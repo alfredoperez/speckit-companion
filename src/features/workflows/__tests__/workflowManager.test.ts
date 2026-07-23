@@ -256,9 +256,7 @@ describe('getWorkflow resolves regardless of active provider', () => {
     });
 
     it('a spec stored as workflow=companion advances on the companion commands, not the stock twins (#548)', () => {
-        // The bug: a Companion spec that recorded workflow=speckit resolved the
-        // stock workflow, so the footer dispatched speckit.plan. With the spec
-        // correctly stored as `companion`, every step resolves the companion command.
+        // A companion-stored spec must resolve the companion commands, not the stock twins.
         mockConfig('claude', []);
         const wf = getWorkflow('companion');
         expect(wf?.name).toBe('companion');

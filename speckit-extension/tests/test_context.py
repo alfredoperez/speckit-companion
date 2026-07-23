@@ -519,9 +519,7 @@ class SetFieldsTests(unittest.TestCase):
         self.assertEqual(ctx["history"], before["history"])
 
     def test_set_workflow_companion_overrides_the_speckit_default(self) -> None:
-        # The Companion specify run pins workflow=companion so a later viewer
-        # advance dispatches speckit.companion.*, not the stock twin. `workflow`
-        # is not a protected key, and --set overwrites the fill_required default.
+        # workflow is not protected, so --set overwrites the speckit default → companion.
         wc.update_context(self.fd, "specify", "specified", "extension")
         self.assertEqual(_ctx(self.fd)["workflow"], "speckit")  # the shared default
         wc.set_fields(self.fd, ["workflow=companion"])
