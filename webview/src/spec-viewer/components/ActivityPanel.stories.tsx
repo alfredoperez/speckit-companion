@@ -338,8 +338,7 @@ export const DossierMidPipeline: Story = {
     },
 };
 
-// Fast-path run: plan and tasks were folded into the specify run — their
-// phases read "folded into Specify" with hollow dots, never "<1s".
+// Fast-path run: folded plan/tasks read "folded into Specify" (hollow dot), never "<1s".
 export const DossierFastPathFolded: Story = {
     render: () => {
         viewerState.value = {
