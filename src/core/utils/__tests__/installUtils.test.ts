@@ -64,4 +64,21 @@ describe('ensureCliInstalled', () => {
 
         expect(vscode.env.clipboard.writeText).toHaveBeenCalledWith('npm install -g test-cli');
     });
+
+    it('offers an Open Install Page action (not copy) for a URL-based tool', async () => {
+        const { promisify } = require('util');
+        (promisify as jest.Mock).mockReturnValue(jest.fn().mockRejectedValue(new Error('not found')));
+        (vscode.window.showErrorMessage as jest.Mock).mockResolvedValue('Open Install Page');
+
+        await expect(
+            ensureCliInstalled('Antigravity CLI', undefined, 'antigravity --version', mockOutputChannel, 'https://antigravity.google')
+        ).rejects.toThrow('Antigravity CLI is not installed');
+
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+            'Antigravity CLI is not installed. Get it at: https://antigravity.google',
+            'Open Install Page'
+        );
+        expect(vscode.env.openExternal).toHaveBeenCalled();
+        expect(vscode.env.clipboard.writeText).not.toHaveBeenCalled();
+    });
 });

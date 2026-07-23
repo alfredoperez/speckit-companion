@@ -272,6 +272,7 @@ export const AIProviders = {
     CLAUDE_VSCODE: 'claude-vscode',
     WIBEY: 'wibey',
     WIBEY_VSCODE: 'wibey-vscode',
+    ANTIGRAVITY: 'antigravity',
 } as const;
 
 /**

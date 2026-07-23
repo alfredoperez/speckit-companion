@@ -24,6 +24,7 @@ export const PROVIDER_TO_AGENT: Record<string, SpecKitAgent> = {
     [AIProviders.CODEX]: 'codex',
     [AIProviders.QWEN]: 'qwen',
     [AIProviders.OPENCODE]: 'opencode',
+    [AIProviders.ANTIGRAVITY]: 'agy',
 };
 
 /** `ide-chat` resolves by detected host editor; unknown hosts fall back to Copilot. */

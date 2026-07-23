@@ -433,6 +433,30 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },
+    // Antigravity — Google's agentic coding CLI. Dispatched as a terminal-CLI
+    // provider (same family as Codex/Gemini/Qwen). Config paths beyond dispatch
+    // are conservative: project-root AGENTS.md steering, nothing claimed for
+    // agents/skills/hooks/MCP that isn't confirmed. These can be tightened once
+    // the tool's layout is verified; they never affect the core dispatch.
+    [AIProviders.ANTIGRAVITY]: {
+        steeringFile: 'AGENTS.md',
+        globalSteeringFile: null,
+        steeringDir: '',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '',
+        agentsPattern: '',
+        skillsDir: '',
+        skillsPattern: '',
+        mcpConfigPath: '',
+        configDir: '.antigravity',
+        supportsHooks: false,
+        displayName: 'Antigravity',
+        commandFormat: 'dot',
+        quickPickIcon: '$(rocket)',
+        quickPickDescription: "Google's agentic coding assistant — terminal mode",
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '',
+    },
 };
 
 /**

@@ -56,7 +56,7 @@ graph TB
 
 ### Supported AI Providers
 
-The README's "Supported AI Providers" matrix is the source of truth — see [README.md#supported-ai-providers](../README.md#supported-ai-providers). Ten providers ship today: Claude Code, Claude in VS Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode, IDE Chat, Wibey CLI, Wibey in VS Code.
+The README's "Supported AI Providers" matrix is the source of truth — see [README.md#supported-ai-providers](../README.md#supported-ai-providers). Eleven providers ship today: Claude Code, Claude in VS Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode, IDE Chat, Wibey CLI, Wibey in VS Code, Antigravity.
 
 ---
 

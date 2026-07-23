@@ -8,4 +8,5 @@ export * from './qwenCliProvider';
 export * from './openCodeProvider';
 export * from './ideChatProvider';
 export * from './claudePanelProvider';
+export * from './antigravityCliProvider';
 export * from './permissionValidation';

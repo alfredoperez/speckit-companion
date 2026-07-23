@@ -78,8 +78,11 @@ export abstract class CliTerminalProvider implements IAIProvider {
 
     /** The bare CLI binary name used for install verification and dispatch. */
     protected abstract readonly cliBinary: string;
-    /** `displayName` shown when the CLI isn't found, plus the install command to suggest. `null` skips the install check entirely. */
-    protected abstract readonly installHint: { displayName: string; installCommand: string } | null;
+    /** `displayName` shown when the CLI isn't found, plus how to get it: a copyable `installCommand` (package-manager CLIs) OR an `installUrl` to open (download-based tools). `null` skips the install check entirely. */
+    protected abstract readonly installHint:
+        | { displayName: string; installCommand: string }
+        | { displayName: string; installUrl: string }
+        | null;
     /** Default title for the visible terminal. */
     protected abstract readonly defaultTerminalTitle: string;
     /** Terminal name for the hidden background terminal in headless mode. */
@@ -189,12 +192,14 @@ export abstract class CliTerminalProvider implements IAIProvider {
     // ─── Shared workflow ────────────────────────────────────────────────────
 
     private async ensureInstalled(): Promise<void> {
-        if (!this.installHint) return;
+        const hint = this.installHint;
+        if (!hint) return;
         await ensureCliInstalled(
-            this.installHint.displayName,
-            this.installHint.installCommand,
+            hint.displayName,
+            'installCommand' in hint ? hint.installCommand : undefined,
             `${this.cliBinary} --version`,
             this.outputChannel,
+            'installUrl' in hint ? hint.installUrl : undefined,
         );
     }
 
