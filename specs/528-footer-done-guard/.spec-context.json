@@ -1,0 +1,213 @@
+{
+  "workflow": "companion",
+  "specName": "Footer Done Guard",
+  "branch": "528-footer-done-guard",
+  "selectedAt": "2026-07-22T20:45:44.521Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T20:45:44.521Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T20:51:14.340Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T20:51:14.423Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T20:51:14.505Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T20:51:14.584Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T20:51:14.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-22T20:54:43.271Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T20:56:56.301Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T20:57:09.801Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T20:57:37.789Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-22T20:58:59.885Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-22T20:58:59.968Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "spec-viewer"
+    ],
+    "synced": [
+      "spec-viewer"
+    ]
+  },
+  "last_action": "spec completed; living spec-viewer folded (+1 ADDED req)",
+  "coverage": {
+    "FR-001": {
+      "title": "Footer MUST NOT surface the forward advance action once the spec is done-building, regardless of the recorded current step",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::implemented (fast-path skew: currentStep still at tasks)"
+      ]
+    },
+    "FR-002": {
+      "title": "While done, the footer MUST keep surfacing its finish actions (Mark Completed / Archive) as today",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::implemented",
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::implemented (fast-path skew: currentStep still at tasks)"
+      ]
+    },
+    "FR-003": {
+      "title": "For a not-yet-done spec, the forward advance action MUST remain visible as before, including the recovered-after-interruption case",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.test.ts::ready-to-implement (recovered after interrupted implement)"
+      ]
+    },
+    "FR-004": {
+      "title": "The footer matrix oracle MUST include the done-status / lagging-current-step skew case asserting no forward button",
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts::implemented (fast-path skew: currentStep still at tasks)"
+      ]
+    },
+    "FR-005": {
+      "title": "The documented footer button matrix MUST state a done spec offers only its finish actions regardless of current step"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 4,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "context": [
+    "living spec: spec-viewer",
+    "area: src/features/spec-viewer/footerActions.ts (footer visibility rules)",
+    "constraint: guard-only fix, do not change status/currentStep capture ordering"
+  ],
+  "intent": "Stop the viewer footer from offering the forward advance action once a spec is done, so it never shows advance and finish at the same time",
+  "expectations": [
+    "Tightening the status/currentStep capture ordering so they never skew",
+    "Changing which lifecycle statuses count as done"
+  ],
+  "approach": "Add an isSpecDone early-return guard to shouldShowApprove, add a skew row to the footer matrix fixtures, and update the viewer-states footer matrix doc",
+  "telemetryInstanceId": "ad553b6a-d35a-4ddb-a24d-4b1f3fd81203",
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added an early isSpecDone(ctx) guard to shouldShowApprove so a done spec never surfaces the forward advance action regardless of currentStep skew",
+      "files": [
+        "src/features/spec-viewer/footerActions.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the fast-path skew oracle row (status implemented, currentStep tasks) asserting right zone archive+complete and no approve",
+      "files": [
+        "src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Documented the done-state guard in the footer button matrix: a done spec offers only finish actions regardless of currentStep, with the fast-path skew explained",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Ran the footer matrix suite (17 pass, +1 skew row) and the full test run (1791 pass, 126 suites); tsc clean",
+      "files": [
+        "npm test"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "footer matrix oracle incl. new fast-path skew row",
+      "command": "npx jest footerMatrix",
+      "result": "17 pass / 0 fail (was 16 — +1 skew row)",
+      "warnings": []
+    },
+    {
+      "what": "full test suite + type-check",
+      "command": "npm test; tsc --noEmit",
+      "result": "1791 pass / 126 suites, tsc clean",
+      "warnings": []
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Guard placed as the first line of shouldShowApprove (before the step===implement check)",
+      "why": "isSpecDone covers implemented+completed and makes the footer correct regardless of currentStep/history skew, in one place",
+      "rejected": "Tightening capture ordering so status/currentStep never skew (explicitly out of scope per spec)"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Done-state guard in shouldShowApprove suppresses the forward Approve on a done spec regardless of currentStep skew; skew oracle row + doc added"
+    }
+  }
+}
