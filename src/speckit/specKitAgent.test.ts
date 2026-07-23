@@ -21,6 +21,9 @@ describe('resolveSpecKitAgent', () => {
         it('maps opencode → opencode', () => {
             expect(resolveSpecKitAgent('opencode', ANY_HOST)).toBe('opencode');
         });
+        it('maps antigravity → agy', () => {
+            expect(resolveSpecKitAgent('antigravity', ANY_HOST)).toBe('agy');
+        });
     });
 
     describe('Claude providers (US2)', () => {
