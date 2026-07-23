@@ -637,12 +637,7 @@ under **Plan**, Requirements under **Specification** — so "where does this
 file come from" is answered in place rather than in separate "<Step> files"
 groups below the rail. A step owns a related doc when the doc's `parentStep`
 names it (a doc with no `parentStep` falls back to the first pipeline step).
-Clicking a sub-item dispatches `switchDocument`; the parent step tab keeps
-opening the step's own document. Only an **orphan** artifact — one whose
-owning step has no rail entry (a hidden action step like Implement, or a
-step absent from the workflow) — keeps a labeled fallback group at the
-bottom so no artifact is ever dropped. Action steps stay hidden from the
-Pipeline group entirely (Implement / Mark Complete never render as tabs).
+Clicking a sub-item dispatches `switchDocument`; the parent step tab keeps opening the step's own document. Only an **orphan** artifact — one whose owning step has no rail entry (a hidden action step like Implement, or a step absent from the workflow) — keeps a labeled fallback group at the bottom so no artifact is ever dropped. Action steps stay hidden from the Pipeline group entirely (Implement / Mark Complete never render as tabs).
 
 ---
 
