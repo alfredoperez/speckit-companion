@@ -120,11 +120,36 @@ export const WorkingOnPlan: Story = {
     },
 };
 
-// ── Step-children rail (parent + sub-files) ─────────────────
-// Verifies the second-row treatment introduced in feat/085: when the active
-// step has related sub-docs, they render in a children rail beneath the
-// step-tabs row, with the parent step as the first chip so users can hop
-// back to the step's overview from any sub-doc.
+// ── Artifacts nested under their step ───────────────────────
+// A step's related artifact docs render as an indented sub-list directly
+// beneath that step's tab in the Pipeline group — so "where does this file
+// come from" is answered in place, not in separate "<Step> files" groups
+// below the rail.
+
+// Multiple steps each carry their own nested artifacts: Requirements under
+// Specification, Data Model / Living Components / Research under Plan.
+export const NestedArtifactsAcrossSteps: Story = {
+    name: 'Artifacts nested under Specification and Plan',
+    render: () => {
+        viewerState.value = null;
+        navState.value = mockNavState({
+            coreDocs: [
+                mockDoc('spec', true, 'Specification'),
+                mockDoc('plan', true, 'Plan'),
+                mockDoc('tasks', true, 'Tasks'),
+            ],
+            relatedDocs: [
+                mockRelatedDoc('requirements', 'spec', 'Requirements'),
+                mockRelatedDoc('data-model', 'plan', 'Data Model'),
+                mockRelatedDoc('living-components', 'plan', 'Living Components'),
+                mockRelatedDoc('research', 'plan', 'Research'),
+            ],
+            currentDoc: 'plan',
+            workflowPhase: 'tasks',
+        });
+        return <NavigationBar />;
+    },
+};
 
 export const PlanWithChildrenActive: Story = {
     render: () => {

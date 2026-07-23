@@ -78,17 +78,25 @@ export function NavigationBar() {
         vscode.postMessage({ type: 'switchDocument', documentType: docType });
     };
 
-    // Artifact groups: every existing related doc, grouped under
-    // its owning step, always visible — "where am I" answers from one place
-    // instead of a per-step second row.
-    const groups: Array<{ parent: SpecDocument | undefined; key: string; docs: SpecDocument[] }> = [];
+    // Artifact docs nest under the step that owns them. A step's children are
+    // its existing related docs (parentless ones fall back to the root step),
+    // rendered as an indented sub-list right beneath that step's tab.
+    const railTypes = new Set(railDocs.map(d => d.type));
+    const childrenFor = (stepType: string): SpecDocument[] =>
+        relatedDocs.filter(d => d.exists && (d.parentStep || rootPhase) === stepType);
+
+    // Orphans: artifacts whose owning step has no rail entry (a hidden action
+    // step, or a step absent from the workflow). They keep a labeled fallback
+    // group at the bottom so no artifact is ever dropped.
+    const orphanGroups: Array<{ parent: SpecDocument | undefined; key: string; docs: SpecDocument[] }> = [];
     for (const doc of relatedDocs) {
         if (!doc.exists) continue;
         const parentType = doc.parentStep || rootPhase;
-        let group = groups.find(g => g.key === parentType);
+        if (railTypes.has(parentType)) continue;
+        let group = orphanGroups.find(g => g.key === parentType);
         if (!group) {
             group = { parent: coreDocs.find(d => d.type === parentType), key: parentType, docs: [] };
-            groups.push(group);
+            orphanGroups.push(group);
         }
         group.docs.push(doc);
     }
@@ -154,43 +162,64 @@ export function NavigationBar() {
             <div class="rail-group">
                 <p class="rail-label">Pipeline</p>
                 <div class="step-tabs">
-                    {railDocs.map((doc, i) => (
-                        <StepTab
-                            key={doc.type}
-                            doc={doc}
-                            index={i}
-                            currentDoc={selectedDoc}
-                            taskCompletionPercent={taskCompletionPercent}
-                            isViewingRelatedDoc={!onOverview && isViewingRelatedDoc}
-                            parentPhaseForRelated={parentPhaseForRelated}
-                            activeStep={activeStep}
-                            currentStep={currentStep}
-                            stepHistory={stepHistory}
-                            stalenessMap={stalenessMap}
-                            hasRelatedChildren={relatedDocs.some(d => d.parentStep === doc.type)}
-                            runningStepIndex={runningStepIndex}
-                            isPercentHost={doc.type === percentHostType}
-                            onClick={handleClick}
-                        />
-                    ))}
+                    {railDocs.map((doc, i) => {
+                        const children = childrenFor(doc.type);
+                        return (
+                            <div class="step-tab-group" key={doc.type}>
+                                <StepTab
+                                    doc={doc}
+                                    index={i}
+                                    currentDoc={selectedDoc}
+                                    taskCompletionPercent={taskCompletionPercent}
+                                    isViewingRelatedDoc={!onOverview && isViewingRelatedDoc}
+                                    parentPhaseForRelated={parentPhaseForRelated}
+                                    activeStep={activeStep}
+                                    currentStep={currentStep}
+                                    stepHistory={stepHistory}
+                                    stalenessMap={stalenessMap}
+                                    hasRelatedChildren={children.length > 0}
+                                    runningStepIndex={runningStepIndex}
+                                    isPercentHost={doc.type === percentHostType}
+                                    onClick={handleClick}
+                                />
+                                {children.length > 0 && (
+                                    <ul class="step-substeps" aria-label={`${doc.label} files`}>
+                                        {children.map(child => (
+                                            <li key={child.type}>
+                                                <button
+                                                    class={`step-child ${child.type === selectedDoc ? 'active' : ''}`}
+                                                    data-doc={child.type}
+                                                    aria-current={child.type === selectedDoc ? 'page' : undefined}
+                                                    onClick={() => handleRelatedClick(child.type)}
+                                                >
+                                                    {child.label}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
-            {groups.map(group => (
+            {orphanGroups.map(group => (
                 <div class="rail-group" key={group.key}>
                     <p class="rail-label">{group.parent ? `${group.parent.label} files` : 'Artifacts'}</p>
-                    <div class="step-children-tabs">
+                    <ul class="step-substeps" aria-label={group.parent ? `${group.parent.label} files` : 'Artifacts'}>
                         {group.docs.map(doc => (
-                            <button
-                                key={doc.type}
-                                class={`step-child ${doc.type === selectedDoc ? 'active' : ''}`}
-                                data-doc={doc.type}
-                                aria-current={doc.type === selectedDoc ? 'page' : undefined}
-                                onClick={() => handleRelatedClick(doc.type)}
-                            >
-                                {doc.label}
-                            </button>
+                            <li key={doc.type}>
+                                <button
+                                    class={`step-child ${doc.type === selectedDoc ? 'active' : ''}`}
+                                    data-doc={doc.type}
+                                    aria-current={doc.type === selectedDoc ? 'page' : undefined}
+                                    onClick={() => handleRelatedClick(doc.type)}
+                                >
+                                    {doc.label}
+                                </button>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
             ))}
         </nav>

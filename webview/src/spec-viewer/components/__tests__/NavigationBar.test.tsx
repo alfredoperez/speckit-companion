@@ -180,7 +180,7 @@ describe('NavigationBar — documents-only rail', () => {
         }
     });
 
-    it('keeps an artifact group whose parent step is hidden, labeled by that step', () => {
+    it('keeps a hidden-parent artifact in a fallback group, labeled by that step', () => {
         const c = renderBar(baseNav({
             relatedDocs: [relatedDoc('impl-notes', 'implement', 'impl-notes.md')],
         }));
@@ -188,6 +188,128 @@ describe('NavigationBar — documents-only rail', () => {
             const labels = Array.from(c.querySelectorAll('.rail-label')).map(l => l.textContent);
             expect(labels).toContain('Implement files');
             expect(c.querySelector('[data-doc="impl-notes"]')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+});
+
+describe('NavigationBar — artifacts nested under their step', () => {
+    it('renders a step\'s artifact docs nested under that step, not in separate groups', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [
+                doc('spec', true, 'Specification'),
+                doc('plan', true, 'Plan'),
+                doc('tasks', true, 'Tasks'),
+            ],
+            relatedDocs: [
+                relatedDoc('requirements', 'spec', 'Requirements'),
+                relatedDoc('data-model', 'plan', 'Data Model'),
+                relatedDoc('living-components', 'plan', 'Living Components'),
+                relatedDoc('research', 'plan', 'Research'),
+            ],
+            currentDoc: 'plan',
+        }));
+        try {
+            // No separate "<Step> files" group renders for a visible parent.
+            const labels = Array.from(c.querySelectorAll('.rail-label')).map(l => l.textContent);
+            expect(labels).toEqual(['Pipeline']);
+
+            // Plan's three artifacts nest in the Plan step's own group.
+            const planGroup = c.querySelector('[data-phase="plan"]')!.closest('.step-tab-group')!;
+            const planChildren = Array.from(planGroup.querySelectorAll('.step-substeps .step-child'))
+                .map(b => b.getAttribute('data-doc'));
+            expect(planChildren).toEqual(['data-model', 'living-components', 'research']);
+
+            // Specification's Requirements nests under the spec step.
+            const specGroup = c.querySelector('[data-phase="spec"]')!.closest('.step-tab-group')!;
+            const specChildren = Array.from(specGroup.querySelectorAll('.step-substeps .step-child'))
+                .map(b => b.getAttribute('data-doc'));
+            expect(specChildren).toEqual(['requirements']);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('nests artifacts as a list (ul/li) for assistive tech', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [doc('plan', true, 'Plan')],
+            relatedDocs: [relatedDoc('data-model', 'plan', 'Data Model')],
+            currentDoc: 'plan',
+        }));
+        try {
+            const list = c.querySelector('.step-tab-group ul.step-substeps');
+            expect(list).not.toBeNull();
+            expect(list!.getAttribute('aria-label')).toBe('Plan files');
+            expect(list!.querySelector('li > .step-child')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('keeps the Overview entry at the top, above the Pipeline group', () => {
+        viewerState.value = {
+            status: 'implementing', highlights: ['specify'], activeSubstep: null,
+            intent: 'Ship the nested rail.',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
+        const c = renderBar(baseNav({
+            activityPanelEnabled: true,
+            relatedDocs: [relatedDoc('data-model', 'plan', 'Data Model')],
+        }));
+        try {
+            const groups = Array.from(c.querySelectorAll('.rail-group'));
+            // Overview group is first; its rail-overview button lives there.
+            expect(groups[0].querySelector('.rail-overview')).not.toBeNull();
+            expect(groups[1].querySelector('.rail-label')!.textContent).toBe('Pipeline');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('opens the artifact document when a nested sub-item is clicked', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [doc('plan', true, 'Plan')],
+            relatedDocs: [relatedDoc('data-model', 'plan', 'Data Model')],
+            currentDoc: 'plan',
+        }));
+        try {
+            const child = c.querySelector<HTMLButtonElement>('.step-substeps [data-doc="data-model"]')!;
+            child.click();
+            expect(postMessage).toHaveBeenLastCalledWith({
+                type: 'switchDocument',
+                documentType: 'data-model',
+            });
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('marks the nested sub-item active when it is the current document', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [doc('plan', true, 'Plan')],
+            relatedDocs: [relatedDoc('data-model', 'plan', 'Data Model')],
+            currentDoc: 'data-model',
+            isViewingRelatedDoc: true,
+        }));
+        try {
+            const child = c.querySelector('.step-substeps [data-doc="data-model"]')!;
+            expect(child.className).toContain('active');
+            expect(child.getAttribute('aria-current')).toBe('page');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('keeps the step tab opening its own document even with nested children', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [doc('plan', true, 'Plan')],
+            relatedDocs: [relatedDoc('data-model', 'plan', 'Data Model')],
+            currentDoc: 'plan',
+        }));
+        try {
+            c.querySelector<HTMLButtonElement>('[data-phase="plan"]')!.click();
+            expect(postMessage).toHaveBeenLastCalledWith({ type: 'stepperClick', phase: 'plan' });
         } finally {
             cleanup(c);
         }

@@ -291,3 +291,21 @@ A phase the derivation marks as folded (a fast-path plan or tasks whose boundari
 - **WHEN** the run timing strip renders a phase carrying the folded marker
 - **THEN** the phase shows "folded into Specify" instead of a sub-second duration
 - **AND** the specify phase keeps its real measured duration
+
+### A step's artifact files nest under it in the rail
+
+Each pipeline step's related artifact documents MUST render as an indented sub-list directly beneath that step in the rail, not in separate per-step groups below it. A step owns a related document when the document names it as its parent step; a document with no parent step falls back to the first pipeline step. An artifact whose owning step has no rail entry — a hidden action step, or a step absent from the workflow — MUST still render in a labeled fallback group so no artifact is dropped.
+
+#### Scenario: a step produced artifact documents
+- **WHEN** a visible step owns one or more related documents
+- **THEN** those documents render as indented sub-items under that step
+- **AND** no separate "<step> files" group renders for them below the rail
+
+#### Scenario: an artifact belongs to a hidden step
+- **WHEN** a related document's owning step is not shown in the rail
+- **THEN** the document renders in a labeled fallback group so it stays reachable
+
+#### Scenario: an artifact sub-item is selected
+- **WHEN** the reader clicks a nested artifact sub-item
+- **THEN** the viewer switches to that document and the sub-item reads as current
+- **AND** clicking the parent step still opens the step's own document

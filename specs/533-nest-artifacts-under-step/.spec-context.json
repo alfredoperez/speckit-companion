@@ -1,0 +1,266 @@
+{
+  "workflow": "companion",
+  "specName": "nest artifacts under step",
+  "branch": "533-nest-artifacts-under-step",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:17:15.478Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:18:33.433Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:18:41.407Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:19:19.420Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:19:19.490Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:19:19.621Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:19:19.703Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:19:41.407Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:19:41.459Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-23T22:19:41.537Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.594Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.643Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.692Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.740Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.789Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.839Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.888Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-23T22:24:35.937Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-23T22:24:36.005Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Render each step's related artifact docs as indented sub-items under that step in the Pipeline group"
+    },
+    "FR-002": {
+      "title": "Do not render separate per-step '<Step> files' groups for visible-parent artifacts"
+    },
+    "FR-003": {
+      "title": "Keep the Overview entry first, above the Pipeline group"
+    },
+    "FR-004": {
+      "title": "Action steps (Implement, Mark Complete) never render as pipeline entries"
+    },
+    "FR-005": {
+      "title": "Clicking a nested sub-item switches to that document and marks it active"
+    },
+    "FR-006": {
+      "title": "Clicking a step tab still opens that step's own document"
+    },
+    "FR-007": {
+      "title": "Hidden-parent artifacts render in a reachable fallback group"
+    },
+    "FR-008": {
+      "title": "Nested sub-items read as a nested list to assistive tech"
+    },
+    "FR-009": {
+      "title": "Preserve highlighting, running indicator, percent host, focus, locking"
+    }
+  },
+  "context": [
+    "area: webview/src/spec-viewer/components/NavigationBar.tsx",
+    "area: webview/styles/spec-viewer/_navigation.css",
+    "constraint: preserve #516 action-step hiding and Overview-first"
+  ],
+  "intent": "Nest each step's artifact files as indented sub-items under that step in the viewer rail instead of separate groups below",
+  "expectations": [
+    "No new data model or capture change — reuses parentStep",
+    "Living-spec tier strip unchanged"
+  ],
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "approach": "Nest each visible step's related artifact docs as an indented sub-list under its StepTab; keep a fallback group only for hidden-parent artifacts",
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Nest each step's related artifact docs as an indented sub-list under its StepTab; remove separate visible-parent groups",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Keep a single fallback group only for orphan artifacts whose parent step has no rail entry",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Add .step-substeps nested-list styles with compact indent; add ellipsis trio to .step-child",
+      "files": [
+        "webview/styles/spec-viewer/_navigation.css"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Verified nested click dispatches switchDocument and parent tab opens step doc (tests)",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Nested list is ul/li with aria-label so it reads as a nested list",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Extend NavigationBar tests: nesting, Overview-first, action hidden, orphan fallback, click dispatch, active state",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Add NestedArtifactsAcrossSteps story; update section comment",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Document nested rail in viewer-states.md; add CHANGELOG Unreleased entry",
+      "files": [
+        "docs/viewer-states.md",
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui"
+    ],
+    "synced": [
+      "viewer-ui"
+    ]
+  },
+  "last_action": "living specs loaded (viewer-ui)"
+}
