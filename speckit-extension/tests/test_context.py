@@ -518,6 +518,13 @@ class SetFieldsTests(unittest.TestCase):
         self.assertEqual(ctx["currentStep"], before["currentStep"])
         self.assertEqual(ctx["history"], before["history"])
 
+    def test_set_workflow_companion_overrides_the_speckit_default(self) -> None:
+        # workflow is not protected, so --set overwrites the speckit default → companion.
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        self.assertEqual(_ctx(self.fd)["workflow"], "speckit")  # the shared default
+        wc.set_fields(self.fd, ["workflow=companion"])
+        self.assertEqual(_ctx(self.fd)["workflow"], "companion")
+
     def test_set_skips_malformed_pair(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
         wc.set_fields(self.fd, ["noequals", "kept=ok"])

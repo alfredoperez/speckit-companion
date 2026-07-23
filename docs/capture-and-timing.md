@@ -173,7 +173,7 @@ Beyond the lifecycle timeline, the Companion command bodies capture the run's **
 |---|---|---|
 | specify sizing (`persist-size`) | specify | `--classification` (the size call's inputs + verdict, not just the scalar `size`) |
 | requirements drafted (`draft-spec`) | specify | `--coverage-req <FR> --title "<requirement text>"` per requirement (titles exist before tasks/coverage run) |
-| specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal + `--context` per thing the run worked from (living specs, areas, constraints) |
+| specify complete (`finalize`) | specify | `--set intent=…` + `--expectation` per non-goal + `--context` per thing the run worked from (living specs, areas, constraints) + **`--set workflow=companion`** — a required deterministic write that pins the run to the Companion workflow, so a later viewer footer advance dispatches `speckit.companion.*` and not the stock twin (the shared writer defaults `workflow` to `speckit`) |
 | living-specs load (`load-living-specs`) | specify | `record-living-specs.py` writes `livingSpecs.loaded` **and** the `last_action` breadcrumb itself — one of `living specs loaded (…)` / `… — no capabilities matched` / `… — skipped (not configured)` — so the gate is a script outcome, not an AI judgment (#535). The assistant only *reads* the recorded specs afterward. |
 | plan complete (`side-files`) | plan | `--set approach=…` + `--decision` per Phase-0 choice + `--step-summary` |
 | tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --title "<requirement text>" --tasks <csv>` per requirement + `--step-summary` |

@@ -254,6 +254,17 @@ describe('getWorkflow resolves regardless of active provider', () => {
         expect(getWorkflows().map(w => w.name)).not.toContain('my-custom-flow'); // hidden from selection
         expect(getWorkflow('my-custom-flow')?.name).toBe('my-custom-flow');       // but still resolvable
     });
+
+    it('a spec stored as workflow=companion advances on the companion commands, not the stock twins (#548)', () => {
+        // A companion-stored spec must resolve the companion commands, not the stock twins.
+        mockConfig('claude', []);
+        const wf = getWorkflow('companion');
+        expect(wf?.name).toBe('companion');
+        const cmd = (step: string) => wf?.steps?.find(s => s.name === step)?.command;
+        expect(cmd('plan')).toBe('speckit.companion.plan');
+        expect(cmd('tasks')).toBe('speckit.companion.tasks');
+        expect(cmd('implement')).toBe('speckit.companion.implement');
+    });
 });
 
 describe('resolveStepCommand strips a leading slash (issue #419)', () => {
