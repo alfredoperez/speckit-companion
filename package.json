@@ -566,6 +566,16 @@
         "command": "speckit.livingSpecs.delete",
         "title": "Delete",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.companion.installNudge",
+        "title": "Install SpecKit Companion",
+        "category": "SpecKit Companion"
+      },
+      {
+        "command": "speckit.companion.dismissInstallNudge",
+        "title": "Dismiss Companion Install Prompt",
+        "category": "SpecKit Companion"
       }
     ],
     "submenus": [
@@ -938,6 +948,14 @@
         },
         {
           "command": "speckit.livingSpecs.coverage",
+          "when": "false"
+        },
+        {
+          "command": "speckit.companion.installNudge",
+          "when": "false"
+        },
+        {
+          "command": "speckit.companion.dismissInstallNudge",
           "when": "false"
         }
       ]
