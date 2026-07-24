@@ -433,11 +433,12 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },
-    // Antigravity — Google's agentic coding CLI. Dispatched as a terminal-CLI
-    // provider (same family as Codex/Gemini/Qwen). Config paths beyond dispatch
-    // are conservative: project-root AGENTS.md steering, nothing claimed for
-    // agents/skills/hooks/MCP that isn't confirmed. These can be tightened once
-    // the tool's layout is verified; they never affect the core dispatch.
+    // Antigravity — Google's terminal agent, the `agy` CLI (successor to Gemini
+    // CLI), dispatched interactively (`agy -i`). Its spec-kit commands install as
+    // dash-named skills for the `agy` agent, so commandFormat is 'dash' (matching
+    // the ide-chat Antigravity host). Config paths beyond dispatch are
+    // conservative: project-root AGENTS.md steering, nothing claimed for
+    // agents/skills/hooks/MCP that isn't confirmed.
     [AIProviders.ANTIGRAVITY]: {
         steeringFile: 'AGENTS.md',
         globalSteeringFile: null,
@@ -451,9 +452,9 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         configDir: '.antigravity',
         supportsHooks: false,
         displayName: 'Antigravity',
-        commandFormat: 'dot',
+        commandFormat: 'dash',
         quickPickIcon: '$(rocket)',
-        quickPickDescription: "Google's agentic coding assistant — terminal mode",
+        quickPickDescription: "Google's agentic coding agent — runs the `agy` CLI in an interactive terminal",
         supportsInteractivePermissions: true,
         autoApproveFlag: '',
     },

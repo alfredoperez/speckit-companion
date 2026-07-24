@@ -1025,7 +1025,7 @@
               "IDE Chat - Routes prompts to the host editor's built-in AI chat (Copilot / Cursor / Windsurf)",
               "Wibey CLI - Walmart's built-in AI coding assistant (dispatches SpecKit commands to the wibey CLI in a VS Code terminal)",
               "Wibey (VS Code) - Opens the Wibey chat panel and pre-fills the command (uses wibey.sendPrompt when available, clipboard fallback otherwise)",
-              "Antigravity - Google's agentic coding assistant (dispatches SpecKit commands to the antigravity CLI in a VS Code terminal)"
+              "Antigravity - Google's agentic coding agent (runs the `agy` CLI interactively in a VS Code terminal)"
             ],
             "scope": "machine",
             "order": 2,
