@@ -183,6 +183,8 @@ The Companion commands are assembled from composable **nodes** — small section
 
 This is separate from stock spec-kit's own extension hooks (`.specify/extensions.yml`): a Companion run honors those too, so any spec-kit extension you've installed (the git extension and others) fires at the start and end of each step exactly as it would on a stock `/speckit.*` run. Both hook systems run on the same pipeline.
 
+**Single-owner validation.** When you attach your own consolidated test/lint run as a hook after `implement-exec` and mark that hook `owns: validation` (`commands.implement.hooks.after.implement-exec`), the tasks command's Polish phase defers its "validate against Success Criteria" task to it instead of generating a second suite run — so your suites run once, not twice. The marker is required on purpose: the same anchor is where review, PR, and deploy hooks live too, so only a hook you've explicitly marked as owning validation takes it over. Without a marked hook, Polish owns validation and generates the run itself, as before.
+
 ## Living specs — map your code to durable capability specs (opt-in)
 
 Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* — checkout, auth, billing, todos — that stays current as the code evolves. This is how Companion moves a team from spec-first to spec-anchored, with a road to spec-as-source: the living spec is the artifact, spec-anchored is the practice. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.

@@ -263,3 +263,19 @@ When the classify step returns `simple`, specify writes the plan inline as the s
 
 - **WHEN** the simple run reaches the fold and `livingSpecs.loaded` is still empty
 - **THEN** the deterministic recorder runs once against the now-known touched files, and never re-resolves when the load already populated it
+
+### The tasks Polish phase validates the spec's Success Criteria in exactly one place
+
+The tasks command's final Polish phase generates a task to validate the result against the spec's Success Criteria. The deferral is gated on an explicit marker, not the mere presence of a hook: only when a hook entry under `commands.implement.hooks.after.implement-exec` (in `.specify/companion.yml`) carries `owns: validation` does that hook own the run, so the Polish phase MUST defer to it rather than generate a second suite run. Presence of an unmarked hook does not defer — the same anchor also hosts review, PR, and deploy hooks, so keying on presence would silently drop validation for any project with a ship tail. With no marked hook the Polish phase owns validation and generates the run itself. Validation ownership therefore lives in exactly one place, and a project that owns its own run never executes the suites twice.
+
+#### Scenario: a project marks a hook as owning validation
+- **WHEN** the tasks command builds the Polish phase and a hook under `commands.implement.hooks.after.implement-exec` carries `owns: validation`
+- **THEN** the Polish validation task defers to that hook and no second suite run is generated
+
+#### Scenario: unmarked post-implement hooks are present (a ship tail)
+- **WHEN** the tasks command builds the Polish phase and hooks exist under `commands.implement.hooks.after.implement-exec` but none carries `owns: validation`
+- **THEN** the Polish phase generates and owns the validation run — the unmarked hooks do not defer it
+
+#### Scenario: no post-implement hook is declared
+- **WHEN** the tasks command builds the Polish phase and no such hook is present (or `companion.yml` is absent or malformed)
+- **THEN** the Polish phase generates and owns the validation run, as before

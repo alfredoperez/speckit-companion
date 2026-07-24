@@ -271,6 +271,12 @@ Its sibling `check_quality.py` (same dir, same report shape plus a WARN tier) gr
 
 The eval **loads `CANONICAL_STEPS` / `CANONICAL_STATUSES` / `VALID_BY` (and the entry `required` list) from `src/core/types/spec-context.schema.json`** at startup (walking up to the repo root), falling back to inline constants only if the schema is unreadable. The schema is the single vocabulary source, so the eval's allowed-value lists cannot drift from the format definition. When the capture model changes, update both this doc and the eval in the same change — but the enums now follow the schema automatically.
 
+## Shared-part footprint — measured, dedupe escalated (2026-07-23, #542)
+
+The capture protocol the AI follows (the `timing` part, plus `orchestrator` / `self-advance` / `speckit-hooks`) is inlined verbatim into every `/speckit.companion.*` pipeline command body via the part-fence mechanism. In a single-session auto run every step dispatches, so a part shared by K of the dispatched steps ships K times — K−1 of those are pure repeat after the first delivery. A committed, re-runnable measurement (`speckit-extension/tests/measure_pipeline_overhead.py`, named `measure_*` so `unittest discover` skips it) reads the assembled bodies on disk and reports the redundant total for a `specify → plan → tasks → implement` run — a baseline of **9,492 tokens** (timing 4,056; orchestrator 2,157; speckit-hooks 2,133; self-advance 1,146). Re-run it after any part is added, removed, or resized; the number tracks the real files because it reads the fences, not a hard-coded list.
+
+**Why no dedupe shipped (yet).** The extension dispatches a slash-command *name* (`executeSlashCommand`), never the assembled body — the AI (CLI) resolves the command file and reads it whole, parts inlined. The extension never holds the body to strip, and the parts must ship whole on a cold one-shot dispatch (someone running `/speckit.companion.plan` fresh). A real per-dispatch strip would therefore need a new dispatch mechanism (the extension assembling and sending trimmed bodies) or a conditional-include templating layer — both are design changes to the dispatch/capture path, this doc's worst bug class. Per the ticket gate ("measure before you optimize; do not force a risky change"), the repeat is measured and the dedupe is escalated to a focused follow-up. **Capture and timing behavior are unchanged** — the bodies still carry the identical protocol.
+
 ## Related documents
 
 - `docs/architecture.md` — structural overview of the codebase.

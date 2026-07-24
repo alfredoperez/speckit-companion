@@ -1,0 +1,327 @@
+{
+  "workflow": "companion",
+  "specName": "pipeline overhead",
+  "branch": "542-pipeline-overhead",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-24T00:28:58.098Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-24T00:30:48.260Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-24T00:31:18.570Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-24T00:31:18.935Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-24T00:31:44.259Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-24T00:31:44.759Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-24T00:33:29.853Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:29.922Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:29.974Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.027Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.081Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.260Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-24T00:33:30.406Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-24T00:33:30.475Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Committed re-runnable measurement",
+      "tasks": [
+        "T002",
+        "T003"
+      ]
+    },
+    "FR-002": {
+      "title": "Reads part fences not a hard-coded list",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-003": {
+      "title": "Polish defers to implement-exec hook",
+      "tasks": [
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "speckit-extension/scripts/check-shape-parity.py",
+        "speckit-extension/scripts/assemble-nodes.py"
+      ]
+    },
+    "FR-004": {
+      "title": "Regenerate body + re-bless golden; gates green",
+      "tasks": [
+        "T006",
+        "T007",
+        "T001"
+      ],
+      "tests": [
+        "speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Item 1 no capture/dispatch change; escalate",
+      "tasks": [
+        "T004"
+      ]
+    }
+  },
+  "intent": "Measure the pipeline's shared-part repeat honestly, remove the double validation run, and escalate the dedupe rather than risk the dispatch/capture path",
+  "expectations": [
+    "No change to capture, timing, or dispatch behavior",
+    "No on-disk part strip that breaks the cold one-shot dispatch"
+  ],
+  "context": [
+    "area: speckit-extension/nodes/tasks",
+    "area: speckit-extension/presets/_parts",
+    "constraint: measure before optimizing (issue #542 gate)"
+  ],
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands"
+    ],
+    "synced": [
+      "companion-commands"
+    ]
+  },
+  "last_action": "all tasks done — item 2 shipped, item 1 measured (9492 tokens) + escalated; gates + 2374 tests green",
+  "approach": "Two decoupled changes: a read-only measurement script (item 1, escalated) and a single-owner-validation node edit (item 2)",
+  "decisions": [
+    {
+      "decision": "Defer Polish validation to the implement-exec hook rather than delete it",
+      "why": "keeps the tasks list recording that Success Criteria were validated, without a duplicate run",
+      "rejected": "unconditionally dropping the Polish validation task"
+    },
+    {
+      "decision": "Escalate item 1 instead of forcing a dedupe",
+      "why": "dispatch sends a command name, not the body; AI reads the whole file; no safe on-disk strip preserves the cold one-shot dispatch",
+      "rejected": "dispatch-time body assembly / conditional-include templating (risky dispatch/capture change)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "measurement script + single-owner-validation node edit; item 1 escalated, no capture/dispatch change"
+    },
+    "tasks": {
+      "summary": "9 tasks across setup, item 1 (measure+escalate), item 2 (single-owner validation), polish/docs"
+    },
+    "implement": {
+      "summary": "measurement script (item 1, escalated) + single-owner-validation tasks-node edit (item 2); docs updated; all gates + 1828 JS + 546 py tests green"
+    }
+  },
+  "currentTask": "T009",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Confirmed four gates + npm test green on clean tree",
+      "files": [
+        "speckit-extension/scripts/"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added baseline measurement script reading assembled bodies",
+      "files": [
+        "speckit-extension/tests/measure_pipeline_overhead.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Ran script; recorded 9492-token baseline",
+      "files": [
+        "specs/542-pipeline-overhead/plan.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Investigated dispatch path; documented escalation (no safe strip)",
+      "files": [
+        "specs/542-pipeline-overhead/spec.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Edited tasks Polish to defer validation to implement-exec hook",
+      "files": [
+        "speckit-extension/nodes/tasks/tasks-doc.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Regenerated assembled tasks command body",
+      "files": [
+        "speckit-extension/commands/speckit.companion.tasks.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Re-blessed golden capture",
+      "files": [
+        "speckit-extension/tests/golden/commands/commands__speckit.companion.tasks.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Updated capture-and-timing, template-profiles, speckit README + CHANGELOG",
+      "files": [
+        "docs/capture-and-timing.md",
+        "docs/template-profiles.md",
+        "speckit-extension/README.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Validation deferred to ship review (single-owner)",
+      "files": [
+        "speckit-extension/scripts/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "npm run compile",
+      "command": "npm run compile",
+      "result": "clean tsc build"
+    },
+    {
+      "what": "JS tests",
+      "command": "npm test",
+      "result": "129 suites, 1828 tests pass"
+    },
+    {
+      "what": "Python unittest",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "546 tests OK"
+    },
+    {
+      "what": "extension gates",
+      "command": "assemble-nodes --check, check-shape-parity, build-commands --check, check-command-emissions",
+      "result": "all OK; golden re-blessed for tasks"
+    },
+    {
+      "what": "quality eval prompting",
+      "command": "check_quality.py --commands-dir",
+      "result": "12 pass / 0 fail"
+    }
+  ]
+}

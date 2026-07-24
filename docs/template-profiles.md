@@ -35,6 +35,8 @@ So template overrides are **mixed** (work for plan/tasks, no-op for specify). Co
 | `tasks` | per stock template | files & dependencies task axis |
 | `plan` / `implement` / `clarify` / `analyze` / `constitution` | stock body | stock body + the shared timing partial |
 
+**Single-owner validation (tasks Polish).** The Companion `tasks` body's Polish phase defers its "validate against Success Criteria" suite-run task to a post-implement hook only when that hook is explicitly marked `owns: validation` under `commands.implement.hooks.after.implement-exec` in `.specify/companion.yml` — so a project that already owns a consolidated validation run doesn't run the suites twice. The deferral is gated on the marker, not on the presence of a hook: the same anchor also hosts review/PR/deploy hooks (see `examples/ship-ticket/`), so keying on presence would silently drop validation for any project with a ship tail. With no marked hook, Polish owns and generates the run. This lives in the `tasks-doc` node (`speckit-extension/nodes/tasks/tasks-doc.md`); it changes task *generation*, not capture or timing.
+
 ## Timing fidelity (both workflows)
 
 Both families bake a single shared **timing partial** into every overridden command body, so durations stay honest for any dispatcher — not only when the GUI prepends its preamble (`src/ai-providers/promptBuilder.ts`). The partial fixes three logged bugs:
