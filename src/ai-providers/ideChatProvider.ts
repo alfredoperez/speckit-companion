@@ -223,8 +223,13 @@ export class IdeChatProvider implements IAIProvider {
                 this.outputChannel.appendLine(
                     `[IdeChatProvider] No chat command available for ${profile.label} — cannot dispatch`
                 );
+                // Antigravity has no chat command we can drive — but it ships the `agy`
+                // CLI, which the dedicated Antigravity provider runs. Name it directly.
+                const hint = host === 'antigravity'
+                    ? 'Switch `speckit.aiProvider` to **Antigravity** to run this command in its `agy` CLI.'
+                    : SWITCH_TO_CLI_HINT;
                 vscode.window.showWarningMessage(
-                    `SpecKit Companion couldn't find a built-in AI chat to open in this editor. ${SWITCH_TO_CLI_HINT}`
+                    `SpecKit Companion couldn't find a built-in AI chat to open in this editor. ${hint}`
                 );
                 return false;
             }
