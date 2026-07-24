@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-07-24
+
 ### Added
 
 - **The path to SpecKit Companion is now visible where you actually look.** When the Companion spec-kit extension isn't installed, the sidebar surfaces a one-click upgrade instead of hiding it: a dot on the SpecKit activity-bar icon, a pinned **Get Companion** row atop the Specs tree, a dismissable **Install SpecKit Companion** button in the empty Specs view, and **SpecKit Companion** always offered in Create New Spec — picking it shows the benefits and installs in one click first, then falls back to standard SpecKit if you decline. Every nudge disappears the moment the extension is installed, with no reload, and the old buried "Not installed" badge in the Steering view is retired. ([#543](https://github.com/alfredoperez/speckit-companion/issues/543))
