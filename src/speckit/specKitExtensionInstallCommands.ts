@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { runInstallSpecKitExtension, openReadmeFallback } from './specKitExtensionInstall';
+import { coerceInstallPromptSurface, reportInstallPromptClicked } from '../core/telemetry';
+import { ConfigKeys } from '../core/constants';
+import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
 
 /**
  * Register the one-click install/update command for the companion spec-kit
@@ -13,6 +16,19 @@ export function registerSpecKitExtensionInstallCommands(
         vscode.commands.registerCommand('speckit.companion.installSpecKitExtension', () => {
             const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             runInstallSpecKitExtension(root);
+        }),
+        // Surface-tagged install trigger for the CTA row and welcome button; records which surface converted.
+        vscode.commands.registerCommand('speckit.companion.installNudge', (surface?: unknown) => {
+            const known = coerceInstallPromptSurface(surface);
+            if (known) {
+                reportInstallPromptClicked(known);
+            }
+            void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+        }),
+        // Dismiss the intrusive empty-state install nudge, remembered across sessions.
+        vscode.commands.registerCommand('speckit.companion.dismissInstallNudge', async () => {
+            await context.globalState.update(ConfigKeys.globalState.installNudgeDismissed, true);
+            await setContextKey(CONTEXT_KEYS.companionInstallNudgeDismissed, true);
         }),
         vscode.commands.registerCommand('speckit.companion.openReadme', () => {
             openReadmeFallback();

@@ -102,6 +102,11 @@
       },
       {
         "view": "speckit.views.explorer",
+        "contents": "SpecKit Companion adds living specs, lifecycle capture, and a fast-path for small changes.\n\n[$(rocket) Install SpecKit Companion](command:speckit.companion.installNudge?%5B%22welcome%22%5D)\n\n[Dismiss](command:speckit.companion.dismissInstallNudge)",
+        "when": "speckit.detected && !speckit.companion.installed && !speckit.companion.installNudgeDismissed"
+      },
+      {
+        "view": "speckit.views.explorer",
         "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
         "when": "speckit.specs.filterActive && speckit.specs.noFilterMatch"
       },
@@ -561,6 +566,16 @@
         "command": "speckit.livingSpecs.delete",
         "title": "Delete",
         "category": "SpecKit"
+      },
+      {
+        "command": "speckit.companion.installNudge",
+        "title": "Install SpecKit Companion",
+        "category": "SpecKit Companion"
+      },
+      {
+        "command": "speckit.companion.dismissInstallNudge",
+        "title": "Dismiss Companion Install Prompt",
+        "category": "SpecKit Companion"
       }
     ],
     "submenus": [
@@ -933,6 +948,14 @@
         },
         {
           "command": "speckit.livingSpecs.coverage",
+          "when": "false"
+        },
+        {
+          "command": "speckit.companion.installNudge",
+          "when": "false"
+        },
+        {
+          "command": "speckit.companion.dismissInstallNudge",
           "when": "false"
         }
       ]

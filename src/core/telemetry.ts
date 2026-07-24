@@ -204,8 +204,23 @@ export function sendTelemetryEvent(name: string, properties?: TelemetryPropertie
     return singleton?.sendEvent(name, properties) ?? false;
 }
 
-/** The two banner surfaces the install prompt appears on. */
-export type InstallPromptSurface = 'createSpec' | 'activity';
+/** The surfaces the install prompt appears on. */
+export type InstallPromptSurface = 'createSpec' | 'activity' | 'sidebarBadge' | 'pinnedRow' | 'welcome';
+
+const INSTALL_PROMPT_SURFACES: ReadonlySet<InstallPromptSurface> = new Set<InstallPromptSurface>([
+    'createSpec',
+    'activity',
+    'sidebarBadge',
+    'pinnedRow',
+    'welcome',
+]);
+
+/** Coerce an untrusted surface value (e.g. a viewsWelcome command arg) to a known surface, else undefined. */
+export function coerceInstallPromptSurface(value: unknown): InstallPromptSurface | undefined {
+    return typeof value === 'string' && INSTALL_PROMPT_SURFACES.has(value as InstallPromptSurface)
+        ? (value as InstallPromptSurface)
+        : undefined;
+}
 
 /** The two funnel moments measured for the install banner. */
 export type InstallPromptAction = 'shown' | 'clicked';

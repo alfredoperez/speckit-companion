@@ -307,9 +307,9 @@ Refreshing the tree invalidates it immediately — there is no artificial loadin
 
 ### Companion node (Steering view)
 
-The **Companion** node — marked with the moss icon, positioned first — gives SpecKit Companion a home alongside your steering docs, agents, and skills. It answers three questions at a glance: is the companion extension installed, where does its configuration live, and which commands does it provide.
+The **Companion** node — marked with the moss icon, positioned first — gives SpecKit Companion a home alongside your steering docs, agents, and skills, but **only when the extension is installed**. It answers two questions at a glance: where does its configuration live, and which commands does it provide.
 
-**Not installed.** When the companion spec-kit extension is absent from the project (no `.specify/extensions/companion/` directory), the Companion node shows a warning icon and a **Not installed** label, and offers an inline **install** action on hover. Clicking it runs the same install flow surfaced elsewhere in the extension; once it finishes, the node switches to the moss icon and its children populate — no window reload needed.
+**Not installed.** When the companion spec-kit extension is absent from the project (no `.specify/extensions/companion/` directory), the Companion node is **hidden entirely** — the old buried "Not installed" badge here is retired. The install nudge now lives where users actually look (see *Install nudges* below).
 
 **Installed.** When the extension is present the node expands into up to three groups:
 
@@ -318,6 +318,17 @@ The **Companion** node — marked with the moss icon, positioned first — gives
 - **Templates** — the prompt templates the Companion preset ships (the per-step command bodies it installs over stock SpecKit). Clicking one opens the template file. Shown only when the installed extension actually carries preset templates.
 
 The Companion node refreshes on its own when the extension is installed or removed, or when `.specify/companion.yml` changes.
+
+## Install nudges
+
+When the SpecKit Companion spec-kit extension isn't installed, four surfaces make the upgrade path visible — all gated on `!speckit.companion.installed`, and all gone the moment it flips true (no reload):
+
+- **Activity-bar badge** — the Specs view carries a single-dot badge tooltipped **Install SpecKit Companion**, which VS Code aggregates onto the SpecKit seedling icon in the activity bar, so the nudge is visible even when the view is collapsed.
+- **Pinned CTA row** — a first row **Get Companion — living specs, capture, fast-path** with a yellow rocket icon sits atop the Specs tree whenever you have specs. One click runs the install. It persists until installed (ambient, no dismiss).
+- **Empty-state button** — when the Specs view is empty, a big **Install SpecKit Companion** button appears with a **Dismiss** link. This is the one intrusive surface, so dismissing it is remembered and it does not return.
+- **Create Spec option** — the New Spec workflow picker always lists **SpecKit Companion** (marked *Install to enable* when absent). Selecting it while not installed shows the benefits and a one-click install first; declining still creates the spec via the graceful stock downgrade.
+
+The ambient surfaces (badge, pinned row, Create Spec option) persist until installed; only the empty-state button is dismissable-and-remembered. Each surface reports the `companion.installPrompt` telemetry funnel with its own surface tag.
 
 ## Accessibility
 

@@ -41,6 +41,11 @@ export const CONTEXT_KEYS = {
      * is on-disk presence, the flag is the user's banner-visibility preference.
      */
     companionInstalled: 'speckit.companion.installed',
+    /**
+     * True once the user dismisses the intrusive empty-state install nudge. Gates
+     * only that welcome block's `when`; ambient surfaces (badge, pinned row) ignore it.
+     */
+    companionInstallNudgeDismissed: 'speckit.companion.installNudgeDismissed',
 } as const;
 
 export type ContextKeyName = (typeof CONTEXT_KEYS)[keyof typeof CONTEXT_KEYS];
@@ -97,5 +102,6 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.specsSelectionCount, 0, logger),
         setContextKey(CONTEXT_KEYS.specsSelectionMixed, false, logger),
         setContextKey(CONTEXT_KEYS.companionInstalled, false, logger),
+        setContextKey(CONTEXT_KEYS.companionInstallNudgeDismissed, false, logger),
     ]);
 }

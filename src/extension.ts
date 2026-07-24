@@ -28,7 +28,7 @@ import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, removeRetiredSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
-import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties } from './core/telemetry';
+import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 
@@ -279,6 +279,24 @@ export async function activate(context: vscode.ExtensionContext) {
             // below when the extension dir appears/disappears (e.g. after the
             // one-click install terminal completes).
             void refreshCompanionInstalledContext(root);
+            // Badge the Specs view when the spec-kit extension is missing and refresh the Specs + Steering trees; the watcher below reruns this so it flips without a reload.
+            const syncInstallAffordances = (): void => {
+                const installed = isCompanionInstalled(root);
+                specsTreeView.badge = installed
+                    ? undefined
+                    : { value: 1, tooltip: 'Install SpecKit Companion' };
+                if (!installed) {
+                    reportInstallPromptShown('sidebarBadge');
+                }
+                specExplorer.refresh();
+                steeringExplorer.refresh();
+            };
+            syncInstallAffordances();
+            // Remember a prior dismissal of the intrusive empty-state install nudge.
+            void setContextKey(
+                CONTEXT_KEYS.companionInstallNudgeDismissed,
+                context.globalState.get<boolean>(ConfigKeys.globalState.installNudgeDismissed, false),
+            );
             // Keep the timing-augmented standard command family materialized — but
             // ONLY when the companion spec-kit extension is installed: the ensure's
             // bundled preset path lives inside `.specify/extensions/companion/`, so
@@ -302,6 +320,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const refresh = (): void => {
                 void refreshCompanionInstalledContext(root);
                 ensureStandardWhenInstalled();
+                syncInstallAffordances();
                 livingSpecsExplorer.refresh();
             };
             extWatcher.onDidCreate(refresh);

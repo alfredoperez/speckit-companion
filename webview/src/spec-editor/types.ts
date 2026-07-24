@@ -39,6 +39,7 @@ export interface WorkflowDefinition {
     description?: string;
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
     supportsAuto?: boolean;
+    installed?: boolean;
 }
 
 export type ExtensionToSpecEditorMessage =

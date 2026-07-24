@@ -319,3 +319,18 @@ describe('sidebar contributions', () => {
         });
     });
 });
+
+describe('Companion install nudge — viewsWelcome', () => {
+    const viewsWelcome: Array<{ view: string; contents: string; when?: string }> =
+        manifest.contributes.viewsWelcome;
+
+    it('adds an empty-state install button gated on not-installed and not-dismissed', () => {
+        const block = viewsWelcome.find(
+            w => w.view === SPECS_VIEW && w.contents.includes('speckit.companion.installNudge')
+        );
+        expect(block).toBeDefined();
+        expect(block!.contents).toContain('command:speckit.companion.dismissInstallNudge');
+        expect(block!.when).toContain('!speckit.companion.installed');
+        expect(block!.when).toContain('!speckit.companion.installNudgeDismissed');
+    });
+});

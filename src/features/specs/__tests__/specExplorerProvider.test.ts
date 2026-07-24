@@ -44,8 +44,14 @@ jest.mock('../specContextManager', () => ({
     deriveSpecName: jest.requireActual('../specContextManager').deriveSpecName,
 }));
 
+// Companion installed by default so the pinned CTA row is absent for pre-existing tree-shape tests; CTA tests flip this to false.
+jest.mock('../../settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn().mockReturnValue(true),
+}));
+
 import { resolveSpecDirectories, hasDuplicateNames } from '../../../core/specDirectoryResolver';
 import { readSpecContextSync } from '../specContextManager';
+import { isCompanionInstalled } from '../../settings/companionPresetReconciler';
 
 const WORKSPACE_ROOT = '/workspace';
 
@@ -1165,5 +1171,39 @@ describe('speckit.markCompleted menu eligibility', () => {
         expect(markCompleted!.when).toContain('spec-active');
         expect(markCompleted!.when).toContain('spec-tasks-done');
         expect(markCompleted!.when).toContain('spec-implemented');
+    });
+});
+
+describe('SpecExplorerProvider — pinned Companion install CTA', () => {
+    let context: vscode.ExtensionContext;
+    let outputChannel: vscode.OutputChannel;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        context = createMockContext();
+        outputChannel = createMockOutputChannel();
+        setupWorkspaceFolder();
+        (mockFs.readdirSync as jest.Mock).mockReturnValue([]);
+        (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: new Date(0) });
+        (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+            { name: '070-a', path: 'specs/070-a' },
+        ]);
+        (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'active', specName: 'A' });
+    });
+
+    it('prepends the CTA row when the spec-kit extension is not installed', async () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(false);
+        const provider = new SpecExplorerProvider(context, outputChannel);
+        const roots = await provider.getChildren();
+        expect(roots[0].contextValue).toBe('companion-install-cta');
+        expect(roots[0].command?.command).toBe('speckit.companion.installNudge');
+        expect(roots[0].command?.arguments).toEqual(['pinnedRow']);
+    });
+
+    it('omits the CTA row when the extension is installed', async () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        const provider = new SpecExplorerProvider(context, outputChannel);
+        const roots = await provider.getChildren();
+        expect(roots.some(r => r.contextValue === 'companion-install-cta')).toBe(false);
     });
 });
