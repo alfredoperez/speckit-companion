@@ -43,7 +43,11 @@ def measure(run: list) -> dict:
     for c in run:
         for name, body in per_command[c].items():
             deliveries.setdefault(name, []).append(c)
-            bodies[name] = body
+            # Lock the first-seen body; a same-named part that diverges across commands would skew the size, so warn rather than silently take the last.
+            if name in bodies and bodies[name] != body:
+                print(f"WARNING: part '{name}' has divergent content across commands; using first-seen for sizing.", file=sys.stderr)
+            else:
+                bodies.setdefault(name, body)
 
     rows = []
     total_redundant = 0

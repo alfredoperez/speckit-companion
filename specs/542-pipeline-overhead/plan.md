@@ -12,7 +12,7 @@ Two independent, decoupled changes plus a documented escalation.
 
 ### Item 2 — single-owner validation (node-body edit)
 
-- Edit `speckit-extension/nodes/tasks/tasks-doc.md` Polish phase: before adding a suite-run "validate Success Criteria" task, check `.specify/companion.yml` for a review hook under `commands.implement.hooks.after.implement-exec`. Present → defer the Polish validation to it (no second suite run); absent → Polish owns validation as before. Ownership lives in exactly one place.
+- Edit `speckit-extension/nodes/tasks/tasks-doc.md` Polish phase: before adding a suite-run "validate Success Criteria" task, check `.specify/companion.yml` for a hook under `commands.implement.hooks.after.implement-exec` explicitly marked `owns: validation`. Marked hook → defer the Polish validation to it (no second suite run); no marked hook (none, or unmarked review/ship hooks) → Polish owns validation as before. Ownership lives in exactly one place.
 - Regenerate `commands/speckit.companion.tasks.md` via `assemble-nodes.py`, re-bless the golden via `capture-golden.py`.
 
 ## Design decisions (Phase 0)

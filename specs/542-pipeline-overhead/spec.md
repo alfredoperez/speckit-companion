@@ -25,8 +25,8 @@ A project attaches a consolidated post-implement validation run (test/lint suite
 **Independent Test**: A `tasks.md` generated for a project whose `companion.yml` declares an `implement-exec` review hook defers its Polish validation to that hook (no second suite run); a project without such a hook keeps generating its own validation task.
 
 **Acceptance Scenarios**:
-1. **Given** a project declares a review hook under `commands.implement.hooks.after.implement-exec`, **When** the tasks command builds the Polish phase, **Then** the validation task defers to that hook and does not re-run the suites.
-2. **Given** a project declares no such hook, **When** the tasks command builds the Polish phase, **Then** Polish owns validation and generates the suite-run task as before.
+1. **Given** a project declares a review hook marked `owns: validation` under `commands.implement.hooks.after.implement-exec`, **When** the tasks command builds the Polish phase, **Then** the validation task defers to that hook and does not re-run the suites.
+2. **Given** a project declares no hook marked `owns: validation` (none at all, or unmarked review/ship hooks), **When** the tasks command builds the Polish phase, **Then** Polish owns validation and generates the suite-run task as before.
 
 ### User Story 3 - The dedupe recommendation is documented, not forced (Priority: P2)
 
@@ -50,7 +50,7 @@ Given the baseline, the maintainer wants a clear, honest verdict on whether the 
 
 - **FR-001**: A committed, re-runnable measurement MUST quantify the shared-part repeat from the assembled command bodies on disk and print a single "redundant tokens after first delivery" total for a representative auto run.
 - **FR-002**: The measurement MUST derive the parts and their dispatch counts by reading the part fences, not by hard-coding a part list, so the number tracks the real files.
-- **FR-003**: The tasks command's Polish phase MUST defer validation to a project-declared `commands.implement.hooks.after.implement-exec` review hook when one is present, and MUST keep generating its own validation task when none is present — so the suites run in exactly one place.
+- **FR-003**: The tasks command's Polish phase MUST defer validation to a project-declared `commands.implement.hooks.after.implement-exec` hook explicitly marked `owns: validation`, and MUST keep generating its own validation task when no such marked hook is present (an unmarked review/ship tail must not suppress validation) — so the suites run in exactly one place.
 - **FR-004**: The item 2 change MUST be a node-body edit that regenerates the assembled command body and re-blesses the golden, keeping `assemble-nodes.py --check`, `check-shape-parity.py`, `build-commands.py --check`, and `check-command-emissions.py` green.
 - **FR-005**: Item 1 MUST NOT alter capture, timing, or dispatch behavior; if no safe dedupe exists it MUST be documented and escalated, not forced.
 
@@ -76,7 +76,7 @@ Given the baseline, the maintainer wants a clear, honest verdict on whether the 
 <!-- capability: companion-commands -->
 ### The tasks Polish phase validates the spec's Success Criteria in exactly one place
 
-The tasks command's final Polish phase generates a task to validate the result against the spec's Success Criteria. When the project declares a consolidated post-implement validation run as a review hook after `implement-exec` (`commands.implement.hooks.after.implement-exec` in `.specify/companion.yml`), that hook owns the run, so the Polish phase MUST defer to it rather than generate a second suite run. When no such hook is declared, the Polish phase owns validation and generates the run itself. Validation ownership therefore lives in exactly one place, and a project that owns its own run never executes the suites twice.
+The tasks command's final Polish phase generates a task to validate the result against the spec's Success Criteria. When the project declares a consolidated post-implement validation run as a hook explicitly marked `owns: validation` after `implement-exec` (`commands.implement.hooks.after.implement-exec` in `.specify/companion.yml`), that hook owns the run, so the Polish phase MUST defer to it rather than generate a second suite run. When no hook carries that marker — none at all, or unmarked review/ship hooks that don't validate — the Polish phase owns validation and generates the run itself. Validation ownership therefore lives in exactly one place, and a project that owns its own run never executes the suites twice.
 
 #### Scenario: a project owns a post-implement validation hook
 - **WHEN** the tasks command builds the Polish phase and `commands.implement.hooks.after.implement-exec` declares a review hook
