@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **The path to SpecKit Companion is now visible where you actually look.** When the Companion spec-kit extension isn't installed, the sidebar surfaces a one-click upgrade instead of hiding it: a dot on the SpecKit activity-bar icon, a pinned **Get Companion** row atop the Specs tree, a dismissable **Install SpecKit Companion** button in the empty Specs view, and **SpecKit Companion** always offered in Create New Spec — picking it shows the benefits and installs in one click first, then falls back to standard SpecKit if you decline. Every nudge disappears the moment the extension is installed, with no reload, and the old buried "Not installed" badge in the Steering view is retired. ([#543](https://github.com/alfredoperez/speckit-companion/issues/543))
-- **Antigravity joins the provider list.** You can now pick **Antigravity** — Google's agentic coding assistant — under **Settings > speckit.aiProvider**, and SpecKit commands dispatch to the `antigravity` CLI in an integrated terminal, the same way Codex, Gemini, and Qwen do. ([#546](https://github.com/alfredoperez/speckit-companion/issues/546))
+- **Antigravity joins the provider list.** You can now pick **Antigravity** — Google's agentic coding agent — under **Settings > speckit.aiProvider**, and SpecKit commands run in its `agy` command-line tool inside an integrated terminal, opened interactively so you can approve edits as they happen. If `agy` isn't installed yet, the extension offers its one-line install command. ([#546](https://github.com/alfredoperez/speckit-companion/issues/546))
 
 ### Changed
 

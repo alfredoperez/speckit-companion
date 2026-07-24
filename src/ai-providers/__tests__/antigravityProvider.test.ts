@@ -8,7 +8,15 @@ describe('Antigravity provider', () => {
         const entry = PROVIDER_PATHS[AIProviders.ANTIGRAVITY];
         expect(entry).toBeDefined();
         expect(entry.displayName).toBe('Antigravity');
-        expect(entry.commandFormat).toBe('dot');
+        expect(entry.commandFormat).toBe('dash');
+    });
+
+    it('dispatches the `agy` binary interactively (-i), not the non-existent `antigravity` CLI', () => {
+        const outputChannel = { appendLine: jest.fn() } as any;
+        const provider = new AntigravityCliProvider({} as any, outputChannel) as any;
+        expect(provider.cliBinary).toBe('agy');
+        expect(provider.cliPromptFlag()).toBe('-i ');
+        expect(provider.installHint.installCommand).toContain('antigravity.google/cli/install.sh');
     });
 
     it('resolves the antigravity setting value to AntigravityCliProvider', () => {
