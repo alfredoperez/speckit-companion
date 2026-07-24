@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+
+- **Your test suites no longer run twice at the end of a spec.** If you attach your own consolidated validation run as a review hook after implement, the tasks command's final Polish phase used to *also* generate a "validate against Success Criteria" task, so the same suites ran twice. Now, when such a hook is present, the Polish validation defers to it — your suites run in exactly one place. Projects without that hook are unchanged: Polish still generates and owns the validation run.
+
 ### Fixed
 
 - **A spec you start on the Companion workflow stays on Companion.** When a spec was built through the pipeline and you later advanced it from the viewer footer (clicking Plan, Tasks, or Implement), it could silently switch to the stock workflow — because the run recorded the wrong workflow name. Companion specify now records that the spec runs the Companion workflow, so every later step dispatches the Companion command instead of the stock one. Specs already in flight keep whatever they recorded; new runs get the correct pin.
