@@ -42,6 +42,7 @@ export const RETIRED_SETTINGS: ReadonlyArray<string> = [
     'companion.speckitCompanionWorkflow',
     'companion.workflowBeta',
     'companion.resumeBeta',
+    'notifications.phaseCompletion',
 ];
 
 /**
@@ -98,6 +99,31 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
             if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
                 await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
             }
+        }
+    }
+}
+
+/**
+ * One-time, idempotent merge of the two former notification toggles into the
+ * single survivor `notifications.stepComplete`. The deprecated
+ * `notifications.phaseCompletion` is dropped by `removeRetiredSettings`; this
+ * runs first so a user who turned phase-completion notifications off keeps that
+ * preference on the merged toggle. Rule: if EITHER was false, the merged one is
+ * false — so any scope where `phaseCompletion` was explicitly `false` forces
+ * `stepComplete` to `false` at that same scope (unless it is already `false`).
+ * Both settings default `true`, so nothing to do when `phaseCompletion` is unset
+ * or `true`. Scope is preserved via per-scope `inspect()`.
+ */
+export async function mergeNotificationSettings(): Promise<void> {
+    const config = vscode.workspace.getConfiguration('speckit');
+    const phase = config.inspect('notifications.phaseCompletion');
+    const step = config.inspect('notifications.stepComplete');
+    if (!phase) {
+        return;
+    }
+    for (const { target, field } of SCOPES) {
+        if (phase[field] === false && step?.[field] !== false) {
+            await config.update('notifications.stepComplete', false, target);
         }
     }
 }

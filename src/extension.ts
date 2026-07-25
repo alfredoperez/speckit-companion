@@ -26,7 +26,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
-import { migrateBetaTriStateSettings, removeRetiredSettings } from './core/settingsMigration';
+import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
@@ -122,8 +122,19 @@ export async function activate(context: vscode.ExtensionContext) {
         outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
     }
 
-    // Drop retired settings (the collapsed spec-driven toggles and the former
-    // Companion-workflow beta gate + its legacy keys) from settings.json. Activation
+    // Fold the deprecated notifications.phaseCompletion toggle into the merged
+    // notifications.stepComplete before the retired-key cleanup below removes it,
+    // so an off preference survives. Idempotent and scope-preserving.
+    try {
+        await mergeNotificationSettings();
+    } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        outputChannel.appendLine(`[Extension] Notification-settings merge skipped: ${detail}`);
+    }
+
+    // Drop retired settings (the collapsed spec-driven toggles, the former
+    // Companion-workflow beta gate + its legacy keys, and the merged-away
+    // phase-completion notification toggle) from settings.json. Activation
     // tolerates them either way; this just keeps users' settings tidy. Wrapped so a
     // bad stored value can never fail activation (the provider-rename lesson).
     try {

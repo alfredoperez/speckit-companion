@@ -441,9 +441,9 @@ Controls whether the extension prepends a short context-update preamble to every
 
 The preamble adds ~200–300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt`: this preamble unlocks finer-grained substep tracking.
 
-### Step-Complete Notifications
+### Completion Notifications
 
-When a dispatched spec step finishes, the extension shows a VS Code information message naming the spec and step (e.g. `Spec 074 · Plan complete`). The message includes an **Open spec** action that focuses the viewer for that spec. VS Code routes info messages to the native OS notification surface when the window is unfocused, so you can tab away during long runs.
+When a dispatched spec step finishes, the extension shows a VS Code information message naming the spec and step (e.g. `Spec 074 · Plan complete`). The message includes an **Open spec** action that focuses the viewer for that spec. VS Code routes info messages to the native OS notification surface when the window is unfocused, so you can tab away during long runs. The same switch also governs the notification shown when a task phase completes.
 
 ```json
 {
@@ -451,7 +451,7 @@ When a dispatched spec step finishes, the extension shows a VS Code information 
 }
 ```
 
-Set to `false` to silence the message while keeping the in-viewer elapsed timer.
+Set to `false` to silence both notifications while keeping the in-viewer elapsed timer. (This one toggle replaces the former separate `speckit.notifications.phaseCompletion` setting; an existing "off" preference is carried over automatically.)
 
 ### Spec Directories
 

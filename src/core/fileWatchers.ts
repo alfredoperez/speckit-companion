@@ -19,11 +19,11 @@ import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
 import type { TransitionEntry } from '../features/workflows/types';
 
 /**
- * Check if phase completion notifications are enabled
+ * Check if step/phase completion notifications are enabled
  */
 function isPhaseCompletionNotificationEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
-    return config.get<boolean>('notifications.phaseCompletion', true);
+    return config.get<boolean>('notifications.stepComplete', true);
 }
 
 /**

@@ -983,7 +983,7 @@
             "default": true,
             "scope": "window",
             "order": 0,
-            "description": "Show a notification when a dispatched spec step completes."
+            "description": "Show a notification when a spec step or task phase completes."
           },
           "speckit.aiProvider": {
             "type": "string",
@@ -1132,12 +1132,6 @@
                 }
               ]
             }
-          },
-          "speckit.notifications.phaseCompletion": {
-            "type": "boolean",
-            "default": true,
-            "scope": "window",
-            "description": "Show notification when a task phase is completed"
           },
           "speckit.views.steering.visible": {
             "type": "boolean",
@@ -1370,7 +1364,7 @@
             "default": true,
             "scope": "window",
             "order": 8,
-            "markdownDescription": "Send anonymous, PII-free usage telemetry to help prioritize providers and features. [What's collected](https://github.com/alfredoperez/speckit-companion#telemetry). Also honors VS Code's global `telemetry.telemetryLevel`."
+            "markdownDescription": "The single on/off switch for SpecKit Companion's anonymous, PII-free usage telemetry, which helps prioritize providers and features. [What's collected](https://github.com/alfredoperez/speckit-companion#telemetry). Turning this off stops all telemetry; leaving it on still respects VS Code's global `telemetry.telemetryLevel` (if you've disabled telemetry globally, nothing is sent regardless of this switch)."
           }
         }
       }
