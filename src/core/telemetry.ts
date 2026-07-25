@@ -206,7 +206,7 @@ export function sendTelemetryEvent(name: string, properties?: TelemetryPropertie
 }
 
 /** The surfaces the install prompt appears on. */
-export type InstallPromptSurface = 'createSpec' | 'activity' | 'sidebarBadge' | 'pinnedRow' | 'welcome';
+export type InstallPromptSurface = 'createSpec' | 'activity' | 'sidebarBadge' | 'pinnedRow' | 'welcome' | 'terminal';
 
 const INSTALL_PROMPT_SURFACES: ReadonlySet<InstallPromptSurface> = new Set<InstallPromptSurface>([
     'createSpec',
@@ -214,6 +214,7 @@ const INSTALL_PROMPT_SURFACES: ReadonlySet<InstallPromptSurface> = new Set<Insta
     'sidebarBadge',
     'pinnedRow',
     'welcome',
+    'terminal',
 ]);
 
 /** Coerce an untrusted surface value (e.g. a viewsWelcome command arg) to a known surface, else undefined. */
