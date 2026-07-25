@@ -1,0 +1,340 @@
+{
+  "workflow": "companion",
+  "specName": "cli install nudge",
+  "branch": "564-cli-install-nudge",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T17:01:37.904Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T17:03:18.087Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T17:04:07.196Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:05:37.055Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:05:37.127Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T17:05:37.577Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T17:06:10.075Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T17:06:50.289Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T17:06:59.075Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.579Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.628Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.683Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.736Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.790Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.842Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.894Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:07.949Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:08.020Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T17:12:08.074Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T17:12:08.147Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Show a single non-blocking dismissable install hint when dispatching a stock speckit command to a terminal-CLI provider",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-002": {
+      "title": "Gate identically to in-editor nudges: spec-kit detected AND companion not installed AND not dismissed",
+      "tasks": [
+        "T003",
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "Do not show for in-editor chat/panel providers (already covered by #543)",
+      "tasks": [
+        "T001",
+        "T004",
+        "T007"
+      ]
+    },
+    "FR-004": {
+      "title": "Reuse existing install infra; no parallel nudge system",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-005": {
+      "title": "Shared dismissal honored in both directions (editor <-> terminal)",
+      "tasks": [
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-006": {
+      "title": "Hint shown at most once per session plus permanent suppression on dismiss",
+      "tasks": [
+        "T003",
+        "T006"
+      ]
+    },
+    "FR-007": {
+      "title": "Never block, delay, or fail the dispatched command",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-008": {
+      "title": "Telemetry shown gated on the same render condition with surface label terminal",
+      "tasks": [
+        "T002",
+        "T003",
+        "T008"
+      ]
+    },
+    "FR-009": {
+      "title": "Acting on the hint runs one-click install and records a terminal-surface conversion",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: src/features/specs (terminal dispatch chokepoints)",
+    "area: src/ai-providers (terminal vs editor provider classification)",
+    "constraint: reuse #543 install-nudge infra, shared installNudgeDismissed",
+    "constraint: extension isolation — src/ + prompt text only"
+  ],
+  "intent": "Give terminal-CLI users a single quiet dismissable hint to install the companion extension, matching #543's in-editor nudges",
+  "expectations": [
+    "No new nudge system — reuse existing install commands and dismissal state",
+    "No editing of .claude/** or .specify/** to implement the feature",
+    "No change to the existing companion->stock fallback warning surface"
+  ],
+  "approach": "Reuse the #543 install-nudge infra (install command, shared installNudgeDismissed, isCompanionInstalled) behind a pure gate predicate and a terminal-vs-editor provider classifier; wire a non-blocking notification into the terminal stock-command dispatch chokepoints, gated identically and telemetered with a terminal surface label.",
+  "decisions": [
+    {
+      "decision": "Non-blocking VS Code notification as the surface",
+      "why": "Reuses #543 infra verbatim, stays dismissable and out of the run",
+      "rejected": "Prepending a hint to the dispatched prompt (not dismissable, mutates the command, repeats every dispatch)"
+    },
+    {
+      "decision": "Classify providers via an editor-provider set with a neutral terminal default",
+      "why": "In-editor providers already have #543 nudges; new CLI providers stay nudge-eligible by default",
+      "rejected": "A dispatchTarget field on all 11 ProviderPaths entries (larger diff, gold-plating for scope)"
+    },
+    {
+      "decision": "Skip the nudge when the companion->stock fallback already warned",
+      "why": "Avoid two notifications for one dispatch; the new nudge targets the stock-workflow case the fallback never covers",
+      "rejected": "Suppressing the fallback warning in favor of the generic hint"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan reuses #543 install-nudge infra behind a pure gate + provider classifier, wired into terminal dispatch",
+      "key_finding": "spec-kit detection = .specify presence; the stock-workflow terminal dispatch is the case with no existing nudge (fallback only covers companion->stock)"
+    },
+    "tasks": {
+      "summary": "10 tasks across Foundational + 3 story phases + Polish; wave-grouped, ends with suite-run validation"
+    }
+  },
+  "currentTask": "T010",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added providerDispatchesToTerminal classifier + EDITOR_DISPATCH_PROVIDERS set (neutral terminal default)",
+      "files": [
+        "src/ai-providers/aiProvider.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added 'terminal' to InstallPromptSurface union and INSTALL_PROMPT_SURFACES set",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Created cliInstallNudge module: pure shouldShowCliInstallNudge predicate + maybeShowCliInstallNudge wrapper (session guard, same-gated terminal telemetry, non-blocking notification, never throws)",
+      "files": [
+        "src/speckit/cliInstallNudge.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Wired maybeShowCliInstallNudge into the terminal stock-command dispatch chokepoints (workflow step + non-workflow phase), skipping the fellBack path",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Test: gate false when dismissed; wrapper reads shared installNudgeDismissed",
+      "files": [
+        "src/speckit/__tests__/cliInstallNudge.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Test: gate false for each non-warranted case; true only on full positive combination",
+      "files": [
+        "src/speckit/__tests__/cliInstallNudge.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Test: providerDispatchesToTerminal classifies every AIProviders enum value; 3 editor providers false, others + unknown true",
+      "files": [
+        "src/ai-providers/__tests__/aiProvider.terminal.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Test: telemetry shown emit gated on the same predicate as the render",
+      "files": [
+        "src/speckit/__tests__/cliInstallNudge.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Documented the terminal install nudge surface in the README install-nudge paragraph",
+      "files": [
+        "README.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Validated: npm run compile + npm test green (132 suites, 1867 tests)"
+    }
+  }
+}

@@ -597,3 +597,22 @@ export function getProviderDisplayName(type: AIProviderType): string {
     }
     return PROVIDER_PATHS[type].displayName;
 }
+
+// The in-editor chat/panel providers — they dispatch into the host editor's chat,
+// not a terminal, and already carry the in-editor install nudges. Every other
+// provider dispatches to a VS Code terminal.
+const EDITOR_DISPATCH_PROVIDERS: ReadonlySet<AIProviderType> = new Set<AIProviderType>([
+    AIProviders.IDE_CHAT,
+    AIProviders.CLAUDE_VSCODE,
+    AIProviders.WIBEY_VSCODE,
+]);
+
+/**
+ * Whether the provider dispatches spec-kit commands to a VS Code terminal (a
+ * terminal-CLI) rather than the host editor's chat/panel. An unknown value
+ * defaults to terminal so a newly-added CLI provider is covered without a code
+ * change; the three editor providers are the only exclusions.
+ */
+export function providerDispatchesToTerminal(type: AIProviderType): boolean {
+    return !EDITOR_DISPATCH_PROVIDERS.has(type);
+}
