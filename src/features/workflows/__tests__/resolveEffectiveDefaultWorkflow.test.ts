@@ -12,7 +12,7 @@ describe('pickEffectiveDefaultWorkflow', () => {
             expect(pickEffectiveDefaultWorkflow(unset, false)).toBe('speckit');
         });
 
-        it('resolves to speckit when inspect returns undefined (no scopes at all)', () => {
+        it('resolves by install state when inspect returns undefined (companion if installed, else speckit)', () => {
             expect(pickEffectiveDefaultWorkflow(undefined, false)).toBe('speckit');
             expect(pickEffectiveDefaultWorkflow(undefined, true)).toBe('companion');
         });
