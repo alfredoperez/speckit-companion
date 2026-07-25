@@ -217,11 +217,24 @@ class TimingTests(QualityEvalBase):
         self.assertEqual(status, "PASS")
         self.assertIn("2/2", detail)
 
-    def test_non_extension_boundary_is_untrusted(self) -> None:
+    def test_instrumented_cli_boundary_is_trusted(self) -> None:
+        # `cli` is an instrumented (deterministic) writer, same trust tier as
+        # `extension` — a cli step-level start closed by an extension complete
+        # is trusted, matching the viewer's deriveStepHistory (#562).
         history = _healthy_history()
         for e in history:
             if e.get("step") == "plan" and e.get("kind") == "start":
                 e["by"] = "cli"
+        self.write_spec(history=history)
+        status, _, _ = next(row for row in self.run_report().rows
+                            if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "PASS")
+
+    def test_unrecognized_boundary_writer_is_untrusted(self) -> None:
+        history = _healthy_history()
+        for e in history:
+            if e.get("step") == "plan" and e.get("kind") == "start":
+                e["by"] = "bogus"
         self.write_spec(history=history)
         status, _, detail = next(row for row in self.run_report().rows
                                  if row[1] == "trusted-boundaries")
@@ -281,6 +294,53 @@ class FastPathFoldTimingTests(QualityEvalBase):
         spans = cq._derive_trusted_spans(_legacy_fastpath_fold())
         self.assertNotIn("plan", spans)
         self.assertNotIn("tasks", spans)
+
+
+def _cli_only_run() -> list[dict]:
+    """A run driven entirely through the CLI: every step boundary is stamped
+    `by: ai` by write-context.py (script clock, ms precision, ordered) — the
+    #562 shape the viewer now trusts. Step-level, no substep."""
+    def _pair(step: str, s: int, e: int) -> list[dict]:
+        return [
+            {"step": step, "substep": None, "kind": "start", "by": "ai", "at": _iso(s)},
+            {"step": step, "substep": None, "kind": "complete", "by": "ai", "at": _iso(e)},
+        ]
+    return (_pair("specify", 0, 2) + _pair("plan", 3, 5)
+            + _pair("tasks", 6, 8) + _pair("implement", 9, 11))
+
+
+class CliOnlyTimingTrustTests(QualityEvalBase):
+    """#562 parity: the eval draws the same line as the viewer's
+    `deriveStepHistory` — a coherent ai/ai CLI run is trusted, while a premature
+    ai finish still can't close an extension start (the #509 masquerade)."""
+
+    def test_cli_only_run_trusts_every_phase(self) -> None:
+        spans = cq._derive_trusted_spans(_cli_only_run())
+        self.assertEqual(set(spans), {"specify", "plan", "tasks", "implement"})
+
+    def test_cli_only_run_reports_full_coverage(self) -> None:
+        self.write_spec(history=_cli_only_run())
+        status, _, detail = next(row for row in self.run_report().rows
+                                 if row[1] == "trusted-boundaries")
+        self.assertEqual(status, "PASS")
+        self.assertIn("4/4", detail)
+
+    def test_ai_close_cannot_finalize_an_extension_start(self) -> None:
+        masquerade = [
+            {"step": "plan", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-07-21T14:00:00.000Z"},
+            {"step": "plan", "substep": None, "kind": "complete", "by": "ai",
+             "at": "2026-07-21T14:00:00.100Z"},
+        ]
+        self.assertNotIn("plan", cq._derive_trusted_spans(masquerade))
+
+    def test_advance_only_phase_claims_no_span(self) -> None:
+        advance_only = [
+            {"step": "specify", "substep": None, "kind": "complete", "by": "ai",
+             "at": _iso(5)},
+            {"step": "plan", "substep": None, "kind": "start", "by": "ai", "at": _iso(6)},
+        ]
+        self.assertNotIn("specify", cq._derive_trusted_spans(advance_only))
 
 
 class PromptingTests(QualityEvalBase):
