@@ -295,8 +295,8 @@ const AGENT_WRITERS = new Set(['ai']);
  * (a CLI/agent run's own `write-context.py`-stamped boundary), 0 = not a
  * trusted writer. A trusted span needs both boundaries > 0 AND the close's
  * rank ≥ the start's — so an `ai` finish can't masquerade as the close of an
- * instrumented start (the #509 shape), while a coherent CLI-only run whose
- * start is itself `ai` accepts an `ai` close.
+ * instrumented start (a premature-finish masquerade), while a coherent CLI-only
+ * run whose start is itself `ai` accepts an `ai` close.
  */
 function boundaryWriterRank(by: string | undefined): number {
     if (by !== undefined && INSTRUMENTED_WRITERS.has(by)) return 2;
