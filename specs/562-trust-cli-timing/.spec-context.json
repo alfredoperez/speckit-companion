@@ -1,0 +1,345 @@
+{
+  "workflow": "companion",
+  "specName": "trust cli timing",
+  "branch": "562-trust-cli-timing",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T14:09:17.806Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T14:11:27.203Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T14:11:48.341Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:12:17.236Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:13:05.821Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T14:13:06.250Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T14:13:23.748Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:13:59.708Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T14:14:00.294Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T14:14:20.867Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:14:20.937Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:14:21.091Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:16:40.393Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:16:40.516Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:20:09.811Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:21:05.268Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:21:34.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T14:22:32.267Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T14:22:32.335Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "specs"
+    ],
+    "synced": [
+      "specs"
+    ]
+  },
+  "last_action": "all tasks done — 1840 TS + 551 py tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Trust gate counts a span measured for a deterministic start+close (extension/hook OR ai), not by:extension alone",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "stepHistoryDerivation.test.ts::duration honesty #562",
+        "test_check_quality.py::CliOnlyTimingTrustTests"
+      ]
+    },
+    "FR-002": {
+      "title": "Close must be >= start authority; ai close cannot finalize an instrumented start",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "stepHistoryDerivation.test.ts::#509 masquerade",
+        "test_check_quality.py::test_ai_close_cannot_finalize_an_extension_start"
+      ]
+    },
+    "FR-003": {
+      "title": "Advance-only or AI-prose-only phase claims no measured duration",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "stepHistoryDerivation.test.ts::advance-only",
+        "test_check_quality.py::test_advance_only_phase_claims_no_span"
+      ]
+    },
+    "FR-004": {
+      "title": "Existing anomaly guards still untrust the span",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "stepHistoryDerivation.test.ts::repeated ai start"
+      ]
+    },
+    "FR-005": {
+      "title": "check_quality.py mirrors the viewer, pinned by parity tests",
+      "tasks": [
+        "T002",
+        "T005"
+      ],
+      "tests": [
+        "test_check_quality.py::CliOnlyTimingTrustTests",
+        "test_unrecognized_boundary_writer_is_untrusted"
+      ]
+    },
+    "FR-006": {
+      "title": "Traceability populates for CLI runs and stays independent of the timing trust rule",
+      "tasks": [
+        "T003"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 8,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: specs (src/features/specs/specs.spec.md)",
+    "area: src/features/specs/stepHistoryDerivation.ts",
+    "area: .claude/skills/eval-speckit-extension/check_quality.py",
+    "constraint: keep the #509 masquerade untrusted (extension start + premature ai close)"
+  ],
+  "intent": "Trust timing coverage for CLI-only runs whose boundaries are script-stamped by:ai, without letting a premature AI finish or an advance-only phase fake a duration",
+  "expectations": [
+    "No change to the traceability count code path (already CLI-friendly)",
+    "No schema change to .spec-context.json",
+    "No change to which phases stock-mode advance-only runs measure (still no start = unmeasured)"
+  ],
+  "approach": "Replace the by==extension trust equality with a two-tier writer-authority rank (instrumented > ai > unknown); a span is trusted with one step-level start of rank>0 and a close of rank>0 and >= the start's rank. Mirror the tier in check_quality.py and pin both with parity tests.",
+  "decisions": [
+    {
+      "decision": "writer-authority tier instead of by-equality",
+      "why": "the ai close must not finalize an extension start (masquerade) but a coherent ai/ai CLI run should be trusted",
+      "rejected": "blanket-trust any recognized by (resurrects the #509 masquerade)"
+    },
+    {
+      "decision": "no schema change / no new by value",
+      "why": "the existing by enum already carries the authority distinction",
+      "rejected": "add a script-stamped marker field"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Loosen the timing-trust gate to a writer-authority tier, mirrored in the Python eval",
+      "key_finding": "traceability shares no gating with timing and already works for CLI runs (FR-006 is a documented no-op)"
+    },
+    "tasks": {
+      "summary": "8 tasks across 6 phases: foundational tier (2, parallel), 3 test stories, docs + living-spec delta + validation"
+    },
+    "implement": {
+      "summary": "Loosened the timing-trust gate to a writer-authority tier (viewer + eval), pinned by parity tests; docs + living-spec delta updated"
+    }
+  },
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added boundaryWriterRank and re-expressed the trust gate: any-rank>0 step-level start + close rank>0 and >= start rank",
+      "files": [
+        "src/features/specs/stepHistoryDerivation.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Ported the writer-authority tier into check_quality.py _derive_trusted_spans",
+      "files": [
+        ".claude/skills/eval-speckit-extension/check_quality.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added CLI-only ai/ai run test: 4 phases trusted, 4/4 coverage",
+      "files": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added masquerade + advance-only + repeated-ai-start untrusted regression tests; kept folded flag extension-only",
+      "files": [
+        "src/features/specs/__tests__/stepHistoryDerivation.test.ts",
+        "src/features/specs/stepHistoryDerivation.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added CliOnlyTimingTrustTests parity class; updated the cli-boundary test to trusted + unrecognized-writer untrusted",
+      "files": [
+        "speckit-extension/tests/test_check_quality.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Updated the Timing honesty rider + eval trust wording in capture-and-timing.md and the viewer spec's trust sentence",
+      "files": [
+        "docs/capture-and-timing.md",
+        "src/features/spec-viewer/spec-viewer.spec.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Authored the ADDED Requirements delta block for the specs capability (writer-authority trust rule)",
+      "files": [
+        "specs/562-trust-cli-timing/spec.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Ran compile + 1840 TS tests + 551 python tests + shape-parity + quality eval"
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile + full jest suite",
+      "command": "npm run compile && npm test",
+      "result": "129 suites / 1840 tests pass"
+    },
+    {
+      "what": "Python eval + writer suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests",
+      "result": "551 tests pass"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK — 14 bodies match"
+    },
+    {
+      "what": "quality eval trusted-boundaries",
+      "command": "check_quality.py --feature-dir specs/562-trust-cli-timing",
+      "result": "3/4 trusted (implement in-flight until mark-complete closes it)"
+    }
+  ]
+}

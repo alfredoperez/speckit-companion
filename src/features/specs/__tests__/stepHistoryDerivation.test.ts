@@ -450,6 +450,72 @@ describe('deriveStepHistory', () => {
         });
     });
 
+    // A run driven entirely through the CLI stamps its step boundaries `by:ai`
+    // via write-context.py (script-clock, ms precision, ordered) rather than
+    // `by:extension`. Those coherent ai/ai spans must count as measured, while
+    // an ai finish must still not close an extension-started span (a premature
+    // finish) and an advance-only phase must claim no duration.
+    describe('duration honesty: CLI-only ai-stamped spans are trusted', () => {
+        const cliRun = (): Transition[] => [
+            tx({ step: 'specify', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00.000Z' }),
+            tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:00.000Z' }),
+            tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:03:00.000Z' }),
+            tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:05:00.000Z' }),
+            tx({ step: 'tasks', kind: 'start', by: 'ai', at: '2026-07-01T10:06:00.000Z' }),
+            tx({ step: 'tasks', kind: 'complete', by: 'ai', at: '2026-07-01T10:08:00.000Z' }),
+            tx({ step: 'implement', kind: 'start', by: 'ai', at: '2026-07-01T10:09:00.000Z' }),
+            tx({ step: 'implement', kind: 'complete', by: 'ai', at: '2026-07-01T10:11:00.000Z' }),
+        ];
+
+        it('trusts every phase of a coherent ai/ai CLI run and reports full coverage', () => {
+            const sh = deriveStepHistory(cliRun(), 'implement', 'implemented');
+            expect(sh.specify.durationTrusted).toBe(true);
+            expect(sh.plan.durationTrusted).toBe(true);
+            expect(sh.tasks.durationTrusted).toBe(true);
+            expect(sh.implement.durationTrusted).toBe(true);
+            const summary = deriveTimingSummary(sh);
+            expect(summary.measuredPhases).toBe(4);
+            expect(summary.expectedPhases).toBe(4);
+        });
+
+        it('trusts an ai start closed by the next step\'s ai start', () => {
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:06:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planning');
+            expect(sh.specify.durationTrusted).toBe(true);
+        });
+
+        it('still does NOT trust an extension start closed by a premature ai finish', () => {
+            const history: Transition[] = [
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
+            expect(sh.plan.durationTrusted).toBe(false);
+        });
+
+        it('claims no duration for an advance-only phase (ai complete, no start)', () => {
+            const history: Transition[] = [
+                tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-07-01T10:05:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:06:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planning');
+            expect(sh.specify.durationTrusted).toBe(false);
+        });
+
+        it('keeps a repeated ai start untrusted (anomaly stays visible)', () => {
+            const history: Transition[] = [
+                tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:01:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:03:00Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
+            expect(sh.plan.durationTrusted).toBe(false);
+        });
+    });
+
     describe('fast-path fold (simple mode) — corrected #514 shape is trusted', () => {
         // A simple-mode run folds plan+tasks into the specify run as ordered,
         // extension-stamped, step-level start+complete pairs. The four fold

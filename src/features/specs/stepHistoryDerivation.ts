@@ -284,6 +284,26 @@ function buildSubsteps(
 /** A fold's stamps land tens of ms apart in one hook run; a real phase takes multiple seconds. */
 const FOLD_WINDOW_MS = 1000;
 
+/** Host/script-instrumented writers — a UI click, an in-command hook, or a reconstruction. */
+const INSTRUMENTED_WRITERS = new Set(['extension', 'cli', 'derive', 'user']);
+/** Agent-journaled writers — a CLI/agent run's own script-stamped boundary. */
+const AGENT_WRITERS = new Set(['ai']);
+
+/**
+ * Rank a boundary's writer for duration trust: 2 = instrumented (extension
+ * button, in-command hook, reconstruction — host/script observed), 1 = agent
+ * (a CLI/agent run's own `write-context.py`-stamped boundary), 0 = not a
+ * trusted writer. A trusted span needs both boundaries > 0 AND the close's
+ * rank ≥ the start's — so an `ai` finish can't masquerade as the close of an
+ * instrumented start (a premature-finish masquerade), while a coherent CLI-only
+ * run whose start is itself `ai` accepts an `ai` close.
+ */
+function boundaryWriterRank(by: string | undefined): number {
+    if (by !== undefined && INSTRUMENTED_WRITERS.has(by)) return 2;
+    if (by !== undefined && AGENT_WRITERS.has(by)) return 1;
+    return 0;
+}
+
 export function deriveStepHistory(
     transitions: HistoryEntry[],
     currentStep?: StepName,
@@ -363,30 +383,37 @@ export function deriveStepHistory(
         const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
 
         // Duration honesty is deliberately stricter than lifecycle derivation.
-        // A measured phase needs exactly one explicit extension-stamped,
-        // step-level start and an extension-stamped close after it. The close
-        // may be this step's own completion or the next lifecycle step's start.
-        // AI/CLI rows remain useful cadence events, never duration boundaries.
+        // A measured phase needs exactly one step-level start from a trusted
+        // writer and a trusted close after it (this step's own completion or the
+        // next lifecycle step's start). A CLI/agent run stamps its boundaries
+        // `by:ai` through `write-context.py` — those are script-stamped and count,
+        // but only when the close is at least as authoritative as the start
+        // (see `boundaryWriterRank`): an `ai` close can't finalize an
+        // extension-stamped start (a premature-finish masquerade). A phase with
+        // no start (advanced with only a complete) or AI prose stays unmeasured.
         // Trust checks use the raw append-only log, not the UI de-duplicated
         // sequence: a repeated start is precisely one of the anomalies that
         // must remain visible to the timing validator.
         const rawStepTransitions = transitions.filter(t => t.step === g.step);
         const explicitStarts = rawStepTransitions.filter(t =>
-            isStepLevelEntry(t) && t.kind === 'start' && t.by === 'extension'
+            isStepLevelEntry(t) && t.kind === 'start' && boundaryWriterRank(t.by) > 0
         );
         const trustedStart = explicitStarts.length === 1 ? explicitStarts[0] : null;
+        const startRank = trustedStart ? boundaryWriterRank(trustedStart.by) : 0;
+        const closeTrusted = (by: string | undefined): boolean =>
+            boundaryWriterRank(by) > 0 && boundaryWriterRank(by) >= startRank;
         const startMs = trustedStart ? Date.parse(trustedStart.at) : NaN;
         const closeMs = completedAt ? Date.parse(completedAt) : NaN;
         const closeIsOwnCompletion = closeEntry !== null
             && closeEntry.step === g.step
             && isStepLevelEntry(closeEntry)
             && closeEntry.kind === 'complete'
-            && closeEntry.by === 'extension';
+            && closeTrusted(closeEntry.by);
         const closeIsNextStart = closeEntry !== null
             && closeEntry.step !== g.step
             && isStepLevelEntry(closeEntry)
             && closeEntry.kind === 'start'
-            && closeEntry.by === 'extension';
+            && closeTrusted(closeEntry.by);
         const completionBeforeStart = trustedStart !== null && rawStepTransitions.some(t =>
             isStepLevelEntry(t)
             && t.kind === 'complete'
@@ -416,21 +443,30 @@ export function deriveStepHistory(
         };
         entry.durationTrusted = spanTrusted;
 
-        // Fold detection anchors on the step's own stamped pair, not the derived close (which can be a much later next-step start).
+        // Fold detection is the fast-path extension fold specifically: its own
+        // EXTENSION-stamped step-level start/complete pair, sub-second and near
+        // the previous step's extension close. It anchors on that extension
+        // start — never the loosened `trustedStart` (which now also accepts an
+        // `ai` boundary) — so a CLI ai/ai span is trusted but never mislabeled
+        // folded, and on the stamped pair, not the derived close (a much later
+        // next-step start).
+        const foldStart = explicitStarts.length === 1 && explicitStarts[0].by === 'extension'
+            ? explicitStarts[0] : null;
+        const foldStartMs = foldStart ? Date.parse(foldStart.at) : NaN;
         const foldClose = rawStepTransitions.find(t =>
             isStepLevelEntry(t)
             && t.kind === 'complete'
             && t.by === 'extension'
             && Number.isFinite(Date.parse(t.at))
-            && Date.parse(t.at) >= startMs
+            && Date.parse(t.at) >= foldStartMs
         );
         const prevGroupClose = i > 0
             ? [...groups[i - 1].transitions].reverse().find(t =>
                 isStepLevelEntry(t) && t.kind === 'complete' && t.by === 'extension')
             : undefined;
-        const foldSpanMs = foldClose ? Date.parse(foldClose.at) - startMs : NaN;
-        const foldGapMs = prevGroupClose ? startMs - Date.parse(prevGroupClose.at) : NaN;
-        if (trustedStart !== null
+        const foldSpanMs = foldClose ? Date.parse(foldClose.at) - foldStartMs : NaN;
+        const foldGapMs = prevGroupClose ? foldStartMs - Date.parse(prevGroupClose.at) : NaN;
+        if (foldStart !== null
             && foldSpanMs >= 0 && foldSpanMs < FOLD_WINDOW_MS
             && foldGapMs >= 0 && foldGapMs < FOLD_WINDOW_MS) {
             entry.folded = true;

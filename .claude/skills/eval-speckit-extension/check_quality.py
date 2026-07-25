@@ -26,9 +26,21 @@ PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
 # Full lifecycle order — overlap handling must see clarify/analyze spans too,
 # exactly like the viewer's STEP_NAMES.
 STEP_NAMES = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
-# Same trust rule as the viewer's deriveStepHistory: only extension-stamped
-# boundaries anchor a span; cli/user/derive writes are honest but not span-grade.
-TRUSTED_BOUNDARY_BY = "extension"
+# Same trust rule as the viewer's deriveStepHistory (`boundaryWriterRank`):
+# 2 = instrumented (extension/cli/derive/user — host or in-command script),
+# 1 = agent-journaled (`ai`, a CLI/agent run's own script-stamped boundary),
+# 0 = untrusted. A span is trusted when both boundaries rank > 0 AND the close's
+# rank >= the start's, so an `ai` finish can't finalize an instrumented start.
+_INSTRUMENTED_WRITERS = frozenset({"extension", "cli", "derive", "user"})
+_AGENT_WRITERS = frozenset({"ai"})
+
+
+def _boundary_writer_rank(by: object) -> int:
+    if by in _INSTRUMENTED_WRITERS:
+        return 2
+    if by in _AGENT_WRITERS:
+        return 1
+    return 0
 
 # Verbosity budgets — the single home of every threshold.
 # artifact -> (warn_lines, fail_lines, warn_chars, fail_chars); calibrated on
@@ -182,9 +194,10 @@ def _dedupe_consecutive(entries: list[dict]) -> list[dict]:
 def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     """Mirror of the viewer's duration-trust rule (`deriveStepHistory` in
     src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
-    when the raw log carries exactly ONE extension-stamped step-level start,
-    the lifecycle close boundary — the step's own extension complete OR the
-    next step's extension start — lands strictly after it, no step-level
+    when the raw log carries exactly ONE step-level start from a trusted writer,
+    the lifecycle close boundary — the step's own complete OR the next step's
+    start, from a writer at least as authoritative as the start — lands
+    strictly after it, no step-level
     complete precedes the start, no competing step-level start falls inside
     the span, and the span doesn't overlap another trusted span (overlap
     untrusts both sides). Returns step -> seconds for trusted spans only."""
@@ -225,15 +238,21 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
         raw_own = [e for e in raw if e.get("step") == step]
         explicit_starts = [e for e in raw_own
                            if _is_step_level(e) and e.get("kind") == "start"
-                           and e.get("by") == TRUSTED_BOUNDARY_BY]
+                           and _boundary_writer_rank(e.get("by")) > 0]
         if len(explicit_starts) != 1:
             continue
+        start_rank = _boundary_writer_rank(explicit_starts[0].get("by"))
+
+        def _close_trusted(by: object) -> bool:
+            rank = _boundary_writer_rank(by)
+            return rank > 0 and rank >= start_rank
+
         close_is_own_completion = (close.get("step") == step and _is_step_level(close)
                                    and close.get("kind") == "complete"
-                                   and close.get("by") == TRUSTED_BOUNDARY_BY)
+                                   and _close_trusted(close.get("by")))
         close_is_next_start = (close.get("step") != step and _is_step_level(close)
                                and close.get("kind") == "start"
-                               and close.get("by") == TRUSTED_BOUNDARY_BY)
+                               and _close_trusted(close.get("by")))
         if not (close_is_own_completion or close_is_next_start):
             continue
         s = _parse_at(explicit_starts[0].get("at"))
