@@ -43,7 +43,7 @@ export function __resetCliInstallNudgeSession(): void {
 /**
  * Resolve the gate inputs and, when the hint should render, show a single
  * non-blocking install notification tagged to the `terminal` surface. Reuses the
- * #543 install command and the shared `installNudgeDismissed` dismissal — no
+ * existing install command and the shared `installNudgeDismissed` dismissal — no
  * parallel system. Never throws: any failure is swallowed so the dispatched
  * command always proceeds.
  */
@@ -70,22 +70,23 @@ export function maybeShowCliInstallNudge(
         if (!shouldShowCliInstallNudge(input)) {
             return;
         }
-        // Burn the session slot and report the show under the SAME gate the hint renders on.
+        // Present the hint first; only then burn the session slot and report the
+        // show (under the SAME gate the hint renders on), so a failed presentation
+        // never over-counts telemetry or silently suppresses the nudge for the session.
+        const shown = vscode.window.showInformationMessage(
+            'Running spec-kit in the terminal — install the SpecKit Companion extension to unlock the richer Companion pipeline (status, resume, mark-complete).',
+            'Install',
+            "Don't show again"
+        );
         shownThisSession = true;
         reportInstallPromptShown('terminal');
-        void vscode.window
-            .showInformationMessage(
-                'Running spec-kit in the terminal — install the SpecKit Companion extension to unlock the richer Companion pipeline (status, resume, mark-complete).',
-                'Install',
-                "Don't show again"
-            )
-            .then(choice => {
-                if (choice === 'Install') {
-                    void vscode.commands.executeCommand('speckit.companion.installNudge', 'terminal');
-                } else if (choice === "Don't show again") {
-                    void vscode.commands.executeCommand('speckit.companion.dismissInstallNudge');
-                }
-            });
+        void shown.then(choice => {
+            if (choice === 'Install') {
+                void vscode.commands.executeCommand('speckit.companion.installNudge', 'terminal');
+            } else if (choice === "Don't show again") {
+                void vscode.commands.executeCommand('speckit.companion.dismissInstallNudge');
+            }
+        });
     } catch {
         /* the nudge must never block or fail the dispatched command */
     }

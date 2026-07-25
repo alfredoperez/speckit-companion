@@ -599,7 +599,7 @@ export function getProviderDisplayName(type: AIProviderType): string {
 }
 
 // The in-editor chat/panel providers — they dispatch into the host editor's chat,
-// not a terminal, and already carry the #543 in-editor install nudges. Every other
+// not a terminal, and already carry the in-editor install nudges. Every other
 // provider dispatches to a VS Code terminal.
 const EDITOR_DISPATCH_PROVIDERS: ReadonlySet<AIProviderType> = new Set<AIProviderType>([
     AIProviders.IDE_CHAT,
