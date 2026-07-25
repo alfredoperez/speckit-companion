@@ -450,12 +450,12 @@ describe('deriveStepHistory', () => {
         });
     });
 
-    // #562: a run driven entirely through the CLI stamps its step boundaries
-    // `by:ai` via write-context.py (script-clock, ms precision, ordered) rather
-    // than `by:extension`. Those coherent ai/ai spans must count as measured,
-    // while an ai finish must still not close an extension-started span
-    // (the #509 masquerade) and an advance-only phase must claim no duration.
-    describe('duration honesty #562: CLI-only ai-stamped spans are trusted', () => {
+    // A run driven entirely through the CLI stamps its step boundaries `by:ai`
+    // via write-context.py (script-clock, ms precision, ordered) rather than
+    // `by:extension`. Those coherent ai/ai spans must count as measured, while
+    // an ai finish must still not close an extension-started span (a premature
+    // finish) and an advance-only phase must claim no duration.
+    describe('duration honesty: CLI-only ai-stamped spans are trusted', () => {
         const cliRun = (): Transition[] => [
             tx({ step: 'specify', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00.000Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:00.000Z' }),
@@ -487,7 +487,7 @@ describe('deriveStepHistory', () => {
             expect(sh.specify.durationTrusted).toBe(true);
         });
 
-        it('still does NOT trust an extension start closed by a premature ai finish (#509 masquerade)', () => {
+        it('still does NOT trust an extension start closed by a premature ai finish', () => {
             const history: Transition[] = [
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),

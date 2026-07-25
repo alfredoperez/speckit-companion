@@ -220,7 +220,7 @@ class TimingTests(QualityEvalBase):
     def test_instrumented_cli_boundary_is_trusted(self) -> None:
         # `cli` is an instrumented (deterministic) writer, same trust tier as
         # `extension` — a cli step-level start closed by an extension complete
-        # is trusted, matching the viewer's deriveStepHistory (#562).
+        # is trusted, matching the viewer's deriveStepHistory.
         history = _healthy_history()
         for e in history:
             if e.get("step") == "plan" and e.get("kind") == "start":
@@ -299,7 +299,7 @@ class FastPathFoldTimingTests(QualityEvalBase):
 def _cli_only_run() -> list[dict]:
     """A run driven entirely through the CLI: every step boundary is stamped
     `by: ai` by write-context.py (script clock, ms precision, ordered) — the
-    #562 shape the viewer now trusts. Step-level, no substep."""
+    shape the viewer now trusts. Step-level, no substep."""
     def _pair(step: str, s: int, e: int) -> list[dict]:
         return [
             {"step": step, "substep": None, "kind": "start", "by": "ai", "at": _iso(s)},
@@ -310,9 +310,9 @@ def _cli_only_run() -> list[dict]:
 
 
 class CliOnlyTimingTrustTests(QualityEvalBase):
-    """#562 parity: the eval draws the same line as the viewer's
-    `deriveStepHistory` — a coherent ai/ai CLI run is trusted, while a premature
-    ai finish still can't close an extension start (the #509 masquerade)."""
+    """Parity: the eval draws the same line as the viewer's `deriveStepHistory`
+    — a coherent ai/ai CLI run is trusted, while a premature ai finish still
+    can't close an extension start."""
 
     def test_cli_only_run_trusts_every_phase(self) -> None:
         spans = cq._derive_trusted_spans(_cli_only_run())
