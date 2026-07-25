@@ -107,12 +107,15 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
  * One-time, idempotent merge of the two former notification toggles into the
  * single survivor `notifications.stepComplete`. The deprecated
  * `notifications.phaseCompletion` is dropped by `removeRetiredSettings`; this
- * runs first so a user who turned phase-completion notifications off keeps that
- * preference on the merged toggle. Rule: if EITHER was false, the merged one is
- * false — so any scope where `phaseCompletion` was explicitly `false` forces
- * `stepComplete` to `false` at that same scope (unless it is already `false`).
- * Both settings default `true`, so nothing to do when `phaseCompletion` is unset
- * or `true`. Scope is preserved via per-scope `inspect()`.
+ * runs first so a user's explicit phase-completion preference survives on the
+ * merged toggle. At every scope where `phaseCompletion` was explicitly set, the
+ * merged value is the either-false-wins combination of the two explicit values
+ * at that scope (`false` if either is `false`, else `true`) and is written only
+ * when it differs from the current `stepComplete` at that scope. This both
+ * propagates a broad `false` down AND preserves a narrower explicit `true`
+ * override (e.g. `false` at User + `true` at Workspace stays ON at Workspace).
+ * Scopes where `phaseCompletion` is unset are left untouched. Scope is preserved
+ * via per-scope `inspect()`.
  */
 export async function mergeNotificationSettings(): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
@@ -122,8 +125,14 @@ export async function mergeNotificationSettings(): Promise<void> {
         return;
     }
     for (const { target, field } of SCOPES) {
-        if (phase[field] === false && step?.[field] !== false) {
-            await config.update('notifications.stepComplete', false, target);
+        const phaseVal = phase[field];
+        if (phaseVal === undefined) {
+            continue;
+        }
+        const stepVal = step?.[field];
+        const merged = phaseVal === false || stepVal === false ? false : true;
+        if (merged !== stepVal) {
+            await config.update('notifications.stepComplete', merged, target);
         }
     }
 }

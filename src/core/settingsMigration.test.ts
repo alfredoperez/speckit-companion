@@ -286,9 +286,29 @@ describe('mergeNotificationSettings', () => {
         );
     });
 
-    it('is a no-op when phaseCompletion was true or unset', async () => {
+    it('preserves a narrower explicit true override (phase false@User + true@Workspace)', async () => {
         const { update } = setupConfig({
-            'notifications.phaseCompletion': { globalValue: true },
+            'notifications.phaseCompletion': { globalValue: false, workspaceValue: true },
+            'notifications.stepComplete': {},
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            false,
+            vscode.ConfigurationTarget.Global
+        );
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            true,
+            vscode.ConfigurationTarget.Workspace
+        );
+    });
+
+    it('is a no-op when phaseCompletion is unset at every scope', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': {},
             'notifications.stepComplete': {},
         });
 
