@@ -40,6 +40,8 @@ export {
     registerWorkflowConfigChangeListener,
     isWorkflowSupportedForProvider,
     isCompanionSelectable,
+    resolveEffectiveDefaultWorkflow,
+    pickEffectiveDefaultWorkflow,
 } from './workflowManager';
 
 // Workflow Selector

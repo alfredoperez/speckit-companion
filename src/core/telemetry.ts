@@ -83,6 +83,7 @@ export function buildBetaSnapshot(): BetaSnapshot {
     const coerced = (key: string, fallback: boolean): string =>
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
+        // Report the RAW configured value (unset → 'speckit'), never the install-derived effective default — only an explicit companion choice counts toward adoption.
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),

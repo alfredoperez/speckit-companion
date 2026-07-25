@@ -1,0 +1,323 @@
+{
+  "workflow": "companion",
+  "specName": "companion default workflow",
+  "branch": "563-companion-default-workflow",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T16:32:34.624Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T16:33:52.538Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T16:34:08.446Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:35:19.278Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:35:19.375Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T16:35:19.842Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T16:35:32.127Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:36:04.082Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T16:36:04.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-25T16:36:16.569Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:36:48.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:37:00.685Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:37:44.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:37:44.615Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:38:01.021Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:38:40.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:39:19.839Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-25T16:39:45.124Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-25T16:39:45.213Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Provide a single resolver returning the effective default workflow",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Return the explicitly-configured value, never overriding it",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Distinguish unset via config.inspect",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Unset resolves to companion when installed else speckit",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Create-Spec pre-selection uses the resolver",
+      "tasks": [
+        "T004"
+      ]
+    },
+    "FR-006": {
+      "title": "Per-feature resolution uses the resolver",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-007": {
+      "title": "Telemetry reports raw configured value",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-008": {
+      "title": "Reuse isCompanionInstalled, no reimplementation",
+      "tasks": [
+        "T001"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 8,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: src/features/workflows (workflowManager, workflowSelector)",
+    "area: src/features/spec-editor/specEditorProvider.ts (Create-Spec pre-selection)",
+    "constraint: telemetry reports raw configured value, not effective",
+    "constraint: reuse isCompanionInstalled, distinguish unset via config.inspect"
+  ],
+  "intent": "Make an unset speckit.defaultWorkflow resolve to companion when the companion extension is installed, honoring any explicit user choice.",
+  "expectations": [
+    "Do not override an explicitly-set defaultWorkflow",
+    "Do not change telemetry to report the effective value"
+  ],
+  "approach": "Add one resolver (pure pickEffectiveDefaultWorkflow + vscode wrapper resolveEffectiveDefaultWorkflow) in workflowManager; use it at the two workflow-pick sites; keep telemetry on the raw configured value.",
+  "decisions": [
+    {
+      "decision": "Distinguish unset vs explicit via config.inspect scope values",
+      "why": "config.get(key, speckit) cannot tell unset from explicit-speckit",
+      "rejected": "compare get() to schema default"
+    },
+    {
+      "decision": "Telemetry keeps raw configured value",
+      "why": "reporting install-derived companion inflates adoption denominator",
+      "rejected": "report effective value"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One resolver at two workflow-pick sites; telemetry stays raw",
+      "key_finding": "workflowManager already hosts isCompanionSelectable, the natural home for the resolver"
+    },
+    "tasks": {
+      "summary": "8 tasks across foundational/consumers/telemetry/polish; 4 waves"
+    },
+    "implement": {
+      "summary": "One install-aware resolver at both workflow-pick sites; telemetry stays raw; docs + 9-case unit test"
+    }
+  },
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added pure pickEffectiveDefaultWorkflow + vscode wrapper resolveEffectiveDefaultWorkflow to workflowManager",
+      "files": [
+        "src/features/workflows/workflowManager.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Re-exported resolveEffectiveDefaultWorkflow and pickEffectiveDefaultWorkflow from workflows barrel",
+      "files": [
+        "src/features/workflows/index.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "workflowSelector.resolveDefaultWorkflow uses resolveEffectiveDefaultWorkflow with workspace root",
+      "files": [
+        "src/features/workflows/workflowSelector.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "specEditorProvider.handleReady pre-selects via resolveEffectiveDefaultWorkflow",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added one-line comment pinning telemetry to the raw configured value",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added 9-case unit test for pure pickEffectiveDefaultWorkflow (unset/installed, explicit, scope precedence, empty/undefined guards)",
+      "files": [
+        "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Documented install-aware effective default in template-profiles selection model + Files",
+      "files": [
+        "docs/template-profiles.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Ran full compile + test suite: 130 suites / 1849 tests pass"
+    }
+  },
+  "verified": [
+    {
+      "what": "compile + full jest suite",
+      "command": "npm run compile && npm test",
+      "result": "tsc clean; 130 suites / 1849 tests pass",
+      "warnings": []
+    }
+  ],
+  "last_action": "all tasks done — 130 suites / 1849 tests pass"
+}

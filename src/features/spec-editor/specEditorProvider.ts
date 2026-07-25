@@ -8,7 +8,7 @@ import type {
     AttachedImage,
     WorkflowDefinition
 } from './types';
-import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider, isCompanionSelectable } from '../workflows';
+import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider, isCompanionSelectable, resolveEffectiveDefaultWorkflow } from '../workflows';
 import type { WorkflowConfig } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
@@ -310,9 +310,8 @@ export class SpecEditorProvider {
      */
     private async handleReady(): Promise<void> {
         const workflows = this.getWorkflows();
-        const defaultWorkflow = vscode.workspace
-            .getConfiguration('speckit')
-            .get<string>('defaultWorkflow', 'speckit');
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const defaultWorkflow = resolveEffectiveDefaultWorkflow(workspaceRoot);
         this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
         this.postMessage({ type: 'init', workflows, defaultWorkflow });
     }

@@ -7,8 +7,7 @@
 
 import * as vscode from 'vscode';
 import { WorkflowConfig } from './types';
-import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow } from './workflowManager';
-import { ConfigKeys } from '../../core/constants';
+import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow, resolveEffectiveDefaultWorkflow } from './workflowManager';
 import { sendTelemetryEvent } from '../../core/telemetry';
 
 /**
@@ -177,9 +176,12 @@ async function resolveDefaultWorkflow(featureDir: string, outputChannel?: vscode
         // Workflow no longer exists, fall through to default
     }
 
-    // Get the configured default workflow
-    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    const defaultWorkflowName = config.get<string>('defaultWorkflow', 'speckit');
+    // Get the effective default workflow: an explicit setting wins; otherwise
+    // an unset default resolves to companion when the companion extension is installed.
+    // Resolve the root from the feature's own folder (correct in multi-root workspaces).
+    const root = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(featureDir))?.uri.fsPath
+        ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const defaultWorkflowName = resolveEffectiveDefaultWorkflow(root);
     const workflows = getWorkflows(outputChannel);
 
     let selectedWorkflow = workflows.find(w => w.name === defaultWorkflowName);
