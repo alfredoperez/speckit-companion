@@ -72,7 +72,7 @@ export const ConfigKeys = {
         settingsVisible: 'speckit.views.settings.visible',
     },
     notifications: {
-        phaseCompletion: 'speckit.notifications.phaseCompletion',
+        stepComplete: 'speckit.notifications.stepComplete',
     },
     globalState: {
         skipVersion: 'speckit.skipVersion',

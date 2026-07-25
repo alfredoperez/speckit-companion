@@ -42,6 +42,7 @@ export const RETIRED_SETTINGS: ReadonlyArray<string> = [
     'companion.speckitCompanionWorkflow',
     'companion.workflowBeta',
     'companion.resumeBeta',
+    'notifications.phaseCompletion',
 ];
 
 /**
@@ -98,6 +99,40 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
             if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
                 await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
             }
+        }
+    }
+}
+
+/**
+ * One-time, idempotent merge of the two former notification toggles into the
+ * single survivor `notifications.stepComplete`. The deprecated
+ * `notifications.phaseCompletion` is dropped by `removeRetiredSettings`; this
+ * runs first so a user's explicit phase-completion preference survives on the
+ * merged toggle. At every scope where `phaseCompletion` was explicitly set, the
+ * merged value is the either-false-wins combination of the two explicit values
+ * at that scope (`false` if either is `false`, else `true`) and is written only
+ * when it differs from the current `stepComplete` at that scope. This both
+ * propagates a broad `false` down AND preserves a narrower explicit `true`
+ * override (e.g. `false` at User + `true` at Workspace stays ON at Workspace).
+ * Scopes where `phaseCompletion` is unset are left untouched. Scope is preserved
+ * via per-scope `inspect()`.
+ */
+export async function mergeNotificationSettings(): Promise<void> {
+    const config = vscode.workspace.getConfiguration('speckit');
+    const phase = config.inspect('notifications.phaseCompletion');
+    const step = config.inspect('notifications.stepComplete');
+    if (!phase) {
+        return;
+    }
+    for (const { target, field } of SCOPES) {
+        const phaseVal = phase[field];
+        if (phaseVal === undefined) {
+            continue;
+        }
+        const stepVal = step?.[field];
+        const merged = phaseVal === false || stepVal === false ? false : true;
+        if (merged !== stepVal) {
+            await config.update('notifications.stepComplete', merged, target);
         }
     }
 }

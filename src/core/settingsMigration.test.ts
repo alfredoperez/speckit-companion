@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import {
     coerceLegacyBoolean,
     migrateBetaTriStateSettings,
+    mergeNotificationSettings,
     removeRetiredSettings,
     BETA_BOOLEAN_SETTINGS,
     RETIRED_SETTINGS,
@@ -158,7 +159,7 @@ describe('removeRetiredSettings', () => {
 
     afterEach(() => jest.restoreAllMocks());
 
-    it('lists the retired toggles plus the former Companion-workflow gate keys', () => {
+    it('lists the retired toggles, the former Companion-workflow gate keys, and the merged-away phase-completion toggle', () => {
         expect([...RETIRED_SETTINGS]).toEqual([
             'companion.templateProfile',
             'companion.turboWorkflowPicker',
@@ -166,6 +167,7 @@ describe('removeRetiredSettings', () => {
             'companion.speckitCompanionWorkflow',
             'companion.workflowBeta',
             'companion.resumeBeta',
+            'notifications.phaseCompletion',
         ]);
     });
 
@@ -231,5 +233,104 @@ describe('removeRetiredSettings', () => {
     it('does not crash when inspect returns undefined for a key', async () => {
         setupConfig({});
         await expect(removeRetiredSettings()).resolves.toBeUndefined();
+    });
+});
+
+describe('mergeNotificationSettings', () => {
+    type Inspection = {
+        globalValue?: unknown;
+        workspaceValue?: unknown;
+        workspaceFolderValue?: unknown;
+    };
+
+    function setupConfig(inspections: Record<string, Inspection | undefined>) {
+        const update = jest.fn().mockResolvedValue(undefined);
+        const inspect = jest.fn((key: string) => inspections[key]);
+        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+            inspect,
+            update,
+            get: jest.fn(),
+        } as unknown as vscode.WorkspaceConfiguration);
+        return { update, inspect };
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('turns stepComplete off at the scope where phaseCompletion was false', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': { globalValue: false },
+            'notifications.stepComplete': {},
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            false,
+            vscode.ConfigurationTarget.Global
+        );
+    });
+
+    it('forces stepComplete off even when it was explicitly true (either-false wins)', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': { workspaceValue: false },
+            'notifications.stepComplete': { workspaceValue: true },
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            false,
+            vscode.ConfigurationTarget.Workspace
+        );
+    });
+
+    it('preserves a narrower explicit true override (phase false@User + true@Workspace)', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': { globalValue: false, workspaceValue: true },
+            'notifications.stepComplete': {},
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            false,
+            vscode.ConfigurationTarget.Global
+        );
+        expect(update).toHaveBeenCalledWith(
+            'notifications.stepComplete',
+            true,
+            vscode.ConfigurationTarget.Workspace
+        );
+    });
+
+    it('is a no-op when phaseCompletion is unset at every scope', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': {},
+            'notifications.stepComplete': {},
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when stepComplete is already false at that scope (idempotent)', async () => {
+        const { update } = setupConfig({
+            'notifications.phaseCompletion': { globalValue: false },
+            'notifications.stepComplete': { globalValue: false },
+        });
+
+        await mergeNotificationSettings();
+
+        expect(update).not.toHaveBeenCalled();
+    });
+
+    it('does not crash when phaseCompletion inspect returns undefined', async () => {
+        const { update } = setupConfig({});
+        await expect(mergeNotificationSettings()).resolves.toBeUndefined();
+        expect(update).not.toHaveBeenCalled();
     });
 });

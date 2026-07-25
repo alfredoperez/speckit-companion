@@ -19,11 +19,11 @@ import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
 import type { TransitionEntry } from '../features/workflows/types';
 
 /**
- * Check if phase completion notifications are enabled
+ * Whether the single completion-notification toggle (step and task-phase) is on.
  */
-function isPhaseCompletionNotificationEnabled(): boolean {
+function isCompletionNotificationEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
-    return config.get<boolean>('notifications.phaseCompletion', true);
+    return config.get<boolean>('notifications.stepComplete', true);
 }
 
 /**
@@ -265,7 +265,7 @@ export function setupTasksWatcher(
 
                 for (const phaseName of completedPhases) {
                     outputChannel.appendLine(`[TasksWatcher] Phase completed: "${phaseName}" in ${specName}`);
-                    if (isPhaseCompletionNotificationEnabled()) {
+                    if (isCompletionNotificationEnabled()) {
                         await NotificationUtils.showPhaseCompleteNotification(specName, phaseName, uri.fsPath);
                     }
                 }

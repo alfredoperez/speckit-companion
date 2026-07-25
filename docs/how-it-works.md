@@ -342,7 +342,7 @@ speckit.customCommands                // Custom command definitions
 speckit.customWorkflows               // Custom workflow definitions
 speckit.defaultWorkflow               // Default workflow name
 speckit.companion.installPrompt       // boolean — offer the install banner when the spec-kit extension is missing
-speckit.notifications.phaseCompletion // boolean
+speckit.notifications.stepComplete    // boolean — notify on step and task-phase completion
 speckit.views.steering.visible        // boolean
 speckit.views.settings.visible        // boolean
 ```
