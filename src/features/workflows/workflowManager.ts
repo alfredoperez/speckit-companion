@@ -18,7 +18,7 @@ import {
     WORKFLOW_NAME_PATTERN,
     FEATURE_CONTEXT_FILE,
 } from './types';
-import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME } from '../../core/constants';
+import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
@@ -238,6 +238,44 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
 export function isCompanionSelectable(): boolean {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     return !!root && isCompanionInstalled(root);
+}
+
+/** The per-scope shape of `WorkspaceConfiguration.inspect` we read to tell unset from explicit. */
+interface InspectedSetting {
+    globalValue?: unknown;
+    workspaceValue?: unknown;
+    workspaceFolderValue?: unknown;
+}
+
+/**
+ * Pure core of the effective-default-workflow rule (testable without vscode/fs):
+ * an explicitly-set value at any scope wins (most-specific first); otherwise an
+ * unset default resolves to `companion` when the companion extension is installed,
+ * else stock `speckit`. A `defaultValue`-only inspect (schema default, no user
+ * value) counts as unset.
+ */
+export function pickEffectiveDefaultWorkflow(
+    inspected: InspectedSetting | undefined,
+    companionInstalled: boolean
+): string {
+    const explicit = inspected?.workspaceFolderValue ?? inspected?.workspaceValue ?? inspected?.globalValue;
+    if (typeof explicit === 'string' && explicit.length > 0) {
+        return explicit;
+    }
+    return companionInstalled ? COMPANION_WORKFLOW_NAME : SPECKIT_WORKFLOW_NAME;
+}
+
+/**
+ * The effective default workflow for a workspace root: the user's explicit
+ * `speckit.defaultWorkflow` when they set one, else `companion` when the companion
+ * extension is installed for `root`, else `speckit`. Only the workflow-pick sites
+ * (Create-Spec pre-selection, per-feature resolution) use this — telemetry keeps
+ * reading the raw configured value so the adoption metric counts only explicit choices.
+ */
+export function resolveEffectiveDefaultWorkflow(root: string | undefined): string {
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const inspected = config.inspect<string>('defaultWorkflow');
+    return pickEffectiveDefaultWorkflow(inspected, !!root && isCompanionInstalled(root));
 }
 
 function buildWorkflows(filterByProvider: boolean, outputChannel?: vscode.OutputChannel): WorkflowConfig[] {
