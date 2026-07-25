@@ -220,6 +220,23 @@ body {
         background: var(--bg-secondary);
     }
 
+    /* #504 nests each step's artifacts in a `.step-tab-group` (the tab plus a
+       `.step-substeps` column). In the horizontal fold that wrapper must own a
+       column sized to its WIDEST child — left as a plain block it collapses to
+       the tab button's width and the wider sub-doc chips overflow into the next
+       tab's column (#560). */
+    .doc-rail .rail-group .step-tabs > .step-tab-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        flex: none;
+    }
+
+    .doc-rail .step-tab-group .step-substeps {
+        padding-left: 0;
+        width: auto;
+    }
+
     .main-column {
         flex: 1;
     }
