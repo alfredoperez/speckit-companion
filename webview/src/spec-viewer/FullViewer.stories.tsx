@@ -473,3 +473,23 @@ export const Implementing172: Story = {
         />
     ),
 };
+
+// ── 172 · narrow pane · the rail folds to a horizontal strip ──
+// Below a container width of 900px the doc-rail becomes a horizontal scrolling
+// strip. Each step keeps its nested artifact chips (#504); the pane is pinned
+// narrow so those sub-docs stay inside their own step column instead of bleeding
+// into the neighbouring tab (#560).
+export const NarrowPaneFold172: Story = {
+    name: '172 · Narrow pane (rail folds horizontal, nested sub-docs)',
+    render: () => (
+        <div style="width: 760px; max-width: 100%; height: 100vh; overflow: hidden;">
+            <InteractiveViewer
+                ctx={ctx172}
+                docs={docs172}
+                initialDoc="plan"
+                view="document"
+                vs={vsFromContext(ctx172, completedFooter)}
+            />
+        </div>
+    ),
+};
