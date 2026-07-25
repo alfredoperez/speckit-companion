@@ -178,7 +178,9 @@ async function resolveDefaultWorkflow(featureDir: string, outputChannel?: vscode
 
     // Get the effective default workflow: an explicit setting wins; otherwise
     // an unset default resolves to companion when the companion extension is installed.
-    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    // Resolve the root from the feature's own folder (correct in multi-root workspaces).
+    const root = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(featureDir))?.uri.fsPath
+        ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     const defaultWorkflowName = resolveEffectiveDefaultWorkflow(root);
     const workflows = getWorkflows(outputChannel);
 

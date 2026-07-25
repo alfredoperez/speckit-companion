@@ -273,7 +273,8 @@ export function pickEffectiveDefaultWorkflow(
  * reading the raw configured value so the adoption metric counts only explicit choices.
  */
 export function resolveEffectiveDefaultWorkflow(root: string | undefined): string {
-    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const resource = root ? vscode.Uri.file(root) : undefined;
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace, resource);
     const inspected = config.inspect<string>('defaultWorkflow');
     return pickEffectiveDefaultWorkflow(inspected, !!root && isCompanionInstalled(root));
 }
