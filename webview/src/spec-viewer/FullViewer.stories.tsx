@@ -476,11 +476,11 @@ export const Implementing172: Story = {
 
 // ── 172 · narrow pane · the rail folds to a horizontal strip ──
 // Below a container width of 900px the doc-rail becomes a horizontal scrolling
-// strip. Each step keeps its nested artifact chips (#504); the pane is pinned
-// narrow so those sub-docs stay inside their own step column instead of bleeding
-// into the neighbouring tab (#560).
+// strip. Each step and its own files form one inline unit — the step tab
+// followed by a row of its artifact chips — with a divider between units, so a
+// step reads with its own files instead of colliding with the next one.
 export const NarrowPaneFold172: Story = {
-    name: '172 · Narrow pane (rail folds horizontal, nested sub-docs)',
+    name: '172 · Narrow pane (rail folds horizontal, inline step+files units)',
     render: () => (
         <div style="width: 760px; max-width: 100%; height: 100vh; overflow: hidden;">
             <InteractiveViewer

@@ -1053,7 +1053,7 @@ describe('SpecExplorerProvider', () => {
             expect(groups).toHaveLength(1);
             expect(groups[0].label).toBe('Active (1)');
             const specs = await filteredProvider.getChildren(groups[0]);
-            expect(specs.map(s => s.label)).toEqual(['Tree group counts']);
+            expect(specs.map(s => s.label)).toEqual(['Tree Group Counts']);
         });
 
         it('matches by specName when slug alone does not match', async () => {
@@ -1066,7 +1066,7 @@ describe('SpecExplorerProvider', () => {
             expect(groups).toHaveLength(1);
             expect(groups[0].label).toBe('Active (1)');
             const specs = await filteredProvider.getChildren(groups[0]);
-            expect(specs.map(s => s.label)).toEqual(['Design — tighten safety']);
+            expect(specs.map(s => s.label)).toEqual(['Design — Tighten Safety']);
         });
 
         it('returns empty root when filter matches zero specs', async () => {

@@ -145,7 +145,7 @@ export function SpecHeader() {
             <div class="spec-header-row">
                 <div class="spec-header-main">
                     {ns.specContextName && (
-                        <h1 class={`spec-header-title${ns.titleFromHeading ? ' spec-header-title--authored' : ''}`}>
+                        <h1 class="spec-header-title">
                             {ns.specContextName}
                         </h1>
                     )}

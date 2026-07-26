@@ -307,6 +307,9 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     if (!rows || rows.length === 0) return null;
 
     const traced = rows.filter(r => r.tests.length > 0).length;
+    // Nothing traced reads as a failing 0/N when the pipeline never maps tests;
+    // the section reappears once any requirement gains a linked test.
+    if (traced === 0) return null;
     // Untraced requirements lead — the gaps are the signal.
     const ordered = [...rows.filter(r => r.tests.length === 0), ...rows.filter(r => r.tests.length > 0)];
     const rest = ordered.slice(COVERAGE_SHOWN);

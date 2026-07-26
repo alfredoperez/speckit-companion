@@ -66,25 +66,25 @@ describe('the status badge tooltip', () => {
 });
 
 describe('the title', () => {
-    it('keeps the author capitalization when it came from the document heading', () => {
+    it('renders an authored heading verbatim, preserving deliberate internal casing', () => {
         navState.value = mockNavState({
             specContextName: 'SpecKit Extension Capture',
             titleFromHeading: true,
         });
         const container = renderInto();
 
-        expect(container.querySelector('.spec-header-title')?.className)
-            .toContain('spec-header-title--authored');
+        expect(container.querySelector('.spec-header-title')?.textContent)
+            .toBe('SpecKit Extension Capture');
 
         cleanup(container);
     });
 
-    it('leaves the slug capitalization on for a derived name', () => {
-        navState.value = mockNavState({ specContextName: 'my feature' });
+    it('renders an acronym-cased feature name unchanged, never re-mangling it', () => {
+        navState.value = mockNavState({ specContextName: 'CLI Install Nudge' });
         const container = renderInto();
 
-        expect(container.querySelector('.spec-header-title')?.className)
-            .not.toContain('spec-header-title--authored');
+        expect(container.querySelector('.spec-header-title')?.textContent)
+            .toBe('CLI Install Nudge');
 
         cleanup(container);
     });
