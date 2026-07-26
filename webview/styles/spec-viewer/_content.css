@@ -243,18 +243,14 @@ body[data-has-spec-context="true"] .meta-branch {
     color: var(--header-title);
     line-height: 1.2;
     letter-spacing: -0.015em;
-    /* Spec names arrive as lowercase dir slugs; presentation-only casing. */
-    text-transform: capitalize;
+    /* Casing is decided in data (toDisplayCase, acronym-aware) so it survives
+       here for both feature names and authored headings — no CSS capitalize,
+       which would mangle "CLI" and re-case an authored heading. */
+    text-transform: none;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-/* A title read from the document's own H1 is already written by a human —
-   capitalizing it would turn "SpecKit" back into "Speckit". */
-.spec-header-title--authored {
-    text-transform: none;
 }
 
 /* Capability facts are readable content, so they take the body token.

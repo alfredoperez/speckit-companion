@@ -1,12 +1,77 @@
 import { deriveSpecName } from '../../features/specs/specContextManager';
 
+const ACRONYMS: Record<string, string> = {
+    cli: 'CLI',
+    api: 'API',
+    ui: 'UI',
+    ux: 'UX',
+    id: 'ID',
+    url: 'URL',
+    uri: 'URI',
+    css: 'CSS',
+    html: 'HTML',
+    json: 'JSON',
+    yaml: 'YAML',
+    md: 'MD',
+    ai: 'AI',
+    sdk: 'SDK',
+    pr: 'PR',
+    db: 'DB',
+    ide: 'IDE',
+    npm: 'npm',
+    ci: 'CI',
+    cd: 'CD',
+    io: 'IO',
+    os: 'OS',
+    sql: 'SQL',
+    http: 'HTTP',
+    https: 'HTTPS',
+    vscode: 'VS Code',
+};
+
+function caseWord(word: string): string {
+    const lower = word.toLowerCase();
+    const acronym = ACRONYMS[lower];
+    if (acronym) {
+        return acronym;
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+/**
+ * Title-case a slug or lowercase feature name while preserving known acronyms
+ * (CLI, API, VS Code, …). Feature specs are named by slugs and capitalised for
+ * display; a naive title-case mangles acronyms ("cli" → "Cli"), so this is the
+ * one shared caser both the viewer header and the specs tree route through.
+ * Not for living-spec headings — those are authored and shown verbatim.
+ */
+export function toDisplayCase(name: string): string {
+    const words = name.replace(/[-_]+/g, ' ').split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+        return name.trim();
+    }
+    const out: string[] = [];
+    for (let i = 0; i < words.length; i++) {
+        const lower = words[i].toLowerCase();
+        if (lower === 'vs' && words[i + 1]?.toLowerCase() === 'code') {
+            out.push('VS', 'Code');
+            i++;
+            continue;
+        }
+        out.push(caseWord(words[i]));
+    }
+    return out.join(' ');
+}
+
 /**
  * Resolve the readable display name for a spec, by preference:
  * recorded name → document heading (living specs) → humanized slug.
  *
  * Presentation-only: the directory slug stays the stable identifier.
  * Empty or whitespace-only inputs are treated as absent so a blank
- * label never wins over the humanized-slug fallback.
+ * label never wins over the humanized-slug fallback. Feature names (recorded
+ * or slug-derived) are acronym-aware title-cased; a living-spec heading is
+ * authored and returned verbatim.
  */
 export function resolveSpecDisplayName(
     specName: string | undefined | null,
@@ -15,11 +80,11 @@ export function resolveSpecDisplayName(
 ): string {
     const recorded = specName?.trim();
     if (recorded) {
-        return recorded;
+        return toDisplayCase(recorded);
     }
     const docHeading = heading?.trim();
     if (docHeading) {
         return docHeading;
     }
-    return deriveSpecName(specDir);
+    return toDisplayCase(deriveSpecName(specDir));
 }

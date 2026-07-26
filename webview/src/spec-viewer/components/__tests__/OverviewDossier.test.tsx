@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { h, render } from 'preact';
-import { IntentSection, OverviewTiming } from '../OverviewDossier';
+import { IntentSection, OverviewTiming, CoverageSection } from '../OverviewDossier';
 import type { ViewerState } from '../../types';
 
 const base = (overrides: Partial<ViewerState>): ViewerState => ({
@@ -188,5 +188,34 @@ describe('OverviewTiming', () => {
             expect(host.querySelector('.dossier-timing__duration--folded')).toBeNull();
             expect(host.textContent).toContain('4m');
         });
+    });
+});
+
+describe('CoverageSection', () => {
+    it('renders when at least one requirement has a linked test', () => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, {
+            state: base({
+                coverage: [
+                    { req: 'FR-1', tasks: ['T001'], tests: ['auth.test.ts'] },
+                    { req: 'FR-2', tasks: ['T002'], tests: [] },
+                ],
+            }),
+        }), host);
+        expect(host.querySelector('.dossier-section')).not.toBeNull();
+        expect(host.textContent).toContain('1/2 traced');
+    });
+
+    it('omits itself entirely when nothing is traced', () => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, {
+            state: base({
+                coverage: [
+                    { req: 'FR-1', tasks: ['T001'], tests: [] },
+                    { req: 'FR-2', tasks: ['T002'], tests: [] },
+                ],
+            }),
+        }), host);
+        expect(host.querySelector('.dossier-section')).toBeNull();
     });
 });

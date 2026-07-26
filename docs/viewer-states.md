@@ -388,14 +388,14 @@ When `.spec-context.json` data is available, a structured header renders above t
 | Row | Content | Source |
 |-----|---------|--------|
 | Row 1 | Badge pill + created date | `computeBadgeText()`, `computeCreatedDate()` |
-| Row 2 | `{DocType}: {specName}` | `getDocTypeLabel(step)`, `specName` or `deriveSpecName(specDir)` |
+| Row 2 | `{DocType}: {specName}` | `getDocTypeLabel(step)`, `resolveSpecDisplayName(specName, specDir)` (acronym-aware `toDisplayCase`) |
 | Row 3 | Branch badge with git icon | `branch` field from context |
 | Separator | Horizontal rule | Always shown |
 
 - **Badge color**: Uses `--header-title` (same as h1 headings) for primary color
 - **H1 hiding**: When header is present (`data-has-context="true"`), the first H1 in markdown is hidden via CSS to avoid duplicate title
 - **Metadata stripping**: When context data is available, `preprocessSpecMetadata` strips raw metadata (Status, Feature Branch, etc.) from rendered markdown
-- **Fallback**: When `specName` is missing from context, it is derived from the directory slug (e.g., `046-spec-viewer-header-redesign` → `Spec Viewer Header Redesign`)
+- **Fallback**: When `specName` is missing from context, it is derived from the directory slug (e.g., `046-spec-viewer-header-redesign` → `Spec Viewer Header Redesign`). Both the recorded name and the slug fallback pass through `toDisplayCase`, so the viewer header and the specs tree (which both call `resolveSpecDisplayName`) show one consistent, acronym-aware casing.
 - **No context**: When no `.spec-context.json` exists, no header renders; markdown displays as before
 
 ### Badge hover text
@@ -415,7 +415,7 @@ A living spec has no branch, created date, phases or task completion, so the hea
 
 Notes:
 
-- **The title is authored, so it is not re-cased.** `.spec-header-title` carries `text-transform: capitalize` for feature specs, whose names really are directory slugs. A heading-derived title adds `.spec-header-title--authored`, which turns that off — without it, `SpecKit` renders as `Speckit` and the fix looks like it never landed.
+- **The title is authored, so it is not re-cased.** Feature-spec names are cased in data by `toDisplayCase()` (`src/core/utils/specDisplayName.ts`) — acronym-aware, so `cli install nudge` becomes `CLI Install Nudge`, not `Cli Install Nudge` — and `.spec-header-title` no longer applies any CSS `text-transform`, so the data value is authoritative. A heading-derived title is never fed to the caser (it takes the heading branch of `resolveSpecDisplayName`), so `SpecKit` stays `SpecKit`.
 - **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
 - **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
 - **The requirement count and the coverage denominator are one derivation.** Both call `requirementIds()` in `src/features/specs/livingSpecsModel.ts`, which ignores fenced code blocks, so `N requirements` and the `M` in `N/M covered` are counted off the same identifiers and cannot drift apart.
@@ -487,6 +487,8 @@ stateDiagram-v2
 | `reviewing` | Viewing completed step, not active workflow | White bold label |
 | `disabled` | Step not available (no file, not first) | Dimmed (opacity 0.35) |
 | `stale` | Document stale relative to upstream | `!` badge |
+
+**Narrow-pane fold.** The doc rail is a vertical list at full width; below a viewer-container width of 900px it folds to a single horizontally-scrolling strip. In that fold each step and its own file chips form one inline unit — the step tab followed by a horizontal row of its `.step-substeps` — with a divider between units, so the strip reads `Overview │ Specification Requirements │ Plan Nudge-Gate Research │ Tasks` rather than stacking sub-docs under each tab. The nesting (which file belongs to which step) is preserved; only the wide-vs-folded layout differs. Scoped entirely to the `@container viewer (max-width: 900px)` block in `webview/styles/spec-viewer/_base.css`.
 
 ### In-flight derivation (one fact, one path)
 
