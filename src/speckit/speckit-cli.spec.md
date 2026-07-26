@@ -85,6 +85,20 @@ The prompt to install the companion CLI extension SHALL be shown when the prompt
 - **WHEN** the gate is evaluated with the extension absent
 - **THEN** nothing is shown — no banner and no fallback warning
 
+### Terminal dispatch carries a once-per-session install hint
+
+When a spec-kit command is dispatched to a terminal-CLI provider and the companion extension is absent, the extension SHALL show a single non-blocking install hint tagged to the `terminal` surface. Its gate is the conjunction: spec-kit is detected in the workspace, the companion extension is not installed, the shared install-nudge dismissal is unset, the active provider dispatches to a terminal (never an editor-chat provider — that surface has its own in-editor nudges), and it has not already shown this session. The hint reuses the shared install command and the same `installNudgeDismissed` flag as the other nudge surfaces — no parallel dismissal. It MUST NEVER block or fail the dispatched command: any failure while deciding or presenting it is swallowed so the command always proceeds, and the session slot and telemetry `shown` are recorded under the same gate the hint renders on.
+
+#### Scenario: a terminal dispatch runs without the extension
+- **WHEN** a command dispatches to a terminal-CLI provider, spec-kit is detected, the extension is absent, and the nudge has not shown this session
+- **THEN** one install hint is shown, tagged `terminal`, offering Install or "Don't show again"
+- **AND** a second dispatch in the same session shows nothing more
+
+#### Scenario: the active provider dispatches to editor chat, or the nudge was dismissed
+- **WHEN** the provider routes to the host editor's chat, or the shared dismissal is already set
+- **THEN** the terminal hint does not render
+- **AND** the dismissal is shared with every other install-prompt surface
+
 ### Two products share one release list and must never be confused
 
 This repository publishes two independently-versioned products into a single releases list. Any release lookup SHALL filter to the tag shape belonging to the product being asked about, and MUST reject drafts and prereleases. A lookup that resolves "the latest release" across both namespaces is a defect shape that has shipped before and MUST NOT be reintroduced anywhere — including links opened for the user.

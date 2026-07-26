@@ -130,6 +130,8 @@ Any command belonging to the Companion namespace SHALL be recognized by its shar
 - **THEN** nothing is dispatched at all
 - **AND** the user is told why
 
+When a phase or workflow step actually dispatches to a terminal, the dispatch path SHALL fire the shared once-per-session terminal install nudge (owned by the speckit-cli capability) — except on the fell-back path, which already surfaces its own install warning. This is a call-through at dispatch time, not gating logic this capability owns: the nudge's own gate decides whether anything renders, and it can never block the dispatched command.
+
 ### Reading a record is tolerant; writing one is strict
 
 The reader SHALL accept records written by older versions, by other tools, and by an AI that got a field's shape slightly wrong — normalizing legacy field names, superseded status vocabulary, and loosely-typed values into the canonical shape in memory. Unknown top-level fields MUST survive a read/write round-trip, because another writer may own them. A genuinely absent record and a record that could not be read MUST be distinguishable to the caller, so a transient read failure is never mistaken for "no record here."

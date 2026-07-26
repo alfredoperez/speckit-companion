@@ -179,18 +179,27 @@ Every section of the overview MUST hide itself when its data is empty, so a spec
 - **WHEN** a spec recorded no decisions
 - **THEN** the decisions section does not render at all
 
+#### Scenario: coverage has rows but nothing is traced
+- **WHEN** the coverage rows exist but no requirement has a linked test
+- **THEN** the Coverage section hides entirely rather than showing a misleading "0 of N traced"
+- **AND** it reappears once any requirement gains a linked test
+
 #### Scenario: a section throws while rendering
 - **WHEN** the overview subtree fails
 - **THEN** an inline notice replaces it, the error is reported to the extension, and the rest of the viewer keeps working
 
-### A living spec's title is authored, not derived
+### The header renders the title it is given; casing is decided upstream
 
-A living spec's header MUST show the title as written in the document's own top-level heading and MUST NOT re-case it. Feature specs are named by directory slugs and are capitalised for display; a heading-derived title is a human's own words, and applying slug capitalisation to it silently mangles deliberate casing. The two cases are therefore distinguished explicitly rather than treated alike.
+The header MUST render the title exactly as supplied and MUST NOT re-case it or branch on where it came from. The authored-versus-derived decision belongs to the extension's shared display-name resolver: a feature name is acronym-aware title-cased there (a slug like "cli install nudge" arrives as "CLI Install Nudge"), and an authored living-spec heading arrives verbatim. Because that decision is already made when the title reaches the header, the header no longer carries a separate CSS state to distinguish the two cases — it prints one title uniformly.
 
-#### Scenario: a capability whose name carries internal capitals
-- **WHEN** the title comes from the document's heading
-- **THEN** it renders exactly as authored
-- **AND** the slug capitalisation applied to feature-spec titles is switched off
+#### Scenario: a feature name with an acronym is shown
+- **WHEN** the header receives a feature title resolved upstream
+- **THEN** it prints it as given — acronyms already in canonical form, words already capitalised
+- **AND** the header applies no casing of its own
+
+#### Scenario: a living spec's authored heading is shown
+- **WHEN** the title came from the document's own top-level heading
+- **THEN** the header prints it exactly as authored, because the resolver returned it verbatim
 
 ### Delegated click handling must survive non-element targets and late mounts
 
@@ -223,6 +232,11 @@ Recorded substep events are journal moments, not measured work. Each event carri
 - **WHEN** the timing summary reports itself not yet complete
 - **THEN** the run surfaces measured-of-expected phase coverage
 - **AND** no start, elapsed, or end figure is shown as if the run had settled
+
+#### Scenario: a spec was driven entirely through the CLI
+- **WHEN** the extension now marks a CLI-run's step spans as measured (both boundaries from an authoritative-enough writer) and reports them in the summary
+- **THEN** the viewer surfaces that trusted coverage as given rather than "0 of N"
+- **AND** the webview still sums nothing itself — the change is in the summary it renders, not in a webview derivation
 
 #### Scenario: a recorded substep event is displayed
 - **WHEN** a tracked substep is rendered in the phase history
@@ -309,3 +323,8 @@ Each pipeline step's related artifact documents MUST render as an indented sub-l
 - **WHEN** the reader clicks a nested artifact sub-item
 - **THEN** the viewer switches to that document and the sub-item reads as current
 - **AND** clicking the parent step still opens the step's own document
+
+#### Scenario: the pane is too narrow for a vertical rail
+- **WHEN** the container falls below the rail's fold width
+- **THEN** the rail folds into a horizontally-scrolling strip where each step and its own artifact chips form one inline unit, with a divider between units
+- **AND** a step reads beside its own files rather than colliding with the next step's column

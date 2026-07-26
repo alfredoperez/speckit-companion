@@ -31,13 +31,14 @@ The workflow the user picked SHALL be carried into the new spec's own state reco
 - **THEN** the creation instruction seeds that workflow into the spec's record
 - **AND** later steps dispatch from that recorded choice
 
-### The picker offers only workflows that can actually run
+### The picker never offers a silent degrade, but Companion stays visible as install-to-enable
 
-The workflow list SHALL be built from what the active AI provider supports and what is genuinely installed, so the picker never lists an option that would silently degrade to something else. Every builder that feeds a workflow list MUST share one predicate — this repo has shipped a bug where one of two independent list builders was gated and the other was not, and the ungated one was the one that rendered.
+The workflow list SHALL be built from what the active AI provider supports, so a provider-incompatible custom workflow is omitted. The Companion entry is the deliberate exception: because starting a spec is the highest-intent install moment, Companion is ALWAYS listed — even when the spec-kit extension is absent — but labeled as install-to-enable and carrying its not-installed state, so it is never a *silent* degrade. A not-installed pick is intercepted before any dispatch (see the install-first requirement below) rather than quietly running stock. Every builder that feeds a workflow list MUST share one predicate — this repo has shipped a bug where one of two independent list builders was gated and the other was not, and the ungated one was the one that rendered.
 
 #### Scenario: the companion piece is not installed
 - **WHEN** the panel builds its workflow list
-- **THEN** the Companion entry is absent rather than present-and-degrading
+- **THEN** the Companion entry is still present, labeled as install-to-enable and flagged not-installed
+- **AND** picking it is intercepted with an install-first prompt rather than silently producing a stock spec
 
 #### Scenario: a user-defined workflow names a step the active provider cannot run
 - **WHEN** the list is built
@@ -47,10 +48,12 @@ The workflow list SHALL be built from what the active AI provider supports and w
 
 When a chosen action needs the companion piece and it is absent, the host SHALL either downgrade to the equivalent stock action or, when there is no equivalent, refuse to start at all. Either way the user gets a non-blocking explanation and a one-click way to install. Dispatching a command the AI cannot resolve is never acceptable. When the panel surfaces its install prompt, and when the user takes it, the host SHALL record the exposure and the click so install-prompt adoption can be measured.
 
+Because Create Spec is the highest-intent install moment, an ordinary (non-Auto, non-custom) Companion pick made without the companion piece SHALL present its benefits and a one-click install FIRST — a modal offering install, "use SpecKit instead", or cancel — before any spec is created, so install is never a surprise. Choosing install kicks off the install and aborts creation (creating a stock spec then would silently run the wrong workflow); "use SpecKit instead" takes the graceful stock downgrade; cancel creates nothing and leaves the editor interactive. The default workflow the panel pre-selects SHALL be the effective default — the user's explicit choice when set, otherwise Companion when the extension is installed — not the raw stock fallback.
+
 #### Scenario: the Companion entry point is chosen without the companion piece
-- **WHEN** the user submits
-- **THEN** the stock equivalent runs
-- **AND** a dismissible warning offers to install the missing piece
+- **WHEN** the user submits an ordinary Companion pick
+- **THEN** a benefits-and-install-first prompt appears before anything is created
+- **AND** installing aborts creation to be re-run once installed, declining takes the stock equivalent, and cancelling creates nothing
 
 #### Scenario: the hands-off run is requested without the companion piece
 - **WHEN** the user triggers it
