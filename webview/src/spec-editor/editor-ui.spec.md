@@ -76,7 +76,7 @@ The editor MUST reject unsupported image formats and oversized files locally, wi
 
 ### The chosen workflow determines which submission affordances exist
 
-Submission affordances MUST be derived from the selected workflow's own declaration rather than hard-coded. A workflow that declares a hands-off orchestrator gets the hands-off affordance; a workflow that declares named entry commands gets a button per command; a workspace with only one workflow hides the chooser entirely instead of showing a one-item control. Adding a workflow must not require editing this surface.
+Submission affordances MUST be derived from the selected workflow's own declaration rather than hard-coded. A workflow that declares a hands-off orchestrator gets the hands-off affordance; a workflow that declares named entry commands gets a button per command; a workspace with only one workflow hides the chooser entirely instead of showing a one-item control. Adding a workflow must not require editing this surface. A workflow declaration MAY also carry an `installed` flag (the Companion entry sets it from whether the spec-kit extension is present) so the surface can present a not-installed workflow as install-to-enable; the install-first decision itself is made extension-side, so this is an inbound flag the editor renders rather than logic it owns.
 
 #### Scenario: the selected workflow has no hands-off mode
 - **WHEN** the user picks such a workflow

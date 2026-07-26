@@ -42,7 +42,17 @@ Providers that drive a CLI in a terminal SHALL inherit a common lifecycle — ve
 
 #### Scenario: the CLI is not installed
 - **WHEN** a provider that declares an install hint dispatches and its binary is absent
-- **THEN** the user is told what to install with a copyable install command and the dispatch fails loudly rather than sending text into a shell that cannot act on it
+- **THEN** the user is told how to get it and the dispatch fails loudly rather than sending text into a shell that cannot act on it
+- **AND** the hint is either a copyable install command (package-manager CLIs) or an "Open Install Page" link that opens the tool's download page (download-based tools such as the `agy` CLI), matching how that tool is actually obtained
+
+### A CLI provider is a terminal target; an editor-chat provider is not
+
+Each provider SHALL be classifiable as dispatching either to a VS Code terminal (every CLI provider — including Antigravity, which runs the real `agy` binary interactively with `-i` rather than a non-existent `antigravity` command) or to the host editor's chat/panel (the in-editor chat and GUI-panel providers). An unknown provider value MUST default to the terminal classification, so a newly-added CLI provider is covered without editing this predicate. This classification is what lets a terminal-only affordance — such as the CLI install nudge — fire for CLI dispatch and stay silent for editor-chat dispatch.
+
+#### Scenario: a newly-added provider is classified
+- **WHEN** the terminal-versus-editor classification is asked about a provider it has never seen
+- **THEN** it answers "terminal", so the new CLI provider behaves like the others without a code change
+- **AND** only the in-editor chat and GUI-panel providers are excluded
 
 ### The prompt is never pasted into visible terminal scrollback
 
@@ -118,6 +128,7 @@ Surfaces the extension does not own — a host editor's chat, another extension'
 #### Scenario: the host editor exposes no chat command
 - **WHEN** none of the candidate chat commands are registered in the running editor
 - **THEN** the user is warned that no built-in chat was found and told to switch to a CLI provider
+- **AND** a host that ships its own CLI provider (an Antigravity host, whose `agy` CLI the dedicated Antigravity provider runs) is named directly rather than pointed at the generic switch-to-CLI hint
 - **AND** nothing throws
 
 #### Scenario: the host drops the prompt it is handed

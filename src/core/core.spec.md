@@ -74,6 +74,8 @@ A span SHALL be reported as trustworthy only when both of its boundaries were st
 - **WHEN** a step's start or end was written by something other than the extension
 - **THEN** the span is marked untrusted and no elapsed time is rendered for it
 
+A derived step entry MAY additionally carry a `folded` marker — set only by the in-memory step-history derivation for a fast-path step whose boundaries were stamped inside its anchoring phase — which is independent of duration trust; the derivation rule and its rendering live in the specs and viewer-UI capabilities, and the field is never persisted alongside the log.
+
 #### Scenario: the whole run's elapsed time is requested
 - **WHEN** a run-level timing summary is derived from the history log
 - **THEN** a start, end, and elapsed span appear only if every expected phase has a trustworthy closed span; otherwise the summary reports how many phases were measured and stays incomplete
@@ -123,6 +125,11 @@ Configuration keys change shape across releases, so a reader SHALL be correct fo
 - **THEN** the new key is written at the workspace level and the old one is removed there
 - **AND** re-running the migration changes nothing
 
+#### Scenario: two toggles are collapsed into one
+- **WHEN** two former notification toggles are merged into the single surviving completion toggle
+- **THEN** at every scope where the retired toggle was explicitly set, the merged value is the either-false-wins combination of the two explicit values at that scope, written only where it differs from the current value
+- **AND** a broad `false` propagates down while a narrower explicit `true` at a more specific scope is preserved, and scopes where the retired toggle was unset are left untouched
+
 ### Telemetry carries shapes, never content
 
 Every telemetry payload SHALL contain only enum-like values, booleans, versions, counts, and a random per-spec identifier. User-authored text — prompt content, file paths, spec names, custom workflow and step names — MUST never be sent. Any value read from disk or settings that could be free text MUST be coerced to a known allow-list before reporting, with anything unrecognized reduced to a neutral placeholder.
@@ -139,10 +146,11 @@ Every telemetry payload SHALL contain only enum-like values, booleans, versions,
 #### Scenario: the extension activates
 - **WHEN** the activation event fires
 - **THEN** it carries only versions, a spec count, a companion-installed boolean, and enum-like feature-flag states — never a spec name, path, or user-authored workflow name
+- **AND** the default-workflow flag reports the user's raw configured value (an unset default reads as stock `speckit`), never the install-derived effective default, so the adoption metric counts only an explicit Companion choice
 
 ### Engagement is counted without naming what was engaged
 
-The extension SHALL emit a bare event when a spec, a living spec, or a steering document is opened, and when a living-spec drift or sync runs — carrying no property at all, so a count can never be tied to a name or path. The install-banner funnel is likewise reported as fixed `shown`/`clicked` × surface literals produced only by our own call sites. Opened-in-viewer events MUST be de-duplicated per session so a re-rendering panel cannot inflate the count, and the de-dupe key used for that MUST be an internal identity that is never sent. A de-dupe slot MUST be claimed only after an event actually emits, so an open that happened while telemetry was off or uninitialized still fires once telemetry becomes available.
+The extension SHALL emit a bare event when a spec, a living spec, or a steering document is opened, and when a living-spec drift or sync runs — carrying no property at all, so a count can never be tied to a name or path. The install-banner funnel is likewise reported as fixed `shown`/`clicked` × surface literals produced only by our own call sites. The set of install-prompt surfaces is a closed allow-list (create-spec, activity, sidebar badge, pinned row, welcome, terminal); a surface value that arrives untrusted — such as a command argument wired from a `viewsWelcome` button — MUST be coerced to a known member of that allow-list before it is reported, and an unrecognized value dropped rather than sent. Opened-in-viewer events MUST be de-duplicated per session so a re-rendering panel cannot inflate the count, and the de-dupe key used for that MUST be an internal identity that is never sent. A de-dupe slot MUST be claimed only after an event actually emits, so an open that happened while telemetry was off or uninitialized still fires once telemetry becomes available.
 
 #### Scenario: the same spec is re-revealed in the viewer
 - **WHEN** the panel re-renders and would re-emit the open event
@@ -166,11 +174,16 @@ VS Code context keys SHALL be written through a single wrapper that accepts only
 
 ### A spec's display name resolves by preference without changing its identity
 
-A readable display name SHALL be resolved by preference — a recorded name first, then a document heading, then a humanized form of the directory slug — while the directory slug remains the stable identifier. A blank or whitespace-only candidate MUST be treated as absent so it can never win over the humanized-slug fallback.
+A readable display name SHALL be resolved by preference — a recorded name first, then a document heading, then a humanized form of the directory slug — while the directory slug remains the stable identifier. A blank or whitespace-only candidate MUST be treated as absent so it can never win over the humanized-slug fallback. A recorded name and a slug-derived name SHALL be title-cased through one shared acronym-aware caser — known acronyms (CLI, API, UI, JSON, VS Code, …) keep their canonical casing rather than being mangled to "Cli"/"Json" — and that same caser is the one both the viewer header and the specs tree route through. A document heading is authored prose and is returned verbatim, never re-cased.
 
 #### Scenario: a spec has no recorded name
 - **WHEN** a display name is needed and the recorded name is empty or whitespace
 - **THEN** a document heading is used when present, otherwise the humanized slug — and the slug still identifies the spec
+
+#### Scenario: a spec name carries an acronym
+- **WHEN** a recorded or slug-derived name contains a known acronym token
+- **THEN** the shared caser title-cases the name while preserving the acronym's canonical form
+- **AND** a living-spec heading is left exactly as authored
 
 ### Shared primitives absorb host and shell differences
 

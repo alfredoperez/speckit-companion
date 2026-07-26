@@ -12,10 +12,17 @@ A workflow is the ordered pipeline a spec travels — which step comes next, whi
 
 The extension SHALL provide the stock SpecKit pipeline and the SpecKit Companion pipeline as built-ins, and SHALL merge any user-defined workflows from settings alongside them. The default for new specs is named by a single configuration key, `speckit.defaultWorkflow`; an unrecognized value falls back to the first available workflow with a logged note rather than leaving a spec pipeline-less.
 
+When that key is left unset, the effective default SHALL resolve to the Companion pipeline where the companion spec-kit extension is installed for the workspace root, and to the stock pipeline otherwise — so an installed workspace starts specs on Companion without the user having to name it. An explicitly-set value at any scope always wins over this install-derived default, most-specific scope first; unset is distinguished from an explicit value by inspecting the setting per scope, and a schema-default-only reading counts as unset. Only the workflow-pick sites (Create-Spec pre-selection, per-feature resolution) consult this effective default; adoption telemetry keeps reporting the RAW configured value, so an install-derived default never counts as an explicit Companion choice.
+
 #### Scenario: the configured default names a workflow that no longer exists
 - **WHEN** a spec's workflow is resolved and the configured default is not among the available workflows
 - **THEN** the first available workflow is used
 - **AND** the substitution is logged rather than surfaced as an error
+
+#### Scenario: the default is unset and the companion extension is installed
+- **WHEN** a workflow-pick site resolves the effective default with `speckit.defaultWorkflow` unset at every scope
+- **THEN** the Companion pipeline is chosen where the companion extension is installed, else the stock pipeline
+- **AND** an explicit value set at any scope overrides this, and telemetry still reports the raw configured value rather than the install-derived one
 
 #### Scenario: the Companion pipeline is chosen
 - **WHEN** a spec selects it
@@ -82,7 +89,7 @@ Resolving a workflow for rendering — tree rows, viewer initialization — SHAL
 
 #### Scenario: a spec with no recorded workflow is rendered in the sidebar
 - **WHEN** its workflow is resolved for display
-- **THEN** the default workflow is returned
+- **THEN** the effective default workflow is returned (the explicit setting when set, else the install-derived default)
 - **AND** the spec's context file is not created or modified
 
 ### Persisting a workflow choice must never destroy existing spec context

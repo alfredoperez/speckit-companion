@@ -30,14 +30,14 @@ Every file-name label, create-action title, and scope path SHALL be resolved fro
 - **THEN** the create action appears inside that scope's group
 - **AND** its title names the provider's real filename
 
-### Sections appear only when they hold content, except the two stable entry points
+### Sections appear only when they hold content, and the provider node stays the stable entry point
 
-The root SHALL omit any section with nothing in it, and SHALL always show the Companion and provider nodes so those two remain findable. An always-visible empty section trains users to ignore the view; a disappearing entry point makes install and configuration undiscoverable.
+The root SHALL omit any section with nothing in it, and SHALL always show the provider node so it remains findable. The Companion node SHALL appear only when the companion extension is installed (surfacing its Configuration and Commands); when it is absent the node is omitted here entirely — the install nudge lives on the higher-signal surfaces (the activity-bar badge, the pinned Specs CTA, and Create Spec) rather than as a warning row in this tree. An always-visible empty section trains users to ignore the view.
 
 #### Scenario: a workspace with no SpecKit scaffolding
 - **WHEN** the project has no constitution, scripts, or templates
 - **THEN** the SpecKit project-files section is absent entirely
-- **AND** the Companion and provider nodes are still present
+- **AND** the provider node is still present, while the Companion node appears only if the companion extension is installed
 
 ### A provider's label and its mark resolve from one decision
 
@@ -50,7 +50,7 @@ The row's display name and its icon SHALL derive from the same provider resoluti
 
 #### Scenario: a provider ships no official mark
 - **WHEN** that provider is configured
-- **THEN** the neutral glyph is chosen deliberately rather than reached by falling through the lookup
+- **THEN** a themed Codicon matching the provider's own QuickPick icon is used when it declares one (Antigravity resolves to its rocket glyph), otherwise the neutral chat glyph is chosen deliberately rather than reached by falling through the lookup
 
 ### The Companion node reports install state and reads the installed extension live
 
