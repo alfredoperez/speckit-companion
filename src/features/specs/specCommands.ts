@@ -29,7 +29,6 @@ import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConf
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
-import { maybeShowCliInstallNudge } from '../../speckit/cliInstallNudge';
 
 function toWorkspaceRelative(absOrRel: string): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -648,11 +647,6 @@ function registerPhaseCommands(
                     step: cmd.name,
                     specDir: toWorkspaceRelative(targetDir),
                 });
-                maybeShowCliInstallNudge(
-                    context,
-                    vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-                    getConfiguredProviderType()
-                );
                 const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`);
                 if (LIFECYCLE_STEPS.has(cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
@@ -771,14 +765,6 @@ async function executeWorkflowStep(
     const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
         ? { model: stepConfig.model, effort: stepConfig.effort }
         : undefined;
-    // Skip on fellBack — that path already shows its own install warning.
-    if (!resolution.fellBack) {
-        maybeShowCliInstallNudge(
-            context,
-            vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
-            getConfiguredProviderType()
-        );
-    }
     const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${title}`, dispatchOptions);
     if (LIFECYCLE_STEPS.has(step)) {
         trackTerminal(terminal, targetDir, step as StepName);

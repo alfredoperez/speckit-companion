@@ -458,16 +458,26 @@ export class SpecEditorProvider {
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
 
-            // Anonymous spec.created. The spec dir doesn't exist yet (the AI
-            // creates it), so the persisted per-spec id is minted lazily on the
-            // first later event; this carries a fresh id as a creation marker.
-            // Workflow is derived from the resolved command (a Companion pick routes
-            // via the `companion.*` family) so a missing-extension downgrade to stock
-            // is reported as `speckit`, matching what actually ran.
+            // Anonymous spec.created + phase.dispatched(specify), sharing one
+            // freshly-minted id. The spec dir doesn't exist yet (the AI creates it),
+            // so the persisted per-spec id is minted lazily on the first later event;
+            // this carries the id as a creation marker. Workflow is derived from the
+            // resolved command (a Companion pick routes via the `companion.*` family)
+            // so a missing-extension downgrade to stock is reported as `speckit`.
+            const specInstanceId = crypto.randomUUID();
             sendTelemetryEvent('spec.created', {
                 providerId: providerType,
                 workflow: command.includes('companion.') ? COMPANION_WORKFLOW_NAME : 'speckit',
-                specInstanceId: crypto.randomUUID(),
+                specInstanceId,
+            });
+            // Specify is dispatched HERE (via Create Spec), not through the viewer rail
+            // like plan/tasks/implement — so emit the same phase.dispatched event the
+            // other three phases fire, or the funnel undercounts specify even though
+            // every plan implies a prior specify.
+            sendTelemetryEvent('phase.dispatched', {
+                providerId: providerType,
+                phase: WorkflowSteps.SPECIFY,
+                specInstanceId,
             });
 
             // Mark as submitted
