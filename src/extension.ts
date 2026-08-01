@@ -20,6 +20,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
+import { maybeShowActivationInstallNudge } from './speckit/activationInstallNudge';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -145,6 +146,11 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     void fireActivatedEvent(context);
+
+    // Nudge users of a spec-kit project that hasn't installed the Companion
+    // extension yet — a single, dismissible, provider-agnostic prompt (installing
+    // is a terminal command regardless of the AI provider). Never blocks activation.
+    maybeShowActivationInstallNudge(context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)
     const configManager = ConfigManager.getInstance();

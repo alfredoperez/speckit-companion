@@ -8,11 +8,11 @@ jest.mock('../../features/settings/companionPresetReconciler', () => ({
 }));
 
 import {
-    shouldShowCliInstallNudge,
-    maybeShowCliInstallNudge,
-    __resetCliInstallNudgeSession,
-    CliInstallNudgeGateInput,
-} from '../cliInstallNudge';
+    shouldShowActivationInstallNudge,
+    maybeShowActivationInstallNudge,
+    __resetActivationInstallNudgeSession,
+    ActivationInstallNudgeGateInput,
+} from '../activationInstallNudge';
 import { isCompanionInstalled } from '../../features/settings/companionPresetReconciler';
 import {
     initTelemetry,
@@ -20,7 +20,6 @@ import {
     __resetInstallPromptShownDedupe,
     INSTALL_PROMPT_EVENT,
 } from '../../core/telemetry';
-import { AIProviders } from '../../core/constants';
 
 interface TelemetryMockShape {
     __captured: { events: { name: string; properties?: Record<string, string> }[] };
@@ -37,12 +36,12 @@ function mockConfig(values: Record<string, unknown>): void {
 }
 
 /** All-true gate input — the one positive combination. */
-function positiveInput(): CliInstallNudgeGateInput {
+function positiveInput(): ActivationInstallNudgeGateInput {
     return {
         specKitDetected: true,
         companionInstalled: false,
         dismissed: false,
-        providerDispatchesToTerminal: true,
+        installPromptEnabled: true,
         alreadyShownThisSession: false,
     };
 }
@@ -56,97 +55,93 @@ function fakeContext(dismissed = false): vscode.ExtensionContext {
     } as unknown as vscode.ExtensionContext;
 }
 
-describe('shouldShowCliInstallNudge (gate predicate)', () => {
+describe('shouldShowActivationInstallNudge (gate predicate)', () => {
     it('returns true only for the full positive combination', () => {
-        expect(shouldShowCliInstallNudge(positiveInput())).toBe(true);
+        expect(shouldShowActivationInstallNudge(positiveInput())).toBe(true);
     });
 
     it('returns false when spec-kit is not detected', () => {
-        expect(shouldShowCliInstallNudge({ ...positiveInput(), specKitDetected: false })).toBe(false);
+        expect(shouldShowActivationInstallNudge({ ...positiveInput(), specKitDetected: false })).toBe(false);
     });
 
     it('returns false when the companion extension is already installed', () => {
-        expect(shouldShowCliInstallNudge({ ...positiveInput(), companionInstalled: true })).toBe(false);
+        expect(shouldShowActivationInstallNudge({ ...positiveInput(), companionInstalled: true })).toBe(false);
     });
 
     it('returns false when the nudge was already dismissed', () => {
-        expect(shouldShowCliInstallNudge({ ...positiveInput(), dismissed: true })).toBe(false);
+        expect(shouldShowActivationInstallNudge({ ...positiveInput(), dismissed: true })).toBe(false);
     });
 
-    it('returns false for a provider that does not dispatch to a terminal', () => {
-        expect(
-            shouldShowCliInstallNudge({ ...positiveInput(), providerDispatchesToTerminal: false })
-        ).toBe(false);
+    it('returns false when the install-prompt preference is off', () => {
+        expect(shouldShowActivationInstallNudge({ ...positiveInput(), installPromptEnabled: false })).toBe(false);
     });
 
     it('returns false when it has already shown this session', () => {
-        expect(
-            shouldShowCliInstallNudge({ ...positiveInput(), alreadyShownThisSession: true })
-        ).toBe(false);
+        expect(shouldShowActivationInstallNudge({ ...positiveInput(), alreadyShownThisSession: true })).toBe(false);
     });
 });
 
-describe('maybeShowCliInstallNudge (wrapper)', () => {
+describe('maybeShowActivationInstallNudge (wrapper)', () => {
     beforeEach(() => {
-        __resetCliInstallNudgeSession();
+        __resetActivationInstallNudgeSession();
         __resetInstallPromptShownDedupe();
         __resetTelemetryMock();
-        mockConfig({ telemetry: true });
+        mockConfig({ telemetry: true, 'companion.installPrompt': true });
         initTelemetry(new TelemetryService());
         (isCompanionInstalled as jest.Mock).mockReturnValue(false);
         (vscode.window.showInformationMessage as jest.Mock).mockReset().mockResolvedValue(undefined);
         (fs.existsSync as jest.Mock).mockReturnValue(true); // .specify present
     });
 
-    it('shows the hint and emits the terminal shown event on the positive path', () => {
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
+    it('shows the prompt and emits the activation shown event on the positive path', () => {
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).toHaveBeenCalledTimes(1);
         expect(__captured.events).toEqual([
-            { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'terminal' } },
+            { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'activation' } },
         ]);
     });
 
     it('shows at most once per session', () => {
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).toHaveBeenCalledTimes(1);
     });
 
     it('is silent (no render, no telemetry) when the companion extension is installed', () => {
         (isCompanionInstalled as jest.Mock).mockReturnValue(true);
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
         expect(__captured.events).toHaveLength(0);
     });
 
     it('is silent when spec-kit is not detected', () => {
         (fs.existsSync as jest.Mock).mockReturnValue(false);
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
         expect(__captured.events).toHaveLength(0);
     });
 
     it('is silent when the shared dismissal is set', () => {
-        maybeShowCliInstallNudge(fakeContext(true), '/root', AIProviders.CLAUDE);
+        maybeShowActivationInstallNudge(fakeContext(true), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
         expect(__captured.events).toHaveLength(0);
     });
 
-    it('is silent for an in-editor chat provider (already covered by #543)', () => {
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.IDE_CHAT);
+    it('is silent when the install-prompt preference is off', () => {
+        mockConfig({ telemetry: true, 'companion.installPrompt': false });
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
         expect(__captured.events).toHaveLength(0);
+    });
+
+    it('fires for any provider — no terminal-provider gate (installing is a terminal command regardless)', () => {
+        // No provider argument at all: the prompt is provider-agnostic by construction.
+        maybeShowActivationInstallNudge(fakeContext(), '/root');
+        expect(vscode.window.showInformationMessage as jest.Mock).toHaveBeenCalledTimes(1);
     });
 
     it('does not throw and does not render when there is no workspace root', () => {
-        expect(() => maybeShowCliInstallNudge(fakeContext(), undefined, AIProviders.CLAUDE)).not.toThrow();
-        expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
-    });
-
-    it('gates the telemetry emit on the same condition as the render (no emit when silent)', () => {
-        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
-        maybeShowCliInstallNudge(fakeContext(), '/root', AIProviders.CLAUDE);
-        expect(__captured.events).toHaveLength(0);
+        expect(() => maybeShowActivationInstallNudge(fakeContext(), undefined)).not.toThrow();
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
     });
 });

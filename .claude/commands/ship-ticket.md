@@ -1,12 +1,12 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Ship an ALREADY-BUILT ticket — code review → PR → Copilot → merge → learnings → install-local. Skips the build (you built it in SpecKit Companion). The tail of /fix-tickets, no rebuild.
+description: Ship an ALREADY-BUILT ticket — code review → PR → merge → learnings → install-local. Skips the build (you built it in SpecKit Companion). The tail of /fix-tickets, no rebuild.
 argument-hint: "<issue # e.g. 292>  (optional — defaults to the current branch's NNN-slug)  [--review-merge]"
 ---
 
 ## What this does
 
-The **post-build tail** for a ticket you built yourself in SpecKit Companion (GUI / `/speckit.companion.*`). It does **not** rebuild — it takes the committed work on the current feature branch and ships it: review, PR, Copilot, merge, learnings, reinstall. It is `/fix-tickets` steps 3–9 with the build skipped.
+The **post-build tail** for a ticket you built yourself in SpecKit Companion (GUI / `/speckit.companion.*`). It does **not** rebuild — it takes the committed work on the current feature branch and ships it: review, PR, merge, learnings, reinstall. It is `/fix-tickets` steps 3–8 with the build skipped.
 
 Use `/fix-tickets` when you want the loop to build the fix too. Use **`/ship-ticket`** when the code already exists on a branch and you just want the review→merge tail.
 
@@ -15,8 +15,8 @@ Use `/fix-tickets` when you want the loop to build the fix too. Use **`/ship-tic
 - **Never rebuild.** The branch already has the work; this command only reviews/ships it.
 - **Never merge red checks.** Leave the PR open and report.
 - **Auto-merge on** unless `--review-merge` is passed (then pause for a thumbs-up before `gh pr merge`).
-- **Copilot is best-effort** — poll ~10 min, then fall back to `/code-review` alone.
-- **Heavy steps run in subagents** (review, addressing Copilot, distilling learnings); the main loop only does git/gh/decisions.
+- **`/code-review` is the review gate** — high effort, findings applied; re-run it on any fix that itself changes real logic (the fix commit is the least-reviewed code).
+- **Heavy steps run in subagents** (review, distilling learnings); the main loop only does git/gh/decisions.
 
 ## Inputs
 
@@ -47,7 +47,9 @@ git status --porcelain                        # work should be committed; a clea
 - If anything is red, **stop and report** — don't ship a broken branch.
 
 ### 1. Code review — subagent (or `/code-review` inline)
-Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 6).
+Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 4).
+
+**Re-review the fix.** If your applied fixes themselves changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate, a DOM/lifecycle refactor), **re-run `/code-review` on the new commit** — the fix you just wrote is the least-reviewed code in the PR. Repeat until a pass surfaces nothing new worth a code change. Docs/CSS/label-only fixes don't need the second pass. Convergence ≠ zero findings; it's "no new finding worth a code change."
 
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.
@@ -57,32 +59,7 @@ gh pr create --title "<title>" --body "<body>" --base main
 ```
 Capture the PR number/URL.
 
-### 3. Request Copilot review — main loop (best-effort)
-Verified method — REST `requested_reviewers` with the bot login (`gh pr edit --add-reviewer Copilot` does NOT work):
-```bash
-gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_reviewers" \
-  -f "reviewers[]=copilot-pull-request-reviewer[bot]" >/dev/null 2>&1 \
-  && echo "[copilot] requested" \
-  || echo "[copilot] unavailable — proceeding on /code-review only"
-```
-Confirm the PR's `requested_reviewers` includes the Copilot bot. Record whether it took.
-
-### 4. Wait + address Copilot — main loop poll, then subagent
-Only if Copilot was requested. Copilot takes ~4–5 min, so `sleep 300` first, then poll at 90s (~12 min total):
-```bash
-sleep 300
-for i in $(seq 1 8); do
-  gh pr view <PR> --json reviews,comments \
-    --jq '[.reviews[],.comments[]] | map(select(.author.login|test("[Cc]opilot")))'
-  sleep 90
-done
-```
-- Actionable comments → subagent: fix, commit, push, re-run `npm test`. **Reply to + resolve each Copilot thread** after fixing it.
-- ~10 min, nothing → log "Copilot timed out; relying on /code-review" and proceed.
-- **Conditional 2nd pass:** if the fix changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate), capture the current Copilot inline-comment count as a baseline, re-request Copilot, poll for NEW comments; address, then merge. Docs/CSS/label-only fixes skip the 2nd pass.
-- **Stopping rule (avoid the treadmill):** each logic fix can trigger another pass, so this can loop 3–4×. Keep going only while a new pass surfaces a **real bug your change introduced or sits on**. Stop and merge once new findings are **pre-existing edge cases the PR didn't touch, prose/docstring precision, or equivalent nitpicks** — reply with the rationale and resolve, don't keep re-requesting. Convergence ≠ zero findings; it's "no new finding worth a code change."
-
-### 5. Merge + cleanup — main loop
+### 3. Merge + cleanup — main loop
 ```bash
 gh pr checks <PR> --watch || true
 ```
@@ -92,7 +69,7 @@ gh pr merge <PR> --squash --delete-branch
 ```
 If checks fail and can't be auto-addressed, leave the PR open, record "merged: NO — checks failing," report.
 
-### 6. Capture learnings + tick the box — distill subagent + main loop
+### 4. Capture learnings + tick the box — distill subagent + main loop
 - **Distill — route by shape, don't dump.** A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over adding a near-duplicate; **empty distill is the norm, not the exception.** Route each kept learning to where it fires:
   - a **codebase-specific review check** → `.claude/review-checklist.md`
   - a **universal authoring convention** → the matching `CLAUDE.md` section (Webview & rendering invariants / Code Comments / Design tokens)
@@ -101,7 +78,7 @@ If checks fail and can't be auto-addressed, leave the PR open, record "merged: N
   - If it can become a test or hook, propose that instead of prose. (`.claude/lessons-learned.md` is retired — don't append to it.)
 - **Tick the box:** flip this ticket's line in `~/dev/GitHub/obsidian-vault/Current.md` (and `Projects/speckit companion/composable-workflow/queue.md`) from `- [ ]` to `- [x]` with `→ [PR #NNN](url)`.
 
-### 7. Reinstall + report — main loop
+### 5. Reinstall + report — main loop
 Run `/install-local` so the workspace ends current, then drop the throwaway bump:
 ```bash
 git checkout main && git fetch origin && git pull --ff-only
@@ -124,5 +101,4 @@ End with a tight summary: issue shipped, PR link, merged / in-review / blocked, 
 - **Never merge red checks.** Report instead.
 - **Never commit version bumps or `.specify/` regenerated artifacts** into the feature PR (install-local's bump is throwaway — restore it).
 - **Reinstall the spec-kit extension when the branch touched `speckit-extension/**`** — `/install-local` only covers the VS Code side; `specify extension remove companion && specify extension add ./speckit-extension --dev` is what makes the new `/speckit.companion.*` commands resolvable in Claude Code. Restore the gitignored `.specify/` copies; never commit them on main.
-- Copilot is best-effort; its absence is not an error.
-- Always reply to + resolve review threads (ours and Copilot's) after fixing.
+- Always reply to + resolve any PR review threads after fixing.

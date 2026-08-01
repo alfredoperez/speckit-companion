@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Open a spec-kit project without the Companion extension and you'll now get a one-time prompt to install it — whatever AI provider you use.** The old install reminder only appeared for terminal-based providers, and only after you dispatched a command through the extension's buttons — so anyone running `/speckit.*` by hand, or using an in-editor chat provider, never saw it. Installing the extension is a terminal command that works the same for every provider, so the prompt is now provider-agnostic and fires when you open a project that already uses spec-kit. It's a single quiet **Install** notification with a **Don't show again** that shares one dismissal with the in-editor nudges, respects the `speckit.companion.installPrompt` setting, and never blocks activation.
+
 ## [0.31.0] - 2026-07-24
 
 ### Added

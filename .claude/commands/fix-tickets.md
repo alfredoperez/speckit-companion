@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Autonomously fix one or more speckit-companion GitHub issues with the SpecKit Companion pipeline — clean branch, fix, review, PR, Copilot review, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
+description: Autonomously fix one or more speckit-companion GitHub issues with the SpecKit Companion pipeline — clean branch, fix, review, PR, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
 
@@ -12,23 +12,21 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 
 1. **Clean slate + install-local FIRST** — on `main`, `git fetch && git pull --ff-only`, then run `/install-local` so this ticket is fixed by the freshest build **and the latest `/speckit.companion.*` commands** (the previous ticket's merge lands here). Discard the throwaway version bump, assert a clean tree. Refuse to start dirty.
 2. **Fix** — drive the SpecKit Companion pipeline to fix the ticket.
-3. **Code review** — run `/code-review`, apply findings.
+3. **Code review** — run `/code-review`, apply findings; re-run it on any fix that itself changed real logic.
 4. **PR** — open a PR with `/create-pr` conventions.
-5. **Copilot review** — request it, poll ~10 min.
-6. **Address** — fix any Copilot comments and push; if Copilot never responds, fall back to our `/code-review` and proceed.
-7. **Merge** — squash-merge, delete branch.
-8. **Capture learnings + tick the box** — distill this ticket's review + Copilot findings and route each to where it fires (review check → `.claude/review-checklist.md`; authoring convention → a *proposed* `CLAUDE.md` edit; loop mechanics → this file; gap → an issue candidate), so the *next* ticket's fix avoids the same bug class. Then check the ticket off in the vault's `Current.md` queue with its PR link.
-9. **Next ticket** — its step 1 `/install-local` installs *this* ticket's merge. After the last ticket, a closing `/install-local` installs the final merge. This is the point of the loop: prove the companion keeps working on itself as it improves.
+5. **Merge** — squash-merge, delete branch.
+6. **Capture learnings + tick the box** — distill this ticket's review findings and route each to where it fires (review check → `.claude/review-checklist.md`; authoring convention → a *proposed* `CLAUDE.md` edit; loop mechanics → this file; gap → an issue candidate), so the *next* ticket's fix avoids the same bug class. Then check the ticket off in the vault's `Current.md` queue with its PR link.
+7. **Next ticket** — its step 1 `/install-local` installs *this* ticket's merge. After the last ticket, a closing `/install-local` installs the final merge. This is the point of the loop: prove the companion keeps working on itself as it improves.
 
 After all tickets: write one **run report** (markdown, via the vault `obsidian` skill, into `Projects/speckit companion/reports/`) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by the pipeline (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
 - **Merge:** auto-merge, no per-ticket stop. You review via the final report + manual verification.
-- **Copilot wait:** poll ~10 min, then fall back to our `/code-review` alone.
+- **`/code-review` is the review gate** — high effort, findings applied; re-run it on any fix that itself changed real logic (the fix commit is the least-reviewed code). Loop until a pass surfaces nothing new worth a code change.
 - **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts. (`--light` lifts this; it has no per-ticket install to gate on. See [Light mode](#light-mode---light).)
-- **Heavy steps run in subagents** (the fix, the code review, addressing Copilot comments, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
-- **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review/Copilot findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
+- **Heavy steps run in subagents** (the fix, the code review, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
+- **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
 
 ## Inputs
@@ -55,8 +53,7 @@ For changes that are **small and already understood** — a wrong regex, a stale
 | Fix | SpecKit Companion pipeline (`specify → plan → tasks → implement`), writes `specs/NNN-*/` | **direct fix**, no spec folder |
 | Execution | strictly sequential | **parallel worktree subagents** |
 | `install-local` | before every ticket | **once, at the end** |
-| Code review | `/code-review` high, applied | **unchanged** |
-| Copilot | loop until a pass is clean | **one pass** on logic changes; **skipped** for docs/manifest-only |
+| Code review | `/code-review` high, applied; re-run on logic-changing fixes | **unchanged** |
 | Learnings | distill per ticket | **one distill** for the batch |
 | Report | themed HTML brief | **chat summary** |
 
@@ -78,7 +75,7 @@ So light mode is a **named exception for small changes, never the default.** If 
 - It's user-facing UI/UX with a visual judgment to make.
 - You can't name the files it will touch before starting.
 
-> A user-visible **bug** can still be light — but give it the full review + Copilot treatment even while skipping the spec ceremony. Skipping paperwork is not the same as skipping scrutiny.
+> A user-visible **bug** can still be light — but give it the full `/code-review` treatment (including the re-review pass on logic-changing fixes) even while skipping the spec ceremony. Skipping paperwork is not the same as skipping scrutiny.
 
 ## Parallel worktrees — the four collisions
 
@@ -117,12 +114,8 @@ If a subagent returns `escalate` — the task was bigger than it looked — **do
 ### L2. Review — one subagent per branch
 `/code-review` at **high** effort on each branch's diff vs `main`, apply findings, commit, re-run tests. Same as the full loop; this step is not lightened.
 
-### L3. PR + Copilot — main loop
-Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`.
-
-Copilot, by change kind:
-- **Logic** (parsers, derived state, dispatch, data writers) → request Copilot, **one pass**, address findings. If that fix itself changes logic, loop until a pass is clean (the full-loop rule still applies to the riskiest code).
-- **Docs / manifest / dead-code removal only** → **skip Copilot.** Our review + CI is the bar. A poll loop here buys nothing but 10 minutes.
+### L3. PR — main loop
+Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`. (The review already happened in L2; if an L2 fix changed real logic, re-run `/code-review` on it before opening the PR.)
 
 ### L4. Merge — main loop, sequential
 Merge **one at a time**, confirming CI green on each (`gh pr checks`). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
@@ -188,7 +181,9 @@ Subagent prompt must include:
 Capture this result. If the subagent reports it could not produce a passing fix, **skip merge** for this ticket, record it as "needs attention," and continue to the next ticket.
 
 #### 3. Code review — **subagent (or `/code-review` inline)**
-Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 8). Commit and re-run `npm test` if code changed.
+Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 6). Commit and re-run `npm test` if code changed.
+
+**Re-review the fix — loop until clean.** A fix commit is the least-reviewed code in the PR: it wasn't seen by the review that prompted it, and it lands under time pressure. If a fix changed real **LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, a DOM/lifecycle refactor) → **re-run `/code-review` on the new commit and address anything new, then repeat** — the fix you just wrote is now itself the unreviewed commit. Merge only on a pass that returns nothing new worth a code change. Docs/CSS/label-only fixes skip the extra pass. **Don't budget for exactly one extra pass** — #433 needed four, and each found something real (pass 3's top finding was a regression introduced by pass 2's fix). The trigger ("did the fix change logic?") is right; the count is not bounded. **Settle a framework-semantics dispute with a test, not an argument** — on #433 the review reasoned confidently about Preact input handling and was wrong; the real bug (Preact forces the DOM back to the vnode's `value`, so an open editor silently reverted and Save wrote the *old* text) was found only by writing the assertion.
 
 #### 4. Open the PR — main loop
 Use the repo's `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, and how-to-verify. Then:
@@ -198,48 +193,7 @@ gh pr create --title "<title>" --body "<body>" --base main
 ```
 Capture the PR number/URL.
 
-#### 5. Request Copilot review — main loop (best-effort)
-Add the GitHub Copilot reviewer. **Verified working method** (from the #218 dry run): the REST `requested_reviewers` call with the bot login — `gh pr edit --add-reviewer Copilot` does NOT work (fails with "Could not resolve user with login 'copilot'"). Try and gracefully fall back:
-```bash
-# Verified: REST requested_reviewers with the Copilot bot login.
-gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_reviewers" \
-  -f "reviewers[]=copilot-pull-request-reviewer[bot]" >/dev/null 2>&1 \
-  && echo "[copilot] requested" \
-  || echo "[copilot] unavailable — proceeding on our /code-review only"
-```
-Confirm it took by checking the PR's `requested_reviewers` includes the `Copilot` bot. Record whether Copilot was successfully requested.
-
-#### 6. Wait for + address Copilot — main loop poll, then **subagent**
-Only if Copilot was requested. Poll **gently** — Copilot takes **~4–5 min**, so **wait an initial `sleep 300` before the first check**, then poll at **90s** intervals (~12 min total). It is NOT a rate-limit risk (GitHub allows 5k req/hr); the delay just avoids no-op early checks. Run it as a background poll that exits on first hit:
-```bash
-sleep 300   # Copilot's SLA — don't poll before this
-for i in $(seq 1 8); do
-  gh pr view <PR> --json reviews,comments \
-    --jq '[.reviews[],.comments[]] | map(select(.author.login|test("[Cc]opilot")))'
-  # break when a Copilot review/comment with actionable content appears
-  sleep 90
-done
-```
-- If Copilot returns actionable comments → dispatch a subagent to address them: fix, commit, push. Re-run `npm test`.
-- If 10 min elapse with nothing → log "Copilot review timed out; relying on /code-review" and proceed. (This is the agreed fallback — our review covers it.)
-
-**Re-request Copilot after EVERY logic-changing fix — loop until a pass comes back clean.** A fix commit is the least-reviewed code in the PR: it was seen by neither Copilot nor `/code-review`, and it lands under time pressure. So:
-- **If the fix changed real LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, a DOM/lifecycle refactor, etc.) → **capture the current Copilot inline-comment count as a baseline, re-request Copilot, and poll for NEW comments** (count > baseline). Address any new findings, then **repeat** — the fix you just wrote is now itself the unreviewed commit. Merge only on a pass that returns nothing new (~12 min quiet = all-clear).
-- **If the fix was only docs / CSS / labels / a comment** → skip the extra pass; merge after CI. A second loop there just adds ~5–12 min for no signal.
-- **Don't budget for exactly one extra pass.** #433 needed **four**, and each found something real — pass 3's top finding was a regression *introduced by pass 2's fix* (a cycle-breaking refactor left `closeInlineEditor()` unable to find its target). The trigger condition ("did the fix change logic?") is right; the count is not bounded.
-- **A finding two independent reviewers raise is a fix order, not a note.** `/code-review` flagged a circular import and declined to fix it ("resolves fine today"); Copilot re-raised it independently. When the second reviewer lands on something ours consciously waived, do it — breaking that cycle surfaced a *second*, pre-existing cycle of the same class that neither reviewer had seen.
-- **Settle a framework-semantics dispute with a test, not an argument.** On #433 both `/code-review` and Copilot reasoned confidently about Preact's input handling and **both were wrong** — Copilot's stated bug ("controlled, can't type") didn't exist, and the real one (Preact forces the DOM back to the vnode's `value`, so an open editor silently reverted and Save wrote the *old* text) was found only by writing the test. When a review thread turns on "how does the framework behave here," stop arguing and write the assertion.
-
-Re-request + baseline pattern:
-```bash
-BASE=$(gh api "repos/alfredoperez/speckit-companion/pulls/<PR>/comments" --jq '[.[]|select(.user.login|test("[Cc]opilot"))]|length')
-gh api -X POST "repos/alfredoperez/speckit-companion/pulls/<PR>/requested_reviewers" -f "reviewers[]=copilot-pull-request-reviewer[bot]" >/dev/null 2>&1
-# then sleep 300 and poll for the inline-comment count to exceed $BASE (new findings); if none in ~12 min, merge.
-# Re-run this whole block after each logic-changing fix — the baseline resets each round.
-```
-This caught real logic bugs across the touchups batch, and on #433 it kept finding them through four rounds — including a regression a fix commit had just introduced.
-
-#### 7. Merge + cleanup — main loop
+#### 5. Merge + cleanup — main loop
 Confirm CI/checks are green (`gh pr checks <PR>`):
 ```bash
 gh pr checks <PR> --watch || true     # let CI finish
@@ -252,10 +206,10 @@ gh pr merge <PR> --squash --delete-branch
 ```
 If checks fail and can't be auto-addressed, leave the PR open, record as "merged: NO — checks failing," continue.
 
-#### 8. Capture learnings + tick the box — **distill subagent** (cheap) + main loop
+#### 6. Capture learnings + tick the box — **distill subagent** (cheap) + main loop
 Two things, so the loop compounds and your tracker stays current:
 
-**a) Distill learnings — route by shape, don't dump.** Dispatch a small subagent with the code-review findings (step 3) and Copilot comments (step 6) for THIS ticket. A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over a near-duplicate; **an empty distill is the norm.** Route each kept learning to where it fires:
+**a) Distill learnings — route by shape, don't dump.** Dispatch a small subagent with the code-review findings (step 3) for THIS ticket. A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over a near-duplicate; **an empty distill is the norm.** Route each kept learning to where it fires:
 - a **codebase-specific review check** → `.claude/review-checklist.md`
 - a **universal authoring convention** → the matching `CLAUDE.md` section (Webview & rendering invariants / Code Comments / Design tokens) — *proposed* in the report, not auto-applied
 - a **loop-mechanics** improvement → this command file
@@ -266,7 +220,7 @@ Two things, so the loop compounds and your tracker stays current:
 
 Mark the ticket task `completed`.
 
-#### 9. Next ticket — main loop
+#### 7. Next ticket — main loop
 **Do not** run install-local here — the next ticket's **step 1** pulls this merge and installs it first thing. Loop to the next ticket.
 
 ---
@@ -288,7 +242,7 @@ Write **one markdown run report** (via the vault `obsidian` skill) to `~/dev/Git
 - **Already exercised by the pipeline** — what the re-run of the companion pipeline + tests + CI proved (so the user knows NOT to re-test those).
 - **🧠 Lessons captured this run** — new review checks added to `.claude/review-checklist.md` and loop-mechanics tweaks to this command file (with where each landed).
 - **🏗️ Architecture / skill flags** — the promotion candidates accumulated in step 8, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion for the user to approve.
-- **Needs attention** — any ticket skipped (and why), PR left in review, or Copilot/CI gap.
+- **Needs attention** — any ticket skipped (and why), PR left in review, or a CI gap.
 
 End your chat response with a tight summary: tickets processed, merged vs in-review vs skipped, the final installed version, lessons-captured count, and a one-line pointer to the report — focused on *what happened*, not *how*.
 
@@ -298,7 +252,7 @@ End your chat response with a tight summary: tickets processed, merged vs in-rev
 - **Never parallelize tickets in the full loop** — the `install-local` gate is the whole point. (`--light` parallelizes *because* it has no such gate; it must still use `isolation: "worktree"` and the disjoint-file check.)
 - **Never force-merge red checks.** Leave the PR open and report it.
 - **Auto-merge is on by default** (per this loop's design). If the user passed `--review-merge` in `$ARGUMENTS`, pause for a thumbs-up before each `gh pr merge` instead.
-- Copilot is best-effort; its absence is not an error.
+- **`/code-review` is the review gate** — re-run it on any fix that changed real logic; convergence is "no new finding worth a code change," not zero findings.
 - **Light mode never silently absorbs a big change.** If a `--light` task needs a design decision, or touches derived state / lifecycle / capture, the subagent returns `escalate` and it goes through the full loop instead. A widening *file set* alone is not an escalation — one coherent root cause may legitimately span more files than you named (see [What light mode COSTS](#what-light-mode-costs--read-before-choosing-it)); report the widened set and re-check disjointness. Skipping paperwork is not skipping scrutiny.
 - **Never trust a test run in a fresh worktree until `npm ci` has run there.** Module-resolution failures masquerade as regressions.
 - **Never run `install-local` inside a worktree.** It installs a global VS Code extension and regenerates `.specify/` — it belongs to the main loop, once, at the end.
