@@ -627,8 +627,7 @@ function registerPhaseCommands(
                         cmd.title,
                         targetDir,
                         refinementContext,
-                        outputChannel,
-                        context
+                        outputChannel
                     );
                     return;
                 }
@@ -674,8 +673,7 @@ async function executeWorkflowStep(
     title: string,
     targetDir: string,
     refinementContext: string | undefined,
-    outputChannel: vscode.OutputChannel,
-    context: vscode.ExtensionContext
+    outputChannel: vscode.OutputChannel
 ): Promise<void> {
     // Get or select workflow for this feature
     const workflow = await getOrSelectWorkflow(targetDir);
