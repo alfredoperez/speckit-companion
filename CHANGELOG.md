@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-08-01
+
 ### Changed
 
 - **Open a spec-kit project without the Companion extension and you'll now get a one-time prompt to install it — whatever AI provider you use.** The old install reminder only appeared for terminal-based providers, and only after you dispatched a command through the extension's buttons — so anyone running `/speckit.*` by hand, or using an in-editor chat provider, never saw it. Installing the extension is a terminal command that works the same for every provider, so the prompt is now provider-agnostic and fires when you open a project that already uses spec-kit. It's a single quiet **Install** notification with a **Don't show again** that shares one dismissal with the in-editor nudges, respects the `speckit.companion.installPrompt` setting, and never blocks activation.
+- **Companion becomes the default workflow once its spec-kit extension is installed.** If you haven't explicitly chosen a workflow, Create New Spec and per-feature resolution now pre-select **SpecKit Companion** whenever the companion spec-kit extension is present. An explicit `speckit.defaultWorkflow` setting at any scope still wins, and without the extension the default stays stock SpecKit.
+
+### Fixed
+
+- **Every finished spec shows real timing now, even one you ran entirely from the CLI.** A spec driven start-to-finish in the terminal used to report "Timing coverage: 0 of 4 phases" despite the hooks recording real per-step timestamps; a coherent CLI run now derives its full per-phase timing and total elapsed.
+- **The viewer's step strip no longer overlaps itself when the pane is narrow.** In the folded layout each step now sits inline with its file chips and the strip scrolls sideways instead of colliding; empty coverage is hidden rather than shown as a bare header, and spec names render acronyms correctly instead of title-casing them.
 
 ## [0.31.0] - 2026-07-24
 
