@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-08-01
+
 ### Changed
 
 - **Your test suites no longer run twice at the end of a spec.** If you attach your own consolidated validation run as a post-implement hook and mark it `owns: validation`, the tasks command's final Polish phase now defers its "validate against Success Criteria" task to that hook instead of generating a second suite run — your suites run in exactly one place. The marker is required so that review, PR, and deploy hooks (which share the same post-implement slot) don't accidentally suppress validation. Projects without a marked hook are unchanged: Polish still generates and owns the validation run.
