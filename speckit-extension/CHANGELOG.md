@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+
+- **The minimum spec-kit version check no longer carries a stale `.dev0` pin.** The floor was pinned to `>=0.9.5.dev0` to admit spec-kit's own git-HEAD dev builds back when spec-kit's `main` was still on the 0.9.5 line — that line shipped stable long ago (spec-kit's `main` now builds `0.15.x`), so the pin had become dead weight and the only catalog entry not using a bare floor. Floor is now `>=0.9.5`, matching every other catalog entry's convention. No install behavior changes for anyone on a real release.
+
 ## [0.20.1] - 2026-08-01
 
 ### Changed
