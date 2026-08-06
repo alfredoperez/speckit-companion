@@ -1,3 +1,4 @@
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { SpecExplorerProvider } from '../features/specs/specExplorerProvider';
@@ -180,8 +181,14 @@ function setupClaudeSettingsWatcher(
     context: vscode.ExtensionContext,
     steeringExplorer: SteeringExplorerProvider
 ): void {
+    // Base the pattern on `~/.claude` rather than `$HOME`. A RelativePattern
+    // whose pattern contains a path segment (e.g. `.claude/settings.json`) is
+    // treated as "complex" by VS Code and makes the base folder be watched
+    // *recursively* — which meant recursively watching the entire home
+    // directory and exhausting the inotify watch limit on Linux (ENOSPC).
+    const claudeDir = vscode.Uri.file(path.join(os.homedir(), '.claude'));
     const claudeSettingsWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(process.env.HOME || '', '.claude/settings.json')
+        new vscode.RelativePattern(claudeDir, 'settings.json')
     );
 
     claudeSettingsWatcher.onDidChange(() => {
@@ -198,8 +205,11 @@ function setupClaudeMdWatchers(
     context: vscode.ExtensionContext,
     steeringExplorer: SteeringExplorerProvider
 ): void {
+    // See `setupClaudeSettingsWatcher`: keep the base at `~/.claude` so the
+    // pattern stays simple and the watcher stays non-recursive.
+    const claudeDir = vscode.Uri.file(path.join(os.homedir(), '.claude'));
     const globalClaudeMdWatcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(process.env.HOME || '', '.claude/CLAUDE.md')
+        new vscode.RelativePattern(claudeDir, 'CLAUDE.md')
     );
     const projectClaudeMdWatcher = vscode.workspace.createFileSystemWatcher('**/CLAUDE.md');
 

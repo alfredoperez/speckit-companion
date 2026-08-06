@@ -1,3 +1,5 @@
+import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { setupFileWatchers } from '../../../src/core/fileWatchers';
 import { getFileWatcherPatterns } from '../../../src/core/specDirectoryResolver';
@@ -38,6 +40,30 @@ describe('setupSpecContextWatchers (via setupFileWatchers)', () => {
             .map(r => r.value)
             .filter(w => typeof w.pattern === 'string' && w.pattern.endsWith('.spec-context.json'));
     }
+
+    function globalClaudeWatchers(): any[] {
+        const results = (vscode.workspace.createFileSystemWatcher as jest.Mock).mock.results;
+        return results
+            .map(r => r.value)
+            .filter(w => w.pattern instanceof vscode.RelativePattern);
+    }
+
+    it('scopes global Claude watchers non-recursively to the .claude directory', () => {
+        setupFileWatchers(context, specExplorer, steeringExplorer, specViewer, outputChannel);
+
+        const patterns = globalClaudeWatchers().map(w => w.pattern);
+
+        expect(patterns).toHaveLength(2);
+        expect(patterns.map(relativePattern => relativePattern.base)).toEqual([
+            path.join(os.homedir(), '.claude'),
+            path.join(os.homedir(), '.claude'),
+        ]);
+        expect(patterns.map(relativePattern => relativePattern.pattern).sort()).toEqual([
+            'CLAUDE.md',
+            'settings.json',
+        ]);
+        expect(patterns.every(relativePattern => !/[\\/]/.test(relativePattern.pattern))).toBe(true);
+    });
 
     it('registers one spec-context watcher per configured spec-directory pattern', () => {
         setupFileWatchers(context, specExplorer, steeringExplorer, specViewer, outputChannel);
