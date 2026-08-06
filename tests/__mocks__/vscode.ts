@@ -91,8 +91,14 @@ export class RelativePattern {
     base: string;
     pattern: string;
 
-    constructor(base: string | { uri: Uri }, pattern: string) {
-        this.base = typeof base === 'string' ? base : base.uri.fsPath;
+    constructor(base: string | Uri | { uri: Uri }, pattern: string) {
+        if (typeof base === 'string') {
+            this.base = base;
+        } else if ('fsPath' in base) {
+            this.base = base.fsPath;
+        } else {
+            this.base = base.uri.fsPath;
+        }
         this.pattern = pattern;
     }
 }
