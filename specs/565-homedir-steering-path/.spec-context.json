@@ -1,0 +1,259 @@
+{
+  "workflow": "companion",
+  "specName": "homedir steering path",
+  "branch": "fix/homedir-steering-path",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-17T00:47:47.131Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-17T00:49:32.722Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-17T00:49:32.801Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-17T00:49:32.879Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-17T00:49:32.959Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-17T00:49:33.037Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-17T00:49:46.716Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-17T00:49:54.655Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-17T00:50:04.323Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-17T00:51:49.123Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-17T00:52:02.392Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-17T00:52:33.765Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-17T00:52:33.851Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "steering"
+    ],
+    "synced": [
+      "steering"
+    ]
+  },
+  "last_action": "simplified, re-verified — 134 suites / 1884 tests pass in 5.0s",
+  "coverage": {
+    "FR-001": {
+      "title": "Resolve the user's home directory from the operating system rather than the environment variable when creating a global steering file",
+      "tests": [
+        "src/features/steering/__tests__/steeringManager.test.ts::writes the global steering file under the OS home directory when HOME is unset"
+      ]
+    },
+    "FR-002": {
+      "title": "The write location must match the location the extension watches and reads for global steering files",
+      "tests": [
+        "src/features/steering/__tests__/steeringManager.test.ts::writes to the same home directory when HOME is set normally"
+      ]
+    },
+    "FR-003": {
+      "title": "Never create a global steering file at a path relative to the current working directory",
+      "tests": [
+        "src/features/steering/__tests__/steeringManager.test.ts::never resolves the target to a path relative to the current working directory"
+      ]
+    },
+    "FR-004": {
+      "title": "Existing behavior is unchanged where the home-directory environment variable is set correctly",
+      "tests": [
+        "src/features/steering/__tests__/steeringManager.test.ts::leaves the existing file untouched when the user cancels the overwrite prompt"
+      ]
+    },
+    "FR-005": {
+      "title": "Retain automated coverage proving the created file's location derives from the operating system's home directory",
+      "tests": [
+        "src/features/steering/__tests__/steeringManager.test.ts"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 5,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "context": [
+    "living spec: steering",
+    "area: src/features/steering/steeringManager.ts",
+    "constraint: home-directory resolution must match the watchers fixed in PR #579"
+  ],
+  "intent": "Make global steering file creation resolve the home directory from the OS so the write location matches where the extension watches and reads.",
+  "expectations": [
+    "No migration or cleanup of stray .claude folders previously created at a relative path",
+    "No changes to the watcher scoping already fixed in PR #579",
+    "No Windows-specific override beyond the OS-reported home directory"
+  ],
+  "approach": "Resolve the home directory via Node's os.homedir() in steeringManager instead of process.env.HOME, and add test coverage for the unset/empty case.",
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Imported the Node os module into the steering manager",
+      "files": [
+        "src/features/steering/steeringManager.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Resolved the global .claude directory from os.homedir() instead of process.env.HOME",
+      "files": [
+        "src/features/steering/steeringManager.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added 5 regression tests for global steering file path resolution; verified 3 fail against the old code",
+      "files": [
+        "src/features/steering/__tests__/steeringManager.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added an Unreleased Fixed changelog entry in user-facing release-note voice",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified TypeScript compile and full suite: 134 suites / 1884 tests pass, no regressions",
+      "files": [
+        "(verification)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compilation",
+      "command": "npm run compile",
+      "result": "clean, no errors",
+      "warnings": []
+    },
+    {
+      "what": "Full test suite",
+      "command": "npm test",
+      "result": "134 suites / 1884 tests pass (was 133/1879 before; +1 suite, +5 tests)",
+      "warnings": []
+    },
+    {
+      "what": "Regression test genuinely catches the bug",
+      "command": "temporarily reverted the fix and re-ran the new test",
+      "result": "3 of 5 cases fail against the old process.env.HOME code and pass against os.homedir()",
+      "warnings": []
+    },
+    {
+      "what": "Simplification pass and re-verification",
+      "command": "code-simplifier agent + npm run compile + npm test",
+      "result": "134 suites / 1884 tests pass; suite time down from 16.4s to 5.0s after removing the 3s timer waits; regression property re-confirmed (3 of 5 still fail against the old code)",
+      "warnings": []
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Use os.homedir() with no environment-variable fallback at all",
+      "why": "os.homedir() already consults the platform-appropriate source on every OS and always returns an absolute path, so a HOME fallback could only reintroduce the relative-path bug",
+      "rejected": "process.env.HOME || os.homedir()"
+    },
+    {
+      "decision": "Extend the shared vscode mock with withProgress, ProgressLocation, and workspace.openTextDocument",
+      "why": "CLAUDE.md requires VS Code API gaps to be filled in tests/__mocks__/vscode.ts rather than stubbed per test file",
+      "rejected": "Mocking NotificationUtils inside the new test file"
+    },
+    {
+      "decision": "Mock NotificationUtils in the test file instead of adding withProgress/ProgressLocation to the shared vscode mock",
+      "why": "The real withProgress runs its task, so each case awaited a 3s auto-dismiss timer and the file took ~12s; mocking our own notification module keeps the test focused on path resolution and leaves the shared mock unchanged",
+      "rejected": "Extending the shared vscode mock with withProgress + ProgressLocation"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Global steering file creation now resolves the home directory via os.homedir(), with 5 regression tests and a changelog entry"
+    }
+  },
+  "concerns": [
+    {
+      "note": "The living-spec fold appended the ADDED requirement after the ## Uncovered section instead of inside ## Requirements; corrected by hand in this change. Worth a fix in the fold script so placement is right automatically.",
+      "step": "implement"
+    }
+  ]
+}

@@ -130,6 +130,15 @@ Any parse or read failure while assembling a section SHALL yield an empty result
 - **THEN** no group entries are produced
 - **AND** the rest of the tree renders normally
 
+### A file the view creates lands where the view watches and reads
+
+Every location the view resolves for a user-scope file SHALL be derived from the operating system's reported home directory, so the folder written to when creating a file, the folder watched for changes, and the folder read when listing are always the same. Deriving any one of them from an environment variable instead lets them disagree — an unset variable yields a path relative to the editor's working directory, and the created file becomes invisible to the view that just created it.
+
+#### Scenario: creating the global rules file with no home variable set
+- **WHEN** the user creates the global rules file in an environment that does not define the home-directory variable
+- **THEN** the file is created under the operating system's reported home directory
+- **AND** the view lists it without a manual refresh
+
 ## Uncovered
 
 _None — every file in the area was read._

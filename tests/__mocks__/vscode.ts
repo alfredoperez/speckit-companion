@@ -153,6 +153,7 @@ export const workspace = {
         delete: jest.fn().mockResolvedValue(undefined),
     },
     workspaceFolders: undefined as any,
+    openTextDocument: jest.fn().mockResolvedValue({}),
     findFiles: jest.fn().mockResolvedValue([]),
     createFileSystemWatcher: jest.fn().mockImplementation(createMockFileSystemWatcher),
     getConfiguration: jest.fn().mockReturnValue({
