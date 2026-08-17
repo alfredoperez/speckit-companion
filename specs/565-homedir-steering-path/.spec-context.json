@@ -111,7 +111,7 @@
       "steering"
     ]
   },
-  "last_action": "simplified, re-verified — 134 suites / 1884 tests pass in 5.0s",
+  "last_action": "PR #581 opened for review — not merged",
   "coverage": {
     "FR-001": {
       "title": "Resolve the user's home directory from the operating system rather than the environment variable when creating a global steering file",
