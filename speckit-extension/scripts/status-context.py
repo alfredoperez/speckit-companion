@@ -45,9 +45,9 @@ STEP_COMMAND = {
     "implement": "/speckit.implement",
 }
 
-# Turbo/companion family — mirrors STEP_COMMAND's keys. Resume dispatches these
-# when the spec's recorded profile is "turbo" so the command family matches the
-# flow the spec has been running.
+# Companion family — mirrors STEP_COMMAND's keys. Status reports and resume
+# dispatches these when the spec records the companion workflow, so the command
+# family matches the flow the spec has been running.
 COMPANION_STEP_COMMAND = {
     "specify": "/speckit.companion.specify",
     "plan": "/speckit.companion.plan",
@@ -55,11 +55,16 @@ COMPANION_STEP_COMMAND = {
     "implement": "/speckit.companion.implement",
 }
 
+def _is_companion(ctx: dict) -> bool:
+    """Whether the spec runs the companion pipeline. `workflow` is the live
+    signal; `profile: turbo` is the retired field, still honored so specs
+    written before the workflow-choice collapse keep resuming on companion."""
+    return ctx.get("workflow") == "companion" or ctx.get("profile") == "turbo"
 
-def _step_command(step: str | None, profile: str | None) -> str | None:
-    """Resolve a step to its command in the family the spec is running:
-    the companion map for turbo specs, the stock map otherwise (standard/absent)."""
-    table = COMPANION_STEP_COMMAND if profile == "turbo" else STEP_COMMAND
+
+def _step_command(step: str | None, companion: bool) -> str | None:
+    """Resolve a step to its command in the family the spec is running."""
+    table = COMPANION_STEP_COMMAND if companion else STEP_COMMAND
     return table.get(step)
 
 # Status that marks each step's own completion (the point at which we advance).
@@ -157,7 +162,7 @@ def resolve(feature_dir: Path) -> dict:
     status = ctx.get("status")
     spec_name = ctx.get("specName") or wc._spec_name(feature_dir)
     decisions = _decisions(ctx)
-    profile = ctx.get("profile")
+    companion = _is_companion(ctx)
 
     resolution = {
         "source": source,
@@ -186,7 +191,7 @@ def resolve(feature_dir: Path) -> dict:
             resolution["nextActionLabel"] = "Pipeline complete"
             return resolution
         resolution["nextStep"] = "implement"
-        resolution["nextCommand"] = _step_command("implement", profile)
+        resolution["nextCommand"] = _step_command("implement", companion)
         resolution["nextTask"] = next_task
         resolution["nextActionLabel"] = f"Continue implementation at {next_task}"
         return resolution
@@ -196,7 +201,7 @@ def resolve(feature_dir: Path) -> dict:
         # Current step finished — advance to the next pipeline step.
         next_step = NEXT_STEP.get(current_step)
         resolution["nextStep"] = next_step
-        resolution["nextCommand"] = _step_command(next_step, profile) if next_step else None
+        resolution["nextCommand"] = _step_command(next_step, companion) if next_step else None
         resolution["nextActionLabel"] = NEXT_LABEL.get(next_step, "Continue") if next_step else "Pipeline complete"
         if next_step is None:
             resolution["complete"] = True
@@ -207,11 +212,11 @@ def resolve(feature_dir: Path) -> dict:
         if current_step in ("clarify", "analyze"):
             next_step = NEXT_STEP.get(current_step)
             resolution["nextStep"] = next_step
-            resolution["nextCommand"] = _step_command(next_step, profile) if next_step else None
+            resolution["nextCommand"] = _step_command(next_step, companion) if next_step else None
             resolution["nextActionLabel"] = NEXT_LABEL.get(next_step, "Continue")
         else:
             resolution["nextStep"] = current_step
-            resolution["nextCommand"] = _step_command(current_step, profile)
+            resolution["nextCommand"] = _step_command(current_step, companion)
             resolution["nextActionLabel"] = f"Finish {current_step}"
 
     return resolution

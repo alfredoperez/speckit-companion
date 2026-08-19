@@ -633,6 +633,36 @@ class StatusResolveTests(unittest.TestCase):
         self.assertEqual(res["nextCommand"], "/speckit.tasks")
         self.assertEqual(res["decisions"], ["Use the existing dispatch path", "No new schema field"])
 
+    def test_companion_workflow_resolves_the_companion_command_family(self) -> None:
+        rows = {
+            ("specify", "specified"): "/speckit.companion.plan",
+            ("plan", "planned"): "/speckit.companion.tasks",
+            ("tasks", "ready-to-implement"): "/speckit.companion.implement",
+        }
+        for (step, status), expected in rows.items():
+            wc.update_context(self.fd, step, status, "extension")
+            ctx = _ctx(self.fd)
+            ctx["workflow"] = "companion"
+            (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+            res = status_mod.resolve(self.fd)
+            self.assertEqual(res["nextCommand"], expected, f"{step}/{status}")
+            (self.fd / ".spec-context.json").unlink()
+
+    def test_stock_workflow_still_resolves_stock_commands(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["workflow"], "speckit")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextCommand"], "/speckit.plan")
+
+    def test_legacy_turbo_profile_still_resolves_the_companion_family(self) -> None:
+        wc.update_context(self.fd, "specify", "specified", "extension")
+        ctx = _ctx(self.fd)
+        ctx["profile"] = "turbo"
+        (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextCommand"], "/speckit.companion.plan")
+
     def test_next_step_rows(self) -> None:
         rows = {
             ("specify", "specified"): "/speckit.plan",

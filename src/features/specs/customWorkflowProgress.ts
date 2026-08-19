@@ -21,7 +21,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SpecContext, HistoryEntry, StepName, STEP_NAMES } from '../../core/types/specContext';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { getStepFile } from '../workflows/workflowManager';
+import { getStepFile, DEFAULT_WORKFLOW, COMPANION_WORKFLOW } from '../workflows/workflowManager';
+
+const BUILTIN_STEP_SEQUENCES: readonly string[][] = [DEFAULT_WORKFLOW, COMPANION_WORKFLOW]
+    .map(w => (w.steps ?? []).map(s => s.name));
+
+function isBuiltinWorkflow(steps: WorkflowStepConfig[]): boolean {
+    return BUILTIN_STEP_SEQUENCES.some(
+        seq => seq.length === steps.length && seq.every((name, i) => name === steps[i].name)
+    );
+}
 
 /**
  * A workflow is "custom" for progression purposes when ANY of its steps —
@@ -30,11 +39,14 @@ import { getStepFile } from '../workflows/workflowManager';
  * verify) has custom action-only steps (discuss/execute/verify) but its one
  * navigable step reuses the lifecycle name `plan`. Looking only at navigable
  * steps would misread that as a built-in workflow and strand its progression.
- * Built-in workflows use lifecycle names for every step, so they stay non-custom
- * and are left entirely to the capture-context machinery.
+ * A workflow whose step-name sequence exactly matches one the extension ships is
+ * exempt outright, so a built-in step outside the lifecycle set — the Companion
+ * pipeline's terminal `mark-complete` — cannot misclassify it. Built-in workflows
+ * are left entirely to the capture-context machinery.
  */
 export function isCustomWorkflow(steps: WorkflowStepConfig[] | undefined): boolean {
     if (!steps) return false;
+    if (isBuiltinWorkflow(steps)) return false;
     return steps.some(s => !STEP_NAMES.includes(s.name as StepName));
 }
 
@@ -42,16 +54,22 @@ const CORE_DOCS = ['spec.md', 'plan.md', 'tasks.md'];
 
 /**
  * Every `.md` in the spec dir (recursively, hidden dirs skipped) that no step
- * claims as its own file and isn't a lifecycle core doc. This is the same
+ * claims — as its own file, as a `subFile`, or by living inside a step's
+ * `subDir` — and isn't a lifecycle core doc. A step's `subDir` is an open-ended
+ * container (`checklists/`, `contracts/`, `issues/`) whose filenames the workflow
+ * never predicts, so the whole directory is claimed rather than its entries;
+ * `stepHasOutput` already credits it to the step that declares it. This is the same
  * "related docs" set the Specs tree computes — the files a step marked
  * `includeRelatedDocs` produces when its output doesn't match a fixed name
  * (GSD's `gsd-plan-phase` writes `01-01-PLAN.md`, not `plan.md`).
  */
 function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): boolean {
     const claimed = new Set<string>();
+    const claimedDirs = new Set<string>();
     for (const s of allSteps) {
         claimed.add(getStepFile(s));
         for (const f of s.subFiles ?? []) claimed.add(f);
+        if (s.subDir) claimedDirs.add(s.subDir);
     }
     let found = false;
     const scan = (dir: string, rel: string): void => {
@@ -64,6 +82,7 @@ function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): bo
             if (e.name.startsWith('.')) continue;
             const entryRel = rel ? `${rel}/${e.name}` : e.name;
             if (e.isDirectory()) {
+                if (claimedDirs.has(entryRel)) continue;
                 scan(path.join(dir, e.name), entryRel);
             } else if (e.isFile() && e.name.endsWith('.md')) {
                 if (!rel && (CORE_DOCS.includes(e.name) || claimed.has(e.name))) continue;
