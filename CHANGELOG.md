@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Creating a global CLAUDE.md now always lands in your home directory, so the Steering view actually shows it.** The create action worked out the home directory from the `HOME` environment variable, and when that variable wasn't set — which is common on Windows — the file was written to a `.claude` folder relative to whatever directory the editor started in. The extension watches and reads your real home directory, so the new file simply never appeared. Home directory resolution is now the same everywhere the extension looks, writes, and watches. ([#580](https://github.com/alfredoperez/speckit-companion/issues/580))
+
 ## [0.31.1] - 2026-08-01
 
 ### Changed

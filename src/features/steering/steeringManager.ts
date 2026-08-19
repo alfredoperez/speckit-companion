@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as os from 'os';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { ConfigManager } from '../../core/utils/configManager';
@@ -186,7 +187,7 @@ Analyze the document and:
     }
 
     async createUserSteeringFile() {
-        const claudeDir = path.join(process.env.HOME || '', '.claude');
+        const claudeDir = path.join(os.homedir(), '.claude');
         const filePath = path.join(claudeDir, 'CLAUDE.md');
 
         try {
