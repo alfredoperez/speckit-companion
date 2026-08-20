@@ -125,8 +125,9 @@ export class UpdateChecker {
             'Skip'
         ).then(async (selection) => {
             if (selection === 'View Changelog') {
-                // Open GitHub releases page
-                const releaseUrl = 'https://github.com/alfredoperez/speckit-companion/releases/latest';
+                // Resolve by tag: both products publish into one releases list, so
+                // `/releases/latest` can land on the spec-kit extension instead.
+                const releaseUrl = `https://github.com/alfredoperez/speckit-companion/releases/tag/v${latestVersion}`;
                 await vscode.env.openExternal(vscode.Uri.parse(releaseUrl));
             } else if (selection === 'Skip') {
                 // Remember skipped version

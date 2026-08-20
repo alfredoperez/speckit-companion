@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **"View Changelog" on the update notification now opens the version it just offered you.** Both this extension and its spec-kit companion publish their releases into one shared list, so the link — which asked GitHub for whichever release was newest — could land on the spec-kit extension's notes instead: a different product, a different version number, and changes that had nothing to do with the update you were being offered. The link now points straight at the offered version's own release. Which version you're told about was always correct; only the link was wrong. ([#585](https://github.com/alfredoperez/speckit-companion/issues/585))
+
+
 ## [0.31.2] - 2026-08-19
 
 ### Fixed

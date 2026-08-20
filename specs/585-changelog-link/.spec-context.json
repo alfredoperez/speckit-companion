@@ -1,0 +1,165 @@
+{
+  "workflow": "companion",
+  "specName": "changelog link",
+  "branch": "fix/585-changelog-link",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-20T11:07:06.456Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-20T11:07:43.956Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-20T11:08:10.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-20T11:08:10.097Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-20T11:08:24.397Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-20T11:08:24.565Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-20T11:08:58.832Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-20T11:08:58.917Z"
+    }
+  ],
+  "unattended": true,
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 4,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "coverage": {
+    "FR-001": {
+      "title": "The changelog address the update notification opens must identify the offered version explicitly, never asking the host which release is newest",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "src/speckit/updateChecker.test.ts::opens the offered versions own release not the shared latest lookup"
+      ]
+    },
+    "FR-002": {
+      "title": "No shipped code path may resolve a release through the shared latest lookup",
+      "tasks": [
+        "T004"
+      ],
+      "tests": [
+        "src/speckit/updateChecker.test.ts::opens the offered versions own release not the shared latest lookup"
+      ]
+    }
+  },
+  "intent": "Make the update notification's View Changelog button open the release notes for the version it just offered, instead of whichever product published most recently.",
+  "approach": "Build the changelog address from the version already in scope at the link site so it resolves by tag rather than by the shared latest lookup, and pin it with a test on the mocked browser-open.",
+  "expectations": [
+    "No change to how the newer version is detected — that filter is already correct",
+    "No version bump on the branch; the release flow owns it"
+  ],
+  "context": [
+    "area: src/speckit/updateChecker.ts",
+    "constraint: CLAUDE.md forbids a bare /releases/latest lookup because both products share one releases list"
+  ],
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the failing test; confirmed the button opens /releases/latest instead of the offered version",
+      "files": [
+        "src/speckit/updateChecker.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Changelog link now resolves by tag from the offered version instead of the shared latest lookup",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added the user-facing changelog entry under Unreleased",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Confirmed no shipped source resolves a release through the shared latest lookup; tsc clean and 1895 jest tests pass",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "The offered version reproduces the wrong link before the fix",
+      "command": "npx jest src/speckit/updateChecker.test.ts",
+      "result": "failed with /releases/latest, passed after the fix",
+      "warnings": []
+    },
+    {
+      "what": "No shipped source resolves a release through the shared latest lookup",
+      "command": "grep -rn releases/latest src/ webview/ speckit-extension/scripts/ excluding tests and comments",
+      "result": "0 live occurrences; the two remaining mentions are comments warning against it",
+      "warnings": []
+    },
+    {
+      "what": "Full suites",
+      "command": "npx tsc --noEmit -p . && npx jest",
+      "result": "tsc clean, 1895 passed, 0 failed",
+      "warnings": []
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Changelog link resolves by tag from the offered version; the last live /releases/latest is gone from shipped source"
+    }
+  },
+  "last_action": "4/4 tasks done — tsc clean, 1895 tests pass"
+}
