@@ -70,6 +70,11 @@ Deliberately no `Edit`/`Write`: this skill writes to a third-party repository an
       --title "$(cat $S/title.txt)" --body-file $S/body.md
     ```
 
-11. **Verify what landed.** `gh issue view <n> --repo github/spec-kit --json body` and diff against `$S/body.md` — it must be byte-identical. Any difference means the create path mangled something.
+11. **Verify what landed.** Diff the stored body against what you sent, normalizing trailing newlines — GitHub appends one, which is not mangling:
+    ```bash
+    diff <(sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' $S/body.md) \
+         <(gh issue view <n> --repo github/spec-kit --json body --jq .body | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+    ```
+    Any real difference means the create path mangled something.
 
 12. **Report** the issue URL, the version transition, the template SHA rendered against, and any drift the report listed. Say plainly that maintainers apply `extension-submission` at triage, which starts automated validation — no label request, no follow-up PR — and that existing users are unaffected meanwhile because they update through `companion-latest`.
