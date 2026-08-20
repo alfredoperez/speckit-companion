@@ -77,7 +77,7 @@ Companion rides your **existing** spec-kit commands via lifecycle hooks — you 
 
 ## Commands
 
-Seventeen commands in four families. Thirteen are yours to run; the four hook commands run themselves and should never be typed by hand.
+Eighteen commands in four families. Fourteen are yours to run; the four hook commands run themselves and should never be typed by hand.
 
 ### Pipeline
 

@@ -60,10 +60,10 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
    - **Already-installed guard** — if a prior `companion` is present, the install aborts with `Extension 'companion' is already installed. … retry with --force`. Either `specify extension remove companion` first (config is backed up to `.specify/extensions/.backup/companion/`) or re-run with `--force`.
    - **Stale/corrupted leftover** — `specify extension list` may show an old `✗ companion (v0.1.0) … ⚠️ Corrupted extension, Commands: 0`. Remove it (`yes | specify extension remove companion`) before installing the current release; the fresh install reports `✓ Extension installed successfully! SpecKit Companion (v0.2.0)` with all 6 commands.
    - **"Configuration may be required" footer** — a successful install ends with `⚠ Configuration may be required / Check: .specify/extensions/companion/`. This is **informational, not a failure** — it points at the installed extension dir; no manual config step is needed for companion.
-9. **Submit to the catalog (first listing only)** — file an **issue** on github/spec-kit using the **Extension Submission** template (NOT a PR). Maintainers verify metadata + URL reachability and add the entry to `extensions/catalog.community.json`. Review is 3–7 business days. Only then does the by-name `specify extension add companion` resolve. The catalog **pins each entry to a version-specific asset** (`download_url` → `speckit-ext-v<X.Y.Z>/companion-<X.Y.Z>.zip`), so declared `version` and downloaded bits always agree — this is what every other catalog entry does. (The `companion-latest` rolling asset still exists, but it's for our own `--force` re-install URL, not the catalog.)
-10. **For later updates** — because the catalog is version-pinned, a **minor or major** release needs a one-line catalog PR bumping `version` + `download_url` (and re-syncing `requires.speckit_version` / `provides.commands` / `tags` from `extension.yml`). **Patches (`x.y.Z`) skip the catalog PR** — catalog/by-name users stay on the current minor and patch fixes ride the rolling `companion-latest` URL; opening a PR per patch just churns the catalog. The `/publish-speckit-ext` skill opens/refreshes that PR automatically on minor/major releases — no separate submission issue is needed once the entry exists. Existing users still update by re-running their install command against the stable `companion-latest` URL with `--force`.
+9. **Submit to the catalog** — file an **issue** on github/spec-kit using the **Extension Submission** template (NOT a PR). Maintainers verify metadata + URL reachability and add the entry to `extensions/catalog.community.json`. Review is 3–7 business days. Only then does the by-name `specify extension add companion` resolve. The catalog **pins each entry to a version-specific asset** (`download_url` → `speckit-ext-v<X.Y.Z>/companion-<X.Y.Z>.zip`), so declared `version` and downloaded bits always agree — this is what every other catalog entry does. (The `companion-latest` rolling asset still exists, but it's for our own `--force` re-install URL, not the catalog.)
+10. **For later updates** — because the catalog is version-pinned, a **minor or major** release needs the entry bumped (`version` + `download_url`, plus a re-sync of `requires` / `provides.commands` / `provides.hooks` / `tags` from `extension.yml`). **This is filed as another [Extension Submission] issue, never a PR.** The guide is explicit — *"Do not open a pull request directly to edit `extensions/catalog.community.json`"*, and *"to update an extension that is already in the catalog (e.g., for a new version), file a new [Extension Submission] issue with the updated version, download URL, and any other changed fields."* We learned this the hard way: github/spec-kit#3937 was closed unmerged for exactly this. Run **`/submit-catalog-update`**, which renders the issue body from the live upstream issue-form template (so our headings cannot drift from theirs) and files it with `gh`. **Patches (`x.y.Z`) skip the catalog entirely** — catalog users stay on the current minor and patch fixes ride the rolling `companion-latest` URL. Existing users update by re-running their install against `companion-latest` with `--force`.
 
-The whole flow is automated by the `/publish-speckit-ext` skill.
+The whole flow is automated by the `/publish-speckit-ext` skill; the catalog step is `/submit-catalog-update`.
 
 ## Pre-submit checklist (mapped to the guide)
 
@@ -81,43 +81,16 @@ The whole flow is automated by the `/publish-speckit-ext` skill.
   grep -rnE 'releases/download/(speckit-ext-v[0-9]|companion-[0-9])' src speckit-extension README.md
   ```
 - [ ] GitHub release created with a `speckit-ext-v*` tag + archive URL
-- [ ] Extension Submission issue filed
+- [ ] Extension Submission issue filed (minor/major only — `/submit-catalog-update`)
 
-## Catalog submission (ready to paste)
+## Catalog submission
 
-```yaml
-id: companion
-name: SpecKit Companion
-version: 0.11.0
-description: "Live spec-driven progress for SpecKit Companion — lifecycle capture, status, and resume."
-author: alfredoperez
-repository: https://github.com/alfredoperez/speckit-companion
-homepage: https://github.com/alfredoperez/speckit-companion/tree/main/speckit-extension
-documentation: https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/README.md
-changelog: https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/CHANGELOG.md
-license: MIT
-requires:
-  speckit_version: ">=0.8.5"
-tags: [spec-driven-development, tracking, companion]
-commands:
-  - speckit.companion.after-specify          # after_specify hook
-  - speckit.companion.after-plan     # after_plan hook
-  - speckit.companion.after-tasks    # after_tasks hook
-  - speckit.companion.after-implement# after_implement hook (per-task journaling)
-  - speckit.companion.status           # report step/status/decisions/next action
-  - speckit.companion.resume           # resume the pipeline from the recorded step
-download_url: https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip
-```
+The submission values are generated at run time by `/submit-catalog-update`, from `extension.yml` plus the **live** catalog entry. There is deliberately no paste-ready copy here — the one that used to live in this file drifted to `0.11.0`, `>=0.8.5`, a six-command list, and a `companion-latest` download URL that contradicted the version-pinning rule above.
 
-### What this release delivers (for the submission body)
+Two display constraints the generator already honors, worth knowing if you ever hand-check a submission:
 
-SpecKit Companion captures the spec-kit lifecycle into a per-spec `.spec-context.json` (canonical append-only `history[]`) so a GUI — or the two read commands below — can show where every spec stands and resume it:
-
-- **Lifecycle capture** — `after_specify/plan/tasks/implement` hooks record each step; `--tasks-file` journals per-task implement progress; `derive-from-files.py` reconstructs state when a hook never fired.
-- **Status** — `/speckit.companion.status` prints current step, status, recorded decisions, and the next action.
-- **Resume** — `/speckit.companion.resume` continues the pipeline from the recorded step with decisions in scope, dispatching the next `/speckit.*` command (works on stock spec-kit — no `specify workflow resume` subcommand required).
-
-Stdlib-only Python; degrades gracefully without `python3`; never fails the host spec-kit command.
+- `documentation` must be a specific `.md` blob URL (`…/speckit-extension/README.md`). A directory URL renders the catalog page blank.
+- The community site shows the newest GitHub **release tag**, not the catalog `version` — so the page can read current while the pinned metadata is stale.
 
 ## Catalog page display gotchas (community site)
 

@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+
+- **The extension now describes itself accurately in the community catalog.** Its tags were `spec-driven-development, tracking, companion` — one of them the extension's own name, none of them mentioning living specs, drift, or the composable command model that arrived since. They are now `vscode, progress, living-specs, drift, hooks`. The catalog listing itself had drifted to a different set of six, so the two now come from one place.
+
 ## [0.20.2] - 2026-08-19
 
 ### Fixed
