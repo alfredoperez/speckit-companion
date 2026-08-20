@@ -105,6 +105,16 @@
 > announces what comes next. Falls back to `Approve` when the
 > workflow definition is missing.
 >
+> **Built-in workflows never guess from files (#582)**: The
+> file-driven progression fallback — which reconstructs a run's
+> position from the documents on disk — applies only to workflows the
+> user defined. A workflow whose step sequence matches one the
+> extension ships is exempt, including SpecKit Companion with its
+> terminal `mark-complete` step, so the footer's next step always
+> matches the step the stepper renders as pending. A step's `subDir`
+> (`checklists/`, `contracts/`) counts as that step's own output and
+> never as a later step's related document.
+>
 > **Approve advance window**: `Approve` stays visible across the
 > "step done, next step not started" pauses (`specified` /
 > `planned` / `ready-to-implement`) so the user can dispatch the

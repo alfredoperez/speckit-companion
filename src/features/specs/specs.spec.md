@@ -161,6 +161,10 @@ The tree SHALL group specs by their recorded status, and offer filtering and ord
 
 Workflows the user defines themselves run commands that write documents but never touch the state record, which would strand them at their first step forever. For those workflows only, progression SHALL be reconstructed from the one signal they do leave — their step outputs on disk — and only ever *forward* of what the record already says. Workflows that do record their own progress MUST be left entirely alone.
 
+A workflow the product ships is recognized by its own step sequence, not by whether every step name belongs to the lifecycle set. A built-in pipeline that ends in a step outside that set MUST still be recognized as built-in and MUST NOT be reconstructed from disk. Recognition may only ever move a workflow from user-defined to built-in — never the reverse — so nothing that reconstructs progression today stops doing so.
+
+A step may claim a whole folder as its own output. Everything inside a claimed folder belongs to the step that claims it and MUST NOT count as loose evidence for any other step.
+
 #### Scenario: a user's workflow has produced its third step's output
 - **WHEN** the record still says step one
 - **THEN** a reconstructed progression advances it to the third step so the forward action appears
@@ -169,6 +173,16 @@ Workflows the user defines themselves run commands that write documents but neve
 #### Scenario: the record is already at or ahead of what disk shows
 - **WHEN** reconstruction runs
 - **THEN** the real record wins and nothing is rewritten
+
+#### Scenario: a built-in pipeline ends in a step outside the lifecycle set
+- **WHEN** the reader opens a spec running that pipeline
+- **THEN** no progression is reconstructed from disk
+- **AND** the forward action names the same step the step strip shows as pending
+
+#### Scenario: only a claimed folder's document is present
+- **WHEN** the sole document beyond the specification lives in a folder an earlier step claims
+- **THEN** no later step reads as having produced output
+- **AND** a document loose in the spec directory still counts as before
 
 ### Destructive and bulk spec actions confirm, skip no-ops, and stay inside the workspace
 

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **A spec you just wrote now offers Plan next, instead of jumping straight to Tasks.** On a freshly specified SpecKit Companion spec the viewer footer said "Next: Tasks" while the step strip correctly showed Plan as still pending — and clicking the button ran task generation against a spec that had never been planned. Two things were going wrong at once: the SpecKit Companion pipeline was being mistaken for a workflow you wrote yourself, which switched on a fallback that guesses progress from whatever files are on disk; and that guess then counted the specification's own quality checklist as if planning had already produced something. The footer and the step strip now always name the same next step. Workflows you define yourself keep guessing progress from their files exactly as before. ([#582](https://github.com/alfredoperez/speckit-companion/issues/582))
+
 - **Creating a global CLAUDE.md now always lands in your home directory, so the Steering view actually shows it.** The create action worked out the home directory from the `HOME` environment variable, and when that variable wasn't set — which is common on Windows — the file was written to a `.claude` folder relative to whatever directory the editor started in. The extension watches and reads your real home directory, so the new file simply never appeared. Home directory resolution is now the same everywhere the extension looks, writes, and watches. ([#580](https://github.com/alfredoperez/speckit-companion/issues/580))
 
 ## [0.31.1] - 2026-08-01

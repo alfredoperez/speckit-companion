@@ -1,0 +1,578 @@
+{
+  "workflow": "companion",
+  "specName": "footer next step",
+  "branch": "fix/582-footer-next-step",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-19T23:36:33.726Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-19T23:39:09.319Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-19T23:39:25.073Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:40:15.659Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:41:22.027Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-19T23:41:55.337Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-19T23:42:06.536Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:42:47.550Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-19T23:43:01.054Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-19T23:43:13.652Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:43:58.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:44:48.745Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:44:48.863Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:45:20.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:45:20.486Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:45:53.781Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:46:14.963Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:46:15.119Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:48:04.549Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:48:04.706Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:48:04.852Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:51:01.604Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:52:28.436Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:53:28.539Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:54:39.514Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:54:39.658Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-19T23:56:03.734Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-19T23:56:03.801Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "spec-viewer",
+      "specs"
+    ],
+    "skipped": [
+      {
+        "name": "spec-viewer",
+        "reason": "read for context only — the viewer's derive-from-recorded-run requirement already covered this; the defect and the fix both live in the specs capability, and no spec-viewer file changed"
+      }
+    ],
+    "synced": [
+      "specs"
+    ]
+  },
+  "last_action": "all 17 tasks done — tsc clean, 1892 jest + 554 python tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Never reconstruct progression from files for a built-in workflow, including SpecKit Companion with its terminal completion step",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::offers Plan on a freshly specified Companion spec not Tasks",
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::exempts both shipped workflows"
+      ]
+    },
+    "FR-002": {
+      "title": "A document under a folder any step claims must not count as a related document for a different step",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::does not count a doc under an earlier step subDir as a later step related doc",
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::still counts a step own subDir as that step output"
+      ]
+    },
+    "FR-003": {
+      "title": "The footer's named next step must match the stepper's pending step on every built-in workflow",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::offers Plan on a freshly specified Companion spec not Tasks"
+      ]
+    },
+    "FR-004": {
+      "title": "Every workflow treated as developer-authored before this change stays developer-authored and keeps file-driven progression",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::leaves a lifecycle-named workflow with an extra mark-complete step custom",
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::still counts a loose unclaimed doc in the spec dir",
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::still counts a doc in an unclaimed nested dir as a related doc"
+      ]
+    },
+    "FR-005": {
+      "title": "Carry a regression test for the reported state asserting the footer offers the planning step",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::offers Plan on a freshly specified Companion spec not Tasks"
+      ]
+    },
+    "FR-006": {
+      "title": "Neither shipped product contains a shorts command, skill, or asset",
+      "tasks": [
+        "T009"
+      ],
+      "tests": [
+        "specs/582-footer-next-step/verification.md"
+      ]
+    },
+    "FR-007": {
+      "title": "Show recorded-progress capture working from a genuinely fresh SpecKit install plus constitution plus extension install",
+      "tasks": [
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "specs/582-footer-next-step/verification.md",
+        "speckit-extension/tests/test_context.py::test_companion_workflow_resolves_the_companion_command_family",
+        "speckit-extension/tests/test_context.py::test_stock_workflow_still_resolves_stock_commands",
+        "speckit-extension/tests/test_context.py::test_legacy_turbo_profile_still_resolves_the_companion_family"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 11,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: spec-viewer (viewer state is derived from the recorded run, not files on disk)",
+    "living spec: specs",
+    "area: src/features/specs/customWorkflowProgress.ts",
+    "area: src/features/spec-viewer (footer + stepper derivation)",
+    "constraint: fix must be additive — no workflow may move from developer-authored to built-in",
+    "constraint: extension isolation — no .claude/** or .specify/** edits for product behavior"
+  ],
+  "intent": "Make the spec viewer footer offer the step the stepper says is pending, so a freshly specified Companion spec goes to Plan instead of skipping to Tasks.",
+  "expectations": [
+    "No plumbing of the workflow name through resolveWorkflowSteps into the two progression call sites",
+    "No change to how developer-authored workflows are detected today (strictly additive exemption)",
+    "No version bump — the release flow owns that",
+    "No changes to the personal speckit-companion-shorts skill itself; only proof it stays out of both distributions"
+  ],
+  "approach": "Close both fail-open guards inside src/features/specs/customWorkflowProgress.ts: front-load isCustomWorkflow with an exact step-name-sequence match against DEFAULT_WORKFLOW and COMPANION_WORKFLOW so a shipped pipeline never enters the file-driven fallback, and prune every step's subDir from the relatedDocsPresent scan so a sub-folder document can never count as another step's related doc. Pin the fix with a composed regression test that stages spec.md plus checklists/requirements.md on disk and asserts the footer yields approve:Plan. Verification-only: audit both distributions for shorts, and prove capture works from a genuinely fresh specify init plus constitution plus extension install in a disposable sandbox.",
+  "decisions": [
+    {
+      "decision": "Recognize built-in workflows by exact step-name-sequence match against DEFAULT_WORKFLOW and COMPANION_WORKFLOW",
+      "why": "Both call sites only receive WorkflowStepConfig[]; the module already imports workflowManager, and the check is strictly additive so nothing custom today becomes built-in",
+      "rejected": "Plumbing the workflow name through both resolveWorkflowSteps implementations and MessageHandlerDependencies, and the narrower option of just exempting the mark-complete name (which would over-exempt developer pipelines)"
+    },
+    {
+      "decision": "Prune claimed subDir directories during the relatedDocsPresent scan instead of enumerating their files",
+      "why": "A subDir is an open-ended container whose filenames the workflow never predicts; claiming the container is exact and costs one string comparison",
+      "rejected": "Enumerating each subDir into the claimed filename set (extra IO, races a folder being written), and ignoring all nested directories (would regress developer pipelines that rely on nested related docs)"
+    },
+    {
+      "decision": "Assert the fix on the composition of synthesizeCustomProgress and getFooterActions, not on either function alone",
+      "why": "getFooterActions already yields approve:Plan on its own — the defect only appears after synthesizeCustomProgress rewrites the context, so only the composition actually reproduces it",
+      "rejected": "A unit assertion on isCustomWorkflow alone (locks in mechanism, would have passed before the fix) and driving it through specViewerProvider (needs a webview/config mock harness the repo lacks)"
+    },
+    {
+      "decision": "Derive the built-in fingerprint from DEFAULT_WORKFLOW and COMPANION_WORKFLOW at module load rather than hand-writing the sequences",
+      "why": "A future built-in step is exempt for free, with no second edit and no chance of the list drifting from the shipped constants",
+      "rejected": "A literal list of step-name arrays in customWorkflowProgress.ts"
+    },
+    {
+      "decision": "Keep profile:turbo as a legacy fallback in the status resolver instead of deleting it with the fix",
+      "why": "Specs written before the workflow-choice collapse still carry the old field; dropping it would silently move those runs onto the stock pipeline mid-flight",
+      "rejected": "Reading only the workflow field and letting old specs fall back to stock"
+    },
+    {
+      "decision": "Match built-in workflows on step name AND command, not name alone",
+      "why": "Review caught that a user workflow mirroring the Companion step names would be exempted and stranded at specify with no forward button — confirmed by temporarily reverting to name-only matching and watching the new test fail",
+      "rejected": "Name-only matching, and keying the exemption off reserved workflow ids (which would need the workflow name plumbed through both call sites)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Two additive guards in customWorkflowProgress.ts — built-in sequence exemption plus subDir pruning — pinned by one composed footer regression test; shorts audit and fresh-install validation are evidence-only",
+      "key_finding": "The bug needs BOTH defects to fire: the misclassification lets the fallback run at all, and the unclaimed checklists folder is what makes disk look ahead. Fixing either alone hides it; fixing only one leaves the trap armed for developer-authored workflows."
+    },
+    "tasks": {
+      "summary": "15 tasks across 5 active phases: 3 for the built-in exemption (test-first), 3 for subDir claiming, 2 additivity guards, 4 verification-only (shorts audit + fresh install), 3 polish"
+    },
+    "implement": {
+      "summary": "Fixed the footer/stepper disagreement with two additive guards in the progression fallback, plus a second Companion-recognition defect the fresh-install status test uncovered in the spec-kit extension"
+    }
+  },
+  "currentTask": "T015",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the #582 regression test staging spec.md + checklists/requirements.md; confirmed it fails with currentStep rewritten to plan",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Exempted built-in workflows in isCustomWorkflow via an exact step-name-sequence match against DEFAULT_WORKFLOW and COMPANION_WORKFLOW, computed once at module load",
+      "files": [
+        "src/features/specs/customWorkflowProgress.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Regression test now passes; all 16 tests in the customWorkflowProgress suite green with no edits to pre-existing tests",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added the failing test: a doc under an earlier step subDir must not count as a later step's related doc",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added three paired guard tests: loose docs, unclaimed nested dirs, and a step's own subDir all still count",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "relatedDocsPresent now collects every step's subDir into a claimed-directory set and prunes those directories during the scan",
+      "files": [
+        "src/features/specs/customWorkflowProgress.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Full suite green with zero deletions in the test file — every pre-existing developer-authored-pipeline test passes unmodified",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added three additivity assertions including a mark-complete lookalike that must stay custom",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Shorts audit: 0 matches in the working tree, 0 in speckit-extension/, 0 in the packaged vsix filenames and unpacked contents; the skill lives only at ~/.claude/skills",
+      "files": [
+        "specs/582-footer-next-step/verification.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Ran a real specify init 0.12.16.dev0 into a disposable gitignored sandbox — stock install with no extensions.yml and no companion extension",
+      "files": [
+        "examples/bench-sandboxes/582-fresh-install"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Ran the constitution step in the fresh sandbox before installing the extension; template fully filled, 0 placeholders left, committed",
+      "files": [
+        "examples/bench-sandboxes/582-fresh-install/.specify/memory/constitution.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Installed companion v0.20.1 from the released zip into the fresh sandbox and confirmed status works in all four situations; found the profile/turbo dispatch defect",
+      "files": [
+        "specs/582-footer-next-step/verification.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Added three status-dispatch tests; the workflow=companion case fails with /speckit.plan while stock and legacy turbo already pass",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Status now picks the command family from the recorded workflow field with profile:turbo kept as a legacy fallback; reinstalled locally and re-verified in the fresh sandbox",
+      "files": [
+        "speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added user-facing entries to both changelogs under Unreleased — the footer fix at the root, the status/resume dispatch fix in the spec-kit extension",
+      "files": [
+        "CHANGELOG.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Wrote a MODIFIED delta for the specs capability tightening the file-driven-progression requirement; recorded an explicit skip for spec-viewer",
+      "files": [
+        "specs/582-footer-next-step/spec.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Validated against the Success Criteria: tsc clean, 1892 jest tests pass, 554 python tests pass, SC-001 through SC-006 all confirmed",
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile across the extension",
+      "command": "npx tsc --noEmit -p .",
+      "result": "0 errors",
+      "warnings": []
+    },
+    {
+      "what": "Full VS Code extension test suite",
+      "command": "npx jest",
+      "result": "1892 passed, 0 failed",
+      "warnings": []
+    },
+    {
+      "what": "Full spec-kit extension python suite",
+      "command": "python3 -m unittest discover tests (from speckit-extension/)",
+      "result": "554 passed, OK",
+      "warnings": []
+    },
+    {
+      "what": "The #582 regression reproduces before the fix",
+      "command": "npx jest src/features/specs/__tests__/customWorkflowProgress.test.ts",
+      "result": "failed with currentStep rewritten to plan, then passed after the fix",
+      "warnings": []
+    },
+    {
+      "what": "The fix is additive to the test file",
+      "command": "git diff --stat on the test file",
+      "result": "114 insertions, 0 deletions — no pre-existing test edited",
+      "warnings": []
+    },
+    {
+      "what": "No shorts command, skill, or asset ships in either distribution",
+      "command": "grep -ril shorts across the working tree, speckit-extension/, the unpacked vsix, and the freshly installed extension",
+      "result": "0 matches on every surface; the skill lives only in the users global Claude directory",
+      "warnings": []
+    },
+    {
+      "what": "Capture and status work from a genuinely fresh install",
+      "command": "specify init + constitution + specify extension add companion --from the released zip, then status-context.py",
+      "result": "companion v0.20.1 installed from the release artifact; status reported source:state, Step:specify, Status:specified, Next:Plan; derived fallback also correct; empty install degraded cleanly at exit 0",
+      "warnings": [
+        "The community catalog entry still advertises v0.11.0 while the shipped artifact is v0.20.1",
+        "Derived status names a spec from the document rather than the directory (cosmetic, not filed)"
+      ]
+    },
+    {
+      "what": "Status and resume dispatch the Companion family after the fix",
+      "command": "reinstalled the rebuilt extension into the fresh sandbox and re-ran status-context.py",
+      "result": "companion spec now reports /speckit.companion.plan; stock spec still reports /speckit.implement; legacy profile:turbo still resolves companion",
+      "warnings": []
+    },
+    {
+      "what": "Local code review at high effort",
+      "command": "/code-review high",
+      "result": "3 low findings; 2 were real regressions in this diff and are fixed with tests, the third is a pre-existing capture gap filed separately",
+      "warnings": []
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The community extension catalog still advertises SpecKit Companion v0.11.0 while the shipped companion-latest zip is v0.20.1. Discovery-only, so it does not block installs, but anyone reading the catalog sees a version nine minors stale.",
+      "step": "implement"
+    },
+    {
+      "note": "Only the companion specify command pins workflow=companion. A run that joins Companion later (stock specify, then companion plan) stays recorded as speckit, so status and resume dispatch stock commands for the rest of the run. Reproduced in the fresh sandbox; filed as its own issue rather than widened into this PR because the fix touches three command bodies and turns on whether one companion command should retroactively pin the whole spec.",
+      "step": "implement"
+    }
+  ]
+}

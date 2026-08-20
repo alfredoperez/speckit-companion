@@ -10,6 +10,7 @@ import { getFooterActions } from '../../spec-viewer/footerActions';
 import { FooterActionIds } from '../../../core/constants';
 import type { SpecContext, StepName } from '../../../core/types/specContext';
 import type { WorkflowStepConfig } from '../../workflows/types';
+import { COMPANION_WORKFLOW, DEFAULT_WORKFLOW } from '../../workflows/workflowManager';
 
 // Ticket-based custom workflow: spec → tickets → implement(actionOnly),
 // with the non-lifecycle step name "tickets".
@@ -165,5 +166,145 @@ describe('stepHasOutput', () => {
     it('needs allSteps to resolve related-doc ownership', () => {
         fs.writeFileSync(path.join(dir, '01-01-PLAN.md'), '# plan');
         expect(stepHasOutput(dir, plan)).toBe(false);
+    });
+});
+
+describe('built-in workflows are never treated as custom', () => {
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-582-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    // The exact state after companion specify: spec + quality checklist, nothing else.
+    const freshlySpecified = (): SpecContext => ({
+        workflow: 'companion',
+        specName: 'footer-next-step',
+        branch: 'fix/582-footer-next-step',
+        currentStep: 'specify' as StepName,
+        status: 'specified',
+        history: [
+            { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-08-19T10:00:00Z' },
+            { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-08-19T10:05:00Z' },
+        ],
+    } as unknown as SpecContext);
+
+    it('offers Plan on a freshly specified Companion spec, not Tasks', () => {
+        fs.writeFileSync(path.join(dir, 'spec.md'), '# spec');
+        fs.mkdirSync(path.join(dir, 'checklists'));
+        fs.writeFileSync(path.join(dir, 'checklists', 'requirements.md'), '# checklist');
+
+        const steps = COMPANION_WORKFLOW.steps!;
+        const ctx = synthesizeCustomProgress(freshlySpecified(), steps,
+            s => stepHasOutput(dir, s, steps));
+
+        expect(ctx.currentStep).toBe('specify');
+        expect(getFooterActions(ctx, ctx.currentStep as StepName, steps)
+            .find(a => a.id === FooterActionIds.APPROVE)?.label).toBe('Plan');
+    });
+});
+
+describe('a step subDir is claimed, so its files are not another step related doc', () => {
+    // Custom, so synthesis applies: specify owns `checklists/`, `draft` takes related docs.
+    const CHECKLIST_STEPS: WorkflowStepConfig[] = [
+        { name: 'specify', command: 'to-spec', file: 'spec.md', subDir: 'checklists' },
+        { name: 'draft', command: 'to-draft', includeRelatedDocs: true },
+        { name: 'implement', command: 'implement', actionOnly: true },
+    ];
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'subdir-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    const draft = CHECKLIST_STEPS[1];
+
+    it('does not count a doc under an earlier step subDir as a later step related doc', () => {
+        fs.mkdirSync(path.join(dir, 'checklists'));
+        fs.writeFileSync(path.join(dir, 'checklists', 'requirements.md'), '# checklist');
+        expect(stepHasOutput(dir, draft, CHECKLIST_STEPS)).toBe(false);
+    });
+
+    it('still counts a loose unclaimed doc in the spec dir', () => {
+        fs.writeFileSync(path.join(dir, '01-draft.md'), '# draft');
+        expect(stepHasOutput(dir, draft, CHECKLIST_STEPS)).toBe(true);
+    });
+
+    it('still counts a step own subDir as that step output', () => {
+        const specify = CHECKLIST_STEPS[0];
+        fs.mkdirSync(path.join(dir, 'checklists'));
+        fs.writeFileSync(path.join(dir, 'checklists', 'requirements.md'), '# checklist');
+        expect(stepHasOutput(dir, specify, CHECKLIST_STEPS)).toBe(true);
+    });
+
+    it('still counts a doc in an unclaimed nested dir as a related doc', () => {
+        fs.mkdirSync(path.join(dir, 'notes'));
+        fs.writeFileSync(path.join(dir, 'notes', 'scratch.md'), '# scratch');
+        expect(stepHasOutput(dir, draft, CHECKLIST_STEPS)).toBe(true);
+    });
+});
+
+describe('the built-in exemption is additive', () => {
+    it('leaves a lifecycle-named workflow with an extra mark-complete step custom', () => {
+        // Not the shipped sequence, so file-driven progression must still apply.
+        const lookalike: WorkflowStepConfig[] = [
+            { name: 'specify', command: 'to-spec', file: 'spec.md' },
+            { name: 'tasks', command: 'to-tasks', file: 'tasks.md' },
+            { name: 'implement', command: 'implement', actionOnly: true },
+            { name: 'mark-complete', command: 'done', actionOnly: true },
+        ];
+        expect(isCustomWorkflow(lookalike)).toBe(true);
+    });
+
+    it('leaves a user workflow that mirrors the Companion step names custom', () => {
+        // Same names as the shipped pipeline, the user's own commands — exempting
+        // this would strand it at specify with no forward button.
+        const mirror: WorkflowStepConfig[] = COMPANION_WORKFLOW.steps!.map(s => ({
+            ...s,
+            command: `my.${s.name}`,
+        }));
+        expect(isCustomWorkflow(mirror)).toBe(true);
+        const out = synthesizeCustomProgress(stubCtx(), mirror, s => s.name === 'specify');
+        expect(hasFooter(out, 'specify' as StepName, mirror, FooterActionIds.APPROVE)).toBe(true);
+    });
+
+    it('exempts both shipped workflows', () => {
+        expect(isCustomWorkflow(DEFAULT_WORKFLOW.steps)).toBe(false);
+        expect(isCustomWorkflow(COMPANION_WORKFLOW.steps)).toBe(false);
+    });
+
+    it('leaves a reordered lifecycle sequence alone rather than exempting it', () => {
+        const reordered: WorkflowStepConfig[] = [
+            { name: 'specify', command: 'to-spec', file: 'spec.md' },
+            { name: 'tasks', command: 'to-tasks', file: 'tasks.md' },
+            { name: 'plan', command: 'to-plan', file: 'plan.md' },
+            { name: 'implement', command: 'implement', actionOnly: true },
+        ];
+        // All lifecycle names — the pre-existing rule already read it non-custom.
+        expect(isCustomWorkflow(reordered)).toBe(false);
+    });
+});
+
+describe('a claimed subDir is pruned to its whole subtree', () => {
+    const CHECKLIST_STEPS: WorkflowStepConfig[] = [
+        { name: 'specify', command: 'to-spec', file: 'spec.md', subDir: 'checklists' },
+        { name: 'draft', command: 'to-draft', includeRelatedDocs: true },
+    ];
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nested-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('does not count a doc nested deeper inside a claimed subDir', () => {
+        fs.mkdirSync(path.join(dir, 'checklists', 'archive'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'checklists', 'archive', 'old.md'), '# old');
+        expect(stepHasOutput(dir, CHECKLIST_STEPS[1], CHECKLIST_STEPS)).toBe(false);
     });
 });

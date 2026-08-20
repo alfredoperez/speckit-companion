@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Fixed
 
+- **Status and resume now speak Companion on a Companion spec.** Asking a Companion run where it stood reported the stock next command — "Next: Plan the feature → /speckit.plan" instead of the Companion one — and resuming from that point dispatched the stock pipeline, quietly dropping the Companion behavior for the rest of the run. The check that picks the command family was still keyed to a per-spec field retired when the workflow choice was simplified, so nothing ever set it and the Companion commands were unreachable. It now reads the workflow the spec actually recorded. Specs written before that change still resume on Companion, and stock specs are unaffected.
+
 - **The minimum spec-kit version check no longer carries a stale `.dev0` pin.** The floor was pinned to `>=0.9.5.dev0` to admit spec-kit's own git-HEAD dev builds back when spec-kit's `main` was still on the 0.9.5 line — that line shipped stable long ago (spec-kit's `main` now builds `0.15.x`), so the pin had become dead weight and the only catalog entry not using a bare floor. Floor is now `>=0.9.5`, matching every other catalog entry's convention. No install behavior changes for anyone on a real release.
 
 ## [0.20.1] - 2026-08-01

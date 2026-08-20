@@ -55,9 +55,9 @@
       "installed_at": "2026-05-21T18:09:23.850204+00:00"
     },
     "companion": {
-      "version": "0.19.0",
+      "version": "0.20.1",
       "source": "local",
-      "manifest_hash": "sha256:f047d6abcaac9f6549db3c338491afd433f303f758879119e58a2c8cf19be99b",
+      "manifest_hash": "sha256:84989117d10a595577515b79ce227b25cff32b02a14af6785328574bb0348638",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -223,7 +223,7 @@
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-07-21T16:01:16.528594+00:00"
+      "installed_at": "2026-08-19T23:53:07.117861+00:00"
     }
   }
 }
