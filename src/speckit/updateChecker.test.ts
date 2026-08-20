@@ -31,6 +31,7 @@ describe('UpdateChecker', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         require('vscode').window.showInformationMessage.mockClear();
+        require('vscode').env.openExternal.mockClear();
         delete (global as any).fetch;
     });
 
@@ -113,5 +114,32 @@ describe('UpdateChecker', () => {
             'View Changelog',
             'Skip'
         );
+    });
+    it('opens the offered version\'s own release, not the shared latest lookup', async () => {
+        const context = buildContext('0.22.0');
+        // A spec-kit release published more recently would win /releases/latest.
+        mockReleases([{ tag_name: 'speckit-ext-v1.0.0' }, { tag_name: 'v0.23.1' }]);
+        jest.spyOn(require('vscode').window, 'showInformationMessage')
+            .mockResolvedValue('View Changelog' as any);
+        const openSpy = require('vscode').env.openExternal as jest.Mock;
+
+        await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+        await new Promise(r => setImmediate(r));
+
+        expect(openSpy).toHaveBeenCalledTimes(1);
+        const opened = String(openSpy.mock.calls[0][0]);
+        expect(opened).toContain('/releases/tag/v0.23.1');
+        expect(opened).not.toContain('/releases/latest');
+    });
+    it('opens nothing when the user skips', async () => {
+        const context = buildContext('0.22.0');
+        mockReleases([{ tag_name: 'v0.23.1' }]);
+        jest.spyOn(require('vscode').window, 'showInformationMessage')
+            .mockResolvedValue('Skip' as any);
+
+        await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+        await new Promise(r => setImmediate(r));
+
+        expect(require('vscode').env.openExternal).not.toHaveBeenCalled();
     });
 });
