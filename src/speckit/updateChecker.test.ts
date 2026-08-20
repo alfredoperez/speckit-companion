@@ -31,6 +31,7 @@ describe('UpdateChecker', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         require('vscode').window.showInformationMessage.mockClear();
+        require('vscode').env.openExternal.mockClear();
         delete (global as any).fetch;
     });
 
@@ -121,7 +122,6 @@ describe('UpdateChecker', () => {
         jest.spyOn(require('vscode').window, 'showInformationMessage')
             .mockResolvedValue('View Changelog' as any);
         const openSpy = require('vscode').env.openExternal as jest.Mock;
-        openSpy.mockClear();
 
         await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
         await new Promise(r => setImmediate(r));
@@ -130,5 +130,16 @@ describe('UpdateChecker', () => {
         const opened = String(openSpy.mock.calls[0][0]);
         expect(opened).toContain('/releases/tag/v0.23.1');
         expect(opened).not.toContain('/releases/latest');
+    });
+    it('opens nothing when the user skips', async () => {
+        const context = buildContext('0.22.0');
+        mockReleases([{ tag_name: 'v0.23.1' }]);
+        jest.spyOn(require('vscode').window, 'showInformationMessage')
+            .mockResolvedValue('Skip' as any);
+
+        await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+        await new Promise(r => setImmediate(r));
+
+        expect(require('vscode').env.openExternal).not.toHaveBeenCalled();
     });
 });

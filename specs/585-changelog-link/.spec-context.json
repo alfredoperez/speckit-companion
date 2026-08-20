@@ -154,6 +154,12 @@
       "command": "npx tsc --noEmit -p . && npx jest",
       "result": "tsc clean, 1895 passed, 0 failed",
       "warnings": []
+    },
+    {
+      "what": "Local code review at high effort",
+      "command": "/code-review high",
+      "result": "no bugs found; one low finding about a leaked mock call, fixed",
+      "warnings": []
     }
   ],
   "step_summaries": {
@@ -161,5 +167,11 @@
       "summary": "Changelog link resolves by tag from the offered version; the last live /releases/latest is gone from shipped source"
     }
   },
-  "last_action": "4/4 tasks done — tsc clean, 1895 tests pass"
+  "last_action": "4/4 tasks done — tsc clean, 1895 tests pass",
+  "concerns": [
+    {
+      "note": "The vscode mock had no withProgress/ProgressLocation, so the Skip branch of the update notification was untestable. Extended the mock rather than dropping the test — this is the config-mock harness gap CLAUDE.md already flags.",
+      "step": "implement"
+    }
+  ]
 }

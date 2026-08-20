@@ -202,6 +202,13 @@ export const window = {
         show: jest.fn(),
         dispose: jest.fn(),
     }),
+    withProgress: jest.fn().mockImplementation((_options: unknown, task: () => Promise<unknown>) => task()),
+};
+
+export const ProgressLocation = {
+    SourceControl: 1,
+    Window: 10,
+    Notification: 15,
 };
 
 export const commands = {
