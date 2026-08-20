@@ -364,6 +364,11 @@
       "decision": "Keep profile:turbo as a legacy fallback in the status resolver instead of deleting it with the fix",
       "why": "Specs written before the workflow-choice collapse still carry the old field; dropping it would silently move those runs onto the stock pipeline mid-flight",
       "rejected": "Reading only the workflow field and letting old specs fall back to stock"
+    },
+    {
+      "decision": "Match built-in workflows on step name AND command, not name alone",
+      "why": "Review caught that a user workflow mirroring the Companion step names would be exempted and stranded at specify with no forward button — confirmed by temporarily reverting to name-only matching and watching the new test fail",
+      "rejected": "Name-only matching, and keying the exemption off reserved workflow ids (which would need the workflow name plumbed through both call sites)"
     }
   ],
   "step_summaries": {
@@ -552,11 +557,21 @@
       "command": "reinstalled the rebuilt extension into the fresh sandbox and re-ran status-context.py",
       "result": "companion spec now reports /speckit.companion.plan; stock spec still reports /speckit.implement; legacy profile:turbo still resolves companion",
       "warnings": []
+    },
+    {
+      "what": "Local code review at high effort",
+      "command": "/code-review high",
+      "result": "3 low findings; 2 were real regressions in this diff and are fixed with tests, the third is a pre-existing capture gap filed separately",
+      "warnings": []
     }
   ],
   "concerns": [
     {
       "note": "The community extension catalog still advertises SpecKit Companion v0.11.0 while the shipped companion-latest zip is v0.20.1. Discovery-only, so it does not block installs, but anyone reading the catalog sees a version nine minors stale.",
+      "step": "implement"
+    },
+    {
+      "note": "Only the companion specify command pins workflow=companion. A run that joins Companion later (stock specify, then companion plan) stays recorded as speckit, so status and resume dispatch stock commands for the rest of the run. Reproduced in the fresh sandbox; filed as its own issue rather than widened into this PR because the fix touches three command bodies and turns on whether one companion command should retroactively pin the whole spec.",
       "step": "implement"
     }
   ]

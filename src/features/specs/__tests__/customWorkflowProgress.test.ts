@@ -260,6 +260,18 @@ describe('the built-in exemption is additive', () => {
         expect(isCustomWorkflow(lookalike)).toBe(true);
     });
 
+    it('leaves a user workflow that mirrors the Companion step names custom', () => {
+        // Same names as the shipped pipeline, the user's own commands — exempting
+        // this would strand it at specify with no forward button.
+        const mirror: WorkflowStepConfig[] = COMPANION_WORKFLOW.steps!.map(s => ({
+            ...s,
+            command: `my.${s.name}`,
+        }));
+        expect(isCustomWorkflow(mirror)).toBe(true);
+        const out = synthesizeCustomProgress(stubCtx(), mirror, s => s.name === 'specify');
+        expect(hasFooter(out, 'specify' as StepName, mirror, FooterActionIds.APPROVE)).toBe(true);
+    });
+
     it('exempts both shipped workflows', () => {
         expect(isCustomWorkflow(DEFAULT_WORKFLOW.steps)).toBe(false);
         expect(isCustomWorkflow(COMPANION_WORKFLOW.steps)).toBe(false);
@@ -274,5 +286,25 @@ describe('the built-in exemption is additive', () => {
         ];
         // All lifecycle names — the pre-existing rule already read it non-custom.
         expect(isCustomWorkflow(reordered)).toBe(false);
+    });
+});
+
+describe('a claimed subDir is pruned to its whole subtree', () => {
+    const CHECKLIST_STEPS: WorkflowStepConfig[] = [
+        { name: 'specify', command: 'to-spec', file: 'spec.md', subDir: 'checklists' },
+        { name: 'draft', command: 'to-draft', includeRelatedDocs: true },
+    ];
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nested-'));
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('does not count a doc nested deeper inside a claimed subDir', () => {
+        fs.mkdirSync(path.join(dir, 'checklists', 'archive'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'checklists', 'archive', 'old.md'), '# old');
+        expect(stepHasOutput(dir, CHECKLIST_STEPS[1], CHECKLIST_STEPS)).toBe(false);
     });
 });
