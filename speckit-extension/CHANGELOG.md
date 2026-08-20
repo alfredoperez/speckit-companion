@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-08-19
+
 ### Fixed
 
 - **Status and resume now speak Companion on a Companion spec.** Asking a Companion run where it stood reported the stock next command — "Next: Plan the feature → /speckit.plan" instead of the Companion one — and resuming from that point dispatched the stock pipeline, quietly dropping the Companion behavior for the rest of the run. The check that picks the command family was still keyed to a per-spec field retired when the workflow choice was simplified, so nothing ever set it and the Companion commands were unreachable. It now reads the workflow the spec actually recorded. Specs written before that change still resume on Companion, and stock specs are unaffected.
