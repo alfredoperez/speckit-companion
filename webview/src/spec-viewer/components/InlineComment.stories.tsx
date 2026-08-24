@@ -158,9 +158,22 @@ export const LongTextTruncates: Story = {
   ),
 };
 
-/** The density case: several annotated lines still read as a document. */
+/**
+ * The density case: several annotated lines still read as a document.
+ *
+ * Also the frame the README's Inline Review Comments section is captured
+ * from (scripts/capture-docs-images.mjs), so it declares an exact-pixel
+ * capture box like the Video Capture stories do. 590x240 is the viewer's own
+ * reading-column width (#markdown-content max-width) by the height of the
+ * five lines and their three comments, so the frame crops to the card with
+ * no dead margin.
+ */
 export const SeveralOnOneDocument: Story = {
   decorators: [DocumentContextDecorator],
+  parameters: {
+    layout: "fullscreen",
+    capture: { width: 590, height: 240 },
+  },
   render: () => (
     <div>
       <Line text="The authentication system must support multiple identity providers.">

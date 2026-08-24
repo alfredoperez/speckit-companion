@@ -18,27 +18,28 @@
 Specs render as rich, structured pages, not walls of markdown: requirements as labeled rows, acceptance scenarios as clean Given/When/Then sentences, tasks grouped under their phases, and mermaid diagrams inline with zoom. A quiet footer advances the spec one click at a time, and it never advances ahead of a running step. The markdown stays in your repo, never on a server.
 
 <!-- TODO: swap this still for the spec-viewer feature clip (media/feature-clips/spec-viewer) once the GIFs are promoted. -->
-![A spec rendered as a structured page: title-leading header, prioritized user story, and scenario prose](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/specify.png)
+![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/spec-viewer.png)
 
 ### Inline Review Comments
 
 Comment on specific lines of a spec, exactly like a pull request review. Comments persist the moment you add them, survive closing the tab, and are committable, so a half-finished review picks up next session or on another machine. Click **Refine** and the pending comments are dispatched to your AI for an in-place edit of the source.
 
-<!-- TODO: add the inline-comments feature clip (media/feature-clips/inline-comments) here once the GIFs are promoted; the old comments.png predates the v0.29 comment redesign and was retired from this section. -->
+<!-- TODO: swap this still for the inline-comments feature clip (media/feature-clips/inline-comments) once the GIFs are promoted. -->
+![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/inline-comments.png)
 
 ### Overview: the run's story
 
 A spec with recorded activity opens on its Overview: why the spec exists, its constraints, the decisions made (with rejected alternatives), what was verified, and a requirement-to-test traceability table. It is the dossier a future session, a reviewer, or a teammate reads instead of re-asking you.
 
 <!-- TODO: swap this still for the overview feature clip (media/feature-clips/overview) once the GIFs are promoted. -->
-![The Overview: run status with honest active time, task and coverage counts, and the plan's intent and out-of-scope fence](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/activity.png)
+![The Overview: run status with honest active time, task and coverage counts, and the plan's intent and out-of-scope fence](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-annotated.png)
 
 ### A sidebar that scales
 
 Specs grouped by lifecycle with live status per document, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
 
 <!-- TODO: swap this still for the specs-sidebar feature clip (media/feature-clips/specs-sidebar) once the GIFs are promoted. -->
-![The Specs sidebar: lifecycle groups with counts and per-document status on every spec](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/sidebar.png)
+![The Specs sidebar: lifecycle groups with per-document status, living capability specs with drift flags, and steering documents](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/specs-sidebar.png)
 
 ### Pick a pipeline once, run it end to end
 
