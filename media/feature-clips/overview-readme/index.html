@@ -100,13 +100,63 @@
       .lbl--below { bottom:auto; top:100%; margin-bottom:0; margin-top:var(--label-gap); }
       /* the opening label floats free of any anchor, centred near the frame foot */
       .lbl--free { bottom:auto; }
+
+      /* ---- track 2 · the cliffhanger end card (B8) ----
+         Full-frame, opaque, same ground as the piece. It enters as ONE unit
+         (fade up), holds still, then hard-cuts away to reveal the frame-zero
+         rest pose. Brand goes at the END, never the start: frame zero keeps
+         showing the feature. */
+      #endcard {
+        position:absolute; left:0; top:0; width:1836px; height:1164px;
+        background:var(--clip-ground);
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:58px;
+      }
+      /* lead line: the piece's 44px glowing label, verbatim anatomy, flow-positioned */
+      .ec-lead {
+        display:inline-flex; align-items:center; gap:14px; white-space:nowrap;
+        padding:var(--label-pad-y) var(--label-pad-x);
+        background:var(--label-bg);
+        border:1.5px solid var(--label-border);
+        border-radius:var(--label-radius);
+        box-shadow:var(--label-glow);
+        font-family:var(--label-font); font-size:var(--label-size);
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .ec-lead::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+                         border-radius:50%; background:var(--label-dot); }
+      /* teaser chips: the same visual family, one step smaller and quieter */
+      .ec-chips { display:flex; gap:26px; }
+      .ec-chip {
+        display:inline-flex; align-items:center; gap:11px; white-space:nowrap;
+        padding:12px 20px;
+        background:var(--label-bg);
+        border:1.5px solid rgba(127,240,196,0.45);
+        border-radius:10px;
+        box-shadow:0 0 0 1px rgba(127,240,196,0.12),
+                   0 0 18px rgba(127,240,196,0.18),
+                   0 10px 24px rgba(0,0,0,0.45);
+        font-family:var(--label-font); font-size:32px;
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .ec-chip::before { content:""; flex:none; width:8px; height:8px;
+                         border-radius:50%; background:var(--label-dot); }
+      /* sign-off: mascot beside the product name, modest */
+      .ec-brand { display:flex; align-items:center; gap:24px; margin-top:6px; }
+      .ec-brand img { width:88px; height:88px; display:block; }
+      .ec-brand span {
+        font-family:var(--label-font); font-size:34px; font-weight:500;
+        letter-spacing:0.01em; color:rgba(238,244,241,0.88); line-height:1.05;
+      }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="26.6" data-fps="30"
+    <div id="root" data-composition-id="main" data-start="0" data-duration="29.5" data-fps="30"
          data-width="1836" data-height="1164">
 
-      <div id="stage" class="clip" data-start="0" data-duration="26.6" data-track-index="0">
+      <div id="stage" class="clip" data-start="0" data-duration="29.5" data-track-index="0">
         <div id="card" data-layout-allow-overflow>
           <div id="cam" data-layout-allow-overflow>
             <img id="page" src="assets/captures/overview-tall.png" alt="" />
@@ -114,7 +164,7 @@
         </div>
       </div>
 
-      <div id="anno" class="clip" data-start="0" data-duration="26.6" data-track-index="1">
+      <div id="anno" class="clip" data-start="0" data-duration="29.5" data-track-index="1">
         <div class="lbl lbl--free" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>The whole run. One page.</div>
         <div class="anchor" id="anc2" data-layout-allow-overlap>
           <div class="lbl lbl--below" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>Every phase, timed</div>
@@ -135,6 +185,20 @@
           <div class="lbl" id="lbl7" data-layout-allow-overlap data-layout-allow-occlusion>Requirement to task to test</div>
         </div>
         <!-- swipes are built from the rect tables below -->
+      </div>
+
+      <div id="endcard" class="clip" data-start="0" data-duration="29.5" data-track-index="2"
+           data-layout-allow-overlap data-layout-allow-occlusion>
+        <div class="ec-lead" data-layout-allow-overlap data-layout-allow-occlusion>And that is not all</div>
+        <div class="ec-chips" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="ec-chip">Living specs</div>
+          <div class="ec-chip">Fast path for small changes</div>
+          <div class="ec-chip">Your own workflows</div>
+        </div>
+        <div class="ec-brand" data-layout-allow-overlap data-layout-allow-occlusion>
+          <img src="assets/icons/mascot.png" alt="" />
+          <span>SpecKit Companion</span>
+        </div>
       </div>
     </div>
 
@@ -274,7 +338,10 @@
            B5 14.10 verified: the pass count, then the command that proves it
            B6 17.70 decisions: WHY, then REJECTED, on decision 01
            B7 21.70 coverage: the 4/4 traced badge, then the FR-001 row
-           B8 25.10 release to the top rest; the tail matches frame zero
+           B8 25.10 cliffhanger end card: annotations leave, the card enters
+                    as ONE unit over its own dark ground, holds still; the
+                    camera snaps home behind the opaque card
+           B9 28.60 hard cut to the top rest; the tail matches frame zero
          ================================================================== */
       window.__timelines = window.__timelines || {};
       var tl = gsap.timeline({ paused: true });
@@ -287,6 +354,7 @@
       gsap.set("#cam", { transformOrigin: "0 0", x: 0, y: 0, scale: 1 });
       gsap.set(ALL_SW.join(","), { autoAlpha: 0, scaleX: 0 });
       gsap.set(ALL_LBL.join(","), { autoAlpha: 0 });
+      gsap.set("#endcard", { autoAlpha: 0 });
 
       function camTo(from, to, t, dur) {
         tl.fromTo("#cam", { x: from.x, y: from.y, scale: from.s },
@@ -351,9 +419,16 @@
       sweep(SW_CROW, 23.10, 0.50);
       lblIn("#lbl7", 23.70);
 
-      /* --- B8 · release: back to the resting frame, which is frame zero --- */
+      /* --- B8 · the cliffhanger end card, one unit in, calm hold --- */
       beatOut("#lbl7", [SW_CBADGE, SW_CROW], 25.10);
-      camTo(CAM_COV, REST, 25.16, 1.10);
+      tl.fromTo("#endcard", { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.70, ease: "power2.out", immediateRender: false }, 25.40);
+      /* behind the opaque card, snap the camera home; sub-frame duration = a cut */
+      camTo(CAM_COV, REST, 27.00, 0.02);
+
+      /* --- B9 · hard cut back to the resting frame, which is frame zero --- */
+      tl.fromTo("#endcard", { autoAlpha: 1, y: 0 },
+        { autoAlpha: 0, y: 0, duration: 0.02, ease: "none", immediateRender: false }, 28.60);
 
       window.__timelines["main"] = tl;
     </script>

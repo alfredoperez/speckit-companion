@@ -2,7 +2,8 @@
 
 **Status: reviewed, decided, and BUILT. See "As built" and "Decisions" at the end.**
 
-One loop, 26.6 s at 30 fps (798 frames), 1836 x 1164, evolving the v1 composition
+One loop, 29.5 s at 30 fps (885 frames, was 26.6 s before the B8 end card;
+see the As built addendum), 1836 x 1164, evolving the v1 composition
 in this folder. The v1 measured-rect machinery (capture-pixel rects projected
 under a camera, swipes built per resting camera) is reused as is; what changes
 is the capture, the camera path, and the label style.
@@ -177,3 +178,34 @@ page" claim spelled out, B1's hold stretches to carry a second label line.
   artifacts at README width. Replaced `docs/screenshots/generated/overview.gif`.
 - Loop verified: first and last GIF frames are the same rest pose
   (PSNR 43 dB, quantization noise only), `loop forever` flag set.
+
+## As built addendum (B8 cliffhanger end card, 2026-08-24)
+
+- New closing beat between the coverage beat and the loop return; total is
+  now 29.5 s (885 frames at 30 fps). As-built timeline: B7 21.70 unchanged,
+  B8 25.10 end card, B9 28.60 hard cut to rest, end 29.50. (This B8/B9
+  supersedes the "release" B8 recorded above.)
+- B8: the coverage annotations leave at 25.10; a full-frame end card on the
+  piece's own dark ground enters as ONE unit (fade up 24 px over 0.70 s) at
+  25.40 and holds still until 28.60. Nothing else animates during the hold.
+  Content, top to bottom: lead line "And that is not all" in the 44 px
+  glowing label style; three teaser chips in a row at 32 px in the same
+  visual family ("Living specs", "Fast path for small changes", "Your own
+  workflows"); the mascot at 88 px beside the product name "SpecKit
+  Companion". The mascot is the luminance-keyed 52 KB mascot.png reused
+  from media/landing-video/hf, copied to assets/icons/ (tracked in git).
+- Behind the opaque card the camera snaps from CAM_COV to REST at 27.00 in
+  0.02 s: sub-frame at 30 fps, invisible. At 28.60 the card cuts away in
+  0.02 s, so no blend frame lands; the reveal is the frame-zero rest pose,
+  and the 0.9 s tail keeps the loop seamless.
+- DECISION: brand goes at the END, never the start. Frame zero keeps
+  showing the feature; the mascot and product name appear only in B8.
+- GIF re-encoded with the same pipeline (960 wide, 14 fps, palettegen
+  stats_mode=diff 128 colors, paletteuse dither=none diff_mode=rectangle,
+  gifsicle -O3 --lossy=30): 2.9 MB, under the 4 MB target and smaller than
+  the 26.6 s build's 3.1 MB; the static end card compresses to almost
+  nothing and the palette redistributed. 396 stored GIF frames, 29.5 s,
+  loop forever flag set. Cut verified frame by frame: end card at 28.57,
+  clean rest pose at 28.64, no ghost or flash; post-cut frame vs frame
+  zero PSNR 42 dB (quantization noise only). Replaced
+  docs/screenshots/generated/overview.gif.
