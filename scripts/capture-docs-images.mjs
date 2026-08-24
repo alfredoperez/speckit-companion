@@ -94,6 +94,15 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-3-living-specs-pair',
         out: 'living-specs-pair.png',
     },
+    {
+        // The four-benefit sub-hero under the extension README's "What you
+        // get" (ReadmeCapture.stories.tsx C4): Traceability, Customization,
+        // Fast path, and Living Specs, each panel a fixture-fed product
+        // surface (run strip + verified rows, the companion.yml hooks shape,
+        // the size verdict, the living header).
+        story: 'video-capture-readme-composites--c-4-benefits-strip',
+        out: 'benefits-strip.png',
+    },
 ];
 
 const PORT = 6017;

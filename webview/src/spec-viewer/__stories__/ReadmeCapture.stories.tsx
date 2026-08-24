@@ -31,14 +31,28 @@
  *   storyboard seed for the future Living Specs GIF (sidebar row → click →
  *   viewer opens → drift → Update).
  *
+ * C4 · Benefits strip (`generated/benefits-strip.png`)
+ *   The four-benefit sub-hero under the extension README's "What you get":
+ *   one panel per benefit, each a real product surface on the Teamboard
+ *   fixtures. Traceability shows the Overview's run strip plus verified check
+ *   rows from the completed run; Customization shows the
+ *   `.specify/companion.yml` hooks shape (same shape as
+ *   examples/ship-ticket/companion.inline.yml); Fast path shows the Intent
+ *   section with the run's size verdict ("Sized simple: 6 files, 6 tasks
+ *   projected"); Living Specs shows the viewer's real living header (LIVING
+ *   badge, covers globs, coverage and drift facts) on photo-storage. Laid out
+ *   as a 2x2 grid, not one row of four: the product type inside each panel
+ *   has to stay legible at the README's ~830px column width.
+ *
  * Determinism: wrapped in CaptureFrame (frozen clock, no animation), so two
  * captures a month apart are identical. See captureFrame.tsx.
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
+import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { NavState, ViewerState } from '../types';
-import { InteractiveViewer, vsFromContext } from './viewerHarness';
+import { InteractiveViewer, vsFromContext, type SpecContextData } from './viewerHarness';
 import { CaptureFrame } from './captureFrame';
 import { SidebarShell } from './sidebarTree';
 import { specsPane, livingSpecsPane, steeringPane } from './SidebarCapture.stories';
@@ -62,8 +76,11 @@ import {
 } from '../markdown';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
+import { IntentSection, OverviewTiming, VerifiedSection } from '../components/OverviewDossier';
+import { SpecHeader } from '../components/SpecHeader';
 
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
+import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
 import photoStorageLivingSpec from '../__fixtures__/teamboard/photo-storage.spec.md?raw';
 
 const meta: Meta = {
@@ -349,6 +366,239 @@ export const C3LivingSpecsPair: Story = {
                         <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
                     </div>
                 </div>
+            </div>
+        </CaptureFrame>
+    ),
+};
+
+// ── C4 · the benefits strip ───────────────────────────────────────────────
+// Four real product surfaces, one per benefit of the extension README's
+// "What you get" spine, on one dark ground. Every panel is fixture-fed
+// product rendering (or, for Customization, the literal companion.yml hook
+// shape): nothing is drawn for the picture.
+
+const ctxCompletedStrip = JSON.parse(ctxCompletedRaw) as SpecContextData;
+const vsCompletedStrip = vsFromContext(ctxCompletedStrip, []);
+
+/** Traceability: the run strip plus two verified rows from the completed
+ *  Teamboard run. The verified slice keeps the panel short; the count chip
+ *  honestly counts what is shown. */
+const vsTraceability: ViewerState = {
+    ...vsCompletedStrip,
+    verified: [vsCompletedStrip.verified![0], vsCompletedStrip.verified![4]],
+};
+
+/** Fast path: the Intent section reduced to the sizing moment. Approach,
+ *  living specs, and the timing strip are elsewhere in the strip already;
+ *  what this panel is about is "Sized simple: 6 files, 6 tasks projected". */
+const vsSizing: ViewerState = {
+    ...vsCompletedStrip,
+    approach: undefined,
+    context: undefined,
+    livingSpecs: undefined,
+    stepHistory: {} as ViewerState['stepHistory'],
+    timing: undefined,
+};
+
+/** One benefit panel: kicker + heading + one line, then a bordered card. */
+function BenefitPanel({
+    kicker,
+    heading,
+    caption,
+    height,
+    children,
+}: {
+    kicker: string;
+    heading: string;
+    caption: string;
+    height: number;
+    children: ComponentChildren;
+}) {
+    return (
+        <div style="display: flex; flex-direction: column; min-width: 0;">
+            <div style="font: 700 11px/1 var(--vscode-font-family); color: #78dce8; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px;">
+                {kicker}
+            </div>
+            <div style="font: 600 18px/1.25 var(--vscode-font-family); color: #e2e2e2; margin-bottom: 5px;">
+                {heading}
+            </div>
+            <div style="font: 400 12.5px/1.5 var(--vscode-font-family); color: #9a9a9a; margin-bottom: 12px;">
+                {caption}
+            </div>
+            <div
+                style={`position: relative; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-editor-background); height: ${height}px; flex-shrink: 0;`}
+            >
+                {children}
+                {/* Fade the clipped bottom edge out to the ground, so a crop
+                    reads as intentional (same device as C1 and C3). */}
+                <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
+            </div>
+        </div>
+    );
+}
+
+// The companion.yml hooks block, colored by hand so the card reads as config
+// without dragging a highlighter into the story. The SHAPE is the real one:
+// it mirrors examples/ship-ticket/companion.inline.yml (type: command / prompt
+// / node are the three hook forms docs/node-model.md defines).
+const YAML_KEY = '#78dce8';
+const YAML_STR = '#a9dc76';
+const YAML_PLAIN = '#c7c7c7';
+const YAML_COMMENT = '#6a6a6a';
+
+function YamlLine({ indent, children }: { indent: number; children: ComponentChildren }) {
+    return (
+        <div style={`padding-left: ${indent * 16}px; white-space: pre;`}>{children}</div>
+    );
+}
+
+function CompanionYmlCard() {
+    return (
+        <div style="padding: 22px 24px; font: 400 14px/2 var(--vscode-editor-font-family); color: #c7c7c7;">
+            <YamlLine indent={0}>
+                <span style={`color: ${YAML_COMMENT};`}># .specify/companion.yml</span>
+            </YamlLine>
+            <YamlLine indent={0}>
+                <span style={`color: ${YAML_KEY};`}>commands</span>
+                <span style={`color: ${YAML_PLAIN};`}>:</span>
+            </YamlLine>
+            <YamlLine indent={1}>
+                <span style={`color: ${YAML_KEY};`}>implement</span>
+                <span style={`color: ${YAML_PLAIN};`}>:</span>
+            </YamlLine>
+            <YamlLine indent={2}>
+                <span style={`color: ${YAML_KEY};`}>hooks</span>
+                <span style={`color: ${YAML_PLAIN};`}>:</span>
+            </YamlLine>
+            <YamlLine indent={3}>
+                <span style={`color: ${YAML_KEY};`}>after</span>
+                <span style={`color: ${YAML_PLAIN};`}>:</span>
+            </YamlLine>
+            <YamlLine indent={4}>
+                <span style={`color: ${YAML_KEY};`}>implement-exec</span>
+                <span style={`color: ${YAML_PLAIN};`}>:</span>
+            </YamlLine>
+            <YamlLine indent={5}>
+                <span style={`color: ${YAML_PLAIN};`}>- {'{'} </span>
+                <span style={`color: ${YAML_KEY};`}>type</span>
+                <span style={`color: ${YAML_PLAIN};`}>: command, </span>
+                <span style={`color: ${YAML_KEY};`}>run</span>
+                <span style={`color: ${YAML_PLAIN};`}>: </span>
+                <span style={`color: ${YAML_STR};`}>"npm test"</span>
+                <span style={`color: ${YAML_PLAIN};`}> {'}'}</span>
+            </YamlLine>
+            <YamlLine indent={5}>
+                <span style={`color: ${YAML_PLAIN};`}>- {'{'} </span>
+                <span style={`color: ${YAML_KEY};`}>type</span>
+                <span style={`color: ${YAML_PLAIN};`}>: prompt, </span>
+                <span style={`color: ${YAML_KEY};`}>text</span>
+                <span style={`color: ${YAML_PLAIN};`}>: </span>
+                <span style={`color: ${YAML_STR};`}>"Open a PR for review"</span>
+                <span style={`color: ${YAML_PLAIN};`}> {'}'}</span>
+            </YamlLine>
+            <YamlLine indent={5}>
+                <span style={`color: ${YAML_PLAIN};`}>- {'{'} </span>
+                <span style={`color: ${YAML_KEY};`}>type</span>
+                <span style={`color: ${YAML_PLAIN};`}>: node, </span>
+                <span style={`color: ${YAML_KEY};`}>ref</span>
+                <span style={`color: ${YAML_PLAIN};`}>: review </span>
+                <span style={`color: ${YAML_PLAIN};`}>{'}'}</span>
+            </YamlLine>
+        </div>
+    );
+}
+
+/** The viewer's real living header (SpecHeader in livingMode), signals-fed
+ *  exactly like C3's viewer panel, on the same photo-storage fixture. */
+function LivingHeaderPanel() {
+    viewerState.value = null;
+    navState.value = mockNavState({
+        coreDocs: [
+            mockDoc('spec', true, 'Spec'),
+            mockDoc('arch', true, 'Architecture'),
+            mockDoc('coverage', true, 'Coverage'),
+        ],
+        relatedDocs: [],
+        currentDoc: 'spec',
+        workflowPhase: 'spec',
+        isViewingRelatedDoc: false,
+        specStatus: 'active',
+        badgeText: 'LIVING',
+        createdDate: null,
+        specContextName: 'Photo Storage',
+        titleFromHeading: true,
+        branch: null,
+        filePath: 'capabilities/photo-storage/spec.md',
+        docTypeLabel: 'Spec',
+        activityPanelEnabled: false,
+        livingMode: true,
+        livingMeta: {
+            capabilityName: 'photo-storage',
+            specPath: 'capabilities/photo-storage/spec.md',
+            location: 'central',
+            match: [
+                'src/services/photoStorage/**',
+                'src/api/photos/**',
+                'src/components/PhotoUploader/**',
+                'src/jobs/thumbnailQueue/**',
+            ],
+            requirements: livingRequirementCount,
+            scenarios: livingScenarioCount,
+            coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
+            drifted: true,
+        },
+    } as Partial<NavState>);
+
+    return (
+        <div class="viewer-container" style="height: 100%; padding: 18px 22px;">
+            <SpecHeader />
+        </div>
+    );
+}
+
+export const C4BenefitsStrip: Story = {
+    name: 'C4 · Benefits strip',
+    parameters: { capture: { width: 1176, height: 902 } },
+    render: () => (
+        <CaptureFrame>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px 26px; width: 100%; height: 100%; box-sizing: border-box; padding: 36px 40px 40px; background: var(--vscode-editor-background); align-content: start;">
+                <BenefitPanel
+                    kicker="Traceability"
+                    heading="Every run leaves a record"
+                    caption="Each step lands in a committed file: honest per-phase timing, plus every check that was verified and the command that proves it."
+                    height={410}
+                >
+                    <div style="padding: 14px 22px 0;">
+                        <OverviewTiming state={vsCompletedStrip} />
+                        <VerifiedSection state={vsTraceability} />
+                    </div>
+                </BenefitPanel>
+                <BenefitPanel
+                    kicker="Customization"
+                    heading="Hooks and custom steps"
+                    caption="Attach your own work before or after any node of a command in .specify/companion.yml, without forking the command itself."
+                    height={410}
+                >
+                    <CompanionYmlCard />
+                </BenefitPanel>
+                <BenefitPanel
+                    kicker="Fast path"
+                    heading="Small changes skip the ceremony"
+                    caption="Every change is sized after specify; a small one takes a folded path with the plan inline, straight to implement."
+                    height={260}
+                >
+                    <div style="padding: 16px 22px 0;">
+                        <IntentSection state={vsSizing} />
+                    </div>
+                </BenefitPanel>
+                <BenefitPanel
+                    kicker="Living specs"
+                    heading="Specs that live with the code"
+                    caption="One durable spec per capability, central or colocated, with coverage counts and a drift flag the moment the code moves on."
+                    height={260}
+                >
+                    <LivingHeaderPanel />
+                </BenefitPanel>
             </div>
         </CaptureFrame>
     ),
