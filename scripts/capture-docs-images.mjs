@@ -73,6 +73,19 @@ const STORIES = [
         story: 'video-capture-specs-sidebar-recreation--b-5-readme-triptych',
         out: 'sidebar-triptych.png',
     },
+    {
+        // The root README hero: sidebar + viewer on one dark ground, mid-plan,
+        // with the tagline set above (ReadmeCapture.stories.tsx C1).
+        story: 'video-capture-readme-composites--c-1-readme-hero',
+        out: 'hero.png',
+    },
+    {
+        // The benchmark stat strip under "Pick a pipeline once, run it end to
+        // end" (ReadmeCapture.stories.tsx C2). Numbers quoted from
+        // docs/configuration.md#workflow-choice; change them there first.
+        story: 'video-capture-readme-composites--c-2-pipeline-stats',
+        out: 'pipeline-stats.png',
+    },
 ];
 
 const PORT = 6017;

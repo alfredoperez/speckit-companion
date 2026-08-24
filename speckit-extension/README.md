@@ -10,8 +10,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <img src="https://img.shields.io/badge/version-0.20.2-0b6dd9" alt="version 0.20.2">
-  <img src="https://img.shields.io/badge/spec--kit-%E2%89%A50.9.5-008080" alt="requires spec-kit >= 0.9.5">
+  <!-- Both badges read speckit-extension/extension.yml on main, so a release
+       (or a floor bump) updates them without touching this file. -->
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fspeckit-extension%2Fextension.yml&query=%24.extension.version&label=version&color=0b6dd9" alt="extension version">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fspeckit-extension%2Fextension.yml&query=%24.requires.speckit_version&label=spec-kit&color=008080" alt="required spec-kit version">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
 
@@ -54,6 +56,18 @@ It works wherever Spec Kit runs (Claude Code, Copilot, Cursor, Gemini, and more)
 Install it and change nothing else. The extension rides your *existing* Spec Kit commands through lifecycle hooks, the small scripts Spec Kit runs after each command finishes. Each step (specify, plan, tasks, implement) is recorded as it happens, implement journals every task as it completes, and each step also records *why*: the goal and out-of-scope fence at specify, decisions with rejected alternatives at plan, requirement-to-task coverage at tasks, and what was verified at implement. Resume, handoff, and audit read the reasoning, not just the timeline.
 
 It also **never lies about state**. When a hook didn't fire (a skipped command, an out-of-band run, a project that never had the extension), `derive-from-files.py` reconstructs the state from the artifacts on disk, so the GUI reflects reality, not a half-truth.
+
+And you don't need the GUI to see any of it. Ask a mid-run feature where it stands and `/speckit.companion.status` prints exactly this (real output of `scripts/status-context.py`, on a sample feature):
+
+```text
+Spec: Profile photo upload   (source: state)
+Step: implement   Status: implementing
+Decisions:
+  - Resize on the server, not in the browser.
+  - Reject oversized uploads before reading the body.
+  - Swap avatar_url first, delete the old object second.
+Next: Continue implementation at T004  →  dispatching /speckit.companion.implement
+```
 
 <!-- TODO(alfredo): the per-task history / traceability presentation is awaiting Alfredo's design pass. Do not redesign how it is presented (here or in the docs) until that lands; this table row keeps only the benefit-led naming treatment. -->
 

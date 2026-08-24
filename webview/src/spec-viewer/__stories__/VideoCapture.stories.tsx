@@ -90,7 +90,7 @@ const allTasksChecked = checkTasks(teamboardTasks, ['T001', 'T002', 'T003', 'T00
  * snapshot that has not reached `plan` yet must not ship a `plan.md`, or the
  * rail lies about how far the run got.
  */
-function teamboardDocs(tasksMd: string, reached: 'specify' | 'plan' | 'tasks'): DocSet {
+export function teamboardDocs(tasksMd: string, reached: 'specify' | 'plan' | 'tasks'): DocSet {
     const docs: DocSet = {
         spec: { md: teamboardSpec, label: 'Specification' },
         checklist: { md: teamboardChecklist, label: 'Checklist', parentStep: 'spec' },
@@ -135,26 +135,40 @@ const steps = (
  * directly after two frames — no smooth scrolling, because a capture taken
  * mid-animation is a different frame every time.
  */
-function ScrollTo({ headingId, children }: { headingId: string; children: ComponentChildren }) {
+export function ScrollTo({
+    headingId,
+    offset = 28,
+    children,
+}: {
+    headingId: string;
+    /** Pixels of context left visible above the heading (28 default; a small
+     *  value pins the heading flush to the top with no sliver of the previous
+     *  section showing). */
+    offset?: number;
+    children: ComponentChildren;
+}) {
     useEffect(() => {
         let inner = 0;
         const outer = requestAnimationFrame(() => {
             inner = requestAnimationFrame(() => {
                 const area = document.getElementById('content-area');
                 const target = document.getElementById(headingId);
-                if (area && target) area.scrollTop = Math.max(0, target.offsetTop - 28);
+                if (area && target) area.scrollTop = Math.max(0, target.offsetTop - offset);
             });
         });
         return () => {
             cancelAnimationFrame(outer);
             cancelAnimationFrame(inner);
         };
-    }, [headingId]);
+    }, [headingId, offset]);
     return <>{children}</>;
 }
 
 const meta: Meta = {
     title: 'Video Capture/Episode 1 · Teamboard',
+    // Shared with ReadmeCapture.stories.tsx (the README hero composite), which
+    // reuses the mid-plan Teamboard state rather than forking the fixtures.
+    excludeStories: ['teamboardDocs', 'PLANNING_AT', 'ctxPlanning', 'planningStepHistory', 'ScrollTo'],
     parameters: {
         layout: 'fullscreen',
         capture: { width: STAGE_WIDTH, height: STAGE_HEIGHT },
@@ -237,16 +251,16 @@ export const A1bRequirements: Story = {
 // freeze: the clock is pinned 1m 18s after the plan step started, and it stays
 // there no matter when the frame is grabbed.
 
-const PLANNING_AT = '2026-05-19T13:12:22.000Z';
+export const PLANNING_AT = '2026-05-19T13:12:22.000Z';
 
 const planStartIndex = ctxPlanned.history.findIndex((h) => h.step === 'plan' && h.kind === 'start');
-const ctxPlanning: SpecContextData = {
+export const ctxPlanning: SpecContextData = {
     ...ctxPlanned,
     status: 'planning',
     currentStep: 'plan',
     history: ctxPlanned.history.slice(0, planStartIndex + 1),
 };
-const planningStepHistory = {
+export const planningStepHistory = {
     ...stepHistoryFrom(ctxPlanning.history),
     plan: { startedAt: ctxPlanned.history[planStartIndex]?.at, completedAt: null },
 } as ViewerState['stepHistory'];

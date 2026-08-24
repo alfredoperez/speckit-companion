@@ -246,18 +246,20 @@ const steeringRows: SidebarRow[] = [
     { id: 'st-template-tasks', depth: 2, label: 'tasks-template.md' },
 ];
 
-function specsPane(expandProfilePhoto: boolean, fill = true): SidebarPane {
+// Exported (and named in `excludeStories` below) so the README composites in
+// ReadmeCapture.stories.tsx reuse these fixture rows instead of forking them.
+export function specsPane(expandProfilePhoto: boolean, fill = true): SidebarPane {
     return { id: 'specs', title: 'Specs', rows: specsRows(expandProfilePhoto), fill };
 }
 
-const livingSpecsPane = (fill = false): SidebarPane => ({
+export const livingSpecsPane = (fill = false): SidebarPane => ({
     id: 'living-specs',
     title: 'Living Specs',
     rows: livingSpecsRows,
     fill,
 });
 
-const steeringPane = (fill = false): SidebarPane => ({
+export const steeringPane = (fill = false): SidebarPane => ({
     id: 'steering',
     title: 'Steering',
     rows: steeringRows,
@@ -266,6 +268,7 @@ const steeringPane = (fill = false): SidebarPane => ({
 
 const meta: Meta = {
     title: 'Video Capture/Specs Sidebar (Recreation)',
+    excludeStories: ['specsPane', 'livingSpecsPane', 'steeringPane'],
     parameters: {
         layout: 'fullscreen',
         capture: { width: SIDEBAR_WIDTH, height: STAGE_HEIGHT },
