@@ -86,7 +86,7 @@ function sizingLine(c: NonNullable<ViewerState['classification']>): string {
     if (typeof c.projectedFiles === 'number') parts.push(`${c.projectedFiles} files`);
     if (typeof c.projectedTasks === 'number') parts.push(`${c.projectedTasks} tasks`);
     const inputs = parts.join(', ');
-    return inputs ? `Sized ${c.verdict} — ${inputs} projected` : `Sized ${c.verdict}`;
+    return inputs ? `Sized ${c.verdict}: ${inputs} projected` : `Sized ${c.verdict}`;
 }
 
 function SectionHead({ kicker, title, count, tone }: {
@@ -206,7 +206,7 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
         <section class="dossier-section" aria-label="Verified">
             <SectionHead
                 kicker="Verified"
-                title="What was checked — and what happened"
+                title="What was checked, and what happened"
                 count={warned > 0 ? `${items.length - warned} passed · ${warned} warned` : `${items.length} passed`}
                 tone={warned > 0 ? 'warn' : 'good'}
             />
