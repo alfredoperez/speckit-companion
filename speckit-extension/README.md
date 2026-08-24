@@ -2,9 +2,11 @@
      speckit-extension/, ../docs/screenshots/... for the shared stills) so the images render
      during branch review and on GitHub after merge, matching the root README. The publish
      step must either rewrite these to absolute raw.githubusercontent URLs or verify that the
-     Spec Kit extension catalog resolves relative paths; that decision is owed at merge. -->
+     Spec Kit extension catalog resolves relative paths; that decision is owed at merge.
+     Exception: the hero image is deliberately an absolute raw.githubusercontent main URL
+     (text-free art; the title is real HTML below it), so it renders everywhere as-is. -->
 <p align="center">
-  <img src="./assets/hero.jpg" alt="SpecKit Companion spec-kit extension" width="100%">
+  <img src="https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/speckit-extension/assets/hero.png" alt="The SpecKit Companion sprout mascot tending rows of glowing seedlings in a forest clearing at dawn" width="100%">
 </p>
 
 <h1 align="center">SpecKit Companion: the Spec Kit Extension</h1>
@@ -76,6 +78,12 @@ Next: Continue implementation at T004  →  dispatching /speckit.companion.imple
 ```
 
 The payoff is the Overview. Every run, watched, resumed, or hands-off, leaves the same enhanced record in the GUI: the intent the run started from, honest per-phase timing, the expectations fence, the checks that were verified with the commands that prove them, the decisions made with their rejected alternatives, and the requirement-to-task-to-test coverage table. That page is what a future session, a reviewer, or a teammate reads instead of re-asking you.
+
+<!-- Engine-angled cut of the Overview loop. Source composition:
+     media/feature-clips/overview-engine/ (see its STORYBOARD.md); regenerate the GIF by
+     rendering that composition. Absolute URL on purpose: this README is also served
+     outside the repo tree (extension catalog), where relative paths do not resolve. -->
+![The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-engine.gif)
 
 <!-- TODO(alfredo): the per-task history / traceability presentation is awaiting Alfredo's design pass. Do not redesign how it is presented (here or in the docs) until that lands; this table row keeps only the benefit-led naming treatment. -->
 
