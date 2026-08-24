@@ -117,12 +117,14 @@
   "intent": "Let a Teamboard member set their own profile photo, and make a bad file fail loudly instead of quietly.",
   "approach": "One endpoint, one storage write, one column swap, one control on the profile page. Validation runs before anything touches storage.",
   "expectations": [
-    "A member uploads a JPEG or PNG under 5 MB and sees it on their profile.",
-    "Anything larger, or any other type, is rejected with the reason named.",
-    "Every stored photo is a 256 by 256 square.",
-    "Nobody can change another member's photo."
+    "Cropping, filters, and rotation. The server centre-crops.",
+    "Admin bulk upload.",
+    "Any third-party avatar source."
   ],
   "context": [
+    "constraint: Only the member can change their own photo. No admin path.",
+    "constraint: A failed delete may orphan an object. It must never lose a photo.",
+    "area: src/api avatar service and the profile page",
     "The CSV export thumbnailer already depends on sharp 0.33.",
     "Express 5 exposes content length before the body is buffered.",
     "The avatars bucket already has a weekly orphan sweep."
@@ -267,5 +269,14 @@
         "src/api/avatar.resize.test.ts"
       ]
     }
+  },
+  "livingSpecs": {
+    "loaded": [
+      "profiles",
+      "media-storage"
+    ],
+    "synced": [
+      "profiles"
+    ]
   }
 }
