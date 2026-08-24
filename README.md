@@ -37,7 +37,7 @@ Comment on specific lines of a spec, exactly like a pull request review. Comment
 A spec with recorded activity opens on its Overview: why the spec exists, its constraints, the decisions made (with rejected alternatives), what was verified, and a requirement-to-test traceability table. It is the dossier a future session, a reviewer, or a teammate reads instead of re-asking you.
 
 <!-- Animated clip built from media/feature-clips/overview-readme; the still overview-annotated.png stays on disk as the docs fallback. -->
-![The Overview assembling itself: intent, per-phase timing, then the Approach card (what actually needs to be done) and the Size card (sized simple, so the run took the faster route)](docs/screenshots/generated/overview.gif)
+![A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
 ### A sidebar that scales
 

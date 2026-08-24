@@ -1,6 +1,6 @@
-# Overview GIF v2. Storyboard for review
+# Overview GIF v2. Storyboard
 
-**Status: awaiting review. Do not build until the beats are approved.**
+**Status: reviewed, decided, and BUILT. See "As built" and "Decisions" at the end.**
 
 One loop, 26.6 s at 30 fps (798 frames), 1836 x 1164, evolving the v1 composition
 in this folder. The v1 measured-rect machinery (capture-pixel rects projected
@@ -141,30 +141,39 @@ holds at least 1.4 s. If review wants it tighter, B3 is the beat to fold
 away (drop to about 24.0 s); if it wants the "stock Spec Kit has no such
 page" claim spelled out, B1's hold stretches to carry a second label line.
 
-## Open questions
+## Decisions (reviewed 2026-08-24, all four questions answered)
 
-1. **Living specs placement.** On this surface living specs render as chips
-   inside the intent meta row, not as their own full-width section. I gave
-   them a shared beat with WORKING AREA (B3). Alternatives: cut B3 for a
-   tighter loop, or show living specs by opening the Living Specs viewer,
-   which would be a second surface and likely its own clip.
-2. **Naming Spec Kit in the opening label.** B1 says "The whole run. One
-   page." and leaves the comparison to the README text around the GIF. If
-   the label itself should carry the claim, propose a two-line label:
-   "The whole run. One page." over "Stock Spec Kit has no page like this."
-   Longer hold needed (about plus 1 s).
-3. **Fixture strings changed under the video-series header.** The A6 fixture
-   file is marked as published copy for the YouTube series. The old
-   `expectations` entries were success criteria rendering under
-   "Deliberately out of scope", which was wrong on screen; they were
-   replaced with the spec's own out-of-scope list, and two constraints plus
-   working area and living specs were added. Any already-recorded episode
-   capture of A6 will differ from a re-capture. Flagging, not asking:
-   the old content was misfiled and the sections were empty without this.
-4. **Decisions beat depth.** Decisions has its own beat (B6) highlighting one
-   decision's WHY and REJECTED. If three beats of scrolling reads long in
-   the animatic, B5 and B6 could share one slower scroll with two label
-   stops, saving about 1 s.
-5. **Header facts strip.** The nav's run strip (6/6 tasks, 4/4 traced,
-   5 checks) is not in any beat; the tall capture keeps the page chrome, so
-   it is visible at B1 scale. Give it a swipe during B1?
+1. **Living specs placement: KEEP the shared chip beat B3** as storyboarded,
+   inside the intent meta row alongside WORKING AREA.
+2. **Opening label stays IMPLICIT.** "The whole run. One page." with no
+   Spec Kit comparison on-image; the README text beside the GIF carries it.
+3. **Header facts strip: YES**, swiped during B1's whole-page hold, reusing
+   the 3.4 s rather than adding runtime. Sequenced pull-back first, swipe
+   once the camera settles, then the label.
+4. **B5 and B6 stay separate beats.** Total stays about 26.6 s. The fixture
+   string change (question 3 of the review draft) was accepted as flagged.
+
+## As built (v2, 2026-08-24)
+
+- Timeline shifted slightly from the draft while keeping 26.6 s total:
+  B0 0.00, B1 1.00, B2 4.40, B3 7.60, B4 10.55, B5 14.10, B6 17.70,
+  B7 21.70, B8 25.10, end 26.60. 798 frames at 30 fps.
+- Labels for B2, B3, and B4 sit BELOW their anchors (`.lbl--below`): above
+  them they collided with the intent statement, the phase strip, and the
+  fence's own identical title. B5, B6, B7 keep the above placement.
+- The B3 chips swipe rect is trimmed to the last chip's right edge; the
+  chips UL box runs wider than its content.
+- One tall capture (1224 x 2430 CSS at device pixel ratio 2, footer hidden,
+  scroll container unclamped) replaces v1's slice machinery;
+  `assets/captures/rects-v2.json` holds the measured rects. Captures are
+  gitignored (`media/.gitignore`), regenerate via a Storybook boot plus the
+  unclamp-and-measure pass described under "Capture plan".
+- MP4: `npx hyperframes@0.8.12 render` (26.6 s, 1836 x 1164).
+- GIF: 960 x 609 at 14 fps, kept the full draft width AND frame rate.
+  Pipeline: ffmpeg palettegen (stats_mode=diff, 128 colors) + paletteuse
+  (dither=none, diff_mode=rectangle), then gifsicle -O3 --lossy=30.
+  Result 3.1 MB, under the 4 MB target with no fps/width step-down; the
+  flat dark UI takes dither=none cleanly and lossy=30 shows no visible
+  artifacts at README width. Replaced `docs/screenshots/generated/overview.gif`.
+- Loop verified: first and last GIF frames are the same rest pose
+  (PSNR 43 dB, quantization noise only), `loop forever` flag set.
