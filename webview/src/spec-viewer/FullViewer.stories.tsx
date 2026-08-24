@@ -14,18 +14,25 @@
  *
  * For isolated pieces see Viewer/NavigationBar, Viewer/SpecHeader,
  * Viewer/Transitions (status walk-through), and Markdown Rendering.
+ *
+ * 393 and 394 are frozen COPIES under `__fixtures__/specs/`, not live specs.
+ * The originals were deleted by d88eb361 ("prune unused agent scaffolding and
+ * stale specs"), which broke this file and `markdown/Tasks.stories.tsx` at
+ * load time. They are restored byte-for-byte from d88eb361^ and now live next
+ * to the stories, so a future `specs/` cleanup cannot break Storybook again.
+ * New story fixtures belong there too, not in the working `specs/` folder.
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
-import { useEffect, useState } from 'preact/hooks';
-import { App } from './App';
-import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from './signals';
-import type { NavState, ViewerState, DocumentType, HistoryEntry, SerializedFooterAction } from './types';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './markdown';
-import { applyHighlighting } from './highlighting';
-import { buildToc } from './toc';
-import { mockDoc, mockRelatedDoc, mockNavState } from './components/__stories__/mockData';
-import { deriveStepHistory, deriveTimingSummary } from '../../../src/features/specs/stepHistoryDerivation';
+import type { ViewerState } from './types';
+import {
+    completedFooter,
+    InteractiveViewer,
+    stepHistoryFrom,
+    vsFromContext,
+    type DocSet,
+    type SpecContextData,
+} from './__stories__/viewerHarness';
 
 import spec392 from '../../../specs/392-living-specs-viewer/spec.md?raw';
 import plan392 from '../../../specs/392-living-specs-viewer/plan.md?raw';
@@ -44,65 +51,30 @@ import quickstart172 from '../../../specs/172-composable-command-nodes/quickstar
 import checklist172 from '../../../specs/172-composable-command-nodes/checklists/requirements.md?raw';
 import contract172 from '../../../specs/172-composable-command-nodes/contracts/assembly-and-parity.md?raw';
 import ctx172Raw from '../../../specs/172-composable-command-nodes/.spec-context.json?raw';
-import spec394 from '../../../specs/394-adopt-codex-design/spec.md?raw';
-import plan394 from '../../../specs/394-adopt-codex-design/plan.md?raw';
-import tasks394 from '../../../specs/394-adopt-codex-design/tasks.md?raw';
-import research394 from '../../../specs/394-adopt-codex-design/research.md?raw';
-import dataModel394 from '../../../specs/394-adopt-codex-design/data-model.md?raw';
-import checklist394 from '../../../specs/394-adopt-codex-design/checklists/requirements.md?raw';
-import contract394 from '../../../specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
-import ctx394Raw from '../../../specs/394-adopt-codex-design/.spec-context.json?raw';
+import spec394 from './__fixtures__/specs/394-adopt-codex-design/spec.md?raw';
+import plan394 from './__fixtures__/specs/394-adopt-codex-design/plan.md?raw';
+import tasks394 from './__fixtures__/specs/394-adopt-codex-design/tasks.md?raw';
+import research394 from './__fixtures__/specs/394-adopt-codex-design/research.md?raw';
+import dataModel394 from './__fixtures__/specs/394-adopt-codex-design/data-model.md?raw';
+import checklist394 from './__fixtures__/specs/394-adopt-codex-design/checklists/requirements.md?raw';
+import contract394 from './__fixtures__/specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
+import ctx394Raw from './__fixtures__/specs/394-adopt-codex-design/.spec-context.json?raw';
 import spec406 from '../../../specs/406-living-spec-components/spec.md?raw';
 import plan406 from '../../../specs/406-living-spec-components/plan.md?raw';
 import tasks406 from '../../../specs/406-living-spec-components/tasks.md?raw';
 import ctx406Raw from '../../../specs/406-living-spec-components/.spec-context.json?raw';
 import viewerUiLiving from './viewer-ui.spec.md?raw';
 import specViewerLiving from '../../../src/features/spec-viewer/spec-viewer.spec.md?raw';
-import spec393 from '../../../specs/393-implement-button-lost/spec.md?raw';
-import plan393 from '../../../specs/393-implement-button-lost/plan.md?raw';
-import tasks393 from '../../../specs/393-implement-button-lost/tasks.md?raw';
-import ctx393Raw from '../../../specs/393-implement-button-lost/.spec-context.json?raw';
-
-/** The slice of an on-disk .spec-context.json these stories consume. */
-interface SpecContextData {
-    specName: string;
-    branch: string;
-    currentStep: string;
-    status: string;
-    history: HistoryEntry[];
-    currentTask?: string;
-    approach?: string;
-    last_action?: string;
-    task_summaries?: ViewerState['taskSummaries'];
-    decisions?: ViewerState['decisions'];
-    intent?: string;
-    expectations?: string[];
-    context?: string[];
-    verified?: ViewerState['verified'];
-    coverage?: Record<string, { title?: string; tasks?: string[]; tests?: string[] }>;
-    classification?: ViewerState['classification'];
-    livingSpecs?: {
-        loaded?: string[];
-        synced?: string[];
-    };
-}
+import spec393 from './__fixtures__/specs/393-implement-button-lost/spec.md?raw';
+import plan393 from './__fixtures__/specs/393-implement-button-lost/plan.md?raw';
+import tasks393 from './__fixtures__/specs/393-implement-button-lost/tasks.md?raw';
+import ctx393Raw from './__fixtures__/specs/393-implement-button-lost/.spec-context.json?raw';
 
 const ctx392 = JSON.parse(ctx392Raw) as SpecContextData;
 const ctx172 = JSON.parse(ctx172Raw) as SpecContextData;
 const ctx394 = JSON.parse(ctx394Raw) as SpecContextData;
 const ctx406 = JSON.parse(ctx406Raw) as SpecContextData;
 const ctx393 = JSON.parse(ctx393Raw) as SpecContextData;
-
-/** Every openable document of a spec, keyed by the `documentType` the nav emits. */
-interface DocEntry {
-    md: string;
-    label: string;
-    /** Step tab the doc hangs under in the sub-rail (core docs omit it). */
-    parentStep?: string;
-}
-type DocSet = Record<string, DocEntry>;
-
-const CORE_DOCS = ['spec', 'plan', 'tasks'];
 
 const docs392: DocSet = {
     spec: { md: spec392, label: 'Specification' },
@@ -146,199 +118,6 @@ const docs393: DocSet = {
     plan: { md: plan393, label: 'Plan' },
     tasks: { md: tasks393, label: 'Tasks' },
 };
-
-function relatedDocsFor(docs: DocSet) {
-    return Object.entries(docs)
-        .filter(([type]) => !CORE_DOCS.includes(type))
-        .map(([type, d]) => mockRelatedDoc(type, d.parentStep ?? 'plan', d.label));
-}
-
-function stepHistoryFrom(history: HistoryEntry[]): ViewerState['stepHistory'] {
-    const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
-    for (const h of history) {
-        const entry = (out[h.step] ??= {});
-        if (h.kind === 'start' && !entry.startedAt) entry.startedAt = h.at;
-        if (h.kind === 'complete') entry.completedAt = h.at;
-    }
-    return out as ViewerState['stepHistory'];
-}
-
-function formatDate(iso: string | undefined): string | null {
-    if (!iso) return null;
-    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-const completedFooter: SerializedFooterAction[] = [
-    { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
-    { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
-];
-
-function navFromContext(ctx: SpecContextData, overrides: Partial<NavState>): NavState {
-    return mockNavState({
-        coreDocs: [
-            mockDoc('spec', true, 'Specification'),
-            mockDoc('plan', true, 'Plan'),
-            mockDoc('tasks', true, 'Tasks'),
-        ],
-        workflowPhase: 'implement',
-        taskCompletionPercent: 100,
-        specStatus: ctx.status,
-        activeStep: ctx.currentStep,
-        currentStep: ctx.currentStep,
-        currentTask: ctx.currentTask ?? null,
-        stepHistory: stepHistoryFrom(ctx.history),
-        badgeText: ctx.status.toUpperCase(),
-        createdDate: formatDate(ctx.history[0]?.at),
-        specContextName: ctx.specName,
-        branch: ctx.branch,
-        activityPanelEnabled: true,
-        ...overrides,
-    });
-}
-
-function vsFromContext(
-    ctx: SpecContextData,
-    footer: SerializedFooterAction[],
-    overrides: Partial<ViewerState> = {},
-): ViewerState {
-    // Use the same production timing derivation as the extension provider so
-    // integrated stories never manufacture durations from raw journal events.
-    const derivedStepHistory = deriveStepHistory(
-        ctx.history as Parameters<typeof deriveStepHistory>[0],
-        ctx.currentStep as Parameters<typeof deriveStepHistory>[1],
-        ctx.status as Parameters<typeof deriveStepHistory>[2],
-    );
-    const coverage = ctx.coverage
-        ? Object.entries(ctx.coverage).map(([req, row]) => ({
-            req,
-            title: row.title,
-            tasks: row.tasks ?? [],
-            tests: row.tests ?? [],
-        }))
-        : undefined;
-    return {
-        status: ctx.status,
-        activeStep: ctx.currentStep,
-        steps: { specify: 'completed', plan: 'completed', tasks: 'completed', implement: 'completed' },
-        pulse: null,
-        highlights: [],
-        activeSubstep: null,
-        footer,
-        history: ctx.history,
-        stepHistory: derivedStepHistory as ViewerState['stepHistory'],
-        timing: deriveTimingSummary(derivedStepHistory),
-        approach: ctx.approach,
-        lastAction: ctx.last_action,
-        taskSummaries: ctx.task_summaries,
-        decisions: ctx.decisions,
-        intent: ctx.intent,
-        expectations: ctx.expectations,
-        context: ctx.context,
-        verified: ctx.verified,
-        coverage,
-        classification: ctx.classification,
-        livingSpecs: ctx.livingSpecs
-            ? { loaded: ctx.livingSpecs.loaded ?? [], synced: ctx.livingSpecs.synced ?? [] }
-            : undefined,
-        ...overrides,
-    } as ViewerState;
-}
-
-interface FullViewerProps {
-    md: string;
-    nav: NavState;
-    vs: ViewerState;
-    /** Pin the shell view; omit to exercise the real landing-view default. */
-    view?: 'overview' | 'document';
-}
-
-/** Mounts the real App exactly as index.tsx does: signals in, then the
- *  same post-paint pass (highlighting + TOC build) updateContent runs. */
-function FullViewer({ md, nav, vs, view }: FullViewerProps) {
-    navState.value = nav;
-    viewerState.value = vs;
-    historyEntries.value = vs.history ?? [];
-    setHasSpecContext(!!(nav.specContextName || nav.badgeText));
-    setCurrentTask(nav.currentTask ?? null);
-    setTaskSummaries(vs.taskSummaries ?? null);
-    markdownHtml.value = renderMarkdown(md);
-
-    useEffect(() => {
-        viewerMode.value = view ?? null;
-        return () => {
-            viewerMode.value = null;
-        };
-    }, [view]);
-
-    useEffect(() => {
-        const id = requestAnimationFrame(() => {
-            applyHighlighting();
-            buildToc(
-                document.getElementById('content-area'),
-                document.getElementById('markdown-content'),
-                document.getElementById('spec-toc'),
-            );
-        });
-        return () => cancelAnimationFrame(id);
-    }, [md]);
-
-    return (
-        <div class="viewer-container">
-            <App specStatus={nav.specStatus ?? 'active'} />
-        </div>
-    );
-}
-
-interface InteractiveViewerProps {
-    ctx: SpecContextData;
-    docs: DocSet;
-    initialDoc: string;
-    vs: ViewerState;
-    extraNav?: Partial<NavState>;
-    view?: 'overview' | 'document';
-    livingDocs?: Record<string, DocEntry>;
-}
-
-/** FullViewer + working navigation: answers the nav's `stepperClick` /
- *  `switchDocument` messages in-story, standing in for messageHandlers.ts. */
-function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, livingDocs }: InteractiveViewerProps) {
-    const [doc, setDoc] = useState(initialDoc);
-
-    useEffect(() => {
-        const host = window as unknown as { vscode: { postMessage: (msg: unknown) => void } };
-        const original = host.vscode.postMessage;
-        host.vscode.postMessage = (msg: unknown) => {
-            const m = msg as { type?: string; phase?: string; documentType?: string; capabilityName?: string };
-            if (m?.type === 'stepperClick' && m.phase && docs[m.phase]) {
-                setDoc(m.phase);
-            } else if (m?.type === 'switchDocument' && m.documentType && docs[m.documentType]) {
-                setDoc(m.documentType);
-            } else if (m?.type === 'openLivingSpec' && m.capabilityName && livingDocs?.[m.capabilityName]) {
-                setDoc(`living:${m.capabilityName}`);
-            } else {
-                original(msg);
-            }
-        };
-        return () => {
-            host.vscode.postMessage = original;
-        };
-    }, [docs, livingDocs]);
-
-    const livingName = doc.startsWith('living:') ? doc.slice('living:'.length) : null;
-    const activeDoc = livingName ? livingDocs?.[livingName] : docs[doc];
-
-    const nav = navFromContext(ctx, {
-        currentDoc: (livingName ? 'spec' : doc) as DocumentType,
-        relatedDocs: relatedDocsFor(docs),
-        isViewingRelatedDoc: livingName ? false : !CORE_DOCS.includes(doc),
-        docTypeLabel: activeDoc?.label,
-        livingMode: livingName !== null,
-        specContextName: livingName ?? ctx.specName,
-        ...extraNav,
-    });
-
-    return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={livingName ? 'document' : view} />;
-}
 
 const meta: Meta = {
     title: 'Viewer/Full Viewer',

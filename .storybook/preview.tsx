@@ -168,6 +168,9 @@ const preview: Preview = {
                     ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts']],
                     'Primitives',
                     'SpecEditor',
+                    // Video capture stories sort last: they are frames for the
+                    // YouTube series, not a component catalog.
+                    'Video Capture',
                 ],
             },
         },
@@ -193,11 +196,20 @@ const preview: Preview = {
                 rootStyle.setProperty(k, v);
             });
 
+            // A story that declares `parameters.capture = { width, height }` is
+            // a video frame, not a catalog entry: it gets an exact-pixel box
+            // with no padding, so a screenshot of the preview iframe IS the
+            // frame. See webview/src/spec-viewer/__stories__/captureFrame.tsx.
+            const capture = context.parameters?.capture as
+                | { width: number; height: number }
+                | undefined;
+
+            const shellStyle = capture
+                ? `background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); width: ${capture.width}px; height: ${capture.height}px; padding: 0; margin: 0; overflow: hidden;`
+                : 'background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); min-height: 100vh; padding: 16px;';
+
             return (
-                <div
-                    class={theme.bodyClass}
-                    style="background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); min-height: 100vh; padding: 16px;"
-                >
+                <div class={theme.bodyClass} style={shellStyle}>
                     <Story />
                 </div>
             );

@@ -1,0 +1,822 @@
+{
+  "workflow": "speckit",
+  "specName": "adopt codex design",
+  "branch": "viewer-redesign-investigation",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:34:06.631Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-13T00:39:29.491Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:40:38.250Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:43:04.472Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:45:00.608Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:45:01.256Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:46:12.229Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:47:41.590Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T00:47:43.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-07-13T00:48:56.576Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T01:10:44.269Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T01:32:04.886Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T01:43:03.385Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T01:53:44.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T01:53:44.671Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:04:16.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:15:12.855Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:27:42.101Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:29:42.120Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:35:39.489Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:39:47.771Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:39:47.829Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T02:42:51.428Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.252Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.305Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.415Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:16:20.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:21:52.616Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:21:52.671Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:21:52.726Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:28:48.804Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:28:48.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:32:58.167Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:42:00.502Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:44:40.705Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-07-13T03:44:40.762Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-07-13T03:44:40.844Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "30/30 tasks done — PR #431 open for review (1266/1266 jest, 22/22 AA)",
+  "coverage": {
+    "FR-001": {
+      "title": "Adopt Codex hybrid theme: owned light/dark palette, host fonts/accessibility inherited",
+      "tasks": [
+        "T001"
+      ]
+    },
+    "FR-002": {
+      "title": "All text roles meet WCAG AA in both palettes",
+      "tasks": [
+        "T001",
+        "T010",
+        "T030"
+      ]
+    },
+    "FR-003": {
+      "title": "Code blocks readable on owned surface in both themes",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-004": {
+      "title": "Primitives migrate to Codex roles without API/message changes",
+      "tasks": [
+        "T011",
+        "T012",
+        "T016",
+        "T017",
+        "T018"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "FR-005": {
+      "title": "Overview is default landing view; document fallback when no activity",
+      "tasks": [
+        "T014",
+        "T020",
+        "T021"
+      ]
+    },
+    "FR-006": {
+      "title": "Document rail (where) separated from completion marks (how far)",
+      "tasks": [
+        "T017"
+      ]
+    },
+    "FR-007": {
+      "title": "Rail/steps fully workflow-driven, no stock-four assumption",
+      "tasks": [
+        "T022",
+        "T023"
+      ]
+    },
+    "FR-008": {
+      "title": "CTA uses workflow-derived label; extra commands in Other actions",
+      "tasks": [
+        "T018",
+        "T024"
+      ]
+    },
+    "FR-009": {
+      "title": "Every lifecycle state renders correct badge/marks/actions",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx",
+        "webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "FR-010": {
+      "title": "All markdown content types styled via existing emitted classes",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-011": {
+      "title": "Hide empty meta/template remnants; branch metadata contrast",
+      "tasks": [
+        "T008"
+      ]
+    },
+    "FR-012": {
+      "title": "Three-column grid with documented responsive behavior",
+      "tasks": [
+        "T015",
+        "T019",
+        "T025"
+      ]
+    },
+    "FR-013": {
+      "title": "Inline review comments + refinement queue keep working",
+      "tasks": [
+        "T026"
+      ]
+    },
+    "FR-014": {
+      "title": "Living-specs mode behavior preserved in new shell",
+      "tasks": [
+        "T014",
+        "T017",
+        "T021"
+      ]
+    },
+    "FR-015": {
+      "title": "Extension-webview message protocol unchanged",
+      "tasks": [
+        "T013",
+        "T021",
+        "T024",
+        "T030"
+      ],
+      "tests": [
+        "tests/unit/spec-viewer/currentDoc.spec.ts",
+        "src/features/specs/__tests__/stepLifecycle.test.ts"
+      ]
+    },
+    "FR-016": {
+      "title": "Recovery/safety affordances surface in new shell",
+      "tasks": [
+        "T013",
+        "T021"
+      ]
+    },
+    "FR-017": {
+      "title": "Stories and viewer docs updated with the design",
+      "tasks": [
+        "T013",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T024",
+        "T026",
+        "T028",
+        "T029"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 18,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "context": [
+    "design source: webview/src/spec-viewer/__redesign__/codex/ (stories, RATIONALE.md, codex.css --cx-* roles)",
+    "area: webview/src/spec-viewer + webview/styles (tokens.css, spec-viewer partials)",
+    "constraint: docs/viewer-states.md state machine must hold unchanged",
+    "constraint: markdown emitted-class contract and extension<->webview message protocol are frozen interfaces",
+    "constraint: keep inline-comment UX (line-anchored comments + refinement queue)"
+  ],
+  "intent": "Ship the Codex redesign (owned palette, Overview-first shell, workflow-driven rail, data-display skin) in the production viewer with zero behavioral regressions",
+  "expectations": [
+    "sidebar tree, spec-editor, workflow-editor webviews unchanged",
+    "no extension-side derivation/capture/schema changes",
+    "no markdown pipeline restructuring",
+    "no new theming/layout settings"
+  ],
+  "approach": "Reskin-and-relayout over frozen seams: re-value the existing token layer to the Codex owned light/dark palette, recompose App.tsx into the shell regions (header + view switch, grouped document rail, 72ch reading column, run-facts aside, CTA footer with Other-actions menu) with each region kept on its existing component and state seam, and restyle the markdown pipeline's emitted classes for the data-display skin. Signals, message protocol, state derivation, and viewer-states transitions untouched.",
+  "decisions": [
+    {
+      "decision": "adopt the palette by re-valuing the existing token layer",
+      "why": "every partial already consumes these token names; one coherent restyle, no rename churn",
+      "rejected": "shipping codex.css alongside and porting components onto .cx-* classes"
+    },
+    {
+      "decision": "shell regions map 1:1 onto existing components (SpecHeader/NavigationBar/FooterActions + new RunAside)",
+      "why": "components already own the right state seams; markup/CSS change only, protocol and state machine fenced",
+      "rejected": "a fresh shell component tree replacing them"
+    },
+    {
+      "decision": "Overview replaces the Activity toggle, defaulting by data presence; living mode exempt",
+      "why": "panel is already a peer region behind a signal — default-state change delivers the design cheaply",
+      "rejected": "keeping the toggle and only restyling it"
+    },
+    {
+      "decision": "code keeps highlight.js on an owned always-dark surface in both themes",
+      "why": "the accepted proposal fixes light-mode code without touching the highlighting pipeline",
+      "rejected": "per-theme syntax palettes overriding hljs classes"
+    },
+    {
+      "decision": "host typography (Geist retired) and 6px geometry supersede the 2px terminal direction; docs updated",
+      "why": "the selected design inherits editor fonts and softer geometry; docs must not describe the old look",
+      "rejected": "keeping Geist lead / keeping 2px radii under the new palette"
+    },
+    {
+      "decision": "kept StepTab logic untouched; the rail look is CSS + NavigationBar structure",
+      "why": "the four canonical states are test-covered and behaviorally frozen",
+      "rejected": "rewriting StepTab markup for rail-specific classes"
+    },
+    {
+      "decision": "theme-dependent tokens are per-theme literals, never :root var() chains",
+      "why": "a :root alias resolves at :root — the light theme shipped invisible headings until --header-* was re-declared per block",
+      "rejected": "aliasing --header-* to --text-primary once at :root"
+    },
+    {
+      "decision": "hero stat chips serve as the Overview metrics row",
+      "why": "ActivityHero already carries task/coverage/check counts — a second metrics band would double-report",
+      "rejected": "adding a separate cx-metrics grid"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Full plan + research + data-model + UI contract for adopting the Codex design over frozen viewer seams",
+      "key_finding": "Every Codex region maps onto an existing component and state seam (getApproveLabel, enhancementButtons, hasAnyData, livingMode), so the entire redesign is markup+CSS with zero protocol or derivation changes"
+    },
+    "tasks": {
+      "summary": "30 tasks, 8 phases: tokens foundation -> US1 data-display skin (8-way parallel wave) -> US2 lifecycle verification -> US3 Overview-first shell (5-way component wave) -> US4 custom workflows -> US5 layout+comments -> polish/docs/reconciliation"
+    },
+    "implement": {
+      "summary": "Codex design shipped across tokens, 14 CSS partials, and the shell (Overview-first, document rail, run aside, floating footer) with zero protocol/derivation changes — 30/30 tasks, 1266/1266 tests, 22/22 AA"
+    }
+  },
+  "currentTask": "T030",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Token layer re-valued to the Codex owned palette: dark/light literals for canvas/surfaces/ink/accent/status, always-dark code surface, host-font leads (Geist retired from tokens), radius 4/6/8, HC stays host-derived",
+      "files": [
+        "webview/styles/tokens.css"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Code/tree/legacy pre blocks on the owned always-dark surface with token-driven hljs syntax roles; language chip chrome kept",
+      "files": [
+        "webview/styles/spec-viewer/_code.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Tables on the surface treatment (mono headers, row-only borders, hover, tabular numerals); user stories as accent-edged cards; review + scenario hues moved onto tokens",
+      "files": [
+        "webview/styles/spec-viewer/_tables.css"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Requirement rows: info-hue id badges (SC stays success), gutter-aligned scan rows",
+      "files": [
+        "webview/styles/spec-viewer/_requirements.css"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Callouts to borderless soft-fill surfaces keyed by type; template-instructions removed from the reading view",
+      "files": [
+        "webview/styles/spec-viewer/_callouts.css"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Phase headers as compact tinted cards; softened phase-num/chips; checkbox check ink fixed to on-status color for both themes",
+      "files": [
+        "webview/styles/spec-viewer/_task-phases.css",
+        "webview/styles/spec-viewer/_tasks.css"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Entities to hairline list rows; checklist head/file chips off the always-dark code token (light-theme fix); decision cards 20px with soft badges; accent-flip hover retired per Codex",
+      "files": [
+        "webview/styles/spec-viewer/_artifacts.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Codex document scale (46px title, 22px quiet sections), inline code on primary ink, empty spec-meta hidden, branch chip guaranteed contrast, neutral quote/input edges",
+      "files": [
+        "webview/styles/spec-viewer/_typography.css",
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "TOC onto the rail-button selection language (lifted surface, no prompt glyph); neutral toggle hover",
+      "files": [
+        "webview/styles/spec-viewer/_toc.css"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Fidelity pass on 008/060 spec+tasks+artifacts in both themes: caught and fixed the frozen --header-*/--border-accent var-chain (invisible light-theme headings); all content types verified styled",
+      "files": [
+        "webview/styles/tokens.css"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Badges to Codex soft pills: mono microtype on tinted washes, working states breathe the warm hue, completed drops the host charts-green",
+      "files": [
+        "webview/styles/spec-viewer/_content.css",
+        "webview/styles/spec-viewer/_animations.css"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Buttons to Codex roles: sentence case, primary=accent/accent-ink pair, secondary/ghost/enhancement use surface contrast, destructive soft-semantic; ids and visibility untouched",
+      "files": [
+        "webview/styles/spec-viewer/_buttons.css",
+        "webview/styles/spec-viewer/_footer.css"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "State-matrix verified on Transitions stories (specifying/tasks-created/completed, both themes): badges, step marks, footer affordances all per docs/viewer-states.md; stories needed no markup changes — reactivity flowed through",
+      "files": [
+        "webview/src/spec-viewer/components/__stories__/ViewerTransitions.stories.tsx"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "viewerMode signal (overview|document) replaces the Activity boolean; landing view derives from recorded activity, living mode + disabled panel force documents",
+      "files": [
+        "webview/src/spec-viewer/signals.ts",
+        "webview/src/spec-viewer/App.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Shell grid: rail | reading column | run aside with 980px aside-yield and 700px rail-strip; floating-footer clearance in the scroll column",
+      "files": [
+        "webview/styles/spec-viewer/_base.css"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "SpecHeader: title-first row with the Overview/Documents view switch; formatStatusLabel exported for reuse",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx",
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "NavigationBar as the document rail: Pipeline group + per-step artifact groups always visible; StepTab logic untouched (rail look is CSS); selection=lifted surface, completion=rail mark; living tier strip preserved; NavigationBar stories host vertically",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx",
+        "webview/styles/spec-viewer/_navigation.css",
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Footer as floating glass pill: context line names the forward action, enhancementButtons collapse into an Other-actions menu, in-flight renders context only; Transitions stories contain the fixed footer",
+      "files": [
+        "webview/src/spec-viewer/components/footer/CatalogFooter.tsx",
+        "webview/styles/spec-viewer/_footer.css",
+        "webview/src/spec-viewer/components/__stories__/ViewerTransitions.stories.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "RunAside: run facts (status/phase/task/progress/checks/concerns) rendered only when present, with three stories",
+      "files": [
+        "webview/src/spec-viewer/components/RunAside.tsx",
+        "webview/src/spec-viewer/components/RunAside.stories.tsx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Overview presentation: latest-activity feed from real history, approach behind progressive disclosure, hero/cards/error boundary kept (boundary now surfaces the error message)",
+      "files": [
+        "webview/src/spec-viewer/components/ActivityPanel.tsx",
+        "webview/src/spec-viewer/components/PlanSection.tsx",
+        "webview/src/spec-viewer/components/ActivityErrorBoundary.tsx",
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Shell integrated and verified: Overview default on 392 (real hero/feed/decisions), documents view on implementing-172 light (live 66% rail, in-flight footer contract); fixed the Preact h-shadow crash the integration surfaced",
+      "files": [
+        "webview/src/spec-viewer/App.tsx",
+        "webview/src/spec-viewer/FullViewer.stories.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Workflow map verified: rail renders arbitrary ordered steps with custom labels and correct done/in-flight/pending/locked marks from workflow data (7-step secure-delivery story)",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Free-named and step-owned documents group under their owning step in the rail (01-01-PLAN.md, threat-model.md verified in story)",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Custom-workflow behavior verified: full jest suite green (derivation untouched, 1266 tests incl. workflow/lifecycle/currentDoc suites) + custom-workflow rail story added as the visual regression anchor",
+      "files": [
+        "webview/src/spec-viewer/components/NavigationBar.stories.tsx"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Responsive sweep 700/980/1600 verified: aside yields at 980, rail folds to a scrollable chip strip at 700 (specificity fix), prose cap holds, no page-level horizontal scroll",
+      "files": [
+        "webview/styles/spec-viewer/_base.css"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Comment machinery verified token-driven (palette flowed via T001); review affordances unified on the info hue; pending-refinement queue affordance (Refine N) preserved through the new footer",
+      "files": [
+        "webview/styles/spec-viewer/_line-actions.css"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Bundled Geist retired end-to-end: font-face injection, webview URI, webpack copy rule, and the 27KB asset removed — webview typography now inherits the host editor",
+      "files": [
+        "src/features/spec-viewer/html/generator.ts",
+        "webpack.config.js",
+        "webview/fonts/geist-vf.woff2"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Docs with the change: DESIGN.md rewritten to the Codex system (owned palette, shell, geometry, bans incl. the :root var-chain lesson); viewer-states.md Activity section became the Overview view with new landing diagram; README rail/Overview/footer descriptions updated. Screenshot retake list deferred to release (filenames stay stable)",
+      "files": [
+        "docs/DESIGN.md",
+        "docs/viewer-states.md",
+        "README.md"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Codex reference retired from the story tree; rationale + reference stylesheet preserved at docs/redesign/; updated real-component stories are the canonical visual baseline; Storybook build green",
+      "files": [
+        "docs/redesign/codex-rationale.md",
+        "docs/redesign/codex-reference.css"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Final validation: 1266/1266 jest, webpack compile clean, Storybook build green, 22/22 WCAG pairs pass in both owned palettes, 700/980/1600 width sweep clean, state matrix + content types + custom workflow verified",
+      "files": [
+        "specs/394-adopt-codex-design/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npm test",
+      "result": "1266/1266 pass, 99 suites — zero behavioral test rewrites"
+    },
+    {
+      "what": "webpack compile",
+      "command": "npm run compile",
+      "result": "clean, 0 TS errors"
+    },
+    {
+      "what": "Storybook build + visual pass",
+      "command": "npm run build-storybook + headless Chrome screenshots",
+      "result": "green; Overview/documents shells, all content types, lifecycle states verified in both themes"
+    },
+    {
+      "what": "WCAG AA audit of both owned palettes",
+      "command": "computed contrast ratios (22 ink/surface pairs)",
+      "result": "22/22 pass (weakest 4.52:1 vs 4.5 floor)"
+    },
+    {
+      "what": "responsive sweep",
+      "command": "headless Chrome at 700/980/1600px",
+      "result": "aside yields at 980, rail folds to chip strip at 700, no page-level horizontal scroll"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "README screenshots (viewer.png, comments.png, hero.jpg, walkthrough) show the old design — retake into the SAME filenames before the next release so the Marketplace listing matches",
+      "step": "implement"
+    }
+  ]
+}
