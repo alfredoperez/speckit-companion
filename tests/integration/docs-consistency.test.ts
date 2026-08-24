@@ -33,11 +33,13 @@ describe('docs consistency', () => {
       return properties['speckit.aiProvider'].enum;
     })();
 
-    it('package.json enum, README matrix, and architecture.md prose agree', () => {
+    it('package.json enum, docs/providers.md matrix, and architecture.md prose agree', () => {
       const count = enumValues.length;
 
-      const readme = read('README.md');
-      const matrixHeader = readme.match(/^\| Feature \|([^\n]+)\|$/m);
+      // The provider matrix moved from README.md to docs/providers.md in the
+      // README rewrite; the README now names a few providers and links here.
+      const providersDoc = read('docs/providers.md');
+      const matrixHeader = providersDoc.match(/^\| Feature \|([^\n]+)\|$/m);
       expect(matrixHeader).not.toBeNull();
       const matrixColumns = matrixHeader![1].split('|').map((s) => s.trim()).filter(Boolean);
       expect(matrixColumns).toHaveLength(count);

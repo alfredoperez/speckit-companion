@@ -167,3 +167,34 @@ pointer, by contrast, is **preserved** on records that already carry it — new
 writers simply stop *adding* them rather than stripping what's already there.
 
 > **Note:** `next` and `updated` are still written by external CLI skills for workflow use (resume/auto-advance and status display). The extension ignores these fields — they are skill-specific and not part of the SpecKit schema.
+
+## Status vocabulary
+
+`draft` → `specifying` → `specified` → `planning` → `planned` → `tasking` →
+`ready-to-implement` → `implementing` → `completed` → `archived`.
+
+Legacy shapes (`status: "active"`, `status: "tasks-done"`, or files that
+only contain `{ status: "completed" }`) are coerced by
+`normalizeSpecContext` at read time.
+
+## Extension-side lifecycle writes
+
+The extension appends a `history[]` entry (start or completion) and
+flips the canonical `status` whenever a step is dispatched (via the
+SpecKit commands or the viewer's next-step / Regenerate buttons; the
+next-step button is labelled with the upcoming phase name, e.g. `Plan`,
+`Tasks`, `Implement`, or `Complete` on the final step), and when a
+spawned terminal closes, independent of AI cooperation. Spec status
+changes (`Mark as Completed`, `Archive`, `Reactivate`) write the
+canonical status and append a history entry. Write failures log to the
+SpecKit output channel without blocking dispatch.
+
+The viewer derives badges, pulse, highlight, and footer button visibility
+from this file only. File existence is never used to infer step
+completion. Per-step timing (start / completion / substeps) is derived
+in-memory by the viewer; it is not persisted. When the viewer opens a
+spec with no context file, it writes a minimal `draft` document.
+
+## Recovering a malformed context file
+
+A `.spec-context.json` that is *syntactically* broken (a truncated write, a hand edit, or merge-conflict markers) cannot be parsed, so the viewer falls back to a read-only, draft-state render of the spec. Instead of failing silently, it surfaces an error notification naming the JSON parse error and the offending file path, with a **Reset context** action. Choosing **Reset context** moves the broken file aside to a timestamped backup (`.spec-context.json.bak-<timestamp>`) and writes a fresh minimal skeleton in its place, then reloads the viewer. The original bytes are never overwritten in place; they survive in the backup so you can salvage lifecycle history by hand. Dismissing the notification leaves the broken file untouched; reopening the spec re-offers the reset. (This covers JSON-syntax failures only. A file that parses but is semantically off is tolerated and coerced as above.)
