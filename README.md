@@ -1,15 +1,20 @@
-# SpecKit Companion: review AI specs before they ship as broken code
+# SpecKit Companion: see and steer everything your AI builds, from first spec to shipped code
+
+<!-- Headline alternates (swap the H1 above for one of these if preferred):
+  1. SpecKit Companion: the whole spec lifecycle, visible and under your control
+  2. SpecKit Companion: know what your AI is doing before, during, and after it writes code
+-->
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/alfredoperez/speckit-companion/release.yml?label=build)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.84.0-blue)
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-**Catch bad specs before they become bad code.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. Review AI-generated specs the way you review pull requests, watch every feature move through Specify, Plan, Tasks, Done, and kill a vague requirement before it turns into 200 lines of wrong implementation.
+**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. A vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
-![SpecKit Companion: Spec-driven development, visualized. Specify, Plan, Tasks, Done.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/hero.jpg)
+![SpecKit Companion: Spec-driven development, visualized. Specify, Plan, Tasks, Done.](docs/screenshots/hero.jpg)
 
-**See it in motion:** a 38-second walkthrough of the spec viewer: one spec, every phase, rendered and navigable. [▶ Watch the walkthrough](./docs/media/walkthrough.mp4)
+<!-- Walkthrough video link pulled pending Alfredo's review of the video itself. The plan is per-section GIFs (media/feature-clips) instead of one long walkthrough; the file itself stays at docs/media/walkthrough.mp4. -->
 
 ## Features
 
@@ -18,32 +23,32 @@
 Specs render as rich, structured pages, not walls of markdown: requirements as labeled rows, acceptance scenarios as clean Given/When/Then sentences, tasks grouped under their phases, and mermaid diagrams inline with zoom. A quiet footer advances the spec one click at a time, and it never advances ahead of a running step. The markdown stays in your repo, never on a server.
 
 <!-- TODO: swap this still for the spec-viewer feature clip (media/feature-clips/spec-viewer) once the GIFs are promoted. -->
-![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/spec-viewer.png)
+![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.png)
 
 ### Inline Review Comments
 
 Comment on specific lines of a spec, exactly like a pull request review. Comments persist the moment you add them, survive closing the tab, and are committable, so a half-finished review picks up next session or on another machine. Click **Refine** and the pending comments are dispatched to your AI for an in-place edit of the source.
 
 <!-- TODO: swap this still for the inline-comments feature clip (media/feature-clips/inline-comments) once the GIFs are promoted. -->
-![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/inline-comments.png)
+![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.png)
 
 ### Overview: the run's story
 
 A spec with recorded activity opens on its Overview: why the spec exists, its constraints, the decisions made (with rejected alternatives), what was verified, and a requirement-to-test traceability table. It is the dossier a future session, a reviewer, or a teammate reads instead of re-asking you.
 
 <!-- TODO: swap this still for the overview feature clip (media/feature-clips/overview) once the GIFs are promoted. -->
-![The Overview: run status with honest active time, task and coverage counts, and the plan's intent and out-of-scope fence](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-annotated.png)
+![The Overview: run status with honest active time, task and coverage counts, and the plan's intent and out-of-scope fence](docs/screenshots/generated/overview-annotated.png)
 
 ### A sidebar that scales
 
 Specs grouped by lifecycle with live status per document, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
 
 <!-- TODO: swap this still for the specs-sidebar feature clip (media/feature-clips/specs-sidebar) once the GIFs are promoted. -->
-![The Specs sidebar: lifecycle groups with per-document status, living capability specs with drift flags, and steering documents](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/specs-sidebar.png)
+![The three sidebar sections side by side: Specs with per-document progress marks, Steering with the standing files the AI follows, and Living Specs with coverage counts and a drift flag](docs/screenshots/generated/sidebar-triptych.png)
 
 ### Pick a pipeline once, run it end to end
 
-Choose stock spec-kit or the leaner **SpecKit Companion** workflow in a single setting, and every step of the run dispatches that choice. The Companion pipeline writes specs roughly 60 to 68% smaller, produces zero throwaway side files, and right-sizes itself: a small change skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark, correctness was a tie; the difference is ceremony, not outcomes. Details and the measured numbers: [Workflow choice](./docs/configuration.md#workflow-choice).
+Choose stock Spec Kit or the leaner **SpecKit Companion** workflow in a single setting, and every step of the run dispatches that choice. The Companion pipeline writes specs roughly 60 to 68% smaller, produces zero throwaway side files, and right-sizes itself: a small change skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark, correctness was a tie; the difference is ceremony, not outcomes. Details and the measured numbers: [Workflow choice](./docs/configuration.md#workflow-choice).
 
 ### Also in the box
 
@@ -61,7 +66,7 @@ Everything lives in plain files in your repo: the spec markdown plus a `.spec-co
 2. Click the SpecKit icon in the activity bar and open a folder.
 3. Click **+** in the Specs view, describe your feature, and pick the AI you already use.
 
-That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion spec-kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing.
+That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing.
 
 ## Works with your AI
 

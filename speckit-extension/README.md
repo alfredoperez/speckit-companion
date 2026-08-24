@@ -2,10 +2,10 @@
   <img src="https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/speckit-extension/assets/hero.jpg" alt="SpecKit Companion spec-kit extension" width="100%">
 </p>
 
-<h1 align="center">SpecKit Companion: the spec-kit Extension</h1>
+<h1 align="center">SpecKit Companion: the Spec Kit Extension</h1>
 
 <p align="center">
-  <strong>Catch bad specs before they become bad code.</strong> This is the spec-kit side of <a href="https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion">SpecKit Companion</a>: it runs inside <a href="https://github.com/github/spec-kit">spec-kit</a> and records every step of your spec-driven runs into <code>.spec-context.json</code>, the file the VS Code GUI reads to show live progress, status, and a Resume button.
+  <strong>Everything your AI does in a spec run, recorded as it happens.</strong> This is the Spec Kit side of <a href="https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion">SpecKit Companion</a>: it runs inside <a href="https://github.com/github/spec-kit">Spec Kit</a> and writes every step of your spec-driven runs into <code>.spec-context.json</code>, the plain file that powers live progress, a full run history, and one-command resume.
 </p>
 
 <p align="center">
@@ -24,50 +24,82 @@ specify extension add companion --from https://github.com/alfredoperez/speckit-c
 
 ---
 
-## The other half of SpecKit Companion
+## The engine half: pair it with the free visual workspace
 
-The two halves install independently and meet in one file. This extension **writes** the canonical `.spec-context.json`; the VS Code GUI **reads** it. Capture works on its own (the JSON is useful to any tool), but it's built to feed the GUI: that's where the captured state becomes a live sidebar, status badges, per-task history, and a Resume button.
+SpecKit Companion is two halves. This extension is the engine: it rides your Spec Kit runs and records everything that happens. The other half is a **free VS Code extension** that turns everything the engine records into a visual workspace: a sidebar that shows where every feature stands, specs rendered as readable documents with pull-request-style review comments, a live view of the run while it happens, and an Overview that keeps the record of what the AI actually did and why.
+
+<!-- These screenshots live in the ROOT repo at docs/screenshots/generated/. The raw URLs resolve once the docs/readme-rewrite branch merges to main. -->
+![A spec rendered as a structured page in the VS Code extension: requirements as labeled rows, the pipeline rail, and on-page navigation](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/spec-viewer.png)
+
+![The Overview in the VS Code extension: run status with honest per-phase timing, task and coverage counts, and the plan's intent](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-annotated.png)
+
+The two halves install independently and meet in one file. This extension **writes** the canonical `.spec-context.json`; the VS Code extension **reads** it. The JSON is useful to any tool on its own, but it is built to feed that GUI:
 
 ```bash
 code --install-extension alfredoperez.speckit-companion   # the GUI (VS Code Marketplace / OpenVSX)
-specify extension add companion --from <release-url>      # this extension (spec-kit side)
+specify extension add companion --from <release-url>      # this extension (Spec Kit side)
 ```
 
-It works wherever spec-kit runs (Claude Code, Copilot, Cursor, Gemini, and more), and it's careful by design: writes are atomic, preserve unknown fields, never regress a shipped spec, and never fail your spec-kit command. Stdlib-only Python; capture degrades gracefully when `python3` is absent.
+It works wherever Spec Kit runs (Claude Code, Copilot, Cursor, Gemini, and more), and it is careful by design: writes are atomic, preserve unknown fields, never regress a shipped spec, and never fail your Spec Kit command. Stdlib-only Python; capture degrades gracefully when `python3` is absent.
 
-## Three ways to use it
+## What you get
 
-1. **[Track the runs you already do](#1-track-the-runs-you-already-do)**: install it, change nothing, and your existing `/speckit.*` commands light up the GUI.
-2. **[Run whole specs hands-off](#2-run-whole-specs-hands-off)**: the lean Companion pipeline, `auto`, and a spec-kit workflow that drives specify through completion with review gates and built-in right-sizing.
-3. **[Living specs](#living-specs-durable-capability-docs-opt-in)**: durable per-capability documents that stay current as the code evolves, with drift detection and one-pass sync.
+1. **[See every run without changing how you work](#see-every-run-without-changing-how-you-work)**: install it, change nothing, and your existing `/speckit.*` commands light up the GUI.
+2. **[Pick up where you left off](#pick-up-where-you-left-off)**: one command shows where every run stands, one continues it.
+3. **[Hand it a feature and let it run](#hand-it-a-feature-and-let-it-run)**: a leaner pipeline with review gates, an unattended mode, and ceremony sized to the change.
+4. **[Living specs](#living-specs-documentation-that-keeps-up-with-your-code-opt-in)**: durable per-capability docs that stay current as the code evolves, with drift detection and one-pass sync.
 
-## 1. Track the runs you already do
+## See every run without changing how you work
 
-Zero workflow change: the extension rides your *existing* spec-kit commands via lifecycle hooks. Each step (specify, plan, tasks, implement) is recorded as it happens, implement journals every task as it completes, and each step also records *why*: the goal and out-of-scope fence at specify, decisions with rejected alternatives at plan, requirement-to-task coverage at tasks, and what was verified at implement. Resume, handoff, and audit read the reasoning, not just the timeline.
+Install it and change nothing else. The extension rides your *existing* Spec Kit commands through lifecycle hooks, the small scripts Spec Kit runs after each command finishes. Each step (specify, plan, tasks, implement) is recorded as it happens, implement journals every task as it completes, and each step also records *why*: the goal and out-of-scope fence at specify, decisions with rejected alternatives at plan, requirement-to-task coverage at tasks, and what was verified at implement. Resume, handoff, and audit read the reasoning, not just the timeline.
 
 It also **never lies about state**. When a hook didn't fire (a skipped command, an out-of-band run, a project that never had the extension), `derive-from-files.py` reconstructs the state from the artifacts on disk, so the GUI reflects reality, not a half-truth.
 
-| Capability | Stock spec-kit | + SpecKit Companion |
+<!-- TODO(alfredo): the per-task history / traceability presentation is awaiting Alfredo's design pass. Do not redesign how it is presented (here or in the docs) until that lands; this table row keeps only the benefit-led naming treatment. -->
+
+| What you get | Stock Spec Kit | + SpecKit Companion |
 |---|:---:|:---:|
-| Spec-driven pipeline (`specify` → `plan` → `tasks` → `implement`) | ✅ | ✅ |
-| Runs across agents (Claude, Copilot, Cursor, Gemini, …) | ✅ | ✅ |
-| Live progress in the VS Code GUI (sidebar + status badges) | ❌ | ✅ |
-| Per-task history during implement | ❌ | ✅ |
-| `status`: where does this spec stand right now? | ❌ | ✅ |
-| `resume`: pick up exactly where you left off | ❌ | ✅ |
-| Lean Companion pipeline shape (no user stories, trimmed plan/tasks) | ❌ | ✅ |
-| One real workflow on spec-kit's engine with built-in size routing | ❌ | ✅ |
-| Honest state recovery when a lifecycle hook didn't fire | ❌ | ✅ |
+| The spec-driven pipeline itself (`specify` → `plan` → `tasks` → `implement`) | ✅ | ✅ |
+| Works with the AI assistants you already use (Claude, Copilot, Cursor, Gemini, …) | ✅ | ✅ |
+| Live progress in the VS Code sidebar while a run happens | ❌ | ✅ |
+| A history of every task the AI completed, kept per task | ❌ | ✅ |
+| Pick up where you left off (`status` shows the run, `resume` continues it) | ❌ | ✅ |
+| Leaner specs that skip sections a typical change never needs | ❌ | ✅ |
+| Ceremony sized to the change: small ones take a shorter path | ❌ | ✅ |
+| An accurate picture even when a step ran outside the hooks | ❌ | ✅ |
 
-Two commands close the loop: `/speckit.companion.status` prints where the active spec stands (step, status, recorded decisions, next action), and `/speckit.companion.resume` continues from the recorded step with those decisions in scope.
+## Pick up where you left off
 
-## 2. Run whole specs hands-off
+A run you stepped away from is not lost, because its state lives in a committed file, not in a chat scrollback. `/speckit.companion.status` prints where the active spec stands: the current step, its status, the decisions recorded so far, and the next action. `/speckit.companion.resume` continues from exactly that point with those decisions in scope, and inside implement it restarts at the next unchecked task. Close the laptop mid-run, or hand the branch to a teammate; either way the next session starts where the last one stopped.
 
-Beyond tracking, the extension ships its own **lean pipeline**: `/speckit.companion.specify · plan · tasks · implement`, a trimmed shape with no user-story section, a files-and-dependencies task axis, and a smaller spec folder. The stock `/speckit.*` commands stay installed unchanged; the two families coexist, and installing one never deletes the other. Output keeps the familiar spec-kit shape, plus three things stock doesn't have: **right-sizing** (a routing step classifies the change `small | normal | oversized` and folds ceremony for small ones, warns and runs the full pipeline for oversized ones, and never silently skips a phase), **lifecycle capture** as each step and task finishes, and a terminal **mark-complete** step so a finished run lands in Completed on its own.
+## Hand it a feature and let it run
 
-`/speckit.companion.auto "what you want built"` runs the entire pipeline unattended: specify, plan, tasks, implement, completion, no approval pauses. It sets an `unattended` signal that project checkpoint hooks can read (record the checkpoint and keep going instead of waiting for a human). On a plain one-shot terminal it gracefully falls back: first step runs, then you trigger the rest as usual.
+Beyond tracking, the extension ships its own **leaner pipeline**: `/speckit.companion.specify · plan · tasks · implement`. Same four steps, smaller output: the specs it writes skip sections a typical change never needs (formal user stories among them), order tasks by the files they touch and what depends on what, and leave no throwaway side files. The stock `/speckit.*` commands stay installed unchanged; the two families coexist, and installing one never deletes the other. A run also finishes itself: capture records each step and task as it lands, and a terminal **mark-complete** step moves a finished run into Completed on its own.
 
-The pipeline also ships as a first-class spec-kit **workflow definition** that the engine drives end to end, pausing at review gates before plan and before tasks:
+### Skip the ceremony when the change is small
+
+Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
+
+```mermaid
+flowchart LR
+    A[your change] --> B{sized how?}
+    B -->|small| C[lean spec, then implement]
+    B -->|normal| D[the full pipeline]
+    B -->|oversized| E[warn first, then the full pipeline]
+```
+
+### Or run the whole thing unattended
+
+`/speckit.companion.auto "what you want built"` runs the entire pipeline with no approval pauses: specify, plan, tasks, implement, completion. It sets an `unattended` signal that project checkpoint hooks can read (record the checkpoint and keep going instead of waiting for a human). On a plain one-shot terminal it gracefully falls back: the first step runs, then you trigger the rest as usual.
+
+### Or let Spec Kit drive it, with checkpoints
+
+The pipeline also ships as a Spec Kit **workflow definition**: a file that tells the Spec Kit engine which step follows which, and where to stop for you. Run it and the engine drives the whole spec end to end, pausing at two review gates (one before plan, one before tasks) so you approve the direction before the detail:
+
+```mermaid
+flowchart LR
+    S[specify] --> G1{review gate} --> P[plan] --> G2{review gate} --> T[tasks] --> I[implement] --> M[mark complete]
+```
 
 ```bash
 specify workflow add speckit-extension/workflows/speckit-companion.workflow.yml
@@ -77,7 +109,7 @@ specify workflow resume <run_id>   # paused at a gate? pick up from the exact no
 
 On an agentic CLI each Companion command also continues into the next step on its own, honoring the same gates, so you get the hands-off flow without `workflow run`. Full reference: [template-profiles.md](../docs/template-profiles.md).
 
-## Living specs: durable capability docs (opt-in)
+## Living specs: documentation that keeps up with your code (opt-in)
 
 Most specs describe one change and then go quiet. **Living specs** are the opposite: one durable spec per *capability* (checkout, auth, billing) that stays current as the code evolves. You register capabilities in a `living-specs.yml` at the project root, mapping file globs to spec files, and Companion does the rest:
 
@@ -87,13 +119,20 @@ Most specs describe one change and then go quiet. **Living specs** are the oppos
 - **Drift and sync**: `/speckit.companion.living-drift` reports which files changed since a spec was last committed; `/speckit.companion.living-sync` updates every affected spec from your current changes in one pass, uncommitted work included, update-not-regenerate.
 - **Coverage**: `/speckit.companion.living-coverage` reports which requirements have a mapped test.
 
+The loop that keeps a spec honest:
+
+```mermaid
+flowchart LR
+    A[code moves on] --> B[drift flags the gap] --> C[sync updates the spec] --> D[spec matches code] --> A
+```
+
 The whole family is **opt-in** (no `living-specs.yml`, no behavior change), its writes are **append-only** and preserve what you wrote, and it **never fails** your run: drift and coverage are read-only reports, and sync leaves its edits uncommitted so they ship with the code that caused them.
 
 Full reference, including the registry format, the resolver, delta sections, and the architecture/coverage tiers: [living-specs.md](./docs/living-specs.md).
 
 ## Commands
 
-Eighteen commands in four families. Fourteen are yours to run; the four hook commands run themselves and should never be typed by hand.
+Four families. Most commands are yours to run; the hook commands run themselves and should never be typed by hand.
 
 ### Pipeline
 
@@ -109,7 +148,7 @@ The spec-driven run itself, in the order you'd use them.
 | `speckit.companion.classify` | Emit a `small \| normal \| oversized` size signal so the workflow can right-size the pipeline. Dispatched by the workflow's routing step |
 | `speckit.companion.mark-complete` | Write `status: completed`, the workflow's terminal step. The command writes it; the AI never hand-writes `completed`. Dispatched by the workflow |
 
-### Run state
+### Pick up where you left off
 
 | Command | What it does |
 |---------|--------------|
@@ -130,7 +169,7 @@ With no `living-specs.yml` in your project these report nothing and change nothi
 
 ### Hooks (never invoke these)
 
-These four run automatically when their lifecycle event fires. They keep `.spec-context.json` current; they are listed here so you recognize them, not so you call them.
+These run automatically when their lifecycle event fires. They keep `.spec-context.json` current; they are listed here so you recognize them, not so you call them.
 
 | Command | Fired by | What it records |
 |---------|----------|-----------------|
@@ -141,15 +180,15 @@ These four run automatically when their lifecycle event fires. They keep `.spec-
 
 Full reference: [docs/commands.md](./docs/commands.md). This table is checked against the extension's own command list on every build, so a command can't be added without appearing here.
 
-## Customize the pipeline
+## Add your own steps without forking a command
 
-The Companion commands are assembled from composable **nodes**: small sections inside a command. An optional, project-local `.specify/companion.yml` lets you attach your own work before or after any node (run a shell command, add an instruction, or call a reusable node file) without forking a command. If the file is absent, every command runs exactly as it ships. A hook marked `owns: validation` after `implement-exec` takes over the pipeline's final validation task, so your consolidated test run happens once, not twice.
+The Companion commands are assembled from composable **nodes**: small named sections inside a command. An optional, project-local `.specify/companion.yml` lets you attach your own work before or after any node (run a shell command, add an instruction, or call a reusable node file) without forking the command itself. If the file is absent, every command runs exactly as it ships. A hook marked `owns: validation` after `implement-exec` takes over the pipeline's final validation task, so your consolidated test run happens once, not twice.
 
-This is separate from stock spec-kit's own `.specify/extensions.yml` hooks: a Companion run honors those too. A worked example (a review, PR, merge, reinstall ship tail) is in [examples/ship-ticket/](./examples/ship-ticket/); full reference in [docs/node-model.md](./docs/node-model.md).
+This is separate from stock Spec Kit's own `.specify/extensions.yml` hooks: a Companion run honors those too. A worked example (a review, PR, merge, reinstall ship tail) is in [examples/ship-ticket/](./examples/ship-ticket/); full reference in [docs/node-model.md](./docs/node-model.md).
 
 ## Installation
 
-Requires a **github-source** spec-kit; the stock PyPI `specify-cli` has no `extension` subsystem:
+Requires a **github-source** Spec Kit; the stock PyPI `specify-cli` has no `extension` subsystem:
 
 ```bash
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
@@ -187,4 +226,4 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 
 ## License
 
-[MIT](./LICENSE) © alfredoperez. Independently maintained; not affiliated with the spec-kit core team.
+[MIT](./LICENSE) © alfredoperez. Independently maintained; not affiliated with the Spec Kit core team.

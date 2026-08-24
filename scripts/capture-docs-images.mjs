@@ -67,6 +67,12 @@ const STORIES = [
         story: 'video-capture-specs-sidebar-recreation--b-4-full-sidebar',
         out: 'specs-sidebar.png',
     },
+    {
+        // The landscape three-panel sidebar explainer the README embeds
+        // (Specs / Steering / Living Specs as captioned cards).
+        story: 'video-capture-specs-sidebar-recreation--b-5-readme-triptych',
+        out: 'sidebar-triptych.png',
+    },
 ];
 
 const PORT = 6017;

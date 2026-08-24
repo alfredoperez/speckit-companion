@@ -54,6 +54,8 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
+import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
 import { CaptureFrame, STAGE_HEIGHT } from './captureFrame';
 import { SidebarShell, SIDEBAR_WIDTH, type SidebarPane, type SidebarRow } from './sidebarTree';
 
@@ -351,6 +353,124 @@ export const B4FullSidebar: Story = {
             <SidebarShell
                 panes={[specsPane(true, false), livingSpecsPane(), steeringPane(true)]}
             />
+        </CaptureFrame>
+    ),
+};
+
+
+// ── B5 · README triptych ──────────────────────────────────────────────────
+// The landscape sidebar image for the README's "A sidebar that scales"
+// section: the three sections side by side as cards, each with a heading and
+// one explainer line, instead of one tall silent portrait. Captured by
+// scripts/capture-docs-images.mjs into docs/screenshots/generated/
+// sidebar-triptych.png. One highlight per panel at most.
+
+/**
+ * Draw one measured ring (plus an optional label chip) around the union rect
+ * of the named rows. Measured with getBoundingClientRect after layout, never
+ * eyeballed, same idea as the capture script's annotation pass.
+ */
+function PanelHighlight({ rowIds, chip }: { rowIds: string[]; chip?: string }) {
+    const holder = useRef<HTMLDivElement>(null);
+    const [box, setBox] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
+    useLayoutEffect(() => {
+        const card = holder.current?.parentElement;
+        if (!card) return;
+        const cardRect = card.getBoundingClientRect();
+        const rects = rowIds
+            .map((id) => card.querySelector(`#row-${id}`)?.getBoundingClientRect())
+            .filter((r): r is DOMRect => !!r);
+        if (rects.length === 0) return;
+        const l = Math.min(...rects.map((r) => r.left)) - cardRect.left;
+        const t = Math.min(...rects.map((r) => r.top)) - cardRect.top;
+        const right = Math.max(...rects.map((r) => r.right)) - cardRect.left;
+        const bottom = Math.max(...rects.map((r) => r.bottom)) - cardRect.top;
+        setBox({ l, t, w: right - l, h: bottom - t });
+    }, []);
+    const PAD = 3;
+    return (
+        <div ref={holder} style="position: absolute; inset: 0; pointer-events: none;">
+            {box ? (
+                <div
+                    style={`position: absolute; left: ${box.l - PAD}px; top: ${box.t - PAD}px; width: ${box.w + PAD * 2}px; height: ${box.h + PAD * 2}px; border: 2px solid #78dce8; border-radius: 6px; box-sizing: border-box;`}
+                />
+            ) : null}
+            {box && chip ? (
+                <div
+                    style={`position: absolute; left: ${box.l + box.w - PAD - 8}px; top: ${box.t + box.h / 2}px; transform: translate(-100%, -50%); background: #78dce8; color: #101416; font: 600 11px/1 var(--vscode-font-family); padding: 4px 7px; border-radius: 4px; white-space: nowrap;`}
+                >
+                    {chip}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+function TriptychPanel({
+    heading,
+    caption,
+    pane,
+    highlight,
+}: {
+    heading: string;
+    caption: string;
+    pane: SidebarPane;
+    highlight?: ComponentChildren;
+}) {
+    return (
+        <div style="width: 340px; display: flex; flex-direction: column;">
+            <div style="font: 600 17px/1.3 var(--vscode-font-family); color: #e2e2e2; margin-bottom: 6px;">
+                {heading}
+            </div>
+            <div style="font: 400 12.5px/1.5 var(--vscode-font-family); color: #9a9a9a; margin-bottom: 14px; min-height: 56px;">
+                {caption}
+            </div>
+            <div style="position: relative; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background); height: 286px; flex-shrink: 0;">
+                <SidebarShell panes={[{ ...pane, fill: false }]} />
+                {highlight}
+            </div>
+        </div>
+    );
+}
+
+export const B5ReadmeTriptych: Story = {
+    name: 'B5 · README triptych',
+    parameters: { capture: { width: 1176, height: 458 } },
+    render: () => (
+        <CaptureFrame>
+            <style>{'.sk-triptych .sk-sidebar .composite.title { display: none !important; }'}</style>
+            <div
+                class="sk-triptych"
+                style="display: flex; gap: 38px; justify-content: center; align-items: flex-start; width: 100%; height: 100%; box-sizing: border-box; padding: 36px 40px; background: var(--vscode-editor-background);"
+            >
+                <TriptychPanel
+                    heading="Every feature at a glance"
+                    caption="Each feature is a row in the Specs view. The marks show how far every document has moved: done, still being written, or not created yet."
+                    pane={specsPane(true, false)}
+                    highlight={
+                        <PanelHighlight
+                            rowIds={[
+                                '041-doc-specification',
+                                '041-doc-requirements',
+                                '041-doc-plan',
+                                '041-doc-tasks',
+                            ]}
+                            chip="done · running · not created"
+                        />
+                    }
+                />
+                <TriptychPanel
+                    heading="The rules the AI follows"
+                    caption="Steering holds the standing files every run obeys: the constitution, the project scripts, and the templates specs are built from."
+                    pane={steeringPane(false)}
+                />
+                <TriptychPanel
+                    heading="Docs that track the code"
+                    caption="Living Specs are durable, one per capability, with test coverage counts and a drift flag the moment the code moves on."
+                    pane={livingSpecsPane(false)}
+                    highlight={<PanelHighlight rowIds={['ls-photo-storage']} />}
+                />
+            </div>
         </CaptureFrame>
     ),
 };
