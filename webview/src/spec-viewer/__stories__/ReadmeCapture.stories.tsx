@@ -44,6 +44,16 @@
  *   as a 2x2 grid, not one row of four: the product type inside each panel
  *   has to stay legible at the README's ~830px column width.
  *
+ * C5 / C6 · Cross-promo banners (`generated/banner-install-engine.png`,
+ *   `generated/banner-install-vscode.png`)
+ *   The "Install the other half" banners: each README points at the OTHER
+ *   half of the product over the mascot art
+ *   (speckit-extension/assets/hero-draft-a.png). C5 sits in the root README
+ *   and invites installing the Spec Kit engine extension; C6 sits in
+ *   speckit-extension/README.md and invites installing the VS Code
+ *   extension. Same frame and headline, one subline swapped; each README
+ *   wraps its banner in a link to the matching install target.
+ *
  * Determinism: wrapped in CaptureFrame (frozen clock, no animation), so two
  * captures a month apart are identical. See captureFrame.tsx.
  */
@@ -78,6 +88,14 @@ import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { IntentSection, OverviewTiming, VerifiedSection } from '../components/OverviewDossier';
 import { SpecHeader } from '../components/SpecHeader';
+
+// The cross-promo banner ground (C5/C6): the mossy sprout mascot cradling its
+// glowing seedling, plus the Geist faces the banner type renders in (the same
+// font files the video compositions embed).
+import bannerArt from '../../../../speckit-extension/assets/hero-draft-a.png';
+import geistRegular from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
+import geistMedium from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
+import geistSemiBold from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
 
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
 import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
@@ -600,6 +618,80 @@ export const C4BenefitsStrip: Story = {
                     <LivingHeaderPanel />
                 </BenefitPanel>
             </div>
+        </CaptureFrame>
+    ),
+};
+
+// ── C5 / C6 · the cross-promotion banners ─────────────────────────────────
+// Each README carries a wide banner pointing at the OTHER half of the
+// product: the root README invites installing the Spec Kit engine extension,
+// the extension README invites installing the VS Code workspace. Same frame,
+// same headline, one subline swapped. The ground is the mascot art
+// (speckit-extension/assets/hero-draft-a.png) cropped to a band that keeps
+// the sprout on its log center-right; the type sits in the dark forest on
+// the left, over a left-to-right scrim. Emerald stays scarce per THEME.md:
+// only the "Get it" chip carries it. No em dashes in on-image copy.
+
+const GEIST_FACES = `
+@font-face { font-family: 'Geist'; src: url('${geistRegular}') format('truetype'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Geist'; src: url('${geistMedium}') format('truetype'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'Geist'; src: url('${geistSemiBold}') format('truetype'); font-weight: 600; font-style: normal; }
+`;
+
+function CrossPromoBanner({ subline }: { subline: string }) {
+    useEffect(() => {
+        // Pull the Geist faces into document.fonts before the capture
+        // script's `document.fonts.ready` await, so the type never captures
+        // in its fallback face.
+        document.fonts.load('600 58px Geist');
+        document.fonts.load('400 23px Geist');
+        document.fonts.load('500 15px Geist');
+    }, []);
+    return (
+        <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #010409;">
+            <style>{GEIST_FACES}</style>
+            {/* The art is 1552x656; the banner is a 420-tall band of it.
+                Shifting it up 128px keeps the head sprout, face, seedling,
+                and mossy log all inside the frame. */}
+            <img
+                src={bannerArt}
+                alt=""
+                style="position: absolute; left: 0; top: -128px; width: 1552px; max-width: none; display: block;"
+            />
+            {/* Left-to-right scrim: near-opaque under the type, gone before
+                the mascot. */}
+            <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(1,4,9,0.93) 0%, rgba(1,4,9,0.87) 26%, rgba(1,4,9,0.58) 46%, rgba(1,4,9,0.14) 62%, rgba(1,4,9,0) 74%);" />
+            <div style="position: absolute; left: 88px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-start; gap: 15px; max-width: 660px;">
+                <div style="font: 600 58px/1.08 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #e6edf3; letter-spacing: -0.015em; text-shadow: 0 2px 26px rgba(1,4,9,0.85), 0 0 44px rgba(120,189,247,0.22);">
+                    Install the other half
+                </div>
+                <div style="font: 400 23px/1.4 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #b7c4d0; text-shadow: 0 1px 14px rgba(1,4,9,0.9);">
+                    {subline}
+                </div>
+                <div style="margin-top: 7px; display: inline-flex; align-items: center; padding: 10px 22px; border: 1px solid rgba(63,185,80,0.6); border-radius: 7px; background: rgba(63,185,80,0.13); font: 500 16px/1 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #7ee2a8; letter-spacing: 0.01em; box-shadow: 0 0 22px rgba(63,185,80,0.18);">
+                    Get it
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export const C5BannerInstallEngine: Story = {
+    name: 'C5 · Banner: install engine',
+    parameters: { capture: { width: 1552, height: 420 } },
+    render: () => (
+        <CaptureFrame>
+            <CrossPromoBanner subline="The engine that records every run" />
+        </CaptureFrame>
+    ),
+};
+
+export const C6BannerInstallVscode: Story = {
+    name: 'C6 · Banner: install VS Code',
+    parameters: { capture: { width: 1552, height: 420 } },
+    render: () => (
+        <CaptureFrame>
+            <CrossPromoBanner subline="See everything it records, in VS Code" />
         </CaptureFrame>
     ),
 };

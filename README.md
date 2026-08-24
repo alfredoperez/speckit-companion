@@ -78,6 +78,12 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](./docs/configuration.md#custom-workflows)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](./docs/viewer.md)
 
+<!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
+     scripts/capture-docs-images.mjs). The whole image is a link to the engine
+     extension's install guide; the extension README carries the mirror banner
+     (C6) pointing back at this extension. -->
+[![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](./docs/getting-started.md#install-the-spec-kit-extension)
+
 ## No lock-in, no server
 
 Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](./docs/getting-started.md).

@@ -103,6 +103,19 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-4-benefits-strip',
         out: 'benefits-strip.png',
     },
+    {
+        // Cross-promo banner in the ROOT README: "Install the other half",
+        // inviting the Spec Kit engine extension (ReadmeCapture.stories.tsx
+        // C5). Type over the mascot art from speckit-extension/assets.
+        story: 'video-capture-readme-composites--c-5-banner-install-engine',
+        out: 'banner-install-engine.png',
+    },
+    {
+        // Cross-promo banner in speckit-extension/README.md: same frame,
+        // inviting the VS Code extension (ReadmeCapture.stories.tsx C6).
+        story: 'video-capture-readme-composites--c-6-banner-install-vscode',
+        out: 'banner-install-vscode.png',
+    },
 ];
 
 const PORT = 6017;
