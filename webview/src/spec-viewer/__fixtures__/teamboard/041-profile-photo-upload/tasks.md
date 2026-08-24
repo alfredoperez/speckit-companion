@@ -1,6 +1,6 @@
 # Tasks: Profile photo upload
 
-**Input**: [plan.md](./plan.md) — six tasks, dependency ordered
+**Input**: [plan.md](./plan.md), six tasks, dependency ordered
 
 ## Phase 1: Service (P1)
 

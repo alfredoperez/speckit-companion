@@ -33,8 +33,8 @@ A member opens their profile page, picks a photo, and sees it in place.
 
 ## Key Entities
 
-- **Member** — one person in the directory. Owns exactly one avatar.
-- **Avatar** — the stored 256 by 256 image, plus the URL the directory reads.
+- **Member**: one person in the directory. Owns exactly one avatar.
+- **Avatar**: the stored 256 by 256 image, plus the URL the directory reads.
 
 ## Success Criteria
 
