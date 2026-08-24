@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1836, height=1164" />
+    <title>Overview page, engine README loop</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* ==========================================================================
+         THEME TOKENS  ·  same contract as overview-readme (this clip is the
+         engine-angled cut of that composition; tokens are copied verbatim).
+         ========================================================================== */
+      :root {
+        --clip-ground: #101416;
+
+        --card-radius: 16px;
+        --card-border: rgba(255,255,255,0.07);
+        --card-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 6px 22px rgba(0,0,0,0.4);
+
+        --swipe-color: #2a6353;
+        --swipe-radius: 4px;
+
+        --label-font:     "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+        --label-size:     44px;
+        --label-weight:   500;
+        --label-tracking: 0.004em;
+        --label-fg:       #eef4f1;
+        --label-bg:       rgba(12,17,19,0.94);
+        --label-border:   rgba(127,240,196,0.65);
+        --label-radius:   12px;
+        --label-pad-y:    16px;
+        --label-pad-x:    26px;
+        --label-gap:      14px;
+        --label-dot:      #7ff0c4;
+        --label-dot-size: 11px;
+        --label-glow:     0 0 0 1px rgba(127,240,196,0.18),
+                          0 0 30px rgba(127,240,196,0.30),
+                          0 14px 34px rgba(0,0,0,0.5);
+      }
+
+      html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+
+      /* ---- track 0 · the captured product page as a floating card ---- */
+      /* CARD GEOMETRY: interior 1640x1040 at (98,62); mirrored in JS below. */
+      #stage { position:absolute; left:0; top:0; width:1836px; height:1164px; }
+      #card  {
+        position:absolute; left:98px; top:62px; width:1640px; height:1040px;
+        border-radius:var(--card-radius); overflow:hidden;
+        box-shadow:var(--card-shadow);
+        border:1px solid var(--card-border);
+        background:#181818;
+      }
+      #cam { position:absolute; left:0; top:0; width:1640px; height:3256px; }
+      #page { position:absolute; left:0; top:0; width:1640px; height:auto; display:block; }
+
+      /* ---- track 1 · the annotation, in frame coordinates ---- */
+      #anno { position:absolute; left:0; top:0; width:1836px; height:1164px; pointer-events:none; }
+      .swipe {
+        position:absolute; background:var(--swipe-color);
+        border-radius:var(--swipe-radius);
+        mix-blend-mode:lighten;
+        transform-origin:0 50%;
+      }
+      .anchor { position:absolute; }
+      .lbl {
+        position:absolute; left:0; bottom:100%;
+        margin-bottom:var(--label-gap);
+        display:inline-flex; align-items:center; gap:14px; white-space:nowrap;
+        padding:var(--label-pad-y) var(--label-pad-x);
+        background:var(--label-bg);
+        border:1.5px solid var(--label-border);
+        border-radius:var(--label-radius);
+        box-shadow:var(--label-glow);
+        font-family:var(--label-font); font-size:var(--label-size);
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .lbl::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+                     border-radius:50%; background:var(--label-dot); }
+      .lbl--below { bottom:auto; top:100%; margin-bottom:0; margin-top:var(--label-gap); }
+      .lbl--free { bottom:auto; }
+
+      /* ---- track 2 · the sign-off end card ----
+         Full-frame, opaque, same ground as the piece. Enters as ONE unit,
+         holds still, hard-cuts away to the frame-zero rest pose. Brand at
+         the END, never the start. */
+      #endcard {
+        position:absolute; left:0; top:0; width:1836px; height:1164px;
+        background:var(--clip-ground);
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:58px;
+      }
+      .ec-lead {
+        display:inline-flex; align-items:center; gap:14px; white-space:nowrap;
+        padding:var(--label-pad-y) var(--label-pad-x);
+        background:var(--label-bg);
+        border:1.5px solid var(--label-border);
+        border-radius:var(--label-radius);
+        box-shadow:var(--label-glow);
+        font-family:var(--label-font); font-size:var(--label-size);
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .ec-lead::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+                         border-radius:50%; background:var(--label-dot); }
+      .ec-brand { display:flex; align-items:center; gap:24px; margin-top:6px; }
+      .ec-brand img { width:88px; height:88px; display:block; }
+      .ec-brand span {
+        font-family:var(--label-font); font-size:34px; font-weight:500;
+        letter-spacing:0.01em; color:rgba(238,244,241,0.88); line-height:1.05;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="16.5" data-fps="30"
+         data-width="1836" data-height="1164">
+
+      <div id="stage" class="clip" data-start="0" data-duration="16.5" data-track-index="0">
+        <div id="card" data-layout-allow-overflow>
+          <div id="cam" data-layout-allow-overflow>
+            <img id="page" src="assets/captures/overview-tall.png" alt="" />
+          </div>
+        </div>
+      </div>
+
+      <div id="anno" class="clip" data-start="0" data-duration="16.5" data-track-index="1">
+        <div class="lbl lbl--free" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>Your run, recorded</div>
+        <div class="anchor" id="anc2" data-layout-allow-overlap>
+          <div class="lbl lbl--below" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>Every phase, timed automatically</div>
+        </div>
+        <div class="anchor" id="anc3" data-layout-allow-overlap>
+          <div class="lbl" id="lbl3" data-layout-allow-overlap data-layout-allow-occlusion>Checks captured with their commands</div>
+        </div>
+        <div class="anchor" id="anc4" data-layout-allow-overlap>
+          <div class="lbl" id="lbl4" data-layout-allow-overlap data-layout-allow-occlusion>Requirements traced to tests</div>
+        </div>
+        <!-- swipes are built from the rect tables below -->
+      </div>
+
+      <div id="endcard" class="clip" data-start="0" data-duration="16.5" data-track-index="2"
+           data-layout-allow-overlap data-layout-allow-occlusion>
+        <div class="ec-lead" data-layout-allow-overlap data-layout-allow-occlusion>Recorded by the companion extension</div>
+        <div class="ec-brand" data-layout-allow-overlap data-layout-allow-occlusion>
+          <img src="assets/icons/mascot.png" alt="" />
+          <span>Spec Kit Companion</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================================
+         GEOMETRY  ·  every rect is a real element box measured off the
+         captured DOM (assets/captures/rects-v2.json, copied from the
+         overview-readme composition), in the capture's own CSS pixels at
+         1224 x 2430. Nothing here is eyeballed.
+         ================================================================== */
+      var CW = 1224, CH = 2430;           // tall capture CSS size
+      var CWD = 1640, CHD = 1040;         // card interior (the camera's frame)
+      var CARD_X = 98, CARD_Y = 62;       // card position in the 1836x1164 frame
+      var K = CWD / CW;                   // capture px -> card px at rest
+      var PAGE_H = CH * K;                // the tall page's height in card px
+
+      /* section and line rects, straight from rects-v2.json */
+      var R = {
+        timingSec:  [328, 250.3, 776, 76.4],
+        phasesRow:  [328, 292.9, 593.8, 20.8],   // union of the four phase chips
+        verifSec:   [328, 923.7, 776, 485.9],
+        verifBadge: [1034.4, 985.1, 69.6, 23.6],
+        verifCode:  [924.4, 1045.7, 179.6, 23.6],
+        covSec:     [328, 1938.1, 776, 369.4],
+        covBadge:   [1021.5, 1999.5, 82.5, 23.6],
+        covRow1:    [328, 2072.1, 776, 50.6]
+      };
+
+      /* ==================================================================
+         MOTION CONSTANTS  ·  timing only; colours/sizes are CSS tokens
+         ================================================================== */
+      var MOVE_EASE = "power3.inOut";
+      var LBL_IN = 0.34, LBL_OUT = 0.24, SW_OUT = 0.22;
+
+      function camFit(r, pad, maxS) {
+        var w = r[2] * K, h = r[3] * K;
+        var s = Math.min((CWD - 2 * pad) / w, (CHD - 2 * pad) / h, maxS);
+        var ccx = (r[0] + r[2] / 2) * K, ccy = (r[1] + r[3] / 2) * K;
+        var tx = CWD / 2 - s * ccx, ty = CHD / 2 - s * ccy;
+        tx = Math.min(0, Math.max(CWD - s * CWD, tx));    // clamp: never see past the capture
+        ty = Math.min(0, Math.max(CHD - s * PAGE_H, ty));
+        return { s: s, x: tx, y: ty };
+      }
+      var REST = { s: 1, x: 0, y: 0 };
+      /* the whole tall page, fitted to the card height and centred */
+      var FULL = (function () {
+        var s = CHD / PAGE_H;
+        return { s: s, x: (CWD - s * CWD) / 2, y: 0 };
+      })();
+
+      var CAM_RUN = camFit(R.timingSec, 120, 1.75);
+      var CAM_VER = camFit(R.verifSec,   90, 1.50);
+      var CAM_COV = camFit(R.covSec,     90, 1.50);
+
+      /* capture rect -> frame coordinates under a given camera */
+      function proj(r, cam) {
+        return { x: CARD_X + cam.s * r[0] * K + cam.x,
+                 y: CARD_Y + cam.s * r[1] * K + cam.y,
+                 w: cam.s * r[2] * K, h: cam.s * r[3] * K };
+      }
+
+      /* ---- swipes, projected under the camera that will be holding still
+             when each swipe runs (the swipe never moves WITH the camera) ---- */
+      var annoEl = document.getElementById("anno");
+      function makeSwipe(r, cam, id, fpad) {
+        var p = proj([r[0] - 5, r[1] - 4, r[2] + 10, r[3] + 8], cam);
+        var f = fpad || 0;
+        var d = document.createElement("div");
+        d.className = "swipe"; d.id = id;
+        d.setAttribute("data-layout-allow-overlap", "");
+        d.setAttribute("data-layout-allow-occlusion", "");
+        d.style.left = (p.x - f) + "px"; d.style.top = (p.y - f) + "px";
+        d.style.width = (p.w + 2 * f) + "px"; d.style.height = (p.h + 2 * f) + "px";
+        annoEl.appendChild(d);
+        return "#" + id;
+      }
+      var SW_PHASES = makeSwipe(R.phasesRow, CAM_RUN, "sw-phases");
+      var SW_VBADGE = makeSwipe(R.verifBadge, CAM_VER, "sw-vbadge");
+      var SW_VCODE  = makeSwipe(R.verifCode,  CAM_VER, "sw-vcode");
+      var SW_CBADGE = makeSwipe(R.covBadge, CAM_COV, "sw-cbadge");
+      var SW_CROW   = makeSwipe(R.covRow1,  CAM_COV, "sw-crow");
+
+      /* ---- label anchors sit on the projected rect their beat swipes ---- */
+      function placeAnchor(id, r, cam) {
+        var p = proj(r, cam);
+        var el = document.getElementById(id);
+        el.style.left = p.x + "px"; el.style.top = p.y + "px";
+        el.style.width = p.w + "px"; el.style.height = p.h + "px";
+      }
+      placeAnchor("anc2", R.timingSec, CAM_RUN);
+      placeAnchor("anc3", R.verifSec,  CAM_VER);
+      placeAnchor("anc4", R.covSec,    CAM_COV);
+      /* the opening label: centred, resting near the frame foot */
+      (function () {
+        var el = document.getElementById("lbl1");
+        el.style.left = "50%"; el.style.top = "952px";
+        el.style.transform = "translateX(-50%)";
+      })();
+
+      /* ==================================================================
+         TIMELINE  ·  one thing moves at a time: camera, then swipe(s),
+         then label; a beat's annotations leave before the next move.
+         Beat map (seconds):
+           B0  0.00 rest at the top of the page (frame zero)
+           B1  0.70 pull back until the whole page fits; "Your run, recorded"
+           B2  3.45 push in to RUN OVERVIEW; sweep the four phase chips
+           B3  6.75 verified: the pass count, then the command that proves it
+           B4 10.30 coverage: the 4/4 traced badge, then the FR-001 row
+           B5 13.85 sign-off end card enters as ONE unit over its own dark
+                    ground, holds still; the camera snaps home behind it
+           B6 15.95 hard cut to the top rest; the tail matches frame zero
+         ================================================================== */
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      var ALL_SW = [SW_PHASES, SW_VBADGE, SW_VCODE, SW_CBADGE, SW_CROW];
+      var ALL_LBL = ["#lbl1", "#lbl2", "#lbl3", "#lbl4"];
+
+      /* initial state: camera at rest on the top of the page (frame zero) */
+      gsap.set("#cam", { transformOrigin: "0 0", x: 0, y: 0, scale: 1 });
+      gsap.set(ALL_SW.join(","), { autoAlpha: 0, scaleX: 0 });
+      gsap.set(ALL_LBL.join(","), { autoAlpha: 0 });
+      gsap.set("#endcard", { autoAlpha: 0 });
+
+      function camTo(from, to, t, dur) {
+        tl.fromTo("#cam", { x: from.x, y: from.y, scale: from.s },
+          { x: to.x, y: to.y, scale: to.s, duration: dur, ease: MOVE_EASE, immediateRender: false }, t);
+      }
+      function sweep(sel, t, dur) {
+        tl.fromTo(sel, { autoAlpha: 1, scaleX: 0 },
+          { autoAlpha: 1, scaleX: 1, duration: dur, ease: "power2.inOut", immediateRender: false }, t);
+      }
+      function lblIn(sel, t) {
+        tl.fromTo(sel, { autoAlpha: 0, y: 10 },
+          { autoAlpha: 1, y: 0, duration: LBL_IN, ease: "power2.out", immediateRender: false }, t);
+      }
+      function beatOut(lbl, swipes, t) {
+        tl.fromTo(lbl, { autoAlpha: 1 }, { autoAlpha: 0, duration: LBL_OUT, ease: "power2.in", immediateRender: false }, t);
+        if (swipes.length)
+          tl.fromTo(swipes.join(","), { autoAlpha: 1 }, { autoAlpha: 0, duration: SW_OUT, ease: "power2.in", immediateRender: false }, t);
+      }
+
+      /* --- B1 · your run, recorded --- */
+      camTo(REST, FULL, 0.70, 1.05);
+      lblIn("#lbl1", 1.85);
+
+      /* --- B2 · every phase, timed automatically --- */
+      beatOut("#lbl1", [], 3.45);
+      camTo(FULL, CAM_RUN, 3.51, 0.80);
+      sweep(SW_PHASES, 4.41, 0.50);
+      lblIn("#lbl2", 5.01);
+
+      /* --- B3 · checks captured with their commands --- */
+      beatOut("#lbl2", [SW_PHASES], 6.75);
+      camTo(CAM_RUN, CAM_VER, 6.81, 0.80);
+      sweep(SW_VBADGE, 7.71, 0.35);
+      sweep(SW_VCODE, 8.14, 0.35);
+      lblIn("#lbl3", 8.59);
+
+      /* --- B4 · requirements traced to tests --- */
+      beatOut("#lbl3", [SW_VBADGE, SW_VCODE], 10.30);
+      camTo(CAM_VER, CAM_COV, 10.36, 0.75);
+      sweep(SW_CBADGE, 11.21, 0.35);
+      sweep(SW_CROW, 11.64, 0.40);
+      lblIn("#lbl4", 12.14);
+
+      /* --- B5 · the sign-off end card, one unit in, calm hold --- */
+      beatOut("#lbl4", [SW_CBADGE, SW_CROW], 13.85);
+      tl.fromTo("#endcard", { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.70, ease: "power2.out", immediateRender: false }, 14.10);
+      /* behind the opaque card, snap the camera home; sub-frame duration = a cut */
+      camTo(CAM_COV, REST, 15.15, 0.02);
+
+      /* --- B6 · hard cut back to the resting frame, which is frame zero --- */
+      tl.fromTo("#endcard", { autoAlpha: 1, y: 0 },
+        { autoAlpha: 0, y: 0, duration: 0.02, ease: "none", immediateRender: false }, 15.95);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
