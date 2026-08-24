@@ -191,8 +191,10 @@ page" claim spelled out, B1's hold stretches to carry a second label line.
   Content, top to bottom: lead line "And that is not all" in the 44 px
   glowing label style; three teaser chips in a row at 32 px in the same
   visual family ("Living specs", "Fast path for small changes", "Your own
-  workflows"); the mascot at 88 px beside the product name "SpecKit
-  Companion". The mascot is the luminance-keyed 52 KB mascot.png reused
+  workflows"); the mascot at 88 px beside the product name "Spec Kit
+  Companion" (two words for Spec Kit: the standing branding rule for
+  on-image copy, matching the landing video's close card; README prose is a
+  separate surface). The mascot is the luminance-keyed 52 KB mascot.png reused
   from media/landing-video/hf, copied to assets/icons/ (tracked in git).
 - Behind the opaque card the camera snaps from CAM_COV to REST at 27.00 in
   0.02 s: sub-frame at 30 fps, invisible. At 28.60 the card cuts away in
