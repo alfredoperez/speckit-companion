@@ -1,0 +1,30 @@
+# HyperFrames video projects: track the sources, ignore the output.
+#
+# Everything ignored here is regenerable from what IS tracked:
+#   renders   -> `npm run render` in the project dir
+#   snapshots -> `hyperframes snapshot`
+#   captures  -> re-shot from the Storybook fixture stories
+#
+# The ignored files stay on disk. They are just not in git, because ~100 MB of
+# mp4 that any clone can rebuild does not belong in the extension's history.
+# Tracked instead: index.html compositions, hyperframes.json, package.json,
+# meta.json, the sidebar build pipeline and its raw captures, fonts, icons.
+
+# The repo root .gitignore excludes `coverage/` for test-coverage output, which
+# would otherwise swallow the whole feature-clips/coverage/ composition.
+# Re-include it here; the rules below still apply inside it.
+!feature-clips/coverage/
+
+# Rendered video, animation and audio output
+**/renders/
+
+# Frame grabs and contact sheets from `hyperframes snapshot`
+**/snapshots/
+
+# Screenshots captured off the running extension / Storybook stories
+**/assets/captures/
+
+# Intermediate fragments from assets/sidebar/build.cjs.
+# The .raw.html inputs are tracked: those come from a hand-driven VS Code
+# devtools session and no script in this repo can reproduce them.
+**/assets/sidebar/*.frag.html
