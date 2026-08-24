@@ -20,12 +20,24 @@
  *   (measured by /bench-run-all, 2026-06-10). Change the numbers THERE first;
  *   this image only repeats them.
  *
+ * C3 · Living Specs pair (`generated/living-specs-pair.png`)
+ *   The Living Specs section image in both READMEs: the sidebar's Living Specs
+ *   view (coverage counts, drift flags) beside the viewer in its real
+ *   `livingMode` (LIVING badge, Covers globs, facts row, WHEN/THEN scenario
+ *   rows), both on the SAME capability: photo-storage, 7 of 9 covered,
+ *   drifted. The right panel is the actual App rendering, fed by the
+ *   `photo-storage.spec.md` Teamboard fixture; counts in the header are
+ *   derived from that file, never typed in. This composition is also the
+ *   storyboard seed for the future Living Specs GIF (sidebar row → click →
+ *   viewer opens → drift → Update).
+ *
  * Determinism: wrapped in CaptureFrame (frozen clock, no animation), so two
  * captures a month apart are identical. See captureFrame.tsx.
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
-import type { ViewerState } from '../types';
+import { useEffect } from 'preact/hooks';
+import type { NavState, ViewerState } from '../types';
 import { InteractiveViewer, vsFromContext } from './viewerHarness';
 import { CaptureFrame } from './captureFrame';
 import { SidebarShell } from './sidebarTree';
@@ -37,9 +49,22 @@ import {
     ScrollTo,
     teamboardDocs,
 } from './VideoCapture.stories';
-import { mockDoc } from '../components/__stories__/mockData';
+import { mockDoc, mockNavState } from '../components/__stories__/mockData';
+import { App } from '../App';
+import { navState, viewerState, markdownHtml, historyEntries } from '../signals';
+import {
+    renderMarkdown,
+    setCurrentTask,
+    setHasSpecContext,
+    setLivingCoverage,
+    setLivingMode,
+    setTaskSummaries,
+} from '../markdown';
+import { applyHighlighting } from '../highlighting';
+import { buildToc } from '../toc';
 
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
+import photoStorageLivingSpec from '../__fixtures__/teamboard/photo-storage.spec.md?raw';
 
 const meta: Meta = {
     title: 'Video Capture/README Composites',
@@ -192,6 +217,137 @@ export const C2PipelineStats: Story = {
                 <div style="font: 400 11px/1.4 var(--vscode-font-family); color: #6a6a6a; margin-top: 14px;">
                     Measured by /bench-run-all (2026-06-10): the same feature at three sizes, each
                     workflow in an isolated sandbox, judged independently. Details: docs/configuration.md
+                </div>
+            </div>
+        </CaptureFrame>
+    ),
+};
+
+// ── C3 · the Living Specs pair ────────────────────────────────────────────
+// One capability, two surfaces. The sidebar's Living Specs view shows
+// photo-storage at "7/9 covered · drift"; the viewer beside it is App's real
+// living mode open on that same capability, whose header derives the same
+// 7/9 and the same drift flag from the fixture. If the two panels ever
+// disagree, the fixture is wrong, not the composition.
+
+const livingRequirementCount = (photoStorageLivingSpec.match(/^###\s+/gm) ?? []).length;
+const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm) ?? []).length;
+
+/**
+ * Mount the real App in living mode on the photo-storage fixture, the same
+ * signals-in path index.tsx uses. Static on purpose: the capture needs one
+ * deterministic frame, not navigation.
+ */
+function LivingViewerPanel() {
+    setLivingMode(true);
+    setLivingCoverage(null);
+    setHasSpecContext(true);
+    setCurrentTask(null);
+    setTaskSummaries(null);
+    viewerState.value = null;
+    historyEntries.value = [];
+    navState.value = mockNavState({
+        coreDocs: [
+            mockDoc('spec', true, 'Spec'),
+            mockDoc('arch', true, 'Architecture'),
+            mockDoc('coverage', true, 'Coverage'),
+        ],
+        relatedDocs: [],
+        currentDoc: 'spec',
+        workflowPhase: 'spec',
+        isViewingRelatedDoc: false,
+        specStatus: 'active',
+        badgeText: 'LIVING',
+        createdDate: null,
+        specContextName: 'Photo Storage',
+        titleFromHeading: true,
+        branch: null,
+        filePath: 'capabilities/photo-storage/spec.md',
+        docTypeLabel: 'Spec',
+        activityPanelEnabled: false,
+        livingMode: true,
+        livingMeta: {
+            capabilityName: 'photo-storage',
+            specPath: 'capabilities/photo-storage/spec.md',
+            location: 'central',
+            match: [
+                'src/services/photoStorage/**',
+                'src/api/photos/**',
+                'src/components/PhotoUploader/**',
+                'src/jobs/thumbnailQueue/**',
+            ],
+            requirements: livingRequirementCount,
+            scenarios: livingScenarioCount,
+            coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
+            drifted: true,
+        },
+    } as Partial<NavState>);
+    markdownHtml.value = renderMarkdown(photoStorageLivingSpec);
+
+    useEffect(() => {
+        const id = requestAnimationFrame(() => {
+            applyHighlighting();
+            buildToc(
+                document.getElementById('content-area'),
+                document.getElementById('markdown-content'),
+                document.getElementById('spec-toc'),
+            );
+        });
+        return () => {
+            cancelAnimationFrame(id);
+            setLivingMode(false);
+            setLivingCoverage(null);
+        };
+    }, []);
+
+    return (
+        <div class="viewer-container">
+            <App specStatus="active" />
+        </div>
+    );
+}
+
+export const C3LivingSpecsPair: Story = {
+    name: 'C3 · Living Specs pair',
+    parameters: { capture: { width: 1480, height: 1040 } },
+    render: () => (
+        <CaptureFrame>
+            <div
+                style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 36px 44px 40px; background: var(--vscode-editor-background); gap: 22px;"
+            >
+                <div style="display: flex; align-items: baseline; justify-content: space-between; flex-shrink: 0;">
+                    <div style="display: flex; align-items: baseline; gap: 16px;">
+                        <div style="font: 600 26px/1.2 var(--vscode-font-family); color: #ececec; letter-spacing: -0.01em;">
+                            Living Specs
+                        </div>
+                        <div style="font: 400 15.5px/1.4 var(--vscode-font-family); color: #9a9a9a;">
+                            One durable spec per capability, kept in one folder or next to the code it covers.
+                        </div>
+                    </div>
+                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: #6f6f6f; letter-spacing: 0.04em;">
+                        Coverage · Drift · Sync
+                    </div>
+                </div>
+                <div style="display: flex; gap: 22px; flex: 1; min-height: 0;">
+                    {/* Addressable panels: a composition (or the future GIF's
+                        storyboard) can mask, highlight, or morph either card
+                        by id without counting children. Rows inside the
+                        sidebar carry their own `#row-<slug>` ids already. */}
+                    <div id="living-pair-sidebar" data-panel="sidebar" style="width: 340px; flex-shrink: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
+                        <SidebarShell
+                            panes={[
+                                { ...specsPane(false), collapsed: true },
+                                livingSpecsPane(true),
+                                { ...steeringPane(), collapsed: true },
+                            ]}
+                        />
+                    </div>
+                    <div id="living-pair-viewer" data-panel="viewer" style="flex: 1; min-width: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; position: relative;">
+                        <LivingViewerPanel />
+                        {/* Fade the clipped bottom edge of the document out to
+                            the ground, so the crop reads as intentional. */}
+                        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
+                    </div>
                 </div>
             </div>
         </CaptureFrame>

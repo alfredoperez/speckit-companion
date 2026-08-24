@@ -86,6 +86,14 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-2-pipeline-stats',
         out: 'pipeline-stats.png',
     },
+    {
+        // The Living Specs pair for both READMEs (ReadmeCapture.stories.tsx
+        // C3): the sidebar's Living Specs view beside the viewer's real living
+        // mode, both on the photo-storage fixture capability. Also the
+        // storyboard seed for the future Living Specs GIF.
+        story: 'video-capture-readme-composites--c-3-living-specs-pair',
+        out: 'living-specs-pair.png',
+    },
 ];
 
 const PORT = 6017;
