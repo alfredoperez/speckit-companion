@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1836, height=1164" />
+    <title>Overview page, README loop</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* ==========================================================================
+         THEME TOKENS  ·  everything this clip's own chrome draws
+         --------------------------------------------------------------------
+         Same token contract as the sibling clips: named by ROLE. The product
+         pixels under the card carry VS Code's dark palette baked into the
+         capture PNGs; they are not themeable from here.
+         ========================================================================== */
+      :root {
+        /* --- ground: the flat colour the UI card floats on */
+        --clip-ground: #101416;
+
+        /* --- card: how the captured product surface is framed */
+        --card-radius: 16px;
+        --card-border: rgba(255,255,255,0.07);
+        --card-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 6px 22px rgba(0,0,0,0.4);
+
+        /* --- swipe: the marker that sweeps across a text line.
+               `lighten` keeps light text legible: the dark ground under the
+               glyphs lifts to this colour, the glyphs themselves stay lighter,
+               so it reads as a selection BEHIND the text, not paint over it. */
+        --swipe-color: #2a6353;
+        --swipe-radius: 4px;
+
+        /* --- label: the small pill naming the beat */
+        --label-font:     "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+        --label-size:     32px;
+        --label-weight:   500;
+        --label-tracking: 0.004em;
+        --label-fg:       #eef4f1;
+        --label-bg:       rgba(12,17,19,0.94);
+        --label-border:   rgba(127,240,196,0.28);
+        --label-radius:   10px;
+        --label-pad-y:    11px;
+        --label-pad-x:    18px;
+        --label-gap:      14px;
+        --label-dot:      #7ff0c4;
+        --label-dot-size: 9px;
+        --label-shadow:   0 14px 34px rgba(0,0,0,0.5);
+      }
+
+      html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+
+      /* ---- track 0 · the captured product surface as a floating card ---- */
+      /* CARD GEOMETRY: interior 1640x1040 at (98,62); mirrored in JS below. */
+      #stage { position:absolute; left:0; top:0; width:1836px; height:1164px; }
+      #card  {
+        position:absolute; left:98px; top:62px; width:1640px; height:1040px;
+        border-radius:var(--card-radius); overflow:hidden;
+        box-shadow:var(--card-shadow);
+        border:1px solid var(--card-border);
+        background:#181818; /* the capture's own page ground, for safety at the rounded edge */
+      }
+      #cam { position:absolute; left:0; top:0; width:1640px; height:1040px; }
+      .base { position:absolute; left:0; top:0; width:1640px; height:1040px; display:block; }
+      /* a slice is a crop of the FULL capture; a cover is a crop of the BLANK
+         one laid over a chip so the chip can arrive on its own beat */
+      .slice, .cover { position:absolute; background-size:1640px 1040px; background-repeat:no-repeat; }
+      .slice { background-image:url("assets/captures/overview-full.png"); }
+      .cover { background-image:url("assets/captures/overview-blank.png"); }
+
+      /* ---- track 1 · the annotation, in frame coordinates ---- */
+      #anno { position:absolute; left:0; top:0; width:1836px; height:1164px; pointer-events:none; }
+      .swipe {
+        position:absolute; background:var(--swipe-color);
+        border-radius:var(--swipe-radius);
+        mix-blend-mode:lighten;
+        transform-origin:0 50%;
+      }
+      .anchor { position:absolute; }
+      .lbl {
+        position:absolute; left:0; bottom:100%;
+        margin-bottom:var(--label-gap);
+        display:inline-flex; align-items:center; gap:12px; white-space:nowrap;
+        padding:var(--label-pad-y) var(--label-pad-x);
+        background:var(--label-bg);
+        border:1px solid var(--label-border);
+        border-radius:var(--label-radius);
+        box-shadow:var(--label-shadow);
+        font-family:var(--label-font); font-size:var(--label-size);
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .lbl::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+                     border-radius:50%; background:var(--label-dot); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="11.6" data-fps="30"
+         data-width="1836" data-height="1164">
+
+      <div id="stage" class="clip" data-start="0" data-duration="11.6" data-track-index="0">
+        <div id="card" data-layout-allow-overflow>
+          <div id="cam" data-layout-allow-overflow>
+            <img class="base" src="assets/captures/overview-blank.png" alt="" />
+            <div id="slices" data-layout-allow-overlap><!-- built from RECTS below --></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="anno" class="clip" data-start="0" data-duration="11.6" data-track-index="1">
+        <div class="anchor" id="anc0" data-layout-allow-overlap>
+          <div class="lbl" id="lblA" data-layout-allow-overlap data-layout-allow-occlusion>What actually needs to be done</div>
+        </div>
+        <div class="anchor" id="anc1" data-layout-allow-overlap>
+          <div class="lbl" id="lblS" data-layout-allow-overlap data-layout-allow-occlusion>Sized simple, took the faster route</div>
+        </div>
+        <!-- swipes are built from LINES below -->
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================================
+         GEOMETRY  ·  every rect is a real element box measured off the
+         captured DOM with getBoundingClientRect / Range.getClientRects
+         (see assets/captures/rects.json), in the capture's own CSS pixels
+         at 1224x776. Nothing here is eyeballed.
+         ================================================================== */
+      var CW = 1224, CH = 776;            // capture CSS size
+      var CWD = 1640, CHD = 1040;         // card interior (the camera's frame)
+      var CARD_X = 98, CARD_Y = 62;       // card position in the 1836x1164 frame
+      var K = CWD / CW;                   // capture px -> card px at rest
+
+      /* the populate slices, cut from the FULL capture (padded measured boxes) */
+      var SLICES = {
+        facts:   [886,  6,   322, 34],    // header run-strip: 6/6 tasks · 4/4 traced · ...
+        intent:  [318, 141,  796, 102],   // INTENT kicker + statement
+        timing:  [318, 244,  796, 90],    // RUN OVERVIEW strip incl. its rules; chips covered below
+        approach:[328, 350,  535, 98],    // APPROACH card incl. shared border
+        size:    [863, 350,  241, 98],    // SIZE card
+        expect:  [318, 478,  796, 298]    // EXPECTATIONS, as far as the frame shows
+      };
+      /* per-phase duration chips inside the timing strip (measured, padded) */
+      var CHIPS = [
+        [323, 287, 121, 31],   // Specify 6m 52s
+        [434, 287, 147, 31],   // Plan 8m 2s
+        [571, 287, 163, 31],   // Tasks 4m 56s
+        [724, 287, 202, 31]    // Implement 34m 45s
+      ];
+      /* the two highlighted regions and their text line boxes (Range rects) */
+      var R_APPROACH = [329, 351.7, 532.5, 94];
+      var R_SIZE     = [862.5, 351.7, 240.5, 94];
+      var LINES_A = [[353, 393.3, 471.5, 15], [353, 412.5, 274.3, 15]];
+      var LINES_S = [[886.5, 393.3, 160.6, 15], [886.5, 412.5, 54, 15]];
+
+      /* ==================================================================
+         MOTION CONSTANTS  ·  timing only; colours/sizes are CSS tokens
+         ================================================================== */
+      var MOVE_EASE = "power3.inOut";
+      var IN_EASE   = "power3.out";
+      var LBL_IN = 0.34, LBL_OUT = 0.24;
+
+      function camFit(r, pad, maxS) {
+        var w = r[2] * K, h = r[3] * K;
+        var s = Math.min((CWD - 2 * pad) / w, (CHD - 2 * pad) / h, maxS);
+        if (s < 1) s = 1;
+        var ccx = (r[0] + r[2] / 2) * K, ccy = (r[1] + r[3] / 2) * K;
+        var tx = CWD / 2 - s * ccx, ty = CHD / 2 - s * ccy;
+        tx = Math.min(0, Math.max(CWD - s * CWD, tx));   // clamp: never see past the capture
+        ty = Math.min(0, Math.max(CHD - s * CHD, ty));
+        return { s: s, x: tx, y: ty };
+      }
+      var REST = { s: 1, x: 0, y: 0 };
+
+      /* capture rect -> frame coordinates under a given camera */
+      function proj(r, cam) {
+        return { x: CARD_X + cam.s * r[0] * K + cam.x,
+                 y: CARD_Y + cam.s * r[1] * K + cam.y,
+                 w: cam.s * r[2] * K, h: cam.s * r[3] * K };
+      }
+
+      var CAM_A = camFit(R_APPROACH, 150, 1.9);
+      var CAM_S = camFit(R_SIZE,     150, 2.05);
+
+      /* ---- build the slice / cover DOM from the tables ---- */
+      var slicesEl = document.getElementById("slices");
+      var sliceIds = {};
+      Object.keys(SLICES).forEach(function (k) {
+        var r = SLICES[k];
+        var d = document.createElement("div");
+        d.className = "slice"; d.id = "sl-" + k;
+        d.setAttribute("data-layout-allow-overlap", "");
+        d.style.left = (r[0] * K) + "px"; d.style.top = (r[1] * K) + "px";
+        d.style.width = (r[2] * K) + "px"; d.style.height = (r[3] * K) + "px";
+        d.style.backgroundPosition = (-r[0] * K) + "px " + (-r[1] * K) + "px";
+        slicesEl.appendChild(d);
+        sliceIds[k] = "#sl-" + k;
+      });
+      var coverIds = CHIPS.map(function (r, i) {
+        var d = document.createElement("div");
+        d.className = "cover"; d.id = "cov-" + i;
+        d.setAttribute("data-layout-allow-overlap", "");
+        d.style.left = (r[0] * K) + "px"; d.style.top = (r[1] * K) + "px";
+        d.style.width = (r[2] * K) + "px"; d.style.height = (r[3] * K) + "px";
+        d.style.backgroundPosition = (-r[0] * K) + "px " + (-r[1] * K) + "px";
+        slicesEl.appendChild(d);
+        return "#cov-" + i;
+      });
+
+      /* ---- swipes, projected under the camera that will be holding still
+             when each swipe runs (the swipe never moves WITH the camera) ---- */
+      var annoEl = document.getElementById("anno");
+      function makeSwipes(lines, cam, tag) {
+        return lines.map(function (r, i) {
+          var p = proj([r[0] - 5, r[1] - 4, r[2] + 10, r[3] + 8], cam);
+          var d = document.createElement("div");
+          d.className = "swipe"; d.id = "sw-" + tag + i;
+          d.setAttribute("data-layout-allow-overlap", "");
+          d.setAttribute("data-layout-allow-occlusion", "");
+          d.style.left = p.x + "px"; d.style.top = p.y + "px";
+          d.style.width = p.w + "px"; d.style.height = p.h + "px";
+          annoEl.appendChild(d);
+          return "#sw-" + tag + i;
+        });
+      }
+      var SW_A = makeSwipes(LINES_A, CAM_A, "a");
+      var SW_S = makeSwipes(LINES_S, CAM_S, "s");
+
+      /* ---- label anchors sit on the projected card rects ---- */
+      function placeAnchor(id, r, cam) {
+        var p = proj(r, cam);
+        var el = document.getElementById(id);
+        el.style.left = p.x + "px"; el.style.top = p.y + "px";
+        el.style.width = p.w + "px"; el.style.height = p.h + "px";
+      }
+      placeAnchor("anc0", R_APPROACH, CAM_A);
+      placeAnchor("anc1", R_SIZE, CAM_S);
+
+      /* ==================================================================
+         TIMELINE
+         Beat map (seconds):
+           0.00  rest: the finished Overview (frame zero = the feature)
+           1.00  hard cut to the page before the dossier arrives
+           1.08  intent statement populates
+           1.42  header facts land (6/6 tasks · 4/4 traced · 5 checks)
+           1.72  RUN OVERVIEW strip arrives, phases still empty
+           2.05+ the four per-phase durations fill in, one by one
+           3.10  APPROACH card populates
+           3.42  SIZE card populates
+           3.78  EXPECTATIONS section follows
+           4.35  punch in on the Approach card
+           5.25  marker swipes across the approach lines + label
+           7.45  camera crosses to the Size card
+           8.25  swipes + label: sized simple, so the faster route
+          10.35  release to rest; the last second matches frame zero, so it loops
+         ================================================================== */
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      var allSlices = Object.keys(sliceIds).map(function (k) { return sliceIds[k]; });
+
+      /* initial state: everything filled, camera at rest (frame zero) */
+      gsap.set("#cam", { transformOrigin: "0 0", x: 0, y: 0, scale: 1 });
+      gsap.set(allSlices.join(","), { autoAlpha: 1 });
+      gsap.set(coverIds.join(","), { autoAlpha: 0 });
+      gsap.set(SW_A.concat(SW_S).join(","), { autoAlpha: 0, scaleX: 0 });
+      gsap.set("#lblA, #lblS", { autoAlpha: 0 });
+
+      /* --- the cut: the dossier vanishes, the page chrome stays --- */
+      tl.set(allSlices.join(","), { autoAlpha: 0 }, 1.00);
+      tl.set(coverIds.join(","), { autoAlpha: 1 }, 1.00);
+
+      /* --- populate, top to bottom; one thing moves at a time --- */
+      function popIn(sel, t, dur, dy) {
+        tl.fromTo(sel, { autoAlpha: 0, y: dy }, { autoAlpha: 1, y: 0, duration: dur, ease: IN_EASE, immediateRender: false }, t);
+      }
+      popIn(sliceIds.intent, 1.08, 0.38, 14);
+      popIn(sliceIds.facts,  1.42, 0.30, 8);
+      popIn(sliceIds.timing, 1.72, 0.34, 10);
+      coverIds.forEach(function (c, i) {
+        tl.fromTo(c, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.20, ease: "power1.in", immediateRender: false }, 2.05 + i * 0.23);
+      });
+      popIn(sliceIds.approach, 3.10, 0.36, 12);
+      popIn(sliceIds.size,     3.42, 0.32, 12);
+      popIn(sliceIds.expect,   3.78, 0.38, 14);
+
+      /* --- beat: the approach tells what needs to be done --- */
+      tl.fromTo("#cam", { x: REST.x, y: REST.y, scale: REST.s },
+        { x: CAM_A.x, y: CAM_A.y, scale: CAM_A.s, duration: 0.85, ease: MOVE_EASE, immediateRender: false }, 4.35);
+      tl.fromTo(SW_A[0], { autoAlpha: 1, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 0.45, ease: "power2.inOut", immediateRender: false }, 5.25);
+      tl.fromTo(SW_A[1], { autoAlpha: 1, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 0.35, ease: "power2.inOut", immediateRender: false }, 5.60);
+      tl.fromTo("#lblA", { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: LBL_IN, ease: "power2.out", immediateRender: false }, 5.90);
+
+      /* --- beat: sized simple, so it took the faster route --- */
+      tl.fromTo("#lblA", { autoAlpha: 1 }, { autoAlpha: 0, duration: LBL_OUT, ease: "power2.in", immediateRender: false }, 7.45);
+      tl.fromTo(SW_A.join(","), { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.22, ease: "power2.in", immediateRender: false }, 7.45);
+      tl.fromTo("#cam", { x: CAM_A.x, y: CAM_A.y, scale: CAM_A.s },
+        { x: CAM_S.x, y: CAM_S.y, scale: CAM_S.s, duration: 0.75, ease: MOVE_EASE, immediateRender: false }, 7.45);
+      tl.fromTo(SW_S[0], { autoAlpha: 1, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 0.40, ease: "power2.inOut", immediateRender: false }, 8.25);
+      tl.fromTo(SW_S[1], { autoAlpha: 1, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 0.30, ease: "power2.inOut", immediateRender: false }, 8.55);
+      tl.fromTo("#lblS", { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: LBL_IN, ease: "power2.out", immediateRender: false }, 8.85);
+
+      /* --- release: back to the resting frame, which is frame zero --- */
+      tl.fromTo("#lblS", { autoAlpha: 1 }, { autoAlpha: 0, duration: LBL_OUT, ease: "power2.in", immediateRender: false }, 10.35);
+      tl.fromTo(SW_S.join(","), { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.22, ease: "power2.in", immediateRender: false }, 10.35);
+      tl.fromTo("#cam", { x: CAM_S.x, y: CAM_S.y, scale: CAM_S.s },
+        { x: REST.x, y: REST.y, scale: REST.s, duration: 0.9, ease: MOVE_EASE, immediateRender: false }, 10.40);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
