@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.31.4] - 2026-08-24
+
+### Changed
+
+- **The marketplace listing now shows the product instead of describing it.** Both READMEs were rewritten for scannability: an animated tour of the Overview page leads the listing as its hero, every screenshot is captured from Storybook by a single regenerable command so the images cannot drift from the real UI, the spec-kit extension's page gets a new text-free hero image, and cross-install banners point each half of the project at the other. The depth that used to live in the README moved into `docs/`.
+
+### Fixed
+
+- **The viewer's on-screen copy drops its em dashes.** The Overview's sizing line now reads "Sized simple: 6 files projected", the verified-checks heading reads "What was checked, and what happened", and the footer's running and archived labels read "Step running, actions unlock when it settles" and "Archived, read-only". Small strings, but they render for every user on every spec.
+
 ## [0.31.3] - 2026-08-20
 
 ### Fixed
