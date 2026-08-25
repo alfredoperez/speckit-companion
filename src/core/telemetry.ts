@@ -20,11 +20,10 @@ import { updateSpecContext } from '../features/specs/specContextWriter';
 
 /**
  * PostHog project API key. This is a **write-only ingestion credential** — it
- * can only capture events, never read them — so it is safe to commit. Empty
- * until the PostHog project exists: an empty key constructs no transport and
- * sends nothing.
+ * can only capture events, never read them — so it is safe to commit. An
+ * empty key constructs no transport and sends nothing.
  */
-export const POSTHOG_PROJECT_API_KEY = '';
+export const POSTHOG_PROJECT_API_KEY: string = 'phc_vemqYCwRiRGR7WkMZdcpi3Zy22EWbSGwPbFrcJacPDQT';
 
 /** PostHog single-event capture endpoint (US Cloud). */
 const POSTHOG_CAPTURE_URL = 'https://us.i.posthog.com/i/v0/e/';
