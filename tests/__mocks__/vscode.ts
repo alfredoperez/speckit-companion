@@ -221,12 +221,29 @@ export const extensions = {
     getExtension: jest.fn(),
 };
 
+export const version = '1.90.0-test';
+
+const telemetryEnabledEmitter = new EventEmitter<boolean>();
+
 export const env = {
     openExternal: jest.fn(),
     shell: '' as string,
     appName: '' as string,
     uriScheme: '' as string,
+    machineId: 'test-machine-id' as string,
+    isTelemetryEnabled: true as boolean,
+    onDidChangeTelemetryEnabled: telemetryEnabledEmitter.event,
     clipboard: {
         writeText: jest.fn().mockResolvedValue(undefined),
     },
 };
+
+/**
+ * Drive the editor-wide telemetry gate from a test: updates `env.isTelemetryEnabled`
+ * and fires every `env.onDidChangeTelemetryEnabled` listener with the new value,
+ * as the real editor does.
+ */
+export function __fireTelemetryEnabledChange(enabled: boolean): void {
+    env.isTelemetryEnabled = enabled;
+    telemetryEnabledEmitter.fire(enabled);
+}

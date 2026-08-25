@@ -16,7 +16,7 @@ import {
     coerceInstallPromptSurface,
     __resetInstallPromptShownDedupe,
     INSTALL_PROMPT_EVENT,
-    APP_INSIGHTS_CONNECTION_STRING,
+    POSTHOG_PROJECT_API_KEY,
     reportSpecOpened,
     reportLivingSpecOpened,
     reportLivingSpecDrift,
@@ -29,20 +29,25 @@ import {
     LIVING_SPEC_SYNC_EVENT,
     STEERING_OPENED_EVENT,
 } from '../telemetry';
-// `@vscode/extension-telemetry` is mapped to the test mock (jest.config.js).
-// The real package types don't declare the mock's captured-event helpers, so
-// describe just the shape we reach for here and require through the mapper.
-interface TelemetryMockShape {
-    __captured: {
-        constructed: string[];
-        events: { name: string; properties?: Record<string, string> }[];
-        disposed: number;
-    };
-    __resetTelemetryMock: () => void;
+import {
+    TEST_POSTHOG_KEY,
+    installTelemetryFetchMock,
+    capturedTelemetryEvents,
+    specificProps,
+} from './helpers/telemetryFetch';
+
+// The mock's gate driver isn't part of the real vscode types.
+const { __fireTelemetryEnabledChange } = vscode as unknown as {
+    __fireTelemetryEnabledChange: (enabled: boolean) => void;
+};
+
+const CAPTURE_URL = 'https://us.i.posthog.com/i/v0/e/';
+
+let fetchMock: jest.Mock;
+
+function capturedEvents() {
+    return capturedTelemetryEvents(fetchMock);
 }
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { __captured, __resetTelemetryMock } =
-    require('@vscode/extension-telemetry') as TelemetryMockShape;
 
 /** Point `getConfiguration('speckit').get(key, default)` at a fixed map. */
 function mockConfig(values: Record<string, unknown>): void {
@@ -87,47 +92,197 @@ const BASE_SPEC = {
 
 describe('TelemetryService', () => {
     beforeEach(() => {
-        __resetTelemetryMock();
+        fetchMock = installTelemetryFetchMock();
+        (vscode.env as { isTelemetryEnabled: boolean }).isTelemetryEnabled = true;
+        (vscode.extensions.getExtension as jest.Mock).mockReturnValue({
+            packageJSON: { version: '9.9.9' },
+        });
         mockConfig({ telemetry: true });
     });
 
     describe('the dual gate', () => {
-        it('sends an event when the reporter exists and speckit.telemetry is on', () => {
-            const service = new TelemetryService();
-            service.sendEvent('extension.activated', { specCount: '3' });
+        it('sends an event when a key is set and speckit.telemetry is on', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            const sent = service.sendEvent('extension.activated', { specCount: '3' });
 
-            expect(__captured.events).toHaveLength(1);
-            expect(__captured.events[0]).toEqual({
-                name: 'extension.activated',
-                properties: { specCount: '3' },
-            });
+            expect(sent).toBe(true);
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe('extension.activated');
+            expect(specificProps(capturedEvents()[0].properties)).toEqual({ specCount: '3' });
         });
 
         it('is a no-op when speckit.telemetry is false', () => {
             mockConfig({ telemetry: false });
-            const service = new TelemetryService();
-            service.sendEvent('provider.selected', { providerId: 'claude' });
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            const sent = service.sendEvent('provider.selected', { providerId: 'claude' });
 
-            expect(__captured.events).toHaveLength(0);
+            expect(sent).toBe(false);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
 
-        it('does not construct a reporter and is a no-op when the connection string is empty', () => {
+        it('constructs no transport and is a no-op when the key is empty', () => {
             const service = new TelemetryService('');
+            const sent = service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            expect(sent).toBe(false);
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('uses the committed project key by default — silent while it is empty', () => {
+            const service = new TelemetryService();
+            const sent = service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            expect(sent).toBe(POSTHOG_PROJECT_API_KEY !== '');
+            expect(fetchMock).toHaveBeenCalledTimes(POSTHOG_PROJECT_API_KEY ? 1 : 0);
+        });
+
+        it('dispose is safe to call', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            expect(() => service.dispose()).not.toThrow();
+        });
+    });
+
+    describe('the editor-wide gate (vscode.env.isTelemetryEnabled)', () => {
+        it('sends nothing while editor-wide telemetry is off, even with the extension switch on', () => {
+            (vscode.env as { isTelemetryEnabled: boolean }).isTelemetryEnabled = false;
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+
+            expect(service.sendEvent('provider.selected', { providerId: 'claude' })).toBe(false);
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('sends nothing when the extension switch is off, even with the editor-wide gate open', () => {
+            mockConfig({ telemetry: false });
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+
+            expect(service.sendEvent('provider.selected', { providerId: 'claude' })).toBe(false);
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('a mid-session editor-wide toggle disables and re-enables sending without reconstructing the service', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            expect(service.sendEvent('provider.selected')).toBe(true);
+
+            __fireTelemetryEnabledChange(false);
+            expect(service.sendEvent('provider.selected')).toBe(false);
+
+            __fireTelemetryEnabledChange(true);
+            expect(service.sendEvent('provider.selected')).toBe(true);
+
+            expect(capturedEvents()).toHaveLength(2);
+        });
+
+        it('dispose drops the change subscription — later gate firings no longer reach the service', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.dispose();
+
+            __fireTelemetryEnabledChange(false);
+            expect(service.sendEvent('provider.selected')).toBe(true);
+        });
+    });
+
+    describe('the wire shape (PostHog capture contract)', () => {
+        it('POSTs one JSON capture payload per event to the capture endpoint', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
             service.sendEvent('provider.selected', { providerId: 'claude' });
 
-            expect(__captured.constructed).toHaveLength(0);
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            const [url, init] = fetchMock.mock.calls[0] as [
+                string,
+                { method: string; headers: Record<string, string>; body: string },
+            ];
+            expect(url).toBe(CAPTURE_URL);
+            expect(init.method).toBe('POST');
+            expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
         });
 
-        it('constructs the reporter with the committed connection string by default', () => {
-            new TelemetryService();
-            expect(__captured.constructed).toEqual([APP_INSIGHTS_CONNECTION_STRING]);
+        it('carries the api_key, the event name, and the machine id as distinct_id', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body);
+            expect(body.api_key).toBe(TEST_POSTHOG_KEY);
+            expect(body.event).toBe('provider.selected');
+            expect(body.distinct_id).toBe('test-machine-id');
         });
 
-        it('disposes the underlying reporter', () => {
-            const service = new TelemetryService();
-            service.dispose();
-            expect(__captured.disposed).toBe(1);
+        it('marks every event for anonymous processing', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            expect(capturedEvents()[0].properties['$process_person_profile']).toBe(false);
+        });
+    });
+
+    describe('the common properties (service-attached)', () => {
+        it('every captured payload carries extensionVersion, vscodeVersion, and platform', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            const props = capturedEvents()[0].properties;
+            expect(props.extensionVersion).toBe('9.9.9');
+            expect(props.vscodeVersion).toBe('1.90.0-test');
+            expect(props.platform).toBe(process.platform);
+        });
+
+        it('falls back to "unknown" when the extension manifest is unavailable', () => {
+            (vscode.extensions.getExtension as jest.Mock).mockReturnValue(undefined);
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.sendEvent('provider.selected', { providerId: 'claude' });
+
+            expect(capturedEvents()[0].properties.extensionVersion).toBe('unknown');
+        });
+
+        it('the extension.activated collision resolves to the event payload\'s own values', () => {
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+            service.sendEvent('extension.activated', {
+                extensionVersion: '1.2.3',
+                vscodeVersion: '1.90.0',
+                specCount: '4',
+            });
+
+            const props = capturedEvents()[0].properties;
+            expect(props.extensionVersion).toBe('1.2.3');
+            expect(props.vscodeVersion).toBe('1.90.0');
+            expect(props.platform).toBe(process.platform);
+        });
+
+        it('the five bare engagement events carry the common facts and nothing else (privacy contract)', () => {
+            __resetEngagementDedupe();
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
+            reportSpecOpened('/ws/specs/1');
+            reportLivingSpecOpened('/ws/src/a/spec.md');
+            reportLivingSpecDrift();
+            reportLivingSpecSync();
+            reportSteeringOpened();
+
+            expect(capturedEvents()).toHaveLength(5);
+            for (const event of capturedEvents()) {
+                expect(Object.keys(event.properties).sort()).toEqual([
+                    '$process_person_profile',
+                    'extensionVersion',
+                    'platform',
+                    'vscodeVersion',
+                ]);
+            }
+        });
+    });
+
+    describe('silent failure (a dead backend never surfaces)', () => {
+        it('swallows a rejected fetch — the emit still reports true and nothing throws', async () => {
+            fetchMock.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+
+            expect(service.sendEvent('provider.selected', { providerId: 'claude' })).toBe(true);
+            await new Promise(r => setTimeout(r, 0));
+        });
+
+        it('ignores a non-2xx response', async () => {
+            fetchMock.mockResolvedValueOnce({ ok: false, status: 429 });
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
+
+            expect(service.sendEvent('provider.selected', { providerId: 'claude' })).toBe(true);
+            await new Promise(r => setTimeout(r, 0));
         });
     });
 
@@ -216,17 +371,17 @@ describe('TelemetryService', () => {
             expect(props.companionInstalled).toBe('false');
         });
 
-        it('emits companionInstalled through the reporter on extension.activated', () => {
+        it('emits companionInstalled over the wire on extension.activated', () => {
             mockConfig({ telemetry: true });
-            const service = new TelemetryService();
+            const service = new TelemetryService(TEST_POSTHOG_KEY);
             service.sendEvent(
                 'extension.activated',
                 buildActivatedProperties({ ...baseSnapshot, companionInstalled: true }),
             );
 
-            expect(__captured.events).toHaveLength(1);
-            expect(__captured.events[0].name).toBe('extension.activated');
-            expect(__captured.events[0].properties?.companionInstalled).toBe('true');
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe('extension.activated');
+            expect(capturedEvents()[0].properties.companionInstalled).toBe('true');
         });
 
         it('carries only booleans/versions/counts/enums — no identifier or path', () => {
@@ -243,35 +398,38 @@ describe('TelemetryService', () => {
         beforeEach(() => {
             __resetInstallPromptShownDedupe();
             mockConfig({ telemetry: true });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
         });
 
         it('emits action=shown with the surface the first time a surface is shown', () => {
             reportInstallPromptShown('createSpec');
-            expect(__captured.events).toEqual([
-                { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'createSpec' } },
-            ]);
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe(INSTALL_PROMPT_EVENT);
+            expect(specificProps(capturedEvents()[0].properties)).toEqual({
+                action: 'shown',
+                surface: 'createSpec',
+            });
         });
 
         it('dedupes a repeated shown for the same surface within a session', () => {
             reportInstallPromptShown('createSpec');
             reportInstallPromptShown('createSpec');
             reportInstallPromptShown('createSpec');
-            expect(__captured.events).toHaveLength(1);
+            expect(capturedEvents()).toHaveLength(1);
         });
 
         it('emits shown independently for each distinct surface', () => {
             reportInstallPromptShown('createSpec');
             reportInstallPromptShown('activity');
-            expect(__captured.events.map(e => e.properties?.surface)).toEqual(['createSpec', 'activity']);
-            expect(__captured.events.every(e => e.properties?.action === 'shown')).toBe(true);
+            expect(capturedEvents().map(e => e.properties.surface)).toEqual(['createSpec', 'activity']);
+            expect(capturedEvents().every(e => e.properties.action === 'shown')).toBe(true);
         });
 
         it('records the new sidebar/pinned/welcome surfaces distinctly', () => {
             reportInstallPromptShown('sidebarBadge');
             reportInstallPromptShown('pinnedRow');
             reportInstallPromptClicked('welcome');
-            expect(__captured.events.map(e => `${e.properties?.action}:${e.properties?.surface}`)).toEqual([
+            expect(capturedEvents().map(e => `${e.properties.action}:${e.properties.surface}`)).toEqual([
                 'shown:sidebarBadge',
                 'shown:pinnedRow',
                 'clicked:welcome',
@@ -290,41 +448,100 @@ describe('TelemetryService', () => {
         it('emits action=clicked with the originating surface (not deduped)', () => {
             reportInstallPromptClicked('activity');
             reportInstallPromptClicked('activity');
-            expect(__captured.events).toEqual([
-                { name: INSTALL_PROMPT_EVENT, properties: { action: 'clicked', surface: 'activity' } },
-                { name: INSTALL_PROMPT_EVENT, properties: { action: 'clicked', surface: 'activity' } },
-            ]);
+            expect(capturedEvents()).toHaveLength(2);
+            for (const event of capturedEvents()) {
+                expect(event.name).toBe(INSTALL_PROMPT_EVENT);
+                expect(specificProps(event.properties)).toEqual({ action: 'clicked', surface: 'activity' });
+            }
         });
 
         it('carries only the action + surface enum fields — no identifier or path', () => {
             reportInstallPromptShown('activity');
             reportInstallPromptClicked('createSpec');
-            for (const event of __captured.events) {
-                expect(Object.keys(event.properties ?? {}).sort()).toEqual(['action', 'surface']);
-                expect(['shown', 'clicked']).toContain(event.properties?.action);
-                expect(['createSpec', 'activity']).toContain(event.properties?.surface);
+            for (const event of capturedEvents()) {
+                expect(Object.keys(specificProps(event.properties)).sort()).toEqual(['action', 'surface']);
+                expect(['shown', 'clicked']).toContain(event.properties.action);
+                expect(['createSpec', 'activity']).toContain(event.properties.surface);
             }
         });
 
         it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportInstallPromptShown('createSpec');
             reportInstallPromptClicked('createSpec');
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
 
         it('a show while telemetry is disabled does not burn the dedupe — it still fires once enabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportInstallPromptShown('createSpec');   // no-op, must NOT record the dedupe
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
             mockConfig({ telemetry: true });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportInstallPromptShown('createSpec');   // now it should emit
-            expect(__captured.events).toEqual([
-                { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'createSpec' } },
+            expect(capturedEvents()).toHaveLength(1);
+            expect(specificProps(capturedEvents()[0].properties)).toEqual({
+                action: 'shown',
+                surface: 'createSpec',
+            });
+        });
+    });
+
+    describe('the funnel contract (pinned identifiers, byte-for-byte)', () => {
+        const ALL_SURFACES = [
+            'createSpec',
+            'activity',
+            'sidebarBadge',
+            'pinnedRow',
+            'welcome',
+            'terminal',
+            'activation',
+        ] as const;
+
+        beforeEach(() => {
+            __resetInstallPromptShownDedupe();
+            mockConfig({ telemetry: true });
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
+        });
+
+        it('posts the event name exactly "companion.installPrompt" with action exactly "shown"/"clicked"', () => {
+            reportInstallPromptShown('terminal');
+            reportInstallPromptClicked('terminal');
+
+            const bodies = fetchMock.mock.calls.map(
+                ([, init]) => JSON.parse((init as { body: string }).body),
+            );
+            expect(bodies.map(b => b.event)).toEqual([
+                'companion.installPrompt',
+                'companion.installPrompt',
             ]);
+            expect(bodies.map(b => b.properties.action)).toEqual(['shown', 'clicked']);
+        });
+
+        it('emits every surface in the closed allow-list verbatim', () => {
+            for (const surface of ALL_SURFACES) {
+                reportInstallPromptShown(surface);
+            }
+            expect(capturedEvents().map(e => e.properties.surface)).toEqual([...ALL_SURFACES]);
+        });
+
+        it('accepts exactly the closed allow-list at the coercion boundary and nothing else', () => {
+            for (const surface of ALL_SURFACES) {
+                expect(coerceInstallPromptSurface(surface)).toBe(surface);
+            }
+            expect(coerceInstallPromptSurface('Shown')).toBeUndefined();
+            expect(coerceInstallPromptSurface('createspec')).toBeUndefined();
+            expect(coerceInstallPromptSurface('custom-surface')).toBeUndefined();
+        });
+
+        it('keeps the funnel payload shape to exactly action + surface beyond the common facts', () => {
+            reportInstallPromptShown('welcome');
+            reportInstallPromptClicked('welcome');
+            for (const event of capturedEvents()) {
+                expect(Object.keys(specificProps(event.properties)).sort()).toEqual(['action', 'surface']);
+            }
         });
     });
 
@@ -365,80 +582,84 @@ describe('TelemetryService', () => {
 
 describe('engagement events', () => {
     beforeEach(() => {
-        __resetTelemetryMock();
+        fetchMock = installTelemetryFetchMock();
+        (vscode.env as { isTelemetryEnabled: boolean }).isTelemetryEnabled = true;
         __resetEngagementDedupe();
         mockConfig({ telemetry: true });
-        initTelemetry(new TelemetryService());
+        initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
     });
 
     describe('spec.opened', () => {
         it('fires a bare event the first time a spec opens', () => {
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events).toEqual([{ name: SPEC_OPENED_EVENT, properties: undefined }]);
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe(SPEC_OPENED_EVENT);
         });
 
-        it('carries no properties — no spec name or path', () => {
+        it('carries nothing event-specific — no spec name or path', () => {
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events[0].properties).toBeUndefined();
+            expect(specificProps(capturedEvents()[0].properties)).toEqual({});
         });
 
         it('dedupes re-renders/reveals of the same spec within a session', () => {
             reportSpecOpened('/ws/specs/123-feature');
             reportSpecOpened('/ws/specs/123-feature');
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events).toHaveLength(1);
+            expect(capturedEvents()).toHaveLength(1);
         });
 
         it('fires once per distinct spec', () => {
             reportSpecOpened('/ws/specs/123-feature');
             reportSpecOpened('/ws/specs/456-other');
-            expect(__captured.events).toHaveLength(2);
-            expect(__captured.events.every(e => e.name === SPEC_OPENED_EVENT)).toBe(true);
+            expect(capturedEvents()).toHaveLength(2);
+            expect(capturedEvents().every(e => e.name === SPEC_OPENED_EVENT)).toBe(true);
         });
 
         it('an open while telemetry is disabled does not burn the dedupe — it still fires once enabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
 
             mockConfig({ telemetry: true });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events).toEqual([{ name: SPEC_OPENED_EVENT, properties: undefined }]);
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe(SPEC_OPENED_EVENT);
         });
 
         it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportSpecOpened('/ws/specs/123-feature');
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
     });
 
     describe('livingSpec.opened', () => {
         it('fires a bare event the first time a living spec opens', () => {
             reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(__captured.events).toEqual([{ name: LIVING_SPEC_OPENED_EVENT, properties: undefined }]);
+            expect(capturedEvents()).toHaveLength(1);
+            expect(capturedEvents()[0].name).toBe(LIVING_SPEC_OPENED_EVENT);
         });
 
         it('dedupes re-renders of the same capability within a session', () => {
             reportLivingSpecOpened('/ws/src/auth/spec.md');
             reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(__captured.events).toHaveLength(1);
+            expect(capturedEvents()).toHaveLength(1);
         });
 
         it('fires once per distinct capability', () => {
             reportLivingSpecOpened('/ws/src/auth/spec.md');
             reportLivingSpecOpened('/ws/src/billing/spec.md');
-            expect(__captured.events).toHaveLength(2);
+            expect(capturedEvents()).toHaveLength(2);
         });
 
         it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
     });
 
@@ -446,27 +667,27 @@ describe('engagement events', () => {
         it('fires a bare drift event each run (not deduped)', () => {
             reportLivingSpecDrift();
             reportLivingSpecDrift();
-            expect(__captured.events).toEqual([
-                { name: LIVING_SPEC_DRIFT_EVENT, properties: undefined },
-                { name: LIVING_SPEC_DRIFT_EVENT, properties: undefined },
+            expect(capturedEvents().map(e => e.name)).toEqual([
+                LIVING_SPEC_DRIFT_EVENT,
+                LIVING_SPEC_DRIFT_EVENT,
             ]);
         });
 
         it('fires a bare sync event each run (not deduped)', () => {
             reportLivingSpecSync();
             reportLivingSpecSync();
-            expect(__captured.events).toEqual([
-                { name: LIVING_SPEC_SYNC_EVENT, properties: undefined },
-                { name: LIVING_SPEC_SYNC_EVENT, properties: undefined },
+            expect(capturedEvents().map(e => e.name)).toEqual([
+                LIVING_SPEC_SYNC_EVENT,
+                LIVING_SPEC_SYNC_EVENT,
             ]);
         });
 
         it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportLivingSpecDrift();
             reportLivingSpecSync();
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
     });
 
@@ -474,28 +695,28 @@ describe('engagement events', () => {
         it('fires a bare event each time a steering doc opens (not deduped)', () => {
             reportSteeringOpened();
             reportSteeringOpened();
-            expect(__captured.events).toEqual([
-                { name: STEERING_OPENED_EVENT, properties: undefined },
-                { name: STEERING_OPENED_EVENT, properties: undefined },
+            expect(capturedEvents().map(e => e.name)).toEqual([
+                STEERING_OPENED_EVENT,
+                STEERING_OPENED_EVENT,
             ]);
         });
 
         it('sends nothing when telemetry is disabled', () => {
             mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService());
+            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportSteeringOpened();
-            expect(__captured.events).toHaveLength(0);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
     });
 
-    it('every engagement event carries no properties at all', () => {
+    it('every engagement event carries nothing event-specific at all', () => {
         reportSpecOpened('/ws/specs/1');
         reportLivingSpecOpened('/ws/src/a/spec.md');
         reportLivingSpecDrift();
         reportLivingSpecSync();
         reportSteeringOpened();
-        for (const event of __captured.events) {
-            expect(event.properties).toBeUndefined();
+        for (const event of capturedEvents()) {
+            expect(specificProps(event.properties)).toEqual({});
         }
     });
 });

@@ -104,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
 
     // Anonymous, PII-free telemetry. Gated on both `speckit.telemetry` and VS
-    // Code's global telemetry level; fires nothing when the connection string
+    // Code's global telemetry level; fires nothing while the PostHog project key
     // is empty. Construct + register dispose now; the once-per-activation event
     // fires after the settings migration so the beta snapshot reads coerced
     // boolean values, not legacy tri-state strings.

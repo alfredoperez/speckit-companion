@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Anonymous usage telemetry moved to PostHog.** The Azure subscription behind the old analytics backend lapsed and took the pipeline with it, so every usage event had been silently discarded for months. Events now go to PostHog with the same event catalog and the same privacy contract: only enum-like values, versions, and counts, never prompt content, file paths, or spec names. Both opt-out switches keep their promise — turning off `speckit.telemetry` or VS Code's global telemetry setting stops all events immediately, mid-session, no restart needed. The retired backend's client library and its credential are removed from the shipped extension. ([#589](https://github.com/alfredoperez/speckit-companion/issues/589))
+
 ## [0.31.4] - 2026-08-24
 
 ### Changed

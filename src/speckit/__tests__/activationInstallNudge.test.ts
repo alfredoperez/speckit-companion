@@ -20,14 +20,14 @@ import {
     __resetInstallPromptShownDedupe,
     INSTALL_PROMPT_EVENT,
 } from '../../core/telemetry';
+import {
+    TEST_POSTHOG_KEY,
+    installTelemetryFetchMock,
+    capturedTelemetryEvents,
+    specificProps,
+} from '../../core/__tests__/helpers/telemetryFetch';
 
-interface TelemetryMockShape {
-    __captured: { events: { name: string; properties?: Record<string, string> }[] };
-    __resetTelemetryMock: () => void;
-}
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { __captured, __resetTelemetryMock } =
-    require('@vscode/extension-telemetry') as TelemetryMockShape;
+let fetchMock: jest.Mock;
 
 function mockConfig(values: Record<string, unknown>): void {
     (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
@@ -85,9 +85,9 @@ describe('maybeShowActivationInstallNudge (wrapper)', () => {
     beforeEach(() => {
         __resetActivationInstallNudgeSession();
         __resetInstallPromptShownDedupe();
-        __resetTelemetryMock();
+        fetchMock = installTelemetryFetchMock();
         mockConfig({ telemetry: true, 'companion.installPrompt': true });
-        initTelemetry(new TelemetryService());
+        initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
         (isCompanionInstalled as jest.Mock).mockReturnValue(false);
         (vscode.window.showInformationMessage as jest.Mock).mockReset().mockResolvedValue(undefined);
         (fs.existsSync as jest.Mock).mockReturnValue(true); // .specify present
@@ -96,9 +96,10 @@ describe('maybeShowActivationInstallNudge (wrapper)', () => {
     it('shows the prompt and emits the activation shown event on the positive path', () => {
         maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).toHaveBeenCalledTimes(1);
-        expect(__captured.events).toEqual([
-            { name: INSTALL_PROMPT_EVENT, properties: { action: 'shown', surface: 'activation' } },
-        ]);
+        const events = capturedTelemetryEvents(fetchMock);
+        expect(events).toHaveLength(1);
+        expect(events[0].name).toBe(INSTALL_PROMPT_EVENT);
+        expect(specificProps(events[0].properties)).toEqual({ action: 'shown', surface: 'activation' });
     });
 
     it('shows at most once per session', () => {
@@ -111,27 +112,27 @@ describe('maybeShowActivationInstallNudge (wrapper)', () => {
         (isCompanionInstalled as jest.Mock).mockReturnValue(true);
         maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
-        expect(__captured.events).toHaveLength(0);
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('is silent when spec-kit is not detected', () => {
         (fs.existsSync as jest.Mock).mockReturnValue(false);
         maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
-        expect(__captured.events).toHaveLength(0);
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('is silent when the shared dismissal is set', () => {
         maybeShowActivationInstallNudge(fakeContext(true), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
-        expect(__captured.events).toHaveLength(0);
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('is silent when the install-prompt preference is off', () => {
         mockConfig({ telemetry: true, 'companion.installPrompt': false });
         maybeShowActivationInstallNudge(fakeContext(), '/root');
         expect(vscode.window.showInformationMessage as jest.Mock).not.toHaveBeenCalled();
-        expect(__captured.events).toHaveLength(0);
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('fires for any provider — no terminal-provider gate (installing is a terminal command regardless)', () => {
