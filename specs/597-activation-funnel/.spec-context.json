@@ -446,12 +446,7 @@
       "specs",
       "core"
     ],
-    "skipped": [
-      {
-        "name": "spec-viewer",
-        "reason": "loaded for context only — the viewer renders the seeded sample and the completion action unchanged; this feature moved the completed-event emit out of the command path into the watcher, which is the specs capability, not the viewer's"
-      }
-    ]
+    "skipped": []
   },
   "last_action": "PR #598 open for review — 45/47 tasks done; T037/T038 need a PostHog login",
   "coverage": {
@@ -1096,6 +1091,10 @@
     },
     {
       "note": "No lint step exists in this repo (no eslint config, no lint script), so the tasks list-item lint gate could not run; tsc plus both webpack builds are the standing static gates.",
+      "step": "implement"
+    },
+    {
+      "note": "Ran the drift check before committing, which hid two drifted capabilities the commit then exposed: ai-providers (the creation preamble now seeds the correlation id) and spec-viewer (its dispatch stopped attaching the retired profile dimension). Both are folded now. The check is only meaningful AFTER the spec and its source are committed together.",
       "step": "implement"
     }
   ],
