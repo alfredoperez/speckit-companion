@@ -38,6 +38,21 @@ const beardedMonokaiBlack: Record<string, string> = {
     '--vscode-button-secondaryHoverBackground': '#2e2e2e',
     '--vscode-button-secondaryBorder': '#262626',
     '--vscode-charts-green': '#a9dc76',
+    '--vscode-charts-blue': '#78dce8',
+    '--vscode-charts-yellow': '#ffd866',
+    // Sidebar and tree surface, read verbatim from the theme rather than
+    // derived: the Specs-sidebar recreation draws a whole VS Code pane, and a
+    // near-miss on the section header reads as the wrong product.
+    '--vscode-sideBar-foreground': '#adadadcc',
+    '--vscode-sideBarSectionHeader-background': '#0e0e0e',
+    '--vscode-sideBarSectionHeader-foreground': '#c7c7c7',
+    '--vscode-sideBarSectionHeader-border': '#050505',
+    '--vscode-sideBarTitle-foreground': '#545454',
+    '--vscode-icon-foreground': '#adadadab',
+    '--vscode-list-warningForeground': '#ffd866',
+    '--vscode-list-errorForeground': '#fc6a67',
+    '--vscode-list-inactiveSelectionBackground': '#3b3b3b40',
+    '--vscode-tree-indentGuidesStroke': '#54545470',
     '--vscode-checkbox-background': '#1a1a1a',
     '--vscode-checkbox-border': '#3a3a3a',
     '--vscode-editor-lineHighlightBackground': '#1073cf2d',
@@ -83,6 +98,18 @@ const beardedVividLight: Record<string, string> = {
     '--vscode-button-secondaryHoverBackground': '#dbdbdb',
     '--vscode-button-secondaryBorder': '#e2e2e2',
     '--vscode-charts-green': '#00ac39',
+    '--vscode-charts-blue': '#0099ff',
+    '--vscode-charts-yellow': '#d48700',
+    '--vscode-sideBar-foreground': '#000000cc',
+    '--vscode-sideBarSectionHeader-background': '#ebebeb',
+    '--vscode-sideBarSectionHeader-foreground': '#181818',
+    '--vscode-sideBarSectionHeader-border': '#cecece',
+    '--vscode-sideBarTitle-foreground': '#8a8a8a',
+    '--vscode-icon-foreground': '#000000ab',
+    '--vscode-list-warningForeground': '#FFB638',
+    '--vscode-list-errorForeground': '#D62C2C',
+    '--vscode-list-inactiveSelectionBackground': '#8a8a8a26',
+    '--vscode-tree-indentGuidesStroke': '#8a8a8a70',
     '--vscode-checkbox-background': '#f9f9f9',
     '--vscode-checkbox-border': '#c1c1c1',
     '--vscode-editor-lineHighlightBackground': '#1073cf2d',
@@ -124,6 +151,12 @@ const themes: Record<string, StoryTheme> = {
             '--vscode-editor-foreground': '#ffffff',
             '--vscode-foreground': '#ffffff',
             '--vscode-sideBar-background': '#000000',
+            '--vscode-sideBar-foreground': '#ffffff',
+            '--vscode-sideBarSectionHeader-background': '#000000',
+            '--vscode-sideBarSectionHeader-foreground': '#ffffff',
+            '--vscode-sideBarSectionHeader-border': '#ffffff',
+            '--vscode-sideBarTitle-foreground': '#ffffff',
+            '--vscode-icon-foreground': '#ffffff',
             '--vscode-editorWidget-background': '#000000',
             '--vscode-contrastBorder': '#ffffff',
             '--vscode-focusBorder': '#ffff00',
@@ -168,6 +201,9 @@ const preview: Preview = {
                     ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts']],
                     'Primitives',
                     'SpecEditor',
+                    // Video capture stories sort last: they are frames for the
+                    // YouTube series, not a component catalog.
+                    'Video Capture',
                 ],
             },
         },
@@ -193,11 +229,20 @@ const preview: Preview = {
                 rootStyle.setProperty(k, v);
             });
 
+            // A story that declares `parameters.capture = { width, height }` is
+            // a video frame, not a catalog entry: it gets an exact-pixel box
+            // with no padding, so a screenshot of the preview iframe IS the
+            // frame. See webview/src/spec-viewer/__stories__/captureFrame.tsx.
+            const capture = context.parameters?.capture as
+                | { width: number; height: number }
+                | undefined;
+
+            const shellStyle = capture
+                ? `background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); width: ${capture.width}px; height: ${capture.height}px; padding: 0; margin: 0; overflow: hidden;`
+                : 'background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); min-height: 100vh; padding: 16px;';
+
             return (
-                <div
-                    class={theme.bodyClass}
-                    style="background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); font-family: var(--vscode-font-family); min-height: 100vh; padding: 16px;"
-                >
+                <div class={theme.bodyClass} style={shellStyle}>
                     <Story />
                 </div>
             );

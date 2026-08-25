@@ -1,0 +1,71 @@
+{
+  "workflow": "speckit",
+  "specName": "Profile photo upload",
+  "branch": "041-profile-photo-upload",
+  "selectedAt": "2026-05-19T13:04:11.402Z",
+  "profile": "standard",
+  "currentStep": "plan",
+  "status": "planned",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-05-19T13:04:11.402Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-19T13:09:52.118Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-05-19T13:11:03.775Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-19T13:18:40.264Z"
+    }
+  ],
+  "last_action": "plan completed",
+  "intent": "Let a Teamboard member set their own profile photo, and make a bad file fail loudly instead of quietly.",
+  "approach": "One endpoint, one storage write, one column swap, one control on the profile page. Validation runs before anything touches storage.",
+  "expectations": [
+    "A member uploads a JPEG or PNG under 5 MB and sees it on their profile.",
+    "Anything larger, or any other type, is rejected with the reason named.",
+    "Every stored photo is a 256 by 256 square.",
+    "Nobody can change another member's photo."
+  ],
+  "context": [
+    "The CSV export thumbnailer already depends on sharp 0.33.",
+    "Express 5 exposes content length before the body is buffered.",
+    "The avatars bucket already has a weekly orphan sweep."
+  ],
+  "decisions": [
+    {
+      "decision": "Resize on the server, not in the browser.",
+      "why": "Two phones produce two different images from the same file. The server is the only place a 256 by 256 square is guaranteed.",
+      "rejected": "Client-side canvas resize before upload"
+    },
+    {
+      "decision": "Reject before reading the body.",
+      "why": "Content length is known up front, so a 500 MB file costs nothing.",
+      "rejected": "Buffer the upload first, then check its size"
+    }
+  ],
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  }
+}

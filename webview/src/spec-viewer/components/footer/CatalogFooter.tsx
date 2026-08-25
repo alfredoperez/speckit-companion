@@ -93,8 +93,8 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
     );
     const settled = vs.status === 'completed' || vs.status === 'archived';
     let context = '';
-    if (stepInFlight) context = 'Step running — actions unlock when it settles';
-    else if (settled) context = vs.status === 'archived' ? 'Archived — read-only' : 'Run complete';
+    if (stepInFlight) context = 'Step running, actions unlock when it settles';
+    else if (settled) context = vs.status === 'archived' ? 'Archived, read-only' : 'Run complete';
     else if (forward) context = `Next: ${forward.label}`;
 
     // Workflow-provided commands collapse into an "Other actions" menu.

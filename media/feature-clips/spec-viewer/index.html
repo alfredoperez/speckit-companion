@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1836, height=1164" />
+    <title>Spec viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* ==========================================================================
+         THEME TOKENS  ·  everything this clip's own chrome draws
+         --------------------------------------------------------------------
+         Named by ROLE, not by appearance, so a landing-page restyle is a
+         search-and-replace inside this block and nothing else.
+
+         NOT THEMEABLE: the product screenshots under the chrome. They carry
+         VS Code's own dark palette, baked into the PNG at capture time. A
+         light-themed landing page needs the stories re-captured against a
+         light VS Code theme, not a token change here.
+         ========================================================================== */
+      :root {
+        /* --- ground: shows only if the camera ever pulls past the capture edge */
+        --clip-ground: #0a0d0e;
+
+        /* --- marker: the outline drawn on the region being named */
+        --marker-color:   #7ff0c4;
+        --marker-width:   3px;
+        --marker-radius:  10px;
+        --marker-halo:    0 0 0 6px rgba(127,240,196,0.13);
+        --marker-shadow:  0 18px 46px rgba(0,0,0,0.55);
+
+        /* --- scrim: how hard everything outside the marked region is pushed back */
+        --scrim-color:    rgba(4,7,8,0.62);
+
+        /* --- label: the small pill naming the region */
+        --label-font:     "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+        --label-size:     32px;
+        --label-weight:   500;
+        --label-tracking: 0.004em;
+        --label-fg:       #eef4f1;
+        --label-bg:       rgba(12,17,19,0.94);
+        --label-border:   rgba(127,240,196,0.28);
+        --label-radius:   10px;
+        --label-pad-y:    11px;
+        --label-pad-x:    18px;
+        --label-gap:      14px;   /* distance from the marker edge */
+        --label-dot:      var(--marker-color);
+        --label-dot-size: 9px;
+        --label-shadow:   0 14px 34px rgba(0,0,0,0.5);
+      }
+
+      html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+
+      /* ---- track 0 · the captured product surface, moved by one camera ---- */
+      #stage { position:absolute; left:0; top:0; width:1836px; height:1164px; overflow:hidden; }
+      #cam   { position:absolute; left:0; top:0; width:1836px; height:1164px; }
+      /* OFFSET: this capture's content sits at the top of its own surface, so the
+         image is pushed down to centre it and the frame ground (which is the
+         captured panel's own flat colour) continues it seamlessly. 0 = flush. */
+      .shot  { position:absolute; left:0; top:0px; width:1836px; height:1164px; display:block; }
+
+      /* ---- track 1 · the annotation, in frame coordinates ---- */
+      #anno { position:absolute; left:0; top:0; width:1836px; height:1164px; pointer-events:none; }
+      #hi {
+        position:absolute; left:0; top:0; width:10px; height:10px;
+        border:var(--marker-width) solid var(--marker-color);
+        border-radius:var(--marker-radius);
+        box-shadow: 0 0 0 4000px var(--scrim-color), var(--marker-halo), var(--marker-shadow);
+      }
+      .lbl {
+        position:absolute; left:calc(-1 * var(--marker-width)); bottom:100%;
+        margin-bottom:var(--label-gap);
+        display:inline-flex; align-items:center; gap:12px; white-space:nowrap;
+        padding:var(--label-pad-y) var(--label-pad-x);
+        background:var(--label-bg);
+        border:1px solid var(--label-border);
+        border-radius:var(--label-radius);
+        box-shadow:var(--label-shadow);
+        font-family:var(--label-font); font-size:var(--label-size);
+        font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
+        color:var(--label-fg); line-height:1.05;
+      }
+      .lbl::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+                     border-radius:50%; background:var(--label-dot); }
+      .lbl.below { bottom:auto; top:100%; margin-bottom:0; margin-top:var(--label-gap); }
+      .lbl.flip  { left:auto; right:calc(-1 * var(--marker-width)); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="10.1" data-fps="30"
+         data-width="1836" data-height="1164">
+
+      <div id="stage" class="clip" data-start="0" data-duration="10.1" data-track-index="0">
+        <!-- the camera is deliberately larger than the frame while punched in -->
+        <div id="cam" data-layout-allow-overflow>
+        <img class="shot" id="sh0" src="assets/captures/spec-a7.png" alt="" />
+        </div>
+      </div>
+
+      <div id="anno" class="clip" data-start="0" data-duration="10.1" data-track-index="1">
+        <!-- one label per beat, stacked on the same anchor; only one is ever visible -->
+        <div id="hi" data-layout-allow-overlap>
+        <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion>Requirements read as sentences</div>
+        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>On this page</div>
+        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>Sub-documents hang off their step</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================================
+         MOTION CONSTANTS  ·  timing only; every colour/size is a CSS token
+         ================================================================== */
+      var MOVE_DUR  = 0.85;        // seconds for one camera move
+      var MOVE_EASE = "power3.inOut";
+      var IN_EASE   = "power3.out";
+      var LBL_IN    = 0.34, LBL_OUT = 0.24;
+
+      /* Capture coordinate space: the story was screen-grabbed at this CSS
+         size (at DPR 2), so every rect below is a real measured element box
+         from the captured DOM, not an eyeballed coordinate. */
+      var CW = 1224, CH = 776;
+      var FW = 1836, FH = 1164;
+      var K  = FW / CW;                      // capture px -> frame px at rest
+      var OFFY  = 0;       // see .shot in the stylesheet
+      var CLAMP = true;   // keep the frame inside the capture
+
+      /* REST is the framing the clip sits at when nothing is being named.
+         Identity for full-surface captures; a fixed fit for the component
+         captures, whose story renders smaller than the frame. */
+      var REST = null;   /* assigned once camFit exists, below */
+
+      function camFit(r, pad, maxS, cx, cy) {
+        var w = r[2] * K, h = r[3] * K;
+        var s = Math.min((FW - 2*pad) / w, (FH - 2*pad) / h, maxS);
+        if (s < 1) s = 1;
+        var ccx = (cx == null ? (r[0] + r[2]/2) : cx) * K;
+        var ccy = (cy == null ? (r[1] + r[3]/2) : cy) * K + OFFY;
+        var tx = FW/2 - s*ccx, ty = FH/2 - s*ccy;
+        if (CLAMP) {   // never let the frame see past the edge of the capture
+          tx = Math.min(0, Math.max(FW - s*FW, tx));
+          ty = Math.min(0, Math.max(FH - s*FH, ty));
+        }
+        return { s:s, x:tx, y:ty };
+      }
+      REST = { s:1, x:0, y:0 };
+
+      function proj(r, cam) {
+        return { x: cam.s*r[0]*K + cam.x, y: cam.s*(r[1]*K + OFFY) + cam.y,
+                 w: cam.s*r[2]*K,          h: cam.s*r[3]*K };
+      }
+
+      /* every r is a real element box measured off the captured DOM,
+         in the capture's own CSS pixels: [x, y, width, height] */
+      var BEATS = [
+        {"t":0.65,"r":[216,88,696,352],"pad":130,"maxS":2,"label":"Requirements read as sentences"},
+        {"t":3.35,"r":[952,103,256,230],"pad":170,"maxS":2.6,"label":"On this page"},
+        {"t":5.85,"r":[4,152,199,251],"pad":160,"maxS":2.4,"label":"Sub-documents hang off their step"},
+        {"t":8.35,"rest":true,"move":0.9}
+      ];
+      var CUTS  = [
+
+      ];
+
+      /* resolve every camera + projected rect up front, so all tweens can be
+         fromTo (explicit start AND end) and the timeline seeks identically
+         whatever order the renderer asks for frames in */
+      var solved = BEATS.map(function (b) {
+        var cam = (b.rest || b.noZoom) ? REST : camFit(b.r, b.pad, b.maxS, b.cx, b.cy);
+        return { b:b, cam:cam, rect: b.rest ? null : proj(b.r, cam) };
+      });
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      gsap.set("#cam", { transformOrigin:"0 0", x:REST.x, y:REST.y, scale:REST.s });
+      gsap.set("#hi",  { autoAlpha:0, transformOrigin:"50% 50%" });
+      gsap.set(".lbl", { autoAlpha:0 });
+      gsap.set(".shot", { autoAlpha:0 });
+      gsap.set("#sh0", { autoAlpha:1 });
+
+      /* park the marker on the first real region so its pre-roll state is sane */
+      (function () {
+        var first = solved.find(function (s) { return s.rect; });
+        if (first) gsap.set("#hi", { left:first.rect.x, top:first.rect.y, width:first.rect.w, height:first.rect.h });
+      })();
+
+      /* a label that would be clipped off the top hangs under its marker instead */
+      var li = -1;
+      solved.forEach(function (s) {
+        if (!s.b.label) return;
+        li++;
+        var el = document.getElementById("lbl" + li);
+        if (s.b.below || (s.rect && s.rect.y < 90)) el.classList.add("below");
+        if (s.b.flip) el.classList.add("flip");
+        s.lbl = "#lbl" + li;
+      });
+
+      /* Every fromTo carries immediateRender:false. Without it GSAP applies a
+         tween's FROM values the moment the tween is created, so the last
+         dissolve's "from" would win at t=0 and frame zero would show the
+         wrong capture. Initial state comes only from the gsap.set calls above. */
+      var prevCam = REST, prevRect = null;
+
+      /* One beat = one camera move plus one marked region.
+         The marker never MORPHS between regions: it clears as the camera
+         leaves, its geometry is re-set while it is invisible, and it settles
+         back in once the camera has arrived. Only opacity and a uniform
+         scale are ever tweened on it, so nothing animates a layout property
+         and nothing stutters under the seek-by-frame capture engine. */
+      solved.forEach(function (s, i) {
+        var b = s.b, cam = s.cam, dur = b.move || MOVE_DUR;
+
+        tl.fromTo("#cam",
+          { x:prevCam.x, y:prevCam.y, scale:prevCam.s },
+          { x:cam.x, y:cam.y, scale:cam.s, duration:dur, ease:MOVE_EASE, immediateRender:false }, b.t);
+
+        if (prevRect) {
+          tl.fromTo("#hi", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, b.t);
+          if (solved[i-1].lbl)
+            tl.fromTo(solved[i-1].lbl, { autoAlpha:1 }, { autoAlpha:0, duration:LBL_OUT, ease:"power2.in", immediateRender:false }, b.t);
+        }
+
+        if (s.rect) {
+          var lands = b.t + dur * 0.66;
+          tl.set("#hi", { left:s.rect.x, top:s.rect.y, width:s.rect.w, height:s.rect.h },
+                 prevRect ? b.t + 0.26 : b.t);
+          tl.fromTo("#hi", { autoAlpha:0, scale:1.035 },
+            { autoAlpha:1, scale:1, duration:0.42, ease:IN_EASE, immediateRender:false }, lands);
+          if (s.lbl)
+            tl.fromTo(s.lbl, { autoAlpha:0, y:10 },
+              { autoAlpha:1, y:0, duration:LBL_IN, ease:"power2.out", immediateRender:false }, lands + 0.12);
+        }
+
+        prevCam = cam;
+        prevRect = s.rect;
+      });
+
+      /* state cuts and dissolves between captures */
+      CUTS.forEach(function (c) {
+        if (c.fade) {
+          tl.fromTo("#sh" + c.from, { autoAlpha:1 }, { autoAlpha:0, duration:c.fade, ease:"power1.inOut", immediateRender:false }, c.t);
+          tl.fromTo("#sh" + c.to,   { autoAlpha:0 }, { autoAlpha:1, duration:c.fade, ease:"power1.inOut", immediateRender:false }, c.t);
+        } else {
+          tl.set("#sh" + c.from, { autoAlpha:0 }, c.t);
+          tl.set("#sh" + c.to,   { autoAlpha:1 }, c.t);
+        }
+      });
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

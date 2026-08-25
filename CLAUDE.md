@@ -10,6 +10,7 @@ Read the matching doc instead of re-deriving from code:
 - `docs/architecture.md` — structure and module map.
 - `docs/capture-and-timing.md` + `docs/spec-context-schema.md` — how `.spec-context.json` gets captured, and its schema (read-then-merge writes; `transitions[]` is append-only).
 - `docs/viewer-states.md`, `docs/sidebar.md`, `docs/template-profiles.md` — viewer state machine, sidebar reference, pipeline/workflow presets.
+- `docs/visual-assets.md`: how docs images and README GIFs are made and when to regenerate them. Everything in `docs/screenshots/generated/` is a build artifact of `scripts/capture-docs-images.mjs` (Storybook capture stories + Teamboard fixtures); the GIFs render from `media/feature-clips/` compositions. Any webview UI, styling, token, or fixture change makes them stale: regenerate, never hand-edit.
 - `.claude/review-checklist.md` — webview/CSS correctness invariants review scans for (`.sr-only` vs `hidden`, ellipsis trio, Preact string styles, etc.).
 - `speckit-extension/docs/publishing.md` — spec-kit extension release flow.
 

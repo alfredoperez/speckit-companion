@@ -1,0 +1,33 @@
+{
+  "workflow": "speckit",
+  "specName": "Profile photo upload",
+  "branch": "041-profile-photo-upload",
+  "selectedAt": "2026-05-19T13:04:11.402Z",
+  "profile": "standard",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-05-19T13:04:11.402Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-05-19T13:09:52.118Z"
+    }
+  ],
+  "last_action": "specify completed",
+  "intent": "Let a Teamboard member set their own profile photo, and make a bad file fail loudly instead of quietly.",
+  "expectations": [
+    "A member uploads a JPEG or PNG under 5 MB and sees it on their profile.",
+    "Anything larger, or any other type, is rejected with the reason named.",
+    "Every stored photo is a 256 by 256 square.",
+    "Nobody can change another member's photo."
+  ]
+}

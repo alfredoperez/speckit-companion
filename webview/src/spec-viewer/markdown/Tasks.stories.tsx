@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { MarkdownDoc } from './storyDoc';
 import tasks060 from '../../../../specs/060-spec-context-tracking/tasks.md?raw';
-import tasks394 from '../../../../specs/394-adopt-codex-design/tasks.md?raw';
-import context394 from '../../../../specs/394-adopt-codex-design/.spec-context.json?raw';
+import tasks394 from '../__fixtures__/specs/394-adopt-codex-design/tasks.md?raw';
+import context394 from '../__fixtures__/specs/394-adopt-codex-design/.spec-context.json?raw';
 
 /** The viewer's **Tasks** page — a whole real phased tasks.md. */
 const meta: Meta<typeof MarkdownDoc> = {
