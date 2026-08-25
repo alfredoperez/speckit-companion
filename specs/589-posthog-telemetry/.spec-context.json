@@ -1,0 +1,536 @@
+{
+  "workflow": "companion",
+  "specName": "PostHog Telemetry",
+  "branch": "589-posthog-telemetry",
+  "selectedAt": "2026-08-25T18:15:04.376Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T18:15:04.376Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T18:19:33.501Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T19:29:21.119Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:32:28.274Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:33:10.686Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T19:33:38.251Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T19:34:01.943Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:37:39.528Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T19:38:06.072Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T19:40:15.642Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:44:57.180Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:45:32.356Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:47:42.938Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:48:34.065Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:48:34.120Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:49:52.650Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:50:27.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:50:54.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:51:29.094Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:51:50.218Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:52:31.142Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:52:31.203Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:53:19.544Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:53:19.600Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T19:54:19.902Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T19:54:19.985Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "core"
+    ],
+    "synced": [
+      "core"
+    ]
+  },
+  "last_action": "all 15 tasks done — full suite 1913/1913, tsc clean; awaiting PostHog key for SC-001 rollout",
+  "coverage": {
+    "FR-001": {
+      "title": "Anonymous usage events are delivered to the new analytics backend and visible in its dashboard",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the wire shape (PostHog capture contract)"
+      ]
+    },
+    "FR-002": {
+      "title": "Turning the extension's own telemetry setting off stops all events",
+      "tasks": [
+        "T002",
+        "T007"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the dual gate",
+        "src/core/__tests__/telemetry.test.ts::the editor-wide gate (vscode.env.isTelemetryEnabled)"
+      ]
+    },
+    "FR-003": {
+      "title": "Editor-wide telemetry off stops all events even with the extension switch on; runtime toggles apply without restart",
+      "tasks": [
+        "T001",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the editor-wide gate (vscode.env.isTelemetryEnabled)"
+      ]
+    },
+    "FR-004": {
+      "title": "Every event carries extension version, editor version, platform, and the anonymous per-install identifier",
+      "tasks": [
+        "T002",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the common properties (service-attached)"
+      ]
+    },
+    "FR-005": {
+      "title": "Payloads keep the existing privacy contract: enum-like values only, never user-authored text or personal info",
+      "tasks": [
+        "T003",
+        "T009"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the common properties (service-attached)",
+        "src/core/__tests__/telemetry.test.ts::engagement events"
+      ]
+    },
+    "FR-006": {
+      "title": "All existing event names and property shapes are preserved unchanged",
+      "tasks": [
+        "T002",
+        "T003",
+        "T010"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts",
+        "src/speckit/__tests__/activationInstallNudge.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Install-prompt funnel readable as a shown-to-clicked conversion rate per surface",
+      "tasks": [
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::the funnel contract (pinned identifiers",
+        "byte-for-byte)"
+      ]
+    },
+    "FR-008": {
+      "title": "Retired backend's client library and credential are removed from the shipped extension",
+      "tasks": [
+        "T002",
+        "T004",
+        "T013"
+      ]
+    },
+    "FR-009": {
+      "title": "New ingestion credential is write-only and safe to publish",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-010": {
+      "title": "Telemetry documentation describes querying the new backend and drops all references to the retired one",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-011": {
+      "title": "Telemetry failures stay invisible and harmless to users regardless of backend availability",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "src/core/__tests__/telemetry.test.ts::silent failure (a dead backend never surfaces)"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 12,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: core (Telemetry carries shapes never content; engagement counted without naming what was engaged)",
+    "area: src/core/telemetry.ts (TelemetryService is the sole reporter surface; all call sites use sendTelemetryEvent)",
+    "constraint: existing event names/shapes frozen; privacy contract unchanged",
+    "constraint: never reintroduce a bare /releases/latest lookup or rename published screenshots (repo gotchas)"
+  ],
+  "intent": "Restore anonymous usage telemetry by replacing the dead Azure App Insights backend with PostHog while keeping every existing event, switch guarantee, and privacy promise unchanged",
+  "expectations": [
+    "No recovery or import of historical Azure data",
+    "No remediation for old installs still posting to the dead endpoint (they resume on upgrade)",
+    "No new events, renamed events, or payload additions beyond restoring the common facts the old reporter attached"
+  ],
+  "approach": "Swap the transport inside TelemetryService to a direct fetch POST against PostHog's capture endpoint, re-implement the editor-wide gate with vscode.env.isTelemetryEnabled + onDidChangeTelemetryEnabled, and re-attach the common facts (versions, platform, machineId as distinct_id) in the service. Public API and all call sites stay frozen; the old dependency, its mock, and the Azure docs are removed in the same change.",
+  "decisions": [
+    {
+      "decision": "Direct fetch to PostHog capture API, no SDK",
+      "why": "removes a dependency instead of trading it for one; no flush timers in the extension host; trivially small volume; silent-failure by construction",
+      "rejected": "posthog-node (batching/retry/flush lifecycle we would have to defuse)"
+    },
+    {
+      "decision": "Cached editor-wide gate fed by onDidChangeTelemetryEnabled",
+      "why": "both APIs are spec-pinned; mid-session toggles apply instantly in both directions without restart",
+      "rejected": "reading isTelemetryEnabled fresh per send (drops the pinned listener API)"
+    },
+    {
+      "decision": "distinct_id = vscode.env.machineId with $process_person_profile: false",
+      "why": "restores what the old reporter attached, adds no new collection, anonymous ingestion class matches the privacy contract",
+      "rejected": "minting a per-install UUID in globalState (a second identity, new state)"
+    },
+    {
+      "decision": "Committed POSTHOG_PROJECT_API_KEY constant, empty until the project exists",
+      "why": "project keys are write-only like the old ingestion credential; empty key keeps the no-op path so the code merges before the account is created",
+      "rejected": "build-time env injection (breaks plain-checkout builds for a value safe to commit)"
+    },
+    {
+      "decision": "Shared fetch-capture test helper lives at src/core/__tests__/helpers/telemetryFetch.ts",
+      "why": "the production tsconfig (rootDir ./src) also type-checks test files, so a helper outside src/ fails TS6059; inside __tests__ it is excluded from test discovery and reusable by both suites",
+      "rejected": "tests/helpers/ (outside rootDir, breaks npm run compile)"
+    },
+    {
+      "decision": "Default-key behavior test asserts conditionally on POSTHOG_PROJECT_API_KEY being non-empty",
+      "why": "the suite stays green both before and after the maintainer pastes the real key, without edits",
+      "rejected": "hard-coding the empty-key expectation (breaks the moment the key lands)"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Transport swap confined to TelemetryService: fetch-to-PostHog, re-implemented dual gate, service-attached common props; API and call sites frozen; Azure dep, mock, and docs removed.",
+      "key_finding": "The 501-line telemetry test suite encodes the privacy contract and must survive the swap re-pointed at a fetch mock — it is the regression net for the frozen event catalog."
+    },
+    "tasks": {
+      "summary": "15 tasks: Setup + 5 story phases + Polish; sequential spine on telemetry.ts/test (frozen API), parallel waves only in US1 tests/dep-removal, docs (US5), and Polish"
+    },
+    "implement": {
+      "summary": "Transport swapped to fire-and-forget PostHog capture POSTs behind the frozen API; editor-wide gate re-implemented with live toggling; common facts re-attached; old dependency, credential, mock, and Azure docs fully excised; 1913 tests green"
+    }
+  },
+  "telemetryInstanceId": "96ba1237-4b1c-44f2-a0e5-82eebf8f7e39",
+  "currentTask": "T015",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Extended the vscode mock env with machineId, settable isTelemetryEnabled, an onDidChangeTelemetryEnabled event stub with a __fireTelemetryEnabledChange driver, plus a vscode.version export",
+      "files": [
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Swapped the transport: deleted the reporter import/construction and the App Insights connection string, added the empty POSTHOG_PROJECT_API_KEY constant, and sendEvent now fire-and-forget POSTs one capture payload (api_key, event, distinct_id=machineId, $process_person_profile:false) to PostHog via global fetch",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Re-pointed the 501-line telemetry suite at a captured global-fetch mock (shared helper in tests/helpers/telemetryFetch.ts); every behavior block kept, plus new wire-shape and silent-failure blocks — 50/50 green",
+      "files": [
+        "src/core/__tests__/telemetry.test.ts",
+        "tests/helpers/telemetryFetch.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Removed @vscode/extension-telemetry end-to-end: npm uninstall (package.json + lock), deleted the reporter mock and its jest moduleNameMapper entry, and re-pointed the activationInstallNudge suite (also asserting through the old mock) at the shared fetch helper — 14/14 green",
+      "files": [
+        "package.json",
+        "package-lock.json",
+        "jest.config.js",
+        "tests/__mocks__/@vscode/extension-telemetry.ts",
+        "src/speckit/__tests__/activationInstallNudge.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified activation wiring unchanged: TelemetryService construction, initTelemetry, and disposal registration in extension.ts line up with the swapped service (read-and-confirm, no edit)",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Re-implemented the editor-wide gate: cached boolean seeded from vscode.env.isTelemetryEnabled, kept live by an onDidChangeTelemetryEnabled subscription disposed in dispose(); sendEvent now requires both gates open",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Dual-gate tests: extension switch off, editor-wide off with extension on, mid-session toggle via the fireable mock event without reconstructing the service, and subscription disposal — all green",
+      "files": [
+        "src/core/__tests__/telemetry.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Service now merges extensionVersion (manifest via getExtension), vscodeVersion, and platform — sourced once at construction — into every event's properties, event-specific keys winning on collision",
+      "files": [
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Common-property tests: three facts on every payload, unknown-manifest fallback, extension.activated collision resolves to the event's own values, and the five bare engagement events carry the common facts and nothing else",
+      "files": [
+        "src/core/__tests__/telemetry.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Funnel-contract tests pin companion.installPrompt with actions shown/clicked, the seven-surface closed allow-list verbatim on the wire and at the coercion boundary, and the action+surface-only payload shape",
+      "files": [
+        "src/core/__tests__/telemetry.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Rewrote the query docs as a PostHog guide: project location, Activity/Trends walkthrough of the frozen catalog, the install-prompt funnel as a native two-step funnel with surface breakdown, HogQL equivalents of the three KQL samples; common-facts and machine-id rows added to What-is-collected; zero App Insights references remain",
+      "files": [
+        "docs/telemetry.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Deleted the Azure workbook (no target backend remains); historical CHANGELOG mentions untouched",
+      "files": [
+        "docs/telemetry-workbook.json"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Repo-wide sweep clean: fixed the stale connection-string comment in the activation wiring and trimmed the key doc's historical aside; remaining mentions live only in CHANGELOG history and this spec's own docs",
+      "files": [
+        "src/extension.ts",
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "User-facing changelog entry under Unreleased: backend migrated to PostHog, both switch guarantees kept, privacy contract unchanged, old library and credential removed",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Validated: full jest suite 1913/1913 across 134 suites, tsc clean; SC-002/003 gate tests, SC-004 common-facts tests, SC-005 funnel doc+contract test, SC-006 sweep clean, SC-007 privacy blocks green; SC-001 pending the maintainer's PostHog key (rollout item)",
+      "files": [
+        "full suite run"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite after the transport swap",
+      "command": "npm test",
+      "result": "134 suites, 1913 tests, all pass",
+      "warnings": [
+        "a pre-existing worker-exit warning from an untouched suite; the two telemetry suites are clean under --detectOpenHandles"
+      ]
+    },
+    {
+      "what": "production TypeScript compile",
+      "command": "npx tsc --noEmit",
+      "result": "no errors"
+    },
+    {
+      "what": "retired-backend sweep across src/, docs/, tests/, package manifests, README",
+      "command": "grep -rni \"app insights|applicationinsights|APP_INSIGHTS|InstrumentationKey|southcentralus|extension-telemetry\"",
+      "result": "zero references outside CHANGELOG history and this spec directory"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "SC-001 (event visible in dashboard within 5 minutes) is unverifiable until the maintainer creates the PostHog project and commits the phc_ key into POSTHOG_PROJECT_API_KEY — the committed key is empty, so shipped builds stay silent exactly as today",
+      "step": "implement"
+    },
+    {
+      "note": "The repo has no eslint config or lint script, so the lint half of T015 could not run; validation rests on jest + tsc",
+      "step": "implement"
+    }
+  ]
+}

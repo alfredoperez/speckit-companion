@@ -2,9 +2,9 @@
  * Anonymous, PII-free telemetry for provider / pipeline-profile / beta-flag
  * adoption and the spec lifecycle.
  *
- * Single home for: the committed connection string, the {@link TelemetryService}
- * wrapper around `@vscode/extension-telemetry`, and the helpers that read a
- * spec's profile + telemetry correlation id off `.spec-context.json`.
+ * Single home for: the committed PostHog project key, the {@link TelemetryService}
+ * that posts each event to PostHog's capture endpoint, and the helpers that read
+ * a spec's profile + telemetry correlation id off `.spec-context.json`.
  *
  * Privacy contract: every payload carries only enum-like values, booleans,
  * versions, counts, and a random per-spec UUID — never prompt content, file
@@ -13,19 +13,22 @@
 
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { ConfigKeys, WorkflowSteps } from './constants';
 import { coerceLegacyBoolean } from './settingsMigration';
 import { readSpecContextSync, SPEC_CONTEXT_FILENAME } from '../features/specs/specContextReader';
 import { updateSpecContext } from '../features/specs/specContextWriter';
 
 /**
- * Application Insights connection string. This is a **write-only ingestion
- * credential** — it can only push events, never read them — so it is safe to
- * commit (per the tracking issue).
+ * PostHog project API key. This is a **write-only ingestion credential** — it
+ * can only capture events, never read them — so it is safe to commit. An
+ * empty key constructs no transport and sends nothing.
  */
-export const APP_INSIGHTS_CONNECTION_STRING =
-    'InstrumentationKey=536761b8-e09d-4c53-8c7b-23b54523c17f;IngestionEndpoint=https://southcentralus-3.in.applicationinsights.azure.com/;LiveEndpoint=https://southcentralus.livediagnostics.monitor.azure.com/;ApplicationId=08e87c2e-a745-4eca-90e3-e00bae6f4256';
+export const POSTHOG_PROJECT_API_KEY: string = 'phc_vemqYCwRiRGR7WkMZdcpi3Zy22EWbSGwPbFrcJacPDQT';
+
+/** PostHog single-event capture endpoint (US Cloud). */
+const POSTHOG_CAPTURE_URL = 'https://us.i.posthog.com/i/v0/e/';
+
+const EXTENSION_ID = 'alfredoperez.speckit-companion';
 
 export type TelemetryProperties = Record<string, string>;
 
@@ -52,7 +55,7 @@ export function phaseTelemetryId(stepName: string): string {
  * profiles is dropped (returns `undefined`) — never sent verbatim.
  */
 export function profileTelemetryId(profile: string | undefined): 'standard' | 'turbo' | undefined {
-    return profile === 'turbo' ? 'turbo' : profile === 'standard' ? 'standard' : undefined;
+    return profile === 'standard' || profile === 'turbo' ? profile : undefined;
 }
 
 /**
@@ -76,8 +79,6 @@ export interface BetaSnapshot {
 /** Read the reported `speckit.*` settings into a string-valued snapshot. */
 export function buildBetaSnapshot(): BetaSnapshot {
     const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-    const bool = (key: string, fallback: boolean): string =>
-        String(config.get<boolean>(key, fallback));
     // The former tri-state settings (#259) funnel through coerceLegacyBoolean
     // so an un-migrated scope reports a clean boolean, not a stale 'beta'/'on'/'off'.
     const coerced = (key: string, fallback: boolean): string =>
@@ -87,7 +88,7 @@ export function buildBetaSnapshot(): BetaSnapshot {
         defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
-        telemetry: bool('telemetry', true),
+        telemetry: String(config.get<boolean>('telemetry', true)),
     };
 }
 
@@ -142,8 +143,9 @@ export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     }
     if (!ctx) return {};
 
+    const profile = profileTelemetryId(ctx.profile);
     if (ctx.telemetryInstanceId) {
-        return { profile: profileTelemetryId(ctx.profile), specInstanceId: ctx.telemetryInstanceId };
+        return { profile, specInstanceId: ctx.telemetryInstanceId };
     }
 
     const id = crypto.randomUUID();
@@ -151,25 +153,40 @@ export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     // hook write that lands between our read above and this write isn't clobbered
     // (we touch only telemetryInstanceId). Fire-and-forget: a failed backfill is
     // non-fatal — the id is still returned for this in-flight event.
-    void updateSpecContext(specDir, c => ({ ...c, telemetryInstanceId: id }), ctx).catch(() => {
-        /* a failed backfill is non-fatal — the id is still used for this event */
-    });
-    return { profile: profileTelemetryId(ctx.profile), specInstanceId: id };
+    void updateSpecContext(specDir, c => ({ ...c, telemetryInstanceId: id }), ctx).catch(() => {});
+    return { profile, specInstanceId: id };
 }
 
 /**
- * Wraps `TelemetryReporter`. Constructed only when the connection string is
- * non-empty; `sendEvent` fires only when the reporter exists AND
- * `speckit.telemetry` is true (the reporter adds VS Code's global-telemetry
- * gate on top).
+ * Posts each event straight to PostHog's capture endpoint: one fire-and-forget
+ * request per event — no queue, no retries, errors swallowed — so a dead or
+ * unreachable backend can never surface to the user. Sends only when the
+ * project key is non-empty AND the editor-wide telemetry gate is open AND
+ * `speckit.telemetry` is true; either gate closing stops events instantly.
+ *
+ * Merges the common facts the retired reporter attached automatically
+ * (extension version, VS Code version, platform) into every event's
+ * properties; event-specific keys win on collision.
  */
 export class TelemetryService {
-    private reporter: TelemetryReporter | undefined;
+    private readonly apiKey: string;
+    private globalTelemetryEnabled: boolean;
+    private readonly telemetryChangeSubscription: vscode.Disposable;
+    private readonly commonProperties: TelemetryProperties;
 
-    constructor(connectionString: string = APP_INSIGHTS_CONNECTION_STRING) {
-        if (connectionString) {
-            this.reporter = new TelemetryReporter(connectionString);
-        }
+    constructor(apiKey: string = POSTHOG_PROJECT_API_KEY) {
+        this.apiKey = apiKey;
+        this.globalTelemetryEnabled = vscode.env.isTelemetryEnabled;
+        this.telemetryChangeSubscription = vscode.env.onDidChangeTelemetryEnabled(enabled => {
+            this.globalTelemetryEnabled = enabled;
+        });
+        this.commonProperties = {
+            extensionVersion: String(
+                vscode.extensions.getExtension(EXTENSION_ID)?.packageJSON?.version ?? 'unknown',
+            ),
+            vscodeVersion: vscode.version,
+            platform: process.platform,
+        };
     }
 
     private isEnabled(): boolean {
@@ -179,14 +196,24 @@ export class TelemetryService {
     }
 
     sendEvent(name: string, properties?: TelemetryProperties): boolean {
-        if (!this.reporter) return false;
+        if (!this.apiKey) return false;
+        if (!this.globalTelemetryEnabled) return false;
         if (!this.isEnabled()) return false;
-        this.reporter.sendTelemetryEvent(name, properties);
+        void fetch(POSTHOG_CAPTURE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                api_key: this.apiKey,
+                event: name,
+                distinct_id: vscode.env.machineId,
+                properties: { $process_person_profile: false, ...this.commonProperties, ...properties },
+            }),
+        }).catch(() => {});
         return true;
     }
 
     dispose(): void {
-        void this.reporter?.dispose();
+        this.telemetryChangeSubscription.dispose();
     }
 }
 
@@ -205,10 +232,19 @@ export function sendTelemetryEvent(name: string, properties?: TelemetryPropertie
     return singleton?.sendEvent(name, properties) ?? false;
 }
 
-/** The surfaces the install prompt appears on. */
-export type InstallPromptSurface = 'createSpec' | 'activity' | 'sidebarBadge' | 'pinnedRow' | 'welcome' | 'terminal' | 'activation';
+function sendEventOncePerKey<K extends string>(
+    seen: Set<K>,
+    key: K,
+    name: string,
+    properties?: TelemetryProperties,
+): void {
+    if (seen.has(key)) return;
+    if (sendTelemetryEvent(name, properties)) {
+        seen.add(key);
+    }
+}
 
-const INSTALL_PROMPT_SURFACES: ReadonlySet<InstallPromptSurface> = new Set<InstallPromptSurface>([
+const INSTALL_PROMPT_SURFACES = [
     'createSpec',
     'activity',
     'sidebarBadge',
@@ -216,13 +252,14 @@ const INSTALL_PROMPT_SURFACES: ReadonlySet<InstallPromptSurface> = new Set<Insta
     'welcome',
     'terminal',
     'activation',
-]);
+] as const;
+
+/** The surfaces the install prompt appears on. */
+export type InstallPromptSurface = (typeof INSTALL_PROMPT_SURFACES)[number];
 
 /** Coerce an untrusted surface value (e.g. a viewsWelcome command arg) to a known surface, else undefined. */
 export function coerceInstallPromptSurface(value: unknown): InstallPromptSurface | undefined {
-    return typeof value === 'string' && INSTALL_PROMPT_SURFACES.has(value as InstallPromptSurface)
-        ? (value as InstallPromptSurface)
-        : undefined;
+    return INSTALL_PROMPT_SURFACES.find(surface => surface === value);
 }
 
 /** The two funnel moments measured for the install banner. */
@@ -240,11 +277,11 @@ const installPromptShownSurfaces = new Set<InstallPromptSurface>();
  * sites (never user data), so they satisfy the privacy allow-list as-is.
  */
 export function reportInstallPromptShown(surface: InstallPromptSurface): void {
-    if (installPromptShownSurfaces.has(surface)) return;
     // Only burn the dedupe slot on a real emit — a show while telemetry is off/uninitialized must still be able to fire once it's enabled.
-    if (sendTelemetryEvent(INSTALL_PROMPT_EVENT, { action: 'shown', surface })) {
-        installPromptShownSurfaces.add(surface);
-    }
+    sendEventOncePerKey(installPromptShownSurfaces, surface, INSTALL_PROMPT_EVENT, {
+        action: 'shown',
+        surface,
+    });
 }
 
 /** Emit the install-banner "clicked" event tagged with the surface it came from. */
@@ -282,18 +319,12 @@ const livingSpecOpenedKeys = new Set<string>();
  * telemetry is off/uninitialized can still fire once it's enabled (the #506 rule).
  */
 export function reportSpecOpened(specKey: string): void {
-    if (specOpenedKeys.has(specKey)) return;
-    if (sendTelemetryEvent(SPEC_OPENED_EVENT)) {
-        specOpenedKeys.add(specKey);
-    }
+    sendEventOncePerKey(specOpenedKeys, specKey, SPEC_OPENED_EVENT);
 }
 
 /** Emit `livingSpec.opened` once per capability per session (same dedupe rules as {@link reportSpecOpened}). */
 export function reportLivingSpecOpened(specKey: string): void {
-    if (livingSpecOpenedKeys.has(specKey)) return;
-    if (sendTelemetryEvent(LIVING_SPEC_OPENED_EVENT)) {
-        livingSpecOpenedKeys.add(specKey);
-    }
+    sendEventOncePerKey(livingSpecOpenedKeys, specKey, LIVING_SPEC_OPENED_EVENT);
 }
 
 /** Emit `livingSpec.drift` — the drift report ran. A user-initiated run, counted each time. */

@@ -150,7 +150,7 @@ Every telemetry payload SHALL contain only enum-like values, booleans, versions,
 
 ### Engagement is counted without naming what was engaged
 
-The extension SHALL emit a bare event when a spec, a living spec, or a steering document is opened, and when a living-spec drift or sync runs — carrying no property at all, so a count can never be tied to a name or path. The install-banner funnel is likewise reported as fixed `shown`/`clicked` × surface literals produced only by our own call sites. The set of install-prompt surfaces is a closed allow-list (create-spec, activity, sidebar badge, pinned row, welcome, terminal); a surface value that arrives untrusted — such as a command argument wired from a `viewsWelcome` button — MUST be coerced to a known member of that allow-list before it is reported, and an unrecognized value dropped rather than sent. Opened-in-viewer events MUST be de-duplicated per session so a re-rendering panel cannot inflate the count, and the de-dupe key used for that MUST be an internal identity that is never sent. A de-dupe slot MUST be claimed only after an event actually emits, so an open that happened while telemetry was off or uninitialized still fires once telemetry becomes available.
+The extension SHALL emit a bare event when a spec, a living spec, or a steering document is opened, and when a living-spec drift or sync runs — carrying nothing event-specific (only the common facts the sending service attaches to every event), so a count can never be tied to a name or path. The install-banner funnel is likewise reported as fixed `shown`/`clicked` × surface literals produced only by our own call sites. The set of install-prompt surfaces is a closed allow-list (create-spec, activity, sidebar badge, pinned row, welcome, terminal); a surface value that arrives untrusted — such as a command argument wired from a `viewsWelcome` button — MUST be coerced to a known member of that allow-list before it is reported, and an unrecognized value dropped rather than sent. Opened-in-viewer events MUST be de-duplicated per session so a re-rendering panel cannot inflate the count, and the de-dupe key used for that MUST be an internal identity that is never sent. A de-dupe slot MUST be claimed only after an event actually emits, so an open that happened while telemetry was off or uninitialized still fires once telemetry becomes available.
 
 #### Scenario: the same spec is re-revealed in the viewer
 - **WHEN** the panel re-renders and would re-emit the open event
@@ -200,3 +200,27 @@ Terminal readiness, temp-file staging, path translation for cross-environment sh
 ## Uncovered
 
 _None — every file in the area was read._
+
+### Both telemetry switches gate every event and apply without restart
+
+The extension SHALL send an event only when the editor-wide telemetry gate and its own telemetry setting are both on. Either switch turning off MUST stop all events immediately, and turning it back on mid-session MUST resume sending — in both directions without a reload, tracked through the editor's own telemetry-changed notification rather than a per-send poll.
+
+#### Scenario: editor-wide telemetry is disabled mid-session
+- **WHEN** the editor-wide telemetry setting turns off while the extension is running
+- **THEN** no further events are sent, and re-enabling it resumes sending without reconstructing anything
+
+### Every event carries the common facts under an anonymous install identity
+
+The extension SHALL attach the extension version, editor version, and platform to every event it sends, and SHALL group events per install under the editor's own anonymized machine identifier processed anonymously (no person profile). Event-specific properties win over the attached common facts on a key collision, so call-site payloads stay frozen.
+
+#### Scenario: any event is inspected at the backend
+- **WHEN** a received event is opened
+- **THEN** it carries the extension version, editor version, and platform, grouped under an anonymous install identity that is never derived from the user
+
+### Telemetry delivery is fire-and-forget and silently fallible
+
+Each event SHALL be delivered as a single post with no queue, no retries, and no batching; a delivery failure of any kind (offline, outage, quota, non-success response) MUST surface nothing to the user and block nothing.
+
+#### Scenario: the analytics backend is unreachable
+- **WHEN** events fire while the backend is down
+- **THEN** the extension behaves normally and no error is surfaced or logged to the user
