@@ -320,6 +320,43 @@ describe('sidebar contributions', () => {
     });
 });
 
+describe('zero-spec merged welcome — viewsWelcome', () => {
+    const viewsWelcome: Array<{ view: string; contents: string; when?: string }> =
+        manifest.contributes.viewsWelcome;
+    const zeroSpecBlocks = viewsWelcome.filter(
+        w => w.view === SPECS_VIEW && w.contents.includes('Create your first spec')
+    );
+
+    it('renders exactly one block per zero-spec state — two mutually-exclusive variants', () => {
+        expect(zeroSpecBlocks).toHaveLength(2);
+        for (const block of zeroSpecBlocks) {
+            expect(block.when).toContain('speckit.detected');
+            expect(block.when).toContain('!speckit.constitutionNeedsSetup');
+        }
+        const companionAbsent = zeroSpecBlocks.filter(
+            b =>
+                b.when!.includes('!speckit.companion.installed') &&
+                b.when!.includes('!speckit.companion.installNudgeDismissed')
+        );
+        const companionInstalledOrDismissed = zeroSpecBlocks.filter(b =>
+            b.when!.includes('speckit.companion.installed || speckit.companion.installNudgeDismissed')
+        );
+        expect(companionAbsent).toHaveLength(1);
+        expect(companionInstalledOrDismissed).toHaveLength(1);
+    });
+
+    it('pins both welcome actions verbatim in each variant', () => {
+        for (const block of zeroSpecBlocks) {
+            expect(block.contents).toContain('Create your first spec](command:speckit.create)');
+            expect(block.contents).toContain('Open a live sample](command:speckit.openSampleSpec)');
+        }
+    });
+
+    it('registers the sample command in contributes.commands', () => {
+        expect(commandTitle('speckit.openSampleSpec')).toBeDefined();
+    });
+});
+
 describe('Companion install nudge — viewsWelcome', () => {
     const viewsWelcome: Array<{ view: string; contents: string; when?: string }> =
         manifest.contributes.viewsWelcome;

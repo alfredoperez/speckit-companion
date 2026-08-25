@@ -401,7 +401,8 @@ export function renderSpecifyCreationLifecyclePreamble(
     specDir: string | null,
     dispatchUtc: string,
     companionInstalled = false,
-    writerPath: string = WORKSPACE_WRITER_PATH
+    writerPath: string = WORKSPACE_WRITER_PATH,
+    telemetryInstanceId: string | null = null
 ): string {
     const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
     return [
@@ -422,6 +423,10 @@ export function renderSpecifyCreationLifecyclePreamble(
         '```json',
         '{',
         `  "workflow": "${workflowName}",`,
+        // The form-minted per-spec correlation id: persisting it here is what
+        // lets created → dispatched → completed join on one id, and what marks
+        // the spec as form-created for the watcher's terminal-created emit.
+        ...(telemetryInstanceId ? [`  "telemetryInstanceId": "${telemetryInstanceId}",`] : []),
         '  "specName": "<human-readable name derived from the spec directory slug, e.g. 108-my-feature → My Feature>",',
         '  "branch": "<output of: git rev-parse --abbrev-ref HEAD>",',
         `  "selectedAt": "${dispatchUtc}",`,

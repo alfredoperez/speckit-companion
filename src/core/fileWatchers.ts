@@ -18,6 +18,14 @@ import { shouldCloseImplement } from '../features/specs/implementCloseGuard';
 import { detectExternalTransition, transitionCache } from '../features/specs/transitionLogger';
 import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
 import type { TransitionEntry } from '../features/workflows/types';
+import {
+    getSpecTelemetryContext,
+    reportSpecCreated,
+    sendTelemetryEvent,
+    workflowTelemetryId,
+    SPEC_COMPLETED_EVENT,
+} from './telemetry';
+import { getConfiguredProviderType } from '../ai-providers/aiProvider';
 
 /**
  * Whether the single completion-notification toggle (step and task-phase) is on.
@@ -98,11 +106,23 @@ function setupClaudeDirectoryWatcher(
  * Re-derive viewer state on a `.spec-context.json` write so the open viewer's
  * timeline picks up the new transition without a reload (R008, NFR004). Shared
  * by the `.claude` watcher and the per-spec-directory context watcher.
+ *
+ * Also the funnel's completion seam: every path that can complete a spec —
+ * sidebar action, viewer lifecycle action, the Companion pipeline's terminal
+ * step (Python-written) — mutates this file, so the status-transition diff
+ * here is the single `spec.completed` owner (exactly once per transition into
+ * `completed`; the cache dedupes the two watchers that can route one file).
+ * On `created`, a context no form minted an id for (and that isn't the seeded
+ * sample) is a terminal-created spec: emit `spec.created` with
+ * `source: 'watcher'`, minting + back-filling the id.
+ *
+ * Exported for tests — production callers are the watchers in this module.
  */
-async function handleSpecContextChange(
+export async function handleSpecContextChange(
     uri: vscode.Uri,
     specViewer: SpecViewerProvider,
     outputChannel: vscode.OutputChannel,
+    opts?: { created?: boolean },
 ): Promise<void> {
     if (!uri.fsPath.endsWith(FEATURE_CONTEXT_FILE)) {
         return;
@@ -124,6 +144,25 @@ async function handleSpecContextChange(
 
         if (logMessage) {
             outputChannel.appendLine(logMessage);
+        }
+
+        if (opts?.created) {
+            // First sight via creation: the current status is a baseline, not an event.
+            transitionCache.seedStatus(specDir, data.status);
+            if (!data.telemetryInstanceId && !data.sampleSpec) {
+                const specTelemetry = getSpecTelemetryContext(specDir);
+                reportSpecCreated({
+                    providerId: getConfiguredProviderType(),
+                    workflow: workflowTelemetryId(data.workflow),
+                    specInstanceId: specTelemetry.specInstanceId ?? '',
+                    source: 'watcher',
+                });
+            }
+        } else if (transitionCache.diffStatus(specDir, data.status)) {
+            const specTelemetry = getSpecTelemetryContext(specDir);
+            sendTelemetryEvent(SPEC_COMPLETED_EVENT, {
+                ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
+            });
         }
 
         void specViewer.refreshContextIfDisplaying(uri.fsPath);
@@ -166,12 +205,40 @@ function setupSpecContextWatchers(
             // Refresh the sidebar so it appears and the welcome screen clears,
             // and refresh the viewer in case it is already open on that path.
             specExplorer.refresh();
-            void handleSpecContextChange(uri, specViewer, outputChannel);
+            void handleSpecContextChange(uri, specViewer, outputChannel, { created: true });
         });
         watcher.onDidDelete(handleSpecContextDelete);
         context.subscriptions.push(watcher);
     }
+    // Seed the status cache from the current on-disk state so the first
+    // observed write diffs against a real baseline — an already-completed spec
+    // must never read as a fresh completion.
+    void seedStatusBaseline(patterns, outputChannel);
     outputChannel.appendLine(`[FileWatcher] spec-context watchers registered for ${patterns.length} spec patterns`);
+}
+
+/**
+ * Activation-time silent seeding of the completion seam's status cache: read
+ * every existing `.spec-context.json` and record its status without emitting.
+ */
+async function seedStatusBaseline(patterns: string[], outputChannel: vscode.OutputChannel): Promise<void> {
+    try {
+        for (const pattern of patterns) {
+            const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**');
+            for (const uri of files) {
+                try {
+                    const content = await vscode.workspace.fs.readFile(uri);
+                    const data = JSON.parse(Buffer.from(content).toString('utf-8'));
+                    const specDir = uri.fsPath.replace(/[/\\].spec-context\.json$/, '');
+                    transitionCache.seedStatus(specDir, data.status);
+                } catch {
+                    // A malformed context file is not a reason to skip the rest.
+                }
+            }
+        }
+    } catch (error) {
+        outputChannel.appendLine(`[FileWatcher] status baseline seeding failed: ${error}`);
+    }
 }
 
 /**

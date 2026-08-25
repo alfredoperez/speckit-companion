@@ -249,3 +249,19 @@ A requirement authored under `## MODIFIED Requirements` that matches no existing
 #### Scenario: the promoted requirement is folded again
 - **WHEN** the same delta set is folded a second time
 - **THEN** the already-present requirement is left in place and nothing is duplicated
+
+### Status resolution dispatches commands from the family the spec has been running
+
+A spec's context records which workflow drives it, and every next-step command that status and resume resolution emit MUST come from that workflow's command family: the companion commands when the context records `workflow: companion`, the stock commands otherwise. Handing a run a command from the other family mid-pipeline would silently switch its capture and completion behavior, so the recorded workflow is the single signal for the choice. Contexts written before the workflow field existed carried a retired marker instead (`profile: turbo`); resolution SHALL keep honoring that marker as meaning the companion workflow, so older specs resume on the flow they started rather than being demoted to the stock family.
+
+#### Scenario: a companion spec resumes
+- **WHEN** resolution computes the next command for a context recording the companion workflow
+- **THEN** the command is drawn from the companion family
+
+#### Scenario: an older context carries only the retired marker
+- **WHEN** a context predating the workflow field records the retired companion marker
+- **THEN** resolution still selects the companion family
+
+#### Scenario: no workflow is recorded
+- **WHEN** a context names neither the workflow nor the retired marker
+- **THEN** resolution emits the stock command family

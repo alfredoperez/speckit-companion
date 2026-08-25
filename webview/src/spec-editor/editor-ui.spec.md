@@ -87,6 +87,22 @@ Submission affordances MUST be derived from the selected workflow's own declarat
 - **WHEN** the workspace offers no alternative
 - **THEN** the chooser is hidden and that workflow's affordances are applied directly
 
+### The workflow choice sells itself: descriptions visible, state on the card, a low-commitment trial
+
+The workflow chooser MUST render each offerable workflow as a selectable card showing its display name and its description *visibly* — never only in a tooltip or one-at-a-time — because the choice is where a workflow's value has to be communicated. A not-installed workflow renders its install-to-enable state on the card rather than mangling its name. When the pre-selected default is not Companion, the Companion card MUST carry a one-click trial affordance that selects Companion for the current submission only; nothing in this surface ever reads or writes the configured default workflow. Every submission reports the selected workflow together with *how* it was selected — the untouched pre-selection, an ordinary change, or the trial — so adoption of the trial is measurable.
+
+#### Scenario: the chooser renders with several workflows
+- **WHEN** the cards appear
+- **THEN** every card's description is readable without any interaction, and the selected card is visually distinct
+
+#### Scenario: the user takes the trial
+- **WHEN** they activate the trial affordance and submit
+- **THEN** the submission carries Companion with the trial marker, and the configured default workflow is unchanged
+
+#### Scenario: the user changes selection after taking the trial
+- **WHEN** they pick a different card manually
+- **THEN** the trial marker clears and the submission reports the manual choice honestly
+
 ### A submission in flight locks the surface and announces itself
 
 While the extension is working, the editor MUST prevent a second submission from any path, mark the content region busy for assistive technology, and announce the state change in a live region. Announcements MUST also cover attachment add/remove, since those are otherwise silent visual-only changes. Busy state belongs on the content region — not on the transient overlay that appears during the wait.
@@ -101,7 +117,7 @@ While the extension is working, the editor MUST prevent a second submission from
 
 ### The Storybook mock stays a faithful stand-in for the real form
 
-Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, hands-off-available-or-not, attachments-present, and a narrow (split-pane) layout — so a reviewer reading Storybook is not shown an arrangement the product never produces. To keep the visuals honest, the mock MUST render through the shipped `spec-editor.css` using the real form's class names and native controls (`textarea`, workflow `select`) rather than bespoke inline styles, so it inherits the product's styling instead of re-declaring it. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
+Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, hands-off-available-or-not, attachments-present, the workflow choice cards (multi-workflow, Companion-not-installed, trial affordance), and a narrow (split-pane) layout — so a reviewer reading Storybook is not shown an arrangement the product never produces. To keep the visuals honest, the mock MUST render through the shipped `spec-editor.css` using the real form's class names and native controls (`textarea`, radio-card inputs) rather than bespoke inline styles, so it inherits the product's styling instead of re-declaring it. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
 
 This duplication is accepted for now and its cost is recorded plainly: the mock is still hand-maintained and nothing enforces that its structure matches the real DOM, so a stale mock misrepresents the product to every reviewer who trusts it — though sharing the shipped stylesheet narrows the drift to structure rather than appearance.
 

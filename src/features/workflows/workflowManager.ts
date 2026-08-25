@@ -60,7 +60,8 @@ export const DEFAULT_WORKFLOW: WorkflowConfig = {
 export const COMPANION_WORKFLOW: WorkflowConfig = {
     name: COMPANION_WORKFLOW_NAME,
     displayName: 'SpecKit Companion',
-    description: 'SpecKit Companion pipeline — leaner output with built-in right-sizing, through to mark-complete',
+    // The pinned proof line — rendered verbatim as the Companion choice card's description.
+    description: 'specs 60–68% leaner, same correctness',
     steps: [
         { name: WorkflowSteps.SPECIFY, label: 'Specification', command: 'speckit.companion.specify', file: 'spec.md', subDir: 'checklists' },
         { name: WorkflowSteps.PLAN, label: 'Plan', command: 'speckit.companion.plan', file: 'plan.md', subFiles: ['research.md', 'data-model.md', 'quickstart.md'], subDir: 'contracts', includeRelatedDocs: true },
@@ -235,9 +236,101 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * spec-kit extension is present on disk. Drives the Create-Spec picker so it never
  * lists an option that silently falls back to stock.
  */
-export function isCompanionSelectable(): boolean {
-    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    return !!root && isCompanionInstalled(root);
+export function isCompanionSelectable(root?: string): boolean {
+    const resolved = root ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return !!resolved && isCompanionInstalled(resolved);
+}
+
+/**
+ * One offerable workflow for a pick surface — the Create Spec form's model.
+ * `entryCommand` is the workflow's first navigable step as a bare command id;
+ * callers format it for the active provider themselves.
+ */
+export interface WorkflowChoice {
+    name: string;
+    displayName: string;
+    description: string;
+    installed: boolean;
+    supportsAuto?: boolean;
+    entryCommand: string;
+    specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
+}
+
+/**
+ * The ONLY producer of pick-surface workflow lists (FR-007). Applies the
+ * canonical validation / dedupe / reserved-names / provider-filter rules to
+ * custom workflows, and ALWAYS includes Companion — with `installed` from
+ * {@link isCompanionSelectable}, the single shared predicate — so the
+ * highest-intent moment can render its install-to-enable state instead of
+ * hiding the option.
+ */
+export function buildWorkflowChoices(
+    root: string | undefined,
+    provider: AIProviderType,
+    outputChannel?: vscode.OutputChannel
+): WorkflowChoice[] {
+    const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
+    const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
+
+    const choices: WorkflowChoice[] = [
+        {
+            name: DEFAULT_WORKFLOW.name,
+            displayName: DEFAULT_WORKFLOW.displayName ?? DEFAULT_WORKFLOW.name,
+            description: DEFAULT_WORKFLOW.description ?? '',
+            installed: true,
+            entryCommand: resolveStepCommand(DEFAULT_WORKFLOW, WorkflowSteps.SPECIFY),
+        },
+        {
+            name: COMPANION_WORKFLOW.name,
+            displayName: COMPANION_WORKFLOW.displayName ?? COMPANION_WORKFLOW.name,
+            description: COMPANION_WORKFLOW.description ?? '',
+            installed: isCompanionSelectable(root),
+            supportsAuto: true,
+            entryCommand: resolveStepCommand(COMPANION_WORKFLOW, WorkflowSteps.SPECIFY),
+        },
+    ];
+
+    const seenNames = new Set<string>(['speckit', LEGACY_DEFAULT_NAME, COMPANION_WORKFLOW_NAME]);
+    for (const workflow of customWorkflows) {
+        const result = validateWorkflow(workflow);
+        if (!result.valid) {
+            outputChannel?.appendLine(
+                `[Workflows] Invalid workflow "${workflow.name || 'unnamed'}": ${result.errors.join('; ')}`
+            );
+            continue;
+        }
+        if (seenNames.has(workflow.name)) {
+            outputChannel?.appendLine(
+                `[Workflows] Duplicate workflow name "${workflow.name}" - skipping duplicate`
+            );
+            continue;
+        }
+        if (!isWorkflowSupportedForProvider(workflow, provider)) {
+            outputChannel?.appendLine(
+                `[Workflows] Workflow "${workflow.name}" not supported by provider "${provider}" - hiding`
+            );
+            continue;
+        }
+        seenNames.add(workflow.name);
+        const normalized = normalizeWorkflowConfig(workflow);
+        // A custom workflow's entry point is its FIRST navigable step, whatever
+        // it's named — a discuss → plan → execute workflow must dispatch its own
+        // first command, not fall back to the stock specify.
+        const entryStep = normalized.steps?.find(s => !s.actionOnly);
+        const entryName = entryStep?.name ?? WorkflowSteps.SPECIFY;
+        choices.push({
+            name: workflow.name,
+            displayName: workflow.displayName || workflow.name,
+            description: workflow.description ?? '',
+            installed: true,
+            entryCommand: resolveStepCommand(normalized, entryName as WorkflowStep),
+            specifyCommands: (workflow.commands || [])
+                .filter(c => c.step === entryName || c.step === WorkflowSteps.SPECIFY)
+                .map(c => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
+        });
+    }
+
+    return choices;
 }
 
 /** The per-scope shape of `WorkspaceConfiguration.inspect` we read to tell unset from explicit. */

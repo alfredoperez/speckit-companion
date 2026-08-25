@@ -1,5 +1,12 @@
 /** Production-class Storybook fixture for the vanilla-DOM Create Spec webview. */
 
+export interface MockWorkflowChoice {
+    name: string;
+    displayName: string;
+    description: string;
+    installed: boolean;
+}
+
 export interface CreateSpecMockProps {
     initialContent?: string;
     submitting?: boolean;
@@ -7,10 +14,19 @@ export interface CreateSpecMockProps {
     showAuto?: boolean;
     attachments?: string[];
     narrow?: boolean;
+    workflows?: MockWorkflowChoice[];
+    selectedWorkflow?: string;
+    /** Renders the "Try Companion for this spec" affordance on the Companion card. */
+    showTrial?: boolean;
 }
 
 const MAX_CHARS = 50_000;
 const PLACEHOLDER = 'Describe the problem, audience, and desired outcome — or paste a Jira/GitHub link.';
+
+export const MOCK_WORKFLOWS: MockWorkflowChoice[] = [
+    { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true },
+    { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: true },
+];
 
 export function CreateSpecMock({
     initialContent = '',
@@ -19,6 +35,9 @@ export function CreateSpecMock({
     showAuto = true,
     attachments = [],
     narrow = false,
+    workflows = MOCK_WORKFLOWS,
+    selectedWorkflow = 'speckit',
+    showTrial = false,
 }: CreateSpecMockProps) {
     const count = overLimit ? MAX_CHARS + 1200 : initialContent.length;
     const canSubmit = initialContent.trim().length > 0 && !overLimit && !submitting;
@@ -35,10 +54,31 @@ export function CreateSpecMock({
                 <div class="spec-editor-content">
                     <div class="workflow-row">
                         <div class="workflow-selector">
-                            <label for="story-workflow">Workflow</label>
-                            <select id="story-workflow" aria-label="Workflow">
-                                <option>SpecKit</option>
-                            </select>
+                            <span class="workflow-selector-label" id="story-workflow-label">Workflow</span>
+                            <div class="workflow-choices" role="radiogroup" aria-labelledby="story-workflow-label">
+                                {workflows.map(wf => (
+                                    <div class="workflow-card" key={wf.name}>
+                                        <input
+                                            type="radio"
+                                            name="story-workflow"
+                                            id={`story-workflow-${wf.name}`}
+                                            value={wf.name}
+                                            checked={wf.name === selectedWorkflow}
+                                            readOnly
+                                        />
+                                        <label class="workflow-card-label" for={`story-workflow-${wf.name}`}>
+                                            <span class="workflow-card-header">
+                                                <span class="workflow-card-name">{wf.displayName}</span>
+                                                {!wf.installed && <span class="workflow-card-badge">Install to enable</span>}
+                                            </span>
+                                            <span class="workflow-card-description">{wf.description}</span>
+                                            {showTrial && wf.name === 'companion' && (
+                                                <button type="button" class="workflow-card-trial">Try Companion for this spec</button>
+                                            )}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

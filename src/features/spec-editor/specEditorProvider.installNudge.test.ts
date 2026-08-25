@@ -3,10 +3,8 @@ import { SpecEditorProvider } from './specEditorProvider';
 import { COMPANION_WORKFLOW_NAME } from '../../core/constants';
 
 jest.mock('../workflows', () => ({
-    normalizeWorkflowConfig: (w: unknown) => w,
-    resolveStepCommand: () => 'speckit.specify',
-    isWorkflowSupportedForProvider: () => true,
-    isCompanionSelectable: jest.fn().mockReturnValue(false),
+    buildWorkflowChoices: jest.fn().mockReturnValue([]),
+    resolveEffectiveDefaultWorkflow: jest.fn().mockReturnValue('speckit'),
 }));
 
 jest.mock('../../ai-providers', () => ({
@@ -18,7 +16,12 @@ jest.mock('../../ai-providers/aiProvider', () => ({
     formatCommandForProvider: (c: string) => c,
 }));
 
-import { isCompanionSelectable } from '../workflows';
+import { buildWorkflowChoices } from '../workflows';
+
+const BUILDER_CHOICES = [
+    { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true, entryCommand: 'speckit.specify' },
+    { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: false, supportsAuto: true, entryCommand: 'speckit.companion.specify' },
+];
 
 function createProvider(): SpecEditorProvider {
     const context = {
@@ -38,23 +41,27 @@ describe('Create Spec — Companion install nudge', () => {
         });
     });
 
-    it('offers SpecKit Companion even when the extension is not installed', () => {
-        (isCompanionSelectable as jest.Mock).mockReturnValue(false);
+    it('lists Companion from the shared builder even when not installed (install-to-enable)', () => {
+        (buildWorkflowChoices as jest.Mock).mockReturnValue(BUILDER_CHOICES);
         const provider = createProvider();
-        const workflows = (provider as unknown as { getWorkflows(): Array<Record<string, unknown>> }).getWorkflows();
+        const workflows = (provider as unknown as { buildWorkflowDefinitions(): Array<Record<string, unknown>> }).buildWorkflowDefinitions();
         const companion = workflows.find(w => w.name === COMPANION_WORKFLOW_NAME);
         expect(companion).toBeDefined();
         expect(companion!.installed).toBe(false);
-        expect(String(companion!.displayName)).toContain('Install to enable');
+        // The card renders the install state separately — the name carries no suffix.
+        expect(companion!.displayName).toBe('SpecKit Companion');
+        expect(companion!.description).toBe('specs 60–68% leaner, same correctness');
     });
 
-    it('marks Companion installed when the extension is present', () => {
-        (isCompanionSelectable as jest.Mock).mockReturnValue(true);
+    it('passes the shared predicate result through when the extension is present', () => {
+        (buildWorkflowChoices as jest.Mock).mockReturnValue(
+            BUILDER_CHOICES.map(c => (c.name === COMPANION_WORKFLOW_NAME ? { ...c, installed: true } : c))
+        );
         const provider = createProvider();
-        const workflows = (provider as unknown as { getWorkflows(): Array<Record<string, unknown>> }).getWorkflows();
+        const workflows = (provider as unknown as { buildWorkflowDefinitions(): Array<Record<string, unknown>> }).buildWorkflowDefinitions();
         const companion = workflows.find(w => w.name === COMPANION_WORKFLOW_NAME)!;
         expect(companion.installed).toBe(true);
-        expect(companion.displayName).toBe('SpecKit Companion');
+        expect(companion.stepSpecify).toBe('/speckit.companion.specify');
     });
 
     it('the install-first prompt installs and reports the click when the user chooses install', async () => {
@@ -93,8 +100,8 @@ describe('Create Spec — Companion install nudge', () => {
         const posted: Array<{ type: string }> = [];
         (provider as unknown as { postMessage: (m: { type: string }) => void }).postMessage = (m) => posted.push(m);
         await (provider as unknown as {
-            handleSubmit(c: string, i: string[], w: string, cmd?: string, auto?: boolean): Promise<void>;
-        }).handleSubmit('build a thing', [], COMPANION_WORKFLOW_NAME, undefined, false);
+            handleSubmit(c: string, i: string[], w: string, chosenAs: string, cmd?: string, auto?: boolean): Promise<void>;
+        }).handleSubmit('build a thing', [], COMPANION_WORKFLOW_NAME, 'picked');
         // Install kicked off, but no dispatch — submissionStarted must never post.
         expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
         expect(posted.find((m) => m.type === 'submissionStarted')).toBeUndefined();

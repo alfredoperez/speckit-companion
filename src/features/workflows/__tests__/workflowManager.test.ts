@@ -14,6 +14,7 @@ jest.mock('../../settings/companionPresetReconciler', () => ({
 import { isCompanionInstalled } from '../../settings/companionPresetReconciler';
 
 import {
+    buildWorkflowChoices,
     getWorkflowCommands,
     getWorkflows,
     getWorkflow,
@@ -216,6 +217,127 @@ describe('Companion is offered to the picker with no beta setting (gate removed)
         mockConfig('claude', []);
 
         expect(getWorkflow('companion')?.name).toBe('companion');
+    });
+});
+
+describe('buildWorkflowChoices — the one pick-surface builder (FR-007)', () => {
+    const ROOT = '/root';
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('always offers exactly the two built-ins when no custom workflows exist', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', []);
+
+        const choices = buildWorkflowChoices(ROOT, 'claude');
+
+        expect(choices.map(c => c.name)).toEqual(['speckit', 'companion']);
+    });
+
+    it('keeps Companion present even when the spec-kit extension is not installed (install-to-enable)', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(false);
+        mockConfig('claude', []);
+
+        const companion = buildWorkflowChoices(ROOT, 'claude').find(c => c.name === 'companion');
+
+        expect(companion).toBeDefined();
+        expect(companion!.installed).toBe(false);
+        expect(companion!.displayName).toBe('SpecKit Companion');
+    });
+
+    it('reports Companion installed through the shared isCompanionSelectable predicate', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', []);
+
+        const companion = buildWorkflowChoices(ROOT, 'claude').find(c => c.name === 'companion');
+
+        expect(companion!.installed).toBe(true);
+        expect(isCompanionInstalled).toHaveBeenCalledWith(ROOT);
+    });
+
+    it("carries Companion's proof line as its description, verbatim", () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', []);
+
+        const companion = buildWorkflowChoices(ROOT, 'claude').find(c => c.name === 'companion');
+
+        expect(companion!.description).toBe('specs 60–68% leaner, same correctness');
+        expect(companion!.supportsAuto).toBe(true);
+    });
+
+    it('gives every choice a description and an installed flag', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', [
+            { name: 'my-flow', description: 'My flow', steps: [{ name: 'discuss', command: 'my.discuss' }] },
+        ]);
+
+        for (const choice of buildWorkflowChoices(ROOT, 'claude')) {
+            expect(typeof choice.description).toBe('string');
+            expect(typeof choice.installed).toBe('boolean');
+        }
+    });
+
+    it('applies canonical validation: an invalid custom workflow is skipped', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', [
+            { name: 'Invalid Name!', steps: [{ name: 'specify', command: 'x.specify' }] },
+        ]);
+
+        const names = buildWorkflowChoices(ROOT, 'claude').map(c => c.name);
+
+        expect(names).toEqual(['speckit', 'companion']);
+    });
+
+    it('applies canonical reserved-name and dedupe rules', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', [
+            { name: 'companion', steps: [{ name: 'specify', command: 'shadow.specify' }] },
+            { name: 'default', steps: [{ name: 'specify', command: 'shadow.specify' }] },
+            { name: 'my-flow', steps: [{ name: 'specify', command: 'my.specify' }] },
+            { name: 'my-flow', steps: [{ name: 'specify', command: 'dup.specify' }] },
+        ]);
+
+        const choices = buildWorkflowChoices(ROOT, 'claude');
+
+        expect(choices.map(c => c.name)).toEqual(['speckit', 'companion', 'my-flow']);
+        expect(choices.find(c => c.name === 'my-flow')!.entryCommand).toBe('my.specify');
+    });
+
+    it('applies the provider filter to custom workflows', () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', [
+            { name: 'gemini-only', supportedAiProviders: ['gemini'], steps: [{ name: 'specify', command: 'g.specify' }] },
+        ]);
+
+        const names = buildWorkflowChoices(ROOT, 'claude').map(c => c.name);
+
+        expect(names).not.toContain('gemini-only');
+    });
+
+    it("resolves a custom workflow's entry command from its first navigable step", () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+        mockConfig('claude', [
+            {
+                name: 'discuss-first',
+                steps: [
+                    { name: 'discuss', command: 'discuss-first.discuss' },
+                    { name: 'plan', command: 'discuss-first.plan' },
+                ],
+                commands: [
+                    { name: 'quick', title: 'Quick', command: '/discuss-first:quick', step: 'discuss' },
+                ],
+            },
+        ]);
+
+        const custom = buildWorkflowChoices(ROOT, 'claude').find(c => c.name === 'discuss-first');
+
+        expect(custom!.entryCommand).toBe('discuss-first.discuss');
+        expect(custom!.installed).toBe(true);
+        expect(custom!.specifyCommands).toEqual([
+            { name: 'quick', title: 'Quick', command: '/discuss-first:quick', tooltip: undefined },
+        ]);
     });
 });
 

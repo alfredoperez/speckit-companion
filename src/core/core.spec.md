@@ -138,6 +138,11 @@ Every telemetry payload SHALL contain only enum-like values, booleans, versions,
 - **WHEN** an event reports which phase it belongs to
 - **THEN** built-in phase names are sent verbatim and any other step name is reported as a generic marker
 
+#### Scenario: an event reports which workflow was involved
+- **WHEN** any event carries a workflow attribution
+- **THEN** it is coerced through the single shared workflow coercer — built-in workflow ids verbatim, the legacy default alias as the stock id, and any custom workflow name reduced to a generic marker
+- **AND** the retired pipeline-profile dimension is attached to nothing; no event carries a profile property
+
 #### Scenario: a spec has no correlation identifier yet
 - **WHEN** an event fires for it
 - **THEN** a random identifier is minted and persisted so later events for the same spec correlate
@@ -159,6 +164,26 @@ The extension SHALL emit a bare event when a spec, a living spec, or a steering 
 #### Scenario: a spec is opened while telemetry is disabled
 - **WHEN** the event cannot be sent yet
 - **THEN** no de-dupe slot is consumed, so the first successful send still happens once telemetry turns on
+
+### The activation funnel is measured rung by rung, each with its own de-dupe scope
+
+The extension SHALL emit one event per activation-funnel rung — installed, panel opened, spec created, phase dispatched, completed — plus a sample-opened engagement event for the welcome's live sample, each de-duplicated at the scope that makes its count honest. The installed event fires once ever per install identity, recorded in a persistent marker that is claimed only after a confirmed send; a wiped persistent state legitimately reads as a new install identity, and the event never fires per session. The panel-opened and sample-opened events fire once per session, so repeated visibility toggles or repeated sample clicks cannot inflate them. The completed event fires exactly once per transition into the completed status, observed at a single seam every completion path flows through. Every funnel event honors both telemetry switches, and no de-dupe slot — persistent or in-memory — is consumed when the event could not be sent.
+
+#### Scenario: the extension activates again on the same install
+- **WHEN** a later session activates and the persistent installed marker is already set
+- **THEN** no installed event is sent
+
+#### Scenario: the first activation happens with telemetry disabled
+- **WHEN** the installed event cannot be sent
+- **THEN** the persistent marker is not written, so the install is still reported once telemetry turns on
+
+#### Scenario: the specs panel is toggled repeatedly in one session
+- **WHEN** the panel becomes visible a second time
+- **THEN** no second panel-opened event is sent
+
+#### Scenario: a created spec is attributed
+- **WHEN** the created event fires from the create form or from the watcher observing a terminal-created spec
+- **THEN** it carries the effective workflow selection coerced through the shared coercer, how the workflow was chosen for form submissions, and which source observed the creation — never a name or path
 
 ### Context keys have one writer and one catalogue
 

@@ -19,11 +19,14 @@ export function buildTransitionEntry(
 }
 
 /**
- * Cached last-known step/substep per spec directory.
- * Used by the file watcher to detect external transitions.
+ * Cached last-known step/substep — and, separately, status — per spec
+ * directory. Used by the file watcher to detect external transitions and to
+ * own the single "entered completed" detection every completion path flows
+ * through.
  */
 export class TransitionCache {
     private cache = new Map<string, { step: string | undefined; substep: string | null | undefined }>();
+    private statusCache = new Map<string, string | undefined>();
 
     /**
      * Get cached state for a spec directory.
@@ -47,10 +50,46 @@ export class TransitionCache {
     }
 
     /**
+     * Diff a spec's status against the cached one, updating the cache. First
+     * sight seeds silently (returns false), so an already-completed spec first
+     * observed never reads as a fresh completion. Returns true only for a real
+     * transition into `completed` — a re-write of `completed` finds it cached
+     * and returns false, which is what makes double-fires structurally
+     * impossible even when two watchers route the same file.
+     */
+    diffStatus(specDir: string, newStatus: string | undefined): boolean {
+        const seen = this.statusCache.has(specDir);
+        const oldStatus = this.statusCache.get(specDir);
+        this.statusCache.set(specDir, newStatus);
+        if (!seen) {
+            return false;
+        }
+        return oldStatus !== 'completed' && newStatus === 'completed';
+    }
+
+    /**
+     * Seed a spec's status without diffing — for the activation-time initial
+     * scan and watcher `onDidCreate`, where the current state is a baseline,
+     * never an event.
+     */
+    seedStatus(specDir: string, status: string | undefined): void {
+        this.statusCache.set(specDir, status);
+    }
+
+    /**
      * Remove cached state for a spec directory.
      */
     delete(specDir: string): void {
         this.cache.delete(specDir);
+        this.statusCache.delete(specDir);
+    }
+
+    /**
+     * Drop all cached state (used by tests).
+     */
+    clear(): void {
+        this.cache.clear();
+        this.statusCache.clear();
     }
 }
 

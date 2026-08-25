@@ -29,7 +29,7 @@ import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
 import { openSpecFile } from './core/utils/fileOpener';
-import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown } from './core/telemetry';
+import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 
@@ -147,6 +147,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     void fireActivatedEvent(context);
 
+    // The funnel's once-ever installed rung — distinct from the per-session
+    // activated event above. The marker is claimed only after a confirmed send.
+    void reportInstalledOnce(context.globalState);
+
     // Nudge users of a spec-kit project that hasn't installed the Companion
     // extension yet — a single, dismissible, provider-agnostic prompt (installing
     // is a terminal command regardless of the AI provider). Never blocks activation.
@@ -198,6 +202,9 @@ export async function activate(context: vscode.ExtensionContext) {
         canSelectMany: true,
     });
     specsTreeView.onDidChangeSelection(e => updateSelectionContextKeys(e.selection as any));
+    // Funnel rung 2: panel.opened on the panel's first visibility this session
+    // (initial-visible check + the visibility event; per-session de-dupe).
+    context.subscriptions.push(trackPanelOpened(specsTreeView));
 
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1836, height=1164" />
+    <title>Make it yours</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* ==========================================================================
+         THEME TOKENS  ·  brand art direction from HERO-PROMPT.md:
+         dark #0F0F13 ground, blueprint grid, blue glow, ONE yellow accent.
+         This clip is typographic: the "UI" on screen is the real settings.json
+         surface (actual keys, actual enum values), never an invented panel.
+         ========================================================================== */
+      :root {
+        --clip-ground:   #0F0F13;
+        --grid-line:     rgba(84,140,255,0.07);
+        --glow-blue:     rgba(64,120,255,0.16);
+
+        --card-bg:       rgba(16,18,26,0.92);
+        --card-border:   rgba(84,140,255,0.22);
+        --card-radius:   18px;
+        --card-shadow:   0 30px 80px rgba(0,0,0,0.6);
+
+        --kicker-fg:     #7fa8ff;
+        --title-fg:      #eef2f7;
+        --code-fg:       #c8d3e8;
+        --code-key:      #7fa8ff;
+        --code-string:   #8fd8b0;
+        --code-punct:    #5a6478;
+        --accent-yellow: #ffd84d;   /* the one yellow accent: the value you changed */
+
+        --font:          "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+        --mono:          "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+      }
+
+      html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground);
+              font-family:var(--font); }
+
+      /* blueprint grid + one soft blue glow behind the card */
+      #bg { position:absolute; inset:0;
+            background-image:
+              linear-gradient(var(--grid-line) 1px, transparent 1px),
+              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size:72px 72px; }
+      #glow { position:absolute; left:50%; top:50%; width:1400px; height:900px;
+              transform:translate(-50%,-50%);
+              background:radial-gradient(closest-side, var(--glow-blue), transparent 70%); }
+
+      /* ---- the three settings cards, stacked on one anchor ---- */
+      .card { position:absolute; left:50%; top:50%; width:1180px;
+              transform:translate(-50%,-50%);
+              background:var(--card-bg); border:1px solid var(--card-border);
+              border-radius:var(--card-radius); box-shadow:var(--card-shadow);
+              padding:56px 64px 60px; }
+      .kicker { font-size:26px; font-weight:500; letter-spacing:0.14em; text-transform:uppercase;
+                color:var(--kicker-fg); margin-bottom:14px; }
+      .card h2 { font-size:58px; font-weight:600; color:var(--title-fg); margin-bottom:36px; letter-spacing:-0.01em; }
+      .file { display:inline-block; font-family:var(--mono); font-size:24px; color:var(--code-punct);
+              margin-bottom:20px; }
+      pre { font-family:var(--mono); font-size:33px; line-height:1.62; color:var(--code-fg); }
+      .k { color:var(--code-key); }
+      .s { color:var(--code-string); }
+      .p { color:var(--code-punct); }
+      .hot { color:var(--accent-yellow); font-weight:600; }
+
+      /* stacked swap values occupy the same slot; only one is ever visible */
+      .swap { position:relative; display:inline-block; vertical-align:baseline; }
+      .swap > span { position:absolute; left:0; top:0; white-space:nowrap; }
+      .swap > span:first-child { position:relative; }
+
+      .row { display:block; }
+
+      /* ---- closing lockup ---- */
+      #outro { position:absolute; inset:0; display:flex; flex-direction:column;
+               align-items:center; justify-content:center; text-align:center; }
+      #outro .mark { font-size:88px; font-weight:600; color:var(--title-fg); letter-spacing:-0.015em; }
+      #outro .line { margin-top:26px; font-size:40px; font-weight:400; color:var(--code-fg); }
+      #outro .line b { color:var(--accent-yellow); font-weight:600; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24" data-fps="30"
+         data-width="1836" data-height="1164">
+
+      <div id="stage" class="clip" data-start="0" data-duration="24" data-track-index="0">
+        <div id="bg"></div>
+        <div id="glow"></div>
+
+        <!-- beat 1 · swap the workflow (real setting, real enum) -->
+        <div class="card" id="card1" data-layout-allow-overlap>
+          <div class="kicker">Make it yours</div>
+          <h2>Swap the workflow</h2>
+          <div class="file">settings.json</div>
+          <pre><span class="p">{</span>
+  <span class="k">"speckit.defaultWorkflow"</span><span class="p">:</span> <span class="swap"><span class="s" id="wf0">"speckit"</span><span class="hot" id="wf1">"companion"</span></span>
+<span class="p">}</span></pre>
+        </div>
+
+        <!-- beat 2 · shape the commands (real customCommands entries) -->
+        <div class="card" id="card2" data-layout-allow-overlap>
+          <div class="kicker">Make it yours</div>
+          <h2>Shape your commands</h2>
+          <div class="file">settings.json</div>
+          <pre><span class="p">{</span>
+  <span class="k">"speckit.customCommands"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="row" id="cmd1"><span class="hot">"review"</span><span class="p">,</span></span>
+    <span class="row" id="cmd2"><span class="p">{</span> <span class="k">"name"</span><span class="p">:</span> <span class="hot">"security"</span><span class="p">,</span> <span class="k">"title"</span><span class="p">:</span> <span class="s">"Security Pass"</span> <span class="p">}</span></span>
+  <span class="p">]</span>
+<span class="p">}</span></pre>
+        </div>
+
+        <!-- beat 3 · pick the provider (real enum values) -->
+        <div class="card" id="card3" data-layout-allow-overlap>
+          <div class="kicker">Make it yours</div>
+          <h2>Pick your provider</h2>
+          <div class="file">settings.json</div>
+          <pre><span class="p">{</span>
+  <span class="k">"speckit.aiProvider"</span><span class="p">:</span> <span class="swap"><span class="s" id="pr0">"claude"</span><span class="s" id="pr1">"gemini"</span><span class="s" id="pr2">"codex"</span><span class="hot" id="pr3">"copilot"</span></span>
+<span class="p">}</span></pre>
+        </div>
+
+        <!-- closing lockup -->
+        <div id="outro" data-layout-allow-overlap>
+          <div class="mark">Spec Kit Companion</div>
+          <div class="line">Your workflow. Your commands. Your provider. <b>Your specs.</b></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================================
+         Single paused timeline; every tween is fromTo + immediateRender:false
+         so the renderer can seek frames in any order. Frame zero = card 1
+         with the stock value, which is also what the loop returns to.
+         ================================================================== */
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      gsap.set(["#card2", "#card3", "#outro"], { autoAlpha:0 });
+      gsap.set("#card1", { autoAlpha:1 });
+      gsap.set(["#wf1", "#pr1", "#pr2", "#pr3"], { autoAlpha:0 });
+      gsap.set(["#wf0", "#pr0"], { autoAlpha:1 });
+      gsap.set(["#cmd1", "#cmd2"], { autoAlpha:0, y:14 });
+
+      /* beat 1 · the default swaps to companion (the one yellow accent) */
+      tl.fromTo("#wf0", { autoAlpha:1 }, { autoAlpha:0, duration:0.3, ease:"power2.in", immediateRender:false }, 2.6);
+      tl.fromTo("#wf1", { autoAlpha:0, y:12 }, { autoAlpha:1, y:0, duration:0.42, ease:"power3.out", immediateRender:false }, 2.75);
+
+      /* card 1 -> card 2 */
+      tl.fromTo("#card1", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 6.6);
+      tl.fromTo("#card2", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.55, ease:"power3.out", immediateRender:false }, 6.9);
+
+      /* beat 2 · commands appear, one per beat */
+      tl.fromTo("#cmd1", { autoAlpha:0, y:14 }, { autoAlpha:1, y:0, duration:0.45, ease:"power3.out", immediateRender:false }, 8.2);
+      tl.fromTo("#cmd2", { autoAlpha:0, y:14 }, { autoAlpha:1, y:0, duration:0.45, ease:"power3.out", immediateRender:false }, 9.1);
+
+      /* card 2 -> card 3 */
+      tl.fromTo("#card2", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 13.2);
+      tl.fromTo("#card3", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.55, ease:"power3.out", immediateRender:false }, 13.5);
+
+      /* beat 3 · the provider enum cycles, settling on copilot */
+      tl.fromTo("#pr0", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 15.1);
+      tl.fromTo("#pr1", { autoAlpha:0 }, { autoAlpha:1, duration:0.22, ease:"power2.out", immediateRender:false }, 15.2);
+      tl.fromTo("#pr1", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 16.1);
+      tl.fromTo("#pr2", { autoAlpha:0 }, { autoAlpha:1, duration:0.22, ease:"power2.out", immediateRender:false }, 16.2);
+      tl.fromTo("#pr2", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 17.1);
+      tl.fromTo("#pr3", { autoAlpha:0, y:12 }, { autoAlpha:1, y:0, duration:0.42, ease:"power3.out", immediateRender:false }, 17.2);
+
+      /* card 3 -> closing lockup */
+      tl.fromTo("#card3", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 19.6);
+      tl.fromTo("#outro", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.6, ease:"power3.out", immediateRender:false }, 19.9);
+
+      /* loop back to frame zero: the lockup hands off to card 1 at rest */
+      tl.fromTo("#outro", { autoAlpha:1 }, { autoAlpha:0, duration:0.8, ease:"power1.inOut", immediateRender:false }, 22.9);
+      tl.fromTo("#card1", { autoAlpha:0 }, { autoAlpha:1, duration:0.8, ease:"power1.inOut", immediateRender:false }, 23.1);
+      tl.fromTo("#wf1", { autoAlpha:1 }, { autoAlpha:0, duration:0.3, ease:"power1.inOut", immediateRender:false }, 23.1);
+      tl.fromTo("#wf0", { autoAlpha:0 }, { autoAlpha:1, duration:0.3, ease:"power1.inOut", immediateRender:false }, 23.2);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

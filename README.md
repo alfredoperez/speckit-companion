@@ -10,7 +10,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. A vague requirement still dies here before it becomes 200 lines of wrong implementation.
+**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](./docs/configuration.md#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
 <!-- IMAGE PATHS: this README keeps RELATIVE paths on purpose. It is rendered by GitHub
      and by vsce for the Marketplace, and both resolve relative paths (vsce rewrites them
@@ -31,15 +31,21 @@
 
 Specs render as rich, structured pages, not walls of markdown: requirements as labeled rows, acceptance scenarios as clean Given/When/Then sentences, tasks grouped under their phases, and mermaid diagrams inline with zoom. A quiet footer advances the spec one click at a time, and it never advances ahead of a running step. The markdown stays in your repo, never on a server.
 
-<!-- TODO: swap this still for the spec-viewer feature clip (media/feature-clips/spec-viewer) once the GIFs are promoted. -->
-![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.png)
+![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.gif)
 
 ### Inline Review Comments
 
 Comment on specific lines of a spec, exactly like a pull request review. Comments persist the moment you add them, survive closing the tab, and are committable, so a half-finished review picks up next session or on another machine. Click **Refine** and the pending comments are dispatched to your AI for an in-place edit of the source.
 
-<!-- TODO: swap this still for the inline-comments feature clip (media/feature-clips/inline-comments) once the GIFs are promoted. -->
-![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.png)
+![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.gif)
+
+### Watch a run in flight
+
+A run is not a black box you check on afterwards. The pipeline rail unlocks phase by phase, one button always offers the next step, tasks tick over live while implement runs, and the actions stay locked until the step settles — then the Overview shows exactly how long each phase took.
+
+<!-- Rendered from media/feature-clips/run-in-flight (see its STORYBOARD.md); frame zero
+     is the specified-state rail at rest, so it reads even paused. -->
+![A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing](docs/screenshots/generated/run-in-flight.gif)
 
 ### Overview: the run's story
 
@@ -53,8 +59,7 @@ A spec with recorded activity opens on its Overview: why the spec exists, its co
 
 Specs grouped by lifecycle with live status per document, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
 
-<!-- TODO: swap this still for the specs-sidebar feature clip (media/feature-clips/specs-sidebar) once the GIFs are promoted. -->
-![The three sidebar sections side by side: Specs with per-document progress marks, Steering with the standing files the AI follows, and Living Specs with coverage counts and a drift flag](docs/screenshots/generated/sidebar-triptych.png)
+![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath](docs/screenshots/generated/specs-sidebar.gif)
 
 ### Pick a pipeline once, run it end to end
 
@@ -77,6 +82,11 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](./docs/configuration.md#custom-workflows)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](./docs/viewer.md)
+
+<!-- Rendered from media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
+     and value on screen is real: change the contributed configuration in package.json
+     and this composition is stale. -->
+![Make it yours: swapping the default workflow, adding your own commands, and picking your AI provider, each shown as the real settings.json entry](docs/screenshots/generated/make-it-yours.gif)
 
 <!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
      scripts/capture-docs-images.mjs). The whole image is a link to the engine

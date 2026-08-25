@@ -4,9 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **A live sample spec you can open before writing anything.** The Specs view's empty state now offers **Open a live sample** beside **Create your first spec**. It copies a small, finished-looking example spec into your workspace and opens it in the viewer, so a first run shows the actual reading surface — pipeline, phases, timing — instead of an empty tree. It is an ordinary spec after that: yours to read, edit, or delete, and clicking again reopens it rather than making a second copy. ([#597](https://github.com/alfredoperez/speckit-companion/issues/597))
+
+- **Try the Companion pipeline on one spec without changing your default.** When your default workflow is stock SpecKit, the Companion option in Create New Spec now offers **Try Companion for this spec**. It applies to that one spec only; your configured default is untouched.
+
 ### Changed
 
+- **One welcome in the empty Specs view instead of two stacked boxes.** A workspace with no specs used to show the welcome message and the Companion install prompt as two separate blocks. They are now a single welcome: one value line, both actions, and the install offer folded in when the companion extension is missing.
+
+- **The workflow choice in Create New Spec explains itself.** The bare dropdown is now a set of cards, each showing what its workflow is for — with the Companion pipeline carrying its measured result, specs 60 to 68% leaner with the same correctness — so the choice can be made without leaving the form. A workflow that needs the companion extension shows as *Install to enable* rather than being hidden, and custom workflows are now validated and filtered the same way here as everywhere else, so no surface offers a workflow another one hides.
+
 - **Anonymous usage telemetry moved to PostHog.** The Azure subscription behind the old analytics backend lapsed and took the pipeline with it, so every usage event had been silently discarded for months. Events now go to PostHog with the same event catalog and the same privacy contract: only enum-like values, versions, and counts, never prompt content, file paths, or spec names. Both opt-out switches keep their promise — turning off `speckit.telemetry` or VS Code's global telemetry setting stops all events immediately, mid-session, no restart needed. The retired backend's client library and its credential are removed from the shipped extension. ([#589](https://github.com/alfredoperez/speckit-companion/issues/589))
+
+- **The anonymous usage counts now cover the whole path from install to a finished spec.** Three moments were previously unmeasured or undercounted: installing the extension, opening the Specs panel, and finishing a spec — the last one only counted when you finished from the sidebar, missing both the viewer's own action and the Companion pipeline's final step. All three are counted now, each exactly once, and a spec created from the terminal is no longer invisible. Everything stays anonymous and both opt-out switches still stop every event; the [telemetry disclosure](./docs/telemetry.md) lists each addition. ([#597](https://github.com/alfredoperez/speckit-companion/issues/597))
 
 ## [0.31.4] - 2026-08-24
 

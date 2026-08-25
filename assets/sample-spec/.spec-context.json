@@ -1,0 +1,65 @@
+{
+  "workflow": "speckit",
+  "specName": "Command Palette Quick-Open",
+  "branch": "sample/command-palette",
+  "selectedAt": "2026-08-01T14:00:00.000Z",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "sampleSpec": true,
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": null,
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-08-01T14:00:00.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T14:04:12.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-08-01T14:05:30.000Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T14:12:45.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "extension",
+      "at": "2026-08-01T14:13:20.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T14:17:05.000Z"
+    }
+  ]
+}

@@ -85,18 +85,18 @@ The prompt to install the companion CLI extension SHALL be shown when the prompt
 - **WHEN** the gate is evaluated with the extension absent
 - **THEN** nothing is shown — no banner and no fallback warning
 
-### Terminal dispatch carries a once-per-session install hint
+### Activation carries a once-per-session install prompt
 
-When a spec-kit command is dispatched to a terminal-CLI provider and the companion extension is absent, the extension SHALL show a single non-blocking install hint tagged to the `terminal` surface. Its gate is the conjunction: spec-kit is detected in the workspace, the companion extension is not installed, the shared install-nudge dismissal is unset, the active provider dispatches to a terminal (never an editor-chat provider — that surface has its own in-editor nudges), and it has not already shown this session. The hint reuses the shared install command and the same `installNudgeDismissed` flag as the other nudge surfaces — no parallel dismissal. It MUST NEVER block or fail the dispatched command: any failure while deciding or presenting it is swallowed so the command always proceeds, and the session slot and telemetry `shown` are recorded under the same gate the hint renders on.
+When the extension activates in a workspace that already uses spec-kit and the companion CLI extension is absent, it SHALL show a single non-blocking install prompt tagged to the `activation` surface. Its gate is the conjunction: spec-kit is detected in the workspace, the companion extension is not installed, the shared install-nudge dismissal is unset, the install-prompt preference is on, and it has not already shown this session. The prompt is deliberately provider-agnostic: installing the extension is a terminal command that works the same regardless of which assistant dispatches spec-kit commands, so an editor-chat user gets the discovery just as a terminal-CLI user does. It reuses the shared install command and the same `installNudgeDismissed` flag as the other nudge surfaces — no parallel dismissal. It MUST NEVER block or fail activation: any failure while deciding or presenting it is swallowed so activation always proceeds, and the session slot and telemetry `shown` are recorded under the same gate the prompt renders on.
 
-#### Scenario: a terminal dispatch runs without the extension
-- **WHEN** a command dispatches to a terminal-CLI provider, spec-kit is detected, the extension is absent, and the nudge has not shown this session
-- **THEN** one install hint is shown, tagged `terminal`, offering Install or "Don't show again"
-- **AND** a second dispatch in the same session shows nothing more
+#### Scenario: activation runs in a spec-kit project without the extension
+- **WHEN** activation runs, spec-kit is detected, the extension is absent, and the prompt has not shown this session
+- **THEN** one install prompt is shown, tagged `activation`, offering Install or "Don't show again"
+- **AND** nothing more is shown for the rest of the session
 
-#### Scenario: the active provider dispatches to editor chat, or the nudge was dismissed
-- **WHEN** the provider routes to the host editor's chat, or the shared dismissal is already set
-- **THEN** the terminal hint does not render
+#### Scenario: the preference is off, the nudge was dismissed, or the extension is present
+- **WHEN** any leg of the gate fails
+- **THEN** the activation prompt does not render
 - **AND** the dismissal is shared with every other install-prompt surface
 
 ### Two products share one release list and must never be confused
@@ -107,6 +107,11 @@ This repository publishes two independently-versioned products into a single rel
 - **WHEN** releases are enumerated
 - **THEN** only tags matching the editor extension's own shape are considered, and the highest version among them wins
 - **AND** the other product's releases, drafts, and prereleases are ignored
+
+#### Scenario: the user opens the changelog for an offered update
+- **WHEN** the update notification's changelog action is chosen
+- **THEN** the link opens the release page for that exact version by its own tag
+- **AND** never a shared "latest release" URL that could land on the other product
 
 ### Update checks are throttled, skippable, and never noisy on failure
 

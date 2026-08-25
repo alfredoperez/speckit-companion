@@ -109,13 +109,14 @@ export function buildLifecyclePrompt(command: string, specDir?: string | null): 
  */
 export function buildSpecifyCreationPreamble(
     workflowName: string,
-    specDir?: string | null
+    specDir?: string | null,
+    telemetryInstanceId?: string | null
 ): string {
     if (!isContextInstructionsEnabled()) return '';
     // specify is self-recorded only when the companion workflow runs AND its
     // extension is installed; otherwise the AI must close specify itself (#332).
     const companionRecords = workflowName === 'companion' && companionInstalledHere();
-    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc(), companionRecords, bundledWriterPath());
+    return renderSpecifyCreationLifecyclePreamble(workflowName, specDir ?? null, nowUtc(), companionRecords, bundledWriterPath(), telemetryInstanceId ?? null);
 }
 
 /**

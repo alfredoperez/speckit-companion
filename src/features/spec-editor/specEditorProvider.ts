@@ -6,18 +6,18 @@ import type {
     SpecEditorToExtensionMessage,
     ExtensionToSpecEditorMessage,
     AttachedImage,
+    WorkflowChosenAs,
     WorkflowDefinition
 } from './types';
-import { normalizeWorkflowConfig, resolveStepCommand, isWorkflowSupportedForProvider, isCompanionSelectable, resolveEffectiveDefaultWorkflow } from '../workflows';
-import type { WorkflowConfig } from '../workflows';
+import { buildWorkflowChoices, resolveEffectiveDefaultWorkflow } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { resolveDispatchForRoot } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
-import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME } from '../../core/constants';
-import { sendTelemetryEvent, reportInstallPromptShown, reportInstallPromptClicked } from '../../core/telemetry';
+import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
+import { reportSpecCreated, sendTelemetryEvent, workflowTelemetryId, reportInstallPromptShown, reportInstallPromptClicked } from '../../core/telemetry';
 import * as crypto from 'crypto';
 
 /** The Companion specify command the picker dispatches when the Companion workflow is chosen. */
@@ -63,64 +63,22 @@ export class SpecEditorProvider {
     ) {}
 
     /**
-     * Get available workflows from settings
+     * The workflow entries sent to the webview: the shared pick-surface builder's
+     * choices (FR-007 — no private list derivation here), with only the
+     * provider-specific command formatting applied on top.
      */
-    private getWorkflows(): WorkflowDefinition[] {
-        const config = vscode.workspace.getConfiguration(ConfigKeys.namespace);
-        const customWorkflows = config.get<WorkflowConfig[]>('customWorkflows', []);
-        const activeProvider = getConfiguredProviderType();
-
-        // SpecKit is always offered. Companion is ALWAYS listed too — even when the
-        // spec-kit extension isn't installed — so the highest-intent moment (starting
-        // a spec) can present its benefits and a one-click install. A not-installed
-        // pick shows the benefits+install prompt first, then falls through the graceful
-        // stock downgrade if declined.
-        const companionInstalled = isCompanionSelectable();
-        const workflows: WorkflowDefinition[] = [
-            {
-                name: 'speckit',
-                displayName: 'SpecKit',
-                description: 'Standard SpecKit workflow',
-                stepSpecify: `/${formatCommandForProvider('speckit.specify')}`
-            }
-        ];
-        workflows.push({
-            name: COMPANION_WORKFLOW_NAME,
-            displayName: companionInstalled ? 'SpecKit Companion' : 'SpecKit Companion · Install to enable',
-            description: 'Living specs, full lifecycle capture, fast-path for small changes, and hands-off Auto.',
-            stepSpecify: `/${formatCommandForProvider(COMPANION_SPECIFY_COMMAND)}`,
-            supportsAuto: true,
-            installed: companionInstalled,
-        });
-
-        // Add custom workflows the active provider supports
-        for (const wf of customWorkflows) {
-            if (wf.name && wf.name !== 'speckit' && wf.name !== 'default'
-                && wf.name !== COMPANION_WORKFLOW_NAME
-                && isWorkflowSupportedForProvider(wf, activeProvider)) {
-                const normalized = normalizeWorkflowConfig(wf);
-                // A custom workflow's entry point is its FIRST navigable step,
-                // whatever it's named — not necessarily `specify`. A workflow
-                // like discuss → plan → execute → verify must dispatch its own
-                // first command from the Create Spec dialog, not fall back to
-                // the stock speckit.specify.
-                const entryStep = normalized.steps?.find(s => !s.actionOnly);
-                const entryName = entryStep?.name ?? WorkflowSteps.SPECIFY;
-                const entryCommand = entryStep?.command
-                    ?? resolveStepCommand(normalized, WorkflowSteps.SPECIFY);
-                workflows.push({
-                    name: wf.name,
-                    displayName: wf.displayName || wf.name,
-                    description: wf.description,
-                    stepSpecify: `/${formatCommandForProvider(entryCommand)}`,
-                    stepPlan: formatCommandForProvider(wf[WorkflowSteps.CONFIG_PLAN] || (normalized.steps?.find(s => s.name === WorkflowSteps.PLAN)?.command) || 'speckit.plan'),
-                    stepImplement: formatCommandForProvider(wf[WorkflowSteps.CONFIG_IMPLEMENT] || (normalized.steps?.find(s => s.name === WorkflowSteps.IMPLEMENT)?.command) || 'speckit.implement'),
-                    specifyCommands: (wf.commands || [])
-                        .filter(c => c.step === entryName || c.step === WorkflowSteps.SPECIFY)
-                        .map(c => ({ name: c.name, title: c.title || c.name, command: c.command, tooltip: c.tooltip })),
-                });
-            }
-        }
+    private buildWorkflowDefinitions(): WorkflowDefinition[] {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const choices = buildWorkflowChoices(root, getConfiguredProviderType(), this.outputChannel);
+        const workflows: WorkflowDefinition[] = choices.map(choice => ({
+            name: choice.name,
+            displayName: choice.displayName,
+            description: choice.description,
+            installed: choice.installed,
+            stepSpecify: `/${formatCommandForProvider(choice.entryCommand)}`,
+            ...(choice.supportsAuto ? { supportsAuto: true } : {}),
+            ...(choice.specifyCommands?.length ? { specifyCommands: choice.specifyCommands } : {}),
+        }));
 
         // Cache workflows for lookup. Rebuilt on every panel open; correctness
         // across an aiProvider change relies on that change forcing a window
@@ -263,15 +221,15 @@ export class SpecEditorProvider {
                 break;
 
             case 'submit':
-                await this.handleSubmit(message.content, message.images, message.workflow);
+                await this.handleSubmit(message.content, message.images, message.workflow, message.chosenAs);
                 break;
 
             case 'submitAuto':
-                await this.handleSubmit(message.content, message.images, COMPANION_WORKFLOW_NAME, undefined, true);
+                await this.handleSubmit(message.content, message.images, message.workflow, message.chosenAs, undefined, true);
                 break;
 
             case 'submitCommand':
-                await this.handleSubmit(message.content, message.images, message.workflow, message.command);
+                await this.handleSubmit(message.content, message.images, message.workflow, message.chosenAs, message.command);
                 break;
 
             case 'preview':
@@ -309,7 +267,7 @@ export class SpecEditorProvider {
      * Handle webview ready - send initial data
      */
     private async handleReady(): Promise<void> {
-        const workflows = this.getWorkflows();
+        const workflows = this.buildWorkflowDefinitions();
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         const defaultWorkflow = resolveEffectiveDefaultWorkflow(workspaceRoot);
         this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
@@ -319,7 +277,7 @@ export class SpecEditorProvider {
     /**
      * Handle spec submission
      */
-    private async handleSubmit(content: string, imageIds: string[], workflowName: string, customCommand?: string, auto?: boolean): Promise<void> {
+    private async handleSubmit(content: string, imageIds: string[], workflowName: string, chosenAs: WorkflowChosenAs, customCommand?: string, auto?: boolean): Promise<void> {
         if (!this.sessionId) {
             this.postMessage({ type: 'error', message: 'No active session' });
             return;
@@ -338,6 +296,9 @@ export class SpecEditorProvider {
             !customCommand &&
             !(root ? isCompanionInstalled(root) : false);
         let installFirstHandled = false;
+        // The effective post-install-modal selection: what this spec actually runs,
+        // seeded into its record and reported to telemetry (FR-009).
+        let effectiveWorkflowName = workflowName;
         if (companionNeedsInstall) {
             const decision = await this.promptCompanionInstallFirst();
             // Nothing was posted yet, so the editor stays interactive on abort.
@@ -349,16 +310,17 @@ export class SpecEditorProvider {
             }
             // decision === 'continue' → the user chose stock; proceed with the graceful downgrade.
             installFirstHandled = true;
+            effectiveWorkflowName = SPECKIT_WORKFLOW_NAME;
         }
 
         try {
             this.postMessage({ type: 'submissionStarted' });
-            this.outputChannel.appendLine(`[SpecEditor] Submitting spec with workflow: ${workflowName}, ${imageIds.length} images`);
+            this.outputChannel.appendLine(`[SpecEditor] Submitting spec with workflow: ${effectiveWorkflowName}, ${imageIds.length} images`);
 
             // Get selected workflow
-            const workflow = this.workflows.get(workflowName) || this.workflows.get('speckit');
+            const workflow = this.workflows.get(effectiveWorkflowName) || this.workflows.get('speckit');
             if (!workflow) {
-                throw new Error(`Workflow '${workflowName}' not found`);
+                throw new Error(`Workflow '${effectiveWorkflowName}' not found`);
             }
 
             // Get attached images
@@ -431,7 +393,7 @@ export class SpecEditorProvider {
                     return;
                 }
                 command = `/${formatCommandForProvider(resolution.command)}`;
-            } else if (!customCommand && workflowName === COMPANION_WORKFLOW_NAME) {
+            } else if (!customCommand && effectiveWorkflowName === COMPANION_WORKFLOW_NAME) {
                 const resolution = resolveDispatchForRoot(COMPANION_SPECIFY_COMMAND, workspaceRoot);
                 // specify always has a stock twin, so command is never suppressed (null) here.
                 command = `/${formatCommandForProvider(resolution.command ?? 'speckit.specify')}`;
@@ -440,11 +402,17 @@ export class SpecEditorProvider {
                 }
             }
 
-            // Seed the chosen workflow name verbatim into `.spec-context.json` so
+            // One id for the whole funnel: sent with spec.created/phase.dispatched
+            // AND seeded into the new spec's record by the creation preamble, so
+            // created → dispatched → completed join on the same id.
+            const specInstanceId = crypto.randomUUID();
+
+            // Seed the effective workflow name into `.spec-context.json` so
             // downstream step-resolution (getWorkflow) dispatches the right command
-            // family for every step. A Companion pick seeds `companion` even when the
-            // extension is missing — each step then applies the same fallback.
-            const specContextInstruction = buildSpecifyCreationPreamble(workflowName, null);
+            // family for every step — the same value telemetry attributes, so the
+            // on-disk record and the reported workflow can never diverge. The
+            // minted id rides along so later events for this spec carry it too.
+            const specContextInstruction = buildSpecifyCreationPreamble(effectiveWorkflowName, null, specInstanceId);
             if (specContextInstruction) {
                 await this.tempFileManager.appendToMarkdownFile(
                     tempFileSet.markdownFilePath,
@@ -458,17 +426,16 @@ export class SpecEditorProvider {
             // Execute in terminal
             await provider.executeInTerminal(prompt, 'SpecKit - New Spec');
 
-            // Anonymous spec.created + phase.dispatched(specify), sharing one
-            // freshly-minted id. The spec dir doesn't exist yet (the AI creates it),
-            // so the persisted per-spec id is minted lazily on the first later event;
-            // this carries the id as a creation marker. Workflow is derived from the
-            // resolved command (a Companion pick routes via the `companion.*` family)
-            // so a missing-extension downgrade to stock is reported as `speckit`.
-            const specInstanceId = crypto.randomUUID();
-            sendTelemetryEvent('spec.created', {
+            // Anonymous spec.created + phase.dispatched(specify), sharing the id
+            // the preamble also seeds into the spec's record. Attribution is the
+            // effective post-modal selection through the single shared coercer —
+            // never sniffed from the dispatched command text (FR-009).
+            reportSpecCreated({
                 providerId: providerType,
-                workflow: command.includes('companion.') ? COMPANION_WORKFLOW_NAME : 'speckit',
+                workflow: workflowTelemetryId(effectiveWorkflowName),
                 specInstanceId,
+                chosenAs,
+                source: 'form',
             });
             // Specify is dispatched HERE (via Create Spec), not through the viewer rail
             // like plan/tasks/implement — so emit the same phase.dispatched event the
@@ -653,10 +620,8 @@ export class SpecEditorProvider {
 
                 <div class="workflow-row">
                     <div class="workflow-selector" id="workflowSelector" style="display: none;">
-                        <label for="workflowSelect">Workflow</label>
-                        <select id="workflowSelect">
-                            <option value="speckit">SpecKit</option>
-                        </select>
+                        <span class="workflow-selector-label" id="workflowChoicesLabel">Workflow</span>
+                        <div class="workflow-choices" id="workflowChoices" role="radiogroup" aria-labelledby="workflowChoicesLabel"></div>
                     </div>
                 </div>
 
