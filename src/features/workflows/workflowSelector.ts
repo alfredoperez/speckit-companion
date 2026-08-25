@@ -9,15 +9,18 @@ import * as vscode from 'vscode';
 import { WorkflowConfig } from './types';
 import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow, resolveEffectiveDefaultWorkflow } from './workflowManager';
 import { sendTelemetryEvent } from '../../core/telemetry';
+import { COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
 
 /**
  * Map a chosen workflow to the value reported in telemetry: the built-in
- * `speckit` id verbatim, or the literal `"custom"` for any user-defined
- * workflow (privacy: never send a user's custom workflow name).
+ * `speckit`/`companion` ids verbatim, or the literal `"custom"` for any
+ * user-defined workflow (privacy: never send a user's custom workflow name).
  */
 function workflowTelemetryId(workflowName: string): string {
     // Legacy `'default'` is an alias for the built-in `speckit` workflow.
-    return workflowName === 'speckit' || workflowName === 'default' ? 'speckit' : 'custom';
+    if (workflowName === SPECKIT_WORKFLOW_NAME || workflowName === 'default') return SPECKIT_WORKFLOW_NAME;
+    if (workflowName === COMPANION_WORKFLOW_NAME) return COMPANION_WORKFLOW_NAME;
+    return 'custom';
 }
 
 /**
