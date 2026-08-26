@@ -350,26 +350,27 @@ def atomic_write(target: Path, ctx: dict) -> None:
     and no debris when the write fails.
     """
     try:
-        import companion_config as cc
-
-        cc.atomic_write_text(str(target),
-                             json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
-        return
-    except ImportError:
-        pass
-    finally:
-        _release_lock(target)
-    tmp = target.with_suffix(target.suffix + ".tmp")
-    try:
-        tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        os.replace(tmp, target)
-    except OSError:
         try:
-            tmp.unlink(missing_ok=True)  # don't litter on a failed write
-        except OSError:
+            import companion_config as cc
+
+            cc.atomic_write_text(str(target),
+                                 json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
+            return
+        except ImportError:
             pass
-        raise
+        tmp = target.with_suffix(target.suffix + ".tmp")
+        try:
+            tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            os.replace(tmp, target)
+        except OSError:
+            try:
+                tmp.unlink(missing_ok=True)  # don't litter on a failed write
+            except OSError:
+                pass
+            raise
     finally:
+        # One release, after the publish (or its failure) on either path — an
+        # early release on the fallback path would reopen the #620 window.
         _release_lock(target)
 
 
