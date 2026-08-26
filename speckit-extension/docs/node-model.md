@@ -161,6 +161,8 @@ In v1 this changes *assembly order only*, not the per-node output text — true 
 | `type: node` hook with a missing `ref` file | **Error** (real misconfiguration) |
 | `reads:` a node the recipe dropped | **Load-time error** |
 
+"Unparseable" means anything outside the reader's constrained subset — block maps, block sequences, inline flow, and quoted or bare scalars. Anchors and aliases, tab indentation, block scalars (`|`, `>`) and multiple documents are all read as malformed, each reported once with the line at fault, and so is any file the reader cannot read to the end. A rejected file contributes nothing: the shipped defaults are used rather than the part that happened to parse, because a half-applied config reads as configured while silently not being.
+
 A hook never fails the host command: its own failure is reported and the pipeline continues unless that clearly makes the rest unsafe — the same "never fail the host command" stance as `mark-complete`.
 
 > **Node hook ≠ lifecycle hook.** These `before`/`after` inserts are *node hooks* (this config). The engine-level **lifecycle hooks** in `extension.yml` (`after_specify` → capture) are a different mechanism and are unaffected.

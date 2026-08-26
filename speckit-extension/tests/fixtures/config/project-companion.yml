@@ -1,0 +1,42 @@
+# SpecKit Companion — project config for speckit-companion itself.
+#
+# Run tracing needs no switch: every capture and drift call already records itself
+# to specs/<NNN>/.trace.jsonl, which the doctor reads at the end of implement.
+#
+# NOTE: this file is read by a constrained YAML parser. Block maps, block
+# sequences, inline flow, and quoted scalars only — no anchors or aliases.
+
+commands:
+  implement:
+    hooks:
+      before:
+        # `complete` is the node that marks the spec completed, so this is the last
+        # moment the run is still open — the right place to look at what it did.
+        complete:
+          - { type: command, run: "python3 .specify/extensions/companion/scripts/doctor.py --chat || true" }
+          - { type: prompt, text: "Read the doctor report above and act on it by this rule. FIX IN THIS RUN only what is this run's own unfinished bookkeeping — tasks completed but never journaled, a living-spec delta not yet folded. Those are yours and they are cheap. DO NOT fix anything else here: drift, template violations, step bleed, and capture failures are separate work, and folding them into the tail of an unrelated spec produces a diff nobody can review. Some findings cannot be fixed at all — history is append-only, so a journal written in one burst stays that way. For everything you are not fixing, record one concern on the spec naming what the doctor found. Then, only if there are problem-severity findings that are not self-inflicted, open ONE GitHub issue for the run with the doctor's own output as the body — one issue per run, never one per finding. If every finding is clean or self-inflicted, say so and open nothing." }
+        implement-exec:
+          - { type: node, ref: debug-timing }
+      after:
+        handoff:
+          - { type: prompt, text: "Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
+          - { type: prompt, text: "Run the code-simplifier agent on the files you changed and apply its safe behavior-preserving simplifications. If you have no agent tool, say so and continue." }
+          - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
+
+  specify:
+    hooks:
+      before:
+        draft-spec:
+          - { type: node, ref: debug-timing }
+
+  plan:
+    hooks:
+      before:
+        plan-doc:
+          - { type: node, ref: debug-timing }
+
+  tasks:
+    hooks:
+      before:
+        tasks-doc:
+          - { type: node, ref: debug-timing }

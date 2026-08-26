@@ -191,6 +191,256 @@ class FailureTableTests(unittest.TestCase):
             self.assertTrue(warnings and "malformed" in warnings[0])
 
 
+ANCHORED_CONFIG = """commands:
+  implement:
+    hooks:
+      before:
+        complete:
+          - { type: command, run: "echo hi" }
+      after:
+        handoff:
+          - { type: prompt, text: "review the diff" }
+  specify: &shared
+    hooks:
+      after:
+        handoff:
+          - { type: prompt, text: "..." }
+  plan: *shared
+"""
+
+
+class UnsupportedSyntaxTests(unittest.TestCase):
+    """Syntax the reader cannot represent degrades loudly, never to a half-applied config."""
+
+    def _load(self, text: str):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "companion.yml"
+            p.write_text(text)
+            return cc.load_config(str(p))
+
+    def test_an_anchored_config_is_reported_as_malformed(self) -> None:
+        cfg, warnings = self._load(ANCHORED_CONFIG)
+        self.assertEqual(cfg, {})
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("malformed companion.yml", warnings[0])
+        self.assertIn("using shipped defaults", warnings[0])
+
+    def test_an_anchored_config_applies_nothing_at_all(self) -> None:
+        cfg, _warnings = self._load(ANCHORED_CONFIG)
+        self.assertIsNone(cfg.get("commands"))
+        ordered, _merge_warnings = cc.merge_hooks(cfg, "implement", ["complete", "handoff"])
+        self.assertEqual(ordered, [])
+
+    def test_an_anchor_on_the_last_line_is_still_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            cc.load_yaml("commands:\n  specify: &shared\n")
+
+    def test_an_alias_with_its_anchor_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            cc.load_yaml("specify: &shared {}\ncommands:\n  plan: *shared\n")
+
+    def test_an_alias_shaped_token_with_no_anchor_reads_as_a_glob(self) -> None:
+        # Lexically identical to `- *bundle` in an exempt list. Real YAML would
+        # error on the undefined alias; here it stays a literal string, and the
+        # config fails visibly downstream if it was meant as an alias — better
+        # than rejecting every registry that holds an unquoted glob.
+        self.assertEqual(cc.load_yaml("commands:\n  plan: *shared\n"),
+                         {"commands": {"plan": "*shared"}})
+
+    def test_a_dotted_anchor_name_is_still_an_anchor(self) -> None:
+        with self.assertRaises(ValueError):
+            cc.load_yaml("a: &shared.spec {}\nb: *shared.spec\n")
+
+    def test_a_slashed_anchor_name_is_still_an_anchor(self) -> None:
+        with self.assertRaises(ValueError):
+            cc.load_yaml("a: &caps/auth {}\n")
+
+    def test_shell_operators_are_not_dotted_anchors(self) -> None:
+        cfg = cc.load_yaml('run: "a && b 2>&1"\nplain: a && b.sh 2>&1\n')
+        self.assertEqual(cfg["plain"], "a && b.sh 2>&1")
+
+    def test_a_dotted_glob_with_no_anchor_still_parses(self) -> None:
+        self.assertEqual(cc.load_yaml("exempt:\n  - *.min.js\n"),
+                         {"exempt": ["*.min.js"]})
+
+    def test_rendered_scalars_with_a_hash_round_trip(self) -> None:
+        rendered = "\n".join(cc.render_capability(
+            {"name": "auth #2", "match": ["src/auth/**"], "spec": "specs/my file #1.md"}))
+        cfg = cc.load_yaml("capabilities:\n" + rendered + "\n")
+        cap = cfg["capabilities"][0]
+        self.assertEqual(cap["name"], "auth #2")
+        self.assertEqual(cap["spec"], "specs/my file #1.md")
+
+    def test_the_rejection_names_the_line(self) -> None:
+        with self.assertRaises(ValueError) as caught:
+            cc.load_yaml("debug: true\n\n# a comment\ncommands: &shared\n")
+        self.assertIn("line 4", str(caught.exception))
+
+    def test_tab_indentation_is_rejected_not_collapsed(self) -> None:
+        cfg, warnings = self._load("commands:\n\timplement:\n\t\tnodes: [plan-doc]\n")
+        self.assertEqual(cfg, {})
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("malformed companion.yml", warnings[0])
+
+    def test_a_block_scalar_value_is_rejected(self) -> None:
+        cfg, warnings = self._load(
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      after:\n"
+            "        handoff:\n"
+            "          - type: prompt\n"
+            "            text: |\n"
+            "              first line\n"
+            "              second line\n"
+        )
+        self.assertEqual(cfg, {})
+        self.assertEqual(len(warnings), 1)
+
+    def test_a_folded_scalar_with_a_chomping_marker_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            cc.load_yaml("note: >-\n  folded text\n")
+
+    def test_a_document_separator_is_rejected(self) -> None:
+        cfg, warnings = self._load("debug: true\n---\ncommands:\n  plan:\n    nodes: [plan-doc]\n")
+        self.assertEqual(cfg, {})
+        self.assertEqual(len(warnings), 1)
+
+    def test_a_file_the_parser_stops_short_of_is_rejected(self) -> None:
+        with self.assertRaises(ValueError) as caught:
+            cc.load_yaml("commands:\n  plan:\n    nodes: [plan-doc]\n  tasks:\n- stray\n")
+        self.assertIn("line 5", str(caught.exception))
+
+
+class NothingAcceptedTodayIsNarrowedTests(unittest.TestCase):
+    """The guard widens what is reported; it must never shrink what parses."""
+
+    # A committed copy of this project's real config, not the live file. Asserting
+    # a fixed hook composition against the working config turns "someone added a
+    # hook" into a parser-regression failure, and the file has changed three times
+    # in recent memory.
+    PROJECT_CONFIG = Path(__file__).resolve().parent / "fixtures" / "config" / "project-companion.yml"
+
+    def test_a_real_world_config_resolves_every_hook_it_declares(self) -> None:
+        cfg, warnings = cc.load_config(str(self.PROJECT_CONFIG))
+        self.assertEqual(warnings, [])
+        implement, implement_warnings = cc.merge_hooks(
+            cfg, "implement", ["complete", "implement-exec", "handoff"]
+        )
+        self.assertEqual(implement_warnings, [])
+        self.assertEqual(
+            [(h["when"], h["anchor"]) for h in implement],
+            [
+                ("before", "complete"),
+                ("before", "complete"),
+                ("before", "implement-exec"),
+                ("after", "handoff"),
+                ("after", "handoff"),
+                ("after", "handoff"),
+            ],
+        )
+        for command, anchor in (("specify", "draft-spec"), ("plan", "plan-doc"), ("tasks", "tasks-doc")):
+            ordered, step_warnings = cc.merge_hooks(cfg, command, [anchor])
+            self.assertEqual(step_warnings, [])
+            self.assertEqual(len(ordered), 1)
+            self.assertEqual(ordered[0]["hook"], {"type": "node", "ref": "debug-timing"})
+
+    def test_the_live_project_config_parses_without_warnings(self) -> None:
+        # The valuable half of reading the working file: it must stay inside the
+        # supported subset. Nothing is asserted about WHAT it declares, so adding
+        # a hook is not a parser failure.
+        live = Path(__file__).resolve().parent.parent.parent / ".specify" / "companion.yml"
+        if not live.is_file():
+            self.skipTest("not running inside the speckit-companion checkout")
+        cfg, warnings = cc.load_config(str(live))
+        self.assertEqual(warnings, [], f"the project's own config no longer parses: {warnings}")
+        self.assertTrue(cfg.get("commands"), "a config that parses to nothing is a silent truncation")
+
+    def _tmp_config(self, body: str) -> str:
+        d = tempfile.mkdtemp()
+        path = Path(d) / "companion.yml"
+        path.write_text(body, encoding="utf-8")
+        return str(path)
+
+    def test_an_alias_inside_a_flow_collection_is_rejected(self) -> None:
+        # Scanning only the first token of each half let this through, and the
+        # assembler received a node id that cannot exist — the config half-applied.
+        # The token is only an alias when its anchor is defined; bare, it is a glob.
+        for body in ("shared: &shared {}\nnodes: [*shared]",
+                     "shared: &shared {}\nhooks:\n  - { type: prompt, text: *shared }"):
+            with self.subTest(body):
+                cfg, warnings = cc.load_config(self._tmp_config(body + "\n"))
+                self.assertEqual(cfg, {})
+                self.assertEqual(len(warnings), 1)
+                self.assertIn("anchors and aliases", warnings[0])
+
+    def test_a_document_separator_is_reported_with_its_line(self) -> None:
+        cfg, warnings = cc.load_config(self._tmp_config("commands: {}\n---\nmore: yes\n"))
+        self.assertEqual(cfg, {})
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("line 2", warnings[0])
+        self.assertIn("one document", warnings[0])
+
+    def test_shell_redirects_in_an_unquoted_command_still_parse(self) -> None:
+        # `2>&1` matched the alias pattern and threw away the whole config, with a
+        # message about anchors on a line containing none.
+        for body in ("run: cmd > log 2>&1", "run: cmd 1>&2"):
+            with self.subTest(body):
+                self.assertEqual(cc._unsupported(body), "")
+
+    def test_unquoted_globs_ending_in_a_name_still_parse(self) -> None:
+        for body in ("- *tmp", "- *bundle", "exempt: [*.min.js, *bundle]"):
+            with self.subTest(body):
+                self.assertEqual(cc._unsupported(body), "")
+
+    def test_an_alias_is_only_an_alias_when_its_anchor_is_defined(self) -> None:
+        # `*shared` with no `&shared` anywhere is a glob and must parse; the same
+        # token with the anchor defined is an alias and must be rejected.
+        self.assertEqual(cc.load_yaml("nodes: [*shared]"), {"nodes": ["*shared"]})
+        with self.assertRaises(ValueError) as ctx:
+            cc.load_yaml("a: &shared\nb: [*shared]")
+        self.assertIn("anchors and aliases", str(ctx.exception))
+
+    def test_a_zero_indent_sequence_is_rejected_with_an_actionable_hint(self) -> None:
+        with self.assertRaises(ValueError) as ctx:
+            cc.load_yaml("capabilities:\n- name: auth\n")
+        self.assertIn("indent", str(ctx.exception))
+
+    def test_a_marker_character_later_in_a_value_stays_ordinary_text(self) -> None:
+        cfg = cc.load_yaml(
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      before:\n"
+            "        handoff:\n"
+            "          - type: command\n"
+            "            run: npm run build && npm test > build.log\n"
+        )
+        hook = cfg["commands"]["implement"]["hooks"]["before"]["handoff"][0]
+        self.assertEqual(hook["run"], "npm run build && npm test > build.log")
+
+    def test_a_quoted_glob_in_a_flow_seq_stays_a_glob(self) -> None:
+        cfg = cc.load_yaml('exempt: ["*.config.*", "**/migrations/**"]\n')
+        self.assertEqual(cfg["exempt"], ["*.config.*", "**/migrations/**"])
+
+    def test_an_unquoted_glob_in_a_block_seq_stays_a_glob(self) -> None:
+        cfg = cc.load_yaml("exempt:\n  - *.config.*\n  - **/migrations/**\n")
+        self.assertEqual(cfg["exempt"], ["*.config.*", "**/migrations/**"])
+
+    def test_a_marker_inside_a_comment_or_a_quoted_value_is_not_a_rejection(self) -> None:
+        cfg = cc.load_yaml(
+            "# reuse via &shared is not supported here\n"
+            "commands:\n"
+            "  implement:\n"
+            "    hooks:\n"
+            "      before:\n"
+            "        handoff:\n"
+            '          - { type: command, run: "echo &shared | tee log" }\n'
+        )
+        hook = cfg["commands"]["implement"]["hooks"]["before"]["handoff"][0]
+        self.assertEqual(hook["run"], "echo &shared | tee log")
+
+
 if __name__ == "__main__":
     unittest.main()
 

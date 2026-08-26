@@ -319,3 +319,16 @@ Capture writes decisions, verifications, and concerns as entries carrying an ide
 - **WHEN** a captured list carries an entry with no identity value among well-formed ones
 - **THEN** that entry is skipped and the remaining entries are still read
 - **AND** the command still exits successfully
+
+### A configuration the reader cannot fully read is rejected whole, never applied in part
+
+Every configuration this runtime reads is either understood completely or not used at all. A reader that meets syntax outside the subset it supports, or that stops before the end of the file for any reason, MUST report the file as malformed and fall back to the shipped defaults — it MUST NOT return the portion it happened to understand. A partially applied configuration is worse than none, because the author reads their own file and believes all of it is live while some of it silently is not. The report SHALL name the line at fault, and, per the never-fail contract, SHALL reach the caller as a warning rather than an exception.
+
+#### Scenario: the file uses syntax the reader does not support
+- **WHEN** a configuration reaches for a YAML feature outside the supported subset
+- **THEN** one warning reports the file as malformed and names the line
+- **AND** the shipped defaults are used, with nothing from the file applied
+
+#### Scenario: the reader stops before the last line
+- **WHEN** parsing ends with part of the file unread, whatever the cause
+- **THEN** the file is reported as malformed rather than returning what was understood so far
