@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from doctor import CheckStatus, Finding  # noqa: E402
+from doctor import CheckStatus, Finding, parse_commit_log, run_git  # noqa: E402
 
 DRIFT_SCRIPT = "drift.py"
 
@@ -41,15 +41,6 @@ CLASS_UNKNOWN = "unknown"
 
 _SEVERITY = {CLASS_REAL: "warning", CLASS_BASELINE: "warning",
              CLASS_SELF: "note", CLASS_UNKNOWN: "note"}
-
-
-def _git(root, args: list) -> tuple:
-    try:
-        p = subprocess.run(["git", "-C", str(root), *args],
-                           capture_output=True, text=True, timeout=30)
-        return p.returncode, p.stdout
-    except (OSError, subprocess.SubprocessError):
-        return 1, ""
 
 
 def recompute(root) -> dict | None:
@@ -77,31 +68,21 @@ def _commits_for(root, baseline: str, files: list) -> list:
     """The commits since `baseline` that touched any of `files`, newest first."""
     if not baseline or not files:
         return []
-    code, out = _git(root, ["log", "--format=%H%x1f%s", "--name-only",
-                            f"{baseline}..HEAD", "--", *files])
+    code, out = run_git(root, ["log", "--format=%H%x1f%s", "--name-only",
+                               f"{baseline}..HEAD", "--", *files])
     if code != 0:
         return []
-    commits, sha, subject, touched = [], None, None, []
-    for line in out.splitlines():
-        if "\x1f" in line:
-            if sha:
-                commits.append({"sha": sha[:8], "subject": subject, "files": touched})
-            sha, subject, touched = line.split("\x1f", 1)[0], line.split("\x1f", 1)[1], []
-        elif line.strip():
-            touched.append(line.strip())
-    if sha:
-        commits.append({"sha": sha[:8], "subject": subject, "files": touched})
-    return commits
+    return parse_commit_log(out)
 
 
 def _baseline_is_ancestor(root, baseline: str) -> bool | None:
     """True / False / None — None means git could not answer, which is not a no."""
     if not baseline:
         return None
-    code, _ = _git(root, ["merge-base", "--is-ancestor", baseline, "HEAD"])
+    code, _ = run_git(root, ["merge-base", "--is-ancestor", baseline, "HEAD"])
     if code == 0:
         return True
-    code2, out = _git(root, ["cat-file", "-t", baseline])
+    code2, out = run_git(root, ["cat-file", "-t", baseline])
     if code2 != 0 or out.strip() != "commit":
         return None  # the baseline is not a commit we can reach — cannot tell
     return False
@@ -115,7 +96,7 @@ def _renamed_files(root, baseline: str, files: list) -> list:
     """
     if not baseline or not files:
         return []
-    code, out = _git(root, ["diff", "--diff-filter=R", "--name-status", "-M", baseline, "HEAD"])
+    code, out = run_git(root, ["diff", "--diff-filter=R", "--name-status", "-M", baseline, "HEAD"])
     if code != 0:
         return []
     renamed = {line.split("\t")[-1] for line in out.splitlines() if line.startswith("R")}
@@ -167,12 +148,14 @@ def _recorded_claims(ctx: dict) -> list:
     """Anything the run recorded that asserts a drift verdict."""
     out = []
     for entry in ctx.get("verified") or []:
-        text = entry.get("what") if isinstance(entry, dict) else str(entry)
-        blob = json.dumps(entry, ensure_ascii=False) if isinstance(entry, dict) else str(entry)
+        if isinstance(entry, dict):
+            text, at = entry.get("what"), entry.get("at")
+            blob = json.dumps(entry, ensure_ascii=False)
+        else:
+            text = blob = str(entry)
+            at = None
         if text and "drift" in blob.lower():
-            out.append({"source": "verified[]", "text": text,
-                        "at": entry.get("at") if isinstance(entry, dict) else None,
-                        "blob": blob})
+            out.append({"source": "verified[]", "text": text, "at": at, "blob": blob})
     return out
 
 

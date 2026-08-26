@@ -3,7 +3,7 @@
   "specName": "Pipeline Doctor",
   "branch": "599-pipeline-doctor",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -394,6 +394,173 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-08-26T01:26:04.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:28:29.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:28:29.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:28:29.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:28:29.658Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:28:29.782Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T041",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:31:12.104Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T042",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:31:12.232Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T043",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:31:12.364Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T044",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:31:12.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T045",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:31:12.618Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T046",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:33:39.856Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T047",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:33:39.978Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T048",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:33:40.097Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T049",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:33:40.216Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T050",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:35.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T051",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:35.334Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T052",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:35.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T053",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:35.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T054",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:35.838Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T055",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:39:43.892Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T01:39:43.984Z"
     }
   ],
   "unattended": true,
@@ -401,15 +568,22 @@
     "loaded": [
       "companion-commands",
       "capture-runtime"
+    ],
+    "synced": [
+      "capture-runtime",
+      "companion-commands"
     ]
   },
-  "last_action": "batch smoke",
+  "last_action": "verifying the classification fix",
   "coverage": {
     "FR-001": {
       "title": "The system MUST provide a read-only health check that can be run against any spec directory at any time and MUST NOT modify any file it inspects.",
       "tasks": [
         "T006",
         "T007"
+      ],
+      "tests": [
+        "tests/test_doctor.py::LedgerTests::test_the_doctor_modifies_nothing_it_examines"
       ]
     },
     "FR-002": {
@@ -417,36 +591,54 @@
       "tasks": [
         "T006",
         "T015"
+      ],
+      "tests": [
+        "tests/test_doctor.py::RecordAuditTests"
       ]
     },
     "FR-003": {
       "title": "The health check MUST report any step whose start has no matching finish, naming the step.",
       "tasks": [
         "T010"
+      ],
+      "tests": [
+        "tests/test_doctor.py::RecordAuditTests::test_dangling_start_is_reported_with_its_step"
       ]
     },
     "FR-004": {
       "title": "The health check MUST report any task marked done in the task list that has no matching finish in the run record.",
       "tasks": [
         "T011"
+      ],
+      "tests": [
+        "tests/test_doctor.py::RecordAuditTests::test_checked_tasks_without_a_journal_entry_are_named"
       ]
     },
     "FR-005": {
       "title": "The health check MUST detect task finishes clustered into a single burst and report them as batched journaling rather than as measured per-task durations.",
       "tasks": [
         "T012"
+      ],
+      "tests": [
+        "tests/test_doctor.py::RecordAuditTests::test_burst_journaling_is_reported_as_batched_not_as_durations"
       ]
     },
     "FR-006": {
       "title": "The health check MUST report attribution anomalies — a step closed by an author that is not the one the pipeline reserves for that step.",
       "tasks": [
         "T013"
+      ],
+      "tests": [
+        "tests/test_doctor.py::RecordAuditTests::test_an_ai_close_on_an_extension_owned_step_is_an_anomaly"
       ]
     },
     "FR-007": {
       "title": "The health check MUST classify the \"status says one thing, the pipeline bar offers another\" symptom as either \"the records disagree with each other\" (a capture defect) or \"the records are consistent\" (a display defect).",
       "tasks": [
         "T014"
+      ],
+      "tests": [
+        "tests/test_doctor.py::TriageTests"
       ]
     },
     "FR-008": {
@@ -454,12 +646,18 @@
       "tasks": [
         "T004",
         "T007"
+      ],
+      "tests": [
+        "tests/test_doctor.py::LedgerTests::test_a_check_that_did_not_run_never_renders_as_clean"
       ]
     },
     "FR-009": {
       "title": "The health check MUST exit successfully whatever it finds; a finding is a report, never a gate that blocks a pipeline.",
       "tasks": [
         "T006"
+      ],
+      "tests": [
+        "tests/test_doctor.py::LedgerTests::test_the_doctor_never_exits_non_zero"
       ]
     },
     "FR-010": {
@@ -469,13 +667,18 @@
         "T020",
         "T021"
       ],
-      "tests": "speckit-extension/tests/test_trace.py"
+      "tests": [
+        "tests/test_trace.py::TraceWriterTests::test_one_line_per_call"
+      ]
     },
     "FR-011": {
       "title": "A failed capture call MUST leave a trace entry carrying the reason it failed.",
       "tasks": [
         "T017",
         "T020"
+      ],
+      "tests": [
+        "tests/test_trace.py::TraceWriterTests::test_a_declined_call_keeps_its_reason_verbatim"
       ]
     },
     "FR-012": {
@@ -484,6 +687,10 @@
         "T001",
         "T017",
         "T018"
+      ],
+      "tests": [
+        "tests/test_trace.py::TraceWriterTests::test_the_trace_ignores_itself_on_first_write",
+        "tests/test_trace.py::TraceWriterTests::test_the_cap_rolls_old_entries_off_and_records_how_many"
       ]
     },
     "FR-013": {
@@ -491,6 +698,9 @@
       "tasks": [
         "T017",
         "T055"
+      ],
+      "tests": [
+        "tests/test_nodes.py::DebugRenderTests::test_off_renders_carry_no_instrumentation_text_at_all"
       ]
     },
     "FR-014": {
@@ -498,30 +708,45 @@
       "tasks": [
         "T019",
         "T022"
+      ],
+      "tests": [
+        "tests/test_trace.py::TraceReaderTests::test_rewrite_counts_are_per_file"
       ]
     },
     "FR-015": {
       "title": "The drift audit MUST recompute drift itself from the deterministic ground truth and MUST NOT trust any previously recorded drift verdict.",
       "tasks": [
         "T026"
+      ],
+      "tests": [
+        "tests/test_doctor_drift.py::GroundTruthTests"
       ]
     },
     "FR-016": {
       "title": "The drift audit MUST show its work for each flag: the capability, the files changed since that capability's spec was last committed, and the commits that changed them.",
       "tasks": [
         "T027"
+      ],
+      "tests": [
+        "tests/test_doctor_drift.py::ClassificationTests::test_real_drift_names_its_files_and_commits"
       ]
     },
     "FR-017": {
       "title": "The drift audit MUST classify each flag as real drift, self-inflicted (caused by the companion's own writes), or suspect baseline (wrong comparison point, renames).",
       "tasks": [
         "T028"
+      ],
+      "tests": [
+        "tests/test_doctor_drift.py::ClassificationTests"
       ]
     },
     "FR-018": {
       "title": "The drift audit MUST report a recorded claim of drift-clean that contradicts its own recomputation as a false claim.",
       "tasks": [
         "T029"
+      ],
+      "tests": [
+        "tests/test_doctor_drift.py::FalseClaimTests::test_a_drift_clean_claim_contradicted_by_recomputation_is_reported"
       ]
     },
     "FR-019": {
@@ -529,42 +754,63 @@
       "tasks": [
         "T026",
         "T028"
+      ],
+      "tests": [
+        "tests/test_doctor_drift.py::ClassificationTests::test_an_unreachable_baseline_is_unknown_never_clean"
       ]
     },
     "FR-020": {
       "title": "Drift evaluations MUST record their own inputs to the trace so repeated verdicts can be compared over time.",
       "tasks": [
         "T021"
+      ],
+      "tests": [
+        "tests/test_trace.py::TraceReaderTests::test_a_drift_verdict_line_is_not_mistaken_for_a_failed_call"
       ]
     },
     "FR-021": {
       "title": "When completion was attempted but the spec did not reach the terminal state, the health check MUST state which of these happened: the write never arrived, the write was refused (and why), or the write landed and the display disagrees.",
       "tasks": [
         "T032"
+      ],
+      "tests": [
+        "tests/test_doctor.py::CompletionTests"
       ]
     },
     "FR-022": {
       "title": "The health check MUST distinguish \"completion was never attempted\" from \"completion failed\".",
       "tasks": [
         "T032"
+      ],
+      "tests": [
+        "tests/test_doctor.py::CompletionTests::test_the_four_outcomes_never_collapse"
       ]
     },
     "FR-023": {
       "title": "The health check MUST verify the task list still carries its generated shape — one phase per user story, waves inside each phase, join lines and checkpoints intact.",
       "tasks": [
         "T035"
+      ],
+      "tests": [
+        "tests/test_doctor.py::TemplateFidelityTests::test_an_intact_task_file_passes"
       ]
     },
     "FR-024": {
       "title": "The health check MUST flag a task list whose user-story sections were renamed, flattened, or replaced after generation as a template violation, naming the offending headings.",
       "tasks": [
         "T035"
+      ],
+      "tests": [
+        "tests/test_doctor.py::TemplateFidelityTests::test_a_flattened_file_is_flagged_and_its_headings_are_named"
       ]
     },
     "FR-025": {
       "title": "The system MUST provide a debug switch in the project's own companion configuration file, not as an editor setting.",
       "tasks": [
         "T037"
+      ],
+      "tests": [
+        "tests/test_config.py::DebugFlagTests"
       ]
     },
     "FR-026": {
@@ -572,6 +818,9 @@
       "tasks": [
         "T039",
         "T040"
+      ],
+      "tests": [
+        "tests/test_nodes.py::DebugRenderTests::test_off_renders_carry_no_instrumentation_text_at_all"
       ]
     },
     "FR-027": {
@@ -580,6 +829,9 @@
         "T038",
         "T039",
         "T040"
+      ],
+      "tests": [
+        "tests/test_nodes.py::DebugRenderTests::test_on_renders_carry_the_instrumentation"
       ]
     },
     "FR-028": {
@@ -587,6 +839,9 @@
       "tasks": [
         "T036",
         "T051"
+      ],
+      "tests": [
+        "tests/test_nodes.py::DebugRenderTests::test_turning_it_off_again_restores_the_exact_off_render"
       ]
     },
     "FR-029": {
@@ -594,30 +849,45 @@
       "tasks": [
         "T042",
         "T045"
+      ],
+      "tests": [
+        "tests/test_doctor_chat.py::CauseTests"
       ]
     },
     "FR-030": {
       "title": "The deep audit MUST distinguish work that was tried and failed, work that was retried, and work that was never attempted.",
       "tasks": [
         "T044"
+      ],
+      "tests": [
+        "tests/test_doctor_chat.py::CauseTests::test_a_step_that_stopped_is_distinguished_from_one_still_running"
       ]
     },
     "FR-031": {
       "title": "The deep audit MUST surface claims recorded during the run that contradict the recomputed reality.",
       "tasks": [
         "T044"
+      ],
+      "tests": [
+        "tests/test_doctor_chat.py::ContradictionTests"
       ]
     },
     "FR-032": {
       "title": "The deep audit MUST quantify wasted output, including extra summaries, narration, and repeated rewrites of the same file.",
       "tasks": [
         "T045"
+      ],
+      "tests": [
+        "tests/test_doctor_chat.py::CauseTests::test_repeated_rewrites_of_one_file_are_quantified"
       ]
     },
     "FR-033": {
       "title": "The deep audit MUST degrade to a single \"not available\" line and exit successfully where no transcript exists or its format can no longer be parsed.",
       "tasks": [
         "T043"
+      ],
+      "tests": [
+        "tests/test_doctor_chat.py::DegradationTests"
       ]
     },
     "FR-034": {
@@ -625,18 +895,27 @@
       "tasks": [
         "T046",
         "T048"
+      ],
+      "tests": [
+        "examples/todo-claude/bench/lib.mjs::runDoctor"
       ]
     },
     "FR-035": {
       "title": "The harness MUST include a deliberately oversized variant large enough to surface batched task journaling when it occurs.",
       "tasks": [
         "T046"
+      ],
+      "tests": [
+        "examples/todo-claude/bench/prompts/oversized.md"
       ]
     },
     "FR-036": {
       "title": "The harness MUST include a failure-injection fixture that proves a failed capture is recorded and reported rather than lost.",
       "tasks": [
         "T047"
+      ],
+      "tests": [
+        "examples/todo-claude/bench/fixtures/failure-injection/inject.mjs"
       ]
     },
     "FR-037": {
@@ -644,6 +923,9 @@
       "tasks": [
         "T036",
         "T055"
+      ],
+      "tests": [
+        "tests/test_capture_fields.py::CloseTaskTests::test_it_matches_what_append_then_materialize_produces"
       ]
     },
     "FR-038": {
@@ -652,60 +934,91 @@
         "T006",
         "T017",
         "T043"
+      ],
+      "tests": [
+        "tests/test_trace.py::TraceWriterTests::test_the_tracer_never_raises_on_an_unwritable_directory",
+        "tests/test_doctor.py::LedgerTests::test_a_check_that_raises_becomes_a_skip_not_a_crash"
       ]
     },
     "FR-039": {
       "title": "The closing of a task SHOULD be reducible to a single call rather than the current pair of calls, without changing what is recorded.",
       "tasks": [
         "T024"
+      ],
+      "tests": [
+        "tests/test_capture_fields.py::CloseTaskTests"
       ]
     },
     "FR-040": {
       "title": "The end-of-step capture calls SHOULD be reducible to a single batched call rather than a volley of separate calls, without changing what is recorded.",
       "tasks": [
         "T023"
+      ],
+      "tests": [
+        "tests/test_capture_fields.py::BatchCaptureTests"
       ]
     },
     "FR-041": {
       "title": "The health check MUST report a specification that carries planning or tasking content — a task checklist, or a file-by-file breakdown — and name the evidence it found.",
       "tasks": [
         "T057"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::ArtifactShapeTests::test_a_spec_carrying_an_approach_section_is_plan_work"
       ]
     },
     "FR-042": {
       "title": "The health check MUST report a plan document that carries a task checklist as planning having done tasking work.",
       "tasks": [
         "T057"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::ArtifactShapeTests::test_a_plan_carrying_a_task_checklist_is_tasks_work"
       ]
     },
     "FR-043": {
       "title": "The health check MUST report a task list that carries substantial implementation code as tasking having done implementation work.",
       "tasks": [
         "T057"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::ArtifactShapeTests::test_a_task_list_carrying_implementation_code_is_implement_work"
       ]
     },
     "FR-044": {
       "title": "The health check MUST report the same task identifiers appearing in more than one artifact, naming the artifacts.",
       "tasks": [
         "T059"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::DuplicationTests"
       ]
     },
     "FR-045": {
       "title": "The health check MUST report source files committed while the run was still in a step before implement, naming the files and their commits.",
       "tasks": [
         "T059"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::EarlySourceTests"
       ]
     },
     "FR-046": {
       "title": "The health check MUST report a step before implement that consumed a larger share of the run than implement itself, as a signal rather than as a defect.",
       "tasks": [
         "T060"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::TimeShareTests"
       ]
     },
     "FR-047": {
       "title": "The health check MUST NOT report a deliberately fast-tracked small change as bleed when its specification carries its approach inline and its plan is a pointer.",
       "tasks": [
         "T057"
+      ],
+      "tests": [
+        "tests/test_doctor_bleed.py::ArtifactShapeTests::test_a_deliberately_fast_tracked_change_is_not_bleed"
       ]
     }
   },
@@ -778,6 +1091,36 @@
       "decision": "Ship the doctor as a command with no VS Code panel",
       "why": "It must run on a repo with no VS Code session, retroactively on old specs, and headlessly inside the bench; a panel would also put the diagnosis behind the very display the doctor exists to put on trial",
       "rejected": "Shipping a panel first — deferred to a follow-up once the verdict shape has settled"
+    },
+    {
+      "decision": "Named the tracer module run_trace.py rather than trace.py",
+      "why": "the scripts directory is prepended to sys.path, so a module named trace there would shadow the standard library trace module for every process that loads one of these scripts",
+      "rejected": "trace.py, which the plan originally named"
+    },
+    {
+      "decision": "A call that resolves to no spec writes to a repo-level unattributed log rather than being dropped",
+      "why": "the unresolvable-directory failure is the single most common capture failure there is, so dropping its line would hide exactly what the tracer exists to catch",
+      "rejected": "dropping the line, which the contract originally specified"
+    },
+    {
+      "decision": "The dangling-step check gives the current step a 30-minute grace period",
+      "why": "the doctor cannot see whether a process is alive, so time since the start is the only honest signal; the symptom this exists for is a step open for days, not one open for a minute",
+      "rejected": "excluding the current step outright, which would never flag the real case"
+    },
+    {
+      "decision": "The rename probe diffs without a pathspec and intersects afterwards",
+      "why": "a rename is a pair of paths, so narrowing the diff to the new name alone hides the pair and git reports an add — the check silently returned real drift for every rename",
+      "rejected": "passing the flagged files as a pathspec, which is what failed"
+    },
+    {
+      "decision": "Debug is forced off whenever a parity gate runs with --check",
+      "why": "debug is a local, temporary developer switch and must never be able to make CI fail or a golden capture drift",
+      "rejected": "letting the gate compare whatever the local config renders"
+    },
+    {
+      "decision": "Step bleed reports the time-share signal as a note, never a problem",
+      "why": "a genuinely hard planning phase is a legitimate reason for a long plan step, so the signal earns attention only alongside artifact evidence",
+      "rejected": "treating a disproportionate step as a defect on its own"
     }
   ],
   "step_summaries": {
@@ -788,9 +1131,13 @@
     },
     "tasks": {
       "summary": "55 tasks across 11 phases — Setup, Foundational, one phase per user story (US1–US8), and Polish; every phase laid out as waves with explicit join lines, and all 40 requirements mapped to tasks."
+    },
+    "implement": {
+      "step": "implement",
+      "summary": "60 tasks across 12 phases: a retroactive read-only doctor with eight checks, an always-on self-trace wired into the two capture funnels, a drift audit that recomputes and classifies, a step-bleed check, debug-mode rendering, a transcript deep audit, bench validation, and the two capture quick wins."
     }
   },
-  "currentTask": "T060",
+  "currentTask": "T055",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -1079,12 +1426,221 @@
         "speckit-extension/scripts/doctor_bleed.py",
         "speckit-extension/scripts/doctor.py"
       ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Wrote the debug tests — off renders byte-identical to golden, on renders carry the part, any non-literal-true value reads as off, and render time is when it is consumed",
+      "files": [
+        "speckit-extension/tests/test_config.py",
+        "speckit-extension/tests/test_nodes.py"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Read the top-level debug flag through the existing loader, inheriting its failure table so an unreadable config simply means off",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Wrote the debug-timing part — per-section boundary finishes, finish-only, authored once and shared by every pipeline command",
+      "files": [
+        "speckit-extension/presets/_parts/debug-timing.md"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "Appended the debug-timing part conditionally in node assembly, reusing the orchestrator part's existing seam and always comparing the off render against golden",
+      "files": [
+        "speckit-extension/scripts/assemble-nodes.py",
+        "speckit-extension/scripts/_command_parts.py"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "Applied the same conditional to the non-node command bodies",
+      "files": [
+        "speckit-extension/scripts/build-commands.py"
+      ]
+    },
+    "T041": {
+      "status": "DONE",
+      "did": "Wrote the chat-audit tests over a committed synthetic transcript — causes, contradictions, waste, and every degradation path",
+      "files": [
+        "speckit-extension/tests/test_doctor_chat.py",
+        "speckit-extension/tests/fixtures/doctor/chat/"
+      ]
+    },
+    "T042": {
+      "status": "DONE",
+      "did": "Implemented transcript discovery — project-path match under ~/.claude/projects intersected with the step's recorded time window, with an explicit override",
+      "files": [
+        "speckit-extension/scripts/doctor_chat.py"
+      ]
+    },
+    "T043": {
+      "status": "DONE",
+      "did": "Implemented defensive parsing that degrades to one not-available line and exits 0 on a missing, empty, or unreadable transcript",
+      "files": [
+        "speckit-extension/scripts/doctor_chat.py"
+      ]
+    },
+    "T044": {
+      "status": "DONE",
+      "did": "Implemented cause classification — tried-and-failed, retried, and stopped — and surfaced recorded claims the recomputation contradicts, showing both sides",
+      "files": [
+        "speckit-extension/scripts/doctor_chat.py"
+      ]
+    },
+    "T045": {
+      "status": "DONE",
+      "did": "Implemented the waste measure (narration, repeated commands, repeated file rewrites) and wired the audit behind --chat",
+      "files": [
+        "speckit-extension/scripts/doctor_chat.py",
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T046": {
+      "status": "DONE",
+      "did": "Added the oversized size and its Boards prompt — 15+ files and 25+ tasks with real wait-lines, so batched journaling has somewhere to show up",
+      "files": [
+        "examples/todo-claude/bench/lib.mjs",
+        "examples/todo-claude/bench/prompts/oversized.md"
+      ]
+    },
+    "T047": {
+      "status": "DONE",
+      "did": "Added the failure-injection fixture — a removed feature.json and a read-only context file, both reversible, reproducing real foreign-repo failures",
+      "files": [
+        "examples/todo-claude/bench/fixtures/failure-injection/"
+      ]
+    },
+    "T048": {
+      "status": "DONE",
+      "did": "Folded the doctor's --json verdict into bench scoring — each problem costs a tenth of the capture component, so a record that does not hold up scores lower",
+      "files": [
+        "examples/todo-claude/bench/lib.mjs"
+      ]
+    },
+    "T049": {
+      "status": "DONE",
+      "did": "Documented the oversized size, the failure-injection fixture, and how the doctor's verdict scores",
+      "files": [
+        "examples/todo-claude/bench/README.md"
+      ]
+    },
+    "T050": {
+      "status": "DONE",
+      "did": "Declared the doctor command in the manifest and authored its body with the standard fences, matching how living-drift ships",
+      "files": [
+        "speckit-extension/extension.yml",
+        "speckit-extension/commands/speckit.companion.doctor.md"
+      ]
+    },
+    "T051": {
+      "status": "DONE",
+      "did": "Documented the doctor command, the self-trace, and the debug flag — including that debug affects the next dispatched command, not one in flight",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T052": {
+      "status": "DONE",
+      "did": "Wrote the Unreleased changelog entry in user-facing release-note voice",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T053": {
+      "status": "DONE",
+      "did": "Brought every command-inventory surface in line with the manifest — agent records, install emissions, and both documentation tables",
+      "files": [
+        ".specify/extensions/.registry",
+        "speckit-extension/README.md",
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T054": {
+      "status": "DONE",
+      "did": "Registered the six new runtime scripts for packaging and kept run_trace.py in the .vsix, so a real install and stock mode both still work",
+      "files": [
+        "speckit-extension/scripts/package-manifest.py",
+        ".vscodeignore"
+      ]
+    },
+    "T055": {
+      "status": "DONE",
+      "did": "Validated against the Success Criteria — 657 capture tests, 1942 VS Code tests, and every CI gate (shape parity, node assembly, packaging, command inventory, command-quality eval) green",
+      "files": [
+        "repo-wide"
+      ]
     }
   },
   "verified": [
     {
       "what": "tracer smoke",
       "result": "pass"
+    },
+    {
+      "what": "spec-kit extension capture suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_*.py",
+      "result": "657 tests, all pass (62 of them new: doctor, drift audit, bleed, chat, tracer, batch/close-task, debug flag)"
+    },
+    {
+      "what": "VS Code extension suite",
+      "command": "npm test",
+      "result": "1942 tests across 137 suites, all pass"
+    },
+    {
+      "what": "capture shape parity gate",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "14 bodies match parts, golden, and carry the timing fence"
+    },
+    {
+      "what": "node-assembly parity gate",
+      "command": "python3 speckit-extension/scripts/assemble-nodes.py --check",
+      "result": "5 command bodies re-assemble byte-identical with debug off"
+    },
+    {
+      "what": "parts assembly gate",
+      "command": "python3 speckit-extension/scripts/build-commands.py --check",
+      "result": "8 bodies match their parts"
+    },
+    {
+      "what": "release packaging gate",
+      "command": "python3 speckit-extension/scripts/package-manifest.py --check",
+      "result": "21 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "command inventory gate",
+      "command": "python3 speckit-extension/scripts/check-command-emissions.py",
+      "result": "19 commands agree across 7 install areas, 8 agent records, and 2 documents"
+    },
+    {
+      "what": "command-quality eval",
+      "command": "check_quality.py --strict on three fixture specs and speckit-extension/commands",
+      "result": "0 fail; 3 warns on pre-existing fixture specs, none on the command sources",
+      "warnings": [
+        "3 pre-existing warns on the 509/514 fixture specs, unrelated to this change"
+      ]
+    },
+    {
+      "what": "the doctor against this very run",
+      "command": "python3 speckit-extension/scripts/doctor.py --feature-dir specs/599-pipeline-doctor --chat",
+      "result": "it caught the two capture failures this run deliberately provoked while smoke-testing the tracer, with their exact reasons — the feature reporting on its own construction"
+    },
+    {
+      "what": "local extension reinstall",
+      "command": "specify extension add ./speckit-extension --dev --force",
+      "result": "19 commands emitted to 7 agent areas; /speckit.companion.doctor is live in this session"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The oversized bench size needed an acceptance oracle to be wired at all — the harness looks for bench/acceptance/<size>.test.tsx and would have scored a run 0/0 silently without one. Added oversized.test.tsx and pinned its data-testid values into the prompt.",
+      "step": "implement"
     }
   ]
 }

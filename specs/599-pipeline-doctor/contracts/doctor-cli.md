@@ -30,6 +30,10 @@ SpecKit Companion doctor — specs/599-pipeline-doctor
     ✗ Step `plan` started at 00:51:12 and never finished
     ✗ 4 tasks are checked in tasks.md with no journal entry: T012, T013, T014, T015
 
+  BLEED       1 warning
+    ⚠ `plan` did `tasks` work
+      2 task checkbox(es) in plan.md — T001, T002
+
   TRIAGE      1 problem
     ✗ Records disagree with each other — status says `specified` but history[] has no
       step-level complete for `specify`, so the stepper cannot advance. Capture path.
@@ -72,6 +76,13 @@ SpecKit Companion doctor — specs/599-pipeline-doctor
       "evidence": {"step": "plan", "start_at": "2026-08-26T00:51:12Z"}
     }
   ],
+  "bleed": [
+    {
+      "step": "plan", "did": "tasks",
+      "what": "2 task checkbox(es) in plan.md",
+      "where": "plan.md", "evidence": ["T001", "T002"]
+    }
+  ],
   "drift": [
     {
       "capability": "capture-runtime",
@@ -88,4 +99,4 @@ SpecKit Companion doctor — specs/599-pipeline-doctor
 }
 ```
 
-The top-level keys are stable. `chat` is `null` unless `--chat` was passed, and is `{"available": false, "reason": "…"}` when the audit could not run.
+The top-level keys are stable: `spec`, `generated_at`, `checks`, `findings`, `bleed`, `drift`, `completion`, `chat`. `chat` is `null` unless `--chat` was passed, and is `{"available": false, "reason": "…"}` when the audit could not run.

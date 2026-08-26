@@ -190,3 +190,49 @@ class FailureTableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DebugFlagTests(unittest.TestCase):
+    """`debug: true` — one literal value, read at render time, off on any doubt."""
+
+    def test_a_literal_true_turns_it_on(self):
+        cfg, warnings = cc.load_config(self._write("debug: true\n"))
+        self.assertEqual(warnings, [])
+        self.assertTrue(cc.debug_enabled(cfg))
+
+    def test_every_other_value_is_off(self):
+        for body in ("debug: false\n", 'debug: "true"\n', "debug: verbose\n",
+                     "debug:\n", "commands: {}\n"):
+            with self.subTest(body=body):
+                cfg, _w = cc.load_config(self._write(body))
+                self.assertFalse(cc.debug_enabled(cfg))
+
+    def test_an_absent_config_is_off_with_no_warning(self):
+        cfg, warnings = cc.load_config(str(Path(self._dir()) / "nope.yml"))
+        self.assertEqual((cfg, warnings), ({}, []))
+        self.assertFalse(cc.debug_enabled(cfg))
+
+    def test_a_malformed_config_is_off_and_warns_once(self):
+        cfg, warnings = cc.load_config(self._write("- not\n- a\n- mapping\n"))
+        self.assertFalse(cc.debug_enabled(cfg))
+        self.assertEqual(len(warnings), 1)
+
+    def test_debug_from_root_reads_the_projects_own_config(self):
+        root = Path(self._dir())
+        (root / ".specify").mkdir()
+        (root / ".specify" / "companion.yml").write_text("debug: true\n", encoding="utf-8")
+        self.assertTrue(cc.debug_from_root(str(root)))
+
+    def test_debug_from_root_on_a_project_with_no_config_is_off(self):
+        self.assertFalse(cc.debug_from_root(self._dir()))
+
+    def _dir(self):
+        if not hasattr(self, "_tmp"):
+            self._tmp = tempfile.TemporaryDirectory()
+            self.addCleanup(self._tmp.cleanup)
+        return self._tmp.name
+
+    def _write(self, body):
+        p = Path(self._dir()) / "companion.yml"
+        p.write_text(body, encoding="utf-8")
+        return str(p)

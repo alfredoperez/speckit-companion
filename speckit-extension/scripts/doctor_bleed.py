@@ -16,21 +16,23 @@ visible. Stdlib only.
 
 from __future__ import annotations
 
-import os
 import re
-import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from doctor import CheckStatus, Finding  # noqa: E402
-from spec_context import _entry_kind, _is_per_task, _is_step_level, canonical_log  # noqa: E402
-
-TASK_MARKER = re.compile(r"^\s*[-*]\s*\[[ xX]\]\s*(?:\*\*)?(T\d+)", re.MULTILINE)
-FENCE = re.compile(r"^```([A-Za-z0-9_+-]*)\s*$", re.MULTILINE)
-FILE_TREE = re.compile(r"^\s*[\w./-]+\.(?:py|ts|tsx|js|jsx|mjs|md|yml|yaml|json)\s{2,}\w", re.MULTILINE)
+from doctor import (  # noqa: E402
+    CheckStatus,
+    Finding,
+    log_entries,
+    parse_commit_log,
+    parse_time,
+    read_text,
+    run_git,
+)
+from spec_context import _entry_kind, _is_step_level  # noqa: E402
+from task_sync import parse_task_markers  # noqa: E402
 
 #: A fenced block longer than this in a task list is implementation, not a task
 #: description. Short snippets (a command to run, a one-line signature) are fine.
@@ -47,29 +49,16 @@ NON_SOURCE_SUFFIXES = (".md", ".json", ".yml", ".yaml", ".lock", ".txt")
 STEP_ORDER_PRE_IMPLEMENT = ("specify", "plan", "tasks")
 
 
-def _git(root, args: list) -> tuple:
-    try:
-        p = subprocess.run(["git", "-C", str(root), *args],
-                           capture_output=True, text=True, timeout=30)
-        return p.returncode, p.stdout
-    except (OSError, subprocess.SubprocessError):
-        return 1, ""
+def _task_ids(path: Path) -> list:
+    """Task ids declared in a document, through the runtime's single counter.
 
-
-def _parse(at):
-    if not isinstance(at, str) or not at:
-        return None
-    try:
-        return datetime.fromisoformat(at.replace("Z", "+00:00")).astimezone(timezone.utc)
-    except ValueError:
-        return None
-
-
-def _read(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError:
-        return ""
+    A second checkbox regex is how the two counters drift apart, so this goes
+    through `task_sync` rather than matching markers here.
+    """
+    if not path.is_file():
+        return []
+    all_ids, _done = parse_task_markers(path)
+    return all_ids
 
 
 def _code_blocks(text: str) -> list:
@@ -87,6 +76,24 @@ def _code_blocks(text: str) -> list:
     return out
 
 
+def _implementation_blocks(text: str) -> list:
+    """Fenced blocks long enough, in a source language, to be implementation."""
+    return [(lang, n) for lang, n in _code_blocks(text)
+            if lang in CODE_LANGS and n >= CODE_BLOCK_LINES]
+
+
+def _code_signals(step: str, doc: str, text: str) -> list:
+    """The `did implement` signal for one document — one entry, or none at all."""
+    code = _implementation_blocks(text)
+    if not code:
+        return []
+    return [{
+        "step": step, "did": "implement",
+        "what": f"{len(code)} implementation code block(s) in {doc}",
+        "where": doc, "evidence": [f"{lang} x{n} lines" for lang, n in code[:5]],
+    }]
+
+
 def _is_source(path: str) -> bool:
     p = path.strip()
     if not p or p.startswith(NON_SOURCE_PREFIXES):
@@ -101,10 +108,10 @@ def _step_windows(ctx: dict) -> dict:
     re-run or an out-of-order step does not shift another step's window.
     """
     starts, ends = {}, {}
-    for e in canonical_log(ctx):
-        if not isinstance(e, dict) or not _is_step_level(e):
+    for e in log_entries(ctx):
+        if not _is_step_level(e):
             continue
-        step, at = e.get("step"), _parse(e.get("at"))
+        step, at = e.get("step"), parse_time(e.get("at"))
         if not isinstance(step, str) or at is None:
             continue
         if _entry_kind(e) == "start":
@@ -120,12 +127,12 @@ def _artifact_signals(feature_dir: Path, ctx: dict) -> list:
     fast_path = size == "simple"
     signals = []
 
-    spec = _read(feature_dir / "spec.md")
-    plan = _read(feature_dir / "plan.md")
-    tasks = _read(feature_dir / "tasks.md")
+    spec = read_text(feature_dir / "spec.md")
+    plan = read_text(feature_dir / "plan.md")
+    tasks = read_text(feature_dir / "tasks.md")
 
     if spec:
-        ids = TASK_MARKER.findall(spec)
+        ids = _task_ids(feature_dir / "spec.md")
         if ids:
             # A fast-tracked change keeps its approach inline, but never its task list.
             signals.append({
@@ -134,14 +141,7 @@ def _artifact_signals(feature_dir: Path, ctx: dict) -> list:
                 "where": "spec.md", "evidence": sorted(set(ids))[:10],
             })
         if not fast_path:
-            code = [(lang, n) for lang, n in _code_blocks(spec)
-                    if lang in CODE_LANGS and n >= CODE_BLOCK_LINES]
-            if code:
-                signals.append({
-                    "step": "specify", "did": "implement",
-                    "what": f"{len(code)} implementation code block(s) in spec.md",
-                    "where": "spec.md", "evidence": [f"{lang} x{n} lines" for lang, n in code[:5]],
-                })
+            signals += _code_signals("specify", "spec.md", spec)
             if re.search(r"^##+\s*(Approach|Project Structure|Architecture|Design)\b", spec, re.MULTILINE):
                 signals.append({
                     "step": "specify", "did": "plan",
@@ -150,31 +150,17 @@ def _artifact_signals(feature_dir: Path, ctx: dict) -> list:
                 })
 
     if plan:
-        ids = TASK_MARKER.findall(plan)
+        ids = _task_ids(feature_dir / "plan.md")
         if ids and not fast_path:
             signals.append({
                 "step": "plan", "did": "tasks",
                 "what": f"{len(ids)} task checkbox(es) in plan.md",
                 "where": "plan.md", "evidence": sorted(set(ids))[:10],
             })
-        code = [(lang, n) for lang, n in _code_blocks(plan)
-                if lang in CODE_LANGS and n >= CODE_BLOCK_LINES]
-        if code:
-            signals.append({
-                "step": "plan", "did": "implement",
-                "what": f"{len(code)} implementation code block(s) in plan.md",
-                "where": "plan.md", "evidence": [f"{lang} x{n} lines" for lang, n in code[:5]],
-            })
+        signals += _code_signals("plan", "plan.md", plan)
 
     if tasks:
-        code = [(lang, n) for lang, n in _code_blocks(tasks)
-                if lang in CODE_LANGS and n >= CODE_BLOCK_LINES]
-        if code:
-            signals.append({
-                "step": "tasks", "did": "implement",
-                "what": f"{len(code)} implementation code block(s) in tasks.md",
-                "where": "tasks.md", "evidence": [f"{lang} x{n} lines" for lang, n in code[:5]],
-            })
+        signals += _code_signals("tasks", "tasks.md", tasks)
 
     return signals
 
@@ -183,7 +169,7 @@ def _duplication_signals(feature_dir: Path) -> list:
     """Task identifiers living in more than one document — two copies that will diverge."""
     where: dict = {}
     for name in ("spec.md", "plan.md", "tasks.md"):
-        for tid in set(TASK_MARKER.findall(_read(feature_dir / name))):
+        for tid in set(_task_ids(feature_dir / name)):
             where.setdefault(tid, []).append(name)
     dupes = {tid: docs for tid, docs in where.items() if len(docs) > 1}
     if not dupes:
@@ -205,26 +191,17 @@ def _early_source_signals(root, ctx: dict) -> list:
         if step not in windows:
             continue
         start, end = windows[step]
-        code, log = _git(root, [
+        code, log = run_git(root, [
             "log", "--format=%H%x1f%s", "--name-only", "--no-merges",
             f"--since={start.isoformat()}", f"--until={end.isoformat()}",
         ])
         if code != 0 or not log.strip():
             continue
-        commits = []
-        sha = subject = None
-        touched: list = []
-        for line in log.splitlines():
-            if "\x1f" in line:
-                if sha and touched:
-                    commits.append((sha[:8], subject, [f for f in touched if _is_source(f)]))
-                sha, subject = line.split("\x1f", 1)
-                touched = []
-            elif line.strip():
-                touched.append(line.strip())
-        if sha and touched:
-            commits.append((sha[:8], subject, [f for f in touched if _is_source(f)]))
-        hits = [(s, subj, files) for s, subj, files in commits if files]
+        hits = []
+        for commit in parse_commit_log(log):
+            sources = [f for f in commit["files"] if _is_source(f)]
+            if sources:
+                hits.append((commit["sha"], commit["subject"], sources))
         if hits:
             files = sorted({f for _s, _subj, fs in hits for f in fs})
             out.append({

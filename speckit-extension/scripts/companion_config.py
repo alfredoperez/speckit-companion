@@ -197,6 +197,27 @@ def load_config(path: str):
         return {}, [f"malformed companion.yml ({exc}); using shipped defaults"]
 
 
+DEBUG_KEY = "debug"
+#: The node-hook / recipe config, relative to a project root.
+CONFIG_REL = os.path.join(".specify", "companion.yml")
+
+
+def debug_enabled(config: dict) -> bool:
+    """True only for a literal `debug: true` at the top level of companion.yml.
+
+    Anything else — absent, unreadable, a string, a nested value — is off. There
+    is no verbose tier: the flag decides which version of the command bodies gets
+    rendered, and a half-on state would be a third shape nobody asked for.
+    """
+    return config.get(DEBUG_KEY) is True
+
+
+def debug_from_root(root: str) -> bool:
+    """Read the flag from a project root, inheriting the loader's failure table."""
+    cfg, _warnings = load_config(os.path.join(root, CONFIG_REL))
+    return debug_enabled(cfg)
+
+
 def resolve_order(config: dict, command: str, default_order: list) -> list:
     """A recipe's `nodes: [...]` replaces the default order; else the default."""
     cmd = (config.get("commands") or {}).get(command) or {}

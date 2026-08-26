@@ -15,13 +15,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from spec_context import _repo_root, read_ctx, resolve_feature_dir  # noqa: E402
+from spec_context import (  # noqa: E402
+    _now_iso,
+    _repo_root,
+    canonical_log,
+    read_ctx,
+    resolve_feature_dir,
+)
 
 CHECKS = ("record", "triage", "bleed", "drift", "completion", "template", "trace", "chat")
 
@@ -29,6 +37,79 @@ SEVERITIES = ("problem", "warning", "note")
 _SEVERITY_RANK = {s: i for i, s in enumerate(SEVERITIES)}
 
 _MARK = {"problem": "✗", "warning": "⚠", "note": "·"}
+
+
+# --------------------------------------------------------------------------- #
+# Shared reading helpers
+#
+# Every check module already imports this one, so these live here rather than in
+# a module of their own: one import edge instead of two, and no cycle, because
+# nothing here reaches back into a check.
+# --------------------------------------------------------------------------- #
+
+
+def read_text(path) -> str:
+    """A file's text, or "" when it cannot be read."""
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def run_git(root, args: list) -> tuple:
+    """(returncode, stdout) for one git call; a git that cannot run reads as non-zero."""
+    try:
+        p = subprocess.run(["git", "-C", str(root), *args],
+                           capture_output=True, text=True, timeout=30)
+        return p.returncode, p.stdout
+    except (OSError, subprocess.SubprocessError):
+        return 1, ""
+
+
+def parse_commit_log(out: str) -> list:
+    """`git log --format=%H%x1f%s --name-only` output as {sha, subject, files} records."""
+    commits, sha, subject, touched = [], None, None, []
+    for line in out.splitlines():
+        if "\x1f" in line:
+            if sha:
+                commits.append({"sha": sha[:8], "subject": subject, "files": touched})
+            sha, _sep, subject = line.partition("\x1f")
+            touched = []
+        elif line.strip():
+            touched.append(line.strip())
+    if sha:
+        commits.append({"sha": sha[:8], "subject": subject, "files": touched})
+    return commits
+
+
+def parse_time(at) -> datetime | None:
+    """An ISO-8601 stamp as UTC, or None when it is absent or unparseable."""
+    if not isinstance(at, str) or not at:
+        return None
+    try:
+        return datetime.fromisoformat(at.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except ValueError:
+        return None
+
+
+def log_entries(ctx: dict) -> list:
+    """The spec's canonical history, objects only."""
+    return [e for e in canonical_log(ctx) if isinstance(e, dict)]
+
+
+def run_window(ctx: dict, pad=None) -> tuple:
+    """The first and last recorded moment of this spec's run, optionally padded."""
+    stamps = [ts for ts in (parse_time(e.get("at")) for e in log_entries(ctx)) if ts is not None]
+    if not stamps:
+        return None, None
+    if pad is None:
+        return min(stamps), max(stamps)
+    return min(stamps) - pad, max(stamps) + pad
+
+
+def plural(n, word: str) -> str:
+    """`1 file` / `3 files` — a count and its word, agreeing."""
+    return f"{n} {word}" + ("" if n == 1 else "s")
 
 
 class Finding:
@@ -162,7 +243,7 @@ def render_human(report: Report) -> str:
         for sev in SEVERITIES:
             n = sum(1 for f in items if f.severity == sev)
             if n:
-                counts.append(f"{n} {sev}{'s' if n > 1 else ''}")
+                counts.append(plural(n, sev))
         out.append(f"  {check.upper():<11} {', '.join(counts)}")
         for f in items:
             out.append(f"    {_MARK[f.severity]} {f.title}")
@@ -171,10 +252,10 @@ def render_human(report: Report) -> str:
         out.append("")
 
     c = report.counts()
-    head = f"{c['problem']} problem{'s' if c['problem'] != 1 else ''}"
+    head = plural(c["problem"], "problem")
     if c["warning"]:
-        head += f", {c['warning']} warning{'s' if c['warning'] != 1 else ''}"
-    tail = [f"across {c['ran']} check{'s' if c['ran'] != 1 else ''}"]
+        head += ", " + plural(c["warning"], "warning")
+    tail = [f"across {plural(c['ran'], 'check')}"]
     if c["skipped"]:
         tail.append(f"{c['skipped']} skipped")
     if c["not_applicable"]:
@@ -251,8 +332,6 @@ def main(argv=None) -> int:
     parser.add_argument("--traceback", action="store_true",
                         help="Print a traceback for a check that raised (debugging the doctor).")
     args = parser.parse_args(argv)
-
-    from spec_context import _now_iso
 
     root = _repo_root()
     if args.all:

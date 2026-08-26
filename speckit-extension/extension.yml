@@ -63,6 +63,9 @@ provides:
     - name: speckit.companion.auto
       file: commands/speckit.companion.auto.md
       description: "Run the whole Companion pipeline hands-off (specify → plan → tasks → implement → mark-complete), no approval pauses"
+    - name: speckit.companion.doctor
+      file: commands/speckit.companion.doctor.md
+      description: "Report on a spec's run health — unfinished steps, unjournaled tasks, step bleed, drift you can judge, and why completion did not land (read-only, retroactive, never halts)"
     - name: speckit.companion.living-adopt
       file: commands/speckit.companion.living-adopt.md
       description: "Brownfield adoption wizard — draft living specs for the code areas you name, surface-first, and register the capabilities (opt-in)"

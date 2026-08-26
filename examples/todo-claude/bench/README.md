@@ -1,4 +1,4 @@
-# Faithful Bench (2 modes · 3 sizes)
+# Faithful Bench (2 modes · 4 sizes)
 
 Run the **same feature** two ways — plain upstream spec-kit (**speckit**) vs the SpecKit Companion pipeline (**companion**) — at three sizes, and compare correctness, speed, artifacts/ceremony, lifecycle-capture fidelity, and an **Overall health composite**. You build each cell through the real SpecKit Companion extension in VS Code; the harness then judges, scores, and records it.
 
@@ -15,7 +15,7 @@ For the absolute yardstick — "how long does this feel in my editor?" — your 
 
 ## Quick start (TL;DR)
 
-Three slash commands, one size at a time (`easy` | `medium` | `hard`):
+Three slash commands, one size at a time (`easy` | `medium` | `hard` | `oversized`):
 
 ```
 /bench-sync                  # ONCE (or when spec-kit / speckit-extension / presets change):
@@ -44,13 +44,14 @@ That's the whole loop. Results land in `REPORT.md` (+ committed `stats.jsonl` / 
 
 Post-#312 the pipeline consolidated to exactly these two workflows — the old `companion-logs` / `companion-standard` / `companion-turbo` / `companion-fast-path` rungs no longer exist as products, so the bench no longer generates them (it still *reads* any legacy rows already in `stats.jsonl` / `history.jsonl` without crashing — they just stop being produced). The two modes differ **only in the command family**; both receive the identical per-step GUI dispatch preamble (see *Faithful dispatch* below), so a per-step delta between them is attributable to the workflow. The MODES list lives in `lib.mjs`.
 
-## The 3 sizes (graded by scope against the app)
+## The 4 sizes (graded by scope against the app)
 
 | Size | Scope | This bench's feature |
 |---|---|---|
 | `easy` | update a route / title | rename the app title to "Task Manager" |
 | `medium` | add a feature to the todos | due dates (input + overdue badge + sort) |
 | `hard` | a whole new feature area | Tags (new `/tags` route + store slice + persistence + filter) |
+| `oversized` | more than one wave can hold | Boards (two routes + two store slices + ordering + persistence + filter), 15+ files and 25+ tasks |
 
 The target app (`examples/todo-claude`) is layered on purpose — react-router routes, a `store/` slice with `localStorage` persistence, `lib/storage`, presentational `components/`, route `pages/`, and a committed test suite — so each size has real surface to attach to. See its `CLAUDE.md` for conventions.
 
@@ -155,3 +156,24 @@ Committed and **never deleted**, so any future build can compare against today:
 | `reports/*.html` | Committed copies of the HTML briefs |
 
 Don't hand-edit `stats.jsonl`, `history.jsonl`, or `REPORT.md` — they're generated. The folders' `node_modules`/`dist`/`.specify` install artifacts are gitignored.
+
+
+## The oversized size and the failure-injection fixture
+
+Two additions exist to prove the run tracer records the cases it was built for, rather than only the cases where nothing goes wrong.
+
+**`oversized`** has its own acceptance oracle (`acceptance/oversized.test.tsx`) like every other size, and the prompt pins the exact `data-testid` values that oracle looks for. It is deliberately larger than one wave can hold — 15+ files, 25+ tasks, real wait-lines between waves. A task list that long is where batched journaling becomes visible: a run that writes every task finish in one burst at the end of a phase looks identical to a well-journaled run in the capture eval, and different under the doctor. That is why the doctor's verdict now feeds the score.
+
+**The failure-injection fixture** (`fixtures/failure-injection/`) breaks capture on purpose in two ways that have actually stranded specs in real repositories — a missing `.specify/feature.json`, and a read-only context file — and asserts the failure gets recorded with its reason rather than vanishing into stderr. Injecting is a deliberate manual act; nothing in the normal loop breaks a cell on its own:
+
+```
+node fixtures/failure-injection/inject.mjs <cell-dir> missing-feature-json
+node fixtures/failure-injection/inject.mjs <cell-dir> unwritable-context
+node fixtures/failure-injection/inject.mjs <cell-dir> restore
+```
+
+## How the doctor's verdict scores
+
+`/bench-capture` now runs the doctor against each companion cell's spec and folds the verdict into the health composite: every problem it finds costs a tenth of the capture component, floored at zero. The reasoning is that the capture eval asks "was the record written?" while the doctor asks "does the record hold up?" — batched journaling, a recorded capture failure, and a step that started and never finished all pass the first question and fail the second. A cell whose record the doctor can pick holes in did not really achieve visibility, and its score should say so.
+
+The verdict is stored on each row as `doctor`, alongside `capture`, so a regression is traceable to the specific finding that caused it.

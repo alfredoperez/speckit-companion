@@ -1,0 +1,14 @@
+{"type": "assistant", "timestamp": "2026-08-01T10:00:00Z", "message": {"content": [{"type": "text", "text": "Let me start."}, {"type": "tool_use", "name": "Bash", "input": {"command": "pytest -q"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:00:10Z", "message": {"content": [{"type": "tool_result", "content": "2 failed, 8 passed", "is_error": true}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:00:20Z", "message": {"content": [{"type": "text", "text": "Retrying after the fix."}, {"type": "tool_use", "name": "Bash", "input": {"command": "pytest -q"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:00:30Z", "message": {"content": [{"type": "tool_result", "content": "10 passed", "is_error": false}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:00:40Z", "message": {"content": [{"type": "tool_use", "name": "Write", "input": {"file_path": "/repo/src/thing.py"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:00:50Z", "message": {"content": [{"type": "tool_result", "content": "ok", "is_error": false}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:01:00Z", "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {"file_path": "/repo/src/thing.py"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:01:10Z", "message": {"content": [{"type": "tool_result", "content": "ok", "is_error": false}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:01:20Z", "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {"file_path": "/repo/src/thing.py"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:01:30Z", "message": {"content": [{"type": "tool_result", "content": "ok", "is_error": false}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:01:40Z", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "ls /nope"}}]}}
+{"type": "user", "timestamp": "2026-08-01T10:01:50Z", "message": {"content": [{"type": "tool_result", "content": "No such file or directory", "is_error": true}]}}
+{"type": "assistant", "timestamp": "2026-09-01T10:00:00Z", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "much later"}}]}}
+{"type": "assistant", "timestamp": "2026-08-01T10:0

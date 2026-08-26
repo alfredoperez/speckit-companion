@@ -172,21 +172,21 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T036** Write the failing debug tests — off renders byte-identical to the frozen golden, on renders carry the part, a non-boolean or malformed config reads as off, and the flag is consumed at render time only · `speckit-extension/tests/test_config.py`, `speckit-extension/tests/test_nodes.py`
+- [x] **T036** Write the failing debug tests — off renders byte-identical to the frozen golden, on renders carry the part, a non-boolean or malformed config reads as off, and the flag is consumed at render time only · `speckit-extension/tests/test_config.py`, `speckit-extension/tests/test_nodes.py`
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T037** [P] [US6] Read the top-level `debug` flag through the existing loader, inheriting its failure table (absent → false silently, malformed → false with one warning) · `speckit-extension/scripts/companion_config.py`
-- [ ] **T038** [P] [US6] Write the instrumentation part text — per-step timing instructions, authored once and shared by every pipeline command · `speckit-extension/presets/_parts/debug-timing.md`
+- [x] **T037** [P] [US6] Read the top-level `debug` flag through the existing loader, inheriting its failure table (absent → false silently, malformed → false with one warning) · `speckit-extension/scripts/companion_config.py`
+- [x] **T038** [P] [US6] Write the instrumentation part text — per-step timing instructions, authored once and shared by every pipeline command · `speckit-extension/presets/_parts/debug-timing.md`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
 **Wave 2 — independent (different files):**
 
-- [ ] **T039** [P] [US6] Append the `debug-timing` part conditionally in node assembly, reusing the orchestrator part's existing conditional-append seam · `speckit-extension/scripts/assemble-nodes.py`
-- [ ] **T040** [P] [US6] Apply the same conditional for the non-node command bodies · `speckit-extension/scripts/build-commands.py`
+- [x] **T039** [P] [US6] Append the `debug-timing` part conditionally in node assembly, reusing the orchestrator part's existing conditional-append seam · `speckit-extension/scripts/assemble-nodes.py`
+- [x] **T040** [P] [US6] Apply the same conditional for the non-node command bodies · `speckit-extension/scripts/build-commands.py`
 
 **Checkpoint**: Turning debug on and re-rendering yields per-step timing; turning it off leaves zero instrumentation text. US6 is independently functional and testable.
 
@@ -199,19 +199,19 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T041** Write the failing chat-audit tests against a committed synthetic transcript — cause classification, a claim contradicting recomputed reality, a waste figure, a missing transcript directory, and an unparseable transcript · `speckit-extension/tests/test_doctor_chat.py`
+- [x] **T041** Write the failing chat-audit tests against a committed synthetic transcript — cause classification, a claim contradicting recomputed reality, a waste figure, a missing transcript directory, and an unparseable transcript · `speckit-extension/tests/test_doctor_chat.py`
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T042** [P] [US7] Implement transcript discovery — match files under `~/.claude/projects/` by project path and intersect with the step's recorded time window from `history[]`, with an explicit path override · `speckit-extension/scripts/doctor_chat.py`
-- [ ] **T043** [P] [US7] Implement defensive parsing that degrades to a single "not available" line and exit 0 on a missing directory or a format it cannot read · `speckit-extension/scripts/doctor_chat.py`
+- [x] **T042** [P] [US7] Implement transcript discovery — match files under `~/.claude/projects/` by project path and intersect with the step's recorded time window from `history[]`, with an explicit path override · `speckit-extension/scripts/doctor_chat.py`
+- [x] **T043** [P] [US7] Implement defensive parsing that degrades to a single "not available" line and exit 0 on a missing directory or a format it cannot read · `speckit-extension/scripts/doctor_chat.py`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T044** [US7] Implement cause classification — tried-and-failed versus retried versus never-attempted — and surface recorded claims that contradict the recomputed reality, showing both sides · `speckit-extension/scripts/doctor_chat.py`
-- [ ] **T045** [US7] Implement the waste measure — extra summaries, narration, and repeated rewrites of the same file — and wire the audit behind `--chat` in the doctor's ledger · `speckit-extension/scripts/doctor_chat.py`, `speckit-extension/scripts/doctor.py`
+- [x] **T044** [US7] Implement cause classification — tried-and-failed versus retried versus never-attempted — and surface recorded claims that contradict the recomputed reality, showing both sides · `speckit-extension/scripts/doctor_chat.py`
+- [x] **T045** [US7] Implement the waste measure — extra summaries, narration, and repeated rewrites of the same file — and wire the audit behind `--chat` in the doctor's ledger · `speckit-extension/scripts/doctor_chat.py`, `speckit-extension/scripts/doctor.py`
 
 **Checkpoint**: The deep audit explains causes and waste on a transcript-keeping provider and exits gracefully elsewhere. US7 is independently functional and testable.
 
@@ -224,13 +224,13 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T046** [P] [US8] Add the oversized variant — 15+ files and 25+ tasks with real wait-lines, alongside the existing easy/medium/hard sizes · `examples/todo-claude/bench/lib.mjs`
-- [ ] **T047** [P] [US8] Add the failure-injection fixture — a run with `.specify/feature.json` removed and one with an unwritable context file · `examples/todo-claude/bench/fixtures/`
+- [x] **T046** [P] [US8] Add the oversized variant — 15+ files and 25+ tasks with real wait-lines, alongside the existing easy/medium/hard sizes · `examples/todo-claude/bench/lib.mjs`
+- [x] **T047** [P] [US8] Add the failure-injection fixture — a run with `.specify/feature.json` removed and one with an unwritable context file · `examples/todo-claude/bench/fixtures/`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T048** [US8] Fold the doctor's `--json` verdict into bench scoring, so a batched-journaling or recorded-failure finding moves the score · `examples/todo-claude/bench/lib.mjs`, `examples/todo-claude/bench/cap.mjs`
-- [ ] **T049** [US8] Document the oversized variant and the failure fixture in the bench guide · `examples/todo-claude/bench/README.md`
+- [x] **T048** [US8] Fold the doctor's `--json` verdict into bench scoring, so a batched-journaling or recorded-failure finding moves the score · `examples/todo-claude/bench/lib.mjs`, `examples/todo-claude/bench/cap.mjs`
+- [x] **T049** [US8] Document the oversized variant and the failure fixture in the bench guide · `examples/todo-claude/bench/README.md`
 
 **Checkpoint**: The bench proves failures get recorded, not just that happy paths trace. US8 is independently functional and testable.
 
@@ -265,15 +265,15 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T050** [P] Declare the doctor command in the manifest and author its body with the standard part fences, matching how `living-drift` is shipped · `speckit-extension/extension.yml`, `speckit-extension/commands/speckit.companion.doctor.md`
-- [ ] **T051** [P] Document the doctor command and the `debug` flag, including that debug affects the next dispatched command and not one in flight · `speckit-extension/README.md`
-- [ ] **T052** [P] Add the `[Unreleased]` changelog entry in user-facing release-note voice · `speckit-extension/CHANGELOG.md`
+- [x] **T050** [P] Declare the doctor command in the manifest and author its body with the standard part fences, matching how `living-drift` is shipped · `speckit-extension/extension.yml`, `speckit-extension/commands/speckit.companion.doctor.md`
+- [x] **T051** [P] Document the doctor command and the `debug` flag, including that debug affects the next dispatched command and not one in flight · `speckit-extension/README.md`
+- [x] **T052** [P] Add the `[Unreleased]` changelog entry in user-facing release-note voice · `speckit-extension/CHANGELOG.md`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T053** Update the command inventory surfaces the manifest gates — install records and documentation tables — so `check-command-emissions.py` passes in both directions · `speckit-extension/docs/`, install records
-- [ ] **T054** Register every script the doctor command calls in the packaging manifest, so `package-manifest.py --check` passes · `speckit-extension/scripts/package-manifest.py`
-- [ ] **T055** Validate against the spec's Success Criteria — run `python3 -m unittest discover -s speckit-extension/tests -p "test_*.py"`, `npm test`, and every CI gate (`check-shape-parity.py`, `assemble-nodes.py --check`, `package-manifest.py --check`, `check-command-emissions.py`, the command-quality eval) · repo-wide
+- [x] **T053** Update the command inventory surfaces the manifest gates — install records and documentation tables — so `check-command-emissions.py` passes in both directions · `speckit-extension/docs/`, install records
+- [x] **T054** Register every script the doctor command calls in the packaging manifest, so `package-manifest.py --check` passes · `speckit-extension/scripts/package-manifest.py`
+- [x] **T055** Validate against the spec's Success Criteria — run `python3 -m unittest discover -s speckit-extension/tests -p "test_*.py"`, `npm test`, and every CI gate (`check-shape-parity.py`, `assemble-nodes.py --check`, `package-manifest.py --check`, `check-command-emissions.py`, the command-quality eval) · repo-wide
 
 ---
 

@@ -16,11 +16,12 @@ No new dependency and no new language: everything is stdlib Python 3, matching e
 ```
 speckit-extension/
   scripts/
-    trace.py                    NEW  append-only tracer: write one line, read/tail, size cap, self-ignore
+    run_trace.py                NEW  append-only tracer: write one line, read/tail, size cap, self-ignore
     doctor.py                   NEW  the doctor CLI: argument surface, orchestration, human + --json report
     doctor_checks.py            NEW  record audit, status-vs-display triage, completion check, template fidelity
     doctor_drift.py             NEW  drift audit: recompute via drift.py, classify each flag, detect false claims
     doctor_chat.py              NEW  --chat transcript audit (Claude-first, degrades to one line)
+    doctor_bleed.py             NEW  step bleed: where one step did the next step's work
     write-context.py            EDIT wrap main() so every invocation — including every early return — traces
     drift.py                    EDIT trace each compute_drift call's inputs and verdict
     companion_config.py         EDIT read the top-level `debug` flag off .specify/companion.yml
@@ -50,6 +51,10 @@ examples/todo-claude/bench/
 
 .gitignore                      EDIT ignore specs/*/.trace.jsonl in this repo
 ```
+
+One name changed during implementation: the tracer is `run_trace.py`, not `trace.py`. The scripts directory is prepended to `sys.path`, so a module named `trace` there would shadow the standard library's for every process that loads one of these scripts.
+
+A check was also added that the spec did not originally call for — `doctor_bleed.py`, reporting where one pipeline step did the next step's work. It arrived as User Story 9 and is specified in `spec.md` alongside the rest.
 
 **Structure Decision**: Everything ships in `speckit-extension/` because that is where the capture runtime, the command bodies, and the manifest live; the VS Code half is untouched by this feature. New behavior is split across five small modules rather than one large `doctor.py`, per the constitution's modular-architecture principle — each check family is independently testable and the `--chat` audit stays quarantined in its own module because it is the one part built on an unstable external format.
 

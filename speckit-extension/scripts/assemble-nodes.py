@@ -21,7 +21,10 @@ import os
 import sys
 
 from _command_parts import (
+    DEBUG_TIMING,
     EXT,
+    append_part,
+    debug_on,
     decomposed_commands,
     fill_parts,
     golden_path,
@@ -34,8 +37,13 @@ from _command_parts import (
 ORCHESTRATOR = "orchestrator"
 
 
-def assemble_command(command: str, order: list = None) -> str:
-    """Return the full command body assembled from nodes/<command>/."""
+def assemble_command(command: str, order: list = None, debug: bool = False) -> str:
+    """Return the full command body assembled from nodes/<command>/.
+
+    With `debug`, the debug-timing part is appended after the orchestrator part.
+    Without it the part is absent from the output entirely — not present and
+    inactive — so an off render stays byte-identical to the frozen golden.
+    """
     cdir = nodes_command_dir(command)
     frame_path = os.path.join(cdir, "_frame.md")
     out = ""
@@ -52,12 +60,9 @@ def assemble_command(command: str, order: list = None) -> str:
     out = fill_parts(out, rel)
 
     if os.path.isfile(part_path(ORCHESTRATOR)):
-        from _command_parts import part_content
-        block = part_content(ORCHESTRATOR)
-        out = (
-            f"{out}\n<!-- speckit-companion:part {ORCHESTRATOR} -->\n"
-            f"{block}\n<!-- /speckit-companion:part {ORCHESTRATOR} -->\n"
-        )
+        out = append_part(out, ORCHESTRATOR)
+    if debug and os.path.isfile(part_path(DEBUG_TIMING)):
+        out = append_part(out, DEBUG_TIMING)
     return out
 
 
@@ -81,9 +86,15 @@ def main() -> int:
         print("[assemble] no nodes/<command>/ dirs — nothing to assemble")
         return 0
 
+    # `--check` always compares the OFF render against golden: debug is a local,
+    # temporary switch and must never make the parity gate fail.
+    debug = debug_on() and not check
+    if debug:
+        print("[assemble] debug: true in .specify/companion.yml — bodies carry timing instrumentation")
+
     drift = []
     for command in commands:
-        assembled = assemble_command(command)
+        assembled = assemble_command(command, debug=debug)
         gpath = golden_path(f"commands/speckit.companion.{command}.md")
         if check:
             if not os.path.isfile(gpath):

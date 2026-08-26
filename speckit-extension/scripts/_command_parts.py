@@ -108,6 +108,34 @@ def part_content(name: str) -> str:
         return fh.read().rstrip("\n")
 
 
+#: Appended only when `debug: true` is set. Absent from an off render entirely —
+#: not present and inactive — so the off render stays byte-identical to golden.
+DEBUG_TIMING = "debug-timing"
+
+
+def append_part(text: str, name: str) -> str:
+    """Append a whole part as its own fenced region at the end of a body."""
+    block = part_content(name)
+    return (f"{text}\n<!-- speckit-companion:part {name} -->\n"
+            f"{block}\n<!-- /speckit-companion:part {name} -->\n")
+
+
+def debug_on(root: str = None) -> bool:
+    """Is `debug: true` set in this project's companion.yml?
+
+    Read at render time, which is why a change to the flag reaches the next
+    dispatched command and cannot affect one already in flight — the agent reads
+    a static file. Any failure to read the config means off, inheriting the
+    config loader's own failure table.
+    """
+    try:
+        import companion_config
+
+        return companion_config.debug_from_root(root or os.path.dirname(EXT))
+    except Exception:  # noqa: BLE001 — a config that cannot be read is not debug
+        return False
+
+
 def canonical(text: str) -> str:
     """Strip fence/marker comment lines so golden compares content, not convention."""
     return _MARKER_LINE.sub("", text)

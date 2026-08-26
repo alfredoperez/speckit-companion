@@ -26,6 +26,7 @@ Stdlib only. Safe to run anywhere `python3` is available.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -766,12 +767,39 @@ class _Tee:
         return getattr(self._real, name)
 
 
+# The vocabulary these scripts already use on stderr when they did NOT do the
+# thing. Everything else on stderr is information — a materialize reporting how
+# many lines it folded is not a failure, and recording it as one sends someone
+# hunting a bug that is not there.
+_DECLINE = re.compile(r"^(Refusing|Skipping|Warning|Could not|Declin)", re.I)
+
+
+def _companion_lines(text: str) -> list:
+    return [line.strip()[len("[companion]"):].strip()
+            for line in text.splitlines() if line.strip().startswith("[companion]")]
+
+
 def _first_companion_line(text: str) -> str | None:
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("[companion]"):
-            return line[len("[companion]"):].strip()
-    return None
+    lines = _companion_lines(text)
+    return lines[0] if lines else None
+
+
+def _outcome(out: str, err: str) -> tuple:
+    """(ok, reason) for one invocation, read from what it printed.
+
+    Every path here returns 0 by design, so the scripts' own reporting is the
+    only signal: a success line on stdout, a decline on stderr. A call that both
+    succeeded partly and declined partly — several `--set` keys where one was a
+    refused lifecycle key — is not ok, because the refusal is what the developer
+    needs to see.
+    """
+    declines = [line for line in _companion_lines(err) if _DECLINE.match(line)]
+    succeeded = bool(_first_companion_line(out))
+    if declines:
+        return False, declines[0]
+    if succeeded:
+        return True, None
+    return False, _first_companion_line(err) or _first_companion_line(out)
 
 
 def main() -> int:
@@ -798,8 +826,7 @@ def _trace_call(argv: list, out: str, err: str, ms: int) -> None:
         import run_trace
 
         op = _classify_op(argv)
-        ok = bool(_first_companion_line(out)) and not _first_companion_line(err)
-        reason = None if ok else (_first_companion_line(err) or _first_companion_line(out))
+        ok, reason = _outcome(out, err)
 
         root = _repo_root()
         feature_dir = None

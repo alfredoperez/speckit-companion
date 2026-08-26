@@ -158,3 +158,78 @@ class TraceReaderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CallClassificationTests(unittest.TestCase):
+    """End-to-end: run the real writer and read back what the trace says about it.
+
+    These scripts always exit 0, so the tracer classifies from what they printed:
+    a success line on stdout, a decline on stderr. Getting that wrong is not a
+    cosmetic problem — a call recorded as failed sends someone hunting a bug that
+    is not there.
+    """
+
+    WRITER = ROOT / "scripts" / "write-context.py"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spec = self.root / "specs" / "001-x"
+        self.spec.mkdir(parents=True)
+        (self.spec / ".spec-context.json").write_text(json.dumps({
+            "workflow": "companion", "specName": "X", "branch": "b",
+            "currentStep": "implement", "status": "implementing",
+            "history": [{"step": "implement", "substep": None, "kind": "start",
+                         "by": "extension", "at": "2026-08-01T11:00:00Z"}],
+        }) + "\n", encoding="utf-8")
+        (self.spec / "tasks.md").write_text("- [ ] **T001** First · a.py\n", encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, *args):
+        import subprocess
+        return subprocess.run(
+            [sys.executable, str(self.WRITER), "--feature-dir", str(self.spec), *args],
+            capture_output=True, text=True, cwd=self.root, check=False)
+
+    def lines(self, where=None):
+        p = (where or self.spec) / run_trace.TRACE_NAME
+        if not p.is_file():
+            return []
+        return [json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip()]
+
+    def test_a_materialize_that_folded_lines_is_recorded_as_ok(self):
+        self.write("--task", "T001", "--kind", "complete", "--by", "ai", "--append")
+        self.write("--materialize")
+        folds = [e for e in self.lines() if e["op"] == "materialize"]
+        self.assertEqual(len(folds), 1)
+        self.assertTrue(folds[0]["ok"],
+                        "materialize prints its count on stderr; that is information, not a decline")
+        self.assertIsNone(folds[0]["reason"])
+
+    def test_a_refused_lifecycle_key_is_recorded_as_not_ok_with_its_reason(self):
+        self.write("--set", "status=completed")
+        sets = [e for e in self.lines() if e["op"] == "set"]
+        self.assertEqual(len(sets), 1)
+        self.assertFalse(sets[0]["ok"], "a refused key is a decline even alongside a success line")
+        self.assertIn("Refusing", sets[0]["reason"])
+
+    def test_an_ordinary_set_is_recorded_as_ok(self):
+        self.write("--set", "last_action=done")
+        sets = [e for e in self.lines() if e["op"] == "set"]
+        self.assertEqual(len(sets), 1)
+        self.assertTrue(sets[0]["ok"])
+
+    def test_a_non_canonical_step_is_recorded_as_not_ok(self):
+        self.write("--step", "nonsense", "--kind", "complete")
+        entries = [e for e in self.lines() if not e["ok"]]
+        self.assertEqual(len(entries), 1)
+        self.assertIn("not a canonical currentStep", entries[0]["reason"])
+
+    def test_each_operation_is_classified_by_the_flag_that_drives_it(self):
+        self.write("--set", "last_action=x")
+        self.write("--task", "T001", "--kind", "complete", "--by", "ai", "--append")
+        self.write("--materialize")
+        self.assertEqual([e["op"] for e in self.lines()],
+                         ["set", "task-append", "materialize"])

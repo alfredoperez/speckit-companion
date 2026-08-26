@@ -3,10 +3,26 @@
 ## Location and lifecycle
 
 - Path: `specs/NNN/.trace.jsonl` — one file per spec directory, exactly as the request pins it.
-- Created lazily on the first traced call for that spec. Never created for a call that could not resolve a spec directory; those lines are dropped rather than written to a guessed location.
+- Created lazily on the first traced call for that spec.
+- A call that could not resolve a spec at all lands in the **repo-level unattributed log** at `specs/.trace.jsonl` instead of being dropped. That failure — the writer could not tell which spec a call belonged to — is the most common capture failure there is, so dropping its line would hide exactly what the trace exists to catch. The doctor reads that log alongside the spec's own and reports any unattributed failure falling inside the spec's run window.
 - Alongside the first write, `trace.py` ensures `specs/NNN/.gitignore` contains `.trace.jsonl`. The write is idempotent and skipped when an existing rule already covers the file.
 - Size-capped. On overflow the file is rewritten newest-first-preserved with one `{"truncated": <dropped-count>}` marker line at the top.
 - Never deleted by any command. Removing it is a user action, and a missing file is a skipped check, never an error.
+
+## Operations
+
+`op` is one of: `lifecycle`, `capture`, `set`, `finish`, `advance`, `task-append`, `task-journal`, `task-close`, `tasks-sync`, `materialize`, `mark-complete`, `fold-living-spec`, `drift-compute`, `unknown`.
+
+`unknown` covers a call that failed before its intent could be determined — which is most of the interesting ones.
+
+## How success is decided
+
+The writer scripts already report themselves: a success line on stdout, a decline on stderr. The tracer classifies from those rather than from a return code, because every path in these scripts returns `0` by design.
+
+- A call is **ok** when it printed a success line on stdout **and** stderr carries no decline.
+- A **decline** is a `[companion]` stderr line beginning `Refusing`, `Skipping`, `Warning`, `Could not`, or `Declin…` — the vocabulary these scripts already use to say they did not do the thing.
+- Informational stderr that is not a decline (a materialize's "Materialized N task line(s)") leaves the call **ok**, and no reason is recorded.
+- A call that both succeeded partly and declined partly — several `--set` keys where one was a refused lifecycle key — is recorded as **not ok**, with the refusal as its reason. A partial refusal is a thing the developer needs to see.
 
 ## Line format
 

@@ -265,3 +265,31 @@ A spec's context records which workflow drives it, and every next-step command t
 #### Scenario: no workflow is recorded
 - **WHEN** a context names neither the workflow nor the retired marker
 - **THEN** resolution emits the stock command family
+
+### Every handled call records itself, including the ones that fail
+
+Every script in this runtime returns success on failure by design, printing its reason to stderr and discarding it — the contract that keeps a capture defect from halting a user's pipeline, and the reason capture failures are invisible. Each script SHALL therefore append one line per handled call to a local, per-spec, size-capped trace: which operation, whether it did what it was asked, and — when it did not — the reason verbatim from the message it already printed. The record MUST cost no additional call and add no instruction text to any command body, so it is written from inside the scripts the pipeline already runs. A call that could not resolve a spec at all MUST still be recorded, in a repository-level unattributed log, because that failure is the most common one there is and dropping it would hide exactly what the trace exists to catch. Writing a trace entry MUST NEVER raise: it runs on paths that are already failing, so a tracer that could raise would turn a recorded problem into a crash.
+
+#### Scenario: a capture call is declined
+- **WHEN** a call is refused and its reason printed to stderr
+- **THEN** a trace entry records the call as not ok, carrying that reason verbatim
+
+#### Scenario: the spec cannot be resolved
+- **WHEN** a call cannot determine which spec it belongs to
+- **THEN** the entry lands in the repository-level unattributed log rather than being dropped
+
+#### Scenario: the trace cannot be written
+- **WHEN** the trace file's directory is unwritable
+- **THEN** the observed call completes exactly as it would have with no trace
+
+### A call count may shrink only when the record it produces stays identical
+
+Reducing the number of calls a step makes is worth doing — the two-call task close and the six-call end-of-step volley are both mostly ceremony — but a shorter path that records something different is a regression disguised as an optimization. A merged form MUST therefore produce a record byte-equivalent to the sequence it replaces, MUST remain idempotent for the same reason the sequence was, and MUST NOT remove the caller's ability to perform the steps separately where the split exists for a reason: only the main agent may fold, so a merged close that folds is for the main agent alone and a fanned-out worker keeps appending on its own.
+
+#### Scenario: a task is closed in one call instead of two
+- **WHEN** the merged close runs
+- **THEN** the resulting record equals what appending and then folding produced
+
+#### Scenario: a worker uses the merged close
+- **WHEN** concurrent workers would each fold
+- **THEN** the merged form is documented and reserved for the single serializing agent
