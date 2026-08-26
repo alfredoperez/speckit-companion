@@ -1593,6 +1593,40 @@ class RegisterCapabilityTests(unittest.TestCase):
     def _config(self, root: Path) -> str:
         return (root / ".specify" / "companion.yml").read_text(encoding="utf-8")
 
+    def test_registry_write_goes_through_a_temp_file(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        registry = root / "living-specs.yml"
+        replaced = []
+        real_replace = os.replace
+
+        def capturing_replace(src, dst):
+            replaced.append((str(src), str(dst)))
+            real_replace(src, dst)
+
+        with mock.patch.object(regcap.os, "replace", capturing_replace):
+            regcap.register(str(root), "orders", ["src/orders/**"], [], None)
+        # The invariant is that the registry is published by renaming a *different*
+        # file in the same directory — not that the temp carries any given name.
+        # The name is deliberately unique per writer so two concurrent runs cannot
+        # truncate each other's temp.
+        self.assertTrue(
+            any(d == str(registry) and s != str(registry)
+                and os.path.dirname(s) == os.path.dirname(str(registry))
+                for s, d in replaced),
+            f"expected a rename into {registry} from a sibling temp; saw {replaced}")
+
+    def test_interrupted_registry_write_cannot_truncate(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        regcap.register(str(root), "billing", ["src/billing/**"], [], None)
+        registry = root / "living-specs.yml"
+        before = registry.read_text(encoding="utf-8")
+        with mock.patch.object(regcap.os, "replace",
+                               side_effect=OSError("interrupted")):
+            with self.assertRaises(OSError):
+                regcap.register(str(root), "orders", ["src/orders/**"], [], None)
+        self.assertEqual(registry.read_text(encoding="utf-8"), before)
+
     def test_absent_config_creates_minimal_block(self) -> None:
         root = Path(tempfile.mkdtemp())  # no .specify/companion.yml
         result = regcap.register(str(root), "billing", ["src/billing/**"], [], None)
@@ -2745,6 +2779,111 @@ class RelocateCapabilityTests(unittest.TestCase):
         result = relocate.relocate(str(root), "central", name="billing")
         self.assertEqual(result["relocated"], [])
         self.assertEqual(result["unchanged"][0]["action"], "already-central")
+
+    def test_failed_move_mid_batch_rolls_back_the_earlier_moves(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: billing\n      match: [\"src/features/billing/**\"]\n"
+            "    - name: orders\n      match: [\"src/features/orders/**\"]\n"
+            "    - name: shipping\n      match: [\"src/features/shipping/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=[
+            "capabilities/billing/spec.md",
+            "capabilities/orders/spec.md",
+            "capabilities/shipping/spec.md",
+        ])
+
+        def tree_snapshot() -> dict[str, str | None]:
+            # Directories are part of the tree. Snapshotting only files hid the
+            # fact that a failed move left its freshly-created destination dirs
+            # behind, so the assertion passed on a tree that had not been restored.
+            return {
+                p.relative_to(root).as_posix(): (
+                    p.read_text(encoding="utf-8") if p.is_file() else None
+                )
+                for p in root.rglob("*")
+            }
+
+        before = tree_snapshot()
+        real_replace = os.replace
+        calls = itertools.count(1)
+
+        # Fail the way a read-only target actually fails — inside the rename,
+        # AFTER `_move` has already created the destination directories. Patching
+        # `_move` wholesale skipped that makedirs and could not reach the bug.
+        def third_replace_raises(src, dst, *a, **kw):
+            if next(calls) == 3:
+                raise OSError("target is read-only")
+            return real_replace(src, dst, *a, **kw)
+
+        with mock.patch.object(relocate.os, "replace", third_replace_raises):
+            with self.assertRaises(OSError):
+                relocate.relocate(str(root), "colocated", every=True)
+        self.assertEqual(tree_snapshot(), before)
+
+    def test_a_failed_registry_write_leaves_no_temp_file_behind(self) -> None:
+        # Driven through relocate() rather than the helper directly, so that
+        # reverting relocate's own write back to an inline temp-without-cleanup
+        # fails this test. Asserting on the helper alone pinned nothing here.
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        target = root / "living-specs.yml"
+        real_replace = os.replace
+
+        def replace_raises(src, dst, *a, **kw):
+            if str(dst) == str(target):
+                raise OSError("no space left on device")
+            return real_replace(src, dst, *a, **kw)
+
+        err = io.StringIO()
+        with mock.patch.object(cc.os, "replace", replace_raises), \
+                contextlib.redirect_stderr(err):
+            with self.assertRaises(OSError):
+                relocate.relocate(str(root), "colocated", name="billing")
+
+        # Match what the writer actually produces — mkstemp names the temp
+        # `living-specs.yml.<random>`, so a `*.tmp` glob could never see it.
+        self.assertEqual(
+            sorted(p.name for p in root.glob("living-specs.yml.*")), [],
+            "a failed registry write must not leave a temp beside a tracked file")
+        self.assertNotIn("Rollback could not restore", err.getvalue(),
+                         "nothing was written, so there is nothing to warn about")
+        # This fixture's config still lives at the legacy path, so the run was
+        # *creating* living-specs.yml — a failed creation correctly leaves none.
+        # What must survive is the config the user already had.
+        self.assertFalse(target.exists())
+        self.assertEqual((root / ".specify" / "companion.yml").read_text(encoding="utf-8"),
+                         CENTRAL_YAML,
+                         "the user's existing config must be untouched by a failed run")
+
+    def test_a_rollback_that_cannot_restore_the_registry_says_so(self) -> None:
+        # The warning branch needs a registry that already exists (so `original`
+        # is real) AND a restore that leaves it different from how it started.
+        root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
+        relocate.relocate(str(root), "colocated", name="billing")
+        registry = root / "living-specs.yml"
+        self.assertTrue(registry.is_file())
+
+        real_write = cc.atomic_write_text
+        calls = itertools.count(1)
+
+        def fail_the_restore(path, text):
+            # First write (the relocation) lands; the restore then fails after
+            # the registry has already been changed.
+            if next(calls) == 2:
+                raise OSError("read-only file system")
+            return real_write(path, text)
+
+        err = io.StringIO()
+        with mock.patch.object(relocate.cc, "atomic_write_text", fail_the_restore), \
+                mock.patch.object(relocate.cc, "should_drop_legacy", lambda meta: True), \
+                mock.patch.object(relocate.regcap, "_drop_legacy_block",
+                                  side_effect=RuntimeError("boom")), \
+                contextlib.redirect_stderr(err):
+            with self.assertRaises(RuntimeError):
+                relocate.relocate(str(root), "central", name="billing")
+
+        self.assertIn("Rollback could not restore", err.getvalue(),
+                      "a registry left differing from its pre-run state must be reported")
 
     def test_multi_glob_without_a_common_root_fails_clearly(self) -> None:
         yaml = (

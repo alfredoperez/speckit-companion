@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+
+- **A capability relocation that fails partway now rolls itself back.** Previously, when one of several file moves failed (a read-only target, a removed source), the moves already made stayed in place while the registry still pointed at the old paths — the two silently disagreed with no way back. Now every applied move is undone — including the folders the failed move had already created — and the project is exactly as it was before the run.
+- **Re-deriving a spec's state no longer duplicates its history.** Running the derive fallback twice while a spec sat at the same step appended a second start entry to the durable record; it now records the step's start once, matching every other writer.
+- **A crash mid-write can no longer truncate your configuration.** Registering a capability rewrote both the living-specs registry and your companion configuration in place, so an interrupted write could leave either one empty or half-written — taking your other companion settings with it. Both now go through a temporary file that is flushed to disk and then renamed into place, so what is on disk is always the previous or the new state — through a crash, a kill signal, or power loss. A write that fails cleans up after itself instead of leaving a stray file next to the real one, two runs at once can no longer leave a torn half-written file behind, and a file's permissions survive the rewrite.
+- **The implement command's steps are numbered correctly again.** The final mark-complete step read as a second step 5 after step 6; it is now step 7.
+
 ## [0.21.0] - 2026-08-26
 
 ### Added

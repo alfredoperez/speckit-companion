@@ -293,3 +293,15 @@ Reducing the number of calls a step makes is worth doing — the two-call task c
 #### Scenario: a worker uses the merged close
 - **WHEN** concurrent workers would each fold
 - **THEN** the merged form is documented and reserved for the single serializing agent
+
+### A capability relocation is transactional — a partial failure rolls back every applied move
+
+Relocating capabilities moves files and then rewrites the registry. When any move or the registry write fails partway, every move already applied MUST be rolled back so files and registry never disagree. The rollback accounting is owned by the caller and each entry is recorded **before** its move is attempted, so the set to undo exists even when a move raises before the batch finishes — and covers the move that was in flight, whose destination directories were already created.
+
+#### Scenario: a later move in the batch fails
+- **WHEN** the third of three moves raises an error
+- **THEN** the first two moves are undone and the tree and registry are as they were before the run
+
+#### Scenario: the registry write fails after the moves
+- **WHEN** every move succeeds but the config write raises
+- **THEN** all moves are rolled back and the original registry content is restored

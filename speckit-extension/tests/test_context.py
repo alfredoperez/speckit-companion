@@ -588,6 +588,14 @@ class DeriveRoundTripTests(unittest.TestCase):
         self.assertEqual(ctx["currentStep"], "specify")
         self.assertEqual(ctx["status"], "specified")
 
+    def test_derive_twice_at_one_step_appends_one_start_entry(self) -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        derive_mod.derive(self.fd)
+        derive_mod.derive(self.fd)
+        starts = [e for e in _ctx(self.fd)["history"]
+                  if e.get("step") == "specify" and e.get("kind") == "start"]
+        self.assertEqual(len(starts), 1)
+
     def test_derive_round_trip_after_deleting_state(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")
         (self.fd / "plan.md").write_text("# Plan\n")

@@ -78,13 +78,16 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
     ctx["currentStep"] = step
     ctx["status"] = status
 
-    log.append({
-        "step": step,
-        "substep": None,
-        "kind": "start",
-        "by": by,
-        "at": now,
-    })
+    # A step is started once — same guard as write-context.update_context, so
+    # deriving twice at the same step cannot duplicate the history entry.
+    if not wc._has_step_start(log, step, None):
+        log.append({
+            "step": step,
+            "substep": None,
+            "kind": "start",
+            "by": by,
+            "at": now,
+        })
 
     if step == "implement":
         all_ids, done_ids = wc.parse_task_markers(feature_dir / "tasks.md")

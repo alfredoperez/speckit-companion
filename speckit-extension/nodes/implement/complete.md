@@ -4,7 +4,7 @@ kind: control
 command: implement
 reads: []
 ---
-5. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`. Run from the repository root (the feature directory resolves on its own):
+7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`. Run from the repository root (the feature directory resolves on its own):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
    ```
