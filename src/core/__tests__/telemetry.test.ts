@@ -8,8 +8,7 @@ import {
     buildBetaSnapshot,
     buildActivatedProperties,
     phaseTelemetryId,
-    profileTelemetryId,
-    defaultWorkflowTelemetryId,
+    workflowTelemetryId,
     initTelemetry,
     reportInstallPromptShown,
     reportInstallPromptClicked,
@@ -324,29 +323,20 @@ describe('TelemetryService', () => {
         });
     });
 
-    describe('profileTelemetryId (privacy: no free-text profile)', () => {
-        it('passes the two known profiles through', () => {
-            expect(profileTelemetryId('standard')).toBe('standard');
-            expect(profileTelemetryId('turbo')).toBe('turbo');
+    describe('workflowTelemetryId (privacy: the one shared workflow coercer)', () => {
+        it('passes the two built-in workflow ids through verbatim', () => {
+            expect(workflowTelemetryId('speckit')).toBe('speckit');
+            expect(workflowTelemetryId('companion')).toBe('companion');
         });
 
-        it('drops any other on-disk profile value rather than sending it verbatim', () => {
-            expect(profileTelemetryId('client-acme-internal')).toBeUndefined();
-            expect(profileTelemetryId('lean')).toBeUndefined();
-            expect(profileTelemetryId(undefined)).toBeUndefined();
-        });
-    });
-
-    describe('defaultWorkflowTelemetryId (privacy: no arbitrary settings.json value)', () => {
-        it('passes the two built-in workflow ids through', () => {
-            expect(defaultWorkflowTelemetryId('speckit')).toBe('speckit');
-            expect(defaultWorkflowTelemetryId('companion')).toBe('companion');
+        it('maps the legacy "default" alias to speckit', () => {
+            expect(workflowTelemetryId('default')).toBe('speckit');
         });
 
-        it('reports an out-of-range / custom workflow name as the default speckit, never verbatim', () => {
-            expect(defaultWorkflowTelemetryId('my-custom-workflow')).toBe('speckit');
-            expect(defaultWorkflowTelemetryId('')).toBe('speckit');
-            expect(defaultWorkflowTelemetryId(undefined)).toBe('speckit');
+        it('collapses any custom workflow name to "custom", never verbatim', () => {
+            expect(workflowTelemetryId('my-custom-workflow')).toBe('custom');
+            expect(workflowTelemetryId('')).toBe('custom');
+            expect(workflowTelemetryId(undefined)).toBe('custom');
         });
     });
 
@@ -547,10 +537,9 @@ describe('TelemetryService', () => {
 
     describe('the per-spec correlation id', () => {
         it('generates and persists a telemetryInstanceId on first read when missing', async () => {
-            const dir = makeSpecDir({ ...BASE_SPEC, profile: 'turbo' });
+            const dir = makeSpecDir({ ...BASE_SPEC });
 
             const ctx = getSpecTelemetryContext(dir);
-            expect(ctx.profile).toBe('turbo');
             expect(ctx.specInstanceId).toMatch(/^[0-9a-f-]{36}$/);
 
             // The backfill write is non-blocking (fire-and-forget); let it flush.

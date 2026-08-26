@@ -186,8 +186,33 @@ export function createMockWebviewPanel() {
     };
 }
 
+/**
+ * A drivable TreeView stub. `visible` starts false (override on the returned
+ * object for an already-open sidebar); `__fireVisibilityChange(visible)` updates
+ * the flag and fires every `onDidChangeVisibility` listener, as the real editor does.
+ */
+export function createMockTreeView() {
+    const visibilityEmitter = new EventEmitter<{ visible: boolean }>();
+    const selectionEmitter = new EventEmitter<{ selection: any[] }>();
+    const treeView = {
+        visible: false,
+        selection: [] as any[],
+        badge: undefined as any,
+        onDidChangeVisibility: visibilityEmitter.event,
+        onDidChangeSelection: selectionEmitter.event,
+        reveal: jest.fn().mockResolvedValue(undefined),
+        dispose: jest.fn(),
+        __fireVisibilityChange(visible: boolean): void {
+            treeView.visible = visible;
+            visibilityEmitter.fire({ visible });
+        },
+    };
+    return treeView;
+}
+
 export const window = {
     createWebviewPanel: jest.fn().mockImplementation(createMockWebviewPanel),
+    createTreeView: jest.fn().mockImplementation(createMockTreeView),
     showInformationMessage: jest.fn(),
     showErrorMessage: jest.fn(),
     showWarningMessage: jest.fn(),

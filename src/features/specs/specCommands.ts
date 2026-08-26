@@ -26,6 +26,7 @@ import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
 import { ALL_SORT_MODES, SortMode } from './specsSortMode';
 import { loadCustomCommands, NormalizedCustomCommand } from './customCommandConfig';
+import { openSampleSpec } from './sampleSpec';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '../../core/telemetry';
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
@@ -87,6 +88,11 @@ export function registerSpecKitCommands(
             // Open the spec editor webview
             await vscode.commands.executeCommand('speckit.openSpecEditor');
         })
+    );
+
+    // The welcome's "Open a live sample" — seed-or-reopen the bundled sample.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(Commands.openSampleSpec, () => openSampleSpec(context))
     );
 
     // Spec refresh
@@ -367,9 +373,11 @@ export function registerSpecKitCommands(
         return id ? { specInstanceId: id } : {};
     }
 
+    // No direct spec.completed emit here: the context-file watcher's
+    // status-transition seam is the event's single owner, and this setStatus
+    // write flows through it like every other completion path.
     async function completeApply(specDir: string): Promise<void> {
         await setStatus(specDir, 'completed');
-        sendTelemetryEvent('spec.completed', telemetryIdProps(specDir));
     }
 
     async function archiveApply(specDir: string): Promise<void> {
@@ -732,7 +740,6 @@ async function executeWorkflowStep(
     sendTelemetryEvent('phase.dispatched', {
         providerId: getConfiguredProviderType(),
         phase: phaseTelemetryId(step),
-        ...(specTelemetry.profile ? { profile: specTelemetry.profile } : {}),
         ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
     });
 

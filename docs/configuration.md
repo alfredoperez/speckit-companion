@@ -35,9 +35,9 @@ The install banner shows whenever the extension is missing and you have not turn
 
 ## Workflow Choice
 
-You make **one decision, once**: run the stock **SpecKit** pipeline or the **SpecKit Companion** pipeline. That choice lives in a single setting, `speckit.defaultWorkflow`, and is pre-selected in the **Workflow** dropdown of *Create New Spec*. There is no separate template-profile, turbo-picker, or fast-path toggle; those three settings were retired and folded into this one choice.
+You make **one decision, once**: run the stock **SpecKit** pipeline or the **SpecKit Companion** pipeline. That choice lives in a single setting, `speckit.defaultWorkflow`, and is pre-selected in the **Workflow** choice of *Create New Spec*. There is no separate template-profile, turbo-picker, or fast-path toggle; those three settings were retired and folded into this one choice.
 
-The **Workflow** picker appears whenever the companion spec-kit extension is installed, with no setting to turn on first. When the extension isn't installed, Create Spec runs stock SpecKit with no picker, so you never see a Companion choice that would silently do nothing.
+The **Workflow** choice renders each workflow as a card with its description visible — Companion's carries its proof line (specs 60–68% leaner, same correctness). It always lists Companion, with no setting to turn on first: when the spec-kit extension isn't installed, the Companion card shows *Install to enable*, and picking it offers a one-click install first (declining falls back to stock, never a silent no-op). When your default is stock, the Companion card also offers **Try Companion for this spec** — it applies Companion to that one spec and leaves `speckit.defaultWorkflow` untouched.
 
 ```json
 {

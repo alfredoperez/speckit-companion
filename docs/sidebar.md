@@ -17,6 +17,14 @@ The SpecKit activity-bar container holds four views, contributed in this order:
 
 You can reorder the views yourself; the contribution order is a default, not an override.
 
+## Zero-spec welcome
+
+A workspace with zero specs shows exactly **one** welcome block in the Specs view — never two stacked boxes. The block carries a single value line plus two pinned actions: **Create your first spec** (opens the Create Spec editor) and **Open a live sample** (seeds a copy of the bundled sample spec into `specs/` and opens it in the viewer, so you see a populated pipeline before authoring anything).
+
+The one block has two mutually-exclusive variants, both gated on the workspace being initialized: when the companion spec-kit extension is installed (or its install nudge was dismissed), the block shows just the value line and the two actions; when the companion piece is absent and not dismissed, the same block additionally folds in the **Install SpecKit Companion** line with its **Dismiss** link — still one block, not a second box.
+
+The sample action is repeat-safe: if the sample already exists it is reopened, never duplicated or overwritten, and deleting the seeded sample brings the welcome back. Without a workspace folder the action explains itself instead of failing silently.
+
 ## Spec groups
 
 Specs are grouped into three collapsible sections based on their status (stored in `.spec-context.json`). Each group header displays a count, e.g. `Active (3)`, `Completed (12)`, `Archived (8)`.
@@ -325,7 +333,7 @@ When the SpecKit Companion spec-kit extension isn't installed, four surfaces mak
 
 - **Activity-bar badge** — the Specs view carries a single-dot badge tooltipped **Install SpecKit Companion**, which VS Code aggregates onto the SpecKit seedling icon in the activity bar, so the nudge is visible even when the view is collapsed.
 - **Pinned CTA row** — a first row **Get Companion — living specs, capture, fast-path** with a yellow rocket icon sits atop the Specs tree whenever you have specs. One click runs the install. It persists until installed (ambient, no dismiss).
-- **Empty-state button** — when the Specs view is empty, a big **Install SpecKit Companion** button appears with a **Dismiss** link. This is the one intrusive surface, so dismissing it is remembered and it does not return.
+- **Empty-state line** — when the Specs view is empty, the single [zero-spec welcome](#zero-spec-welcome) block folds in an **Install SpecKit Companion** button with a **Dismiss** link. This is the one intrusive surface, so dismissing it is remembered and it does not return.
 - **Create Spec option** — the New Spec workflow picker always lists **SpecKit Companion** (marked *Install to enable* when absent). Selecting it while not installed shows the benefits and a one-click install first; declining still creates the spec via the graceful stock downgrade.
 
 The ambient surfaces (badge, pinned row, Create Spec option) persist until installed; only the empty-state button is dismissable-and-remembered. Each surface reports the `companion.installPrompt` telemetry funnel with its own surface tag.

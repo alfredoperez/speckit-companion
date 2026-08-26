@@ -450,7 +450,6 @@ async function executeStepInTerminal(
   sendTelemetryEvent('phase.dispatched', {
     providerId: getConfiguredProviderType(),
     phase: phaseTelemetryId(step.name),
-    ...(specTelemetry.profile ? { profile: specTelemetry.profile } : {}),
     ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
   });
   const formatted = formatCommandForProvider(command);

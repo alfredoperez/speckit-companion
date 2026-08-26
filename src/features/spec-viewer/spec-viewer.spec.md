@@ -129,6 +129,11 @@ Re-running or advancing a step MUST resolve its target from the spec's recorded 
 - **THEN** nothing is dispatched
 - **AND** the reader is told what is missing and offered a way to install it
 
+#### Scenario: a step is dispatched from the viewer
+- **WHEN** the dispatch is reported for usage measurement
+- **THEN** it carries only the provider, the phase coerced to its allow-list, and the spec's correlation identifier when one exists
+- **AND** it attaches no retired dimension, so no reported field can outlive the concept it described
+
 ### Review comments persist through the single writer, one mutation at a time
 
 An inline comment MUST be persisted to the spec's record the moment it is added, edited, or removed, and MUST reach disk through the sanctioned writer rather than a direct write. Mutations for a given spec SHALL be serialized so two comments added in quick succession cannot read the same baseline and clobber each other, and a failed mutation MUST NOT wedge the queue for the ones behind it. A mutation SHALL be refused outright when the existing record cannot be read.

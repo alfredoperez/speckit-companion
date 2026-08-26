@@ -25,8 +25,10 @@ export type {
 export { WORKFLOW_NAME_PATTERN, FEATURE_CONTEXT_FILE } from './types';
 
 // Workflow Manager
+export type { WorkflowChoice } from './workflowManager';
 export {
     DEFAULT_WORKFLOW,
+    buildWorkflowChoices,
     getWorkflows,
     getWorkflow,
     getStepFile,
@@ -45,7 +47,7 @@ export {
 } from './workflowManager';
 
 // Workflow Selector
-export { needsSelection, selectWorkflow, getOrSelectWorkflow, resolveWorkflow } from './workflowSelector';
+export { getOrSelectWorkflow, resolveWorkflow } from './workflowSelector';
 
 // Checkpoint Handler
 export {

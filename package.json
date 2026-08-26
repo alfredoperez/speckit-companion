@@ -1,7 +1,7 @@
 {
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
-  "description": "VS Code companion for GitHub SpecKit - spec-driven development with AI assistants, from spec-first to spec-anchored with living specs",
+  "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline, per-phase timing, and living specs for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
   "version": "0.31.4",
   "license": "MIT",
   "publisher": "alfredoperez",
@@ -21,6 +21,10 @@
     "speckit",
     "spec-driven",
     "claude",
+    "copilot",
+    "gemini",
+    "codex",
+    "cursor",
     "ai",
     "github",
     "workflow",
@@ -37,7 +41,7 @@
     "Other"
   ],
   "galleryBanner": {
-    "color": "#1e1e1e",
+    "color": "#0F0F13",
     "theme": "dark"
   },
   "activationEvents": [
@@ -97,13 +101,13 @@
       },
       {
         "view": "speckit.views.explorer",
-        "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement, step by step.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(book) Read the docs](https://github.com/alfredoperez/speckit-companion#readme)\n\n[$(heart) Support this project](command:speckit.sponsor)",
-        "when": "speckit.detected && !speckit.constitutionNeedsSetup"
+        "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(play) Open a live sample](command:speckit.openSampleSpec)",
+        "when": "speckit.detected && !speckit.constitutionNeedsSetup && (speckit.companion.installed || speckit.companion.installNudgeDismissed)"
       },
       {
         "view": "speckit.views.explorer",
-        "contents": "SpecKit Companion adds living specs, lifecycle capture, and a fast-path for small changes.\n\n[$(rocket) Install SpecKit Companion](command:speckit.companion.installNudge?%5B%22welcome%22%5D)\n\n[Dismiss](command:speckit.companion.dismissInstallNudge)",
-        "when": "speckit.detected && !speckit.companion.installed && !speckit.companion.installNudgeDismissed"
+        "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(play) Open a live sample](command:speckit.openSampleSpec)\n\nSpecKit Companion adds living specs, lifecycle capture, and a fast-path for small changes.\n\n[$(rocket) Install SpecKit Companion](command:speckit.companion.installNudge?%5B%22welcome%22%5D)\n\n[Dismiss](command:speckit.companion.dismissInstallNudge)",
+        "when": "speckit.detected && !speckit.constitutionNeedsSetup && !speckit.companion.installed && !speckit.companion.installNudgeDismissed"
       },
       {
         "view": "speckit.views.explorer",
@@ -133,6 +137,12 @@
         "title": "New Spec",
         "category": "SpecKit",
         "icon": "$(plus)"
+      },
+      {
+        "command": "speckit.openSampleSpec",
+        "title": "Open a Live Sample",
+        "category": "SpecKit",
+        "icon": "$(play)"
       },
       {
         "command": "speckit.companion.auto.run",

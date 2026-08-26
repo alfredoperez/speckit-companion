@@ -83,6 +83,46 @@ export const StockWorkflow: Story = {
     ),
 };
 
+export const MultiWorkflowChoice: Story = {
+    name: 'Multi-Workflow Choice (descriptions on cards)',
+    render: () => (
+        <CreateSpecMock
+            initialContent="Add a quiet-footer mode to the spec viewer."
+            workflows={[
+                { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true },
+                { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: true },
+                { name: 'discuss-first', displayName: 'Discuss First', description: 'Talk the shape through before any document is written.', installed: true },
+            ]}
+            selectedWorkflow="companion"
+        />
+    ),
+};
+
+export const CompanionNotInstalled: Story = {
+    name: 'Companion Not Installed (install to enable)',
+    render: () => (
+        <CreateSpecMock
+            initialContent="Add a quiet-footer mode to the spec viewer."
+            showAuto={false}
+            workflows={[
+                { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true },
+                { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: false },
+            ]}
+        />
+    ),
+};
+
+export const TrialAffordance: Story = {
+    name: 'Trial (Try Companion for this spec)',
+    render: () => (
+        <CreateSpecMock
+            initialContent="Add a quiet-footer mode to the spec viewer."
+            showAuto={false}
+            showTrial
+        />
+    ),
+};
+
 export const WithAttachments: Story = {
     name: 'Attachments',
     render: () => (

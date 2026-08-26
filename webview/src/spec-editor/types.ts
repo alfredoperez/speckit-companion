@@ -16,10 +16,13 @@ export interface VSCodeApi {
 // Message Types: Webview → Extension
 // ============================================
 
+/** How the workflow was selected: untouched pre-selection, ordinary change, or the one-spec Companion trial. */
+export type WorkflowChosenAs = 'default' | 'picked' | 'trial';
+
 export type SpecEditorToExtensionMessage =
-    | { type: 'submit'; content: string; images: string[]; workflow: string }
-    | { type: 'submitAuto'; content: string; images: string[]; workflow: string }
-    | { type: 'submitCommand'; content: string; images: string[]; workflow: string; command: string }
+    | { type: 'submit'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
+    | { type: 'submitAuto'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
+    | { type: 'submitCommand'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs; command: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }
@@ -36,10 +39,12 @@ export type SpecEditorToExtensionMessage =
 export interface WorkflowDefinition {
     name: string;
     displayName: string;
-    description?: string;
+    /** Rendered visibly on the choice card — never only a tooltip. */
+    description: string;
+    /** false renders the card in its install-to-enable state. */
+    installed: boolean;
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
     supportsAuto?: boolean;
-    installed?: boolean;
 }
 
 export type ExtensionToSpecEditorMessage =

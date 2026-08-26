@@ -76,6 +76,21 @@ The extension prepends spec-context bookkeeping to the prompt, delimited by mark
 - **WHEN** the prompt carries a preamble and the CLI supports appending to its system prompt
 - **THEN** the preamble is staged separately and passed through that channel so it neither pollutes scrollback nor interferes with slash-command resolution
 
+### The creation preamble seeds every fact the new spec's record must be born with
+
+A spec's record does not exist when its creation is dispatched, so the only way a fact known at dispatch time reaches that record is for the creation preamble to instruct the assistant to write it. The preamble therefore seeds both the workflow the run will follow and the correlation identifier the dispatching surface minted for it, and a seeded field SHALL be emitted only when the dispatcher supplied it, so a surface with nothing to seed produces the same instruction as before.
+
+Seeding the identifier is what lets the events for one spec be joined: a surface that mints an id, reports it, and then lets the spec be created without it leaves the record to mint a different one later, and the run's own events no longer refer to the same spec. Seeding it also marks the spec as having been created through a form, which is how a spec first observed on disk can be told apart from one already accounted for.
+
+#### Scenario: the dispatching surface minted a correlation identifier
+- **WHEN** the creation preamble is built for that dispatch
+- **THEN** the instruction writes that identifier into the new spec's record alongside the workflow
+- **AND** later events for the spec carry the same identifier rather than a freshly minted one
+
+#### Scenario: creation is dispatched with no identifier to seed
+- **WHEN** the preamble is built
+- **THEN** it omits the identifier field entirely rather than writing an empty one
+
 ### Command names are rewritten to whatever the target actually registered
 
 The canonical dotted command form SHALL be translated to the form the target assistant resolves — some tools register these commands with dots, others as dash-named skills. The translation MUST be driven by per-target configuration and MUST be overridable by an explicit user setting. It MUST apply to the command verb only, never to its argument, and MUST leave non-SpecKit commands untouched.

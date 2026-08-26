@@ -24,6 +24,7 @@ README*.md
 *.vsix
 !assets/media/**
 !assets/icons/**
+!assets/sample-spec/**
 .claude/**
 CLAUDE.md
 scripts/**
@@ -68,5 +69,6 @@ speckit-extension/**
 storybook-static/**
 **/*.stories.tsx
 assets/mascot/**
+assets/social/**
 AGENTS.md
 package-lock.json

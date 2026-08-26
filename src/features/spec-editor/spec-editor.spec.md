@@ -24,16 +24,24 @@ On submit, the host SHALL materialize the user's content and attachments into a 
 
 ### The chosen workflow is recorded with the spec, verbatim
 
-The workflow the user picked SHALL be carried into the new spec's own state record as part of the creation instruction, so every later step resolves its command from the spec's recorded choice rather than from whatever the project default happens to be at that moment. The picked name is recorded as picked, even when the piece that implements it is missing — each step then applies the same fallback independently, so one absent dependency cannot silently rewrite the spec's identity.
+The workflow the spec actually runs SHALL be carried into the new spec's own state record as part of the creation instruction, so every later step resolves its command from the spec's recorded choice rather than from whatever the project default happens to be at that moment. The recorded name is the *effective post-install-modal selection*: a pick whose implementing piece is present records that pick verbatim, and a pick the user explicitly downgraded through the install-first prompt records the stock choice they accepted. An absent dependency can never *silently* rewrite the spec's identity — only the user's explicit modal decision can — and the record, the dispatched command family, and the reported creation attribution always agree on one value.
 
 #### Scenario: the user picks the Companion workflow
 - **WHEN** the spec is created
 - **THEN** the creation instruction seeds that workflow into the spec's record
 - **AND** later steps dispatch from that recorded choice
 
+#### Scenario: a Companion pick is downgraded via the install-first prompt
+- **WHEN** the user chooses to continue with stock instead of installing
+- **THEN** the record seeds the stock workflow — the same value the creation event reports
+
 ### The picker never offers a silent degrade, but Companion stays visible as install-to-enable
 
-The workflow list SHALL be built from what the active AI provider supports, so a provider-incompatible custom workflow is omitted. The Companion entry is the deliberate exception: because starting a spec is the highest-intent install moment, Companion is ALWAYS listed — even when the spec-kit extension is absent — but labeled as install-to-enable and carrying its not-installed state, so it is never a *silent* degrade. A not-installed pick is intercepted before any dispatch (see the install-first requirement below) rather than quietly running stock. Every builder that feeds a workflow list MUST share one predicate — this repo has shipped a bug where one of two independent list builders was gated and the other was not, and the ungated one was the one that rendered.
+The workflow list SHALL be built from what the active AI provider supports, so a provider-incompatible custom workflow is omitted. The Companion entry is the deliberate exception: because starting a spec is the highest-intent install moment, Companion is ALWAYS listed — even when the spec-kit extension is absent — but labeled as install-to-enable and carrying its not-installed state, so it is never a *silent* degrade. A not-installed pick is intercepted before any dispatch (see the install-first requirement below) rather than quietly running stock. Every surface that offers a workflow list MUST resolve it through the one shared pick-surface builder, whose availability check is the one shared predicate — no surface derives its own list. This closed the shipped bug where one of two independent list builders was gated and the other was not, and the ungated one was the one that rendered; a second private builder reappearing is that bug reopening.
+
+#### Scenario: two surfaces offer a workflow list under the same conditions
+- **WHEN** each renders its list
+- **THEN** both offer exactly the same set, because both delegated to the shared builder
 
 #### Scenario: the companion piece is not installed
 - **WHEN** the panel builds its workflow list

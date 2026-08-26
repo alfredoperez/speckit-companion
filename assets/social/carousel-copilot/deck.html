@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Carousel · Copilot users</title>
+<style>
+  /* ==========================================================================
+     Brand art direction, from speckit-extension/assets/HERO-PROMPT.md:
+     near-black #0F0F13, faint blueprint grid, blue glow #60A5FA / #3B82F6,
+     ONE yellow accent #FACC15, absolutely no purple.
+
+     Every product image on these slides is a real capture out of
+     docs/screenshots/generated/ — nothing here draws a fake UI.
+     ========================================================================== */
+  :root {
+    --ground:     #0F0F13;
+    --grid:       #2A2A3A;
+    --fg:         #E8E8F0;
+    --fg-dim:     #A8AEC0;
+    --blue:       #60A5FA;
+    --blue-deep:  #3B82F6;
+    --yellow:     #FACC15;
+    --card:       rgba(20,22,32,0.86);
+    --font:       -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; font-family:var(--font); }
+
+  /* 1080x1350 — the 4:5 portrait slot LinkedIn and Instagram both render full-bleed */
+  .slide {
+    position:relative; width:1080px; height:1350px; overflow:hidden;
+    background:var(--ground); color:var(--fg);
+    display:flex; flex-direction:column;
+    padding:88px 80px 96px;
+  }
+  .slide::before {
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(42,42,58,0.55) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(42,42,58,0.55) 1px, transparent 1px);
+    background-size:60px 60px;
+  }
+  .slide::after {
+    content:""; position:absolute; left:50%; top:38%; width:1100px; height:800px;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(closest-side, rgba(59,130,246,0.16), transparent 70%);
+  }
+  .slide > * { position:relative; z-index:1; }
+
+  .eyebrow {
+    font-size:26px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--blue); margin-bottom:28px;
+  }
+  h1 { font-size:82px; line-height:1.06; font-weight:700; letter-spacing:-0.02em; }
+  h2 { font-size:64px; line-height:1.1; font-weight:700; letter-spacing:-0.018em; }
+  .mark { background:var(--yellow); color:#101014; padding:2px 14px; border-radius:6px; }
+  .sub { margin-top:30px; font-size:34px; line-height:1.42; color:var(--fg-dim); max-width:840px; }
+
+  .shot {
+    margin-top:auto; width:100%; border-radius:16px; overflow:hidden;
+    border:1px solid rgba(96,165,250,0.28);
+    box-shadow:0 40px 90px rgba(0,0,0,0.66);
+  }
+  .shot img { display:block; width:100%; }
+  .shot.crop { height:640px; }
+  .shot.crop img { height:auto; object-fit:cover; object-position:top left; }
+
+  .pills { display:flex; gap:14px; margin-top:34px; flex-wrap:wrap; }
+  .pill {
+    font-size:27px; font-weight:600; padding:12px 26px; border-radius:999px;
+    border:1px solid rgba(96,165,250,0.5); color:var(--fg);
+  }
+  .pill.done { background:var(--yellow); border-color:var(--yellow); color:#101014; }
+
+  .stat { display:flex; align-items:baseline; gap:20px; margin-top:36px; }
+  .stat .n { font-size:110px; font-weight:700; color:var(--yellow); letter-spacing:-0.03em; }
+  .stat .l { font-size:34px; color:var(--fg-dim); line-height:1.3; max-width:520px; }
+
+  .bullets { margin-top:40px; display:flex; flex-direction:column; gap:26px; }
+  .bullet { display:flex; gap:20px; align-items:flex-start; font-size:34px; line-height:1.35; }
+  .bullet .dot { flex:none; width:14px; height:14px; border-radius:50%; background:var(--blue); margin-top:14px; }
+  .bullet.hot .dot { background:var(--yellow); }
+
+  .foot {
+    margin-top:auto; padding-top:44px; display:flex; align-items:center; justify-content:space-between;
+    font-size:27px; color:var(--fg-dim);
+  }
+  .foot b { color:var(--fg); font-weight:600; }
+  .cta { font-size:38px; font-weight:600; color:var(--fg); }
+  .cta .mark { font-size:38px; }
+</style>
+</head>
+<body>
+
+<!-- 1 · hook, aimed at Copilot users -->
+<div class="slide" id="s1">
+  <div class="eyebrow">For GitHub Copilot users</div>
+  <h1>Copilot writes the code.<br /><span class="mark">You never see the plan.</span></h1>
+  <div class="sub">Spec Kit turns an idea into spec, plan and tasks. Spec Kit Companion puts that whole run on screen, in VS Code, while it happens.</div>
+  <div class="pills">
+    <span class="pill">Specify</span>
+    <span class="pill">Plan</span>
+    <span class="pill">Tasks</span>
+    <span class="pill done">Done</span>
+  </div>
+  <div class="shot crop"><img src="../../../docs/screenshots/generated/spec-viewer.png" alt="" /></div>
+</div>
+
+<!-- 2 · the visualization payoff -->
+<div class="slide" id="s2">
+  <div class="eyebrow">See the run</div>
+  <h2>Every phase, <span class="mark">timed as it ran</span></h2>
+  <div class="sub">Intent, run timeline, approach and size on one page. No guessing which step your assistant is on.</div>
+  <div class="shot"><img src="../../../docs/screenshots/generated/overview.png" alt="" /></div>
+</div>
+
+<!-- 3 · the proof line -->
+<div class="slide" id="s3">
+  <div class="eyebrow">The Companion pipeline</div>
+  <h2>Leaner specs,<br />same correctness</h2>
+  <div class="stat">
+    <div class="n">60–68%</div>
+    <div class="l">less spec to read, measured against the stock pipeline on the same features</div>
+  </div>
+  <div class="sub">Right-sizing is built in: a small change gets a small spec, and the pipeline still runs through to done.</div>
+  <div class="shot crop"><img src="../../../docs/screenshots/generated/pipeline-stats.png" alt="" /></div>
+</div>
+
+<!-- 4 · customization -->
+<div class="slide" id="s4">
+  <div class="eyebrow">Make it yours</div>
+  <h2>Your workflow.<br /><span class="mark">Your assistant.</span></h2>
+  <div class="bullets">
+    <div class="bullet"><span class="dot"></span><span>Swap the pipeline: stock Spec Kit or Spec Kit Companion, per project or per spec.</span></div>
+    <div class="bullet"><span class="dot"></span><span>Shape your own commands and steps, no fork required.</span></div>
+    <div class="bullet hot"><span class="dot"></span><span>Copilot CLI, Copilot in the IDE, Claude, Gemini, Codex, Cursor and more.</span></div>
+  </div>
+  <div class="shot crop"><img src="../../../docs/screenshots/generated/specs-sidebar.png" alt="" /></div>
+</div>
+
+<!-- 5 · close -->
+<div class="slide" id="s5">
+  <div class="eyebrow">Free and open source</div>
+  <h1>See and steer<br /><span class="mark">everything your AI builds</span></h1>
+  <div class="sub">Install Spec Kit Companion from the VS Code Marketplace, open the sidebar, and open the live sample. Two minutes, nothing to author.</div>
+  <div class="shot crop"><img src="../../../docs/screenshots/generated/living-specs-pair.png" alt="" /></div>
+  <div class="foot">
+    <span class="cta">Search <b>Spec Kit Companion</b> in VS Code</span>
+    <span>github.com/alfredoperez/speckit-companion</span>
+  </div>
+</div>
+
+</body>
+</html>

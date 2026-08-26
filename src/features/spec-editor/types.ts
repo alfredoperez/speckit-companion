@@ -149,15 +149,23 @@ export interface TempFileManifest {
 // ============================================
 
 /**
+ * How the workflow was selected in the Create Spec form: the untouched
+ * pre-selection, an ordinary change, or the one-spec Companion trial.
+ */
+export type WorkflowChosenAs = 'default' | 'picked' | 'trial';
+
+/**
  * A workflow definition for spec-driven development
  */
 export interface WorkflowDefinition {
     /** Unique workflow identifier */
     name: string;
-    /** Display name shown in picker */
+    /** Display name shown on the choice card (no install-state suffix — the card renders state) */
     displayName: string;
-    /** Description shown in picker */
-    description?: string;
+    /** Description rendered visibly on the choice card (Companion's is the pinned proof line) */
+    description: string;
+    /** Whether the workflow is ready to run; false renders the install-to-enable card state */
+    installed: boolean;
     /** Command for specify step */
     stepSpecify: string;
     /** Command for plan step */
@@ -168,8 +176,6 @@ export interface WorkflowDefinition {
     specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
     /** Workflow has a hands-off auto orchestrator — surfaces the Auto button when selected */
     supportsAuto?: boolean;
-    /** For the Companion workflow: whether the spec-kit extension is installed (drives the install-first prompt) */
-    installed?: boolean;
 }
 
 // ============================================
@@ -177,9 +183,9 @@ export interface WorkflowDefinition {
 // ============================================
 
 export type SpecEditorToExtensionMessage =
-    | { type: 'submit'; content: string; images: string[]; workflow: string }
-    | { type: 'submitAuto'; content: string; images: string[]; workflow: string }
-    | { type: 'submitCommand'; content: string; images: string[]; workflow: string; command: string }
+    | { type: 'submit'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
+    | { type: 'submitAuto'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
+    | { type: 'submitCommand'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs; command: string }
     | { type: 'preview' }
     | { type: 'attachImage'; name: string; size: number; dataUri: string }
     | { type: 'removeImage'; imageId: string }

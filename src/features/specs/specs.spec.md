@@ -79,6 +79,22 @@ The Companion pipeline finishes by marking the spec complete at its last step �
 - **THEN** it records the implementation as finished
 - **AND** it does not itself declare the spec closed
 
+### Completion is observed at one seam, and observing it writes nothing
+
+Reporting that a spec was completed SHALL happen at exactly one seam: the state-file watcher diffing each write's status against the last known one, because the state file is the only artifact every completion path — the sidebar action, the viewer's lifecycle action, and the pipeline's terminal step written outside the extension — flows through. The observation fires exactly once per transition into the closed state: a first sighting of an already-closed spec seeds the baseline silently, and a re-write of the closed state is a non-event. The seam only *observes* — it adds no writer of the closed state, respects forward-only status, and a deleted spec's baseline is evicted so a re-created spec starts fresh. No completion path may carry its own report beside the seam; two reporters needing cross-de-duplication is the shape this requirement exists to forbid.
+
+#### Scenario: a completion lands from any of the three paths
+- **WHEN** the state file's status transitions into the closed state
+- **THEN** exactly one completion is reported, whoever wrote it
+
+#### Scenario: two paths act on the same spec
+- **WHEN** a second write of the closed state lands after the first
+- **THEN** nothing further is reported
+
+#### Scenario: the extension starts over a workspace with closed specs
+- **WHEN** the baseline is seeded from what is already on disk
+- **THEN** no completion is reported for any of them
+
 ### The implementation step settles from a signal that fires in every mode
 
 The implementation step is the one step with no successor to close it, and the host gets no completion callback from any dispatch surface. Its settle MUST therefore hang off the one always-on, mode-agnostic signal — the task list's own file changing — rather than off a terminal handle or a workflow hook that only some modes have. The settle SHALL be guarded so it fires exactly once and only when warranted.

@@ -1,0 +1,1137 @@
+{
+  "workflow": "companion",
+  "specName": "Activation Funnel",
+  "branch": "597-activation-funnel",
+  "selectedAt": "2026-08-25T21:51:30.521Z",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T21:51:30.521Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T21:57:05.524Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T21:59:01.446Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:12:29.631Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:13:57.180Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T22:14:34.974Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T22:36:25.631Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:41:28.960Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-25T22:42:17.544Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-25T22:47:38.752Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:49:19.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:50:34.299Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:52:19.046Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:52:48.151Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:54:50.242Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:54:50.302Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:56:33.771Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:56:33.831Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:56:33.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:56:55.263Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:57:53.027Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T22:57:53.076Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:01:10.069Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:02:46.493Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:02:46.551Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:02:46.609Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:02:46.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:08:22.700Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:08:22.763Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:08:22.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:08:22.886Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:10:35.685Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:10:35.743Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:10:35.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:10:35.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:10:35.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:13:28.558Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:13:28.618Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:14:48.196Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:14:48.256Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:14:48.315Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:15:40.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:17:05.551Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:17:05.613Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:17:05.675Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:18:56.909Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T043",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:20:34.904Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:31:49.026Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:31:49.085Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T041",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:31:49.145Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T042",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:32:41.922Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T044",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:33:50.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T045",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:34:26.571Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T046",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:37:29.863Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T047",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-25T23:38:49.305Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "spec-editor",
+      "spec-viewer",
+      "editor-ui",
+      "workflows",
+      "specs",
+      "core"
+    ],
+    "skipped": []
+  },
+  "last_action": "PR #598 open for review — 45/47 tasks done; T037/T038 need a PostHog login",
+  "coverage": {
+    "FR-001": {
+      "title": "Zero-spec sidebar shows one merged welcome (value line, create, open sample)",
+      "tasks": [
+        "T005",
+        "T009",
+        "T012"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/manifest.test.ts::zero-spec merged welcome — viewsWelcome"
+      ]
+    },
+    "FR-002": {
+      "title": "Package bundles a curated sample spec; Open a live sample seeds a copy into the workspace",
+      "tasks": [
+        "T007",
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-003": {
+      "title": "Seeded sample opens in the viewer immediately with a populated pipeline state",
+      "tasks": [
+        "T007",
+        "T010"
+      ]
+    },
+    "FR-004": {
+      "title": "Seeding is repeat-safe: reopen not duplicate, never overwrite, clear error without a workspace",
+      "tasks": [
+        "T006",
+        "T010"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/sampleSpec.test.ts::openSampleSpec (speckit.openSampleSpec)"
+      ]
+    },
+    "FR-005": {
+      "title": "Workflow choice renders descriptions with Companion's proof line, replacing the bare dropdown",
+      "tasks": [
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T020"
+      ]
+    },
+    "FR-006": {
+      "title": "Try Companion for this spec applies Companion once without changing the default",
+      "tasks": [
+        "T019",
+        "T020"
+      ]
+    },
+    "FR-007": {
+      "title": "All workflow lists resolve through one shared builder/predicate",
+      "tasks": [
+        "T013",
+        "T014",
+        "T019",
+        "T024"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/workflowManager.test.ts::buildWorkflowChoices — the one pick-surface builder (FR-007)"
+      ]
+    },
+    "FR-008": {
+      "title": "Unreachable workflow picker wired or removed; workflow-selected event has a live emitter or is retired",
+      "tasks": [
+        "T018",
+        "T035"
+      ]
+    },
+    "FR-009": {
+      "title": "Created-spec event attributes the actually selected workflow, not the dispatched command string",
+      "tasks": [
+        "T003",
+        "T019"
+      ],
+      "tests": [
+        "src/features/spec-editor/specEditorProvider.telemetry.test.ts::attributes spec.created to the selected workflow through the shared coercer"
+      ]
+    },
+    "FR-010": {
+      "title": "Create flow without the companion piece behaves exactly as today",
+      "tasks": [
+        "T019",
+        "T047"
+      ],
+      "tests": [
+        "src/features/spec-editor/specEditorProvider.installNudge.test.ts::Create Spec — Companion install nudge"
+      ]
+    },
+    "FR-011": {
+      "title": "Installed event fires exactly once per install, distinct from activation",
+      "tasks": [
+        "T002",
+        "T003",
+        "T027",
+        "T029"
+      ],
+      "tests": [
+        "src/core/__tests__/funnelEvents.test.ts::extension.installed (once ever per install identity)"
+      ]
+    },
+    "FR-012": {
+      "title": "Panel-opened event on first panel visibility, de-duplicated per session",
+      "tasks": [
+        "T001",
+        "T003",
+        "T027",
+        "T029"
+      ],
+      "tests": [
+        "src/core/__tests__/funnelEvents.test.ts::panel.opened (once per session)"
+      ]
+    },
+    "FR-013": {
+      "title": "Completed event fires from all three completion paths via one shared status seam, exactly once",
+      "tasks": [
+        "T028",
+        "T031",
+        "T032",
+        "T033"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/completionSeam.test.ts::the completion seam (single spec.completed owner)"
+      ]
+    },
+    "FR-014": {
+      "title": "New events honor both telemetry switches, shape-only payloads, no de-dupe slot on unsent",
+      "tasks": [
+        "T003",
+        "T004",
+        "T027"
+      ],
+      "tests": [
+        "src/core/__tests__/funnelEvents.test.ts::burns no marker on an unsent event",
+        "src/core/__tests__/funnelEvents.test.ts::burns no session slot on an unsent event"
+      ]
+    },
+    "FR-015": {
+      "title": "Telemetry disclosure docs list every new event",
+      "tasks": [
+        "T035"
+      ]
+    },
+    "FR-016": {
+      "title": "Created event for terminal-created specs via watcher, or the blind spot stays documented",
+      "tasks": [
+        "T028",
+        "T030",
+        "T032"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/completionSeam.test.ts::watcher spec.created (terminal-created specs)"
+      ]
+    },
+    "FR-017": {
+      "title": "Dashboard shows the five-stage activation funnel in order",
+      "tasks": [
+        "T036",
+        "T037"
+      ]
+    },
+    "FR-018": {
+      "title": "No dashboard tiles that can never return data; profile/turbo tile removed",
+      "tasks": [
+        "T003",
+        "T037"
+      ]
+    },
+    "FR-019": {
+      "title": "Specify-vs-plan parity verified on fresh post-fix data and recorded",
+      "tasks": [
+        "T038"
+      ]
+    },
+    "FR-020": {
+      "title": "30-60s demo clip of a run in flight (live rail + per-phase timing) via the asset pipeline",
+      "tasks": [
+        "T039"
+      ]
+    },
+    "FR-021": {
+      "title": "Make-it-yours customization asset: swap workflow, shape commands, pick provider",
+      "tasks": [
+        "T040"
+      ]
+    },
+    "FR-022": {
+      "title": "Marketplace listing benefit-led, leaner-specs stat above the fold, README clip placeholders resolved",
+      "tasks": [
+        "T041",
+        "T043",
+        "T044"
+      ]
+    },
+    "FR-023": {
+      "title": "Social carousel aimed at Copilot users in the US and India",
+      "tasks": [
+        "T042"
+      ]
+    },
+    "FR-024": {
+      "title": "Existing create/dispatch/complete/install-prompt flows unchanged outside new surfaces",
+      "tasks": [
+        "T047"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 18,
+    "projectedTasks": 28,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "context": [
+    "living spec: spec-editor",
+    "living spec: spec-viewer",
+    "living spec: editor-ui",
+    "living spec: workflows",
+    "living spec: specs",
+    "living spec: core",
+    "area: sidebar welcome/tree (zero-spec state)",
+    "area: Create Spec editor (extension host + webview form)",
+    "area: workflow list builders and selector",
+    "area: telemetry events + disclosure docs",
+    "area: README/Marketplace listing + feature clips",
+    "constraint: every workflow-list surface shares one predicate (spec-editor living spec)",
+    "constraint: telemetry carries shapes never content; both switches gate every event (core living spec)",
+    "constraint: status is forward-only; completed is written only by the sanctioned paths (specs living spec)",
+    "constraint: demo fixtures are not packaged; sample must be a bundled copy-into-workspace seed",
+    "constraint: screenshots overwritten in place, never renamed; generated assets regenerated, never hand-edited"
+  ],
+  "intent": "Make customization and visualization reachable in a new user's first two minutes and make the install-to-completion funnel measurable end to end",
+  "expectations": [
+    "Already-shipped epic #520 pieces (#543, #531, #563, #576, #589/#596) are not redone",
+    "No walkthroughs contribution (the epic's optional stretch)",
+    "No reintroduction of the retired profile standard/turbo dimension",
+    "Dashboard build happens in the analytics tool; repo-side scope is events + disclosure + recording the parity check"
+  ],
+  "telemetryInstanceId": "91a41d53-ef9f-4602-95f2-ca82db6506b2",
+  "approach": "Merge the two overlapping viewsWelcome blocks into one welcome (two mutually-exclusive variants) whose sample action copy-seeds a bundled asset spec and opens the viewer; replace the Create Spec dropdown with radio-card workflow choices fed by one shared buildWorkflowChoices builder; add the missing funnel events with the completed emit moved to a single status-transition seam in the context-file watcher; produce launch content through the existing HyperFrames/screenshot pipeline.",
+  "decisions": [
+    {
+      "decision": "spec.completed emits only from the context-file watcher via a status-extended TransitionCache",
+      "why": "the three completion paths never converge in TypeScript (the Companion terminal step writes completed from Python), so the context file watcher is the only seam all three flow through, and cache diffing makes double-fires structurally impossible",
+      "rejected": "emitting inside setStatus plus a second watcher emit for the Python path — two emit sites needing cross-de-duplication is exactly what FR-013 forbids"
+    },
+    {
+      "decision": "adopt FR-016 by seeding the form-minted telemetryInstanceId through the creation preamble; watcher emits spec.created only for id-less non-sample contexts",
+      "why": "the persisted id is a reliable form-vs-terminal discriminator AND fixes the broken created-to-completed funnel join (the form id is never persisted today, later events mint a different id)",
+      "rejected": "keeping the documented blind spot — marginal cost fell to one preamble line once the id mechanism existed"
+    },
+    {
+      "decision": "one shared buildWorkflowChoices in workflowManager; delete the spec-editor private builder and the dead selectWorkflow quick-pick; retire workflow.selected",
+      "why": "the two builders demonstrably diverge (Companion gating, validation, dedupe) and the picker has no live entry point; the Create Spec form IS the picker after this feature",
+      "rejected": "patching both builders to agree (keeps two derivations of one fact) or wiring the quick-pick to a command (redundant surface)"
+    },
+    {
+      "decision": "sample ships at assets/sample-spec/ with a sampleSpec marker and is seeded via workspace.fs.copy overwrite:false; seeding emits sample.opened, never spec.created",
+      "why": "specs/** is excluded from the vsix and demo fixtures are mutation-prone; the marker keeps the seeded sample from polluting the creation rung the sample exists to feed",
+      "rejected": "dist/resources (no build step produces it — known silent no-op landmine) and read-in-place (forbidden by the spec)"
+    },
+    {
+      "decision": "spec.completed emits only from the context-file watcher, via a status-extended TransitionCache with seed-then-diff",
+      "why": "the three completion paths never converge in TypeScript (the Companion terminal step writes completed from Python), so the context file is the one artifact all three mutate; cache diffing makes a double-fire structurally impossible and also de-duplicates the two watchers that can route the same file",
+      "rejected": "emitting inside setStatus plus a second watcher emit for the Python path — two emit sites needing cross-de-duplication is exactly what FR-013 forbids"
+    },
+    {
+      "decision": "buildWorkflowChoices returns choice metadata (description, installed, entryCommand) and the spec editor only formats commands on top of it",
+      "why": "FR-007 needs one list producer, but the editor still owns provider-specific command formatting; splitting at the metadata boundary keeps one derivation of what is offerable without pushing provider concerns into the workflows module",
+      "rejected": "having the builder return fully provider-formatted entries (couples the workflows module to the active provider) or keeping the private builder and syncing the two (two derivations of one fact)"
+    },
+    {
+      "decision": "the spec editor records and reports the EFFECTIVE post-install-modal workflow, not the raw form pick",
+      "why": "a Companion pick the user downgraded through the install-first modal actually runs stock, so seeding and reporting the effective value keeps the on-disk record, the dispatched command family, and the created event agreeing on one workflow",
+      "rejected": "attributing the raw pre-modal form value — it would report Companion for specs that ran stock and break the created-to-dispatched join by workflow"
+    },
+    {
+      "decision": "run-in-flight ships at 880px / 12fps / lossy 45 instead of the house 960px / 14fps / lossy 30",
+      "why": "at 36 seconds it is the longest clip in the set and the standard encode landed at 4.6MB, over the 4MB README target; the step-down reaches 3.7MB with no visible artifacts at README width",
+      "rejected": "shortening the clip (the spec pins 30 to 60 seconds) or shipping it over the size target"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Full plan + research + data model + telemetry/UI contracts: merged welcome with bundled-sample seeding, radio-card workflow choice on one shared builder, five funnel rungs with a single watcher-based completed seam, PostHog-side dashboard split, pipeline-built launch content.",
+      "key_finding": "The three completed-writers never converge in TypeScript (the Companion terminal step writes from Python), so the context-file watcher is the only viable single seam — and the form-minted specInstanceId is never persisted today, meaning created-to-completed could not be joined per spec until the preamble seeds the id."
+    },
+    "tasks": {
+      "summary": "47 tasks in 8 phases: Setup + Foundational (telemetry core/constants), then US1 first-run sample, US2 choice control, US3 funnel events, US4 dashboard, US5 launch content, Polish (changelog + living-spec drift fix + validation), each phase as explicit dependency waves"
+    },
+    "implement": {
+      "summary": "Shipped the activation funnel: one merged zero-spec welcome with a bundled live sample, a descriptive Create Spec workflow choice on one shared builder with a one-spec Companion trial, the five funnel events with a single watcher-owned completion seam, plus the run-in-flight and make-it-yours clips, a Copilot carousel, and a benefit-led listing."
+    }
+  },
+  "currentTask": "T047",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added drivable createTreeView fake (visible flag + onDidChangeVisibility) to the VS Code mock",
+      "files": [
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Catalogued the installedEventSent global-state key and the speckit.openSampleSpec command id",
+      "files": [
+        "src/core/constants.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Funnel event senders (installed/panel/sample), shared workflowTelemetryId coercer, typed spec.created props, profile prop retired, slot-after-confirmed-send enforced",
+      "files": [
+        "src/core/telemetry.ts",
+        "src/features/specs/specCommands.ts",
+        "src/features/spec-viewer/messageHandlers.ts",
+        "src/core/__tests__/telemetry.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Core living spec: funnel rungs with de-dupe scopes, shared workflow coercer, profile dimension retired",
+      "files": [
+        "src/core/core.spec.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Contract test: merged welcome renders one block per zero-spec state with both pinned actions verbatim",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Unit tests for the seed command: no-workspace error, seed+open, reopen, never-overwrite",
+      "files": [
+        "src/features/specs/__tests__/sampleSpec.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Authored the bundled sample spec (spec/plan/tasks + extension-stamped context, sampleSpec marker, no telemetry id)",
+      "files": [
+        "assets/sample-spec/spec.md",
+        "assets/sample-spec/plan.md",
+        "assets/sample-spec/tasks.md",
+        "assets/sample-spec/.spec-context.json"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Ship assets/sample-spec in the vsix, exclude assets/social",
+      "files": [
+        ".vscodeignore"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Merged the two stacked welcomes into two mutually-exclusive variants with pinned actions; registered speckit.openSampleSpec",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "New sampleSpec module: no-workspace error, copy-seed with overwrite:false, reopen semantics, sample.opened emit",
+      "files": [
+        "src/features/specs/sampleSpec.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Registered speckit.openSampleSpec with the extension's command registrations",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Documented the merged zero-spec welcome (one block, two variants, pinned actions) in the sidebar reference",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Unit tests for buildWorkflowChoices: validation/dedupe/reserved/provider-filter, Companion always present via shared predicate, proof line verbatim",
+      "files": [
+        "src/features/workflows/__tests__/workflowManager.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "buildWorkflowChoices: the one pick-surface builder with isCompanionSelectable as the shared predicate; Companion description = proof line",
+      "files": [
+        "src/features/workflows/workflowManager.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "WorkflowDefinition gains required description/installed and WorkflowChosenAs on submit messages",
+      "files": [
+        "src/features/spec-editor/types.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Mirrored workflow-entry shape and submit-family { workflow, chosenAs } in webview types",
+      "files": [
+        "webview/src/spec-editor/types.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Radio-card choice styles: cards, checked/focus states, install badge, trial link",
+      "files": [
+        "webview/styles/spec-editor.css"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Removed the dead selectWorkflow quick-pick, needsSelection, and the local coercer; kept resolveDefaultWorkflow path",
+      "files": [
+        "src/features/workflows/workflowSelector.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Provider consumes buildWorkflowChoices; spec.created attributes effective post-modal selection via shared coercer with chosenAs/source; trial plumbed; sniff removed",
+      "files": [
+        "src/features/spec-editor/specEditorProvider.ts",
+        "src/features/spec-editor/specEditorProvider.telemetry.test.ts",
+        "src/features/spec-editor/specEditorProvider.installNudge.test.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "initWorkflows renders descriptive radio cards with install-to-enable state and the trial affordance; submits carry { workflow, chosenAs }",
+      "files": [
+        "webview/src/spec-editor/index.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Barrel exports: buildWorkflowChoices/WorkflowChoice added, dead selector exports removed",
+      "files": [
+        "src/features/workflows/index.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Mock parity: radio-card choices, install-to-enable, trial — through shipped spec-editor.css class names",
+      "files": [
+        "webview/src/spec-editor/CreateSpecMock.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "New stories: multi-workflow choice, Companion-not-installed, trial state",
+      "files": [
+        "webview/src/spec-editor/__stories__/CreateSpec.stories.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Living spec: one-predicate requirement satisfied by the shared builder; effective post-modal recording",
+      "files": [
+        "src/features/spec-editor/spec-editor.spec.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Living spec: descriptive choice-control requirement, trial semantics, Storybook parity states",
+      "files": [
+        "webview/src/spec-editor/editor-ui.spec.md"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Fixed stale no-picker-when-not-installed claim; documented cards, proof line, install-to-enable, trial",
+      "files": [
+        "docs/configuration.md"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Funnel tests: installed once-ever with confirmed-send marker, panel.opened per-session via tree-view fake, unsent events burn no slot",
+      "files": [
+        "src/core/__tests__/funnelEvents.test.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Completion-seam tests: once per transition, first-sight seeding, all paths, watcher spec.created discrimination",
+      "files": [
+        "src/features/specs/__tests__/completionSeam.test.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "activate() sends installed once-ever (marker on confirmed send) and wires panel.opened via trackPanelOpened(specsTreeView)",
+      "files": [
+        "src/extension.ts",
+        "src/core/telemetry.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Creation preamble seeds the form-minted telemetryInstanceId into the new spec's record",
+      "files": [
+        "src/ai-providers/promptPreamble.ts",
+        "src/ai-providers/promptBuilder.ts"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "TransitionCache caches status: diffStatus (entered-completed detection, first-sight silent), seedStatus, eviction, clear",
+      "files": [
+        "src/features/specs/transitionLogger.ts"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Watcher seam wired: single spec.completed emit on status transition, watcher spec.created for id-less non-sample creates, activation baseline seeding",
+      "files": [
+        "src/core/fileWatchers.ts"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Removed the sidebar's direct spec.completed emit — the watcher seam is the only emitter",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Living spec: completion observed at one seam, writes nothing, seeds silently, evicts on delete",
+      "files": [
+        "src/features/specs/specs.spec.md"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Disclosure rows for installed/panel/sample events, spec.created chosenAs+source, spec.completed all-paths, profile removal, workflow.selected retirement",
+      "files": [
+        "docs/telemetry.md"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Five-stage funnel recipe (installed → panel → created → dispatched → completed) added to the PostHog reading section",
+      "files": [
+        "docs/telemetry.md"
+      ]
+    },
+    "T043": {
+      "status": "DONE",
+      "did": "Benefit-led Marketplace description with the leaner-specs stat; keywords gain copilot/gemini/codex/cursor; galleryBanner #0F0F13",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "New run-in-flight composition (36s, live rail + per-phase timing from tracked captures), rendered and promoted to run-in-flight.gif",
+      "files": [
+        "media/feature-clips/run-in-flight/",
+        "docs/screenshots/generated/run-in-flight.gif"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "New make-it-yours composition (24s: workflow swap, command shaping, provider pick from real settings), rendered and promoted",
+      "files": [
+        "media/feature-clips/make-it-yours/",
+        "docs/screenshots/generated/make-it-yours.gif"
+      ]
+    },
+    "T041": {
+      "status": "DONE",
+      "did": "Rendered spec-viewer, inline-comments, specs-sidebar compositions and promoted their GIFs additively (PNG stills untouched)",
+      "files": [
+        "docs/screenshots/generated/spec-viewer.gif",
+        "docs/screenshots/generated/inline-comments.gif",
+        "docs/screenshots/generated/specs-sidebar.gif"
+      ]
+    },
+    "T042": {
+      "status": "DONE",
+      "did": "Copilot carousel (US/India): 5 slides composed from real captures via a playwright render script, plus HERO-PROMPT-derived regeneration sheet; never packaged",
+      "files": [
+        "assets/social/carousel-copilot/"
+      ]
+    },
+    "T044": {
+      "status": "DONE",
+      "did": "README: leaner-specs stat in the opening value paragraph above the fold, three clip placeholders resolved with promoted GIFs, new run-in-flight and make-it-yours sections; visual-assets rulebook updated",
+      "files": [
+        "README.md",
+        "docs/visual-assets.md"
+      ]
+    },
+    "T045": {
+      "status": "DONE",
+      "did": "Changelog entries under Unreleased: live sample, merged welcome, descriptive workflow choice + trial, funnel telemetry — release-notes voice",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T046": {
+      "status": "DONE",
+      "did": "Ran the drift report and folded every drifted capability: workflows (shared builder, install-to-enable, single picker), speckit-cli, capture-runtime, viewer-ui",
+      "files": [
+        "capabilities/workflows/spec.md",
+        "src/speckit/speckit-cli.spec.md",
+        "speckit-extension/scripts/capture-runtime.spec.md",
+        "webview/src/spec-viewer/viewer-ui.spec.md"
+      ]
+    },
+    "T047": {
+      "status": "DONE",
+      "did": "Validated against Success Criteria: 1942 tests + typecheck + both builds green, five funnel rungs asserted, clips within 30-60s and size targets, demo fixtures untouched",
+      "files": [
+        "tests + build (whole repo)"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "T037/T038 blocked: PostHog (us.posthog.com) is not logged in in the connected Chrome session and credential entry is out of scope for the agent — the dashboard funnel view, dead-tile removal, and the specify-vs-plan parity check need the maintainer to log in; the doc-side funnel recipe (T036) is in place and T038 has a reserved spot beside it.",
+      "step": "implement"
+    },
+    {
+      "note": "No lint step exists in this repo (no eslint config, no lint script), so the tasks list-item lint gate could not run; tsc plus both webpack builds are the standing static gates.",
+      "step": "implement"
+    },
+    {
+      "note": "Ran the drift check before committing, which hid two drifted capabilities the commit then exposed: ai-providers (the creation preamble now seeds the correlation id) and spec-viewer (its dispatch stopped attaching the retired profile dimension). Both are folded now. The check is only meaningful AFTER the spec and its source are committed together.",
+      "step": "implement"
+    }
+  ],
+  "verified": [
+    {
+      "what": "Full Jest suite after every phase",
+      "command": "npx jest",
+      "result": "137 suites / 1942 tests pass, including the 3 pre-existing telemetry+install-nudge suites updated for the new shapes",
+      "warnings": [
+        "Jest prints a worker-force-exit notice on every run, pre-existing and unrelated to this change"
+      ]
+    },
+    {
+      "what": "TypeScript typecheck and production builds",
+      "command": "npx tsc --noEmit -p tsconfig.json; npm run compile; npm run package-web",
+      "result": "all clean, exit 0; webview bundles emit normally",
+      "warnings": []
+    },
+    {
+      "what": "Five funnel rungs observable from the scripted session (SC-005)",
+      "command": "npx jest funnelEvents completionSeam specEditorProvider.telemetry --verbose",
+      "result": "installed (once-ever, marker only on confirmed send), panel.opened (per-session, initial-visible + toggles), spec.created (form attribution + watcher source), phase.dispatched (specify, shared id), spec.completed (once per transition, all three paths) all asserted green",
+      "warnings": []
+    },
+    {
+      "what": "Clip and GIF pipeline (SC-007)",
+      "command": "hyperframes check + render; ffmpeg palettegen/paletteuse; gifsicle -O3",
+      "result": "run-in-flight 36.0s at 3.7MB (loop PSNR 46.6dB), make-it-yours 24.0s at 941KB (loop PSNR 49.4dB); both checks pass, 48/48 contrast checks AA; three existing compositions re-rendered and promoted additively",
+      "warnings": [
+        "run-in-flight overshot 4MB at the standard 960px/14fps, stepped down to 880px/12fps lossy 45 and recorded in its STORYBOARD"
+      ]
+    },
+    {
+      "what": "Demo fixtures left at their committed baseline",
+      "command": "git status --short | grep _demo",
+      "result": "no demo fixture appears in the working tree diff",
+      "warnings": []
+    }
+  ]
+}

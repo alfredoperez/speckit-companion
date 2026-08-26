@@ -1,19 +1,22 @@
 /**
- * Anonymous, PII-free telemetry for provider / pipeline-profile / beta-flag
- * adoption and the spec lifecycle.
+ * Anonymous, PII-free telemetry for provider / workflow / beta-flag adoption,
+ * the spec lifecycle, and the activation funnel (installed → panel opened →
+ * spec created → phase dispatched → completed).
  *
  * Single home for: the committed PostHog project key, the {@link TelemetryService}
  * that posts each event to PostHog's capture endpoint, and the helpers that read
- * a spec's profile + telemetry correlation id off `.spec-context.json`.
+ * a spec's telemetry correlation id off `.spec-context.json`.
  *
  * Privacy contract: every payload carries only enum-like values, booleans,
  * versions, counts, and a random per-spec UUID — never prompt content, file
- * paths, spec names, or custom workflow names.
+ * paths, spec names, or custom workflow names. A de-dupe slot — persistent or
+ * in-memory — is claimed only after `sendTelemetryEvent` returned true, so an
+ * event suppressed by a closed switch can still fire later.
  */
 
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { ConfigKeys, WorkflowSteps } from './constants';
+import { COMPANION_WORKFLOW_NAME, ConfigKeys, SPECKIT_WORKFLOW_NAME, WorkflowSteps } from './constants';
 import { coerceLegacyBoolean } from './settingsMigration';
 import { readSpecContextSync, SPEC_CONTEXT_FILENAME } from '../features/specs/specContextReader';
 import { updateSpecContext } from '../features/specs/specContextWriter';
@@ -50,22 +53,15 @@ export function phaseTelemetryId(stepName: string): string {
 }
 
 /**
- * Coerce a `.spec-context.json` `profile` to the reported enum. The on-disk
- * value is user/hook-authored free text, so anything other than the two known
- * profiles is dropped (returns `undefined`) — never sent verbatim.
+ * Coerce a workflow name to its telemetry allow-list — the single shared
+ * coercer every emit site uses. Built-in ids pass verbatim, the legacy
+ * `'default'` alias maps to `speckit`, and anything else (a user-authored
+ * custom workflow name) is reported as the literal `"custom"`, never verbatim.
  */
-export function profileTelemetryId(profile: string | undefined): 'standard' | 'turbo' | undefined {
-    return profile === 'standard' || profile === 'turbo' ? profile : undefined;
-}
-
-/**
- * Coerce the `speckit.defaultWorkflow` setting to its allow-list before reporting.
- * The setting is an enum, but settings.json accepts arbitrary strings — anything
- * other than `companion` is reported as the default `'speckit'`, never sent
- * verbatim (privacy contract: a custom workflow name is user-authored).
- */
-export function defaultWorkflowTelemetryId(value: string | undefined): 'speckit' | 'companion' {
-    return value === 'companion' ? 'companion' : 'speckit';
+export function workflowTelemetryId(workflowName: string | undefined): 'speckit' | 'companion' | 'custom' {
+    if (workflowName === SPECKIT_WORKFLOW_NAME || workflowName === 'default') return SPECKIT_WORKFLOW_NAME;
+    if (workflowName === COMPANION_WORKFLOW_NAME) return COMPANION_WORKFLOW_NAME;
+    return 'custom';
 }
 
 /** The workflow + feature-flag states reported with `extension.activated`. */
@@ -85,7 +81,7 @@ export function buildBetaSnapshot(): BetaSnapshot {
         String(coerceLegacyBoolean(config.get<unknown>(key), fallback));
     return {
         // Report the RAW configured value (unset → 'speckit'), never the install-derived effective default — only an explicit companion choice counts toward adoption.
-        defaultWorkflow: defaultWorkflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
+        defaultWorkflow: workflowTelemetryId(config.get<string>('defaultWorkflow', 'speckit')),
         activityPanel: coerced('viewer.activityPanel', true),
         installPrompt: coerced('companion.installPrompt', true),
         telemetry: String(config.get<boolean>('telemetry', true)),
@@ -119,20 +115,19 @@ export function buildActivatedProperties(snapshot: ActivationSnapshot): Telemetr
 }
 
 /**
- * Per-spec telemetry correlation context: the spec's pipeline profile and a
- * stable random id. The id is minted + persisted lazily on first read for a
- * spec that has none yet (created before this feature, or by a hook).
+ * Per-spec telemetry correlation context: a stable random id. The id is minted
+ * + persisted lazily on first read for a spec that has none yet (created before
+ * this feature, or by a hook).
  */
 export interface SpecTelemetryContext {
-    profile?: string;
     specInstanceId?: string;
 }
 
 /**
- * Read a spec's `{ profile, telemetryInstanceId }`. When the spec exists on
- * disk but carries no id, generate one and persist it (so the same id rides
- * every later event for this spec). A spec with no `.spec-context.json` yields
- * an empty context — the id is minted by the create path instead.
+ * Read a spec's `telemetryInstanceId`. When the spec exists on disk but
+ * carries no id, generate one and persist it (so the same id rides every later
+ * event for this spec). A spec with no `.spec-context.json` yields an empty
+ * context — the id is minted by the create path instead.
  */
 export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     let ctx;
@@ -143,9 +138,8 @@ export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     }
     if (!ctx) return {};
 
-    const profile = profileTelemetryId(ctx.profile);
     if (ctx.telemetryInstanceId) {
-        return { profile, specInstanceId: ctx.telemetryInstanceId };
+        return { specInstanceId: ctx.telemetryInstanceId };
     }
 
     const id = crypto.randomUUID();
@@ -154,7 +148,7 @@ export function getSpecTelemetryContext(specDir: string): SpecTelemetryContext {
     // (we touch only telemetryInstanceId). Fire-and-forget: a failed backfill is
     // non-fatal — the id is still returned for this in-flight event.
     void updateSpecContext(specDir, c => ({ ...c, telemetryInstanceId: id }), ctx).catch(() => {});
-    return { profile, specInstanceId: id };
+    return { specInstanceId: id };
 }
 
 /**
@@ -346,6 +340,90 @@ export function reportSteeringOpened(): void {
 export function __resetEngagementDedupe(): void {
     specOpenedKeys.clear();
     livingSpecOpenedKeys.clear();
+}
+
+/**
+ * Activation-funnel rungs (pinned order: installed → panel opened → spec
+ * created → phase dispatched → completed). All BARE events except
+ * `spec.created` / `spec.completed`, which carry the allow-listed props below.
+ */
+export const EXTENSION_INSTALLED_EVENT = 'extension.installed';
+export const PANEL_OPENED_EVENT = 'panel.opened';
+export const SAMPLE_OPENED_EVENT = 'sample.opened';
+export const SPEC_CREATED_EVENT = 'spec.created';
+export const SPEC_COMPLETED_EVENT = 'spec.completed';
+
+// Per-session funnel dedupe: the slot is claimed only after a confirmed send.
+const funnelSessionKeys = new Set<string>();
+
+/**
+ * Emit `extension.installed` once ever per install identity. The persistent
+ * marker is written only after a confirmed send, so a first activation with
+ * telemetry off can still report the install once it's enabled. A wiped
+ * globalState legitimately reads as a new install identity.
+ */
+export async function reportInstalledOnce(globalState: vscode.Memento): Promise<void> {
+    if (globalState.get<boolean>(ConfigKeys.globalState.installedEventSent, false)) return;
+    if (sendTelemetryEvent(EXTENSION_INSTALLED_EVENT)) {
+        await globalState.update(ConfigKeys.globalState.installedEventSent, true);
+    }
+}
+
+/** Emit `panel.opened` once per session — the specs panel became visible. */
+export function reportPanelOpened(): void {
+    sendEventOncePerKey(funnelSessionKeys, PANEL_OPENED_EVENT, PANEL_OPENED_EVENT);
+}
+
+/** The minimal tree-view surface panel-opened tracking needs. */
+interface PanelVisibilitySource {
+    readonly visible: boolean;
+    onDidChangeVisibility(listener: (e: { visible: boolean }) => void): vscode.Disposable;
+}
+
+/**
+ * Wire the per-session `panel.opened` emit to the specs tree view: an initial
+ * check (the sidebar may already be open at activation) plus its visibility
+ * event. Repeated toggles never re-fire — the per-session dedupe owns that.
+ */
+export function trackPanelOpened(treeView: PanelVisibilitySource): vscode.Disposable {
+    if (treeView.visible) {
+        reportPanelOpened();
+    }
+    return treeView.onDidChangeVisibility(e => {
+        if (e.visible) {
+            reportPanelOpened();
+        }
+    });
+}
+
+/** Emit `sample.opened` once per session — the welcome's live sample was seeded or reopened. */
+export function reportSampleOpened(): void {
+    sendEventOncePerKey(funnelSessionKeys, SAMPLE_OPENED_EVENT, SAMPLE_OPENED_EVENT);
+}
+
+/** How the workflow was selected in the Create Spec form. */
+export type WorkflowChosenAs = 'default' | 'picked' | 'trial';
+
+/** The allow-listed `spec.created` payload — shared by the form and watcher emit sites. */
+export interface SpecCreatedProperties {
+    providerId: string;
+    /** The effective post-install-modal selection, pre-coerced via {@link workflowTelemetryId}. */
+    workflow: 'speckit' | 'companion' | 'custom';
+    specInstanceId: string;
+    /** Present only for form submissions (the watcher path has no form selection). */
+    chosenAs?: WorkflowChosenAs;
+    source: 'form' | 'watcher';
+}
+
+/** Emit `spec.created` with the typed allow-listed payload. */
+export function reportSpecCreated(props: SpecCreatedProperties): void {
+    const { chosenAs, ...rest } = props;
+    sendTelemetryEvent(SPEC_CREATED_EVENT, { ...rest, ...(chosenAs ? { chosenAs } : {}) });
+}
+
+/** Reset the per-session funnel dedupe. Test-only — never called in production. */
+export function __resetFunnelDedupe(): void {
+    funnelSessionKeys.clear();
 }
 
 // Re-export so call sites importing from this module have the filename handy.

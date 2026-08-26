@@ -25,6 +25,7 @@ export const Commands = {
     upgradeAll: 'speckit.upgradeAll',
     upgrade: 'speckit.upgrade',
     checkForUpdates: 'speckit.checkForUpdates',
+    openSampleSpec: 'speckit.openSampleSpec',
     steering: {
         create: 'speckit.steering.create',
         createUserRule: 'speckit.steering.createUserRule',
@@ -80,6 +81,7 @@ export const ConfigKeys = {
         initSuggestionDismissed: 'speckit.initSuggestionDismissed',
         installBannerDismissed: 'speckit.installBannerDismissed',
         installNudgeDismissed: 'speckit.installNudgeDismissed',
+        installedEventSent: 'speckit.installedEventSent',
     },
     workspaceState: {
         specsFilterQuery: 'speckit.specs.filter.query',

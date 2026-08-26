@@ -328,3 +328,30 @@ Each pipeline step's related artifact documents MUST render as an indented sub-l
 - **WHEN** the container falls below the rail's fold width
 - **THEN** the rail folds into a horizontally-scrolling strip where each step and its own artifact chips form one inline unit, with a divider between units
 - **AND** a step reads beside its own files rather than colliding with the next step's column
+
+### The viewer's own microcopy reads as plain sentences
+
+The short strings the webview composes itself — a footer context line, a section summary title, a sizing line — MUST read as ordinary prose: clauses join with a comma, a list of figures is introduced with a colon, and a dash SHALL NOT stand in as the connective. This copy sits beside content the reader authored, and dash-joined fragments read as generated boilerplate where a plain sentence reads as the surface explaining its state.
+
+#### Scenario: the footer explains a locked action set
+- **WHEN** a running step withholds the forward action and the footer says why
+- **THEN** the explanation reads as one plain sentence joined with a comma
+- **AND** no dash stands in for the pause
+
+#### Scenario: a verdict is shown with its inputs
+- **WHEN** a summary line pairs a verdict with the figures behind it
+- **THEN** a colon introduces the figures
+
+### The capture stories are published copies of the real viewer, never forks of it
+
+The stories and fixtures that produce the project's documentation imagery MUST compose the shipped viewer components with fixture data rather than re-implement any surface, because their output is published copy: what they render is what readers of the documentation are told the product looks like. A change to a component's behavior, styling, or tokens therefore makes the captured imagery stale, and the response SHALL be to regenerate it from the stories, never to hand-edit the imagery or let a story drift onto its own rendering of the surface.
+
+#### Scenario: a viewer component's rendering changes
+- **WHEN** a component the capture stories compose changes its markup, styling, or tokens
+- **THEN** the stories render the changed component as shipped, with no captured surface still showing the old behavior
+- **AND** the generated imagery is regenerated from the stories rather than edited by hand
+
+#### Scenario: a story needs to show a particular viewer state
+- **WHEN** a capture story stages a state for imagery
+- **THEN** it drives the real components with fixture data
+- **AND** it does not re-implement the surface it is capturing

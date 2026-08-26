@@ -9,6 +9,7 @@ import type {
     ExtensionToSpecEditorMessage,
     SpecEditorWebviewState,
     AttachedImageUI,
+    WorkflowChosenAs,
     WorkflowDefinition
 } from './types';
 import { canSubmit, isOverLimit, shouldShowCharCount, isMacPlatform, MAX_CHARS } from './submitGate';
@@ -26,6 +27,11 @@ function keyboardHintsHtml(): string {
 let attachedImages: AttachedImageUI[] = [];
 let isSubmitting = false;
 let workflowList: WorkflowDefinition[] = [];
+// The pre-selected default workflow — the baseline `chosenAs` compares against.
+let preselectedWorkflow = 'speckit';
+// Set by the "Try Companion for this spec" affordance; cleared by any ordinary
+// selection change so a later manual pick reports honestly.
+let trialActive = false;
 
 // ============================================
 // DOM Elements
@@ -45,7 +51,7 @@ function getElements() {
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
-        workflowSelect: document.getElementById('workflowSelect') as HTMLSelectElement,
+        workflowChoices: document.getElementById('workflowChoices') as HTMLElement,
         commandButtonsContainer: document.getElementById('commandButtons') as HTMLElement,
         keyboardHints: document.getElementById('keyboardHints') as HTMLElement,
         srStatus: document.getElementById('sr-status') as HTMLElement
@@ -59,10 +65,17 @@ function announce(message: string): void {
     }
 }
 
-// Get selected workflow
+// Get selected workflow (the checked choice card's radio)
 function getSelectedWorkflow(): string {
-    const { workflowSelect } = getElements();
-    return workflowSelect?.value || 'default';
+    const checked = document.querySelector<HTMLInputElement>('input[name="workflow"]:checked');
+    return checked?.value || workflowList[0]?.name || 'speckit';
+}
+
+// How the current selection was made — computed at submit time.
+function getChosenAs(): WorkflowChosenAs {
+    const selected = getSelectedWorkflow();
+    if (trialActive && selected === 'companion') return 'trial';
+    return selected === preselectedWorkflow ? 'default' : 'picked';
 }
 
 // ============================================
@@ -308,7 +321,8 @@ function setupEventListeners(): void {
             type: 'submit',
             content: elements.textarea.value,
             images: attachedImages.map(img => img.id),
-            workflow: getSelectedWorkflow()
+            workflow: getSelectedWorkflow(),
+            chosenAs: getChosenAs()
         });
     });
 
@@ -320,7 +334,8 @@ function setupEventListeners(): void {
             type: 'submitAuto',
             content: elements.textarea.value,
             images: attachedImages.map(img => img.id),
-            workflow: getSelectedWorkflow()
+            workflow: getSelectedWorkflow(),
+            chosenAs: getChosenAs()
         });
     });
 
@@ -373,7 +388,8 @@ function setupEventListeners(): void {
                     type: 'submit',
                     content: elements.textarea.value,
                     images: attachedImages.map(img => img.id),
-                    workflow: getSelectedWorkflow()
+                    workflow: getSelectedWorkflow(),
+                    chosenAs: getChosenAs()
                 });
             }
         }
@@ -410,37 +426,95 @@ function setupEventListeners(): void {
 
 
 function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string): void {
-    const { workflowSelector, workflowSelect } = getElements();
+    const { workflowSelector, workflowChoices } = getElements();
 
     // Store for later lookup
     workflowList = workflows;
+    trialActive = false;
 
-    // Only show selector if there are custom workflows (more than just default)
+    // A single-workflow list keeps hiding the chooser entirely
     if (workflows.length <= 1) {
         workflowSelector.style.display = 'none';
-        updateCommandButtons(workflows[0]?.name || 'default');
+        updateCommandButtons(workflows[0]?.name || 'speckit');
         return;
     }
 
-    // Populate dropdown
-    workflowSelect.innerHTML = workflows.map(wf =>
-        `<option value="${wf.name}" title="${wf.description || ''}">${wf.displayName}</option>`
-    ).join('');
+    preselectedWorkflow =
+        (defaultWorkflow && workflows.some(wf => wf.name === defaultWorkflow))
+            ? defaultWorkflow
+            : workflows[0].name;
 
-    // Pre-select the default workflow
-    if (defaultWorkflow) {
-        workflowSelect.value = defaultWorkflow;
+    // Render one radio card per workflow. Built via DOM APIs (not innerHTML) so
+    // user-authored names/descriptions can't break out of an attribute.
+    workflowChoices.replaceChildren();
+    for (const wf of workflows) {
+        const card = document.createElement('div');
+        card.className = 'workflow-card';
+
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'workflow';
+        input.id = `workflow-${wf.name}`;
+        input.value = wf.name;
+        input.checked = wf.name === preselectedWorkflow;
+        input.addEventListener('change', () => {
+            trialActive = false;
+            updateCommandButtons(wf.name);
+        });
+        card.appendChild(input);
+
+        const label = document.createElement('label');
+        label.className = 'workflow-card-label';
+        label.htmlFor = input.id;
+
+        const header = document.createElement('span');
+        header.className = 'workflow-card-header';
+        const name = document.createElement('span');
+        name.className = 'workflow-card-name';
+        name.textContent = wf.displayName;
+        header.appendChild(name);
+        if (wf.installed === false) {
+            const badge = document.createElement('span');
+            badge.className = 'workflow-card-badge';
+            badge.textContent = 'Install to enable';
+            header.appendChild(badge);
+        }
+        label.appendChild(header);
+
+        // The description sells the choice, so it renders visibly on the card —
+        // never only as a tooltip.
+        if (wf.description) {
+            const description = document.createElement('span');
+            description.className = 'workflow-card-description';
+            description.textContent = wf.description;
+            label.appendChild(description);
+        }
+
+        // Low-commitment trial: shown on the Companion card whenever the
+        // pre-selected default is something else. Applies Companion to this one
+        // submission only — nothing ever writes the configured default.
+        if (wf.name === 'companion' && preselectedWorkflow !== 'companion') {
+            const trial = document.createElement('button');
+            trial.type = 'button';
+            trial.className = 'workflow-card-trial';
+            trial.textContent = 'Try Companion for this spec';
+            trial.addEventListener('click', event => {
+                event.preventDefault();
+                input.checked = true;
+                trialActive = true;
+                updateCommandButtons(wf.name);
+            });
+            label.appendChild(trial);
+        }
+
+        card.appendChild(label);
+        workflowChoices.appendChild(card);
     }
 
     workflowSelector.style.display = 'flex';
 
     // Update command buttons for initial selection
-    updateCommandButtons(workflowSelect.value);
-
-    // Update on workflow change
-    workflowSelect.addEventListener('change', () => {
-        updateCommandButtons(workflowSelect.value);
-    });
+    updateCommandButtons(getSelectedWorkflow());
 }
 
 function sendCommand(command: string): void {
@@ -452,8 +526,9 @@ function sendCommand(command: string): void {
         content: elements.textarea.value,
         images: attachedImages.map(img => img.id),
         workflow: getSelectedWorkflow(),
+        chosenAs: getChosenAs(),
         command
-    } as any);
+    });
 }
 
 function updateCommandButtons(workflowName: string): void {
