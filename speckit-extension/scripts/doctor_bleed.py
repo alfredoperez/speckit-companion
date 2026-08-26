@@ -213,15 +213,49 @@ def _early_source_signals(root, ctx: dict) -> list:
     return out
 
 
+#: Below this, the gap between elapsed time and the sum of step spans is ordinary
+#: dispatch latency. Above it, the per-step numbers are describing a minority of
+#: the run and should say so.
+UNATTRIBUTED_THRESHOLD = 0.25
+
+
+def _elapsed_gap(ctx: dict) -> dict | None:
+    """Elapsed time versus the time the steps actually account for."""
+    windows = _step_windows(ctx)
+    if not windows:
+        return None
+    durations = [(e - b).total_seconds() for b, e in windows.values()]
+    span_total = sum(durations)
+    begins = [b for b, _ in windows.values()]
+    ends = [e for _, e in windows.values()]
+    elapsed = (max(ends) - min(begins)).total_seconds()
+    if elapsed <= 0:
+        return None
+    return {"elapsed_seconds": elapsed, "step_span_seconds": span_total,
+            "unattributed_share": max(0.0, (elapsed - span_total) / elapsed)}
+
+
 def _time_share(ctx: dict) -> dict | None:
-    """A pre-implement step that consumed more of the run than implement itself."""
+    """A pre-implement step that consumed more of the run than implement itself.
+
+    Shares are computed against ELAPSED time, not the sum of step spans. Those
+    are not the same number: a step's boundary is stamped when the command body
+    reaches its start line, so work done before that — reading the plan, editing
+    files — lands between steps and belongs to none of them. Measured on a real
+    run, that gap was 49% of the clock. Dividing by the sum of spans quietly
+    removed it and roughly doubled every share it reported as "of the run".
+    """
     windows = _step_windows(ctx)
     if "implement" not in windows:
         return None
     durations = {s: (e - b).total_seconds() for s, (b, e) in windows.items()}
-    total = sum(durations.values())
-    if total <= 0:
+    span_total = sum(durations.values())
+    if span_total <= 0:
         return None
+    begins = [b for b, _ in windows.values()]
+    ends = [e for _, e in windows.values()]
+    elapsed = (max(ends) - min(begins)).total_seconds()
+    total = elapsed if elapsed > 0 else span_total
     impl = durations["implement"]
     worse = {s: d for s, d in durations.items()
              if s in STEP_ORDER_PRE_IMPLEMENT and d > impl}
@@ -231,6 +265,8 @@ def _time_share(ctx: dict) -> dict | None:
     return {
         "step": step, "share": dur / total, "seconds": dur,
         "implement_seconds": impl, "implement_share": impl / total,
+        "elapsed_seconds": elapsed, "step_span_seconds": span_total,
+        "unattributed_share": max(0.0, (elapsed - span_total) / total) if elapsed > 0 else 0.0,
     }
 
 
@@ -260,11 +296,23 @@ def check_bleed(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
         findings.append(Finding(
             "bleed", "note",
             f"`{share['step']}` took longer than `implement`",
-            f"{share['step']} {share['seconds']:.0f}s ({share['share']:.0%} of the run) versus "
-            f"implement {share['implement_seconds']:.0f}s ({share['implement_share']:.0%}) — a "
-            f"hard planning phase can be a legitimate reason, so read this alongside the "
-            f"evidence above rather than on its own",
+            f"{share['step']} {share['seconds']:.0f}s ({share['share']:.0%} of elapsed time) "
+            f"versus implement {share['implement_seconds']:.0f}s "
+            f"({share['implement_share']:.0%}) — a hard planning phase can be a legitimate "
+            f"reason, so read this alongside the evidence above rather than on its own",
             share,
+        ))
+
+    gap = _time_share(ctx) or _elapsed_gap(ctx)
+    if gap and gap.get("unattributed_share", 0) >= UNATTRIBUTED_THRESHOLD:
+        findings.append(Finding(
+            "bleed", "warning",
+            f"{gap['unattributed_share']:.0%} of elapsed time belongs to no step",
+            f"{gap['elapsed_seconds']:.0f}s elapsed but the steps only account for "
+            f"{gap['step_span_seconds']:.0f}s — work done before a step stamps its own start "
+            f"is invisible to every per-step number, so those durations measure journaling "
+            f"latency more than they measure work",
+            {k: gap[k] for k in ("elapsed_seconds", "step_span_seconds", "unattributed_share")},
         ))
 
     if report is not None:
