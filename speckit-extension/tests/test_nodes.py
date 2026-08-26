@@ -152,3 +152,40 @@ class DebugRenderTests(unittest.TestCase):
         section = body[marker:]
         self.assertIn("--finish", section)
         self.assertNotIn("--kind start", section)
+
+
+class DebugRenderRegressionTests(unittest.TestCase):
+    """Debug rendering must be idempotent, reversible, and never ambient."""
+
+    def test_applying_debug_repeatedly_yields_exactly_one_block(self):
+        body = "# Body\n"
+        for _ in range(3):
+            body = cp.apply_debug(body, cp.DEBUG_TIMING, True)
+        self.assertEqual(body.count(f"<!-- speckit-companion:part {cp.DEBUG_TIMING} -->"), 1)
+
+    def test_turning_debug_off_removes_the_block_rather_than_leaving_it(self):
+        original = "# Body\n"
+        on = cp.apply_debug(original, cp.DEBUG_TIMING, True)
+        self.assertIn(cp.DEBUG_TIMING, on)
+        off = cp.apply_debug(on, cp.DEBUG_TIMING, False)
+        self.assertNotIn(cp.DEBUG_TIMING, off)
+        self.assertEqual(off, original, "the off render must return the exact original body")
+
+    def test_stripping_a_body_that_has_no_block_is_a_no_op(self):
+        self.assertEqual(cp.strip_part("# Body\n", cp.DEBUG_TIMING), "# Body\n")
+
+    def test_the_project_root_is_the_directory_that_owns_dot_specify(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as tmp:
+            project = os.path.join(tmp, "proj")
+            deep = os.path.join(project, ".specify", "extensions", "companion")
+            os.makedirs(os.path.join(project, ".specify"))
+            os.makedirs(deep)
+            # The installed layout: walking up from the extension dir must reach the
+            # project, not `<project>/.specify/extensions`.
+            self.assertEqual(cp.project_root(deep), project)
+
+    def test_project_root_returns_none_when_nothing_owns_dot_specify(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(cp.project_root(tmp))

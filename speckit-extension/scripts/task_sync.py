@@ -417,5 +417,9 @@ def close_task(
     Byte-equivalent to `--task … --append` followed by `--materialize`, and
     idempotent for the same reason the fold is.
     """
-    append_task_log(feature_dir, task_id, by, did, files)
-    return materialize_log(feature_dir, by, quiet=True)
+    appended = append_task_log(feature_dir, task_id, by, did, files)
+    folded = materialize_log(feature_dir, by, quiet=True)
+    # A fold that finds nothing to do returns None; returning that would discard
+    # the fact that the append itself landed, leaving the call reported as a
+    # silent failure. The append is the write that matters here.
+    return folded or appended

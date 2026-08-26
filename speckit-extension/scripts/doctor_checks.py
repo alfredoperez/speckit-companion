@@ -248,18 +248,35 @@ def check_triage(feature_dir: Path, ctx: dict) -> tuple:
 _COMPLETION_OPS = ("mark-complete",)
 
 
-def _completion_attempts(feature_dir: Path) -> list:
-    """Completion attempts the trace recorded, whether or not they landed."""
+def _completion_attempts(feature_dir: Path, ctx: dict) -> list:
+    """Completion attempts belonging to THIS spec.
+
+    The spec's own trace is unambiguous. The repo-level unattributed log is
+    shared, so an attempt is only this spec's if it falls inside this spec's run
+    window — otherwise one unresolvable mark-complete from months ago would be
+    reported as a refusal against every spec in the repository.
+    """
     import run_trace
 
     out = []
-    for source in (feature_dir, Path(feature_dir).parent):
-        read = run_trace.read(source)
-        if read is None:
-            continue
-        for e in read.events:
-            if e.get("op") in _COMPLETION_OPS:
-                out.append(e)
+    own = run_trace.read(feature_dir)
+    if own is not None:
+        out += [e for e in own.events if e.get("op") in _COMPLETION_OPS]
+
+    shared = run_trace.read(Path(feature_dir).parent)
+    if shared is not None:
+        start, end = run_window(ctx)
+        rel = Path(feature_dir).name
+        for e in shared.events:
+            if e.get("op") not in _COMPLETION_OPS:
+                continue
+            spec = e.get("spec")
+            if spec and rel not in str(spec):
+                continue
+            ts = parse_time(e.get("at"))
+            if not (start and end and ts is not None and start <= ts <= end):
+                continue
+            out.append(e)
     return out
 
 
@@ -275,7 +292,7 @@ def check_completion(feature_dir: Path, ctx: dict, report=None) -> tuple:
         return skip, []
 
     status = ctx.get("status")
-    attempts = _completion_attempts(feature_dir)
+    attempts = _completion_attempts(feature_dir, ctx)
     verdict = {"attempted": bool(attempts), "outcome": None, "reason": None}
 
     def settled(findings: list) -> tuple:

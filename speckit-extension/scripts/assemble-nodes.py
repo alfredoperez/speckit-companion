@@ -86,11 +86,11 @@ def main() -> int:
         print("[assemble] no nodes/<command>/ dirs — nothing to assemble")
         return 0
 
-    # `--check` always compares the OFF render against golden: debug is a local,
-    # temporary switch and must never make the parity gate fail.
-    debug = debug_on() and not check
+    # Opt-in per invocation, never from ambient config: these bodies are committed,
+    # gated artifacts, and `--check` always compares the OFF render.
+    debug = "--debug" in sys.argv[1:] and not check
     if debug:
-        print("[assemble] debug: true in .specify/companion.yml — bodies carry timing instrumentation")
+        print("[assemble] --debug — bodies carry timing instrumentation (do not commit)")
 
     drift = []
     for command in commands:

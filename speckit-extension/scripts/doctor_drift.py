@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -122,10 +123,17 @@ def classify(root, cap: dict) -> dict:
         flag["reason"] = "every changed file is a record the companion writes during a run"
         return flag
 
+    if not baseline:
+        flag["class"] = CLASS_UNKNOWN
+        flag["reason"] = ("no baseline commit was recorded for this capability — its spec has "
+                          "never been committed, so there is nothing to compare against")
+        return flag
+
     ancestor = _baseline_is_ancestor(root, baseline)
     if ancestor is None:
         flag["class"] = CLASS_UNKNOWN
-        flag["reason"] = f"the baseline commit {baseline} is unreachable — history may be shallow or rewritten"
+        flag["reason"] = (f"the baseline commit {baseline} is unreachable — history may be "
+                          f"shallow or rewritten")
         return flag
     if ancestor is False:
         flag["class"] = CLASS_BASELINE
@@ -159,12 +167,14 @@ def _recorded_claims(ctx: dict) -> list:
     return out
 
 
-_CLEAN_WORDS = ("in sync", "no drift", "drift-clean", "drift clean", "clean")
+# Whole words only. Substring matching read "cleaned up two stale entries" as a
+# drift-clean assertion and accused the run of a claim it never made.
+_CLEAN_CLAIM = re.compile(
+    r"\b(in sync|no drift|drift[- ]clean|clean)\b", re.I)
 
 
 def _claims_clean(claim: dict) -> bool:
-    blob = claim["blob"].lower()
-    return any(w in blob for w in _CLEAN_WORDS)
+    return bool(_CLEAN_CLAIM.search(claim["blob"]))
 
 
 def check_drift(root, feature_dir: Path, ctx: dict, report=None) -> tuple:

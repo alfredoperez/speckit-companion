@@ -51,16 +51,46 @@ class CauseTests(unittest.TestCase):
         self.assertEqual(note.evidence["tool_calls"], 6,
                          "the later call sits outside the window")
 
-    def test_a_step_that_stopped_is_distinguished_from_one_still_running(self):
-        stalled = {"currentStep": "plan", "status": "planning", "history": [
+    def test_a_step_still_inside_the_grace_period_is_not_reported_as_stopped(self):
+        from datetime import datetime, timezone
+        ctx = {"currentStep": "plan", "status": "planning", "history": [
+            {"step": "plan", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-08-01T10:00:00Z"}]}
+        fresh = datetime(2026, 8, 1, 10, 1, tzinfo=timezone.utc)
+        self.assertEqual(dch._stalled_steps(ctx, fresh), [])
+
+    def test_a_step_open_long_past_the_grace_period_is_reported(self):
+        from datetime import datetime, timezone
+        ctx = {"currentStep": "plan", "status": "planning", "history": [
             {"step": "specify", "substep": None, "kind": "start", "by": "extension",
              "at": "2026-08-01T10:00:00Z"},
             {"step": "plan", "substep": None, "kind": "start", "by": "extension",
-             "at": "2026-08-01T10:01:00Z"},
-        ]}
+             "at": "2026-08-01T10:01:00Z"}]}
+        later = datetime(2026, 8, 2, 10, 0, tzinfo=timezone.utc)
+        self.assertEqual(dch._stalled_steps(ctx, later), ["specify", "plan"])
+
+    def test_it_defers_to_the_record_checks_rule_rather_than_re_deriving_it(self):
+        # Two checks disagreeing about the same step is the defect this guards.
+        import doctor_checks
+        ctx = {"currentStep": "plan", "status": "planning", "history": [
+            {"step": "specify", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-08-01T10:00:00Z"}]}
+        self.assertEqual(dch._stalled_steps(ctx),
+                         [s for s, _at in doctor_checks._dangling_steps(ctx)])
+
+    def test_a_stopped_step_is_a_warning_and_its_detail_reflects_the_transcript(self):
+        stalled = {"currentStep": "implement", "status": "implemented", "history": [
+            {"step": "plan", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-08-01T10:00:00Z"},
+            {"step": "implement", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-08-01T10:00:00Z"},
+            {"step": "implement", "substep": None, "kind": "complete", "by": "extension",
+             "at": "2026-08-01T10:02:00Z"}]}
         _status, findings = audit(stalled)
-        stopped = [f.evidence["step"] for f in findings if "never attempted again" in f.title]
-        self.assertEqual(stopped, ["specify"], "plan is in flight, not stalled")
+        hit = [f for f in findings if "never finished" in f.title]
+        self.assertEqual(len(hit), 1)
+        self.assertEqual(hit[0].severity, "warning")
+        self.assertIn("mentioned_in_transcript", hit[0].evidence)
 
     def test_repeated_rewrites_of_one_file_are_quantified(self):
         _status, findings = audit()

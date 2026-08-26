@@ -225,3 +225,50 @@ class TemplateFidelityTests(unittest.TestCase):
         status, findings = self.check("dangling-start")
         self.assertEqual(status.state, "not-applicable")
         self.assertEqual(findings, [])
+
+
+class ReviewRegressionTests(unittest.TestCase):
+    """Defects the review found in the doctor's own checks."""
+
+    def test_a_completion_failure_in_the_shared_log_is_not_blamed_on_every_spec(self):
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            specs = Path(tmp) / "specs"
+            spec = specs / "001-x"
+            spec.mkdir(parents=True)
+            # An unresolvable mark-complete from a different run, long before this spec.
+            run_trace.record("write-context", "mark-complete", False, ms=1,
+                             feature_dir=specs, reason="could not resolve", spec=None)
+            with open(specs / run_trace.TRACE_NAME, "r+", encoding="utf-8") as fh:
+                body = fh.read().replace('"at":"', '"at":"2020-01-01T00:00:00Z","_at":"', 1)
+                fh.seek(0); fh.write(body); fh.truncate()
+            ctx = {"status": "implemented", "currentStep": "implement", "history": [
+                {"step": "implement", "substep": None, "kind": "start",
+                 "by": "extension", "at": "2026-08-01T11:00:00Z"},
+                {"step": "implement", "substep": None, "kind": "complete",
+                 "by": "extension", "at": "2026-08-01T11:30:00Z"}]}
+            attempts = dc._completion_attempts(spec, ctx)
+            self.assertEqual(attempts, [],
+                             "another run's failure outside this spec's window is not this spec's")
+
+    def test_the_doctor_reads_the_repo_that_owns_the_spec_not_the_cwd(self):
+        import inspect
+        src = inspect.getsource(doctor.main)
+        self.assertIn("_repo_root_for(d)", src,
+                      "resolving from the cwd scores a spec against whatever repo the shell is in")
+
+    def test_the_report_falls_back_to_ascii_when_stdout_cannot_encode(self):
+        import io, contextlib
+        report = doctor.Report("specs/x")
+        report.record(doctor.CheckStatus("record", "ran"),
+                      [doctor.Finding("record", "problem", "a problem")])
+
+        class AsciiOut(io.StringIO):
+            encoding = "ascii"
+
+        buf = AsciiOut()
+        with contextlib.redirect_stdout(buf):
+            text = doctor.render_human(report)
+            self.assertNotIn("✗", text, "marks fall back to ASCII")
+            doctor.safe_print(text + " \u2014 an em-dash the console cannot encode")
+        self.assertIn("a problem", buf.getvalue())

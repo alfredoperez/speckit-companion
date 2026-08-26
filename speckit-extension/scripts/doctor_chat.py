@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -45,7 +44,6 @@ WINDOW_PAD = timedelta(minutes=5)
 #: A file touched more than this in one run is churn worth naming.
 CHURN_THRESHOLD = 3
 
-_FAILED = re.compile(r"\b(error|failed|traceback|exception|not found|refus\w+|denied)\b", re.I)
 
 
 def project_key(root) -> str:
@@ -138,9 +136,12 @@ def analyze(entries: list) -> dict:
                         retries += 1
         elif e.get("type") == "user":
             for block in _blocks(e, "tool_result"):
-                body = block.get("content")
-                text = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)
-                if block.get("is_error") or _FAILED.search(text or ""):
+                # `is_error` is the only reliable signal. Scanning the result text
+                # for words like "error" or "failed" counted a grep for
+                # `errorHandler`, a file containing the word, and a test reporting
+                # "0 failed" as failures — near-certain false positives on any real
+                # run, which is worse than no count at all.
+                if block.get("is_error"):
                     failures += 1
 
     return {
@@ -171,22 +172,16 @@ def _contradictions(ctx: dict, report) -> list:
     return out
 
 
-def _stalled_steps(ctx: dict) -> list:
-    """Steps started and never finished — work that stopped rather than failed.
+def _stalled_steps(ctx: dict, now=None) -> list:
+    """Steps that stopped rather than finished.
 
-    The run's own current step is excluded: a step that is still in flight has
-    not stalled, it simply has not finished yet.
+    Defers to the record check's own rule — same in-flight grace period, same
+    definition — so the two checks cannot return contradictory verdicts about the
+    same step, which they did when this re-derived the answer itself.
     """
-    started, done = set(), set()
-    for e in log_entries(ctx):
-        if not _is_step_level(e):
-            continue
-        step = e.get("step")
-        (started if _entry_kind(e) == "start" else done).add(step)
-    open_steps = {s for s in started - done if isinstance(s, str)}
-    if ctx.get("status") not in ("completed", "archived"):
-        open_steps.discard(ctx.get("currentStep"))
-    return sorted(open_steps)
+    import doctor_checks
+
+    return [step for step, _at in doctor_checks._dangling_steps(ctx, now)]
 
 
 def check_chat(root, feature_dir: Path, ctx: dict, report=None, override=None) -> tuple:
@@ -231,12 +226,16 @@ def check_chat(root, feature_dir: Path, ctx: dict, report=None, override=None) -
              "retries": stats["retries"]},
         ))
     for step in stalled:
+        touched = any(step in _text(e) for e in entries)
         findings.append(Finding(
-            "chat", "problem",
-            f"`{step}` was started and never attempted again",
-            "the transcript shows no further work on it inside the run window — this step "
-            "stopped rather than failed",
-            {"step": step},
+            "chat", "warning",
+            f"`{step}` was started and never finished",
+            ("the transcript mentions it inside the run window, so it was worked on and "
+             "abandoned rather than skipped"
+             if touched else
+             "the transcript never mentions it inside the run window — this step was "
+             "started and then not attempted"),
+            {"step": step, "mentioned_in_transcript": touched},
         ))
     for c in contradictions:
         findings.append(Finding(

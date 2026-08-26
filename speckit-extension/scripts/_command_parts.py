@@ -120,18 +120,61 @@ def append_part(text: str, name: str) -> str:
             f"{block}\n<!-- /speckit-companion:part {name} -->\n")
 
 
+def strip_part(text: str, name: str) -> str:
+    """Remove a whole appended part region, fence included.
+
+    Appending without stripping first is what let debug blocks accumulate one per
+    build and survive the switch being turned off.
+    """
+    open_tag = f"<!-- speckit-companion:part {name} -->"
+    close_tag = f"<!-- /speckit-companion:part {name} -->"
+    while open_tag in text and close_tag in text:
+        start = text.index(open_tag)
+        end = text.index(close_tag, start) + len(close_tag)
+        text = text[:start].rstrip("\n") + "\n" + text[end:].lstrip("\n")
+    return text
+
+
+def apply_debug(text: str, name: str, on: bool) -> str:
+    """Return `text` carrying exactly one `name` region, or none at all.
+
+    Idempotent in both directions: building twice with debug on yields one block,
+    and turning it off removes the block rather than leaving it baked in.
+    """
+    text = strip_part(text, name)
+    return append_part(text, name) if on else text
+
+
+def project_root(start: str = None) -> str | None:
+    """The project directory that owns `.specify/`, walking up from `start`.
+
+    Deriving it as the parent of the extension directory only held in the source
+    repo. Installed, the extension lives at `<project>/.specify/extensions/companion`,
+    so the parent is `<project>/.specify/extensions` and the config lookup landed on
+    a path that never exists — meaning a user's `debug: true` was never read.
+    """
+    here = os.path.abspath(start or EXT)
+    while True:
+        if os.path.isdir(os.path.join(here, ".specify")):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            return None
+        here = parent
+
+
 def debug_on(root: str = None) -> bool:
     """Is `debug: true` set in this project's companion.yml?
 
     Read at render time, which is why a change to the flag reaches the next
-    dispatched command and cannot affect one already in flight — the agent reads
-    a static file. Any failure to read the config means off, inheriting the
-    config loader's own failure table.
+    rendered command and never one already in flight. Any failure to read the
+    config means off, inheriting the config loader's own failure table.
     """
     try:
         import companion_config
 
-        return companion_config.debug_from_root(root or os.path.dirname(EXT))
+        resolved = root or project_root()
+        return bool(resolved) and companion_config.debug_from_root(resolved)
     except Exception:  # noqa: BLE001 — a config that cannot be read is not debug
         return False
 

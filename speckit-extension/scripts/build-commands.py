@@ -18,7 +18,7 @@ from _command_parts import (
     DEBUG_TIMING,
     EXT,
     PART_OPEN,
-    append_part,
+    apply_debug,
     debug_on,
     decomposed_commands,
     fill_parts,
@@ -53,16 +53,17 @@ def assemble(text: str, rel: str, debug: bool = False) -> str:
     from the output rather than present and inactive.
     """
     out = fill_parts(text, rel)
-    if debug and os.path.isfile(part_path(DEBUG_TIMING)):
-        out = append_part(out, DEBUG_TIMING)
+    if os.path.isfile(part_path(DEBUG_TIMING)):
+        out = apply_debug(out, DEBUG_TIMING, debug)
     return out
 
 
 def main() -> int:
     check = "--check" in sys.argv[1:]
-    # `--check` always compares the OFF render: debug is a local, temporary switch
-    # and must never make the parity gate fail.
-    debug = debug_on() and not check
+    # Debug is opt-in per invocation and NEVER read from config here. These bodies
+    # are committed, gated artifacts; rendering instrumentation into them from an
+    # ambient config setting is how it got permanently baked in and passed the gate.
+    debug = "--debug" in sys.argv[1:] and not check
     drift = []
     built = 0
     for path in command_files():

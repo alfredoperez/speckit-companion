@@ -16,7 +16,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <di
 ```
 
 - Every key is optional; an absent key writes nothing for that slot.
-- Applied through the existing additive-capture writers, in one read-modify-write, with the same de-duplication rules each writer already has.
+- Applied through the existing additive-capture writers with the same de-duplication rules each writer already has. It collapses the volley to **one invocation**; each writer still performs its own atomic write, so the call count drops and the rewrite count does not.
+- `step_summary.step` selects which slot to write and is not stored in the record, so the entry is byte-identical to what `--step-summary` writes.
 - A malformed document is a caller error: nothing is written and the exit code is `2`, matching how `--classification` already treats a bad payload.
 - Mixing `--batch` with a lifecycle flag follows the existing rule — the capture is applied and the skipped lifecycle write is named on stderr.
 

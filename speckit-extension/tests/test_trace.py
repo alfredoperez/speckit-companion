@@ -233,3 +233,87 @@ class CallClassificationTests(unittest.TestCase):
         self.write("--materialize")
         self.assertEqual([e["op"] for e in self.lines()],
                          ["set", "task-append", "materialize"])
+
+
+class ReviewRegressionTests(unittest.TestCase):
+    """Each of these reproduces a defect the review found in the tracer."""
+
+    WRITER = ROOT / "scripts" / "write-context.py"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spec = self.root / "specs" / "001-x"
+        self.spec.mkdir(parents=True)
+        (self.spec / ".spec-context.json").write_text(json.dumps({
+            "workflow": "companion", "specName": "X", "branch": "b",
+            "currentStep": "implement", "status": "implementing",
+            "history": [{"step": "implement", "substep": None, "kind": "start",
+                         "by": "extension", "at": "2026-08-01T11:00:00Z"}],
+        }) + "\n", encoding="utf-8")
+        (self.spec / "tasks.md").write_text(
+            "- [x] **T001** First · a.py\n- [ ] **T002** Second · b.py\n", encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self, *args, spec=None):
+        import subprocess
+        return subprocess.run(
+            [sys.executable, str(self.WRITER), "--feature-dir", str(spec or self.spec), *args],
+            capture_output=True, text=True, cwd=self.root, check=False)
+
+    def lines(self, where=None):
+        p = (where or self.spec) / run_trace.TRACE_NAME
+        return ([json.loads(x) for x in p.read_text(encoding="utf-8").splitlines() if x.strip()]
+                if p.is_file() else [])
+
+    def test_a_successful_tasks_file_sync_is_not_traced_as_a_failure(self):
+        # sync_tasks reports success on stderr and is excluded from the stdout
+        # block, so text inference recorded every sync as a failed call.
+        self.write("--tasks-file", str(self.spec / "tasks.md"), "--by", "ai")
+        syncs = [e for e in self.lines() if e["op"] == "tasks-sync"]
+        self.assertEqual(len(syncs), 1)
+        self.assertTrue(syncs[0]["ok"], f"traced as failed with reason {syncs[0]['reason']!r}")
+
+    def test_an_informational_warning_on_a_successful_capture_is_not_a_failure(self):
+        # The capture lands; the skipped lifecycle flag is only advisory.
+        r = self.write("--decision", "chose A", "--materialize")
+        self.assertIn("not applied", r.stderr)
+        caps = [e for e in self.lines() if e["op"] == "capture"]
+        self.assertEqual(len(caps), 1)
+        self.assertTrue(caps[0]["ok"], "the decision was recorded; the call succeeded")
+
+    def test_the_equals_form_of_a_flag_is_classified_and_resolved(self):
+        self.write(f"--task=T002", "--kind=complete", "--by=ai", "--append")
+        entries = self.lines()
+        self.assertEqual([e["op"] for e in entries], ["task-append"],
+                         "--flag=value must not read as an unknown op")
+
+    def test_the_equals_form_of_feature_dir_traces_to_the_right_spec(self):
+        import subprocess
+        other = self.root / "specs" / "002-y"
+        other.mkdir(parents=True)
+        (other / ".spec-context.json").write_text('{"history": []}\n', encoding="utf-8")
+        subprocess.run([sys.executable, str(self.WRITER), f"--feature-dir={other}",
+                        "--set", "last_action=x"], capture_output=True, text=True,
+                       cwd=self.root, check=False)
+        self.assertTrue(self.lines(other), "the trace must land in the spec that was written")
+        self.assertFalse(self.lines(self.spec), "and not in some other spec")
+
+    def test_a_refused_key_alongside_a_success_line_is_still_a_failure(self):
+        self.write("--set", "status=completed")
+        sets = [e for e in self.lines() if e["op"] == "set"]
+        self.assertFalse(sets[0]["ok"])
+        self.assertIn("Refusing", sets[0]["reason"])
+
+    def test_a_close_task_whose_fold_is_a_noop_still_reports_the_append(self):
+        import subprocess
+        r = subprocess.run(
+            [sys.executable, str(self.WRITER), "--feature-dir", str(self.spec),
+             "--close-task", "T002", "--by", "ai", "--did", "did it"],
+            capture_output=True, text=True, cwd=self.root, check=False)
+        self.assertIn("[companion]", r.stdout, "a landed write must report itself")
+        closes = [e for e in self.lines() if e["op"] == "task-close"]
+        self.assertEqual(len(closes), 1)
+        self.assertTrue(closes[0]["ok"])

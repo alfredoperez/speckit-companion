@@ -418,8 +418,12 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
              f"coverage {item['req']}")
     summary = doc.get("step_summary")
     if summary:
+        # The step is which slot to write, not part of the record. Passing it
+        # through would store `{"step": …, "summary": …}` where the single-flag
+        # form stores `{"summary": …}` — the two would not be byte-equivalent.
+        body = {k: v for k, v in summary.items() if k != "step"}
         note(upsert_step_summary(feature_dir, summary.get("step") or step,
-                                 json.dumps(summary, ensure_ascii=False)),
+                                 json.dumps(body, ensure_ascii=False)),
              "step summary")
     if doc.get("last_action"):
         note(set_fields(feature_dir, [f"last_action={doc['last_action']}"]), "last_action")

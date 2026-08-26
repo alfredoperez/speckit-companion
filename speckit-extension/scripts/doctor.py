@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from spec_context import (  # noqa: E402
     _now_iso,
     _repo_root,
+    _repo_root_for,
     canonical_log,
     read_ctx,
     resolve_feature_dir,
@@ -37,6 +38,22 @@ SEVERITIES = ("problem", "warning", "note")
 _SEVERITY_RANK = {s: i for i, s in enumerate(SEVERITIES)}
 
 _MARK = {"problem": "✗", "warning": "⚠", "note": "·"}
+_MARK_ASCII = {"problem": "x", "warning": "!", "note": "-"}
+
+
+def _marks():
+    """The glyph set this stdout can actually encode.
+
+    A UnicodeEncodeError from `print` would escape every per-check try/except and
+    kill the process — breaking the never-halts contract on any console whose
+    encoding is not UTF-8.
+    """
+    enc = getattr(sys.stdout, "encoding", None) or "ascii"
+    try:
+        "".join(_MARK.values()).encode(enc)
+    except (UnicodeEncodeError, LookupError):
+        return _MARK_ASCII
+    return _MARK
 
 
 # --------------------------------------------------------------------------- #
@@ -219,6 +236,7 @@ def run_check(report: Report, check: str, fn) -> None:
 
 
 def render_human(report: Report) -> str:
+    mark = _marks()
     out = [f"SpecKit Companion doctor — {report.spec}", ""]
     grouped: dict[str, list] = {c: [] for c in CHECKS}
     for f in report.ordered():
@@ -246,7 +264,7 @@ def render_human(report: Report) -> str:
                 counts.append(plural(n, sev))
         out.append(f"  {check.upper():<11} {', '.join(counts)}")
         for f in items:
-            out.append(f"    {_MARK[f.severity]} {f.title}")
+            out.append(f"    {mark[f.severity]} {f.title}")
             if f.detail:
                 out.append(f"      {f.detail}")
         out.append("")
@@ -321,6 +339,21 @@ def _spec_dirs(root: Path) -> list:
     return sorted(d for d in specs.iterdir() if d.is_dir() and (d / ".spec-context.json").is_file())
 
 
+def safe_print(text: str) -> None:
+    """Write `text` to stdout, never raising on an encoding it cannot represent.
+
+    The mark fallback keeps the report readable on an ASCII console, but detail
+    strings carry em-dashes and capability names of their own. A UnicodeEncodeError
+    from `print` escapes every per-check try/except and kills the process, which
+    would break the contract that this command always exits 0.
+    """
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, "encoding", None) or "ascii"
+        sys.stdout.write(text.encode(enc, "replace").decode(enc, "replace") + "\n")
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Report on a spec's run health (read-only)")
     parser.add_argument("--feature-dir", default=None)
@@ -352,17 +385,20 @@ def main(argv=None) -> int:
         targets = [target]
 
     at = _now_iso()
-    reports = [examine(d, root, args.chat) for d in targets]
+    # Resolve each spec's OWN repository. Reading the root from the cwd made a
+    # --feature-dir outside it run drift, git, and bleed against whatever repo the
+    # shell happened to be in — which is exactly how the bench invokes it.
+    reports = [examine(d, _repo_root_for(d), args.chat) for d in targets]
     if args.as_json:
         if args.all:
-            print(json.dumps(
+            safe_print(json.dumps(
                 {"generated_at": at,
                  "specs": [json.loads(render_json(r, at)) for r in reports]},
                 indent=2, ensure_ascii=False))
         else:
-            print(render_json(reports[0], at))
+            safe_print(render_json(reports[0], at))
     else:
-        print("\n\n".join(render_human(r) for r in reports))
+        safe_print("\n\n".join(render_human(r) for r in reports))
     return 0
 
 
