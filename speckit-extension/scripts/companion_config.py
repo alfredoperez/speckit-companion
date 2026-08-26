@@ -19,6 +19,8 @@ outside that subset raises, which the loader surfaces as "malformed".
 from __future__ import annotations
 
 import os
+import stat
+import tempfile
 
 HOOK_TYPES = {"command", "prompt", "node"}
 WHENS = ("before", "after")
@@ -440,6 +442,62 @@ def is_project_root(path: str) -> bool:
 def _yaml_flow_list(items: list) -> str:
     """Render a string list as a YAML flow sequence with double-quoted scalars."""
     return "[" + ", ".join(f'"{i}"' for i in items) + "]"
+
+
+def atomic_write_text(path: str, text: str) -> None:
+    """Write text through a temp file and a rename, leaving no debris on failure.
+
+    Three call sites had grown their own copy of this and every one of them
+    dropped the cleanup, so a failed write left a `.tmp` beside a tracked file.
+
+    Not quite a drop-in for `open(path, "w")`: publishing by rename needs write
+    and execute on the containing directory rather than write on the file, gives
+    the result the current user's ownership, and breaks any hard links to it.
+    """
+    # Follow a symlink: these files are user-managed, and replacing the link
+    # itself with a regular file would quietly detach a shared config.
+    path = os.path.realpath(path) if os.path.islink(path) else path
+    mode = None
+    try:
+        # Permission bits only — chmod's behavior on the file-type bits is
+        # unspecified by POSIX even though Linux and macOS happen to mask them.
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError:
+        pass
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    # A unique temp name per writer: a fixed `<path>.tmp` let two concurrent runs
+    # against the same file truncate each other's temp and publish half of it.
+    fd, tmp = tempfile.mkstemp(dir=parent or ".", prefix=os.path.basename(path) + ".")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+            # os.replace is atomic against a killed process but not against power
+            # loss: the rename can reach disk before the data blocks, leaving a
+            # zero-length file. Flushing to disk first is what makes the durability
+            # claim true rather than nearly true.
+            fh.flush()
+            os.fsync(fh.fileno())
+        if mode is None:
+            # New file: match what a plain open() would have produced, so a
+            # restrictive umask still yields a restrictive config. Hardcoding
+            # 0644 here made a fresh config world-readable under `umask 077`.
+            umask = os.umask(0)
+            os.umask(umask)
+            mode = 0o666 & ~umask
+        # A fresh temp file is 0600 regardless, so carry the intended mode across.
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        # BaseException, not OSError: a Ctrl-C during the write would otherwise
+        # leave the temp file beside the real one, which is the litter this
+        # helper exists to prevent.
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def render_registry(enabled: bool, capabilities: list, exempt=None) -> str:

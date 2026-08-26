@@ -105,7 +105,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    One `--verified` per real check (tests, build, manual pass — include warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction — on a clean run record none (the empty list is itself the signal). All additive and de-duped; re-runs never duplicate.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
-5. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`. Run from the repository root (the feature directory resolves on its own):
+7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`. Run from the repository root (the feature directory resolves on its own):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
    ```

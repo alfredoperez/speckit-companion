@@ -140,11 +140,8 @@ def _write_registry(config_path: str, enabled: bool, capabilities: list[dict],
     if os.path.isfile(config_path):
         with open(config_path, encoding="utf-8") as fh:
             rendered = cc.splice_registry(fh.read(), rendered)
-    parent = os.path.dirname(config_path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as fh:
-        fh.write(rendered)
+    # A crash mid-write must not truncate the registry.
+    cc.atomic_write_text(config_path, rendered)
 
 
 def _drop_legacy_block(legacy_path: str) -> bool:
@@ -162,8 +159,9 @@ def _drop_legacy_block(legacy_path: str) -> bool:
     if start is None:
         return False
     remaining = "".join(lines[:start]) + "".join(lines[cc.block_end(lines, start):])
-    with open(legacy_path, "w", encoding="utf-8") as fh:
-        fh.write(remaining)
+    # Same guarantee as the registry write above: this file carries the user's
+    # other companion settings, so a half-written rewrite loses those too.
+    cc.atomic_write_text(legacy_path, remaining)
     return True
 
 

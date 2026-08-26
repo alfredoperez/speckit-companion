@@ -1,0 +1,441 @@
+{
+  "workflow": "companion",
+  "specName": "fix vendoring regressions",
+  "branch": "600-fix-vendoring-regressions",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T03:08:33.971Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:08:44.396Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:09:55.606Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:10:20.270Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T03:10:20.678Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T03:10:44.552Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:12:25.324Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:12:47.221Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T03:13:05.233Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T03:13:34.531Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:14:09.676Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T03:14:17.290Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T03:14:30.731Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:16:04.038Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:16:04.194Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:16:45.103Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:16:45.237Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:17:48.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:17:48.826Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:18:00.433Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:18:16.720Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:18:25.315Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:18:46.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T03:20:45.053Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T03:20:45.127Z"
+    }
+  ],
+  "telemetryInstanceId": "5ecd0023-5812-4f69-a1d8-1e118d0e8dd6",
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime",
+      "companion-commands"
+    ],
+    "skipped": [
+      {
+        "name": "companion-commands",
+        "reason": "the no-restarted-numbering requirement already exists in its living spec; this fix restores conformance without changing the contract"
+      }
+    ],
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "last_action": "all 11 tasks done — 683 py + 1942 ts tests pass, gates green, doctor clean",
+  "coverage": {
+    "FR-001": {
+      "title": "A relocation that fails partway rolls back every move already made",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_failed_move_mid_batch_rolls_back_the_earlier_moves"
+      ]
+    },
+    "FR-002": {
+      "title": "Rollback accounting is caller-owned and updated as each move lands",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_failed_move_mid_batch_rolls_back_the_earlier_moves"
+      ]
+    },
+    "FR-003": {
+      "title": "Rollback rationale restored in the mover's docstring",
+      "tasks": [
+        "T001"
+      ]
+    },
+    "FR-004": {
+      "title": "Re-deriving at a started step appends no second start entry",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_context.py::test_derive_twice_at_one_step_appends_one_start_entry"
+      ]
+    },
+    "FR-005": {
+      "title": "Registry write is atomic via temp file + rename, matching the relocation writer",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_specs.py::test_registry_write_goes_through_a_temp_file",
+        "speckit-extension/tests/test_living_specs.py::test_interrupted_registry_write_cannot_truncate"
+      ]
+    },
+    "FR-006": {
+      "title": "Implement command steps numbered consecutively ending at 7, fixed in the source node",
+      "tasks": [
+        "T007",
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-007": {
+      "title": "Each behavioral fix pinned by a regression test",
+      "tasks": [
+        "T002",
+        "T004",
+        "T006"
+      ]
+    },
+    "FR-008": {
+      "title": "Changelog Unreleased entry in release-note voice, no version bump",
+      "tasks": [
+        "T010"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "living spec: companion-commands",
+    "area: speckit-extension/scripts (relocate/register/derive writers)",
+    "area: speckit-extension/nodes/implement (generated command source)",
+    "constraint: command bodies are generated — fix nodes, re-assemble, re-bless golden separately",
+    "constraint: no version bump; changelog under Unreleased in release-note voice"
+  ],
+  "intent": "Restore the four safety guards lost in the 0.20.2 vendoring pass: relocate rollback, derive dedup, atomic registry write, and implement step numbering",
+  "expectations": [
+    "No new behavior beyond restoring the 0.20.1 guards",
+    "No version bump — releases own it",
+    "No root README/CHANGELOG changes — this is a speckit-extension change"
+  ],
+  "approach": "Restore each deleted guard to its documented 0.20.1 shape in the module that owns it: caller-owned rollback list inside the try, _has_step_start dedup in derive, temp-file+rename registry write, and the step renumber in the source node with a re-assembled body and re-blessed golden. Pin each behavioral fix with a regression test in the suite that already loads that module.",
+  "decisions": [
+    {
+      "decision": "Restore guards from the issue text, not a git revert",
+      "why": "This repo never carried the guarded _apply_moves; the vendored 0.20.1 copy did",
+      "rejected": "git revert of a nonexistent commit"
+    },
+    {
+      "decision": "Match relocate-capability._write_config write tail exactly for the registry write",
+      "why": "The issue pins it and a second atomic-writer variant would drift",
+      "rejected": "Extracting a shared writer into companion_config.py (widens the diff)"
+    },
+    {
+      "decision": "Add regression tests to test_living_specs.py and test_context.py",
+      "why": "They already load the hyphenated modules and own the fixtures",
+      "rejected": "A new test file duplicating loader boilerplate"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Four guard restorations planned with exact target lines identified and test homes chosen",
+      "key_finding": "nodes/implement/complete.md line 7 carries the misnumbered 5.; implement-exec.md ends at 6., so the fix is 7. plus re-assemble and re-bless"
+    },
+    "tasks": {
+      "summary": "11 tasks across 4 independent story phases plus Polish; Phase 6 strictly ordered node-fix -> regenerate -> re-bless"
+    },
+    "implement": {
+      "summary": "All four 0.20.2 regressions restored to guarded shape with pinned tests; suites and gates green"
+    }
+  },
+  "currentTask": "T011",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Restored caller-owned done list on _apply_moves and moved the call inside relocate()'s try, with the rollback docstring",
+      "files": [
+        "speckit-extension/scripts/relocate-capability.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Regression test: 3rd-of-3 move failure rolls back the tree byte-for-byte; verified failing on the regressed shape",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Restored the _has_step_start dedup guard in derive() with the sibling-guard comment",
+      "files": [
+        "speckit-extension/scripts/derive-from-files.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Regression test: deriving twice at one step yields one start entry; verified failing on the regressed shape",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Restored temp-file + os.replace atomic write in _write_registry, matching the relocation writer",
+      "files": [
+        "speckit-extension/scripts/register-capability.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Regression tests: registry write goes through a temp file; interrupted write cannot truncate; verified failing on the regressed shape",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Renumbered the final mark-complete step 5. to 7. in the implement source node",
+      "files": [
+        "speckit-extension/nodes/implement/complete.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Re-assembled command bodies; implement steps now read 1-7",
+      "files": [
+        "speckit-extension/commands/speckit.companion.implement.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Re-blessed the frozen golden for the implement body; single-hunk 5.-to-7. diff",
+      "files": [
+        "speckit-extension/tests/golden/commands/commands__speckit.companion.implement.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Changelog Fixed entries under Unreleased in release-note voice, no version bump",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Validated: 683 Python tests, 1942 TS tests across 137 suites, all 6 CI gates green, doctor clean",
+      "files": [
+        "speckit-extension/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit extension Python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_*.py",
+      "result": "683 tests OK"
+    },
+    {
+      "what": "VS Code extension build + tests",
+      "command": "npm run compile && npm test",
+      "result": "compile clean; 1942 tests, 137 suites pass"
+    },
+    {
+      "what": "CI gates",
+      "command": "check-shape-parity, assemble-nodes --check, build-commands --check, package-manifest --check, check-command-emissions, check_quality --strict",
+      "result": "all pass; 14 bodies match golden"
+    },
+    {
+      "what": "each regression test fails on the regressed shape",
+      "command": "git stash the fix, run the new test, pop",
+      "result": "all three fail pre-fix and pass post-fix"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Doctor DRIFT warning: companion-commands flagged real (baseline 038566aa) for speckit.companion.implement.md and nodes/implement/complete.md. Not folded as a delta — the living spec already carries the no-restarted-numbering requirement, so this change restores conformance without changing the contract; an explicit skip was recorded instead.",
+      "step": "implement"
+    }
+  ]
+}

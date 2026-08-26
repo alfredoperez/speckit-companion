@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import importlib
 import sys
+import os
+import stat
 import tempfile
+from unittest import mock
 import unittest
 from pathlib import Path
 
@@ -236,3 +239,62 @@ class DebugFlagTests(unittest.TestCase):
         p = Path(self._dir()) / "companion.yml"
         p.write_text(body, encoding="utf-8")
         return str(p)
+
+
+class AtomicWriteTextTests(unittest.TestCase):
+    """The shared writer behind every registry and config rewrite."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    def test_two_concurrent_writers_cannot_publish_each_others_half(self):
+        # A fixed `<path>.tmp` let the second writer truncate the first's temp,
+        # so the first `os.replace` published half a file.
+        target = self.root / "living-specs.yml"
+        target.write_text("original\n", encoding="utf-8")
+        seen = []
+        real_mkstemp = cc.tempfile.mkstemp
+
+        def recording_mkstemp(*a, **kw):
+            fd, path = real_mkstemp(*a, **kw)
+            seen.append(path)
+            return fd, path
+
+        with mock.patch.object(cc.tempfile, "mkstemp", recording_mkstemp):
+            cc.atomic_write_text(str(target), "first\n")
+            cc.atomic_write_text(str(target), "second\n")
+        self.assertEqual(len(set(seen)), 2, "each writer needs its own temp name")
+        self.assertEqual(target.read_text(encoding="utf-8"), "second\n")
+
+    def test_the_write_is_flushed_to_disk_before_the_rename(self):
+        target = self.root / "cfg.yml"
+        synced = []
+        real_fsync = cc.os.fsync
+        with mock.patch.object(cc.os, "fsync", lambda fd: (synced.append(fd), real_fsync(fd))[1]):
+            cc.atomic_write_text(str(target), "body\n")
+        self.assertTrue(synced, "a rename that outruns the data blocks leaves a zero-length file")
+
+    def test_existing_permissions_survive_the_replace(self):
+        target = self.root / "cfg.yml"
+        target.write_text("a\n", encoding="utf-8")
+        os.chmod(target, 0o600)
+        cc.atomic_write_text(str(target), "b\n")
+        self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
+
+    def test_a_symlinked_config_is_followed_not_replaced(self):
+        real = self.root / "real.yml"
+        real.write_text("a\n", encoding="utf-8")
+        link = self.root / "link.yml"
+        link.symlink_to(real)
+        cc.atomic_write_text(str(link), "b\n")
+        self.assertTrue(link.is_symlink(), "the link must survive")
+        self.assertEqual(real.read_text(encoding="utf-8"), "b\n")
+
+    def test_a_failed_write_leaves_no_temp_behind(self):
+        target = self.root / "cfg.yml"
+        with mock.patch.object(cc.os, "replace", side_effect=OSError("nope")):
+            with self.assertRaises(OSError):
+                cc.atomic_write_text(str(target), "b\n")
+        self.assertEqual(sorted(p.name for p in self.root.iterdir()), [])
