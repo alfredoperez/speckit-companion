@@ -124,7 +124,7 @@ from living_spec_fold import (  # noqa: E402,F401
 
 
 def update_context(
-    feature_dir: Path, step: str, status: str, by: str, kind: str = "start",
+    feature_dir: Path, step: str, status: str | None, by: str, kind: str = "start",
     substep: str | None = None,
 ) -> Path | None:
     target = feature_dir / ".spec-context.json"
@@ -147,7 +147,13 @@ def update_context(
     fill_required(ctx, feature_dir, branch)
 
     ctx["currentStep"] = step
-    ctx["status"] = status
+    # A start carries the step forward and leaves status alone. `--status` used to
+    # default to "specified" and was written on every branch, so opening a step
+    # without naming a status was indistinguishable from asking to go back to the
+    # first one: a run would read currentStep=implement alongside status=specified
+    # for the whole step, and only the later complete repaired it.
+    if status is not None:
+        ctx["status"] = status
 
     if kind == "complete":
         # Deterministic self-close. Idempotent: skip if the step is already closed,
@@ -317,7 +323,8 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
 def _main() -> int:
     parser = argparse.ArgumentParser(description="Write/update a feature's .spec-context.json")
     parser.add_argument("--step", default="specify")
-    parser.add_argument("--status", default="specified")
+    # No default: a caller that does not name a status does not want one changed.
+    parser.add_argument("--status", default=None)
     parser.add_argument("--by", default="extension")
     parser.add_argument("--kind", default="start", choices=["start", "complete"])
     parser.add_argument(
@@ -670,8 +677,8 @@ def _main() -> int:
             tasks_md = Path(args.tasks_file)
             if not tasks_md.is_absolute():
                 tasks_md = root / tasks_md
-            # Task-sync operates on the implement step; the global --status default
-            # ("specified") would be an incoherent terminal status here.
+            # Task-sync operates on the implement step, so a caller that named no
+            # status means "implemented" here rather than "leave it alone".
             final_status = args.status if args.status != parser.get_default("status") else "implemented"
             target = sync_tasks(feature_dir, tasks_md, final_status, args.by)
         elif args.mark_complete:
@@ -731,7 +738,8 @@ def _main() -> int:
         elif args.task:
             print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")
         else:
-            print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
+            _shown = args.status if args.status is not None else "unchanged"
+            print(f"[companion] Updated {target} (currentStep={args.step}, status={_shown}, kind={args.kind}, by={args.by})")
     return 0
 
 

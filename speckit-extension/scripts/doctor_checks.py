@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -166,17 +166,36 @@ def check_record(feature_dir: Path, ctx: dict, now: datetime | None = None) -> t
                 {"tasks": missing},
             ))
 
+    # Batching is a LOCAL property: several tasks stamped together. Measuring
+    # first-to-last across the whole run missed the strongest possible case — a
+    # run journaling four tasks at the identical millisecond, three times over,
+    # scored a 60s span and warned about nothing. Cluster first, then judge each
+    # cluster on its own span.
     finishes = _task_finish_times(ctx)
-    if len(finishes) >= BURST_MIN_TASKS:
-        span = (finishes[-1][1] - finishes[0][1]).total_seconds()
-        if span <= BURST_WINDOW_SECONDS:
-            findings.append(Finding(
-                "record", "warning",
-                f"{len(finishes)} task finishes recorded inside {span:.0f}s — journaling was batched",
-                "the per-task timestamps reflect when the batch was written, not how long "
-                "each task took; the summaries are still trustworthy, the durations are not",
-                {"tasks": [t for t, _ in finishes], "span_seconds": span},
-            ))
+    clusters, current = [], []
+    for entry in finishes:
+        if current and (entry[1] - current[0][1]).total_seconds() > BURST_WINDOW_SECONDS:
+            clusters.append(current)
+            current = []
+        current.append(entry)
+    if current:
+        clusters.append(current)
+
+    bursts = [c for c in clusters if len(c) >= BURST_MIN_TASKS]
+    if bursts:
+        worst = max(bursts, key=len)
+        span = (worst[-1][1] - worst[0][1]).total_seconds()
+        batched = sum(len(c) for c in bursts)
+        extra = (f" across {len(bursts)} batches" if len(bursts) > 1 else "")
+        findings.append(Finding(
+            "record", "warning",
+            f"{batched} task finishes recorded in bursts{extra} — journaling was batched",
+            f"the largest batch stamped {len(worst)} tasks inside {span:.1f}s; those "
+            "timestamps reflect when the batch was written, not how long each task "
+            "took, so the summaries are still trustworthy and the durations are not",
+            {"tasks": [t for c in bursts for t, _ in c],
+             "batches": len(bursts), "largest_batch": len(worst), "span_seconds": span},
+        ))
 
     for step, by, at, why in _attribution_anomalies(ctx):
         findings.append(Finding(
@@ -248,6 +267,22 @@ def check_triage(feature_dir: Path, ctx: dict) -> tuple:
 _COMPLETION_OPS = ("mark-complete",)
 
 
+#: Unattributed capture failures carry `spec: null` — they could not resolve a
+#: spec, which is the whole reason they matter — so they can only be matched to a
+#: run by time. The window is the first-to-last history entry, and the failures
+#: worth finding happen OUTSIDE it: before the first entry exists, or after the
+#: last one lands. An unpadded window discarded exactly those, so a run that
+#: silently lost writes reported "failures: 0". Pad it, and never drop in silence.
+WINDOW_PAD = timedelta(minutes=5)
+
+
+def _in_window(ts, start, end) -> bool:
+    """True when a timestamp falls inside the padded run window, or cannot be placed."""
+    if ts is None or start is None or end is None:
+        return True  # undateable: count it rather than hide it
+    return start <= ts <= end
+
+
 def _completion_attempts(feature_dir: Path, ctx: dict) -> list:
     """Completion attempts belonging to THIS spec.
 
@@ -265,7 +300,7 @@ def _completion_attempts(feature_dir: Path, ctx: dict) -> list:
 
     shared = run_trace.read(Path(feature_dir).parent)
     if shared is not None:
-        start, end = run_window(ctx)
+        start, end = run_window(ctx, WINDOW_PAD)
         rel = Path(feature_dir).name
         for e in shared.events:
             if e.get("op") not in _COMPLETION_OPS:
@@ -273,8 +308,7 @@ def _completion_attempts(feature_dir: Path, ctx: dict) -> list:
             spec = e.get("spec")
             if spec and rel not in str(spec):
                 continue
-            ts = parse_time(e.get("at"))
-            if not (start and end and ts is not None and start <= ts <= end):
+            if not _in_window(parse_time(e.get("at")), start, end):
                 continue
             out.append(e)
     return out
@@ -492,15 +526,22 @@ def _unattributed_failures(feature_dir: Path, ctx: dict) -> list:
     read = run_trace.read(log.parent)
     if read is None:
         return []
-    start, end = run_window(ctx)
-    out = []
+    start, end = run_window(ctx, WINDOW_PAD)
+    out, dropped = [], 0
     for e in read.events:
         if e.get("ok"):
             continue
-        ts = parse_time(e.get("at"))
-        if start and end and ts is not None and not (start <= ts <= end):
+        if not _in_window(parse_time(e.get("at")), start, end):
+            dropped += 1
             continue
         out.append(e)
+    if dropped:
+        # Say what was set aside. Silently discarding a failure because of when it
+        # happened is how "0 problems" got reported for a run that lost writes.
+        out.append({"op": "outside-window", "ok": False, "spec": None,
+                    "reason": f"{plural(dropped, 'further failed capture call')} in the "
+                              f"repo-level log fell outside this run's window and were "
+                              f"not attributed to it"})
     return out
 
 
