@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline, per-phase timing, and living specs for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
-  "version": "0.31.4",
+  "version": "0.32.0",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",

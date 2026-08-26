@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-08-26
+
 ### Added
 
 - **A live sample spec you can open before writing anything.** The Specs view's empty state now offers **Open a live sample** beside **Create your first spec**. It copies a small, finished-looking example spec into your workspace and opens it in the viewer, so a first run shows the actual reading surface — pipeline, phases, timing — instead of an empty tree. It is an ordinary spec after that: yours to read, edit, or delete, and clicking again reopens it rather than making a second copy. ([#597](https://github.com/alfredoperez/speckit-companion/issues/597))
