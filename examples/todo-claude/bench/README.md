@@ -74,7 +74,7 @@ const preamble = await buildStepPreamble('plan', specDir, dispatchUtc) // SAME f
 
 Stock and companion get byte-identical preambles; only the command family differs, exactly like the GUI.
 
-**2. Wait for the step to settle — don't fire capture synchronously.** After dispatching a step, block until the cell's `.spec-context.json` reaches that step's completed-form status (`specified` / `planned` / `ready-to-implement` / `implemented`) — the same settle signal the GUI's file watchers wait on — before advancing:
+**2. Wait for the step to settle — don't fire capture synchronously.** After dispatching a step, block until the cell's `.spec-context.json` reaches that step's completed-form status (`specified` / `planned` / `ready-to-implement` / `implemented`) **or any later one** — the same settle signal the GUI's file watchers wait on — before advancing:
 
 ```js
 const res = await waitForSettle(cellDir, 'plan', /* timeoutMs */ 600000)
@@ -83,7 +83,9 @@ if (!res.settled) console.warn(`plan never settled (status=${res.status})`)
 
 `waitForSettle` lives in `lib.mjs` and has unit coverage in `bench/waitForSettle.test.mjs` (run `node --test examples/todo-claude/bench/waitForSettle.test.mjs` — no AI needed).
 
-**3. Track capture time as its own line.** As the driver runs `cap.mjs` / `write-context.py`, accumulate the wall-time spent inside those calls and write it to the cell's `.run-meta.json` as `captureOverheadSec`. `capture` surfaces it on the row and report as the **Capture overhead** line, separate from work time. `speckit` has no capture, so its overhead is `—`.
+**3. Never let the driver disable right-sizing.** The settle-wait resolves on a step's completed status *or any later one*, so a folded fast-path lifecycle (`specify`→`ready-to-implement`) and the terminal auto-complete (`implement`→`completed`) both settle correctly and report `folded: true`. A driver must treat a folded step as done, not re-dispatch it and not steer the size verdict to force four separate settles. This is not a detail: right-sizing only fires on small changes, so a bench that cannot observe it measures Companion's slow path exclusively and reports a gap that is an artifact of the instrument.
+
+**4. Track capture time as its own line.** As the driver runs `cap.mjs` / `write-context.py`, accumulate the wall-time spent inside those calls and write it to the cell's `.run-meta.json` as `captureOverheadSec`. `capture` surfaces it on the row and report as the **Capture overhead** line, separate from work time. `speckit` has no capture, so its overhead is `—`.
 
 The old drivers did **neither** of the first two — they followed raw command bodies and fired capture synchronously, which counted capture overhead as work time (companion looked ~30% slower) and let stock "complete" for the agent even though the GUI gets stuck (the #324 stock-settle bug). See `docs/capture-and-timing.md` for the settle model.
 
