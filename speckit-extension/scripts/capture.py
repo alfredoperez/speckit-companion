@@ -342,3 +342,89 @@ def set_classification(feature_dir: Path, raw: str) -> Path:
     ctx["classification"] = obj
     atomic_write(target, ctx)
     return target
+
+
+# --------------------------------------------------------------------------- #
+# Batched end-of-step capture
+#
+# The capture flags are already additive and already compose in one call — the
+# end-of-step volley is several calls only because the command bodies emit them
+# separately. One document through the same writers changes the number of file
+# rewrites, not the record.
+# --------------------------------------------------------------------------- #
+
+BATCH_KEYS = ("verified", "decisions", "concerns", "expectations", "context",
+              "coverage", "step_summary", "last_action")
+
+
+def _parsed_batch(raw: str) -> dict:
+    """Validate the batch document. A malformed payload is a caller error."""
+    try:
+        doc = json.loads(raw)
+    except ValueError as exc:
+        raise ValueError(f"--batch is not valid JSON: {exc}") from exc
+    if not isinstance(doc, dict):
+        raise ValueError("--batch must be a JSON object")
+    unknown = sorted(set(doc) - set(BATCH_KEYS))
+    if unknown:
+        raise ValueError(
+            f"--batch has unknown key(s): {', '.join(unknown)}. "
+            f"Known keys: {', '.join(BATCH_KEYS)}."
+        )
+    for key in ("verified", "decisions", "concerns", "expectations", "context", "coverage"):
+        if key in doc and not isinstance(doc[key], list):
+            raise ValueError(f"--batch '{key}' must be a list")
+    for item in doc.get("coverage") or []:
+        if not isinstance(item, dict) or not item.get("req"):
+            raise ValueError("--batch 'coverage' entries need a 'req' key")
+    if "step_summary" in doc and not isinstance(doc["step_summary"], dict):
+        raise ValueError("--batch 'step_summary' must be an object")
+    return doc
+
+
+def _as_raw(items: list) -> list:
+    """Capture writers take JSON strings or bare text; pass objects through as JSON."""
+    return [x if isinstance(x, str) else json.dumps(x, ensure_ascii=False) for x in items]
+
+
+def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
+    """Apply the whole end-of-step volley, returning (target, [what landed])."""
+    doc = _parsed_batch(raw)
+    target, landed = None, []
+
+    def note(result, label):
+        nonlocal target
+        if result is not None:
+            target = result
+            landed.append(label)
+
+    for field, key, identity in (
+        ("decisions", "decisions", "decision"),
+        ("verified", "verified", "what"),
+        ("concerns", "concerns", "note"),
+    ):
+        items = doc.get(key)
+        if items:
+            note(append_capture_entries(feature_dir, field, identity, _as_raw(items)),
+                 f"{len(items)} {key}")
+    for field in ("expectations", "context"):
+        items = doc.get(field)
+        if items:
+            note(append_string_list(feature_dir, field, [str(x) for x in items]),
+                 f"{len(items)} {field}")
+    for item in doc.get("coverage") or []:
+        note(upsert_coverage(feature_dir, item["req"], item.get("tasks"),
+                             item.get("tests"), item.get("title")),
+             f"coverage {item['req']}")
+    summary = doc.get("step_summary")
+    if summary:
+        # The step is which slot to write, not part of the record. Passing it
+        # through would store `{"step": …, "summary": …}` where the single-flag
+        # form stores `{"summary": …}` — the two would not be byte-equivalent.
+        body = {k: v for k, v in summary.items() if k != "step"}
+        note(upsert_step_summary(feature_dir, summary.get("step") or step,
+                                 json.dumps(body, ensure_ascii=False)),
+             "step summary")
+    if doc.get("last_action"):
+        note(set_fields(feature_dir, [f"last_action={doc['last_action']}"]), "last_action")
+    return target, landed

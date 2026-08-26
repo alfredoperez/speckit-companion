@@ -26,8 +26,11 @@ export const HISTORY_FILE = join(BENCH_DIR, 'history.jsonl')
 export const REPORT_FILE = join(BENCH_DIR, 'REPORT.md')
 export const VITEST_OUT = join(BENCH_DIR, '.last-vitest.json')
 
-// easy = update a route/title · medium = add a feature to todos · hard = a whole new feature
-export const SIZES = ['easy', 'medium', 'hard']
+// easy = update a route/title · medium = add a feature to todos · hard = a whole new
+// feature · oversized = deliberately too big for one wave, so batched task journaling
+// has somewhere to show up. A tracer validated only on happy paths proves nothing
+// about the case it exists for, which is why `oversized` is a first-class size.
+export const SIZES = ['easy', 'medium', 'hard', 'oversized']
 // Post-#312 the pipeline consolidated to TWO workflows — the turbo/lean/fast-path/
 // logs preset axis no longer exists. The bench mirrors that, with exactly two modes:
 //   speckit   — plain upstream spec-kit, no companion, NO capture (blind control).
@@ -51,6 +54,10 @@ export const PRESET_BY_MODE = {
 export const TEMPLATES_DIR = join(REPO_ROOT, 'examples', 'bench-sandboxes')
 export const CHECK_CAPTURE = join(
   REPO_ROOT, '.claude', 'skills', 'eval-speckit-extension', 'check_capture.py'
+)
+// The doctor ships in the extension, so the bench calls the same file a user would.
+export const DOCTOR = join(
+  REPO_ROOT, 'speckit-extension', 'scripts', 'doctor.py'
 )
 export const SPECKIT_EXT_DIR = join(REPO_ROOT, 'speckit-extension')
 // The canonical pristine app — the universal diff baseline (every folder was cloned from it).
@@ -351,6 +358,35 @@ function readJsonStr(s) {
   try { return JSON.parse(s) } catch { return null }
 }
 
+// Run the doctor against a spec dir and return its verdict. Null when there is no
+// run record to read (the stock speckit mode is blind by design).
+//
+// The doctor recomputes rather than trusting the run, so folding its verdict into
+// scoring is what makes a cell that journaled its tasks in one end-of-phase burst
+// score differently from one that journaled them as it went — a difference the
+// capture eval alone cannot see.
+export function runDoctor(specDir) {
+  if (!existsSync(join(specDir, '.spec-context.json'))) return null
+  let raw = ''
+  try {
+    raw = run('python3', [DOCTOR, '--json', '--feature-dir', specDir], { stdio: ['ignore', 'pipe', 'pipe'] })
+  } catch (e) {
+    raw = (e && e.stdout) || ''
+  }
+  const rep = readJsonStr(raw)
+  if (!rep || !Array.isArray(rep.findings)) return { problems: 0, warnings: 0, findings: [], error: 'no report' }
+  const by = (sev) => rep.findings.filter((f) => f.severity === sev)
+  return {
+    problems: by('problem').length,
+    warnings: by('warning').length,
+    batchedJournaling: rep.findings.some((f) => /journaling was batched/.test(f.title || '')),
+    recordedFailures: rep.findings.filter((f) => f.check === 'trace' && f.severity === 'problem').length,
+    bleed: rep.findings.filter((f) => f.check === 'bleed' && f.severity === 'warning').length,
+    findings: rep.findings.map((f) => ({ check: f.check, severity: f.severity, title: f.title })),
+    checks: rep.checks || [],
+  }
+}
+
 // Find the spec dir a run produced inside an arbitrary cell's specs/ (newest
 // .spec-context.json wins; falls back to newest dir by name).
 export function newestSpecDir(specsDir) {
@@ -556,6 +592,7 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
 
   const diff = diffAgainstBaseline(cellDir)
   const capture = mode === 'speckit' ? null : runCaptureEval(specDir || cellDir)
+  const doctor = mode === 'speckit' ? null : runDoctor(specDir || cellDir)
 
   return {
     runId, size, mode,
@@ -581,6 +618,7 @@ export function measureCell({ cellDir, size, mode, runId, startedAt, finishedAt,
     shape: { hasUserStories, specLines: lines(specMd), planLines: lines(planMd), tasksLines: lines(tasksMd), taskCount, sideFiles, artifactFiles: artifacts.files, artifactLines: artifacts.lines },
     diff,
     capture,
+    doctor,
   }
 }
 
@@ -598,7 +636,9 @@ export function loadHistoryRows() {
   }).filter(Boolean)
 }
 
-// 0–100 health composite for one cell: correctness (45) + rubric (30) + capture (25).
+// 0–100 health composite for one cell: correctness (45) + rubric (30) + capture (25),
+// with the doctor's verdict applied as a penalty on the capture component — a cell
+// whose record the doctor can pick holes in did not really achieve visibility.
 // Cohort-independent on purpose — a cell's score only moves when ITS OWN correctness,
 // quality, or visibility moves, so a drop between runs is a real regression signal.
 // Capture is the companion-vs-barebones gap: stock speckit is blind → 0 there, so an
@@ -611,7 +651,12 @@ export function computeOverall(r) {
   const q = r.quality || {}
   const rb = ['readability', 'conventions', 'scope'].map((k) => q[k]).filter((n) => typeof n === 'number')
   const rubric = rb.length ? rb.reduce((a, b) => a + b, 0) / (rb.length * 5) : 0
-  const capture = r.capture ? ratio(r.capture.pass, r.capture.pass + r.capture.fail) : 0
+  const captureRaw = r.capture ? ratio(r.capture.pass, r.capture.pass + r.capture.fail) : 0
+  // Each doctor problem costs a tenth of the capture component, floored at zero:
+  // batched journaling and recorded capture failures are exactly the "looked fine,
+  // wasn't" cases the capture eval passes and the doctor catches.
+  const penalty = r.doctor ? Math.min(1, 0.1 * (r.doctor.problems || 0)) : 0
+  const capture = Math.max(0, captureRaw * (1 - penalty))
   return Math.round(45 * correctness + 30 * rubric + 25 * capture)
 }
 

@@ -112,3 +112,80 @@ class TimingFencePresenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DebugRenderTests(unittest.TestCase):
+    """Off means the instrumentation is absent, not dormant."""
+
+    COMMAND = "plan"
+
+    def test_off_renders_carry_no_instrumentation_text_at_all(self):
+        body = asm.assemble_command(self.COMMAND, debug=False)
+        self.assertNotIn(cp.DEBUG_TIMING, body)
+        self.assertNotIn("Debug timing", body)
+
+    def test_on_renders_carry_the_instrumentation(self):
+        body = asm.assemble_command(self.COMMAND, debug=True)
+        self.assertIn(f"<!-- speckit-companion:part {cp.DEBUG_TIMING} -->", body)
+        self.assertIn("Debug timing", body)
+
+    def test_turning_it_off_again_restores_the_exact_off_render(self):
+        before = asm.assemble_command(self.COMMAND, debug=False)
+        asm.assemble_command(self.COMMAND, debug=True)
+        after = asm.assemble_command(self.COMMAND, debug=False)
+        self.assertEqual(before, after)
+
+    def test_the_off_render_is_the_only_difference_between_the_two(self):
+        off = asm.assemble_command(self.COMMAND, debug=False)
+        on = asm.assemble_command(self.COMMAND, debug=True)
+        self.assertTrue(on.startswith(off.rstrip("\n")),
+                        "debug appends; it never edits what is already there")
+
+    def test_every_pipeline_command_can_be_instrumented(self):
+        for command in cp.decomposed_commands():
+            with self.subTest(command=command):
+                self.assertIn("Debug timing", asm.assemble_command(command, debug=True))
+
+    def test_the_instrumentation_never_asks_for_a_substep_start(self):
+        body = asm.assemble_command(self.COMMAND, debug=True)
+        marker = body.index("Debug timing")
+        section = body[marker:]
+        self.assertIn("--finish", section)
+        self.assertNotIn("--kind start", section)
+
+
+class DebugRenderRegressionTests(unittest.TestCase):
+    """Debug rendering must be idempotent, reversible, and never ambient."""
+
+    def test_applying_debug_repeatedly_yields_exactly_one_block(self):
+        body = "# Body\n"
+        for _ in range(3):
+            body = cp.apply_debug(body, cp.DEBUG_TIMING, True)
+        self.assertEqual(body.count(f"<!-- speckit-companion:part {cp.DEBUG_TIMING} -->"), 1)
+
+    def test_turning_debug_off_removes_the_block_rather_than_leaving_it(self):
+        original = "# Body\n"
+        on = cp.apply_debug(original, cp.DEBUG_TIMING, True)
+        self.assertIn(cp.DEBUG_TIMING, on)
+        off = cp.apply_debug(on, cp.DEBUG_TIMING, False)
+        self.assertNotIn(cp.DEBUG_TIMING, off)
+        self.assertEqual(off, original, "the off render must return the exact original body")
+
+    def test_stripping_a_body_that_has_no_block_is_a_no_op(self):
+        self.assertEqual(cp.strip_part("# Body\n", cp.DEBUG_TIMING), "# Body\n")
+
+    def test_the_project_root_is_the_directory_that_owns_dot_specify(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as tmp:
+            project = os.path.join(tmp, "proj")
+            deep = os.path.join(project, ".specify", "extensions", "companion")
+            os.makedirs(os.path.join(project, ".specify"))
+            os.makedirs(deep)
+            # The installed layout: walking up from the extension dir must reach the
+            # project, not `<project>/.specify/extensions`.
+            self.assertEqual(cp.project_root(deep), project)
+
+    def test_project_root_returns_none_when_nothing_owns_dot_specify(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(cp.project_root(tmp))

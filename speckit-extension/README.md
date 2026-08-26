@@ -201,6 +201,12 @@ The spec-driven run itself, in the order you'd use them.
 | `/speckit.companion.status` | Print where the active spec stands: current step, status, recorded decisions, and the next action |
 | `/speckit.companion.resume` | Continue from the recorded step, carrying decisions into scope, and dispatch the next command in the family the spec has been running (at the next unchecked task inside implement) |
 
+### Diagnostics
+
+| Command | What it does |
+|---------|--------------|
+| `/speckit.companion.doctor` | Report on a spec's run health — unfinished steps, unjournaled tasks, batched journaling, step bleed, drift you can actually judge, and why completion did not land. Read-only, never halts, and works on specs created before it existed. `--chat` adds a session-transcript audit; `--json` for tooling |
+
 ### Living specs
 
 With no `living-specs.yml` in your project these report nothing and change nothing.

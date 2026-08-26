@@ -1,0 +1,24 @@
+{
+  "workflow": "companion",
+  "specName": "Bleed Fixture",
+  "branch": "fixture",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "size": "normal",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T10:00:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T10:05:00Z"
+    }
+  ]
+}

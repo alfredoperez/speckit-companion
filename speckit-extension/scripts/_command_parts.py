@@ -108,6 +108,77 @@ def part_content(name: str) -> str:
         return fh.read().rstrip("\n")
 
 
+#: Appended only when `debug: true` is set. Absent from an off render entirely —
+#: not present and inactive — so the off render stays byte-identical to golden.
+DEBUG_TIMING = "debug-timing"
+
+
+def append_part(text: str, name: str) -> str:
+    """Append a whole part as its own fenced region at the end of a body."""
+    block = part_content(name)
+    return (f"{text}\n<!-- speckit-companion:part {name} -->\n"
+            f"{block}\n<!-- /speckit-companion:part {name} -->\n")
+
+
+def strip_part(text: str, name: str) -> str:
+    """Remove a whole appended part region, fence included.
+
+    Appending without stripping first is what let debug blocks accumulate one per
+    build and survive the switch being turned off.
+    """
+    open_tag = f"<!-- speckit-companion:part {name} -->"
+    close_tag = f"<!-- /speckit-companion:part {name} -->"
+    while open_tag in text and close_tag in text:
+        start = text.index(open_tag)
+        end = text.index(close_tag, start) + len(close_tag)
+        text = text[:start].rstrip("\n") + "\n" + text[end:].lstrip("\n")
+    return text
+
+
+def apply_debug(text: str, name: str, on: bool) -> str:
+    """Return `text` carrying exactly one `name` region, or none at all.
+
+    Idempotent in both directions: building twice with debug on yields one block,
+    and turning it off removes the block rather than leaving it baked in.
+    """
+    text = strip_part(text, name)
+    return append_part(text, name) if on else text
+
+
+def project_root(start: str = None) -> str | None:
+    """The project directory that owns `.specify/`, walking up from `start`.
+
+    Deriving it as the parent of the extension directory only held in the source
+    repo. Installed, the extension lives at `<project>/.specify/extensions/companion`,
+    so the parent is `<project>/.specify/extensions` and the config lookup landed on
+    a path that never exists — meaning a user's `debug: true` was never read.
+    """
+    here = os.path.abspath(start or EXT)
+    while True:
+        if os.path.isdir(os.path.join(here, ".specify")):
+            return here
+        parent = os.path.dirname(here)
+        if parent == here:
+            return None
+        here = parent
+
+
+def debug_on(root: str = None) -> bool:
+    """Is `debug: true` set in this project's companion.yml?
+
+    Read at render time, which is why a change to the flag reaches the next
+    rendered command and never one already in flight. Any failure to read the
+    config means off, inheriting the config loader's own failure table.
+    """
+    try:
+        import companion_config
+
+        resolved = root or project_root()
+        return bool(resolved) and companion_config.debug_from_root(resolved)
+    except Exception:  # noqa: BLE001 — a config that cannot be read is not debug
+        return False
+
+
 def canonical(text: str) -> str:
     """Strip fence/marker comment lines so golden compares content, not convention."""
     return _MARKER_LINE.sub("", text)

@@ -57,6 +57,7 @@ speckit-extension/**
 !speckit-extension/scripts/capture.py
 !speckit-extension/scripts/task_sync.py
 !speckit-extension/scripts/living_spec_fold.py
+!speckit-extension/scripts/run_trace.py
 .specify/**
 .opencode/**
 .serena/**

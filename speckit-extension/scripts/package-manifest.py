@@ -57,6 +57,14 @@ RUNTIME_SCRIPTS = frozenset({
     "relocate-capability.py",
     "drift.py",
     "check-coverage.py",
+    # Run tracing + the doctor. `run_trace` is reached from inside write-context
+    # and drift rather than from a command body, so it ships with them.
+    "run_trace.py",
+    "doctor.py",
+    "doctor_checks.py",
+    "doctor_drift.py",
+    "doctor_bleed.py",
+    "doctor_chat.py",
 })
 
 BUILD_ONLY = frozenset({

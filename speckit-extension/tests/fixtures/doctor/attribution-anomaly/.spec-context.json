@@ -1,0 +1,23 @@
+{
+  "workflow": "companion",
+  "specName": "Attribution Anomaly",
+  "branch": "fixture",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T10:00:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-01T10:04:00Z"
+    }
+  ]
+}

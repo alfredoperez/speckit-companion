@@ -26,6 +26,7 @@ Stdlib only. Safe to run anywhere `python3` is available.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -78,8 +79,10 @@ from capture import (  # noqa: E402,F401
     _coerce_entry,
     _coerce_value,
     _entry_identity,
+    _parsed_batch,
     _parsed_classification,
     append_capture_entries,
+    apply_batch,
     append_string_list,
     set_classification,
     set_fields,
@@ -100,6 +103,7 @@ from task_sync import (  # noqa: E402,F401
     _tasks_at_100,
     _upsert_task_summary,
     append_task_log,
+    close_task,
     journal_task_finish,
     materialize_log,
     parse_task_markers,
@@ -310,7 +314,7 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     return target
 
 
-def main() -> int:
+def _main() -> int:
     parser = argparse.ArgumentParser(description="Write/update a feature's .spec-context.json")
     parser.add_argument("--step", default="specify")
     parser.add_argument("--status", default="specified")
@@ -444,6 +448,19 @@ def main() -> int:
              "(plus key_finding/risks) or bare text.",
     )
     parser.add_argument(
+        "--batch", dest="batch", default=None, metavar="JSON",
+        help="Apply the whole end-of-step capture volley in one call — a JSON object with "
+             "any of verified/decisions/concerns/expectations/context/coverage/step_summary/"
+             "last_action, written through the same additive writers. Collapses the volley "
+             "to one invocation; each writer still performs its own atomic write.",
+    )
+    parser.add_argument(
+        "--close-task", dest="close_task", default=None, metavar="TaskID",
+        help="Append this task's finish AND fold it, in one call. For the MAIN agent only — "
+             "a fanned-out worker must still use --task <id> --append alone, because folding "
+             "writes the shared record and two folders race.",
+    )
+    parser.add_argument(
         "--classification", dest="classification", default=None, metavar="JSON",
         help="Store the size classification object {projectedFiles, projectedTasks, "
              "scopeSignal, verdict}; verdict (simple|normal|oversized) is required.",
@@ -456,13 +473,13 @@ def main() -> int:
     capture_mode = bool(
         args.decisions or args.verified or args.concerns or args.expectations
         or args.coverage_req or args.step_summary or args.classification or args.context_entries
+        or args.batch
     )
-    if not args.tasks_file and not args.task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
-        print(
-            f"[companion] Skipping: '{args.step}' is not a canonical currentStep "
-            f"({', '.join(sorted(CANONICAL_STEPS))}).",
-            file=sys.stderr,
-        )
+    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
+        msg = (f"Skipping: '{args.step}' is not a canonical currentStep "
+               f"({', '.join(sorted(CANONICAL_STEPS))}).")
+        print(f"[companion] {msg}", file=sys.stderr)
+        _record_outcome(False, msg)
         return 0
 
     root = _repo_root()
@@ -478,24 +495,22 @@ def main() -> int:
         if args.feature_dir:
             explicit_dir = resolve_feature_dir(root, args.feature_dir)
             if explicit_dir is not None and explicit_dir.resolve() != tf_dir.resolve():
-                print(
-                    f"[companion] --feature-dir ({explicit_dir}) and --tasks-file dir "
-                    f"({tf_dir}) disagree; refusing to write to avoid settling the "
-                    f"wrong spec. Drop --feature-dir or point --tasks-file at its tasks.md.",
-                    file=sys.stderr,
-                )
+                msg = (f"--feature-dir ({explicit_dir}) and --tasks-file dir ({tf_dir}) "
+                       f"disagree; refusing to write to avoid settling the wrong spec. "
+                       f"Drop --feature-dir or point --tasks-file at its tasks.md.")
+                print(f"[companion] {msg}", file=sys.stderr)
+                _record_outcome(False, msg)
                 return 0
         feature_dir: Path | None = tf_dir
     else:
         feature_dir = resolve_feature_dir(root, args.feature_dir)
 
     if feature_dir is None or not feature_dir.is_dir():
-        print(
-            "[companion] Could not resolve the active feature directory "
-            "(checked --feature-dir, SPECIFY_FEATURE_DIRECTORY, SPECIFY_FEATURE, "
-            ".specify/feature.json, git branch prefix). Skipping context write.",
-            file=sys.stderr,
-        )
+        msg = ("Could not resolve the active feature directory "
+               "(checked --feature-dir, SPECIFY_FEATURE_DIRECTORY, SPECIFY_FEATURE, "
+               ".specify/feature.json, git branch prefix). Skipping context write.")
+        print(f"[companion] {msg}", file=sys.stderr)
+        _record_outcome(False, msg)
         return 0  # best-effort: never fail the host command
 
     # Caller-error validation for --classification (exit 2, per the capture contract):
@@ -506,6 +521,15 @@ def main() -> int:
             _parsed_classification(args.classification)
         except ValueError as exc:
             print(f"[companion] {exc}", file=sys.stderr)
+            _record_outcome(False, str(exc))
+            return 2
+
+    if args.batch:
+        try:
+            _parsed_batch(args.batch)
+        except ValueError as exc:
+            print(f"[companion] {exc}", file=sys.stderr)
+            _record_outcome(False, str(exc))
             return 2
 
     # Capture flags are additive: every one given in a single call takes effect.
@@ -519,6 +543,10 @@ def main() -> int:
         if args.set_pairs:
             target = set_fields(feature_dir, args.set_pairs)
             captured.append(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
+        if args.batch:
+            target, landed = apply_batch(feature_dir, args.batch, args.step)
+            if target is not None:
+                captured.append(f"[companion] Batched capture ({'; '.join(landed)}) in {target}")
         if args.decisions:
             target = append_capture_entries(feature_dir, "decisions", "decision", args.decisions)
             captured.append(f"[companion] Recorded {len(args.decisions)} decision(s) in {target}")
@@ -578,6 +606,7 @@ def main() -> int:
                     f"[companion] Folded feature deltas into living spec(s): {', '.join(synced)} ({target})")
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
+        _record_outcome(False, f"skipped .spec-context.json write: {exc}")
         return 0
 
     # A no-op fold already named its own exact reason on stderr (from
@@ -589,16 +618,30 @@ def main() -> int:
         skipped = [
             name for name, given in (
                 ("--tasks-file", args.tasks_file), ("--task", args.task),
+                ("--close-task", args.close_task),
                 ("--materialize", args.materialize), ("--mark-complete", args.mark_complete),
                 ("--finish", args.finish), ("--advance", args.advance),
             ) if given
         ]
         if skipped:
+            # Informational: the capture landed. The skipped lifecycle flag is
+            # named so the caller can re-run it, but this call did its work.
             print(
                 f"[companion] Warning: {', '.join(skipped)} not applied — a capture flag "
                 f"in the same call takes precedence. Run it as a separate call.",
                 file=sys.stderr,
             )
+        refused = sorted(
+            k for k in (str(p).split("=", 1)[0].strip() for p in (args.set_pairs or []))
+            if k in PROTECTED_SET_KEYS
+        )
+        if refused:
+            # Same wording the writer already printed, so the trace reason and the
+            # stderr line a developer sees are the same sentence.
+            _record_outcome(False, f"Refusing --set {', '.join(repr(k) for k in refused)} — "
+                                   f"lifecycle keys are managed by the capture/mark-complete writers.")
+        else:
+            _record_outcome(bool(captured), "no capture flag produced a write")
         return 0
 
     # Lifecycle modes stay exclusive — these are alternative readings of one
@@ -620,6 +663,13 @@ def main() -> int:
             target = journal_advance(feature_dir, args.step, args.by)
         elif args.materialize:
             target = materialize_log(feature_dir, args.by)
+        elif args.close_task:
+            files = (
+                [f.strip() for f in args.files.split(",") if f.strip()]
+                if args.files else None
+            )
+            target = close_task(feature_dir, args.close_task, args.by,
+                                args.did.strip() if args.did else None, files)
         elif args.task:
             files = (
                 [f.strip() for f in args.files.split(",") if f.strip()]
@@ -634,7 +684,14 @@ def main() -> int:
             target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
+        _record_outcome(False, f"skipped .spec-context.json write: {exc}")
         return 0
+
+    # `target is not None` is the writers' shared success signal, including for
+    # --tasks-file, which reports itself on stderr and is deliberately excluded
+    # from the stdout block below.
+    _record_outcome(target is not None,
+                    "the write did not land (see the reason above)")
 
     if target is not None and not args.tasks_file:
         if args.mark_complete:
@@ -646,6 +703,8 @@ def main() -> int:
             print(f"[companion] Advanced {args.step} in {target} (by={args.by})")
         elif args.materialize:
             print(f"[companion] Materialized append-log into {target}")
+        elif args.close_task:
+            print(f"[companion] Closed task {args.close_task} in {target} (by={args.by})")
         elif args.task and args.append:
             print(f"[companion] Appended finish for task {args.task} to {target} (by={args.by})")
         elif args.task:
@@ -653,6 +712,188 @@ def main() -> int:
         else:
             print(f"[companion] Updated {target} (currentStep={args.step}, status={args.status}, kind={args.kind}, by={args.by})")
     return 0
+
+
+# --------------------------------------------------------------------------- #
+# Self-trace
+#
+# Every path through _main() returns 0 — that contract is what keeps a capture
+# defect from halting a user's pipeline, and it is also why capture failures are
+# invisible today. Wrapping the funnel is the only placement that catches the
+# early returns (unresolvable spec, refused lifecycle key, --feature-dir /
+# --tasks-file mismatch), which are exactly the failures that vanish. The reason
+# recorded is the message the script already prints, verbatim.
+# --------------------------------------------------------------------------- #
+
+_OP_FLAGS = (
+    ("--mark-complete", "mark-complete"),
+    ("--materialize", "materialize"),
+    ("--tasks-file", "tasks-sync"),
+    ("--fold-living-spec", "fold-living-spec"),
+    ("--finish", "finish"),
+    ("--advance", "advance"),
+)
+
+_CAPTURE_FLAGS = (
+    "--batch",
+    "--decision", "--verified", "--concern", "--expectation", "--context",
+    "--coverage-req", "--step-summary", "--classification", "--living-specs",
+    "--living-spec-skip",
+)
+
+_OP_FILE = {
+    "task-append": ".spec-context.events.jsonl",
+    "tasks-sync": ".spec-context.json",
+}
+
+
+def _has_flag(argv: list, flag: str) -> bool:
+    """True for `--flag`, `--flag value`, or `--flag=value` — all forms argparse takes."""
+    return any(a == flag or a.startswith(flag + "=") for a in argv)
+
+
+def _classify_op(argv: list) -> str:
+    if _has_flag(argv, "--close-task"):
+        return "task-close"
+    if _has_flag(argv, "--task"):
+        return "task-append" if _has_flag(argv, "--append") else "task-journal"
+    # Capture before lifecycle: when both are present the capture is what runs and
+    # the lifecycle flag is skipped, so filing it under the lifecycle flag would
+    # name the half that did nothing.
+    if any(_has_flag(argv, f) for f in _CAPTURE_FLAGS):
+        return "capture"
+    if _has_flag(argv, "--set"):
+        return "set"
+    for flag, op in _OP_FLAGS:
+        if _has_flag(argv, flag):
+            return op
+    if _has_flag(argv, "--step") or _has_flag(argv, "--kind"):
+        return "lifecycle"
+    return "unknown"
+
+
+def _flag_value(argv: list, flag: str):
+    """The value of `--flag value` or `--flag=value`.
+
+    Missing the `=` form sent the trace line to whatever spec the ambient pointers
+    named while the write went somewhere else entirely.
+    """
+    for i, a in enumerate(argv):
+        if a == flag:
+            return argv[i + 1] if i + 1 < len(argv) else None
+        if a.startswith(flag + "="):
+            return a.split("=", 1)[1]
+    return None
+
+
+class _Tee:
+    """Pass writes through to the real stream while keeping a copy."""
+
+    def __init__(self, real, buf):
+        self._real, self._buf = real, buf
+
+    def write(self, s):
+        self._buf.write(s)
+        return self._real.write(s)
+
+    def flush(self):
+        self._real.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+# What a call did is recorded by the call itself, not inferred from what it
+# printed. Text inference got this wrong three separate ways: a `--tasks-file`
+# sync reports success on stderr, an informational `Warning:` on a successful
+# call is not a decline, and a refused append that prints neither reads as
+# whichever branch the heuristic happened to take.
+_OUTCOME: dict = {}
+
+
+def _record_outcome(ok: bool, reason: str | None = None) -> None:
+    """Called from _main at each exit point. Last call wins."""
+    _OUTCOME.clear()
+    _OUTCOME.update(ok=bool(ok), reason=None if ok else reason)
+
+
+def _companion_lines(text: str) -> list:
+    return [line.strip()[len("[companion]"):].strip()
+            for line in text.splitlines() if line.strip().startswith("[companion]")]
+
+
+def _first_companion_line(text: str) -> str | None:
+    lines = _companion_lines(text)
+    return lines[0] if lines else None
+
+
+def main() -> int:
+    """Record this invocation, then behave exactly as the unwrapped command did."""
+    import io
+    import time
+
+    argv = list(sys.argv[1:])
+    started = time.monotonic()
+    out_buf, err_buf = io.StringIO(), io.StringIO()
+    real_out, real_err = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = _Tee(real_out, out_buf), _Tee(real_err, err_buf)
+    try:
+        code = _main()
+    finally:
+        sys.stdout, sys.stderr = real_out, real_err
+        _trace_call(argv, out_buf.getvalue(), err_buf.getvalue(),
+                    int((time.monotonic() - started) * 1000))
+    return code
+
+
+def _trace_call(argv: list, out: str, err: str, ms: int) -> None:
+    try:
+        import run_trace
+
+        op = _classify_op(argv)
+        if _OUTCOME:
+            ok, reason = _OUTCOME["ok"], _OUTCOME["reason"]
+        else:
+            # _main died before recording anything — the crash itself is the outcome.
+            ok, reason = False, _first_companion_line(err) or "the writer exited without recording an outcome"
+
+        root = _repo_root()
+        feature_dir = None
+        try:
+            resolved = resolve_feature_dir(root, _flag_value(argv, "--feature-dir"))
+            # resolve_feature_dir can name a directory that does not exist; a trace
+            # line has nowhere to land there, so it falls through to unattributed.
+            if resolved is not None and resolved.is_dir():
+                feature_dir = resolved
+        except Exception:  # noqa: BLE001
+            feature_dir = None
+
+        files, size = [], 0
+        if ok and feature_dir is not None:
+            name = _OP_FILE.get(op, ".spec-context.json")
+            target = Path(feature_dir) / name
+            if target.is_file():
+                files = [name]
+                # The record's size after the write, not the bytes this call added —
+                # there is no cheap way to know the delta, and the per-file rewrite
+                # COUNT is what actually makes churn visible. Named accordingly so
+                # nobody reads it as a volume-of-work figure.
+                size = target.stat().st_size
+
+        spec = None
+        if feature_dir is not None:
+            try:
+                spec = str(feature_dir.relative_to(root))
+            except ValueError:
+                spec = str(feature_dir)
+
+        run_trace.record(
+            "write-context", op, ok, ms=ms, feature_dir=feature_dir,
+            reason=reason, spec=spec, files=files, written=size,
+            read=sum(len(a) for a in argv),
+        )
+    except Exception:  # noqa: BLE001 — tracing never breaks the call it observes
+        pass
 
 
 if __name__ == "__main__":

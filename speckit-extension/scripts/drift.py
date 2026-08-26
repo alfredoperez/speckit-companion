@@ -231,7 +231,81 @@ def _exempt(file: str, exempt_globs: list[str]) -> bool:
 def compute_drift(root: str, living: dict, working: bool = False) -> dict:
     """The drift result object. Inert (empty) when living specs are disabled.
     `working` widens each changed set to the working tree (uncommitted +
-    untracked); the default path issues exactly the same git commands as before."""
+    untracked); the default path issues exactly the same git commands as before.
+
+    Every evaluation records its inputs and its verdict to the run self-trace, so
+    a "drift warning on every open" can be compared against what the computation
+    actually said last time instead of relying on memory."""
+    import time as _time
+
+    _started = _time.monotonic()
+    try:
+        result = _compute_drift(root, living, working)
+    except Exception as exc:  # noqa: BLE001
+        _trace_drift(root, living, working, None, exc,
+                     int((_time.monotonic() - _started) * 1000))
+        raise
+    _trace_drift(root, living, working, result, None,
+                 int((_time.monotonic() - _started) * 1000))
+    return result
+
+
+def _trace_drift(root: str, living: dict, working: bool, result, exc, ms: int) -> None:
+    """One trace line per drift evaluation. Never raises."""
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        import run_trace
+
+        if result is None:
+            reason = f"{type(exc).__name__}: {exc}".strip()
+            run_trace.record("drift", "drift-compute", False, ms=ms,
+                             feature_dir=None, reason=reason,
+                             read=len(living.get("capabilities") or []))
+            return
+        drifted = [c["name"] for c in result.get("capabilities", []) if not c.get("inSync")]
+        run_trace.record(
+            "drift", "drift-compute", True, ms=ms, feature_dir=None,
+            spec=None,
+            files=sorted({d["file"] for c in result.get("capabilities", [])
+                          for d in (c.get("drifted") or [])}),
+            read=len(living.get("capabilities") or []),
+        )
+        _record_drift_verdict(root, {
+            "working": working,
+            "checked": result.get("checked", 0),
+            "drifted": drifted,
+            "skipped": [s.get("name") for s in result.get("skipped", [])],
+        })
+    except Exception:  # noqa: BLE001 — tracing never breaks the evaluation
+        pass
+
+
+def _record_drift_verdict(root: str, verdict: dict) -> None:
+    """Append the verdict itself, so two evaluations can be diffed later."""
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        import run_trace
+        from spec_context import _now_iso
+
+        target = _Path(root) / run_trace.UNATTRIBUTED_DIR
+        if not target.is_dir():
+            return
+        run_trace._ensure_ignored(target)
+        line = json.dumps({"at": _now_iso(), "tool": "drift", "verdict": verdict},
+                          ensure_ascii=False, separators=(",", ":")) + "\n"
+        with (target / run_trace.TRACE_NAME).open("a", encoding="utf-8") as fh:
+            fh.write(line)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
     if not living["enabled"]:
         return {"enabled": False, "working": working, "checked": 0,
                 "capabilities": [], "skipped": []}

@@ -15,10 +15,14 @@ import os
 import sys
 
 from _command_parts import (
+    DEBUG_TIMING,
     EXT,
     PART_OPEN,
+    apply_debug,
+    debug_on,
     decomposed_commands,
     fill_parts,
+    part_path,
 )
 
 
@@ -42,13 +46,24 @@ def command_files() -> list:
     return out
 
 
-def assemble(text: str, rel: str) -> str:
-    """Return text with every part region filled from its part file."""
-    return fill_parts(text, rel)
+def assemble(text: str, rel: str, debug: bool = False) -> str:
+    """Return text with every part region filled from its part file.
+
+    With `debug`, the debug-timing part is appended; without it the part is absent
+    from the output rather than present and inactive.
+    """
+    out = fill_parts(text, rel)
+    if os.path.isfile(part_path(DEBUG_TIMING)):
+        out = apply_debug(out, DEBUG_TIMING, debug)
+    return out
 
 
 def main() -> int:
     check = "--check" in sys.argv[1:]
+    # Debug is opt-in per invocation and NEVER read from config here. These bodies
+    # are committed, gated artifacts; rendering instrumentation into them from an
+    # ambient config setting is how it got permanently baked in and passed the gate.
+    debug = "--debug" in sys.argv[1:] and not check
     drift = []
     built = 0
     for path in command_files():
@@ -56,7 +71,7 @@ def main() -> int:
         original = open(path, encoding="utf-8").read()
         if not PART_OPEN.search(original):
             continue
-        assembled = assemble(original, rel)
+        assembled = assemble(original, rel, debug=debug)
         built += 1
         if assembled == original:
             continue

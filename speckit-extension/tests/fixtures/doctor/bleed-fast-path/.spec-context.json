@@ -1,0 +1,24 @@
+{
+  "workflow": "companion",
+  "specName": "Fast Path",
+  "branch": "fixture",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "size": "simple",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T10:00:00Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T10:05:00Z"
+    }
+  ]
+}

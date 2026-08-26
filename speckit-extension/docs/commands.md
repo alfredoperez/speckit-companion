@@ -6,7 +6,7 @@ The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycl
 /speckit.specify  →  after_specify hook  →  speckit.companion.after-specify  →  write-context.py  →  .spec-context.json
 ```
 
-## The seventeen commands
+## The eighteen commands
 
 Everything the extension declares, by family. The README's [Commands](../README.md#commands) table is the short version; this page is the detail. Both are checked against the extension's own command list on every build, so neither can fall behind a rename.
 
@@ -14,8 +14,46 @@ Everything the extension declares, by family. The README's [Commands](../README.
 |--------|----------|
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
+| [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
 | [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
+
+## Diagnostics
+
+### `speckit.companion.doctor`
+
+Say what actually happened in a run, and where the record, the display, or the run's own claim is at fault. Read-only, always exits `0`, and every core check derives from `.spec-context.json` plus the spec's own documents — so it produces a meaningful verdict on a spec created long before this command existed.
+
+Nothing is read off a prior verdict. Drift is recomputed from scratch and a recorded drift-clean claim that contradicts the recomputation is reported as a false claim. Every check reports whether it ran, was skipped (always with a reason), or is not applicable, so "found nothing" and "could not look" never print the same way.
+
+```bash
+python3 .specify/extensions/companion/scripts/doctor.py                              # the active spec
+python3 .specify/extensions/companion/scripts/doctor.py --feature-dir specs/042-x     # one spec
+python3 .specify/extensions/companion/scripts/doctor.py --all                         # every spec
+python3 .specify/extensions/companion/scripts/doctor.py --json                        # machine-readable
+python3 .specify/extensions/companion/scripts/doctor.py --chat                        # + transcript audit
+```
+
+| Check | What it answers |
+|-------|-----------------|
+| `record` | Which steps started and never finished; which checked-off tasks have no journal entry; whether task finishes were written in one burst (so their durations mean nothing); which steps were closed by the wrong author |
+| `triage` | For the "status says one thing, the pipeline bar offers another" symptom: *records disagree with each other* (a capture defect) or *records are consistent* (a display defect) |
+| `bleed` | Where one step did the next step's work — plan content in the spec, a task checklist in the plan, implementation code in the task list, one task list in two documents, source committed before implement, a pre-implement step that outlasted implement |
+| `drift` | Recomputed drift with its work shown — capability, files, commits — each flag classified `real`, `self-inflicted`, `suspect-baseline`, or `unknown`; plus any recorded claim the recomputation contradicts |
+| `completion` | Why a spec did not land as `completed`: refused (with the writer's reason), reported success but never arrived, landed with the display disagreeing, or never attempted |
+| `template` | Whether `tasks.md` kept its generated shape — user-story phases containing waves, join lines and checkpoints intact |
+| `trace` | What the self-trace recorded: capture calls that failed and why, call counts, payload sizes, per-file rewrite counts, and calls that resolved to no spec at all |
+| `chat` | *(`--chat` only)* From the session transcript: work tried and failed, retried, or stopped; claims the recomputation contradicts; and waste — narration, repeated commands, repeated rewrites |
+
+### The self-trace
+
+Every capture and drift call records itself to `specs/<NNN>/.trace.jsonl` — one line, success or failure, with the reason verbatim. It costs no extra call and adds nothing to any command body: the scripts the pipeline already runs write it from the inside. Size-capped, self-ignoring on first write, read by nothing but the doctor, and safe to delete (a missing trace is a skipped check, never an error).
+
+### Debug mode
+
+Setting `debug: true` in `.specify/companion.yml` is read by the body renderers, but **the renderers are build-time tools and are not part of a release** — so on an installed project this switch currently does nothing. Treat it as a maintainer tool: from a source checkout, `python3 speckit-extension/scripts/assemble-nodes.py --debug` and `build-commands.py --debug` render the bodies with per-section timing instrumentation, and a plain rebuild removes it again. Never commit an instrumented body.
+
+To instrument a run on an installed project today, attach the instruction as a node hook in your own `.specify/companion.yml` — that mechanism ships and takes effect on the next dispatched command. See the `debug-timing` hook in this repository's own config for the wording.
 
 ## Lifecycle hooks
 

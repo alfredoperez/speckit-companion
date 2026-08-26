@@ -1,0 +1,1 @@
+{"at":"2026-08-01T11:26:00Z","tool":"write-context","op":"mark-complete","ok":false,"reason":"specs/x/.spec-context.json is at status='implementing' with implement not finished; refusing to mark complete (only a finished implement step, or an implementing spec with every task checked, can be shipped).","spec":"specs/x","files":[],"bytes":0,"in_bytes":40,"ms":4}

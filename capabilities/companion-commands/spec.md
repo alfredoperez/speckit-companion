@@ -279,3 +279,27 @@ The tasks command's final Polish phase generates a task to validate the result a
 #### Scenario: no post-implement hook is declared
 - **WHEN** the tasks command builds the Polish phase and no such hook is present (or `companion.yml` is absent or malformed)
 - **THEN** the Polish phase generates and owns the validation run, as before
+
+### A diagnostic command recomputes reality rather than trusting what a run recorded
+
+Where a command reports on the health of a run, it MUST derive its answer by recomputing, never by reading back a verdict the run recorded about itself — a run that claimed it was clean is precisely the case worth checking. Such a command SHALL be read-only, SHALL always exit successfully, and SHALL isolate each of its checks so that one failing becomes that check's stated skip reason rather than taking the report down. It MUST report, for every check it knows about, whether that check ran, was skipped with a reason, or did not apply, so that "found nothing" and "could not look" can never print the same way. Its core checks MUST derive from the durable record and the on-disk documents alone, so that it produces a meaningful verdict on a run that finished long before the command existed.
+
+#### Scenario: a recorded claim contradicts the recomputation
+- **WHEN** a run recorded that an area was clean and recomputing finds otherwise
+- **THEN** the contradiction is reported as a false claim, showing both sides
+
+#### Scenario: a check cannot run
+- **WHEN** the input a check needs is missing
+- **THEN** it is reported as skipped with the reason, never as clean
+
+### Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them
+
+A switch that adds instruction text to command bodies MUST change which bodies get rendered, not toggle a passage inside them. With the switch off the text MUST be absent from the assembled body entirely, so an off render stays byte-identical to the frozen baseline and the parity gate keeps its meaning. The switch SHALL be declared in the project's own configuration and read through the existing loader, inheriting its failure table, and it MUST NOT introduce a second mechanism for changing command text. Because a body is a static file the agent reads, the switch necessarily affects the next dispatched command and never one already in flight.
+
+#### Scenario: the switch is off
+- **WHEN** the bodies are assembled
+- **THEN** they contain no instrumentation text and match the frozen baseline byte for byte
+
+#### Scenario: a parity gate runs while the switch is on locally
+- **WHEN** the gate assembles the bodies to compare them
+- **THEN** it compares the off render, so a local switch can never fail the gate

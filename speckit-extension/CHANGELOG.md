@@ -8,7 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+
+- **A new `/speckit.companion.doctor` command tells you what actually happened in a run.** Until now, when a spec looked wrong there was no way to tell whether the records were wrong, the display was wrong, or the assistant's claim about what it did was wrong. The doctor recomputes rather than believing: it reports steps that started and never finished, tasks ticked off with no journal entry behind them, task finishes written in one burst at the end (so their durations mean nothing), and steps closed by the wrong author. For the familiar "the status says specified but the Plan button isn't there" symptom, it gives one of exactly two answers — the records disagree with each other, or the records are fine and the display is at fault. It is read-only, never blocks anything, and works on specs created long before it existed. Add `--chat` on Claude to read back the session and explain *why* something failed; `--json` for tooling.
+
+- **Drift warnings you can actually judge.** The doctor re-runs the drift computation itself and shows its work — which capability, which files, which commits. Each flag is labelled: real drift, a false alarm caused by the companion's own bookkeeping writes, a false alarm caused by comparing against the wrong commit, or genuinely unknown because the baseline could not be reached. And if a run recorded that everything was in sync while a fresh computation disagrees, that contradiction is reported as a false claim rather than quietly believed.
+
+- **Runs now record themselves, for free.** Every capture and drift call writes one line about itself, including the ones that fail and the reason they failed — the failures that used to disappear into stderr and leave a hole in the record with no explanation. It costs no extra call, adds nothing to any command, and the file is local, size-capped, ignores itself, and is read by nothing but the doctor.
+
+- **A check for steps doing each other's work.** Specifying that drifts into planning, planning that turns into a task list, a task list that turns into code: each one looks fine on its own and costs you twice. The doctor names it — plan content in the spec, a task checklist in the plan, implementation code in the task list, the same task list living in two documents, source committed before implementation started, and a step before implement that ran longer than implement did.
+
+- **`debug: true` in `.specify/companion.yml`** re-renders the pipeline commands with per-step timing instrumentation while you are investigating where a run's time goes. Turn it off and the instrumentation is gone from the commands entirely — not sitting there switched off. It takes effect on the next command dispatched, not one already running.
+
+- **Why a spec would not complete.** When marking a spec complete does not take, the doctor states which of four things happened: the write was refused and why, it reported success but never arrived, it landed and the display disagrees, or it was never attempted at all.
+
+- **A check that the task list kept its shape.** Task lists are generated with user-story phases containing waves; a later step that renames or flattens those sections breaks progress tracking. That is now reported, with the offending headings named.
+
 ### Changed
+
+- **Two fewer calls per task, and one instead of six at the end of a step.** Closing an implement task took two separate calls; there is now a single one for the common case (parallel workers keep the split they need). The end-of-step bookkeeping volley — what was verified, what was decided, what is left over — can now go in one call instead of six. Both record exactly what they recorded before.
+
 
 - **The extension now describes itself accurately in the community catalog.** Its tags were `spec-driven-development, tracking, companion` — one of them the extension's own name, none of them mentioning living specs, drift, or the composable command model that arrived since. They are now `vscode, progress, living-specs, drift, hooks`. The catalog listing itself had drifted to a different set of six, so the two now come from one place.
 
