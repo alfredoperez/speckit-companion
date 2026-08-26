@@ -252,8 +252,84 @@ def _is_more_advanced(ctx: dict, step: str) -> bool:
     return cur in STEP_ORDER and STEP_ORDER[cur] > STEP_ORDER[step]
 
 
+#: Set by the writer script only. A read-modify-write pair is not atomic just
+#: because the write is: two writers can each read the same copy and the second
+#: publish silently discards the first one's field. Twelve simultaneous captures
+#: left four recorded, with no warning and no failure anywhere (#620).
+#:
+#: Readers (the health check, the fold reader) never set this, so they are never
+#: blocked and never block a writer.
+_WRITE_LOCK_ENABLED = False
+#: One held lock per target path, opened on read and released on publish.
+_HELD_LOCKS: dict = {}
+
+
+def enable_write_lock() -> None:
+    """Serialise this process's read-modify-write against other writers."""
+    global _WRITE_LOCK_ENABLED
+    _WRITE_LOCK_ENABLED = True
+
+
+def _lock_path(target: Path) -> Path:
+    """Where the lock for a context file lives.
+
+    Deliberately NOT beside the context file: a spec directory is the user's,
+    and a stray `.spec-context.json.lock` there would be committed, shipped and
+    puzzled over. It also cannot be the context file itself — publishing renames
+    over it, so a later writer would lock a different inode than the one already
+    held. A stable per-path file in the system temp directory is neither.
+    """
+    import hashlib
+    import tempfile
+
+    key = hashlib.sha256(str(target.resolve()).encode("utf-8")).hexdigest()[:32]
+    root = Path(tempfile.gettempdir()) / "speckit-companion-locks"
+    root.mkdir(parents=True, exist_ok=True)
+    return root / f"{key}.lock"
+
+
+def _acquire_lock(target: Path) -> None:
+    if not _WRITE_LOCK_ENABLED or str(target) in _HELD_LOCKS:
+        return
+    try:
+        import atexit
+        import fcntl
+
+        fh = open(_lock_path(target), "w")
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        _HELD_LOCKS[str(target)] = fh
+        # A writer that resolves to "nothing to do" returns without publishing,
+        # so the release has a second home at process exit.
+        atexit.register(_release_lock, target)
+    except Exception:  # noqa: BLE001 — locking is best-effort, never fatal
+        # No fcntl, an unwritable temp dir, a filesystem without locking: fall
+        # back to the previous behaviour rather than refusing to record anything.
+        pass
+
+
+def _release_lock(target: Path) -> None:
+    fh = _HELD_LOCKS.pop(str(target), None)
+    if fh is None:
+        return
+    try:
+        import fcntl
+
+        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        fh.close()
+    except OSError:
+        pass
+
+
 def read_ctx(target: Path) -> dict:
-    """Read the existing context, tolerating absence or corruption."""
+    """Read the existing context, tolerating absence or corruption.
+
+    When this process is a writer, the read also takes the lock and holds it
+    until the matching publish, so the whole read-modify-write is one turn.
+    """
+    _acquire_lock(target)
     if target.is_file():
         try:
             ctx = json.loads(target.read_text(encoding="utf-8"))
@@ -281,6 +357,8 @@ def atomic_write(target: Path, ctx: dict) -> None:
         return
     except ImportError:
         pass
+    finally:
+        _release_lock(target)
     tmp = target.with_suffix(target.suffix + ".tmp")
     try:
         tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -291,6 +369,8 @@ def atomic_write(target: Path, ctx: dict) -> None:
         except OSError:
             pass
         raise
+    finally:
+        _release_lock(target)
 
 
 def canonical_log(ctx: dict) -> list:
