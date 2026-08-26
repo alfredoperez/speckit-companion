@@ -164,6 +164,12 @@ This is one step in the Companion pipeline. How the run continues depends on the
 - **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
 <!-- /speckit-companion:part self-advance -->
 
+**Pin the workflow identity before handing off.** Record that this spec runs the **Companion** workflow, so the next dispatch is a Companion command and not a stock one. A spec that joined Companion after `specify` has never had this written, and the shared writer defaults `workflow` to `speckit` — so without this the footer advance silently dispatches stock `/speckit.tasks`'s successor. Idempotent, and a required deterministic write (skip only if `python3` is genuinely unavailable):
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
+```
+
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts
 

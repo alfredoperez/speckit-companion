@@ -1,0 +1,164 @@
+"""Tests for the workflow-integrity batch (#607 #584 #611 #603 #593 #615)."""
+import json, os, subprocess, sys, tempfile, unittest
+from pathlib import Path
+
+REPO = Path("/Users/alfredoperez/dev/GitHub/speckit-companion")
+SCRIPTS = REPO / "speckit-extension" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+WRITER = SCRIPTS / "write-context.py"
+
+
+def run_writer(cwd, *args):
+    return subprocess.run([sys.executable, str(WRITER), *args], cwd=cwd,
+                          capture_output=True, text=True)
+
+
+class PointerFailsLoudly(unittest.TestCase):
+    """#607 — a pointer that cannot resolve must say so, not resolve to nothing."""
+
+    def _cell(self):
+        d = Path(tempfile.mkdtemp())
+        (d / ".specify").mkdir()
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        return d
+
+    def test_a_stale_pointer_names_the_missing_directory(self):
+        d = self._cell()
+        (d / ".specify" / "feature.json").write_text(
+            json.dumps({"feature_directory": "specs/999-gone"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertIn("does not exist", r.stderr)
+        self.assertIn("stale", r.stderr)
+
+    def test_an_unrecognised_key_names_the_keys_that_work(self):
+        d = self._cell()
+        (d / ".specify" / "feature.json").write_text(json.dumps({"featureDir": "specs/001-x"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertIn("no recognised key", r.stderr)
+        self.assertIn("feature_directory", r.stderr)
+        self.assertIn("featureDir", r.stderr)  # says what it actually found
+
+    def test_a_good_pointer_still_resolves_silently(self):
+        d = self._cell()
+        (d / ".specify" / "feature.json").write_text(
+            json.dumps({"feature_directory": "specs/001-x"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertNotIn("no recognised key", r.stderr)
+        self.assertNotIn("stale", r.stderr)
+        ctx = json.loads((d / "specs" / "001-x" / ".spec-context.json").read_text())
+        self.assertEqual(ctx.get("size"), "simple")
+
+
+class DeclineCarriesItsReason(unittest.TestCase):
+    """#615 — a recorded failure must carry the cause, not a pointer to lost output."""
+
+    def _cell(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        return d
+
+    def _failures(self, d):
+        p = d / "specs" / "001-x" / ".trace.jsonl"
+        rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+        return [r for r in rows if not r.get("ok")]
+
+    def test_a_declined_write_records_why(self):
+        d = self._cell()
+        run_writer(d, "--feature-dir", "specs/001-x", "--coverage-req", "FR-002", "--tests", "")
+        fails = self._failures(d)
+        self.assertTrue(fails, "the decline must be recorded as a failure")
+        reason = fails[-1]["reason"] or ""
+        self.assertNotIn("see the reason above", reason)
+        self.assertIn("FR-002", reason)
+
+    def test_a_decline_is_never_counted_as_a_write(self):
+        d = self._cell()
+        r = run_writer(d, "--feature-dir", "specs/001-x", "--coverage-req", "FR-002", "--tests", "")
+        self.assertNotIn("Upserted coverage for FR-002 in None", r.stdout)
+        self.assertTrue(self._failures(d))
+
+
+class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
+    """#611 — the standalone command must emit the word every consumer reads."""
+
+    BODY = REPO / "speckit-extension" / "commands" / "speckit.companion.classify.md"
+
+    def test_the_emitted_verdict_is_simple_not_small(self):
+        text = self.BODY.read_text()
+        self.assertIn("size=<simple|normal|oversized>", text)
+        self.assertNotIn("size=<small|normal|oversized>", text)
+
+    def test_the_routing_contract_names_simple(self):
+        text = self.BODY.read_text()
+        routing = text.split("part routing -->")[1].split("<!-- /speckit-companion:part routing")[0]
+        self.assertIn("`simple`", routing)
+
+    def test_the_writer_accepts_the_word_the_command_emits(self):
+        import re
+        text = self.BODY.read_text()
+        emitted = set(re.search(r"size=<([^>]+)>", text).group(1).split("|"))
+        accepted = set(re.search(r"verdict \(([a-z|]+)\)",
+                                 (SCRIPTS / "write-context.py").read_text()).group(1).split("|"))
+        self.assertEqual(emitted, accepted)
+
+
+class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
+    """#584 — a spec joining mid-run must be pinned before the next dispatch."""
+
+    def test_every_pipeline_command_pins_the_workflow(self):
+        cmds = REPO / "speckit-extension" / "commands"
+        for step in ("specify", "plan", "tasks", "implement"):
+            body = (cmds / f"speckit.companion.{step}.md").read_text()
+            self.assertIn("--set workflow=companion", body,
+                          f"{step} never pins the workflow, so a mid-run join keeps stock dispatch")
+
+
+class CaptureWritesAreAtomic(unittest.TestCase):
+    """#603 — the capture runtime must not use a shared temp name."""
+
+    def test_no_capture_script_uses_a_fixed_temp_suffix_as_its_only_path(self):
+        import companion_config as cc
+        self.assertTrue(hasattr(cc, "atomic_write_text"))
+        for name in ("spec_context.py", "task_sync.py", "run_trace.py"):
+            src = (SCRIPTS / name).read_text()
+            self.assertIn("atomic_write_text", src,
+                          f"{name} still publishes without the shared atomic helper")
+
+    def test_the_context_writer_publishes_through_the_helper(self):
+        d = Path(tempfile.mkdtemp())
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        run_writer(d, "--feature-dir", "specs/001-x", "--set", "size=simple")
+        target = d / "specs" / "001-x" / ".spec-context.json"
+        self.assertEqual(json.loads(target.read_text())["size"], "simple")
+        leftovers = list(target.parent.glob("*.tmp"))
+        self.assertEqual(leftovers, [], "a completed write left temp debris")
+
+
+class SilentPaletteCommandsAreHidden(unittest.TestCase):
+    """#593 — a command that only writes a log line must not be reachable."""
+
+    STUBS = {
+        "speckit.workflowEditor.removeSection", "speckit.workflowEditor.addUserStory",
+        "speckit.workflowEditor.approveAndContinue", "speckit.workflowEditor.regenerate",
+        "speckit.workflowEditor.navigateToPhase", "speckit.workflowEditor.editSource",
+    }
+
+    def setUp(self):
+        self.pkg = json.loads((REPO / "package.json").read_text())
+
+    def test_every_silent_stub_is_suppressed_from_the_palette(self):
+        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
+               if str(e.get("when", "")).strip() == "false"}
+        self.assertTrue(self.STUBS <= pal, f"still reachable: {sorted(self.STUBS - pal)}")
+
+    def test_the_working_refine_command_stays_reachable(self):
+        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
+               if str(e.get("when", "")).strip() == "false"}
+        self.assertNotIn("speckit.workflowEditor.refineSection", pal)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=1)
