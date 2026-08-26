@@ -278,8 +278,15 @@ function listFilesRec(dir, baseRel = '', acc = []) {
   return acc
 }
 
-// Changed src/ files (added/modified/deleted) vs the pristine snapshot, with the
-// current content of each — the substrate for convention + blast-radius checks.
+// Root-level files that are part of the mutable working surface. Must stay in
+// step with resetFolder, which restores exactly src/ + these from the canonical
+// app: a file the harness resets but never diffs is invisible to every check
+// downstream, which is how the easy feature's tab-title half went ungraded.
+const ROOT_APP_FILES = ['index.html']
+
+// Changed working-surface files (added/modified/deleted) vs the pristine
+// snapshot, with the current content of each — the substrate for the behavioral
+// judge's evidence and the convention + blast-radius checks.
 export function changedSrcFiles(folderDir) {
   const cur = join(folderDir, 'src')
   const curFiles = new Set(listFilesRec(cur))
@@ -291,6 +298,11 @@ export function changedSrcFiles(folderDir) {
     else if (a !== readText(join(CANONICAL_SRC, f))) changed.push({ path: f, status: 'modified', content: a })
   }
   for (const f of baseFiles) if (!curFiles.has(f)) changed.push({ path: f, status: 'deleted', content: '' })
+  for (const f of ROOT_APP_FILES) {
+    const a = readText(join(folderDir, f))
+    const base = readText(join(CANONICAL_DIR, f))
+    if (a !== base) changed.push({ path: f, status: a ? 'modified' : 'deleted', content: a })
+  }
   return changed
 }
 
@@ -313,7 +325,7 @@ export function conventionChecks(changed) {
 
 // Files changed outside the area a given size is expected to touch (soft signal).
 const SCOPE = {
-  easy: [/^components\/Header\./, /^App\./],
+  easy: [/^components\/Header\./, /^App\./, /^index\.html$/],
   medium: [/^components\/(TodoItem|TodoList|AddTodo)\./, /^pages\/TodosPage\./, /^store\//, /^types\./, /^lib\//, /^App\./],
   hard: [/^pages\//, /^components\//, /^store\//, /^lib\/storage\./, /^types\./, /^App\./, /^main\./],
 }
