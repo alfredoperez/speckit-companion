@@ -869,6 +869,30 @@
         }
       ],
       "commandPalette": [
+                {
+                    "command": "speckit.workflowEditor.removeSection",
+                    "when": "false"
+                },
+                {
+                    "command": "speckit.workflowEditor.addUserStory",
+                    "when": "false"
+                },
+                {
+                    "command": "speckit.workflowEditor.approveAndContinue",
+                    "when": "false"
+                },
+                {
+                    "command": "speckit.workflowEditor.regenerate",
+                    "when": "false"
+                },
+                {
+                    "command": "speckit.workflowEditor.navigateToPhase",
+                    "when": "false"
+                },
+                {
+                    "command": "speckit.workflowEditor.editSource",
+                    "when": "false"
+                },
         {
           "command": "speckit.create"
         },
