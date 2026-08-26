@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Pipeline Doctor",
   "branch": "599-pipeline-doctor",
-  "currentStep": "plan",
-  "status": "planned",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
   "history": [
     {
       "step": "specify",
@@ -46,6 +46,27 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-08-26T01:01:30.800Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T01:01:42.642Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:03:40.592Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T01:03:52.471Z"
     }
   ],
   "unattended": true,
@@ -58,124 +79,264 @@
   "last_action": "living specs loaded (companion-commands, capture-runtime)",
   "coverage": {
     "FR-001": {
-      "title": "The system MUST provide a read-only health check that can be run against any spec directory at any time and MUST NOT modify any file it inspects."
+      "title": "The system MUST provide a read-only health check that can be run against any spec directory at any time and MUST NOT modify any file it inspects.",
+      "tasks": [
+        "T006",
+        "T007"
+      ]
     },
     "FR-002": {
-      "title": "The health check MUST produce a meaningful verdict for a spec created before this feature existed, deriving its findings from the run record and the on-disk files alone."
+      "title": "The health check MUST produce a meaningful verdict for a spec created before this feature existed, deriving its findings from the run record and the on-disk files alone.",
+      "tasks": [
+        "T006",
+        "T015"
+      ]
     },
     "FR-003": {
-      "title": "The health check MUST report any step whose start has no matching finish, naming the step."
+      "title": "The health check MUST report any step whose start has no matching finish, naming the step.",
+      "tasks": [
+        "T010"
+      ]
     },
     "FR-004": {
-      "title": "The health check MUST report any task marked done in the task list that has no matching finish in the run record."
+      "title": "The health check MUST report any task marked done in the task list that has no matching finish in the run record.",
+      "tasks": [
+        "T011"
+      ]
     },
     "FR-005": {
-      "title": "The health check MUST detect task finishes clustered into a single burst and report them as batched journaling rather than as measured per-task durations."
+      "title": "The health check MUST detect task finishes clustered into a single burst and report them as batched journaling rather than as measured per-task durations.",
+      "tasks": [
+        "T012"
+      ]
     },
     "FR-006": {
-      "title": "The health check MUST report attribution anomalies — a step closed by an author that is not the one the pipeline reserves for that step."
+      "title": "The health check MUST report attribution anomalies — a step closed by an author that is not the one the pipeline reserves for that step.",
+      "tasks": [
+        "T013"
+      ]
     },
     "FR-007": {
-      "title": "The health check MUST classify the \"status says one thing, the pipeline bar offers another\" symptom as either \"the records disagree with each other\" (a capture defect) or \"the records are consistent\" (a display defect)."
+      "title": "The health check MUST classify the \"status says one thing, the pipeline bar offers another\" symptom as either \"the records disagree with each other\" (a capture defect) or \"the records are consistent\" (a display defect).",
+      "tasks": [
+        "T014"
+      ]
     },
     "FR-008": {
-      "title": "The health check MUST state which checks it ran and which it could not run, and MUST NOT report a clean verdict for checks it skipped."
+      "title": "The health check MUST state which checks it ran and which it could not run, and MUST NOT report a clean verdict for checks it skipped.",
+      "tasks": [
+        "T004",
+        "T007"
+      ]
     },
     "FR-009": {
-      "title": "The health check MUST exit successfully whatever it finds; a finding is a report, never a gate that blocks a pipeline."
+      "title": "The health check MUST exit successfully whatever it finds; a finding is a report, never a gate that blocks a pipeline.",
+      "tasks": [
+        "T006"
+      ]
     },
     "FR-010": {
-      "title": "The capture runtime MUST record one trace entry for every call it handles, including calls that fail, without requiring any additional call from the run."
+      "title": "The capture runtime MUST record one trace entry for every call it handles, including calls that fail, without requiring any additional call from the run.",
+      "tasks": [
+        "T017",
+        "T020",
+        "T021"
+      ]
     },
     "FR-011": {
-      "title": "A failed capture call MUST leave a trace entry carrying the reason it failed."
+      "title": "A failed capture call MUST leave a trace entry carrying the reason it failed.",
+      "tasks": [
+        "T017",
+        "T020"
+      ]
     },
     "FR-012": {
-      "title": "The trace MUST be stored locally per spec, excluded from version control, and capped in size so it cannot grow without bound."
+      "title": "The trace MUST be stored locally per spec, excluded from version control, and capped in size so it cannot grow without bound.",
+      "tasks": [
+        "T001",
+        "T017",
+        "T018"
+      ]
     },
     "FR-013": {
-      "title": "Writing a trace entry MUST NOT measurably slow a run and MUST NOT add any instruction text to a command body."
+      "title": "Writing a trace entry MUST NOT measurably slow a run and MUST NOT add any instruction text to a command body.",
+      "tasks": [
+        "T017",
+        "T055"
+      ]
     },
     "FR-014": {
-      "title": "The health check MUST consume the trace to report call counts, failure counts, payload sizes, loaded-context sizes, and per-file rewrite counts."
+      "title": "The health check MUST consume the trace to report call counts, failure counts, payload sizes, loaded-context sizes, and per-file rewrite counts.",
+      "tasks": [
+        "T019",
+        "T022"
+      ]
     },
     "FR-015": {
-      "title": "The drift audit MUST recompute drift itself from the deterministic ground truth and MUST NOT trust any previously recorded drift verdict."
+      "title": "The drift audit MUST recompute drift itself from the deterministic ground truth and MUST NOT trust any previously recorded drift verdict.",
+      "tasks": [
+        "T026"
+      ]
     },
     "FR-016": {
-      "title": "The drift audit MUST show its work for each flag: the capability, the files changed since that capability's spec was last committed, and the commits that changed them."
+      "title": "The drift audit MUST show its work for each flag: the capability, the files changed since that capability's spec was last committed, and the commits that changed them.",
+      "tasks": [
+        "T027"
+      ]
     },
     "FR-017": {
-      "title": "The drift audit MUST classify each flag as real drift, self-inflicted (caused by the companion's own writes), or suspect baseline (wrong comparison point, renames)."
+      "title": "The drift audit MUST classify each flag as real drift, self-inflicted (caused by the companion's own writes), or suspect baseline (wrong comparison point, renames).",
+      "tasks": [
+        "T028"
+      ]
     },
     "FR-018": {
-      "title": "The drift audit MUST report a recorded claim of drift-clean that contradicts its own recomputation as a false claim."
+      "title": "The drift audit MUST report a recorded claim of drift-clean that contradicts its own recomputation as a false claim.",
+      "tasks": [
+        "T029"
+      ]
     },
     "FR-019": {
-      "title": "The drift audit MUST report a capability whose baseline cannot be determined as unknown with the reason, never as clean."
+      "title": "The drift audit MUST report a capability whose baseline cannot be determined as unknown with the reason, never as clean.",
+      "tasks": [
+        "T026",
+        "T028"
+      ]
     },
     "FR-020": {
-      "title": "Drift evaluations MUST record their own inputs to the trace so repeated verdicts can be compared over time."
+      "title": "Drift evaluations MUST record their own inputs to the trace so repeated verdicts can be compared over time.",
+      "tasks": [
+        "T021"
+      ]
     },
     "FR-021": {
-      "title": "When completion was attempted but the spec did not reach the terminal state, the health check MUST state which of these happened: the write never arrived, the write was refused (and why), or the write landed and the display disagrees."
+      "title": "When completion was attempted but the spec did not reach the terminal state, the health check MUST state which of these happened: the write never arrived, the write was refused (and why), or the write landed and the display disagrees.",
+      "tasks": [
+        "T032"
+      ]
     },
     "FR-022": {
-      "title": "The health check MUST distinguish \"completion was never attempted\" from \"completion failed\"."
+      "title": "The health check MUST distinguish \"completion was never attempted\" from \"completion failed\".",
+      "tasks": [
+        "T032"
+      ]
     },
     "FR-023": {
-      "title": "The health check MUST verify the task list still carries its generated shape — one phase per user story, waves inside each phase, join lines and checkpoints intact."
+      "title": "The health check MUST verify the task list still carries its generated shape — one phase per user story, waves inside each phase, join lines and checkpoints intact.",
+      "tasks": [
+        "T035"
+      ]
     },
     "FR-024": {
-      "title": "The health check MUST flag a task list whose user-story sections were renamed, flattened, or replaced after generation as a template violation, naming the offending headings."
+      "title": "The health check MUST flag a task list whose user-story sections were renamed, flattened, or replaced after generation as a template violation, naming the offending headings.",
+      "tasks": [
+        "T035"
+      ]
     },
     "FR-025": {
-      "title": "The system MUST provide a debug switch in the project's own companion configuration file, not as an editor setting."
+      "title": "The system MUST provide a debug switch in the project's own companion configuration file, not as an editor setting.",
+      "tasks": [
+        "T037"
+      ]
     },
     "FR-026": {
-      "title": "When the debug switch is off, command bodies MUST contain no instrumentation text at all — absent, not dormant."
+      "title": "When the debug switch is off, command bodies MUST contain no instrumentation text at all — absent, not dormant.",
+      "tasks": [
+        "T039",
+        "T040"
+      ]
     },
     "FR-027": {
-      "title": "When the debug switch is on, re-rendered command bodies MUST carry step-by-step timing instrumentation that yields per-step timing on the next run."
+      "title": "When the debug switch is on, re-rendered command bodies MUST carry step-by-step timing instrumentation that yields per-step timing on the next run.",
+      "tasks": [
+        "T038",
+        "T039",
+        "T040"
+      ]
     },
     "FR-028": {
-      "title": "A change to the debug switch MUST affect the next dispatched command and MUST NOT alter a command already in flight."
+      "title": "A change to the debug switch MUST affect the next dispatched command and MUST NOT alter a command already in flight.",
+      "tasks": [
+        "T036",
+        "T051"
+      ]
     },
     "FR-029": {
-      "title": "The health check MUST offer an optional deep audit that reads the AI session transcript covering the run's time window."
+      "title": "The health check MUST offer an optional deep audit that reads the AI session transcript covering the run's time window.",
+      "tasks": [
+        "T042",
+        "T045"
+      ]
     },
     "FR-030": {
-      "title": "The deep audit MUST distinguish work that was tried and failed, work that was retried, and work that was never attempted."
+      "title": "The deep audit MUST distinguish work that was tried and failed, work that was retried, and work that was never attempted.",
+      "tasks": [
+        "T044"
+      ]
     },
     "FR-031": {
-      "title": "The deep audit MUST surface claims recorded during the run that contradict the recomputed reality."
+      "title": "The deep audit MUST surface claims recorded during the run that contradict the recomputed reality.",
+      "tasks": [
+        "T044"
+      ]
     },
     "FR-032": {
-      "title": "The deep audit MUST quantify wasted output, including extra summaries, narration, and repeated rewrites of the same file."
+      "title": "The deep audit MUST quantify wasted output, including extra summaries, narration, and repeated rewrites of the same file.",
+      "tasks": [
+        "T045"
+      ]
     },
     "FR-033": {
-      "title": "The deep audit MUST degrade to a single \"not available\" line and exit successfully where no transcript exists or its format can no longer be parsed."
+      "title": "The deep audit MUST degrade to a single \"not available\" line and exit successfully where no transcript exists or its format can no longer be parsed.",
+      "tasks": [
+        "T043"
+      ]
     },
     "FR-034": {
-      "title": "The measurement harness MUST produce a trace for runs performed in its comparison folders and MUST fold the health check's verdict into its scoring."
+      "title": "The measurement harness MUST produce a trace for runs performed in its comparison folders and MUST fold the health check's verdict into its scoring.",
+      "tasks": [
+        "T046",
+        "T048"
+      ]
     },
     "FR-035": {
-      "title": "The harness MUST include a deliberately oversized variant large enough to surface batched task journaling when it occurs."
+      "title": "The harness MUST include a deliberately oversized variant large enough to surface batched task journaling when it occurs.",
+      "tasks": [
+        "T046"
+      ]
     },
     "FR-036": {
-      "title": "The harness MUST include a failure-injection fixture that proves a failed capture is recorded and reported rather than lost."
+      "title": "The harness MUST include a failure-injection fixture that proves a failed capture is recorded and reported rather than lost.",
+      "tasks": [
+        "T047"
+      ]
     },
     "FR-037": {
-      "title": "Existing capture, drift, and completion behavior MUST be unchanged for a user who never runs the health check and never turns debug on."
+      "title": "Existing capture, drift, and completion behavior MUST be unchanged for a user who never runs the health check and never turns debug on.",
+      "tasks": [
+        "T036",
+        "T055"
+      ]
     },
     "FR-038": {
-      "title": "Every part of this feature MUST inherit the runtime's never-fail-the-host contract: a missing interpreter, an unreadable file, or an unresolvable directory reports the problem and continues, never halting the pipeline."
+      "title": "Every part of this feature MUST inherit the runtime's never-fail-the-host contract: a missing interpreter, an unreadable file, or an unresolvable directory reports the problem and continues, never halting the pipeline.",
+      "tasks": [
+        "T006",
+        "T017",
+        "T043"
+      ]
     },
     "FR-039": {
-      "title": "The closing of a task SHOULD be reducible to a single call rather than the current pair of calls, without changing what is recorded."
+      "title": "The closing of a task SHOULD be reducible to a single call rather than the current pair of calls, without changing what is recorded.",
+      "tasks": [
+        "T024"
+      ]
     },
     "FR-040": {
-      "title": "The end-of-step capture calls SHOULD be reducible to a single batched call rather than a volley of separate calls, without changing what is recorded."
+      "title": "The end-of-step capture calls SHOULD be reducible to a single batched call rather than a volley of separate calls, without changing what is recorded.",
+      "tasks": [
+        "T023"
+      ]
     }
   },
   "size": "oversized",
@@ -254,6 +415,9 @@
       "summary": "Five new modules plus a debug part in speckit-extension/, all stdlib Python, hanging off seams that already exist — no new mechanism anywhere.",
       "key_finding": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so the reported specified-but-no-Plan-button symptom is a history[] gap in almost every case — which is what makes the status-vs-display triage decidable from two readings the codebase already computes.",
       "risks": "The --chat audit rides on a transcript format with no compatibility promise; it is quarantined in its own module and documented as a builders tool for that reason."
+    },
+    "tasks": {
+      "summary": "55 tasks across 11 phases — Setup, Foundational, one phase per user story (US1–US8), and Polish; every phase laid out as waves with explicit join lines, and all 40 requirements mapped to tasks."
     }
   }
 }
