@@ -216,6 +216,10 @@ The dependency order is one-way: `spec_context` and `spec_deltas` depend on noth
 
 **Every new module must be in `package-manifest.py`'s `RUNTIME_SCRIPTS`.** The gate derives what ships by scanning command bodies and then following plain `import` statements to a fixed point — which is why the siblings are imported by plain name rather than loaded dynamically. A dynamically-loaded module would be invisible to the gate and the release archive would ship a broken extension.
 
+**One batched call for the end-of-step volley (#599).** The capture flags compose, so the six-call volley a step closes with — what was verified, what was decided, what is left over, requirement coverage, the step summary, the last-action breadcrumb — was six calls only because the command bodies emitted them separately. `--batch '<json>'` takes the whole volley as one document and applies it through the same additive writers in a single read-modify-write. The record is identical; the number of file rewrites is not. A malformed document is a caller error (exit 2, nothing written), matching how `--classification` already behaves.
+
+**One call to close a task (#599).** `--close-task <id>` appends the finish *and* folds it, collapsing the main agent's two-call close into one. It is byte-equivalent to `--task <id> --append` followed by `--materialize` and idempotent for the same reason the fold is. Both original flags keep working unchanged, and they have to: a fanned-out worker must still append alone, because folding writes the shared record and two folders is exactly the contention the split exists to prevent. `--close-task` is documented, in its help text and in the command bodies, as the main agent's flag.
+
 **Capture flags are additive; lifecycle modes are exclusive.** `--set`, `--decision`, `--verified`, `--concern`, `--expectation`, `--context`, `--coverage-req`, `--step-summary`, `--living-specs`, `--fold-living-spec`, and `--classification` all take effect when passed together, each printing its own line. A ladder used to record the first and silently drop the rest at exit 0. The lifecycle modes (`--tasks-file`, `--mark-complete`, `--finish`, `--advance`, `--materialize`, `--task`, and the default step update) stay first-match-wins — they are alternative readings of one invocation, not composable writes. A capture flag also takes precedence over an explicit lifecycle flag in the same call: the lifecycle write is skipped and named on stderr, so `--mark-complete --set x=y` sets the field and warns that the completion did not happen. Run the two as separate calls.
 
 `speckit-extension/tests/test_cli_parity.py` is the guard: it runs a 34-invocation matrix against two copies of the writer and compares exit code, stdout, stderr, and the resulting context file. Run it with `--record` before a refactor and `--compare` after, or `--reference <scripts dir>` against a checked-out copy.
@@ -283,3 +287,27 @@ The capture protocol the AI follows (the `timing` part, plus `orchestrator` / `s
 - `docs/spec-context-schema.md` — the on-disk `.spec-context.json` schema.
 - `docs/template-profiles.md` — the Companion workflow & pipeline-shape reference.
 - `docs/viewer-states.md` — how captured state drives the viewer.
+
+## Run self-trace — every call records itself (#599)
+
+Every script in this runtime returns success on failure by design. That contract is what keeps a capture defect from halting a user's pipeline, and it is also why capture failures were invisible: the reason went to stderr and was discarded, leaving a hole in the record with no explanation and no way to tell a call that failed from one that was never made.
+
+`write-context.py` and `drift.py` now append **one line per handled call** to `specs/<NNN>/.trace.jsonl` — which operation, whether it did what it was asked, and when it did not, the reason verbatim from the message it already printed. The instrumentation lives inside the scripts the pipeline already runs, so it costs no additional call and adds **no instruction text to any command body**. Writing an entry never raises: it runs on paths that are already failing, so a tracer that could raise would turn a recorded problem into a crash.
+
+Three properties make it safe to leave on:
+
+- **Local and gitignored.** The file writes a one-line `.gitignore` sibling on first use, so it is ignored in every project that installs the extension without anyone editing a root ignore file.
+- **Size-capped.** Past the cap the oldest entries roll off and a `{"truncated": n}` marker records how many, so a reader reports counts as *at least* n rather than presenting a partial file as a total.
+- **Read by nothing but the doctor.** No production path branches on its contents, and deleting it is safe — a missing trace is a skipped check, never an error.
+
+A call that could not resolve a spec at all lands in the repo-level unattributed log at `specs/.trace.jsonl` rather than being dropped. That failure — the writer could not tell which spec a call belonged to — is the most common capture failure there is, so dropping its line would hide exactly what the trace exists to catch.
+
+**How success is decided.** Since every path exits 0, the tracer classifies from what the script printed: a success line on stdout, a decline on stderr. A *decline* is a `[companion]` stderr line beginning `Refusing`, `Skipping`, `Warning`, `Could not`, or `Declin…` — the vocabulary these scripts already use to say they did not do the thing. Informational stderr that is not a decline (a materialize reporting how many lines it folded) leaves the call `ok`. A call that partly succeeded and partly declined — several `--set` keys where one was a refused lifecycle key — is recorded as **not ok**, because the refusal is what a developer needs to see.
+
+## Reading the record back — `/speckit.companion.doctor` (#599)
+
+The trace and `.spec-context.json` are only worth writing if something reads them. `/speckit.companion.doctor` is that reader: a read-only command that **recomputes** rather than trusting what a run recorded about itself, always exits 0, and isolates each check so one failing becomes that check's stated skip reason. Every check reports whether it ran, was skipped with a reason, or did not apply, so "found nothing" and "could not look" never print the same way.
+
+Its core checks derive from `history[]` plus the on-disk documents alone, which is what makes it **retroactive** — it produces a meaningful verdict on a spec created long before it existed. It reports dangling step starts, tasks ticked off with no journal entry, task finishes clustered into one burst (journaling that was batched, so the per-task durations mean nothing), attribution anomalies, the status-versus-pipeline-bar triage, recomputed drift with each flag classified, why a completion did not land, whether `tasks.md` kept its generated shape, and where one step did the next step's work. `--chat` adds a session-transcript audit on Claude; `--json` is the machine-readable form the bench scores against.
+
+See [`speckit-extension/docs/commands.md`](../speckit-extension/docs/commands.md#diagnostics) for the full check list and the debug-mode switch.
