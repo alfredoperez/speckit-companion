@@ -143,9 +143,14 @@ def _enforce_cap(path: Path) -> None:
         keep.reverse()
         dropped = dropped_before + (len(lines) - len(keep))
         header = json.dumps({"truncated": dropped}, separators=(",", ":")) + "\n"
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(header + "".join(keep), encoding="utf-8")
-        tmp.replace(path)
+        try:
+            import companion_config as cc
+
+            cc.atomic_write_text(str(path), header + "".join(keep))
+        except ImportError:
+            tmp = path.with_suffix(path.suffix + ".tmp")
+            tmp.write_text(header + "".join(keep), encoding="utf-8")
+            tmp.replace(path)
     except (OSError, ValueError):
         pass
 

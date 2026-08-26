@@ -58,6 +58,9 @@ speckit-extension/**
 !speckit-extension/scripts/task_sync.py
 !speckit-extension/scripts/living_spec_fold.py
 !speckit-extension/scripts/run_trace.py
+# The shared atomic-write helper. The capture writers publish through it, so a
+# .vsix without it would import-fail in stock mode.
+!speckit-extension/scripts/companion_config.py
 .specify/**
 .opencode/**
 .serena/**
