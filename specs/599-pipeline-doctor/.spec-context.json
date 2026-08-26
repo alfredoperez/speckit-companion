@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Pipeline Doctor",
   "branch": "599-pipeline-doctor",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "implementing",
   "history": [
     {
       "step": "specify",
@@ -67,6 +67,333 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-08-26T01:03:52.471Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T01:04:06.202Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:04:56.605Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:05:03.676Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:05:35.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:07:02.325Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:07:02.454Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:07:02.597Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:07:02.720Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:24.539Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:24.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:24.768Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:24.881Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:25.003Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:25.120Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:25.243Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:10:25.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:52.959Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.087Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.221Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.349Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.474Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.597Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.726Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.852Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:18:53.980Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:55.418Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:55.549Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:55.683Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:55.813Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:55.970Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:20:56.104Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:22:39.289Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:22:39.422Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:22:39.549Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:22:39.677Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:22:39.823Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T056",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:26:04.192Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T057",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:26:04.317Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T058",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:26:04.443Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T059",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:26:04.568Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T060",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:26:04.698Z"
     }
   ],
   "unattended": true,
@@ -76,7 +403,7 @@
       "capture-runtime"
     ]
   },
-  "last_action": "living specs loaded (companion-commands, capture-runtime)",
+  "last_action": "batch smoke",
   "coverage": {
     "FR-001": {
       "title": "The system MUST provide a read-only health check that can be run against any spec directory at any time and MUST NOT modify any file it inspects.",
@@ -141,7 +468,8 @@
         "T017",
         "T020",
         "T021"
-      ]
+      ],
+      "tests": "speckit-extension/tests/test_trace.py"
     },
     "FR-011": {
       "title": "A failed capture call MUST leave a trace entry carrying the reason it failed.",
@@ -337,6 +665,48 @@
       "tasks": [
         "T023"
       ]
+    },
+    "FR-041": {
+      "title": "The health check MUST report a specification that carries planning or tasking content — a task checklist, or a file-by-file breakdown — and name the evidence it found.",
+      "tasks": [
+        "T057"
+      ]
+    },
+    "FR-042": {
+      "title": "The health check MUST report a plan document that carries a task checklist as planning having done tasking work.",
+      "tasks": [
+        "T057"
+      ]
+    },
+    "FR-043": {
+      "title": "The health check MUST report a task list that carries substantial implementation code as tasking having done implementation work.",
+      "tasks": [
+        "T057"
+      ]
+    },
+    "FR-044": {
+      "title": "The health check MUST report the same task identifiers appearing in more than one artifact, naming the artifacts.",
+      "tasks": [
+        "T059"
+      ]
+    },
+    "FR-045": {
+      "title": "The health check MUST report source files committed while the run was still in a step before implement, naming the files and their commits.",
+      "tasks": [
+        "T059"
+      ]
+    },
+    "FR-046": {
+      "title": "The health check MUST report a step before implement that consumed a larger share of the run than implement itself, as a signal rather than as a defect.",
+      "tasks": [
+        "T060"
+      ]
+    },
+    "FR-047": {
+      "title": "The health check MUST NOT report a deliberately fast-tracked small change as bleed when its specification carries its approach inline and its plan is a pointer.",
+      "tasks": [
+        "T057"
+      ]
     }
   },
   "size": "oversized",
@@ -419,5 +789,302 @@
     "tasks": {
       "summary": "55 tasks across 11 phases — Setup, Foundational, one phase per user story (US1–US8), and Polish; every phase laid out as waves with explicit join lines, and all 40 requirements mapped to tasks."
     }
-  }
+  },
+  "currentTask": "T060",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the specs/*/.trace.jsonl ignore rule beside the existing events-journal rule",
+      "files": [
+        ".gitignore"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Created the doctor fixture directory with a README naming each fixture's one broken shape",
+      "files": [
+        "speckit-extension/tests/fixtures/doctor/README.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Built five record fixtures — dangling start, unjournaled tasks, burst journal, attribution anomaly, and the earliest-state case that must produce no finding",
+      "files": [
+        "speckit-extension/tests/fixtures/doctor/"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Implemented Finding and CheckStatus with severity ordering and the rule that a skipped check carries a reason and never renders as clean",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Implemented the TraceEvent shape — fixed field order, tracer-stamped clock, compact one-line serialization",
+      "files": [
+        "speckit-extension/scripts/trace.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Implemented the doctor CLI — flag surface, feature-dir resolution, always-exit-0, and per-check exception isolation that turns a crash into that check's skip reason",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Implemented the human and --json renderers with the summary computed from the check ledger rather than the findings list",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Wrote the record-audit tests over the committed fixtures, with the in-flight vantage injected so they stay deterministic",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Wrote the triage tests plus the records-disagree and records-consistent fixtures",
+      "files": [
+        "speckit-extension/tests/test_doctor.py",
+        "speckit-extension/tests/fixtures/doctor/"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Implemented the dangling-step check with an in-flight grace period so a live step is not mistaken for a stuck one",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Implemented the unjournaled-task check, reusing task_sync's marker parsing so no marker format is missed",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Implemented the burst-clustering check that reports batched journaling instead of treating packed timestamps as durations",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Implemented the attribution-anomaly check for both directions — an ai close on an extension-owned step and the mirror case",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Implemented the status-versus-display triage by re-deriving the viewer's step badges from history[] and comparing them against status",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Wired the record checks and triage into the doctor's ledger with lazy per-check imports, so a missing module is a named skip rather than a crash",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Wrote the tracer tests — one line per call, verbatim reasons, the size cap and its truncated marker, self-ignore idempotence, and that a tracer failure never propagates",
+      "files": [
+        "speckit-extension/tests/test_trace.py"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Implemented the tracer writer with a byte cap, newest-preserved rewrite, a truncated marker, and a total swallow of every internal failure",
+      "files": [
+        "speckit-extension/scripts/run_trace.py"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Implemented the self-ignore — a one-line .gitignore sibling written on first trace write, idempotent and skipped when a rule already covers the file",
+      "files": [
+        "speckit-extension/scripts/run_trace.py"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Implemented the tracer reader — counts unparseable lines, separates drift verdict lines from call events, and surfaces a truncated marker as a lower bound",
+      "files": [
+        "speckit-extension/scripts/run_trace.py"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Wrapped write-context main() so every invocation traces at exit, including the early returns, reusing each stderr message verbatim as the reason; unresolvable calls land in the repo-level unattributed log",
+      "files": [
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Traced every compute_drift call — inputs, verdict, and skips — so repeated drift verdicts can be compared over time",
+      "files": [
+        "speckit-extension/scripts/drift.py"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Implemented the trace-derived doctor section — failure counts with reasons, call volumes, per-file rewrite counts, and unattributed failures inside the spec's run window",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added --batch: the whole end-of-step volley through the existing additive writers in one read-modify-write, exit 2 on a malformed payload",
+      "files": [
+        "speckit-extension/scripts/capture.py",
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Added --close-task: append plus fold in one main-agent-only call, proven byte-equivalent to the two-call form, with --append and --materialize unchanged",
+      "files": [
+        "speckit-extension/scripts/task_sync.py",
+        "speckit-extension/scripts/write-context.py",
+        "speckit-extension/tests/test_capture_fields.py"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Wrote the drift-audit tests over real throwaway git repos — real, self-inflicted, suspect-baseline, unknown, and the false-claim case",
+      "files": [
+        "speckit-extension/tests/test_doctor_drift.py"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Invoked drift.py --json as ground truth and normalized its result into DriftFlag records, carrying every skip through as unknown with its reason",
+      "files": [
+        "speckit-extension/scripts/doctor_drift.py"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Implemented the commit-attribution walk — the commits since each capability's baseline that touched its flagged files, with sha and subject",
+      "files": [
+        "speckit-extension/scripts/doctor_drift.py"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Implemented the three classifiers in order — self-inflicted, suspect-baseline (non-ancestor or pure rename), real otherwise",
+      "files": [
+        "speckit-extension/scripts/doctor_drift.py"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Implemented false-claim detection — a recorded drift-clean claim contradicted by the recomputation is reported with both sides and their timestamps",
+      "files": [
+        "speckit-extension/scripts/doctor_drift.py"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Wired the drift audit into the doctor's ledger, reporting not-applicable where living specs are disabled",
+      "files": [
+        "speckit-extension/scripts/doctor.py",
+        "speckit-extension/scripts/doctor_drift.py"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Wrote the completion tests covering all four outcomes and asserting they never collapse into one another",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Implemented the completion check — resolves to completed, refused with the writer's own reason, never-arrived, or not-attempted",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Built the completion fixtures — refused, reported-success-but-never-landed, never-attempted, and the happy case",
+      "files": [
+        "speckit-extension/tests/fixtures/doctor/",
+        ".gitignore"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Wrote the template-fidelity tests — intact, flattened, joins stripped, single-story, and no task file",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Implemented the template-fidelity check against the generated shape, naming the offending headings and staying not-applicable without a task file",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T056": {
+      "status": "DONE",
+      "did": "Wrote the bleed tests — artifact shapes, duplication, early source commits, time share, and the fast-path case that must stay clean",
+      "files": [
+        "speckit-extension/tests/test_doctor_bleed.py"
+      ]
+    },
+    "T057": {
+      "status": "DONE",
+      "did": "Implemented the artifact-shape signals — plan or task content in spec.md, a task checklist in plan.md, implementation code in tasks.md — with the fast-path shape exempt",
+      "files": [
+        "speckit-extension/scripts/doctor_bleed.py"
+      ]
+    },
+    "T058": {
+      "status": "DONE",
+      "did": "Built the bleed fixtures — clean, spec-does-plan, spec-does-tasks, plan-does-tasks, tasks-does-code, and the fast-tracked shape",
+      "files": [
+        "speckit-extension/tests/fixtures/doctor/"
+      ]
+    },
+    "T059": {
+      "status": "DONE",
+      "did": "Implemented cross-artifact duplication and the early-source-commit signal, the latter from the commits inside each pre-implement step's recorded window",
+      "files": [
+        "speckit-extension/scripts/doctor_bleed.py"
+      ]
+    },
+    "T060": {
+      "status": "DONE",
+      "did": "Implemented the step time-share signal as a note and wired the bleed check into the doctor's ledger and --json output",
+      "files": [
+        "speckit-extension/scripts/doctor_bleed.py",
+        "speckit-extension/scripts/doctor.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "tracer smoke",
+      "result": "pass"
+    }
+  ]
 }

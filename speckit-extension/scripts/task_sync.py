@@ -400,3 +400,22 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
         file=sys.stderr,
     )
     return target
+
+
+def close_task(
+    feature_dir: Path, task_id: str, by: str,
+    did: str | None = None, files: list[str] | None = None,
+) -> Path | None:
+    """Append a task finish and fold it, in one call — the MAIN agent's task close.
+
+    Half of every capture call during implement is the main agent's own second
+    call for its own task. This collapses those two into one without removing the
+    split: a fanned-out worker must still append alone, because folding is a write
+    to the shared record and two folders is exactly the contention the split
+    exists to prevent.
+
+    Byte-equivalent to `--task … --append` followed by `--materialize`, and
+    idempotent for the same reason the fold is.
+    """
+    append_task_log(feature_dir, task_id, by, did, files)
+    return materialize_log(feature_dir, by, quiet=True)

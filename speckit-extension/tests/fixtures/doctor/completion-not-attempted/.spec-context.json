@@ -1,0 +1,39 @@
+{
+  "workflow": "companion",
+  "specName": "Completion Not Attempted",
+  "branch": "fixture",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T11:00:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-01T11:10:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-01T11:20:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-01T11:25:00Z"
+    }
+  ]
+}

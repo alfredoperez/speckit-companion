@@ -1,0 +1,24 @@
+{
+  "workflow": "companion",
+  "specName": "Unjournaled Tasks",
+  "branch": "fixture",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T11:00:00Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-01T11:03:00Z"
+    }
+  ]
+}

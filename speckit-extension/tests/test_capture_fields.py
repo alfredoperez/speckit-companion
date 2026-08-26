@@ -23,6 +23,8 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 wc = importlib.import_module("write-context")
+capture = importlib.import_module("capture")
+task_sync = importlib.import_module("task_sync")
 
 
 def _ctx(feature_dir: Path) -> dict:
@@ -228,3 +230,118 @@ class ContextCaptureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BatchCaptureTests(unittest.TestCase):
+    """`--batch`: one call, one read-modify-write, the same record as the volley."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        (self.dir / ".spec-context.json").write_text(
+            json.dumps({"workflow": "companion", "specName": "X", "branch": "b",
+                        "currentStep": "implement", "status": "implementing", "history": []}) + "\n",
+            encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def ctx(self):
+        return json.loads((self.dir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_the_batch_records_what_the_separate_calls_record(self):
+        doc = {
+            "verified": [{"what": "suite", "result": "pass"}],
+            "decisions": [{"decision": "chose A", "why": "simpler"}],
+            "concerns": [{"note": "flaky on CI", "step": "implement"}],
+            "expectations": ["no panel in this pass"],
+            "context": ["area: scripts"],
+            "coverage": [{"req": "FR-001", "tasks": ["T001"], "tests": ["t.py::x"]}],
+            "step_summary": {"step": "implement", "summary": "shipped"},
+            "last_action": "done",
+        }
+        target, landed = capture.apply_batch(self.dir, json.dumps(doc), "implement")
+        self.assertIsNotNone(target)
+        c = self.ctx()
+        self.assertEqual(len(c["verified"]), 1)
+        self.assertEqual(len(c["decisions"]), 1)
+        self.assertEqual(len(c["concerns"]), 1)
+        self.assertEqual(c["expectations"], ["no panel in this pass"])
+        self.assertEqual(c["context"], ["area: scripts"])
+        self.assertEqual(c["coverage"]["FR-001"]["tasks"], ["T001"])
+        self.assertEqual(c["step_summaries"]["implement"]["summary"], "shipped")
+        self.assertEqual(c["last_action"], "done")
+        self.assertEqual(len(landed), 8)
+
+    def test_re_running_the_same_batch_never_duplicates(self):
+        doc = {"verified": [{"what": "suite", "result": "pass"}],
+               "decisions": [{"decision": "chose A"}]}
+        capture.apply_batch(self.dir, json.dumps(doc), "implement")
+        capture.apply_batch(self.dir, json.dumps(doc), "implement")
+        c = self.ctx()
+        self.assertEqual(len(c["verified"]), 1)
+        self.assertEqual(len(c["decisions"]), 1)
+
+    def test_an_empty_batch_writes_nothing(self):
+        target, landed = capture.apply_batch(self.dir, "{}", "implement")
+        self.assertIsNone(target)
+        self.assertEqual(landed, [])
+
+    def test_a_malformed_batch_is_rejected_before_anything_is_written(self):
+        for bad in ('not json', '[]', '{"nope": 1}', '{"verified": "text"}',
+                    '{"coverage": [{"tasks": []}]}', '{"step_summary": []}'):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    capture._parsed_batch(bad)
+        self.assertNotIn("verified", self.ctx())
+
+
+class CloseTaskTests(unittest.TestCase):
+    """`--close-task`: append + fold in one call, for the main agent only."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        (self.dir / ".spec-context.json").write_text(
+            json.dumps({"workflow": "companion", "specName": "X", "branch": "b",
+                        "currentStep": "implement", "status": "implementing",
+                        "history": [{"step": "implement", "substep": None, "kind": "start",
+                                     "by": "extension", "at": "2026-08-01T11:00:00Z"}]}) + "\n",
+            encoding="utf-8")
+        (self.dir / "tasks.md").write_text(
+            "- [ ] **T001** First · a.py\n- [ ] **T002** Second · b.py\n", encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def ctx(self):
+        return json.loads((self.dir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_one_call_journals_the_finish_and_checks_the_box(self):
+        task_sync.close_task(self.dir, "T001", "ai", "did the thing", ["a.py"])
+        c = self.ctx()
+        self.assertTrue(any(e.get("task") == "T001" for e in c["history"]))
+        self.assertEqual(c["task_summaries"]["T001"]["did"], "did the thing")
+        self.assertIn("- [x] **T001**", (self.dir / "tasks.md").read_text(encoding="utf-8"))
+
+    def test_it_matches_what_append_then_materialize_produces(self):
+        task_sync.append_task_log(self.dir, "T001", "ai", "did the thing", ["a.py"])
+        task_sync.materialize_log(self.dir, "ai", quiet=True)
+        split = self.ctx()
+
+        self.tearDown()
+        self.setUp()
+        task_sync.close_task(self.dir, "T001", "ai", "did the thing", ["a.py"])
+        merged = self.ctx()
+
+        for c in (split, merged):
+            for e in c["history"]:
+                e.pop("at", None)
+        self.assertEqual(split["history"], merged["history"])
+        self.assertEqual(split["task_summaries"], merged["task_summaries"])
+
+    def test_closing_the_same_task_twice_never_double_counts(self):
+        task_sync.close_task(self.dir, "T001", "ai", "once", ["a.py"])
+        task_sync.close_task(self.dir, "T001", "ai", "once", ["a.py"])
+        finishes = [e for e in self.ctx()["history"] if e.get("task") == "T001"]
+        self.assertEqual(len(finishes), 1)

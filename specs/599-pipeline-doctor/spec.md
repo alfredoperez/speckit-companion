@@ -159,6 +159,27 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 
 ---
 
+### User Story 9 - Catch a step doing the next step's work (Priority: P2)
+
+Each step in the pipeline has a job, and the value of the pipeline comes from each one stopping where it stops. In practice a step bleeds: specify starts naming files and dependencies, plan starts writing a task checklist, tasks starts writing the implementation. Nobody notices, because every artifact still looks plausible on its own — the cost shows up later as duplicated work, a step that took three times as long as it should have, and two artifacts that now disagree. The health check reads the artifacts and the run's own timing and reports where one step did another's work.
+
+**Why this priority**: This is the pipeline's most expensive silent failure — it is what makes a run feel slow without any single step looking wrong. It is decidable from the artifacts already on disk, so like the rest of the doctor it works retroactively.
+
+**Independent Test**: Take a spec whose plan document contains a task checklist, run the health check, and confirm it reports plan as having done tasks' work, naming the evidence.
+
+**Acceptance Scenarios**:
+
+1. **Given** a specification that carries a task checklist or a file-by-file breakdown, **When** the health check runs, **Then** it reports the specification as having done planning or tasking work, and names what it found.
+2. **Given** a plan document that carries a task checklist, **When** the health check runs, **Then** it reports planning as having done tasking work.
+3. **Given** a task list that carries substantial implementation code rather than task descriptions, **When** the health check runs, **Then** it reports tasking as having done implementation work.
+4. **Given** the same task identifiers appearing in two different artifacts, **When** the health check runs, **Then** the duplication is reported with the artifacts named, because two copies of one list will diverge.
+5. **Given** source files committed while the run was still in a step before implement, **When** the health check runs, **Then** those files and their commits are reported as implementation done early.
+6. **Given** a step before implement that consumed a larger share of the run than implement itself, **When** the health check runs, **Then** the disproportion is reported as a signal worth looking at, not as a defect in itself.
+7. **Given** a small change deliberately fast-tracked, where the specification legitimately carries its approach inline and the plan is a pointer, **When** the health check runs, **Then** none of that is reported as bleed.
+8. **Given** artifacts that each stay within their own step, **When** the health check runs, **Then** the check reports clean.
+
+---
+
 ### Edge Cases
 
 - A spec directory with no run record at all — the health check must report which checks it could not run, not a clean verdict.
@@ -171,6 +192,9 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 - A project that has never enabled living specs — the drift audit reports itself as not applicable rather than as clean or as failing.
 - The trace file and the run record disagreeing about the same event — the report must state the disagreement rather than pick a winner silently.
 - A task file that legitimately contains only one user story — a single phase must not be mistaken for a flattened file.
+- A specification for a change deliberately fast-tracked as small — its inline approach section and pointer plan are correct, not bleed, and must not be flagged.
+- A specification that pins exact identifiers the request supplied — those are requirements, not implementation detail leaking in.
+- A run whose steps were executed out of order or re-run — step time shares must be computed from the recorded boundaries, not assumed sequential.
 
 ## Requirements
 
@@ -217,6 +241,14 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 - **FR-039**: The closing of a task SHOULD be reducible to a single call rather than the current pair of calls, without changing what is recorded.
 - **FR-040**: The end-of-step capture calls SHOULD be reducible to a single batched call rather than a volley of separate calls, without changing what is recorded.
 
+- **FR-041**: The health check MUST report a specification that carries planning or tasking content — a task checklist, or a file-by-file breakdown — and name the evidence it found.
+- **FR-042**: The health check MUST report a plan document that carries a task checklist as planning having done tasking work.
+- **FR-043**: The health check MUST report a task list that carries substantial implementation code as tasking having done implementation work.
+- **FR-044**: The health check MUST report the same task identifiers appearing in more than one artifact, naming the artifacts.
+- **FR-045**: The health check MUST report source files committed while the run was still in a step before implement, naming the files and their commits.
+- **FR-046**: The health check MUST report a step before implement that consumed a larger share of the run than implement itself, as a signal rather than as a defect.
+- **FR-047**: The health check MUST NOT report a deliberately fast-tracked small change as bleed when its specification carries its approach inline and its plan is a pointer.
+
 ### Key Entities
 
 - **Run record** — the durable per-spec account of a run: which step it is on, its status, and an append-only history of step and task events with their authors and timestamps. Already exists; this feature reads it and never rewrites it.
@@ -225,6 +257,7 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 - **Drift flag** — a per-capability verdict pairing what was recomputed with how it is classified (real, self-inflicted, suspect baseline, unknown) and the files and commits behind it.
 - **Debug switch** — a project-level setting whose only effect is which version of the command bodies gets rendered.
 - **Harness variant** — a comparison folder configuration, including the oversized variant and the failure-injection fixture, whose scoring now includes the health check's verdict.
+- **Bleed signal** — one piece of evidence that a step did another step's work: which step, which step's work it did, what was found (a task checklist, a code block, a duplicated identifier, an early source commit, a disproportionate time share), and where.
 
 ## Success Criteria
 
@@ -244,6 +277,7 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 - **SC-012**: The deep audit produces causes and a waste figure on a run recorded by a transcript-keeping provider, and exits successfully with a single notice on providers without transcripts.
 - **SC-013**: A harness run over the oversized variant surfaces batched task journaling whenever journaling was in fact batched, with no false positive on a variant that journaled per task.
 - **SC-014**: Users who never run the health check and never turn debug on observe no change in capture, drift, or completion behavior.
+- **SC-015**: For each of the five bleed shapes — a specification doing plan work, a plan doing task work, a task list doing implementation work, an identifier duplicated across artifacts, and source committed before implement — the health check reports it in 100% of the fixture cases, with zero findings on a clean run and zero on a deliberately fast-tracked small change.
 
 ## Assumptions
 
@@ -255,6 +289,8 @@ The measurement harness runs the tracer in its own comparison folders and folds 
 - Debug mode's instrumentation is delivered by re-rendering command bodies through the existing assembly pipeline; the switch does not introduce a second way to change command text.
 - Both quick wins (a single-call task close, a single batched end-of-step capture) preserve exactly what is recorded today; they change the number of calls, not the record.
 - The oversized harness variant is a new variant alongside the existing ones, not a replacement for any of them.
+- Step bleed is reported, never blocked. A run that bleeds still produces working software; the point is to make the cost visible, not to fail the pipeline over it.
+- The time-share signal is a note rather than a problem, because a genuinely hard planning phase is a legitimate reason for a long plan step. It earns attention only alongside the artifact evidence.
 
 ## Verbatim Constraints
 

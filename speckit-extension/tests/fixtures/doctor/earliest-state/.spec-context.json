@@ -1,0 +1,16 @@
+{
+  "workflow": "companion",
+  "specName": "Earliest State",
+  "branch": "fixture",
+  "currentStep": "specify",
+  "status": "specifying",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-01T10:00:00Z"
+    }
+  ]
+}

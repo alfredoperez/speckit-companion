@@ -11,12 +11,12 @@ All Python is stdlib-only, matching every sibling script. Tests join the existin
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T001** [P] Add `specs/*/.trace.jsonl` to the repository ignore rules, beside the existing `.spec-context.events.jsonl` rule · `.gitignore`
-- [ ] **T002** [P] Create the doctor fixture directory with a README naming each fixture's shape (broken record, false claim, flattened tasks, stuck completion, unwritable context) · `speckit-extension/tests/fixtures/doctor/README.md`
+- [x] **T001** [P] Add `specs/*/.trace.jsonl` to the repository ignore rules, beside the existing `.spec-context.events.jsonl` rule · `.gitignore`
+- [x] **T002** [P] Create the doctor fixture directory with a README naming each fixture's shape (broken record, false claim, flattened tasks, stuck completion, unwritable context) · `speckit-extension/tests/fixtures/doctor/README.md`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T003** Build the four doctor fixtures as committed spec directories the tests read — a dangling-start record, a checked-task-without-journal record, a burst-journaled record, and an attribution-anomaly record · `speckit-extension/tests/fixtures/doctor/`
+- [x] **T003** Build the four doctor fixtures as committed spec directories the tests read — a dangling-start record, a checked-task-without-journal record, a burst-journaled record, and an attribution-anomaly record · `speckit-extension/tests/fixtures/doctor/`
 
 ---
 
@@ -26,13 +26,13 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T004** [P] Implement `Finding` and `CheckStatus` per `data-model.md` — construction, severity ordering, and the rule that a skipped check carries a reason and is never rendered as clean · `speckit-extension/scripts/doctor.py`
-- [ ] **T005** [P] Implement the trace line shape (`TraceEvent`) — field set, ISO-8601 stamping, and JSON serialization per `contracts/trace-file.md` · `speckit-extension/scripts/trace.py`
+- [x] **T004** [P] Implement `Finding` and `CheckStatus` per `data-model.md` — construction, severity ordering, and the rule that a skipped check carries a reason and is never rendered as clean · `speckit-extension/scripts/doctor.py`
+- [x] **T005** [P] Implement the trace line shape (`TraceEvent`) — field set, ISO-8601 stamping, and JSON serialization per `contracts/trace-file.md` · `speckit-extension/scripts/trace.py`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T006** Implement the doctor CLI surface — `--feature-dir`, `--chat`, `--json`, `--all`, feature-dir resolution reusing `spec_context.resolve_feature_dir`, always-exit-0, and per-check exception isolation (a crashing check becomes a skip with its message as the reason) · `speckit-extension/scripts/doctor.py`
-- [ ] **T007** Implement the human and `--json` renderers exactly as `contracts/doctor-cli.md` specifies, with the summary computed from the check ledger rather than the findings list · `speckit-extension/scripts/doctor.py`
+- [x] **T006** Implement the doctor CLI surface — `--feature-dir`, `--chat`, `--json`, `--all`, feature-dir resolution reusing `spec_context.resolve_feature_dir`, always-exit-0, and per-check exception isolation (a crashing check becomes a skip with its message as the reason) · `speckit-extension/scripts/doctor.py`
+- [x] **T007** Implement the human and `--json` renderers exactly as `contracts/doctor-cli.md` specifies, with the summary computed from the check ledger rather than the findings list · `speckit-extension/scripts/doctor.py`
 
 ---
 
@@ -43,22 +43,22 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T008** Write the failing record-audit tests against the Phase 1 fixtures — dangling start, checked-task-without-journal, burst clustering, attribution anomaly, and the empty/earliest-state case that must NOT be a finding · `speckit-extension/tests/test_doctor.py`
-- [ ] **T009** Write the failing triage tests — a records-disagree fixture and a records-consistent fixture, each asserting the exact verdict wording · `speckit-extension/tests/test_doctor.py`
+- [x] **T008** Write the failing record-audit tests against the Phase 1 fixtures — dangling start, checked-task-without-journal, burst clustering, attribution anomaly, and the empty/earliest-state case that must NOT be a finding · `speckit-extension/tests/test_doctor.py`
+- [x] **T009** Write the failing triage tests — a records-disagree fixture and a records-consistent fixture, each asserting the exact verdict wording · `speckit-extension/tests/test_doctor.py`
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T010** [P] [US1] Implement the dangling-step check — a step-level start in `history[]` with no matching complete, excluding a step that is genuinely in flight · `speckit-extension/scripts/doctor_checks.py`
-- [ ] **T011** [P] [US1] Implement the unjournaled-task check — `- [x]` markers in `tasks.md` with no matching per-task complete in the record, reusing `task_sync`'s marker parsing so no marker format is missed · `speckit-extension/scripts/doctor_checks.py`
-- [ ] **T012** [P] [US1] Implement the burst-clustering check — task finishes packed inside a short window reported as batched journaling rather than as measured durations · `speckit-extension/scripts/doctor_checks.py`
-- [ ] **T013** [P] [US1] Implement the attribution-anomaly check — a step closed by an author the pipeline reserves for the other side (an `ai` complete on specify/plan/tasks/implement, or an `extension` complete on clarify/analyze) · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T010** [P] [US1] Implement the dangling-step check — a step-level start in `history[]` with no matching complete, excluding a step that is genuinely in flight · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T011** [P] [US1] Implement the unjournaled-task check — `- [x]` markers in `tasks.md` with no matching per-task complete in the record, reusing `task_sync`'s marker parsing so no marker format is missed · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T012** [P] [US1] Implement the burst-clustering check — task finishes packed inside a short window reported as batched journaling rather than as measured durations · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T013** [P] [US1] Implement the attribution-anomaly check — a step closed by an author the pipeline reserves for the other side (an `ai` complete on specify/plan/tasks/implement, or an `extension` complete on clarify/analyze) · `speckit-extension/scripts/doctor_checks.py`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T014** [US1] Implement the status-versus-display triage — run the record-driven reading (`status-context.py`) against the file-driven reading (`derive-from-files.py`) plus a Python re-derivation of the viewer's step badges from `history[]`, and emit "records disagree" or "records are consistent" · `speckit-extension/scripts/doctor_checks.py`
-- [ ] **T015** [US1] Wire the record checks and the triage into the doctor's check ledger, with a corrupt or absent record reported as a named skip rather than a crash · `speckit-extension/scripts/doctor.py`
+- [x] **T014** [US1] Implement the status-versus-display triage — run the record-driven reading (`status-context.py`) against the file-driven reading (`derive-from-files.py`) plus a Python re-derivation of the viewer's step badges from `history[]`, and emit "records disagree" or "records are consistent" · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T015** [US1] Wire the record checks and the triage into the doctor's check ledger, with a corrupt or absent record reported as a named skip rather than a crash · `speckit-extension/scripts/doctor.py`
 
 **Checkpoint**: The doctor runs against any existing spec directory and returns an actionable verdict. US1 is independently functional and testable.
 
@@ -71,31 +71,31 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T016** Write the failing tracer tests — one line per call, the reason captured verbatim on a declined call, the size cap and its `truncated` marker, self-ignore idempotence, and the guarantee that a tracer failure never propagates · `speckit-extension/tests/test_trace.py`
+- [x] **T016** Write the failing tracer tests — one line per call, the reason captured verbatim on a declined call, the size cap and its `truncated` marker, self-ignore idempotence, and the guarantee that a tracer failure never propagates · `speckit-extension/tests/test_trace.py`
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T017** [P] [US2] Implement the tracer writer — lazy create, single append, byte cap with newest-preserved rewrite plus the `truncated` marker, and a total swallow of every internal failure · `speckit-extension/scripts/trace.py`
-- [ ] **T018** [P] [US2] Implement the self-ignore — write `specs/NNN/.gitignore` containing `.trace.jsonl` on first trace write, idempotent and skipped when an existing rule already covers it · `speckit-extension/scripts/trace.py`
+- [x] **T017** [P] [US2] Implement the tracer writer — lazy create, single append, byte cap with newest-preserved rewrite plus the `truncated` marker, and a total swallow of every internal failure · `speckit-extension/scripts/trace.py`
+- [x] **T018** [P] [US2] Implement the self-ignore — write `specs/NNN/.gitignore` containing `.trace.jsonl` on first trace write, idempotent and skipped when an existing rule already covers it · `speckit-extension/scripts/trace.py`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T019** [US2] Implement the tracer reader — parse lines, count and report unparseable ones, and surface a `truncated` marker as "at least N" rather than an exact total · `speckit-extension/scripts/trace.py`
+- [x] **T019** [US2] Implement the tracer reader — parse lines, count and report unparseable ones, and surface a `truncated` marker as "at least N" rather than an exact total · `speckit-extension/scripts/trace.py`
 
 **⟶ Wait for T019, then:**
 
 **Wave 3 — independent (different files):**
 
-- [ ] **T020** [P] [US2] Wrap `main()` so every invocation traces at exit — including each early return (unresolvable feature dir, refused lifecycle key, `--feature-dir`/`--tasks-file` mismatch), classifying the op and reusing the stderr message verbatim as the reason · `speckit-extension/scripts/write-context.py`
-- [ ] **T021** [P] [US2] Trace each `compute_drift` call — its inputs, its per-capability verdict, and its skips — so repeated verdicts can be compared over time · `speckit-extension/scripts/drift.py`
+- [x] **T020** [P] [US2] Wrap `main()` so every invocation traces at exit — including each early return (unresolvable feature dir, refused lifecycle key, `--feature-dir`/`--tasks-file` mismatch), classifying the op and reusing the stderr message verbatim as the reason · `speckit-extension/scripts/write-context.py`
+- [x] **T021** [P] [US2] Trace each `compute_drift` call — its inputs, its per-capability verdict, and its skips — so repeated verdicts can be compared over time · `speckit-extension/scripts/drift.py`
 
 **⟶ Wait for Wave 3 to finish, then:**
 
-- [ ] **T022** [US2] Implement the trace-derived doctor section — call counts, failure counts with reasons, payload and loaded-context sizes, and per-file rewrite counts; a missing trace is a named skip, not a clean verdict · `speckit-extension/scripts/doctor_checks.py`
-- [ ] **T023** [US2] Add `--batch` per `contracts/capture-cli-additions.md` — one JSON document through the existing additive-capture writers in a single read-modify-write, exit 2 on a malformed payload · `speckit-extension/scripts/capture.py`
-- [ ] **T024** [US2] Add `--close-task` per `contracts/capture-cli-additions.md` — append plus fold in one main-agent-only call, leaving `--append` and `--materialize` unchanged, with the worker restriction stated in the help text · `speckit-extension/scripts/task_sync.py`
+- [x] **T022** [US2] Implement the trace-derived doctor section — call counts, failure counts with reasons, payload and loaded-context sizes, and per-file rewrite counts; a missing trace is a named skip, not a clean verdict · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T023** [US2] Add `--batch` per `contracts/capture-cli-additions.md` — one JSON document through the existing additive-capture writers in a single read-modify-write, exit 2 on a malformed payload · `speckit-extension/scripts/capture.py`
+- [x] **T024** [US2] Add `--close-task` per `contracts/capture-cli-additions.md` — append plus fold in one main-agent-only call, leaving `--append` and `--materialize` unchanged, with the worker restriction stated in the help text · `speckit-extension/scripts/task_sync.py`
 
 **Checkpoint**: A failed capture call is visible in the doctor's report with its reason, and the two quick wins are provably recording what the multi-call forms recorded. US2 is independently functional and testable.
 
@@ -108,20 +108,20 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T025** Write the failing drift-audit tests — a real-drift case, a self-inflicted case, a suspect-baseline case, an unknown-baseline case, and a false-claim case where a recorded drift-clean claim contradicts recomputation · `speckit-extension/tests/test_doctor_drift.py`
+- [x] **T025** Write the failing drift-audit tests — a real-drift case, a self-inflicted case, a suspect-baseline case, an unknown-baseline case, and a false-claim case where a recorded drift-clean claim contradicts recomputation · `speckit-extension/tests/test_doctor_drift.py`
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T026** [P] [US3] Invoke `drift.py --json` as ground truth and normalize its result into `DriftFlag` records, carrying every skip through as `unknown` with its reason · `speckit-extension/scripts/doctor_drift.py`
-- [ ] **T027** [P] [US3] Implement the commit-attribution walk — for each flagged file, the commits since the capability's baseline that touched it, with sha and subject · `speckit-extension/scripts/doctor_drift.py`
+- [x] **T026** [P] [US3] Invoke `drift.py --json` as ground truth and normalize its result into `DriftFlag` records, carrying every skip through as `unknown` with its reason · `speckit-extension/scripts/doctor_drift.py`
+- [x] **T027** [P] [US3] Implement the commit-attribution walk — for each flagged file, the commits since the capability's baseline that touched it, with sha and subject · `speckit-extension/scripts/doctor_drift.py`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T028** [US3] Implement the three classifiers in order — self-inflicted (every changed file is a companion bookkeeping artifact or the capability's own living-spec documents), suspect-baseline (baseline not an ancestor of `HEAD`, or a git-followable rename), real otherwise · `speckit-extension/scripts/doctor_drift.py`
-- [ ] **T029** [US3] Implement false-claim detection — compare the recomputed verdict against `verified[]` claims and against trace-recorded drift verdicts, reporting a contradiction with both sides and their timestamps · `speckit-extension/scripts/doctor_drift.py`
-- [ ] **T030** [US3] Wire the drift audit into the doctor's ledger, reporting "not applicable" where living specs are not enabled · `speckit-extension/scripts/doctor.py`
+- [x] **T028** [US3] Implement the three classifiers in order — self-inflicted (every changed file is a companion bookkeeping artifact or the capability's own living-spec documents), suspect-baseline (baseline not an ancestor of `HEAD`, or a git-followable rename), real otherwise · `speckit-extension/scripts/doctor_drift.py`
+- [x] **T029** [US3] Implement false-claim detection — compare the recomputed verdict against `verified[]` claims and against trace-recorded drift verdicts, reporting a contradiction with both sides and their timestamps · `speckit-extension/scripts/doctor_drift.py`
+- [x] **T030** [US3] Wire the drift audit into the doctor's ledger, reporting "not applicable" where living specs are not enabled · `speckit-extension/scripts/doctor.py`
 
 **Checkpoint**: Every drift warning the extension shows can be judged in under a minute from the doctor's output. US3 is independently functional and testable.
 
@@ -134,15 +134,15 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T031** Write the failing completion tests — never-arrived, refused-with-reason, display-disagrees, and not-attempted, each asserting the four outcomes stay distinct · `speckit-extension/tests/test_doctor.py`
+- [x] **T031** Write the failing completion tests — never-arrived, refused-with-reason, display-disagrees, and not-attempted, each asserting the four outcomes stay distinct · `speckit-extension/tests/test_doctor.py`
 
 ### Implementation
 
-- [ ] **T032** [US4] Implement the completion check — read completion attempts from `history[]` and the trace, then resolve to exactly one of `completed`, `never-arrived`, `refused`, `display-disagrees`, or `not-attempted`, carrying the writer's refusal message as the reason · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T032** [US4] Implement the completion check — read completion attempts from `history[]` and the trace, then resolve to exactly one of `completed`, `never-arrived`, `refused`, `display-disagrees`, or `not-attempted`, carrying the writer's refusal message as the reason · `speckit-extension/scripts/doctor_checks.py`
 
 **⟶ Wait for T032, then:**
 
-- [ ] **T033** [US4] Build the stuck-completion fixtures — a spec directory with no `.specify/feature.json` and one with an unwritable context file — and assert the doctor states the cause for each · `speckit-extension/tests/fixtures/doctor/`
+- [x] **T033** [US4] Build the stuck-completion fixtures — a spec directory with no `.specify/feature.json` and one with an unwritable context file — and assert the doctor states the cause for each · `speckit-extension/tests/fixtures/doctor/`
 
 **Checkpoint**: Every completion failure the fixtures reproduce yields a stated reason. US4 is independently functional and testable.
 
@@ -155,11 +155,11 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ### Tests
 
-- [ ] **T034** Write the failing template-fidelity tests — an intact file, a flattened file, a file with its join lines stripped, a single-user-story file that must NOT be flagged, and a spec with no task file at all · `speckit-extension/tests/test_doctor.py`
+- [x] **T034** Write the failing template-fidelity tests — an intact file, a flattened file, a file with its join lines stripped, a single-user-story file that must NOT be flagged, and a spec with no task file at all · `speckit-extension/tests/test_doctor.py`
 
 ### Implementation
 
-- [ ] **T035** [US5] Implement the template-fidelity check against the generated shape in `speckit-extension/nodes/tasks/tasks-doc.md` — user-story phases containing waves, `⟶ Wait` join lines and checkpoints intact — naming the offending headings on a violation and reporting "not applicable" when there is no task file · `speckit-extension/scripts/doctor_checks.py`
+- [x] **T035** [US5] Implement the template-fidelity check against the generated shape in `speckit-extension/nodes/tasks/tasks-doc.md` — user-story phases containing waves, `⟶ Wait` join lines and checkpoints intact — naming the offending headings on a violation and reporting "not applicable" when there is no task file · `speckit-extension/scripts/doctor_checks.py`
 
 **Checkpoint**: A restructured task file is flagged with its offending headings named. US5 is independently functional and testable.
 
@@ -236,6 +236,31 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ---
 
+## Phase 10b: User Story 9 — Catch a step doing the next step's work (P2)
+
+**Goal**: Report where one pipeline step did another's work, from the artifacts and the run's own timing.
+**Independent Test**: Take a spec whose plan document carries a task checklist, run the health check, and confirm it reports plan as having done tasks' work with the evidence named.
+
+### Tests
+
+- [x] **T056** Write the failing bleed tests — a spec carrying a task checklist, a plan carrying one, a task list carrying implementation code, an identifier duplicated across artifacts, source committed before implement, a clean run, and a fast-tracked small change that must stay clean · `speckit-extension/tests/test_doctor_bleed.py`
+
+### Implementation
+
+**Wave 1 — independent (different files):**
+
+- [x] **T057** [P] [US9] Implement the artifact-shape signals — planning or tasking content in `spec.md`, a task checklist in `plan.md`, substantial implementation code in `tasks.md` — with the fast-path shape explicitly exempt · `speckit-extension/scripts/doctor_bleed.py`
+- [x] **T058** [P] [US9] Build the bleed fixtures — spec-does-plan, plan-does-tasks, tasks-does-code, duplicated identifiers, a clean run, and a fast-tracked small change · `speckit-extension/tests/fixtures/doctor/`
+
+**⟶ Wait for Wave 1 to finish, then:**
+
+- [x] **T059** [US9] Implement the cross-artifact duplication signal and the early-source-commit signal, the latter from the commits inside each pre-implement step's recorded window · `speckit-extension/scripts/doctor_bleed.py`
+- [x] **T060** [US9] Implement the step time-share signal as a note, and wire the whole check into the doctor's ledger and its `--json` output · `speckit-extension/scripts/doctor_bleed.py`, `speckit-extension/scripts/doctor.py`
+
+**Checkpoint**: A run where one step did another's work is reported with named evidence. US9 is independently functional and testable.
+
+---
+
 ## Phase 11: Polish
 
 **Wave 1 — independent (different files):**
@@ -254,7 +279,7 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 
 ## Dependencies & Execution Order
 
-**Phase order**: Setup → Foundational → US1 → US2 → US3 → US4 → US5 → US6 → US7 → US8 → Polish. Phases 5 through 9 (US3–US7) depend only on Foundational and US1, so they are independent of each other; the listed order is priority, not a hard chain.
+**Phase order**: Setup → Foundational → US1 → US2 → US3 → US4 → US5 → US6 → US7 → US8 → US9 → Polish. Phases 5 through 9 (US3–US7) depend only on Foundational and US1, so they are independent of each other; the listed order is priority, not a hard chain.
 
 | Phase | Waves |
 |---|---|
@@ -268,6 +293,7 @@ The report shapes and the honesty ledger are shared by every check, so nothing s
 | 8 US6 | test (T036) → W1 (T037, T038) → W2 (T039, T040) |
 | 9 US7 | test (T041) → W1 (T042, T043) → W2 (T044, T045) |
 | 10 US8 | W1 (T046, T047) → W2 (T048, T049) |
+| 10b US9 | test (T056) → W1 (T057, T058) → W2 (T059, T060) |
 | 11 Polish | W1 (T050, T051, T052) → W2 (T053, T054) → T055 |
 
-**Hard blocks**: T022 needs the tracer reader (T019) and both instrumentation points (T020, T021). T028 and T029 need the normalized flags and the commit walk (T026, T027). T048 needs the doctor's `--json` output to be stable, so all of Phases 3–9 land first. T055 runs last, after every other task.
+**Hard blocks**: T022 needs the tracer reader (T019) and both instrumentation points (T020, T021). T028 and T029 need the normalized flags and the commit walk (T026, T027). T048 needs the doctor's `--json` output to be stable, so all of Phases 3–9 land first. T059 and T060 need the artifact signals and fixtures from T057 and T058. T055 runs last, after every other task.
