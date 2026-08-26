@@ -1,0 +1,673 @@
+{
+  "workflow": "companion",
+  "specName": "loud malformed config",
+  "branch": "602-loud-malformed-config",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T11:32:15.814Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T11:33:51.064Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T11:34:05.696Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:35:15.249Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:36:23.777Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:36:23.864Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T11:36:39.111Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T11:36:51.549Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:37:40.894Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:37:40.980Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T11:37:49.048Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T11:38:00.894Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:38:38.117Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:38:58.641Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:34.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:34.309Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:34.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:34.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:34.475Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:39:58.526Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:40:29.375Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:40:29.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:40:29.488Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:40:29.542Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:41:01.051Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:41:01.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:42:29.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:43:17.035Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:43:17.104Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:43:17.170Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:43:44.486Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:43:44.554Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T11:46:39.090Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T11:46:39.179Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime"
+    ],
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "last_action": "all 21 tasks done — 714 Python tests, 1942 TypeScript tests, every gate green, doctor 0 problems",
+  "telemetryInstanceId": "a57c7deb-6b7c-41d3-8a47-0892e21a2061",
+  "coverage": {
+    "FR-001": {
+      "title": "The config reader rejects, rather than partially accepts, a file using unsupported YAML",
+      "tasks": [
+        "T002",
+        "T008",
+        "T013",
+        "T014",
+        "T015"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests"
+      ]
+    },
+    "FR-002": {
+      "title": "A rejected config surfaces as one malformed warning and the caller gets shipped defaults",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_an_anchored_config_is_reported_as_malformed"
+      ]
+    },
+    "FR-003": {
+      "title": "A rejection names the line where the unsupported syntax appears",
+      "tasks": [
+        "T001",
+        "T007"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_the_rejection_names_the_line"
+      ]
+    },
+    "FR-004": {
+      "title": "An anchor declaration is rejected, whether or not anything follows it",
+      "tasks": [
+        "T003",
+        "T005",
+        "T008"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_an_anchor_on_the_last_line_is_still_rejected"
+      ]
+    },
+    "FR-005": {
+      "title": "An alias reference is rejected",
+      "tasks": [
+        "T006",
+        "T008"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_a_bare_alias_in_a_value_position_is_rejected"
+      ]
+    },
+    "FR-006": {
+      "title": "Indentation written with tab characters is rejected",
+      "tasks": [
+        "T009",
+        "T013"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_tab_indentation_is_rejected_not_collapsed"
+      ]
+    },
+    "FR-007": {
+      "title": "A value written as a block scalar is rejected",
+      "tasks": [
+        "T010",
+        "T014"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_a_block_scalar_value_is_rejected",
+        "test_config.py::UnsupportedSyntaxTests::test_a_folded_scalar_with_a_chomping_marker_is_rejected"
+      ]
+    },
+    "FR-008": {
+      "title": "A file the reader does not read to the end is rejected",
+      "tasks": [
+        "T011",
+        "T012",
+        "T015"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_a_file_the_parser_stops_short_of_is_rejected",
+        "test_config.py::UnsupportedSyntaxTests::test_a_document_separator_is_rejected"
+      ]
+    },
+    "FR-009": {
+      "title": "No file accepted today is rejected, and every such file parses identically",
+      "tasks": [
+        "T017",
+        "T021"
+      ],
+      "tests": [
+        "test_config.py::NothingAcceptedTodayIsNarrowedTests"
+      ]
+    },
+    "FR-010": {
+      "title": "An unsupported token inside a comment or a quoted value does not cause a rejection",
+      "tasks": [
+        "T018"
+      ],
+      "tests": [
+        "test_config.py::NothingAcceptedTodayIsNarrowedTests::test_a_marker_inside_a_comment_or_a_quoted_value_is_not_a_rejection"
+      ]
+    },
+    "FR-011": {
+      "title": "This project's own companion config still parses cleanly and resolves the same hooks",
+      "tasks": [
+        "T016"
+      ],
+      "tests": [
+        "test_config.py::NothingAcceptedTodayIsNarrowedTests::test_this_projects_own_config_still_resolves_every_hook"
+      ]
+    },
+    "FR-012": {
+      "title": "A reported failure can never fail the host command",
+      "tasks": [
+        "T003",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "test_config.py::UnsupportedSyntaxTests::test_an_anchored_config_is_reported_as_malformed"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 13,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "area: speckit-extension/scripts/companion_config.py (constrained YAML reader)",
+    "constraint: a malformed config must never fail the host command — degrade to shipped defaults plus one warning",
+    "constraint: must not narrow what parses cleanly today; the repo's own .specify/companion.yml is the live regression fixture"
+  ],
+  "intent": "Make a companion.yml the constrained reader cannot handle fail loudly with the documented malformed warning, instead of returning a silently truncated config.",
+  "expectations": [
+    "Do not implement YAML anchor/alias support",
+    "Do not narrow what the reader accepts today",
+    "Do not change any behavior outside the config reader"
+  ],
+  "approach": "Teach the constrained YAML reader to recognise the four unsupported shapes (anchor, alias, tab indentation, block scalar) with a per-line guard, and add a general check that the parser read the file to its last line. Every one raises, which the loader's existing failure path turns into the documented malformed warning plus shipped defaults. The checks look only at the first token of a key or an unquoted value, so nothing that parses today is narrowed.",
+  "decisions": [
+    {
+      "decision": "Detect the unsupported syntax and raise, rather than implement anchor support",
+      "why": "The failure table already reports an unreadable file correctly; the reader just never noticed. Detection is a few line-shape checks against a substantially larger reader.",
+      "rejected": "Implementing real anchors, aliases and merge keys — a hook config gains almost nothing from reuse syntax."
+    },
+    {
+      "decision": "Add a general check that the parser reached the last line, on top of the named-token checks",
+      "why": "A cursor that stops short is the mechanism behind every silent truncation, so checking it converts the whole class — including shapes nobody has hit yet — into a loud failure.",
+      "rejected": "Named-token detection alone, which only patches the four spellings we enumerated."
+    },
+    {
+      "decision": "Anchor the token checks to the first token of a key or an unquoted value",
+      "why": "Keeps the change from narrowing: shell commands with && , quoted globs with * and redirects with > must keep parsing exactly as they do now.",
+      "rejected": "Scanning the whole line for the marker characters, which would break the two things a hook config is most full of."
+    },
+    {
+      "decision": "Examine only the first token of a key or an unquoted value",
+      "why": "A marker later in a value is ordinary text — shell commands with &&, redirects with >, quoted globs with * must all keep parsing exactly as before.",
+      "rejected": "Scanning the whole line for the marker characters."
+    },
+    {
+      "decision": "Reject the whole file rather than apply the readable part",
+      "why": "A partly applied config is the defect: the author reads their own file and believes all of it is live.",
+      "rejected": "Applying what parsed and warning about the rest."
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan to make an unreadable companion.yml raise so the existing malformed path reports it, with a completeness backstop covering the whole silent-truncation class.",
+      "key_finding": "The anchor is a symptom: the reader unwinds and returns whatever it collected whenever its cursor stops advancing, so the load-bearing fix is checking that the parser reached the last line."
+    },
+    "tasks": {
+      "summary": "21 tasks across 6 phases — foundational line identity and one guard, then a story per failure shape, a no-narrowing proof story, and polish."
+    },
+    "implement": {
+      "summary": "The config reader now rejects anchors, aliases, tab indentation and block scalars, and any file it does not read to the end, so an unreadable companion.yml degrades to shipped defaults plus one line-numbered warning instead of a silent partial parse."
+    }
+  },
+  "currentTask": "T021",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Carry each retained line's original file number alongside its text so a rejection can name the line the user sees",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Add the single line-shape guard the reader consults for every retained line, raising a line-numbered rejection",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Add a test whose fixture is the issue's reproduction verbatim, asserting shipped defaults and one malformed warning",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Add a test that the anchored fixture applies nothing at all — no hook survives from above the anchor",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Add a test that an anchor on the file's last line is still rejected",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Add a test that a bare alias in a value position is rejected",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Add a test that the reported reason names the line number, counting blank and comment lines",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Reject a key or unquoted value whose first token begins with an anchor or alias marker",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Add a test that a tab-indented config is rejected rather than collapsed to the top level",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Add tests that a literal block scalar and a folded scalar with a chomping marker are both rejected",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Add a test pinning the already-present rejection of a document separator",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Add a test that a file the parser stops short of finishing is rejected, naming the first unread line",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Reject a tab character in a line's leading whitespace",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Reject an unquoted value that is exactly a block-scalar header, chomping marker and indent digit included",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Reject any file the parser did not read to its last line, naming that line — no partial config can be returned",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Add a regression test loading this repo's own companion.yml — no warnings, 6 implement hooks in order, 1 each for specify/plan/tasks",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Add tests that a shell command joining two parts, a redirect, and a quoted glob still parse as ordinary values",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Add a test that a marker inside a comment or a quoted value does not cause a rejection",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Add the user-facing Unreleased entry in release-notes voice",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Confirmed the failure-table docstring's claim that anything outside the subset raises is now actually enforced — no edit needed",
+      "files": [
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Validated against the Success Criteria: 714 Python tests, 1942 TypeScript tests, six gates green, doctor 0 problems, both failure directions proven",
+      "files": [
+        "specs/602-loud-malformed-config/spec.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Python suite for the spec-kit extension",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_*.py",
+      "result": "714 pass (700 before, 14 new)",
+      "warnings": []
+    },
+    {
+      "what": "TypeScript compile and Jest suite",
+      "command": "npm run compile && npm test",
+      "result": "137 suites, 1942 tests pass",
+      "warnings": [
+        "a Jest worker did not exit gracefully — pre-existing, unrelated to this change"
+      ]
+    },
+    {
+      "what": "Every repository gate",
+      "command": "check-shape-parity.py; assemble-nodes.py --check; build-commands.py --check; package-manifest.py --check; check-command-emissions.py; check_quality.py --strict",
+      "result": "all green — 14 bodies, 5 node commands, 8 part bodies, 21 runtime scripts, 19 commands, 12 quality checks",
+      "warnings": []
+    },
+    {
+      "what": "Failure direction of the new tests against the pre-fix reader",
+      "command": "ran the new cases with the guard stubbed out",
+      "result": "9 of 10 unsupported-syntax cases fail pre-fix for the defect reason (a truncated config, no raise); the document-separator case already raised and is pinned as such",
+      "warnings": []
+    },
+    {
+      "what": "The no-narrowing tests catch an over-broad guard",
+      "command": "temporarily widened the guard to scan whole lines and re-ran them",
+      "result": "3 of 4 fail, so they pin the acceptance side rather than passing vacuously",
+      "warnings": []
+    },
+    {
+      "what": "This repo own companion.yml still resolves every hook",
+      "command": "test_this_projects_own_config_still_resolves_every_hook",
+      "result": "no warnings; 6 implement hooks (2 before complete, 1 before implement-exec, 3 after handoff) and 1 each for specify, plan, tasks",
+      "warnings": []
+    },
+    {
+      "what": "Run health",
+      "command": "python3 speckit-extension/scripts/doctor.py --feature-dir specs/602-loud-malformed-config",
+      "result": "0 problems, 1 warning across 7 checks",
+      "warnings": [
+        "companion-commands drift naming commit 2a908047 from #604 — inherited, predates this run"
+      ]
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The doctor reports a companion-commands drift warning against baseline 038566aa naming commit 2a908047 from #604 — it predates this run and belongs to that change, so it was recorded rather than fixed here.",
+      "step": "implement"
+    },
+    {
+      "note": ".specify/feature.json still pointed at the previous spec after the branch was created; every capture call in this run passed --feature-dir explicitly, but a bare doctor invocation resolved to the wrong spec until the pointer was corrected.",
+      "step": "implement"
+    }
+  ]
+}

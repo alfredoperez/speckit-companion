@@ -19,11 +19,26 @@ outside that subset raises, which the loader surfaces as "malformed".
 from __future__ import annotations
 
 import os
+import re
 import stat
 import tempfile
 
 HOOK_TYPES = {"command", "prompt", "node"}
 WHENS = ("before", "after")
+
+#: A block-scalar header: `|` or `>` with an optional chomping marker and indent digit.
+_BLOCK_SCALAR = re.compile(r"[|>][-+0-9]*")
+#: A quoted span, removed before scanning so prose inside a string is never read as YAML.
+_QUOTED_SPAN = re.compile(r"\"[^\"]*\"|'[^']*'")
+#: An anchor definition. Unambiguous: the marker must start a token, so a shell
+#: redirect (`2>&1`) is not one, and no glob begins with `&`. The name class covers
+#: real-world anchor names (`shared.spec`, `caps/auth`) but deliberately excludes
+#: `&`/`>` so shell operators (`a && b`) never read as anchors.
+_ANCHOR_DEF = re.compile(r"(?:^|(?<=[\s,\[{]))&([A-Za-z0-9_.+/-]+)(?=[\s,\]}]|$)")
+#: An alias reference. Lexically identical to a glob (`- *bundle`), so this is only
+#: an alias when the file also defines that anchor — otherwise it is a glob, and
+#: rejecting the file over it would throw away a config for no reason.
+_ALIAS_REF = re.compile(r"(?:^|(?<=[\s,\[{]))\*([A-Za-z0-9_.+/-]+)(?=[\s,\]}]|$)")
 
 
 class ConfigError(Exception):
@@ -110,6 +125,44 @@ def _strip_comment(line: str) -> str:
     return line
 
 
+def _split_key(body: str) -> tuple:
+    """Split `key: value` at the colon that ends the key; a line with no such colon is all key."""
+    for ci, ch in enumerate(body):
+        if ch == ":" and (ci + 1 == len(body) or body[ci + 1] == " "):
+            return body[:ci].strip(), body[ci + 1:].strip()
+    return body, ""
+
+
+def _anchor_names(lines: list) -> set:
+    """Every anchor defined in the file, so an alias can be told from a glob."""
+    out = set()
+    for line in lines:
+        out.update(_ANCHOR_DEF.findall(_QUOTED_SPAN.sub(" ", line)))
+    return out
+
+
+def _unsupported(line: str, anchors: set = frozenset()) -> str:
+    """Name the YAML feature a line reaches for beyond the supported subset, else ""."""
+    if line.lstrip(" ").startswith("\t"):
+        return "tabs cannot be used for indentation"
+    body = line.strip()
+    while body.startswith("- "):
+        body = body[2:].strip()
+    if body.startswith("---") or body.startswith("..."):
+        return "a file may hold only one document"
+    key, val = _split_key(body)
+    # Scan the whole line with quoted spans removed, not just the first token of
+    # each half: an alias inside a flow collection (`nodes: [*shared]`) reached the
+    # assembler as a node id that cannot exist — half-applying the config the
+    # rest of this guard exists to reject.
+    bare = _QUOTED_SPAN.sub(" ", body)
+    if _ANCHOR_DEF.search(bare) or (anchors & set(_ALIAS_REF.findall(bare))):
+        return "anchors and aliases are not supported"
+    if _BLOCK_SCALAR.fullmatch(val):
+        return "block scalars are not supported"
+    return ""
+
+
 def _starts_block_map(rest: str) -> bool:
     """True for a seq item that opens a block mapping (`key: val`), not a scalar.
     A colon followed by end-or-space marks the key/value split; `http://x` (colon
@@ -120,7 +173,17 @@ def _starts_block_map(rest: str) -> bool:
 
 def load_yaml(text: str):
     """Parse the constrained YAML subset into nested dict/list. Raises on the rest."""
-    lines = [stripped for ln in text.split("\n") if (stripped := _strip_comment(ln)).strip()]
+    lines, linenos = [], []
+    anchors = _anchor_names([_strip_comment(r) for r in text.split("\n")])
+    for lineno, raw in enumerate(text.split("\n"), 1):
+        line = _strip_comment(raw)
+        if not line.strip():
+            continue
+        problem = _unsupported(line, anchors)
+        if problem:
+            raise ValueError(f"line {lineno}: {problem}")
+        lines.append(line)
+        linenos.append(lineno)
     pos = [0]
 
     def parse_block(min_indent: int):
@@ -177,6 +240,12 @@ def load_yaml(text: str):
         return out
 
     result = parse_block(0)
+    if pos[0] < len(lines):
+        stopped = lines[pos[0]].lstrip()
+        hint = (" (a list at the same indent as its key is not supported — indent the "
+                "`- ` items under it)" if stopped.startswith("- ") else "")
+        raise ValueError(
+            f"line {linenos[pos[0]]}: parsing stopped before the end of the file{hint}")
     return result if result is not None else {}
 
 
@@ -521,11 +590,20 @@ def render_registry(enabled: bool, capabilities: list, exempt=None) -> str:
 def render_capability(cap: dict) -> list:
     """Render one capability as block-seq lines under the registry's `capabilities:` key."""
     pad, body = "  ", "    "
-    out = [f"{pad}- name: {cap['name']}", f"{body}match: {_yaml_flow_list(cap['match'])}"]
+
+    def scalar(v: str) -> str:
+        # Quote anything this module's own reader would refuse or misread bare —
+        # a writer that can emit a file its reader rejects (or comment-strips) strands the registry.
+        probe = f"k: {v}"
+        if _unsupported(probe) or _strip_comment(probe) != probe or v != v.strip() or ":" in v:
+            return f'"{v}"'
+        return v
+
+    out = [f"{pad}- name: {scalar(cap['name'])}", f"{body}match: {_yaml_flow_list(cap['match'])}"]
     if cap.get("exclude"):
         out.append(f"{body}exclude: {_yaml_flow_list(cap['exclude'])}")
     if cap.get("spec"):
-        out.append(f"{body}spec: {cap['spec']}")
+        out.append(f"{body}spec: {scalar(cap['spec'])}")
     return out
 
 
