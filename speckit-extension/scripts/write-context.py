@@ -872,6 +872,15 @@ def main() -> int:
     import io
     import time
 
+    # This process mutates the record, so its read and its publish must be one
+    # turn against other writers. Readers never enable this and are never blocked.
+    try:
+        from spec_context import enable_write_lock
+
+        enable_write_lock()
+    except ImportError:
+        pass
+
     argv = list(sys.argv[1:])
     started = time.monotonic()
     out_buf, err_buf = io.StringIO(), io.StringIO()
