@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+
+### Fixed
+
+- The health check's drift audit decides more carefully whether a run claimed its living specs were in sync. It reads the check's name and its outcome as separate things instead of searching the whole entry, so an unrelated note can no longer supply the verdict, and it understands negation — "no drift found" reads as clean, "not in sync" does not. It deliberately stays quiet on a bare "clean", because nothing distinguishes a clean project from a clean note about tooling, and wrongly accusing a run of dishonesty costs more than missing one.
 ### Fixed
 
 - **Two captures landing at the same moment no longer erase each other's work.** Every capture reads the spec's record, changes its part, and writes the whole thing back — so two arriving at once each started from the same copy, and whichever published second silently discarded the other's work: twelve simultaneous saves left four recorded, with no warning and a perfectly valid-looking document at the end. Writers now take turns, each holding a short-lived lock across its whole read-modify-write, so every save lands. Reading is untouched — the health check and status reports never wait on a writer, and a writer never waits on them.
