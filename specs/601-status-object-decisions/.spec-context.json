@@ -1,0 +1,536 @@
+{
+  "workflow": "companion",
+  "specName": "status object decisions",
+  "branch": "601-status-object-decisions",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T04:33:04.493Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:33:14.137Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:34:21.568Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:34:42.210Z"
+    },
+    {
+      "step": "specify",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:34:54.839Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T04:34:54.894Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T04:35:07.499Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:35:34.190Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:37:07.210Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T04:37:17.985Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T04:37:57.471Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:38:38.813Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T04:38:46.627Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T04:39:00.632Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:39:07.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:39:46.538Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:40:51.343Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:40:51.401Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:41:26.542Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:41:47.900Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:41:47.956Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:43:00.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:43:00.648Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:43:11.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:43:41.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:43:41.445Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:45:46.694Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T04:46:10.707Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T04:46:10.782Z"
+    }
+  ],
+  "telemetryInstanceId": "482f1afe-d09c-44db-9eb4-8be2b5a5ae70",
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime"
+    ],
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "last_action": "all 14 tasks done — 697 extension tests, 1942 VS Code tests, 6 gates green; doctor 0 problems / 1 inherited drift warning",
+  "coverage": {
+    "FR-001": {
+      "title": "Status lists a recorded decision captured in the structured form the pipeline writes, showing its decision text",
+      "tasks": [
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_entry_form_decisions_render_their_decision_text"
+    },
+    "FR-002": {
+      "title": "Status keeps listing plain-text decisions exactly as it does today",
+      "tasks": [
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_reads_recorded_state_and_decisions"
+    },
+    "FR-003": {
+      "title": "Status lists every decision from a context mixing both stored forms, preserving recorded order",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_mixed_entry_and_string_decisions_all_render_in_recorded_order"
+    },
+    "FR-004": {
+      "title": "Status leaves out a decision entry with no usable text and still lists the rest",
+      "tasks": [
+        "T006",
+        "T007"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_unusable_decision_entries_are_skipped_without_dropping_the_rest"
+    },
+    "FR-005": {
+      "title": "Status does not change its Decisions output shape beyond making hidden decisions appear",
+      "tasks": [
+        "T004"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_entry_form_decisions_print_one_line_each"
+    },
+    "FR-006": {
+      "title": "A decision's why and rejected detail stays reachable for a future verbose report",
+      "tasks": [
+        "T004"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_decision_entries_keep_their_supporting_detail_for_a_verbose_report"
+    },
+    "FR-007": {
+      "title": "Every reader of the run's other recorded lists is audited for the same string-only assumption",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": "speckit-extension/tests/test_doctor_drift.py::FalseClaimTests::test_a_string_form_claim_is_read_the_same_as_an_entry_form_one"
+    },
+    "FR-008": {
+      "title": "Status never fails the command that runs it, on any shape of recorded data",
+      "tasks": [
+        "T007",
+        "T013"
+      ],
+      "tests": "speckit-extension/tests/test_context.py::StatusResolveTests::test_a_non_list_decisions_field_resolves_to_no_decisions"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Make the status report show the decisions a run actually recorded, in every stored form, instead of reporting none.",
+  "expectations": [
+    "The Decisions section stays one line per decision — a verbose why/rejected report is separate work",
+    "No change to how decisions are recorded, only to how they are read back",
+    "No de-duplication, reordering, or truncation of recorded decisions"
+  ],
+  "context": [
+    "living spec: capture-runtime (speckit-extension/scripts/capture-runtime.spec.md)",
+    "area: speckit-extension/scripts — the capture read side (status-context.py) and its writers (capture.py, write-context.py)",
+    "constraint: the read side never raises and never exits non-zero"
+  ],
+  "approach": "Widen the status reader's decisions filter to accept both stored forms — a bare string renders as itself, an entry object renders its decision text, anything with no usable text is skipped — mirroring the rule the VS Code viewer's reader already uses. The report block and the machine-readable RESOLUTION line keep their exact shape, so resume and the test suite see no contract change. Sibling readers of the other captured lists are audited in the same pass and fixed only where they actually share the assumption.",
+  "decisions": [
+    {
+      "decision": "Mirror the viewer reader's accept-both-shapes rule instead of inventing a second one",
+      "why": "the viewer and the status report read the same field, and two independent derivations of one fact drift; the viewer's version has been correct all along",
+      "rejected": "writing a bespoke widening in the Python reader, or normalizing decisions to plain strings at write time (which would discard why/rejected)"
+    },
+    {
+      "decision": "Keep _decisions returning display strings so the RESOLUTION line's element type is unchanged",
+      "why": "resume parses that line and both the tests and the TypeScript side treat decisions as a list of strings; silently changing it would be a contract break inside a fix for a silent contract break",
+      "rejected": "returning entry dicts and flattening at the print boundary"
+    },
+    {
+      "decision": "Skip an unusable entry rather than letting it blank or break the section",
+      "why": "the defect being fixed is a whole section disappearing; a fix that trades one silent blanking for another is not worth shipping",
+      "rejected": "failing loudly on a malformed entry, or dropping the whole list when any entry is bad"
+    },
+    {
+      "decision": "Treat the sibling-reader sweep as an audit that reports, not speculative widening",
+      "why": "doctor_drift.py already branches on dict for verified[], and expectations/context go through a string-only writer so their shape is guaranteed — widening them would add branches no honest test can reach",
+      "rejected": "widening every list reader for symmetry"
+    },
+    {
+      "decision": "Prove the new mixed-form test fails against the pre-fix reader before landing the fix",
+      "why": "the defect survived because the fixture population was all strings and could not see it; a test that only ever ran against fixed code would repeat that mistake",
+      "rejected": "accepting the test by inspection"
+    },
+    {
+      "decision": "Drop a bare number or boolean decision instead of stringifying it, as the old filter did",
+      "why": "the viewer reader this one now mirrors accepts only strings and entry objects, so keeping the numeric passthrough would make the two surfaces disagree about which decisions exist — and a boolean rendering as the line \"True\" was never a decision anyone wrote",
+      "rejected": "preserving the int/float passthrough for strict output parity with the old filter"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One reader widened to accept both stored decision forms, mirroring the viewer rule, with the report and RESOLUTION contracts held byte-stable",
+      "key_finding": "capture.py always stores decisions as objects, so the string-only filter dropped every real run — only hand-authored fixtures ever rendered, which is why every test was green"
+    },
+    "tasks": {
+      "summary": "14 tasks across 5 phases — foundational baseline, three user-story phases (render both forms, degrade per entry, audit the sibling readers), and polish covering the changelog, the living-spec delta, the full gate run, and the doctor"
+    },
+    "implement": {
+      "summary": "Widened the status reader so recorded decisions in both stored forms render, with per-entry degradation, an unchanged output contract, and the sibling readers audited"
+    }
+  },
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Captured the pre-fix baseline: 599-pipeline-doctor holds 14 recorded decisions and 601 holds 5, and both print 'Decisions: (none recorded)'",
+      "files": [
+        "speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added six StatusResolveTests cases: entry-form decisions, a mixed list in recorded order, unusable entries skipped, supporting detail preserved, a non-list field, and the printed report block",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Ran the new cases against the unmodified reader: 4 failures + 1 error, while the existing string-form and non-list cases stayed green — failure direction proven",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Widened the status reader: decision_entries() accepts both stored forms and keeps why/rejected, _decisions() flattens to text so the RESOLUTION contract is unchanged",
+      "files": [
+        "speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Verified live: 599-pipeline-doctor now lists all 14 recorded decisions (was 0), this spec lists all 5, and the four string-form demo fixtures print byte-identical output",
+      "files": [
+        "speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Covered the malformed shapes in the skip case: an entry with no decision key, a blank decision, a non-string decision, a bare list, null, a bare number, and a whitespace string — all skipped while the good entries render",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Confirmed per-entry degradation and exit 0 across six hostile decisions shapes (bare string, number, null, non-list object, mixed junk list, good-plus-null)",
+      "files": [
+        "speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Audited the drift reader of verified[]: it already branches on dict before falling back to text, so no fix was needed — pinned that with a string-form claim test alongside the existing entry-form one",
+      "files": [
+        "speckit-extension/scripts/doctor_drift.py",
+        "speckit-extension/tests/test_doctor_drift.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Confirmed expectations[] and context[] are written only by append_string_list on both the flag path and the batch path, so their string-only readers are correct by construction",
+      "files": [
+        "speckit-extension/scripts/capture.py",
+        "speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Recorded the audit verdict on the spec: five reader families checked, one fixed, four correct as-is",
+      "files": [
+        "specs/601-status-object-decisions/.spec-context.json"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added the [Unreleased] Fixed release note in user-facing voice, naming what the user sees rather than the function that changed",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Authored the capture-runtime ADDED Requirements delta: a reader of a captured list accepts every form its writer stores, skips an unusable entry alone, and keeps its emitted shape",
+      "files": [
+        "specs/601-status-object-decisions/spec.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Ran the full validation set: 697 extension tests, 1942 VS Code tests, and all six gates green",
+      "files": [
+        "speckit-extension/tests/test_context.py",
+        "speckit-extension/tests/test_doctor_drift.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Ran the doctor: 0 problems, 1 warning across 6 checks — the only warning is inherited drift on companion-commands from the prior commit on main, untouched by this run",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "sibling-reader audit of the capture lists",
+      "command": "grep sweep over speckit-extension/scripts and src for every read of decisions/verified/concerns/expectations/context",
+      "result": "one defective reader found and fixed (status-context.py decisions[]); doctor_drift.py verified[] already reads both forms; stateDerivation.ts pickDecisions/pickVerified/pickConcerns already read both forms; expectations[] and context[] are written only by append_string_list so their string-only readers are correct by construction"
+    },
+    {
+      "what": "spec-kit extension Python suite",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_*.py",
+      "result": "697 tests, all pass (690 before, 7 new)"
+    },
+    {
+      "what": "VS Code extension compile and suite",
+      "command": "npm run compile && npm test",
+      "result": "1942 tests across 137 suites, all pass",
+      "warnings": [
+        "a jest worker did not exit gracefully — pre-existing, unrelated to this change"
+      ]
+    },
+    {
+      "what": "shape parity gate",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence"
+    },
+    {
+      "what": "node assembly gate",
+      "command": "python3 speckit-extension/scripts/assemble-nodes.py --check",
+      "result": "OK — checked 5 command bodies from nodes"
+    },
+    {
+      "what": "command build gate",
+      "command": "python3 speckit-extension/scripts/build-commands.py --check",
+      "result": "OK — checked 8 bodies from parts"
+    },
+    {
+      "what": "package manifest gate",
+      "command": "python3 speckit-extension/scripts/package-manifest.py --check",
+      "result": "OK — 21 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "command emissions gate",
+      "command": "python3 speckit-extension/scripts/check-command-emissions.py",
+      "result": "OK — 19 commands agree across 7 install areas, 8 agent records, and 2 documents"
+    },
+    {
+      "what": "command quality gate",
+      "command": "python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --commands-dir speckit-extension/commands",
+      "result": "12 pass / 0 warn / 0 fail"
+    },
+    {
+      "what": "failure direction of the new regression tests",
+      "command": "python3 -m unittest discover -s speckit-extension/tests -p test_context.py -k decision",
+      "result": "4 failures + 1 error against the unmodified reader; all 9 pass after the fix"
+    },
+    {
+      "what": "live spec rendering",
+      "command": "python3 speckit-extension/scripts/status-context.py --feature-dir specs/599-pipeline-doctor",
+      "result": "14 recorded decisions now listed where 0 were before"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The doctor reports a real drift warning on the companion-commands capability (speckit.companion.implement.md, nodes/implement/complete.md, commit 2a908047). It predates this run and belongs to the prior commit on main, so it is left for separate work rather than folded into an unrelated diff.",
+      "step": "implement"
+    }
+  ]
+}

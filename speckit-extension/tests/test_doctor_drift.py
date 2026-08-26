@@ -140,6 +140,37 @@ class FalseClaimTests(unittest.TestCase):
         self.assertEqual(false_claims[0].severity, "problem")
         self.assertIn("x", false_claims[0].detail)
 
+    def test_a_string_form_claim_is_read_the_same_as_an_entry_form_one(self):
+        ctx = {"verified": ["living specs are in sync — no drift"]}
+        _status, findings = self.run_audit(ctx)
+        false_claims = [f for f in findings if "contradicts the recomputation" in f.title]
+        self.assertEqual(len(false_claims), 1)
+        self.assertEqual(false_claims[0].severity, "problem")
+
+    def test_an_entry_with_no_usable_identity_cannot_become_a_false_claim(self):
+        # A nested list stringified to "['no drift']", matched the clean-claim
+        # pattern, and accused the run of a claim it never made.
+        ctx = {"verified": [
+            ["no drift"],                       # not an entry at all
+            {"nested": ["drift", "clean"]},     # no identity key
+            {"what": ["no drift"]},             # identity present but not text
+        ]}
+        _status, findings = self.run_audit(ctx)
+        self.assertEqual([f for f in findings if "contradicts" in f.title], [],
+                         "an entry with no identity value must be skipped, not stringified")
+
+    def test_the_shape_the_pipeline_actually_records_is_detected(self):
+        # The implement command tells every run to record
+        # {"what": "<check>", "command": "<cmd>", "result": "<outcome>"} — the
+        # topic in `what`, the verdict in `result`. Scanning `what` alone made
+        # the check silent on exactly the shape real runs write.
+        ctx = {"verified": [{"what": "living-spec drift check",
+                             "command": "drift.py",
+                             "result": "in sync — no drift"}]}
+        _status, findings = self.run_audit(ctx)
+        hit = [f for f in findings if "contradicts the recomputation" in f.title]
+        self.assertEqual(len(hit), 1, "a real drift-clean claim must still be caught")
+
     def test_no_claim_means_no_false_claim_finding(self):
         _status, findings = self.run_audit({})
         self.assertEqual([f for f in findings if "contradicts" in f.title], [])

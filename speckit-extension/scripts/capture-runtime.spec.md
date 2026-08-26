@@ -305,3 +305,17 @@ Relocating capabilities moves files and then rewrites the registry. When any mov
 #### Scenario: the registry write fails after the moves
 - **WHEN** every move succeeds but the config write raises
 - **THEN** all moves are rolled back and the original registry content is restored
+
+### A reader of a captured list MUST accept every form its writer stores
+
+Capture writes decisions, verifications, and concerns as entries carrying an identity value plus supporting detail, while hand-authored and pre-coercion contexts carry bare strings for the same fields. Any reader of one of these lists SHALL accept both forms — a non-empty string reads as itself, an entry reads through its identity value, and its supporting detail stays reachable rather than being discarded at the boundary. A reader that recognizes only one form silently drops everything real runs record while continuing to pass on hand-authored fixtures, so its emptiness reads as a fact about the run rather than a defect in the reader. An entry with no usable identity value SHALL be skipped on its own, never taking the rest of the list with it. Widening such a reader MUST NOT change the shape of what it emits — only which entries reach it — because the machine-readable resolution other commands parse is part of that shape. Lists whose writer stores plain strings only are exempt: their readers are correct by construction, and a widened branch there would be unreachable.
+
+#### Scenario: a real run's decisions are read back
+- **WHEN** status resolves a spec whose decisions were recorded by the pipeline
+- **THEN** every decision appears, in the order it was recorded
+- **AND** hand-authored string decisions in the same list appear unchanged alongside them
+
+#### Scenario: one entry in the list is unusable
+- **WHEN** a captured list carries an entry with no identity value among well-formed ones
+- **THEN** that entry is skipped and the remaining entries are still read
+- **AND** the command still exits successfully

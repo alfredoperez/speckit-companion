@@ -12,6 +12,7 @@ derive-from-files round-trip.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import io
 import json
@@ -628,18 +629,100 @@ class StatusResolveTests(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
-    def test_reads_recorded_state_and_decisions(self) -> None:
+    def _plan_ctx_with_decisions(self, decisions: object) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")
         (self.fd / "plan.md").write_text("# Plan\n")  # artifacts agree with recorded plan/planned
         wc.update_context(self.fd, "plan", "planned", "extension")
         ctx = _ctx(self.fd)
-        ctx["decisions"] = ["Use the existing dispatch path", "No new schema field"]
+        ctx["decisions"] = decisions
         (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+
+    def test_reads_recorded_state_and_decisions(self) -> None:
+        self._plan_ctx_with_decisions(["Use the existing dispatch path", "No new schema field"])
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "state")
         self.assertEqual(res["currentStep"], "plan")
         self.assertEqual(res["nextCommand"], "/speckit.tasks")
         self.assertEqual(res["decisions"], ["Use the existing dispatch path", "No new schema field"])
+
+    def test_entry_form_decisions_render_their_decision_text(self) -> None:
+        self._plan_ctx_with_decisions([
+            {"decision": "Resize on the server", "why": "browsers vary", "rejected": "canvas"},
+            {"decision": "Reject oversized uploads before reading the body"},
+        ])
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["decisions"], [
+            "Resize on the server",
+            "Reject oversized uploads before reading the body",
+        ])
+
+    def test_mixed_entry_and_string_decisions_all_render_in_recorded_order(self) -> None:
+        self._plan_ctx_with_decisions([
+            "Use the existing dispatch path",
+            {"decision": "Resize on the server", "why": "browsers vary"},
+            "No new schema field",
+            {"decision": "Swap the avatar first, delete second"},
+        ])
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["decisions"], [
+            "Use the existing dispatch path",
+            "Resize on the server",
+            "No new schema field",
+            "Swap the avatar first, delete second",
+        ])
+
+    def test_unusable_decision_entries_are_skipped_without_dropping_the_rest(self) -> None:
+        self._plan_ctx_with_decisions([
+            {"why": "no decision key at all"},
+            {"decision": "   "},
+            {"decision": ["not", "a", "string"]},
+            ["not an entry"],
+            None,
+            True,
+            "  ",
+            {"decision": "The one good entry"},
+            "A good string",
+        ])
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["decisions"], ["The one good entry", "A good string"])
+
+    def test_a_bare_number_still_renders_as_it_did_before(self) -> None:
+        # This ticket exists because decisions vanished silently. Dropping a value
+        # that used to render would be a second silent disappearance.
+        self._plan_ctx_with_decisions([3, 4.5, "a string", {"decision": "an entry"}])
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["decisions"], ["3", "4.5", "a string", "an entry"])
+
+    def test_decision_entries_keep_their_supporting_detail_for_a_verbose_report(self) -> None:
+        self._plan_ctx_with_decisions([
+            {"decision": "Resize on the server", "why": "browsers vary", "rejected": "canvas"},
+            "A bare string",
+        ])
+        entries = status_mod.decision_entries(_ctx(self.fd))
+        self.assertEqual(
+            entries,
+            [
+                {"decision": "Resize on the server", "why": "browsers vary", "rejected": "canvas"},
+                {"decision": "A bare string"},
+            ],
+        )
+
+    def test_a_non_list_decisions_field_resolves_to_no_decisions(self) -> None:
+        self._plan_ctx_with_decisions("not a list")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["decisions"], [])
+
+    def test_entry_form_decisions_print_one_line_each(self) -> None:
+        self._plan_ctx_with_decisions([
+            {"decision": "Resize on the server", "why": "browsers vary", "rejected": "canvas"},
+        ])
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            status_mod._print_summary(status_mod.resolve(self.fd))
+        out = buf.getvalue()
+        self.assertIn("Decisions:\n  - Resize on the server\n", out)
+        self.assertNotIn("browsers vary", out)
+        self.assertNotIn("(none recorded)", out)
 
     def test_companion_workflow_resolves_the_companion_command_family(self) -> None:
         rows = {
