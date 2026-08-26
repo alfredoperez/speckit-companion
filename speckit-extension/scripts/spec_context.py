@@ -362,6 +362,62 @@ def read_ctx(target: Path) -> dict:
     return {}
 
 
+def _entry_key(e) -> tuple:
+    """Identity of one history entry, for recognising it across a re-read."""
+    if not isinstance(e, dict):
+        return ("raw", repr(e))
+    return (e.get("step"), e.get("substep"), e.get("task"), e.get("kind"), e.get("at"))
+
+
+def _guard_append_only(target: Path, ctx: dict) -> None:
+    """Refuse to publish a history shorter than the one already on disk.
+
+    `history` is append-only by contract and by nothing else. A writer that read a
+    context whose `history` was not a list — a torn read, a hand-edit, a legacy
+    shape — got `[]` back from `canonical_log`, appended one entry, and published a
+    log of one, destroying everything before it. That was observed once: a step's
+    real start time simply gone, with a later timestamp in its place and every
+    check passing.
+
+    Rather than trust the caller, compare against disk and splice: keep every entry
+    that was there, then add whatever this write is contributing that is genuinely
+    new. Order is preserved and nothing is lost.
+    """
+    outgoing = ctx.get("history")
+    if not isinstance(outgoing, list):
+        return
+    try:
+        if not target.is_file():
+            return
+        on_disk = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    existing = on_disk.get("history") if isinstance(on_disk, dict) else None
+    if existing is not None and not isinstance(existing, list):
+        # Unreadable rather than absent. The entries cannot be merged, but they can
+        # be kept: overwriting them is how a run's history disappears with nothing
+        # said. Park them beside the new log so the loss is recoverable and visible.
+        ctx["historyQuarantined"] = existing
+        print(
+            f"[companion] Warning: {target} had a `history` that is not a list "
+            f"({type(existing).__name__}). Starting a fresh log and keeping the old "
+            f"value under `historyQuarantined` — nothing was discarded.",
+            file=sys.stderr,
+        )
+        return
+    if not isinstance(existing, list) or len(outgoing) >= len(existing):
+        return
+    seen = {_entry_key(e) for e in existing}
+    added = [e for e in outgoing if _entry_key(e) not in seen]
+    ctx["history"] = existing + added
+    print(
+        f"[companion] Warning: refused to shorten the run history in {target} "
+        f"({len(existing)} entries on disk, {len(outgoing)} in this write). "
+        f"Kept all {len(existing)} and added {len(added)} — history is append-only.",
+        file=sys.stderr,
+    )
+
+
 def atomic_write(target: Path, ctx: dict) -> None:
     """Crash-safe write: serialize to a unique temp file, then rename over the target.
 
@@ -371,6 +427,7 @@ def atomic_write(target: Path, ctx: dict) -> None:
     which the reader then swallows as `{}`), a flush to disk before the rename,
     and no debris when the write fails.
     """
+    _guard_append_only(target, ctx)
     try:
         import companion_config as cc
 

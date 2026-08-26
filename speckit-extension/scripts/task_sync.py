@@ -335,6 +335,30 @@ def materialize_log(feature_dir: Path, by: str, quiet: bool = False) -> Path | N
     return target
 
 
+def _last_finished(log: list, done: list) -> str | None:
+    """The most recently journaled completion among `done`, by recorded time.
+
+    Not `done[-1]`: that is the last task in tasks.md order, so after a wave of
+    tasks completing together it names whichever happens to sit lowest in the
+    file rather than the one that actually finished last. Falls back to file
+    order only when the journal cannot answer — a task synced from tasks.md
+    without ever being journaled has no time of its own.
+    """
+    best, best_at = None, None
+    for entry in log:
+        if not isinstance(entry, dict):
+            continue
+        tid = entry.get("task")
+        if tid not in done or entry.get("kind") != "complete":
+            continue
+        at = entry.get("at")
+        if not isinstance(at, str):
+            continue
+        if best_at is None or at >= best_at:
+            best, best_at = tid, at
+    return best or done[-1]
+
+
 def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) -> Path | None:
     """Per-task journaling for the implement step.
 
@@ -386,7 +410,13 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     ctx["status"] = final_status if all_done else "implementing"
 
     pending = [tid for tid in distinct_all if tid not in distinct_done]
-    ctx["currentTask"] = (pending[0] if pending else (distinct_done[-1] if distinct_done else None))
+    # With work left, the current task is the next one to do. With none left, it is
+    # the one most recently FINISHED — which is not `distinct_done[-1]`: that is the
+    # last task in tasks.md order, so after a wave of tasks completing together it
+    # names whichever happens to sit lowest in the file. Read the journal instead,
+    # which knows when each one actually closed.
+    ctx["currentTask"] = (pending[0] if pending
+                          else (_last_finished(log, distinct_done) if distinct_done else None))
 
     # Finish-only backstop: append ONE finish per fresh task (no start/complete
     # pair → no 0s tick). The live path (`--task <id> --kind complete`) already
