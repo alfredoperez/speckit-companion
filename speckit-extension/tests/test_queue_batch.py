@@ -93,3 +93,102 @@ class DirectivesCanBeCounted(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheSpecNameDoesNotFreezeToThePlaceholder(unittest.TestCase):
+    """#622 — the name resolved on the first write, before the spec was drafted."""
+
+    def _cell(self):
+        import tempfile
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / "specs" / "001-tag-management").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        return d
+
+    def _name(self, d):
+        import json
+        return json.loads(
+            (d / "specs" / "001-tag-management" / ".spec-context.json").read_text())["specName"]
+
+    def _write(self, d, *args):
+        subprocess.run([sys.executable, str(SCRIPTS / "write-context.py"),
+                        "--feature-dir", "specs/001-tag-management", *args],
+                       cwd=d, capture_output=True, text=True)
+
+    def test_the_template_placeholder_never_becomes_the_name(self):
+        d = self._cell()
+        spec = d / "specs" / "001-tag-management" / "spec.md"
+        spec.write_text("# Feature Specification: [FEATURE NAME]\n")
+        self._write(d, "--step", "specify", "--status", "specifying", "--kind", "start")
+        self.assertNotIn("[FEATURE NAME]", self._name(d))
+
+    def test_the_real_title_replaces_the_fallback_once_it_exists(self):
+        d = self._cell()
+        spec = d / "specs" / "001-tag-management" / "spec.md"
+        spec.write_text("# Feature Specification: [FEATURE NAME]\n")
+        self._write(d, "--step", "specify", "--status", "specifying", "--kind", "start")
+        spec.write_text("# Feature Specification: Tag Management\n")
+        self._write(d, "--step", "specify", "--status", "specified", "--kind", "complete")
+        self.assertEqual(self._name(d), "Tag Management")
+
+    def test_a_name_someone_chose_is_left_alone(self):
+        d = self._cell()
+        spec = d / "specs" / "001-tag-management" / "spec.md"
+        spec.write_text("# Feature Specification: Tag Management\n")
+        self._write(d, "--step", "specify", "--status", "specifying", "--kind", "start")
+        self._write(d, "--set", "specName=My Own Name")
+        spec.write_text("# Feature Specification: Something Else\n")
+        self._write(d, "--step", "specify", "--status", "specified", "--kind", "complete")
+        self.assertEqual(self._name(d), "My Own Name")
+
+
+class AWriteWithNoTraceEntryIsVisible(unittest.TestCase):
+    """#622 — a capture could succeed while its trace entry could not be written."""
+
+    def _cell(self):
+        import tempfile
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        return d
+
+    def _write(self, d, *args):
+        return subprocess.run([sys.executable, str(SCRIPTS / "write-context.py"),
+                               "--feature-dir", "specs/001-x", *args],
+                              cwd=d, capture_output=True, text=True)
+
+    def test_the_run_says_so_and_leaves_evidence(self):
+        import json, os
+        d = self._cell()
+        self._write(d, "--set", "size=simple")
+        trace = d / "specs" / "001-x" / ".trace.jsonl"
+        os.chmod(trace, 0o444)
+        try:
+            r = self._write(d, "--set", "other=1")
+        finally:
+            os.chmod(trace, 0o644)
+        self.assertIn("not recorded", r.stderr)
+        # the write itself must still have landed
+        ctx = json.loads((d / "specs" / "001-x" / ".spec-context.json").read_text())
+        self.assertEqual(ctx.get("other"), 1)
+        self.assertTrue((d / "specs" / "001-x" / ".trace-lost").is_file())
+
+    def test_the_health_check_calls_its_counts_lower_bounds(self):
+        import os
+        d = self._cell()
+        self._write(d, "--set", "size=simple")
+        trace = d / "specs" / "001-x" / ".trace.jsonl"
+        os.chmod(trace, 0o444)
+        try:
+            self._write(d, "--set", "other=1")
+        finally:
+            os.chmod(trace, 0o644)
+        out = subprocess.run(
+            [sys.executable, str(SCRIPTS / "doctor.py"), "--feature-dir",
+             str(d / "specs" / "001-x")], capture_output=True, text=True).stdout
+        self.assertIn("could not be recorded", out)
+        self.assertIn("lower bound", out)

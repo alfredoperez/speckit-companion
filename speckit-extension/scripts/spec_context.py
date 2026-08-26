@@ -224,6 +224,16 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
     return None
 
 
+#: A title still carrying template scaffolding — `[FEATURE NAME]`, `<feature>`,
+#: `TODO` — is not a name, and recording it as one is worse than recording nothing:
+#: the fallback would have derived something readable from the directory.
+_PLACEHOLDER = re.compile(r"^\s*([\[<{].*[\]>}]|TBD|TODO|FEATURE NAME)\s*$", re.I)
+
+
+def _is_placeholder(title: str) -> bool:
+    return bool(_PLACEHOLDER.match(title))
+
+
 def _spec_name(feature_dir: Path) -> str:
     spec_md = feature_dir / "spec.md"
     if spec_md.is_file():
@@ -234,11 +244,23 @@ def _spec_name(feature_dir: Path) -> str:
                     title = line[2:].strip()
                     # Drop a leading "Feature Specification:" / "Spec:" label.
                     title = re.sub(r"^(Feature Specification|Spec|Feature)\s*:\s*", "", title)
-                    if title:
+                    # `# Feature Specification: [FEATURE NAME]` is the shipped
+                    # template's own first line. Resolving it on the first write —
+                    # which happens before the spec is drafted — froze the
+                    # placeholder in as the feature's name forever.
+                    if title and not _is_placeholder(title):
                         return title
         except OSError:
             pass
-    # Fallback: humanized slug from the dir name (strip NNN- prefix).
+    return _fallback_name(feature_dir)
+
+
+def _fallback_name(feature_dir: Path) -> str:
+    """Humanized slug from the directory name, stripping the NNN- prefix.
+
+    Named so the refresh above can tell "still the fallback" from "someone chose
+    this" — a recorded name equal to the fallback has not been decided yet.
+    """
     slug = PREFIX_RE.sub("", feature_dir.name)
     return slug.replace("-", " ").strip() or feature_dir.name
 
@@ -397,7 +419,15 @@ def commit_log(ctx: dict, log: list) -> None:
 def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     """Set required keys only when missing (read-then-merge preserves the rest)."""
     ctx.setdefault("workflow", "speckit")
-    ctx.setdefault("specName", _spec_name(feature_dir))
+    # setdefault froze whatever the first write saw. The first write happens before
+    # the spec is drafted, so the frozen answer was the template placeholder and no
+    # later write ever corrected it. Re-resolve while the recorded name is still a
+    # fallback; once it is real, leave it alone so a rename by hand survives.
+    recorded = ctx.get("specName")
+    if not recorded or _is_placeholder(str(recorded)) or recorded == _fallback_name(feature_dir):
+        resolved = _spec_name(feature_dir)
+        if resolved:
+            ctx["specName"] = resolved
     ctx.setdefault("branch", branch)
 
 

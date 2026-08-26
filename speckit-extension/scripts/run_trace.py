@@ -25,6 +25,7 @@ Stdlib only.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 TRACE_NAME = ".trace.jsonl"
@@ -183,8 +184,41 @@ def record(tool: str, op: str, ok: bool, *, ms: int, feature_dir=None,
         with path.open("a", encoding="utf-8") as fh:
             fh.write(event.line())
         _enforce_cap(path)
-    except Exception:  # noqa: BLE001 — a tracer that can raise is worse than no tracer
+    except Exception as exc:  # noqa: BLE001 — a tracer that can raise is worse than no tracer
+        # ...but a tracer that fails in total silence is barely better. A capture
+        # can succeed while its trace entry cannot be written — the publish renames
+        # into the directory, the trace appends to a file — and the run then has a
+        # write nothing recorded, with the reader reporting its short count as a
+        # total. Say it once, on stderr, and leave a marker the reader can find.
+        _note_trace_failure(feature_dir, exc)
+
+
+#: Written beside the trace when the trace itself could not be appended, so a
+#: reader can say "this count is short" instead of presenting it as complete.
+LOST_NAME = ".trace-lost"
+
+
+def _note_trace_failure(feature_dir, exc: Exception) -> None:
+    try:
+        print(f"[companion] Warning: this call was not recorded in the run trace "
+              f"({type(exc).__name__}: {exc}). The trace is incomplete for this run.",
+              file=sys.stderr)
+    except Exception:  # noqa: BLE001
         pass
+    try:
+        from spec_context import _now_iso
+
+        stamp = _now_iso()
+    except Exception:  # noqa: BLE001 — a timestamp is nice, evidence is the point
+        stamp = "unknown-time"
+    for target in (Path(feature_dir) / LOST_NAME,
+                   Path(feature_dir).parent / LOST_NAME):
+        try:
+            with target.open("a", encoding="utf-8") as fh:
+                fh.write(f"{stamp} {type(exc).__name__}: {exc}\n")
+            return
+        except Exception:  # noqa: BLE001 — nowhere writable; stderr was the last resort
+            continue
 
 
 class Read:
