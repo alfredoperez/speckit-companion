@@ -362,6 +362,10 @@ def main(argv=None) -> int:
     parser.add_argument("--json", dest="as_json", action="store_true")
     parser.add_argument("--all", action="store_true",
                         help="Examine every spec directory under specs/.")
+    parser.add_argument("--strict", action="store_true",
+                        help="exit non-zero when any problem-severity finding is present, "
+                             "so this can gate a pipeline. Without it the check always "
+                             "succeeds, which is the default and stays the default.")
     parser.add_argument("--traceback", action="store_true",
                         help="Print a traceback for a check that raised (debugging the doctor).")
     args = parser.parse_args(argv)
@@ -399,6 +403,15 @@ def main(argv=None) -> int:
             safe_print(render_json(reports[0], at))
     else:
         safe_print("\n\n".join(render_human(r) for r in reports))
+
+    # A constraint nobody can fail is a constraint nobody can demonstrate. Default
+    # stays 0 — this check is informational and must never break an ordinary run —
+    # but `--strict` gives a caller something to gate on.
+    problems = sum(1 for r in reports for f in r.findings if f.severity == "problem")
+    if args.strict and problems:
+        safe_print(f"\n[companion] {plural(problems, 'problem')} found — failing because "
+                   f"--strict was requested.")
+        return 1
     return 0
 
 

@@ -15,15 +15,18 @@ reads: [draft-spec]
    ```
    crossedGuardrail = the change exceeds the **small** bar above (more files or tasks than it allows)
 
-   verdict = "simple" if  the change is **small** by the definition above
-                      and scopeSignal != "larger"
+   verdict = "simple"    if  the change is **small** by the definition above
+                         and scopeSignal != "larger"
+             "oversized" if  the change exceeds the small bar by a wide margin —
+                             roughly double it (more than 10 files or more than 20
+                             tasks), or spans multiple subsystems
              else "normal"
    ```
 
    - **Guardrail warning.** When `crossedGuardrail == true` OR `scopeSignal == "larger"`, print this line verbatim, then run the **normal** branch (never a silent fast-track):
 
      ```
-     [companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline.
+     [companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline as <normal|oversized>.
      ```
 
      Exactly-at-threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling — it does **not** warn and stays eligible for `simple`.
