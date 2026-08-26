@@ -689,7 +689,13 @@ export function computeOverall(r) {
   const ratio = (p, t) => (t ? Math.max(0, Math.min(1, p / t)) : 0)
   const correctness = (r.buildPass ? 1 : 0) * ratio(r.acceptancePassed, r.acceptanceTotal) * ratio(r.regressionPassed, r.regressionTotal)
   const q = r.quality || {}
-  const rb = ['readability', 'conventions', 'scope'].map((k) => q[k]).filter((n) => typeof n === 'number')
+  // Rubric dimensions are 0-5. Clamp per dimension: a judge that answers on a
+  // different scale must not inflate the composite past its 30-point share —
+  // an Overall above 100 is arithmetically impossible and was being rendered.
+  const rb = ['readability', 'conventions', 'scope']
+    .map((k) => q[k])
+    .filter((n) => typeof n === 'number' && Number.isFinite(n))
+    .map((n) => Math.max(0, Math.min(5, n)))
   const rubric = rb.length ? rb.reduce((a, b) => a + b, 0) / (rb.length * 5) : 0
   const captureRaw = r.capture ? ratio(r.capture.pass, r.capture.pass + r.capture.fail) : 0
   // Each doctor problem costs a tenth of the capture component, floored at zero:
@@ -715,9 +721,12 @@ export function renderReport(rows) {
   const qual = (r) => {
     const q = r?.quality
     if (!q) return r ? '—' : '—'
-    const nums = ['readability', 'conventions', 'scope'].map((k) => q[k]).filter((n) => typeof n === 'number')
-    if (!nums.length) return '—'
-    return `${(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)}/5`
+    const raw = ['readability', 'conventions', 'scope'].map((k) => q[k]).filter((n) => typeof n === 'number')
+    if (!raw.length) return '—'
+    const nums = raw.map((n) => Math.max(0, Math.min(5, n)))
+    const flag = raw.some((n) => n < 0 || n > 5) ? ' ⚠︎out-of-range' : ''
+    const missing = raw.length < 3 ? ` (${raw.length}/3 dims)` : ''
+    return `${(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)}/5${missing}${flag}`
   }
   const dur = (r, step) => (step === 'total' ? r?.timing?.totalSec : r?.timing?.perStep?.[step])
   const cell = (r, fn) => (r ? fn(r) : '—')
