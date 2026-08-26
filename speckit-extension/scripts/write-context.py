@@ -652,8 +652,15 @@ def _main() -> int:
         else:
             for line in declined:
                 print(f"[companion] {line}", file=sys.stderr)
-            _record_outcome(bool(captured),
-                            "; ".join(declined) or "no capture flag produced a write")
+            if declined:
+                # A call that wrote some of what was asked and silently dropped the
+                # rest is the failure this reporting exists to surface. `ok` means
+                # "everything asked for landed", so a partial call is not ok — and
+                # the reason names both halves so the trace is actionable.
+                landed = f"{len(captured)} write(s) landed; " if captured else ""
+                _record_outcome(False, landed + "; ".join(declined))
+            else:
+                _record_outcome(bool(captured), "no capture flag produced a write")
         return 0
 
     # Lifecycle modes stay exclusive — these are alternative readings of one
@@ -888,7 +895,19 @@ def _trace_call(argv: list, out: str, err: str, ms: int) -> None:
         root = _repo_root()
         feature_dir = None
         try:
-            resolved = resolve_feature_dir(root, _flag_value(argv, "--feature-dir"))
+            # main() already printed any pointer complaint on the tee'd stream;
+            # this second resolve is bookkeeping, so it must stay quiet.
+            try:
+                from spec_context import quiet_pointer_complaints
+            except ImportError:
+                quiet_pointer_complaints = None
+            if quiet_pointer_complaints:
+                quiet_pointer_complaints(True)
+            try:
+                resolved = resolve_feature_dir(root, _flag_value(argv, "--feature-dir"))
+            finally:
+                if quiet_pointer_complaints:
+                    quiet_pointer_complaints(False)
             # resolve_feature_dir can name a directory that does not exist; a trace
             # line has nowhere to land there, so it falls through to unattributed.
             if resolved is not None and resolved.is_dir():

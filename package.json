@@ -870,6 +870,10 @@
       ],
       "commandPalette": [
                 {
+                    "command": "speckit.workflowEditor.refineSection",
+                    "when": "false"
+                },
+                {
                     "command": "speckit.workflowEditor.removeSection",
                     "when": "false"
                 },

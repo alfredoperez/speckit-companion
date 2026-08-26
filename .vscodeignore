@@ -58,8 +58,10 @@ speckit-extension/**
 !speckit-extension/scripts/task_sync.py
 !speckit-extension/scripts/living_spec_fold.py
 !speckit-extension/scripts/run_trace.py
-# The shared atomic-write helper. The capture writers publish through it, so a
-# .vsix without it would import-fail in stock mode.
+# The shared atomic-write helper. The capture writers publish through it; each
+# guards the import and falls back to its old fixed-`.tmp` write, so leaving it
+# out would silently downgrade the crash-safety guarantee rather than fail loudly
+# — which is exactly the kind of quiet regression it exists to prevent.
 !speckit-extension/scripts/companion_config.py
 .specify/**
 .opencode/**

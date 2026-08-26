@@ -2,7 +2,7 @@
 import json, os, subprocess, sys, tempfile, unittest
 from pathlib import Path
 
-REPO = Path("/Users/alfredoperez/dev/GitHub/speckit-companion")
+REPO = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO / "speckit-extension" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 WRITER = SCRIPTS / "write-context.py"
@@ -17,7 +17,9 @@ class PointerFailsLoudly(unittest.TestCase):
     """#607 — a pointer that cannot resolve must say so, not resolve to nothing."""
 
     def _cell(self):
-        d = Path(tempfile.mkdtemp())
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
         (d / ".specify").mkdir()
         (d / "specs" / "001-x").mkdir(parents=True)
         subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
@@ -54,7 +56,9 @@ class DeclineCarriesItsReason(unittest.TestCase):
     """#615 — a recorded failure must carry the cause, not a pointer to lost output."""
 
     def _cell(self):
-        d = Path(tempfile.mkdtemp())
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
         (d / "specs" / "001-x").mkdir(parents=True)
         subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
         return d
@@ -127,7 +131,9 @@ class CaptureWritesAreAtomic(unittest.TestCase):
                           f"{name} still publishes without the shared atomic helper")
 
     def test_the_context_writer_publishes_through_the_helper(self):
-        d = Path(tempfile.mkdtemp())
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
         (d / "specs" / "001-x").mkdir(parents=True)
         subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
         run_writer(d, "--feature-dir", "specs/001-x", "--set", "size=simple")
@@ -154,10 +160,87 @@ class SilentPaletteCommandsAreHidden(unittest.TestCase):
                if str(e.get("when", "")).strip() == "false"}
         self.assertTrue(self.STUBS <= pal, f"still reachable: {sorted(self.STUBS - pal)}")
 
-    def test_the_working_refine_command_stays_reachable(self):
+    def test_no_workflow_editor_command_is_palette_reachable(self):
+        # refineSection dispatches real work, but only when the webview passes it
+        # (uri, sectionId, prompt). From the palette it gets none of them and
+        # sends an undefined prompt to the terminal — the same defect as the six
+        # silent stubs, so it is suppressed too. It stays fully usable in-webview.
+        contributed = {c["command"] for c in self.pkg["contributes"]["commands"]
+                       if c["command"].startswith("speckit.workflowEditor.")}
         pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
                if str(e.get("when", "")).strip() == "false"}
-        self.assertNotIn("speckit.workflowEditor.refineSection", pal)
+        self.assertTrue(contributed <= pal,
+                        f"palette-reachable and argument-dependent: {sorted(contributed - pal)}")
+
+
+class PartialCaptureIsNotClean(unittest.TestCase):
+    """#615 review — a call that wrote some of what was asked must not report ok."""
+
+    def _cell(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        return d
+
+    def test_a_decline_beside_a_write_still_reaches_the_trace(self):
+        d = self._cell()
+        run_writer(d, "--feature-dir", "specs/001-x", "--step", "plan",
+                   "--step-summary", "did stuff", "--coverage-req", "FR-002", "--tests", "")
+        rows = [json.loads(l) for l in
+                (d / "specs" / "001-x" / ".trace.jsonl").read_text().splitlines() if l.strip()]
+        last = rows[-1]
+        self.assertFalse(last["ok"], "a partly-dropped capture must not report clean")
+        self.assertIn("FR-002", last["reason"] or "")
+        self.assertIn("landed", last["reason"] or "")
+
+
+class StalePointerFallsThroughToTheBranch(unittest.TestCase):
+    """#607 review — complaining must not skip the remaining resolution rungs."""
+
+    def test_a_stale_pointer_still_resolves_by_branch(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / ".specify").mkdir()
+        (d / "specs" / "001-x").mkdir(parents=True)
+        for cmd in (["git", "init", "-q", "."], ["git", "checkout", "-q", "-b", "001-x"]):
+            subprocess.run(cmd, cwd=d, check=True)
+        (d / "specs" / "001-x" / "spec.md").write_text("# x\n")
+        subprocess.run(["git", "add", "-A"], cwd=d, check=True)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
+                        "commit", "-q", "-m", "init"], cwd=d, check=True)
+        (d / ".specify" / "feature.json").write_text(
+            json.dumps({"feature_directory": "specs/999-gone"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertIn("stale", r.stderr)
+        self.assertTrue((d / "specs" / "001-x" / ".spec-context.json").is_file(),
+                        "the branch rung must still be reached after the complaint")
+
+    def test_a_stale_pointer_is_not_also_called_keyless(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / ".specify").mkdir()
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        (d / ".specify" / "feature.json").write_text(
+            json.dumps({"feature_directory": "specs/999-gone"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertNotIn("no recognised key", r.stderr)
+
+    def test_the_complaint_is_printed_once(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name)
+        (d / ".specify").mkdir()
+        (d / "specs" / "001-x").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", "."], cwd=d, check=True)
+        (d / ".specify" / "feature.json").write_text(
+            json.dumps({"feature_directory": "specs/999-gone"}))
+        r = run_writer(d, "--set", "size=simple")
+        self.assertEqual(r.stderr.count("the pointer is stale"), 1)
 
 
 if __name__ == "__main__":
