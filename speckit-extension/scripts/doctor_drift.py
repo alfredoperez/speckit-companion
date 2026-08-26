@@ -159,10 +159,15 @@ def _recorded_claims(ctx: dict) -> list:
         if isinstance(entry, dict):
             text, at = entry.get("what"), entry.get("at")
             blob = json.dumps(entry, ensure_ascii=False)
-        else:
-            text = blob = str(entry)
+        elif isinstance(entry, str):
+            text = blob = entry
             at = None
-        if text and "drift" in blob.lower():
+        else:
+            # No usable identity. Stringifying it turned a nested list into
+            # "['no drift']", which matched the clean pattern and accused the run
+            # of a claim it never made.
+            continue
+        if isinstance(text, str) and text.strip() and "drift" in blob.lower():
             out.append({"source": "verified[]", "text": text, "at": at, "blob": blob})
     return out
 

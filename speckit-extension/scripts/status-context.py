@@ -106,12 +106,37 @@ def _should_prefer_disk(feature_dir: Path, rec_step: str, disk_step: str) -> boo
     return PIPELINE_ORDER.get(disk_step, -1) > PIPELINE_ORDER[rec_step]
 
 
-def _decisions(ctx: dict) -> list[str]:
-    """The top-level `decisions[]` passthrough (surfaced as ViewerState.decisions)."""
+def decision_entries(ctx: dict) -> list[dict]:
+    """The top-level `decisions[]` as entries, in recorded order.
+
+    Capture writes `{"decision", "why"?, "rejected"?}`; hand-authored contexts
+    carry bare strings. Reading both, and keeping the entry's detail for a
+    verbose report, follows `pickEntryList` in
+    src/features/spec-viewer/stateDerivation.ts. The one deliberate difference:
+    a bare number renders here because it always did, while the viewer drops it."""
     raw = ctx.get("decisions")
-    if isinstance(raw, list):
-        return [str(d) for d in raw if isinstance(d, (str, int, float)) and str(d).strip()]
-    return []
+    if not isinstance(raw, list):
+        return []
+    out: list[dict] = []
+    for d in raw:
+        if isinstance(d, dict):
+            text = d.get("decision")
+            if isinstance(text, str) and text.strip():
+                out.append(d)
+        elif isinstance(d, str) and d.strip():
+            out.append({"decision": d})
+        elif isinstance(d, (int, float)) and not isinstance(d, bool):
+            # A bare number rendered before this change, so it still does —
+            # dropping it would be a second silent disappearance. A bool is
+            # excluded deliberately: "True" is not a decision anyone wrote, and
+            # the viewer's reader drops it too.
+            out.append({"decision": str(d)})
+    return out
+
+
+def _decisions(ctx: dict) -> list[str]:
+    """Just the decision text of each entry (surfaced as ViewerState.decisions)."""
+    return [e["decision"] for e in decision_entries(ctx)]
 
 
 def _next_unchecked_task(feature_dir: Path) -> str | None:
