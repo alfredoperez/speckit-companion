@@ -77,6 +77,16 @@ def _repo_root_for(path: Path) -> Path:
     return _repo_root()
 
 
+def _pointer_complaint(message: str) -> None:
+    """Say why the active-spec pointer did not resolve.
+
+    Resolution is best-effort and must never raise, but failing in silence is
+    how a stale or misspelled pointer turns into an audit of the wrong spec —
+    or of nothing at all — that still reports clean.
+    """
+    print(f"[companion] {message}", file=sys.stderr)
+
+
 def _git_branch(root: Path) -> str | None:
     try:
         out = subprocess.run(
@@ -166,9 +176,25 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
             fd = data.get("feature_directory") or data.get("FEATURE_DIR")
             if fd:
                 p = Path(fd)
-                return p if p.is_absolute() else root / p
-        except (json.JSONDecodeError, OSError):
-            pass
+                resolved = p if p.is_absolute() else root / p
+                if not resolved.is_dir():
+                    # A pointer naming a directory that is gone is worse than no
+                    # pointer: callers resolve it, audit nothing, and report clean.
+                    _pointer_complaint(
+                        f"{feature_json} points at {fd}, which does not exist — "
+                        f"the pointer is stale. Pass --feature-dir, or re-run the "
+                        f"step that maintains it.")
+                    return None
+                return resolved
+            # The file parsed but carried no key this resolver reads. Silence here
+            # is what let four fixtures ship a `featureDir` spelling that nothing
+            # ever read, so name the file and the keys that would have worked.
+            _pointer_complaint(
+                f"{feature_json} has no recognised key — expected "
+                f"'feature_directory' (or stock spec-kit's 'FEATURE_DIR'), "
+                f"found {sorted(data) if isinstance(data, dict) else type(data).__name__}.")
+        except (json.JSONDecodeError, OSError) as exc:
+            _pointer_complaint(f"{feature_json} could not be read ({exc}).")
 
     # 5. git current branch -> numeric-prefix match
     branch = _git_branch(root)
@@ -221,7 +247,22 @@ def read_ctx(target: Path) -> dict:
 
 
 def atomic_write(target: Path, ctx: dict) -> None:
-    """Crash-safe write: serialize to a temp file, then rename over the target."""
+    """Crash-safe write: serialize to a unique temp file, then rename over the target.
+
+    Routed through the shared helper so this file gets the same guarantees the
+    config writer already had: a unique temp name (a fixed `<path>.tmp` let two
+    concurrent writers truncate each other's temp and publish half a document,
+    which the reader then swallows as `{}`), a flush to disk before the rename,
+    and no debris when the write fails.
+    """
+    try:
+        import companion_config as cc
+
+        cc.atomic_write_text(str(target),
+                             json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
+        return
+    except ImportError:
+        pass
     tmp = target.with_suffix(target.suffix + ".tmp")
     try:
         tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
