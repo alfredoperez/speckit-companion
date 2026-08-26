@@ -536,6 +536,9 @@ def _main() -> int:
     # A ladder here recorded the first and dropped the rest, exit 0, with the
     # caller told only about the one that landed.
     captured: list[str] = []
+    #: Writers that declined, with the reason each gave. Kept apart from
+    #: `captured` so a decline can never be counted as a write.
+    declined: list[str] = []
     try:
         if args.classification:
             target = set_classification(feature_dir, args.classification)
@@ -572,7 +575,13 @@ def _main() -> int:
                 if args.coverage_tests else None
             )
             target = upsert_coverage(feature_dir, args.coverage_req, cov_tasks, cov_tests, args.coverage_title)
-            captured.append(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
+            if target is None:
+                # NOT appended to `captured` — that list is what marks the call a
+                # write, so a decline recorded there would report itself as success.
+                declined.append(f"coverage for {args.coverage_req} was not written "
+                                f"(no coverage entry could be resolved in {feature_dir})")
+            else:
+                captured.append(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
         if args.step_summary:
             target = upsert_step_summary(feature_dir, args.step, args.step_summary)
             captured.append(f"[companion] Recorded {args.step} step summary in {target}")
@@ -641,7 +650,17 @@ def _main() -> int:
             _record_outcome(False, f"Refusing --set {', '.join(repr(k) for k in refused)} — "
                                    f"lifecycle keys are managed by the capture/mark-complete writers.")
         else:
-            _record_outcome(bool(captured), "no capture flag produced a write")
+            for line in declined:
+                print(f"[companion] {line}", file=sys.stderr)
+            if declined:
+                # A call that wrote some of what was asked and silently dropped the
+                # rest is the failure this reporting exists to surface. `ok` means
+                # "everything asked for landed", so a partial call is not ok — and
+                # the reason names both halves so the trace is actionable.
+                landed = f"{len(captured)} write(s) landed; " if captured else ""
+                _record_outcome(False, landed + "; ".join(declined))
+            else:
+                _record_outcome(bool(captured), "no capture flag produced a write")
         return 0
 
     # Lifecycle modes stay exclusive — these are alternative readings of one
@@ -689,9 +708,11 @@ def _main() -> int:
 
     # `target is not None` is the writers' shared success signal, including for
     # --tasks-file, which reports itself on stderr and is deliberately excluded
-    # from the stdout block below.
-    _record_outcome(target is not None,
-                    "the write did not land (see the reason above)")
+    # from the stdout block below. A writer that declines returns None without
+    # raising, so the reason it printed must be carried into the trace — a
+    # recorded failure whose cause is only on the terminal cannot be diagnosed
+    # from the trace file afterwards, which is the trace file's whole job.
+    _record_outcome(target is not None, _DECLINED)
 
     if target is not None and not args.tasks_file:
         if args.mark_complete:
@@ -809,6 +830,11 @@ class _Tee:
 # call is not a decline, and a refused append that prints neither reads as
 # whichever branch the heuristic happened to take.
 _OUTCOME: dict = {}
+#: Stand-in recorded when a writer declines by returning None. The real cause is
+#: whatever it printed, which is only readable after main() stops teeing output —
+#: _trace_call swaps this for that line so the trace carries the cause, not a
+#: pointer to a terminal nobody kept.
+_DECLINED = "\x00declined"
 
 
 def _record_outcome(ok: bool, reason: str | None = None) -> None:
@@ -825,6 +851,12 @@ def _companion_lines(text: str) -> list:
 def _first_companion_line(text: str) -> str | None:
     lines = _companion_lines(text)
     return lines[0] if lines else None
+
+
+def _last_companion_line(text: str) -> str | None:
+    """The most recent `[companion]` line — for a decline, the complaint itself."""
+    lines = _companion_lines(text)
+    return lines[-1] if lines else None
 
 
 def main() -> int:
@@ -853,6 +885,9 @@ def _trace_call(argv: list, out: str, err: str, ms: int) -> None:
         op = _classify_op(argv)
         if _OUTCOME:
             ok, reason = _OUTCOME["ok"], _OUTCOME["reason"]
+            if reason == _DECLINED:
+                reason = (_last_companion_line(err) or _last_companion_line(out)
+                          or f"the {op} writer declined to write and printed no reason")
         else:
             # _main died before recording anything — the crash itself is the outcome.
             ok, reason = False, _first_companion_line(err) or "the writer exited without recording an outcome"
@@ -860,7 +895,19 @@ def _trace_call(argv: list, out: str, err: str, ms: int) -> None:
         root = _repo_root()
         feature_dir = None
         try:
-            resolved = resolve_feature_dir(root, _flag_value(argv, "--feature-dir"))
+            # main() already printed any pointer complaint on the tee'd stream;
+            # this second resolve is bookkeeping, so it must stay quiet.
+            try:
+                from spec_context import quiet_pointer_complaints
+            except ImportError:
+                quiet_pointer_complaints = None
+            if quiet_pointer_complaints:
+                quiet_pointer_complaints(True)
+            try:
+                resolved = resolve_feature_dir(root, _flag_value(argv, "--feature-dir"))
+            finally:
+                if quiet_pointer_complaints:
+                    quiet_pointer_complaints(False)
             # resolve_feature_dir can name a directory that does not exist; a trace
             # line has nowhere to land there, so it falls through to unattributed.
             if resolved is not None and resolved.is_dir():

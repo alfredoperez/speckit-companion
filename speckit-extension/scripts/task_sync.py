@@ -81,6 +81,15 @@ def _mark_tasks_done(tasks_md: Path, ids: set) -> None:
             changed = True
     if not changed:
         return
+    try:
+        import companion_config as cc
+
+        cc.atomic_write_text(str(tasks_md), "".join(lines))
+        return
+    except ImportError:
+        pass
+    except OSError:
+        return
     tmp = tasks_md.with_suffix(tasks_md.suffix + ".tmp")
     try:
         tmp.write_text("".join(lines), encoding="utf-8")
