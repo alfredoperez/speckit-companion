@@ -449,19 +449,47 @@ function cellStatus(cellDir) {
   return ctx && typeof ctx.status === 'string' ? ctx.status : null
 }
 
+// Lifecycle order, ranked. A step is settled once the status reaches ITS completed
+// form OR ANY LATER ONE — never equality. Two shipped Companion behaviours make
+// equality wrong, and both used to strand a driver:
+//   · the fast path folds specify→plan→tasks, landing on `ready-to-implement`
+//     without ever passing through `specified` or `planned`; and
+//   · mark-complete is the pipeline's terminal node, so implement lands on
+//     `completed`, not `implemented`.
+// Waiting for equality means the bench can only measure Companion with its own
+// right-sizing turned off, which is exactly the feature the comparison exists to
+// weigh. `in-progress` forms are absent on purpose: they rank below every
+// completed form, so they never satisfy a wait.
+export const STATUS_RANK = {
+  specifying: 0,
+  specified: 1,
+  planning: 1,
+  planned: 2,
+  tasking: 2,
+  'ready-to-implement': 3,
+  implementing: 3,
+  implemented: 4,
+  completed: 5,
+  archived: 6,
+}
+
 // Wait for a dispatched step to SETTLE before advancing: poll the cell's
-// `.spec-context.json` until its status reaches the step's completed form
-// (`specified`/`planned`/`ready-to-implement`/`implemented`). Resolves
-// { settled:true, status, waitedMs } on settle, or { settled:false, ... } on
-// timeout. Mirrors the GUI's settle-wait so the bench is a faithful proxy.
+// `.spec-context.json` until its status reaches the step's completed form or a
+// later one. Resolves { settled:true, status, waitedMs } on settle, or
+// { settled:false, ... } on timeout. Mirrors the GUI's settle-wait so the bench
+// is a faithful proxy.
 export async function waitForSettle(cellDir, step, timeoutMs = 600000, pollMs = 500) {
   const want = SETTLED_STATUS_BY_STEP[step]
   if (!want) throw new Error(`waitForSettle: unknown step "${step}"`)
+  const wantRank = STATUS_RANK[want]
   const startMs = Date.now()
   const elapsed = () => Math.max(0, Date.now() - startMs)
   for (;;) {
     const status = cellStatus(cellDir)
-    if (status === want) return { settled: true, status, waitedMs: elapsed() }
+    const rank = status == null ? undefined : STATUS_RANK[status]
+    if (rank !== undefined && rank >= wantRank) {
+      return { settled: true, status, waitedMs: elapsed(), folded: status !== want }
+    }
     if (elapsed() >= timeoutMs) return { settled: false, status, waitedMs: elapsed() }
     await new Promise((r) => setTimeout(r, pollMs))
   }

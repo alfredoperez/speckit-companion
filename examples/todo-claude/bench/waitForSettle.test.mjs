@@ -58,6 +58,60 @@ test('times out cleanly when no .spec-context.json exists yet', async () => {
   }
 })
 
+test('the fast path settles specify and plan without their own statuses', async () => {
+  // Right-sizing folds specify→plan→tasks, so the run jumps straight to
+  // `ready-to-implement`. Waiting for `specified`/`planned` would strand the
+  // driver and force the fast path off — the feature the bench must measure.
+  const { cell, specDir } = makeCell()
+  try {
+    writeStatus(specDir, 'ready-to-implement')
+    for (const step of ['specify', 'plan', 'tasks']) {
+      const res = await waitForSettle(cell, step, 300, 50)
+      assert.equal(res.settled, true, `${step} should settle on a folded lifecycle`)
+      assert.equal(res.status, 'ready-to-implement')
+    }
+    assert.equal((await waitForSettle(cell, 'specify', 300, 50)).folded, true)
+  } finally {
+    rmSync(cell, { recursive: true, force: true })
+  }
+})
+
+test('implement settles when the pipeline auto-completes past it', async () => {
+  // mark-complete is Companion's terminal node, so implement lands on
+  // `completed`, never re-settling at `implemented`.
+  const { cell, specDir } = makeCell()
+  try {
+    writeStatus(specDir, 'completed')
+    const res = await waitForSettle(cell, 'implement', 300, 50)
+    assert.equal(res.settled, true)
+    assert.equal(res.status, 'completed')
+  } finally {
+    rmSync(cell, { recursive: true, force: true })
+  }
+})
+
+test('an in-flight status never satisfies its own step', async () => {
+  const { cell, specDir } = makeCell()
+  try {
+    writeStatus(specDir, 'implementing')
+    assert.equal((await waitForSettle(cell, 'implement', 300, 50)).settled, false)
+    // ...but it does satisfy the steps genuinely behind it.
+    assert.equal((await waitForSettle(cell, 'tasks', 300, 50)).settled, true)
+  } finally {
+    rmSync(cell, { recursive: true, force: true })
+  }
+})
+
+test('an unknown status never settles', async () => {
+  const { cell, specDir } = makeCell()
+  try {
+    writeStatus(specDir, 'small') // the wrong-vocabulary size word, as a status
+    assert.equal((await waitForSettle(cell, 'specify', 300, 50)).settled, false)
+  } finally {
+    rmSync(cell, { recursive: true, force: true })
+  }
+})
+
 test('SETTLED_STATUS_BY_STEP covers every measured step', () => {
   assert.deepEqual(Object.keys(SETTLED_STATUS_BY_STEP).sort(), ['implement', 'plan', 'specify', 'tasks'])
 })
