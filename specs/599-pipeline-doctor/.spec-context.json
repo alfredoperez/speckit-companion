@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Pipeline Doctor",
   "branch": "599-pipeline-doctor",
-  "currentStep": "specify",
-  "status": "specified",
+  "currentStep": "plan",
+  "status": "planned",
   "history": [
     {
       "step": "specify",
@@ -18,6 +18,34 @@
       "kind": "complete",
       "by": "extension",
       "at": "2026-08-26T00:55:30.647Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T00:56:03.976Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T00:59:25.600Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-08-26T01:00:53.049Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T01:01:30.800Z"
     }
   ],
   "unattended": true,
@@ -177,5 +205,55 @@
     "The deep transcript audit is a builder's tool, not a supported product surface; transcript format is not a stable contract",
     "No new VS Code setting — the debug switch lives in the project's own companion configuration file",
     "Command bodies are not hand-edited; instrumentation arrives only through the existing assembly pipeline"
-  ]
+  ],
+  "approach": "Wire a tiny append-only tracer into the single funnel write-context.py and drift.py already have, so every call — including the early returns that currently vanish into stderr — leaves a line. Add a read-only doctor command backed by focused check modules that read the run record, the on-disk artifacts, and that trace, and that shells out to drift.py as ground truth rather than reimplementing drift. Deliver debug mode by appending a debug-timing part through the same conditional seam assemble-nodes.py already uses for the orchestrator part, so an off render carries no instrumentation text at all.",
+  "decisions": [
+    {
+      "decision": "Trace by wrapping main() in write-context.py and compute_drift() in drift.py",
+      "why": "Both scripts funnel every path through one entry point and return 0 on failure by design, so the funnel is the only placement that catches the early returns — unresolvable feature dir, refused lifecycle key, feature-dir/tasks-file mismatch — which are exactly the failures that vanish today",
+      "rejected": "Decorating each capture writer, which would only trace calls that got far enough to reach a writer"
+    },
+    {
+      "decision": "The trace file self-ignores by writing specs/NNN/.gitignore on first write",
+      "why": "The trace must be gitignored in every project that installs the extension, and a capture call cannot edit a users root .gitignore as a side effect; a self-ignoring sibling is one idempotent write needing no user action and no installer step",
+      "rejected": "A system temp directory (the trace must survive the run and be findable days later) and an install-time ignore rule (would not cover specs created by a project that installed earlier)"
+    },
+    {
+      "decision": "The drift audit shells out to drift.py --json as ground truth",
+      "why": "compute_drift is already the deterministic authority and already separates tracked from unspeced and reports skips with reasons; reimplementing it would create the second source of truth this feature exists to eliminate, and running it as a user would also exercises its entry point",
+      "rejected": "Reimplementing drift inside the doctor, and importing compute_drift directly (materially the same but bypasses the entry point)"
+    },
+    {
+      "decision": "Classify drift flags as real, self-inflicted, suspect-baseline, or unknown",
+      "why": "These are the two false-alarm shapes the issue names and both are decidable from what git already knows; keeping unknown distinct from real and from clean is required by the capture runtimes own rule that a probe which cannot determine an answer never returns the negative",
+      "rejected": "A confidence score, which invites the same is-it-real shrug the current warning already produces"
+    },
+    {
+      "decision": "Decide the status-vs-display triage from status-context.py against derive-from-files.py plus a Python re-derivation of the step badges",
+      "why": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so status says specified but no Plan button is almost always a history[] gap; deciding from the readings the system already computes is what makes the verdict trustworthy",
+      "rejected": "Reading the TypeScript derivation through a Node shim — the doctor must run in a repo with no Node toolchain"
+    },
+    {
+      "decision": "Debug mode appends a debug-timing part through the existing conditional-append seam",
+      "why": "Reusing the orchestrator seam means no new mechanism for changing command text, which the companion-commands living spec requires, and appending rather than toggling is what makes an off render contain no instrumentation text at all",
+      "rejected": "A conditional block inside each node body (present-but-dormant, and duplicated five times) and a recipe node-order swap (a recipe replaces the whole order, so a project using both would lose one)"
+    },
+    {
+      "decision": "Keep --append and --materialize and add --close-task rather than replacing them",
+      "why": "The two-call shape exists because parallel workers must append without contending while only the main agent may fold; the merge removes the main agents redundant second call for its own task, not the ability to do them separately",
+      "rejected": "Replacing the two flags outright, which would let a fanned-out worker put a second writer on the shared record"
+    },
+    {
+      "decision": "Ship the doctor as a command with no VS Code panel",
+      "why": "It must run on a repo with no VS Code session, retroactively on old specs, and headlessly inside the bench; a panel would also put the diagnosis behind the very display the doctor exists to put on trial",
+      "rejected": "Shipping a panel first — deferred to a follow-up once the verdict shape has settled"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Five new modules plus a debug part in speckit-extension/, all stdlib Python, hanging off seams that already exist — no new mechanism anywhere.",
+      "key_finding": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so the reported specified-but-no-Plan-button symptom is a history[] gap in almost every case — which is what makes the status-vs-display triage decidable from two readings the codebase already computes.",
+      "risks": "The --chat audit rides on a transcript format with no compatibility promise; it is quarantined in its own module and documented as a builders tool for that reason."
+    }
+  }
 }
