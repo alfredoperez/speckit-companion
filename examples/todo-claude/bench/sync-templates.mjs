@@ -129,7 +129,7 @@ export function installSpeckit(dir) {
   rmSync(join(dir, '.claude'), { recursive: true, force: true })
   rmSync(join(dir, 'specs'), { recursive: true, force: true })
   mkdirSync(join(dir, 'specs'), { recursive: true })
-  const ok = specify(dir, ['init', '--here', '--integration', 'claude', '--force', '--no-git'])
+  const ok = specify(dir, ['init', '--here', '--integration', 'claude', '--force'])
   seedConstitution(dir) // overwrite init's [PROJECT_NAME] placeholder with the shared real one
   return ok
 }

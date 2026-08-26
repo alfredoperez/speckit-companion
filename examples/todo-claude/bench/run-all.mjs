@@ -57,12 +57,13 @@ if (cmd === 'prep') {
   // Surface the realistic feature ask — the lead text + plain-English Behavior,
   // but DROP the `Required affordance` block (the exact test-ids are the bench's
   // hidden grading key, not something a real user would type).
-  let prompt = ''
-  try {
-    const md = readFileSync(join(folderDir(MODES[0]), 'bench', 'prompts', `${size}.md`), 'utf8')
-    const body = (md.match(/^---\s*$([\s\S]*?)^---\s*$/m)?.[1] ?? md)
-    prompt = body.split(/\n\*\*Required affordance/i)[0].trim()
-  } catch { /* */ }
+  // Read from the canonical bench folder: the bake strips `bench/` out of every
+  // cell so the model never sees the oracle, so the cell has no prompts to read.
+  const promptFile = join(BENCH_DIR, 'prompts', `${size}.md`)
+  const md = readFileSync(promptFile, 'utf8')
+  const body = (md.match(/^---\s*$([\s\S]*?)^---\s*$/m)?.[1] ?? md)
+  const prompt = body.split(/\n\*\*Required affordance/i)[0].trim()
+  if (!prompt) { console.error(`✗ empty feature prompt in ${relFromRepo(promptFile)}`); process.exit(1) }
   console.log(`\n── PASTE INTO specify (same in all ${MODES.length} folders) ───────────────\n${prompt}\n─────────────────────────────────────────────────────────────`)
 
   // Open each folder in its own VS Code window (unless --no-open). Best-effort.
