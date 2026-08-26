@@ -1,0 +1,181 @@
+{
+  "workflow": "companion",
+  "specName": "Pipeline Doctor",
+  "branch": "599-pipeline-doctor",
+  "currentStep": "specify",
+  "status": "specified",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-08-26T00:50:23.335Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-08-26T00:55:30.647Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "capture-runtime"
+    ]
+  },
+  "last_action": "living specs loaded (companion-commands, capture-runtime)",
+  "coverage": {
+    "FR-001": {
+      "title": "The system MUST provide a read-only health check that can be run against any spec directory at any time and MUST NOT modify any file it inspects."
+    },
+    "FR-002": {
+      "title": "The health check MUST produce a meaningful verdict for a spec created before this feature existed, deriving its findings from the run record and the on-disk files alone."
+    },
+    "FR-003": {
+      "title": "The health check MUST report any step whose start has no matching finish, naming the step."
+    },
+    "FR-004": {
+      "title": "The health check MUST report any task marked done in the task list that has no matching finish in the run record."
+    },
+    "FR-005": {
+      "title": "The health check MUST detect task finishes clustered into a single burst and report them as batched journaling rather than as measured per-task durations."
+    },
+    "FR-006": {
+      "title": "The health check MUST report attribution anomalies — a step closed by an author that is not the one the pipeline reserves for that step."
+    },
+    "FR-007": {
+      "title": "The health check MUST classify the \"status says one thing, the pipeline bar offers another\" symptom as either \"the records disagree with each other\" (a capture defect) or \"the records are consistent\" (a display defect)."
+    },
+    "FR-008": {
+      "title": "The health check MUST state which checks it ran and which it could not run, and MUST NOT report a clean verdict for checks it skipped."
+    },
+    "FR-009": {
+      "title": "The health check MUST exit successfully whatever it finds; a finding is a report, never a gate that blocks a pipeline."
+    },
+    "FR-010": {
+      "title": "The capture runtime MUST record one trace entry for every call it handles, including calls that fail, without requiring any additional call from the run."
+    },
+    "FR-011": {
+      "title": "A failed capture call MUST leave a trace entry carrying the reason it failed."
+    },
+    "FR-012": {
+      "title": "The trace MUST be stored locally per spec, excluded from version control, and capped in size so it cannot grow without bound."
+    },
+    "FR-013": {
+      "title": "Writing a trace entry MUST NOT measurably slow a run and MUST NOT add any instruction text to a command body."
+    },
+    "FR-014": {
+      "title": "The health check MUST consume the trace to report call counts, failure counts, payload sizes, loaded-context sizes, and per-file rewrite counts."
+    },
+    "FR-015": {
+      "title": "The drift audit MUST recompute drift itself from the deterministic ground truth and MUST NOT trust any previously recorded drift verdict."
+    },
+    "FR-016": {
+      "title": "The drift audit MUST show its work for each flag: the capability, the files changed since that capability's spec was last committed, and the commits that changed them."
+    },
+    "FR-017": {
+      "title": "The drift audit MUST classify each flag as real drift, self-inflicted (caused by the companion's own writes), or suspect baseline (wrong comparison point, renames)."
+    },
+    "FR-018": {
+      "title": "The drift audit MUST report a recorded claim of drift-clean that contradicts its own recomputation as a false claim."
+    },
+    "FR-019": {
+      "title": "The drift audit MUST report a capability whose baseline cannot be determined as unknown with the reason, never as clean."
+    },
+    "FR-020": {
+      "title": "Drift evaluations MUST record their own inputs to the trace so repeated verdicts can be compared over time."
+    },
+    "FR-021": {
+      "title": "When completion was attempted but the spec did not reach the terminal state, the health check MUST state which of these happened: the write never arrived, the write was refused (and why), or the write landed and the display disagrees."
+    },
+    "FR-022": {
+      "title": "The health check MUST distinguish \"completion was never attempted\" from \"completion failed\"."
+    },
+    "FR-023": {
+      "title": "The health check MUST verify the task list still carries its generated shape — one phase per user story, waves inside each phase, join lines and checkpoints intact."
+    },
+    "FR-024": {
+      "title": "The health check MUST flag a task list whose user-story sections were renamed, flattened, or replaced after generation as a template violation, naming the offending headings."
+    },
+    "FR-025": {
+      "title": "The system MUST provide a debug switch in the project's own companion configuration file, not as an editor setting."
+    },
+    "FR-026": {
+      "title": "When the debug switch is off, command bodies MUST contain no instrumentation text at all — absent, not dormant."
+    },
+    "FR-027": {
+      "title": "When the debug switch is on, re-rendered command bodies MUST carry step-by-step timing instrumentation that yields per-step timing on the next run."
+    },
+    "FR-028": {
+      "title": "A change to the debug switch MUST affect the next dispatched command and MUST NOT alter a command already in flight."
+    },
+    "FR-029": {
+      "title": "The health check MUST offer an optional deep audit that reads the AI session transcript covering the run's time window."
+    },
+    "FR-030": {
+      "title": "The deep audit MUST distinguish work that was tried and failed, work that was retried, and work that was never attempted."
+    },
+    "FR-031": {
+      "title": "The deep audit MUST surface claims recorded during the run that contradict the recomputed reality."
+    },
+    "FR-032": {
+      "title": "The deep audit MUST quantify wasted output, including extra summaries, narration, and repeated rewrites of the same file."
+    },
+    "FR-033": {
+      "title": "The deep audit MUST degrade to a single \"not available\" line and exit successfully where no transcript exists or its format can no longer be parsed."
+    },
+    "FR-034": {
+      "title": "The measurement harness MUST produce a trace for runs performed in its comparison folders and MUST fold the health check's verdict into its scoring."
+    },
+    "FR-035": {
+      "title": "The harness MUST include a deliberately oversized variant large enough to surface batched task journaling when it occurs."
+    },
+    "FR-036": {
+      "title": "The harness MUST include a failure-injection fixture that proves a failed capture is recorded and reported rather than lost."
+    },
+    "FR-037": {
+      "title": "Existing capture, drift, and completion behavior MUST be unchanged for a user who never runs the health check and never turns debug on."
+    },
+    "FR-038": {
+      "title": "Every part of this feature MUST inherit the runtime's never-fail-the-host contract: a missing interpreter, an unreadable file, or an unresolvable directory reports the problem and continues, never halting the pipeline."
+    },
+    "FR-039": {
+      "title": "The closing of a task SHOULD be reducible to a single call rather than the current pair of calls, without changing what is recorded."
+    },
+    "FR-040": {
+      "title": "The end-of-step capture calls SHOULD be reducible to a single batched call rather than a volley of separate calls, without changing what is recorded."
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 34,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "context": [
+    "living spec: capture-runtime (speckit-extension/scripts/capture-runtime.spec.md)",
+    "living spec: companion-commands (capabilities/companion-commands/spec.md)",
+    "area: speckit-extension/scripts — write-context.py, drift.py, companion_config.py, build-commands.py",
+    "area: speckit-extension/nodes + commands — bodies are generated, never hand-edited",
+    "area: examples/todo-claude/bench — harness variants and scoring",
+    "constraint: recording MUST NOT be able to break the run it observes (never-fail-the-host)",
+    "constraint: a probe that cannot determine an answer reports unknown, never the negative",
+    "constraint: a report MUST NOT claim success for work it did not do",
+    "constraint: command bodies are assembled from single-sourced parts/nodes and gated byte-identical",
+    "constraint: source of truth is speckit-extension/, not the installed .specify/extensions/companion copy"
+  ],
+  "intent": "Give every Companion run a free self-record, plus a read-only health check that recomputes reality instead of trusting claims, and a debug switch that only costs something while it is on.",
+  "expectations": [
+    "The health check reports only — it never repairs a finding, and never gates or blocks a pipeline",
+    "No change to capture, drift, or completion behavior for users who never run the health check or enable debug",
+    "The trace is a local, gitignored diagnostic — never uploaded, never committed, no telemetry contract",
+    "The deep transcript audit is a builder's tool, not a supported product surface; transcript format is not a stable contract",
+    "No new VS Code setting — the debug switch lives in the project's own companion configuration file",
+    "Command bodies are not hand-edited; instrumentation arrives only through the existing assembly pipeline"
+  ]
+}
