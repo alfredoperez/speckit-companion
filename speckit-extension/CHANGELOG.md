@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-08-26
+
 ### Added
 
 - **A new `/speckit.companion.doctor` command tells you what actually happened in a run.** Until now, when a spec looked wrong there was no way to tell whether the records were wrong, the display was wrong, or the assistant's claim about what it did was wrong. The doctor recomputes rather than believing: it reports steps that started and never finished, tasks ticked off with no journal entry behind them, task finishes written in one burst at the end (so their durations mean nothing), and steps closed by the wrong author. For the familiar "the status says specified but the Plan button isn't there" symptom, it gives one of exactly two answers — the records disagree with each other, or the records are fine and the display is at fault. It is read-only, never blocks anything, and works on specs created long before it existed. Add `--chat` on Claude to read back the session and explain *why* something failed; `--json` for tooling.

@@ -3,8 +3,8 @@ schema_version: "1.0"
 extension:
   id: companion
   name: "SpecKit Companion"
-  version: "0.20.2"
-  description: "Catch bad specs before they become bad code: records your spec-kit runs live, with status and resume."
+  version: "0.21.0"
+  description: "Records your spec-kit runs live: status, resume, and a health check for what actually happened."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
   homepage: https://github.com/alfredoperez/speckit-companion/tree/main/speckit-extension
