@@ -206,7 +206,12 @@ describe('CoverageSection', () => {
         expect(host.textContent).toContain('1/2 traced');
     });
 
-    it('omits itself entirely when nothing is traced', () => {
+    it('states the zero instead of hiding it', () => {
+        // It used to omit itself here, on the reasoning that a bare zero reads as
+        // failure when the pipeline simply never mapped tests. But the header strip
+        // kept showing "0 of N traced" regardless, so the page reported the zero and
+        // hid the explanation at the same time. Zero traced is a finding, not an
+        // unknown — arguably the most important one this table can carry.
         const host = document.createElement('div');
         render(h(CoverageSection, {
             state: base({
@@ -216,6 +221,40 @@ describe('CoverageSection', () => {
                 ],
             }),
         }), host);
-        expect(host.querySelector('.dossier-section')).toBeNull();
+        expect(host.querySelector('.dossier-section')).not.toBeNull();
+        expect(host.textContent).toContain('0/2 traced');
+        expect(host.textContent).toContain('No test linked');
+    });
+
+    it('separates a test that is named but not on disk from one that is missing entirely', () => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, {
+            state: base({
+                coverage: [
+                    { req: 'FR-1', tasks: ['T001'], tests: ['src/a.test.ts'], missingTests: ['src/a.test.ts'] },
+                    { req: 'FR-2', tasks: ['T002'], tests: ['src/b.test.ts'] },
+                    { req: 'FR-3', tasks: ['T003'], tests: [] },
+                ],
+            }),
+        }), host);
+        expect(host.querySelector('.is-missing')).not.toBeNull();
+        expect(host.textContent).toContain('1 test not found');
+        expect(host.textContent).toContain('No test linked');
+    });
+
+    it('says how many of several named tests were found', () => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, {
+            state: base({
+                coverage: [
+                    {
+                        req: 'FR-1', tasks: ['T001'],
+                        tests: ['src/a.test.ts', 'src/b.test.ts'],
+                        missingTests: ['src/b.test.ts'],
+                    },
+                ],
+            }),
+        }), host);
+        expect(host.textContent).toContain('1 of 2 found');
     });
 });

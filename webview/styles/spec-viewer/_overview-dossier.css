@@ -484,6 +484,17 @@
 .dossier-coverage__state.is-traced { color: var(--success); }
 .dossier-coverage__state.is-untraced { color: var(--warning); }
 
+/* A named test that is not on disk. Distinct from "no test linked" on purpose:
+   a link that resolves to nothing is worse than an honest gap, because it reads
+   as coverage that exists. The dot is hollow so the difference survives a
+   monochrome or high-contrast theme rather than resting on hue alone. */
+.dossier-coverage__state.is-missing { color: var(--error, var(--warning)); }
+
+.dossier-coverage__state.is-missing i {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
 /* ── Disclosures: "show more" + the demoted run log ── */
 
 .dossier-more {

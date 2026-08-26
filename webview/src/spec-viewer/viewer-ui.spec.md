@@ -179,10 +179,17 @@ Every section of the overview MUST hide itself when its data is empty, so a spec
 - **WHEN** a spec recorded no decisions
 - **THEN** the decisions section does not render at all
 
+Coverage is the exception to the hide-when-empty rule, because its empty state is a finding rather than an absence, and because the header strip reports the count whether the section renders or not — hiding the section left the page showing the zero and withholding the explanation.
+
 #### Scenario: coverage has rows but nothing is traced
 - **WHEN** the coverage rows exist but no requirement has a linked test
-- **THEN** the Coverage section hides entirely rather than showing a misleading "0 of N traced"
-- **AND** it reappears once any requirement gains a linked test
+- **THEN** the Coverage section renders and states "0 of N traced" plainly
+- **AND** each untraced requirement is listed, so the gap is readable rather than merely counted
+
+#### Scenario: a requirement names a test that is not on disk
+- **WHEN** a requirement's linked test path does not resolve in the workspace
+- **THEN** that row renders in a state distinct from both a confirmed test and an unmapped requirement
+- **AND** the label says how many of the named tests were found, so a partially-real link is not read as whole
 
 #### Scenario: a section throws while rendering
 - **WHEN** the overview subtree fails

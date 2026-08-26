@@ -400,6 +400,15 @@ export interface ViewerCoverageRow {
     title?: string;
     tasks: string[];
     tests: string[];
+    /**
+     * Which of `tests` were confirmed to exist on disk. A named test that is not
+     * there is the case the table used to render exactly like a real one — the
+     * string was typed once and nothing ever read it back.
+     *
+     * `undefined` means nobody checked (no workspace to resolve against), which
+     * is different from "checked and found nothing" and must render differently.
+     */
+    missingTests?: string[];
 }
 
 export interface ViewerState {

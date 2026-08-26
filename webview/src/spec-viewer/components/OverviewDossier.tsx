@@ -1,4 +1,4 @@
-import type { ViewerState } from '../types';
+import type { ViewerState, ViewerCoverageRow } from '../types';
 import { formatElapsed } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 
@@ -295,11 +295,35 @@ function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number
             <div class="dossier-coverage__tasks">
                 {row.tasks.map(task => <code key={task}>{task}</code>)}
             </div>
-            <div class={tested ? 'dossier-coverage__state is-traced' : 'dossier-coverage__state is-untraced'}>
-                <i aria-hidden="true" /> {tested ? `${row.tests.length} test${row.tests.length === 1 ? '' : 's'}` : 'No test linked'}
+            <div class={coverageStateClass(row)}>
+                <i aria-hidden="true" /> {coverageStateLabel(row)}
             </div>
         </article>
     );
+}
+
+/**
+ * Three states, not two. A named test that is not on disk is the case this table
+ * used to render exactly like a real one — and it is worse than no test at all,
+ * because it reads as coverage that exists.
+ */
+function coverageStateClass(row: ViewerCoverageRow): string {
+    if (row.missingTests?.length) { return 'dossier-coverage__state is-missing'; }
+    return row.tests.length > 0
+        ? 'dossier-coverage__state is-traced'
+        : 'dossier-coverage__state is-untraced';
+}
+
+function coverageStateLabel(row: ViewerCoverageRow): string {
+    const missing = row.missingTests?.length ?? 0;
+    if (missing) {
+        return missing === row.tests.length
+            ? `${missing} test${missing === 1 ? '' : 's'} not found`
+            : `${row.tests.length - missing} of ${row.tests.length} found`;
+    }
+    return row.tests.length > 0
+        ? `${row.tests.length} test${row.tests.length === 1 ? '' : 's'}`
+        : 'No test linked';
 }
 
 export function CoverageSection({ state }: { state: ViewerState }) {
@@ -307,9 +331,12 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     if (!rows || rows.length === 0) return null;
 
     const traced = rows.filter(r => r.tests.length > 0).length;
-    // Nothing traced reads as a failing 0/N when the pipeline never maps tests;
-    // the section reappears once any requirement gains a linked test.
-    if (traced === 0) return null;
+    // The section used to hide itself when nothing was traced, on the reasoning
+    // that a bare zero reads as failure when the pipeline simply never mapped
+    // tests. But the header strip goes on showing "0 of N traced" two inches
+    // above, so the page reported the zero and hid the explanation at once. Zero
+    // requirements traced is not an unknown — it is the most important finding
+    // the page can carry, so it is stated.
     // Untraced requirements lead — the gaps are the signal.
     const ordered = [...rows.filter(r => r.tests.length === 0), ...rows.filter(r => r.tests.length > 0)];
     const rest = ordered.slice(COVERAGE_SHOWN);
