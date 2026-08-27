@@ -28,6 +28,26 @@ interface Props {
     onReplaceNode: NodeAction;
     /** Drop the project's copy and go back to the shipped node. */
     onRestoreNode: NodeAction;
+    /** Save a step's whole node order after a drag. */
+    onReorder: (command: string, order: string[]) => void;
+}
+
+/**
+ * A step's nodes as one flat list, which is what the configuration stores.
+ *
+ * Phases are drawn as containers but written as nothing: `companion.yml` holds a
+ * single ordered list per step, and the phase grouping is the extension's.
+ */
+function flatOrder(step: PipelineStep): string[] {
+    return step.phases.flatMap(phase => phase.nodes.map(n => n.id));
+}
+
+/** That list with `moved` taken out and put back before `target`. */
+function reordered(order: string[], moved: string, target: string): string[] {
+    const without = order.filter(id => id !== moved);
+    const at = without.indexOf(target);
+    if (at < 0) { return order; }
+    return [...without.slice(0, at), moved, ...without.slice(at)];
 }
 
 function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
@@ -44,13 +64,37 @@ function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
     );
 }
 
-type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'>;
+type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'> & {
+    /** Called when a node is dropped onto another within the same phase. */
+    onDrop: (moved: string, target: string) => void;
+};
 
 function Node({ node, step, actions }: {
     node: PipelineNode; step: string; actions: NodeActions;
 }) {
     return (
-        <div class={`pb-node ${node.replaced ? 'pb-node--replaced' : ''}`}>
+        <div class={`pb-node ${node.replaced ? 'pb-node--replaced' : ''}`}
+            draggable
+            onDragStart={event => {
+                event.dataTransfer?.setData('text/plain', node.id);
+                if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; }
+                (event.currentTarget as HTMLElement).classList.add('pb-node--dragging');
+            }}
+            onDragEnd={event =>
+                (event.currentTarget as HTMLElement).classList.remove('pb-node--dragging')}
+            onDragOver={event => {
+                event.preventDefault();
+                if (event.dataTransfer) { event.dataTransfer.dropEffect = 'move'; }
+                (event.currentTarget as HTMLElement).classList.add('pb-node--over');
+            }}
+            onDragLeave={event =>
+                (event.currentTarget as HTMLElement).classList.remove('pb-node--over')}
+            onDrop={event => {
+                event.preventDefault();
+                (event.currentTarget as HTMLElement).classList.remove('pb-node--over');
+                const moved = event.dataTransfer?.getData('text/plain');
+                if (moved && moved !== node.id) { actions.onDrop(moved, node.id); }
+            }}>
             <button class="pb-node-main" onClick={() => actions.onOpenNode(step, node.id)}
                 title={node.replaced
                     ? "Open this project's instructions for this node"
@@ -123,7 +167,18 @@ function Decisions({ step }: { step: PipelineStep }) {
     );
 }
 
-function Step({ step, actions }: { step: PipelineStep; actions: NodeActions }) {
+function Step({ step, actions, onReorder }: {
+    step: PipelineStep; actions: Omit<NodeActions, 'onDrop'>; onReorder: Props['onReorder'];
+}) {
+    const withDrop: NodeActions = {
+        ...actions,
+        onDrop: (moved, target) =>
+            onReorder(step.name, reordered(flatOrder(step), moved, target)),
+    };
+    return <StepBody step={step} actions={withDrop} />;
+}
+
+function StepBody({ step, actions }: { step: PipelineStep; actions: NodeActions }) {
     const changed = step.changes.added.length || step.changes.removed.length
         || step.changes.reordered || step.changes.hooks || step.changes.decisions.length
         || step.changes.replaced.length || step.template;
@@ -163,13 +218,13 @@ function Step({ step, actions }: { step: PipelineStep; actions: NodeActions }) {
     );
 }
 
-export function Canvas({ graph, onOpenNode, onReplaceNode, onRestoreNode }: Props) {
-    const actions: NodeActions = { onOpenNode, onReplaceNode, onRestoreNode };
+export function Canvas({ graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder }: Props) {
+    const actions = { onOpenNode, onReplaceNode, onRestoreNode };
     return (
         <main class="pb-canvas">
             {graph.steps.map((step, index) => (
                 <div key={step.name} class="pb-chain-item">
-                    <Step step={step} actions={actions} />
+                    <Step step={step} actions={actions} onReorder={onReorder} />
                     {index < graph.steps.length - 1 && (
                         <div class="pb-link" aria-hidden="true" />
                     )}

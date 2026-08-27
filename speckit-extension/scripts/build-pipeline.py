@@ -103,6 +103,13 @@ def plan_build(config: dict) -> tuple[dict, list]:
         # boundary — so both are valid anchor names. Without the phase names
         # here, a hook attached to one is warned about and silently skipped.
         phases = assemble.phases_for(command, order)
+        stray = assemble.unexpressible_order(command, order)
+        if stray:
+            raise BuildError(
+                f"{command}: '{stray}' is ordered across a phase boundary. Phases are "
+                f"contiguous in the body, so this order cannot be built — move it "
+                f"within its phase, or change the phase it belongs to."
+            )
         anchors = list(order) + [phase["name"] for phase in phases]
 
         try:

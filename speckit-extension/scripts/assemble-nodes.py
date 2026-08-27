@@ -66,19 +66,26 @@ def phases_for(command: str, order: list) -> list:
 
     A command whose `_order.yml` declares no phases gets none, and assembles
     exactly as it did before. When a recipe changes the order, each phase keeps
-    only the nodes the recipe still runs, and a phase left with nothing is
-    dropped rather than rendered empty.
+    only the nodes the recipe still runs, in the order the recipe asked for, and
+    a phase left with nothing is dropped rather than rendered empty.
+
+    Phases are the outer sequence, so an order that interleaves them cannot be
+    honoured here. `unexpressible_order` names that case; this function does not
+    raise, because the builder has to be able to draw such a project.
     """
     declared = parse_phases(os.path.join(nodes_command_dir(command), "_order.yml"))
     if not declared:
         return []
     kept = set(order)
+    rank = {node_id: i for i, node_id in enumerate(order)}
     grouped = []
     seen = set()
     for phase in declared:
         nodes = [n for n in phase["nodes"] if n in kept]
         if nodes:
-            grouped.append({"name": phase["name"], "nodes": nodes})
+            # The recipe's order decides, not the shipped one — otherwise a
+            # reorder inside a phase is reported as applied and changes nothing.
+            grouped.append({"name": phase["name"], "nodes": sorted(nodes, key=rank.get)})
             seen.update(nodes)
     # A recipe may name a node no phase claims. It still runs — order is the
     # authority — so it goes in a trailing phase rather than being dropped.
@@ -86,6 +93,23 @@ def phases_for(command: str, order: list) -> list:
     if unclaimed:
         grouped.append({"name": "other", "nodes": unclaimed})
     return grouped
+
+
+def unexpressible_order(command: str, order: list):
+    """The first node an order moves across a phase boundary, or None.
+
+    A phase is a contiguous run in the assembled body, so `[a_from_p1, b_from_p2,
+    c_from_p1]` is a request the grouping cannot represent. Reporting it is the
+    difference between a recipe that is refused and one that is quietly rewritten.
+    """
+    grouped = phases_for(command, order)
+    if not grouped:
+        return None
+    flat = [n for phase in grouped for n in phase["nodes"]]
+    for asked, built in zip(order, flat):
+        if asked != built:
+            return asked
+    return None
 
 
 def _wrap_phase(name: str, body: str) -> str:

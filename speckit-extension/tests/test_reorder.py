@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Reordering a step's nodes, and saving that order back to `companion.yml`.
+
+Two defects sit behind these tests.
+
+The first: `phases_for` grouped nodes by the shipped phase membership and kept
+the *shipped* order inside each phase, so a recipe that swapped two nodes in one
+phase produced a byte-identical body while the build printed "reordered". A
+change reported as applied and silently discarded is the exact failure this
+pipeline keeps closing.
+
+The second is the shape of the fix: phases are contiguous runs of the body, so
+an order that interleaves them cannot be built. That is now refused by name
+rather than quietly rewritten to the nearest expressible thing.
+
+Stdlib `unittest` only.
+"""
+from __future__ import annotations
+
+import importlib
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+EXT = Path(__file__).resolve().parent.parent
+SCRIPTS = EXT / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import config_write  # noqa: E402
+
+assemble = importlib.import_module("assemble-nodes")
+build = importlib.import_module("build-pipeline")
+
+# plan/gather holds two nodes that read nothing from each other, so it is the
+# one phase in the shipped pipeline a reorder can legally touch.
+PLAN_DEFAULT = ["size-budget", "gather-context", "plan-doc",
+                "constitution-check", "side-files", "handoff"]
+PLAN_SWAPPED = ["gather-context", "size-budget", "plan-doc",
+                "constitution-check", "side-files", "handoff"]
+
+
+class AReorderInsideAPhaseIsHonoured(unittest.TestCase):
+    def test_the_shipped_order_is_what_we_think_it_is(self):
+        self.assertEqual(assemble.default_order("plan"), PLAN_DEFAULT)
+
+    def test_the_phase_lists_the_nodes_in_the_order_that_was_asked_for(self):
+        gather = next(p for p in assemble.phases_for("plan", PLAN_SWAPPED)
+                      if p["name"] == "gather")
+        self.assertEqual(gather["nodes"], ["gather-context", "size-budget"])
+
+    def test_the_body_actually_changes(self):
+        before = assemble.assemble_command("plan", order=PLAN_DEFAULT)
+        after = assemble.assemble_command("plan", order=PLAN_SWAPPED)
+        self.assertNotEqual(before, after)
+        # The same nodes, in the other order — nothing added or dropped.
+        self.assertEqual(sorted(before.splitlines()), sorted(after.splitlines()))
+
+    def test_an_order_within_phases_is_expressible(self):
+        self.assertIsNone(assemble.unexpressible_order("plan", PLAN_SWAPPED))
+
+
+class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
+    def test_the_node_that_crosses_is_named(self):
+        crossing = ["size-budget", "constitution-check", "gather-context",
+                    "plan-doc", "side-files", "handoff"]
+        self.assertEqual(assemble.unexpressible_order("plan", crossing), "constitution-check")
+
+    def test_a_build_refuses_it_and_says_which_node(self):
+        with tempfile.TemporaryDirectory() as project:
+            specify = Path(project) / ".specify"
+            specify.mkdir()
+            (specify / "companion.yml").write_text(
+                "commands:\n  plan:\n    nodes:\n"
+                "      - size-budget\n      - constitution-check\n      - gather-context\n"
+                "      - plan-doc\n      - side-files\n      - handoff\n",
+                encoding="utf-8",
+            )
+            config = build.load_config(project)
+            with self.assertRaises(build.BuildError) as caught:
+                build.plan_build(config)
+        self.assertIn("constitution-check", str(caught.exception))
+        self.assertIn("phase boundary", str(caught.exception))
+
+
+class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
+    """A configuration written and then refused at every build is worse than none."""
+
+    def test_a_legal_reorder_passes(self):
+        config_write.check_order("plan", PLAN_SWAPPED)
+
+    def test_running_a_node_before_something_it_reads_is_refused(self):
+        with self.assertRaises(config_write.ConfigWriteError) as caught:
+            config_write.check_order(
+                "specify",
+                ["resolve-dir", "load-living-specs", "quality-checklist", "draft-spec",
+                 "classify-size", "persist-size", "branch", "finalize", "handoff"],
+            )
+        self.assertIn("quality-checklist", str(caught.exception))
+        self.assertIn("draft-spec", str(caught.exception))
+
+    def test_an_unknown_node_is_refused(self):
+        with self.assertRaises(config_write.ConfigWriteError):
+            config_write.check_order("plan", PLAN_DEFAULT + ["invented"])
+
+    def test_an_empty_order_is_refused(self):
+        with self.assertRaises(config_write.ConfigWriteError):
+            config_write.set_nodes("", "plan", [])
+
+
+class WritingBackLeavesTheRestOfTheFileAlone(unittest.TestCase):
+    """The configuration is a file people read and review, not a serialization."""
+
+    EXISTING = (
+        "# our pipeline\n"
+        "debug: false\n"
+        "\n"
+        "commands:\n"
+        "  specify:\n"
+        "    hooks:\n"
+        "      after:\n"
+        "        author:\n"
+        "          - { type: prompt, text: \"re-read it\" }\n"
+    )
+
+    def test_an_absent_file_gets_a_whole_block(self):
+        out = config_write.set_nodes("", "plan", ["a", "b"])
+        self.assertEqual(out, "commands:\n  plan:\n    nodes:\n      - a\n      - b\n")
+
+    def test_another_commands_entry_is_untouched(self):
+        out = config_write.set_nodes(self.EXISTING, "plan", ["a", "b"])
+        self.assertIn("# our pipeline", out)
+        self.assertIn("- { type: prompt, text: \"re-read it\" }", out)
+        self.assertIn("  plan:\n    nodes:\n      - a\n      - b\n", out)
+
+    def test_an_existing_order_is_replaced_not_appended(self):
+        once = config_write.set_nodes(self.EXISTING, "plan", ["a", "b"])
+        twice = config_write.set_nodes(once, "plan", ["b", "a"])
+        self.assertEqual(twice.count("nodes:"), 1)
+        self.assertIn("      - b\n      - a\n", twice)
+
+    def test_hooks_on_the_same_command_survive_a_reorder(self):
+        out = config_write.set_nodes(self.EXISTING, "specify", ["a", "b"])
+        self.assertIn("hooks:", out)
+        self.assertIn("- { type: prompt, text: \"re-read it\" }", out)
+        self.assertIn("nodes:", out)
+
+    def test_the_result_still_reads_as_the_order_that_was_written(self):
+        import companion_config as cc
+
+        out = config_write.set_nodes(self.EXISTING, "plan", ["a", "b", "c"])
+        parsed = cc.load_yaml(out)
+        self.assertEqual(parsed["commands"]["plan"]["nodes"], ["a", "b", "c"])
+        self.assertEqual(parsed["debug"], False)
+
+
+if __name__ == "__main__":
+    unittest.main()

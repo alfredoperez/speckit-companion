@@ -18,6 +18,43 @@ export function resolveGraphScript(workspaceRoot: string, extensionPath: string)
     return build ? build.replace(/build-pipeline\.py$/, 'pipeline-graph.py') : null;
 }
 
+export function resolveConfigWriteScript(
+    workspaceRoot: string,
+    extensionPath: string,
+): string | null {
+    const build = resolveBuildScript(workspaceRoot, extensionPath);
+    return build ? build.replace(/build-pipeline\.py$/, 'config_write.py') : null;
+}
+
+/**
+ * Save a step's node order into the project's `companion.yml`.
+ *
+ * The script refuses an order the pipeline cannot honour — a node moved across a
+ * phase boundary, or before something it reads — and writes nothing when it
+ * does, so a rejected drag leaves the configuration exactly as it was. Returns
+ * the reason on refusal, or null on success.
+ */
+export function writeNodeOrder(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    order: string[],
+): Promise<string | null> {
+    const { execFile } = require('child_process');
+    return new Promise<string | null>(resolve => {
+        execFile(
+            'python3',
+            [script, '--project', workspaceRoot, '--command', command, '--nodes', order.join(',')],
+            { cwd: workspaceRoot, timeout: GRAPH_TIMEOUT_MS },
+            (err: Error | null, stdout: string, stderr: string) => {
+                if (!err) { resolve(null); return; }
+                const said = (stdout || stderr || '').replace(/^\[config]\s*/m, '').trim();
+                resolve(said || `the order could not be saved: ${err.message}`);
+            },
+        );
+    });
+}
+
 /**
  * Read the graph, or an error shaped like one.
  *

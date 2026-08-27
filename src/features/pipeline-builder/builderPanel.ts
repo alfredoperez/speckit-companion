@@ -20,7 +20,12 @@ import {
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
-import { readPipelineGraph, resolveGraphScript } from '../specs/pipelineGraph';
+import {
+    readPipelineGraph,
+    resolveConfigWriteScript,
+    resolveGraphScript,
+    writeNodeOrder,
+} from '../specs/pipelineGraph';
 
 const VIEW_TYPE = 'speckit.pipelineBuilder';
 const BUILD_COMMAND = 'speckit.companion.buildPipeline';
@@ -135,6 +140,28 @@ export class PipelineBuilderPanel {
                 'Build',
             ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
             await this.send();
+        },
+        reorderNodes: async message => {
+            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
+            if (!script) {
+                void vscode.window.showWarningMessage(
+                    'Reordering needs the companion spec-kit extension.');
+                return;
+            }
+            const refused = await writeNodeOrder(
+                script, this.workspaceRoot, message.command, message.order);
+            if (refused) {
+                // The drag is already undone: the panel redraws from the file,
+                // which the script left untouched.
+                void vscode.window.showWarningMessage(refused);
+                await this.send();
+                return;
+            }
+            await this.send();
+            void vscode.window.showInformationMessage(
+                `${message.command} reordered in companion.yml. Build to apply it.`,
+                'Build',
+            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
         },
         restoreNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);

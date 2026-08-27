@@ -80,6 +80,8 @@ function App() {
                     vscode.postMessage({ type: 'replaceNode', command, nodeId })}
                 onRestoreNode={(command, nodeId) =>
                     vscode.postMessage({ type: 'restoreNode', command, nodeId })}
+                onReorder={(command, order) =>
+                    vscode.postMessage({ type: 'reorderNodes', command, order })}
             />
         </div>
     );

@@ -133,7 +133,9 @@ export type BuilderToExtensionMessage =
     /** Take ownership of a node: copy the shipped instructions in to edit. */
     | { type: 'replaceNode'; command: string; nodeId: string }
     /** Give it back: drop the project's copy and return to the shipped node. */
-    | { type: 'restoreNode'; command: string; nodeId: string };
+    | { type: 'restoreNode'; command: string; nodeId: string }
+    /** Save a step's node order after a drag. `order` is the whole step, in order. */
+    | { type: 'reorderNodes'; command: string; order: string[] };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }

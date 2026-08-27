@@ -94,6 +94,9 @@ BUILD_ONLY = frozenset({
     # Emits the pipeline structure the builder panel draws. Runs from the
     # extension's own sources like the build command it mirrors.
     "pipeline-graph.py",
+    # Writes one key back into a project's companion.yml after a drag in the
+    # builder. Same story: the editor runs it, no shipped command body does.
+    "config_write.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

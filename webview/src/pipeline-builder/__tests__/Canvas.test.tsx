@@ -65,13 +65,33 @@ type Calls = string[][];
 /** Mount the canvas and hand back the DOM plus what each node action recorded. */
 function canvas(g: PipelineGraph = graph()) {
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [];
+    const orders: Array<[string, string[]]> = [];
     const host = mount(
         <Canvas graph={g}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
-            onRestoreNode={(c, n) => restored.push([c, n])} />,
+            onRestoreNode={(c, n) => restored.push([c, n])}
+            onReorder={(c, order) => orders.push([c, order])} />,
     );
-    return { host, opened, replaced, restored };
+    return { host, opened, replaced, restored, orders };
+}
+
+/** Drag the node at `from` onto the node at `to`, as the browser would. */
+function drag(host: HTMLElement, from: number, to: number): void {
+    const nodes = host.querySelectorAll('.pb-node');
+    const carried = new Map<string, string>();
+    const dataTransfer = {
+        setData: (k: string, v: string) => { carried.set(k, v); },
+        getData: (k: string) => carried.get(k) ?? '',
+        effectAllowed: '', dropEffect: '',
+    };
+    const fire = (el: Element, type: string) => {
+        const event = new Event(type, { bubbles: true }) as DragEvent;
+        Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+        el.dispatchEvent(event);
+    };
+    fire(nodes[from], 'dragstart');
+    fire(nodes[to], 'drop');
 }
 
 afterEach(() => { document.body.innerHTML = ''; });
@@ -167,6 +187,49 @@ describe('the canvas draws the three levels as containment', () => {
         });
         const { host } = canvas(mixed);
         expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
+    });
+});
+
+describe('dragging a node reorders the step', () => {
+    /** One phase holding three nodes, so a drag has somewhere to land. */
+    function threeInAPhase() {
+        return graph({
+            steps: [step({
+                phases: [{
+                    name: 'wrap-up',
+                    hooks: [],
+                    nodes: [
+                        node({ id: 'branch', name: 'Create the branch' }),
+                        node({ id: 'finalize', name: 'Finalize' }),
+                        node({ id: 'handoff', name: 'Hand off' }),
+                    ],
+                }],
+            })],
+        });
+    }
+
+    it('sends the step\'s whole order, with the dragged node in its new place', () => {
+        const { host, orders } = canvas(threeInAPhase());
+        drag(host, 2, 0);   // handoff, dropped onto branch
+        expect(orders).toEqual([['specify', ['handoff', 'branch', 'finalize']]]);
+    });
+
+    it('sends nothing when a node is dropped on itself', () => {
+        const { host, orders } = canvas(threeInAPhase());
+        drag(host, 1, 1);
+        expect(orders).toEqual([]);
+    });
+
+    it('carries the nodes of every phase, since the file stores one flat list', () => {
+        const { host, orders } = canvas();   // two phases, one node each
+        drag(host, 1, 0);
+        expect(orders).toEqual([['specify', ['draft-spec', 'resolve-dir']]]);
+    });
+
+    it('marks every node draggable', () => {
+        const { host } = canvas(threeInAPhase());
+        const nodes = Array.from(host.querySelectorAll('.pb-node'));
+        expect(nodes.every(n => n.getAttribute('draggable') !== null)).toBe(true);
     });
 });
 

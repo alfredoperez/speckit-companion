@@ -315,6 +315,16 @@ body {
     background: var(--bg-hover);
 }
 
+/* Dragging reorders within a phase. The node being carried fades; the one it
+   would land above shows the line it would land on. */
+.pb-node--dragging {
+    opacity: 0.4;
+}
+
+.pb-node--over > .pb-node-main {
+    border-top: 2px solid var(--purple);
+}
+
 /* A node this project owns reads differently from one it merely runs. */
 .pb-node--replaced .pb-node-main {
     border-color: var(--purple);
