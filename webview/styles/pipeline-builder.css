@@ -301,24 +301,44 @@ body {
 
 .pb-run {
     display: grid;
-    grid-template-columns: repeat(var(--pb-steps, 4), minmax(0, 1fr));
-    /* min-width 0 lets a grid track shrink below its content; the floor is the
-       column, set by the container queries below. */
-    gap: var(--space-3);
+    grid-auto-flow: column;
+    /* A lane never narrows past readable. Four fit on a wide editor; on a split
+       pane the board scrolls sideways, the way a board should. */
+    grid-auto-columns: minmax(300px, 1fr);
+    gap: 0;
     align-items: start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
 }
 
 .pb-step {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
+    padding: 0 var(--space-3);
+    border-left: 1px solid var(--border);
 }
 
-.pb-step--changed { border-color: var(--border-hover); }
+.pb-step:first-child { border-left: none; }
+
+/* The lane header stays put while its nodes scroll past. */
+.pb-step-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-primary);
+}
+
+.pb-step--changed .pb-step-name::after {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-left: var(--space-2);
+    vertical-align: middle;
+    background: var(--review);
+    border-radius: 50%;
+}
 
 .pb-step-head {
     display: flex;
@@ -798,22 +818,261 @@ body {
 
 /* Four columns need room. Below it, two; below that, one — never four squeezed
    to the width of a word. */
-@container builder (max-width: 1180px) {
-    .pb-run { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+/* The board scrolls rather than reflowing, so there is no column breakpoint —
+   only the side column, which stops fitting beside it first. */
 
-@container builder (max-width: 620px) {
-    .pb-run { grid-template-columns: minmax(0, 1fr); }
-}
-
-@container builder (max-width: 720px) {
+@container builder (max-width: 860px) {
     .builder-body { flex-direction: column; }
 
+    .pb-side,
     .pb-inspector {
         width: auto;
         border-left: none;
         border-top: 1px solid var(--border);
+        max-height: 50vh;
     }
 
     .builder-facts { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ============================================
+   Side column — inspector, attach, new workflow
+   ============================================ */
+
+.pb-side {
+    flex-shrink: 0;
+    width: 400px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+}
+
+.pb-side-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--border);
+}
+
+.pb-side-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pb-side-close {
+    align-self: start;
+    padding: var(--space-1);
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.pb-side-close:hover { color: var(--text-primary); }
+
+.pb-side-where {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-side-step { font-family: var(--font-mono); color: var(--text-secondary); }
+
+.pb-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    overflow: auto;
+    min-height: 0;
+}
+
+.pb-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.pb-field--row { flex-direction: row; gap: var(--space-3); }
+.pb-field--grow { flex-grow: 1; min-width: 0; }
+
+.pb-field-label {
+    padding: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-optional { color: var(--text-muted); }
+
+.pb-field-problem {
+    font-size: var(--text-xs);
+    color: var(--error);
+}
+
+.pb-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--space-2);
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    color: var(--vscode-input-foreground, var(--text-primary));
+    background: var(--vscode-input-background, var(--bg-primary));
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
+}
+
+.pb-input:focus {
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
+}
+
+.pb-input--mono { font-family: var(--font-mono); }
+.pb-input--area { resize: vertical; line-height: var(--leading-normal); }
+
+.pb-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-choice:hover { background: var(--bg-hover); }
+
+.pb-choice--on {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+.pb-choice input { margin-top: 3px; }
+
+.pb-choice-body { display: flex; flex-direction: column; gap: 2px; }
+
+.pb-choice-label { font-size: var(--text-sm); color: var(--text-body); }
+
+.pb-choice-help {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: var(--leading-normal);
+}
+
+.pb-form-preview {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: var(--leading-normal);
+}
+
+.pb-mono { font-family: var(--font-mono); }
+
+.pb-form-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.pb-action {
+    padding: var(--space-1) var(--space-4);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-action:hover:not(:disabled) { background: var(--bg-hover); }
+.pb-action:disabled { opacity: 0.5; cursor: default; }
+
+.pb-action--primary {
+    color: var(--accent-ink);
+    background: var(--accent-strong);
+    border-color: transparent;
+    font-weight: 600;
+}
+
+.pb-action--primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+/* The inspector shares the side column's shell, and only its body scrolls, so
+   the actions are never below the fold. */
+.pb-inspector {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    overflow: hidden;
+}
+
+.pb-doc { overflow: auto; min-height: 0; }
+
+.pb-inspector-actions { position: static; }
+
+/* ============================================
+   Hooks from the project's spec-kit extensions
+   ============================================ */
+
+.pb-stock {
+    margin: var(--space-2) var(--space-1) 0;
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--border);
+}
+
+.pb-stock-label {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-stock-list {
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pb-stock-hook {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+}
+
+.pb-stock-when { color: var(--text-muted); }
+
+.pb-stock-command {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    overflow-wrap: break-word;
+    min-width: 0;
+}
+
+.pb-stock-from,
+.pb-stock-note {
+    padding: 0 var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* An in-panel notice, since a toast cannot travel outside the editor. */
+.builder-notice-close {
+    float: right;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }

@@ -24,6 +24,7 @@ import {
     PipelineNode,
     PipelinePhase,
     PipelineStep,
+    StockHook,
 } from '../../../src/protocol/pipeline';
 
 type NodeAction = (command: string, nodeId: string) => void;
@@ -175,7 +176,10 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
                 }}>
 
                 <span class={`pb-grip ${movable ? '' : 'pb-grip--pinned'}`}
-                    title={node.pinned || 'Drag to reorder within this phase'}>
+                    title={movable
+                        ? 'Drag to reorder within this phase'
+                        : `Cannot be reordered — ${node.pinned}. You can still rewrite it, `
+                          + 'attach work to it, or drop it from companion.yml.'}>
                     {movable ? <GripIcon /> : <PinnedIcon />}
                 </span>
 
@@ -185,14 +189,15 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
                         ? "Read this project's instructions for this node"
                         : 'Read the instructions this node contributes'}>
                     <span class="pb-node-name">{node.name}</span>
-                    <span class="pb-node-meta">
-                        <span class="pb-node-id">{node.id}</span>
-                        {node.replaced && <span class="pb-yours">yours</span>}
-                        {node.writes.map(file => (
-                            <span key={file} class="pb-writes"
-                                title="this node produces it">{file}</span>
-                        ))}
-                    </span>
+                    {(node.replaced || node.writes.length > 0) && (
+                        <span class="pb-node-meta">
+                            {node.replaced && <span class="pb-yours">yours</span>}
+                            {node.writes.map(file => (
+                                <span key={file} class="pb-writes"
+                                    title="this node produces it">{file}</span>
+                            ))}
+                        </span>
+                    )}
                 </button>
 
                 {node.replaced ? (
@@ -236,6 +241,35 @@ function Phase({ phase, actions, onAdd }: {
             </div>
             <Hooks hooks={after} side="after" />
         </section>
+    );
+}
+
+/**
+ * Hooks the project's spec-kit extensions attach to this step.
+ *
+ * A second, independent hook system — `.specify/extensions.yml` is spec-kit's
+ * own, keyed by lifecycle step. A Companion run fires both, so a panel that
+ * drew only ours said nine when the answer was twenty-one. These are not ours
+ * to edit, and read as a quieter list because of it.
+ */
+function StockHooks({ hooks }: { hooks: StockHook[] }) {
+    if (hooks.length === 0) { return null; }
+    return (
+        <div class="pb-stock">
+            <span class="pb-stock-label">also fires here, from your spec-kit extensions</span>
+            <ul class="pb-stock-list">
+                {hooks.map((hook, i) => (
+                    <li key={i} class="pb-stock-hook"
+                        title={hook.description || `${hook.extension} extension`}>
+                        <span class="pb-stock-when">{hook.when}</span>
+                        <span class="pb-stock-command">{hook.command}</span>
+                        <span class="pb-stock-from">{hook.extension}</span>
+                        {hook.optional && <span class="pb-stock-note">asks first</span>}
+                        {hook.conditional && <span class="pb-stock-note">only sometimes</span>}
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 }
 
@@ -317,6 +351,7 @@ function Step({ step, index, actions, onReorder, onAddHook }: {
                         onAdd={anchor => onAddHook(step.name, anchor, 'before')} />
                 ))}
                 <Decisions decisions={step.decisions} />
+                <StockHooks hooks={step.stockHooks} />
             </div>
 
             {step.artifacts.length > 0 && (

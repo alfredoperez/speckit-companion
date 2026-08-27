@@ -21,11 +21,20 @@ import {
 import { Canvas } from './Canvas';
 import { Header } from './Header';
 import { Inspector } from './Inspector';
+import { AttachForm, NewWorkflowForm, Attachment } from './AttachForm';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
 
 interface Selection { command: string; nodeId: string }
+interface Attaching { command: string; anchor: string }
+
+/** Only one thing occupies the side column at a time. */
+type Side =
+    | { kind: 'node'; at: Selection }
+    | { kind: 'attach'; at: Attaching }
+    | { kind: 'new-workflow' }
+    | null;
 
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
 function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
@@ -41,7 +50,8 @@ function App() {
     const [graph, setGraph] = useState<PipelineGraphResult | null>(null);
     const [buildState, setBuildState] = useState<PipelineBuildKind>('unconfigured');
     const [busy, setBusy] = useState(false);
-    const [selected, setSelected] = useState<Selection | null>(null);
+    const [side, setSide] = useState<Side>(null);
+    const [notice, setNotice] = useState<string | null>(null);
     const [body, setBody] = useState<{ key: string; body: string; parts: string[] } | null>(null);
 
     useEffect(() => {
@@ -52,6 +62,8 @@ function App() {
                 setBuildState(message.buildState);
             } else if (message.type === 'busy') {
                 setBusy(message.busy);
+            } else if (message.type === 'notice') {
+                setNotice(message.text);
             } else if (message.type === 'nodeBody') {
                 setBody({
                     key: `${message.command}/${message.nodeId}`,
@@ -86,16 +98,24 @@ function App() {
     }
 
     const openNode = (command: string, nodeId: string) => {
-        setSelected({ command, nodeId });
+        setSide({ kind: 'node', at: { command, nodeId } });
+        setNotice(null);
         setBody(null);
         vscode.postMessage({ type: 'readNode', command, nodeId });
     };
 
+    const selected = side?.kind === 'node' ? side.at : null;
     const node = selected ? findNode(graph, selected) : null;
     const key = selected ? `${selected.command}/${selected.nodeId}` : '';
+    const attaching = side?.kind === 'attach' ? side.at : null;
+    const attachStep = attaching
+        ? graph.steps.find(s => s.name === attaching.command) ?? null
+        : null;
+
+    const send = (message: unknown) => { setNotice(null); vscode.postMessage(message); };
 
     return (
-        <div class={`builder ${node ? 'builder--inspecting' : ''}`}>
+        <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
@@ -103,10 +123,16 @@ function App() {
                 onBuild={() => vscode.postMessage({ type: 'build' })}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
-                onSelectWorkflow={name => vscode.postMessage({ type: 'selectWorkflow', name })}
-                onNewWorkflow={() =>
-                    vscode.postMessage({ type: 'newWorkflow', from: graph.workflows.active })}
+                onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
+                onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
             />
+            {notice && (
+                <div class="builder-notice builder-notice--warning" role="status">
+                    {notice}
+                    <button class="builder-notice-close" onClick={() => setNotice(null)}
+                        title="Dismiss">×</button>
+                </div>
+            )}
             <div class="builder-body">
                 <Canvas
                     graph={graph}
@@ -118,16 +144,45 @@ function App() {
                         vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
-                    onAddHook={(command, anchor, when) =>
-                        vscode.postMessage({ type: 'addHook', command, anchor, when })}
+                    onAddHook={(command, anchor) => {
+                        setNotice(null);
+                        setSide({ kind: 'attach', at: { command, anchor } });
+                    }}
                 />
+
+                {attachStep && attaching && (
+                    <AttachForm
+                        step={attachStep}
+                        anchor={attaching.anchor}
+                        onCancel={() => setSide(null)}
+                        onAttach={(a: Attachment) => {
+                            setSide(null);
+                            send({
+                                type: 'addHook', command: attaching.command, anchor: a.anchor,
+                                when: a.when, hookType: a.hookType, value: a.value, note: a.note,
+                            });
+                        }}
+                    />
+                )}
+
+                {side?.kind === 'new-workflow' && (
+                    <NewWorkflowForm
+                        from={graph.workflows.active}
+                        taken={graph.workflows.available}
+                        onCancel={() => setSide(null)}
+                        onCreate={name => {
+                            setSide(null);
+                            send({ type: 'newWorkflow', from: graph.workflows.active, name });
+                        }}
+                    />
+                )}
                 {node && selected && (
                     <Inspector
                         node={node}
                         step={selected.command}
                         body={body?.key === key ? body.body : null}
                         parts={body?.key === key ? body.parts : []}
-                        onClose={() => { setSelected(null); setBody(null); }}
+                        onClose={() => { setSide(null); setBody(null); }}
                         onOpenFile={() => vscode.postMessage({
                             type: 'openNode', command: selected.command, nodeId: selected.nodeId,
                         })}

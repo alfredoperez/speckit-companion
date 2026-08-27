@@ -169,5 +169,84 @@ class NodesAreSharedAcrossWorkflows(unittest.TestCase):
         self.assertEqual(specify["changes"]["replaced"], ["draft-spec"])
 
 
+class TheOtherHookSystemIsVisibleToo(unittest.TestCase):
+    """`.specify/extensions.yml` is spec-kit's own registry. A run fires both."""
+
+    REGISTRY = (
+        "installed:\n"
+        "- companion\n"
+        "hooks:\n"
+        "  before_specify:\n"
+        "  - extension: git\n"
+        "    command: speckit.git.feature\n"
+        "    enabled: true\n"
+        "    optional: false\n"
+        "    description: Create feature branch before specification\n"
+        "      on the current checkout\n"
+        "    condition: null\n"
+        "  after_specify:\n"
+        "  - extension: git\n"
+        "    command: speckit.git.commit\n"
+        "    enabled: false\n"
+        "    optional: true\n"
+        "  - extension: companion\n"
+        "    command: speckit.companion.after-specify\n"
+        "    optional: false\n"
+        "    condition: has_changes\n"
+    )
+
+    def with_registry(self, text: str):
+        tmp = tempfile.TemporaryDirectory()
+        specify = Path(tmp.name) / ".specify"
+        specify.mkdir(parents=True)
+        (specify / "extensions.yml").write_text(text, encoding="utf-8")
+        return tmp
+
+    def test_hooks_registered_against_a_step_are_reported(self):
+        with self.with_registry(self.REGISTRY) as root:
+            hooks = build.stock_hooks(root, "specify")
+
+        commands = [(h["when"], h["command"]) for h in hooks]
+        self.assertIn(("before", "speckit.git.feature"), commands)
+        self.assertIn(("after", "speckit.companion.after-specify"), commands)
+
+    def test_a_disabled_hook_is_left_out(self):
+        with self.with_registry(self.REGISTRY) as root:
+            hooks = build.stock_hooks(root, "specify")
+        self.assertNotIn("speckit.git.commit", [h["command"] for h in hooks])
+
+    def test_a_wrapped_description_arrives_whole(self):
+        with self.with_registry(self.REGISTRY) as root:
+            hook = build.stock_hooks(root, "specify")[0]
+        self.assertEqual(
+            hook["description"],
+            "Create feature branch before specification on the current checkout")
+
+    def test_a_conditional_hook_is_flagged_rather_than_promised(self):
+        with self.with_registry(self.REGISTRY) as root:
+            byname = {h["command"]: h for h in build.stock_hooks(root, "specify")}
+        self.assertTrue(byname["speckit.companion.after-specify"]["conditional"])
+        self.assertFalse(byname["speckit.git.feature"]["conditional"])
+
+    def test_a_step_with_no_registered_hooks_reports_none(self):
+        with self.with_registry(self.REGISTRY) as root:
+            self.assertEqual(build.stock_hooks(root, "implement"), [])
+
+    def test_an_absent_or_unreadable_registry_is_no_hooks_not_a_failure(self):
+        with tempfile.TemporaryDirectory() as empty:
+            self.assertEqual(build.stock_hooks(empty, "specify"), [])
+        with self.with_registry("hooks:\n\tbad: [\n") as broken:
+            self.assertEqual(build.stock_hooks(broken, "specify"), [])
+
+    def test_the_graph_carries_them_beside_the_projects_own(self):
+        with self.with_registry(self.REGISTRY) as root:
+            graph = graph_mod.build_graph(root)
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        self.assertEqual(len(specify["stockHooks"]), 2)
+        self.assertEqual(graph["counts"]["stockHooks"], 2)
+        # They are not the project's own hooks and must not be counted as them.
+        self.assertEqual(graph["counts"]["hooks"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -111,6 +111,9 @@ def build_graph(project_root: str) -> dict:
         template = templates.get(command)
         steps.append({
             "name": command,
+            # Stock spec-kit's own extension hooks, which a Companion run fires
+            # alongside its own. Showing only ours understated the pipeline.
+            "stockHooks": build.stock_hooks(project_root, command),
             # `auto` runs the others rather than taking a turn among them. Drawn
             # as a peer it reads like a fifth step, which it is not.
             "inSequence": command in RUN_ORDER,
@@ -152,6 +155,7 @@ def build_graph(project_root: str) -> dict:
             "phases": sum(len(s["phases"]) for s in steps),
             "nodes": sum(len(p["nodes"]) for s in steps for p in s["phases"]),
             "hooks": sum(s["changes"]["hooks"] for s in steps),
+            "stockHooks": sum(len(s["stockHooks"]) for s in steps),
         },
     }
 

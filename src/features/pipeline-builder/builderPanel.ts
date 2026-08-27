@@ -112,16 +112,16 @@ export class PipelineBuilderPanel {
         refresh: () => this.send(),
         build: () => this.run(BUILD_COMMAND),
         preview: () => this.run('speckit.companion.previewPipelineBuild'),
+
         openConfig: async () => {
             const file = path.join(this.workspaceRoot, COMPANION_CONFIG_REL);
             if (!fs.existsSync(file)) {
-                void vscode.window.showInformationMessage(
-                    'This project has no companion.yml yet — the pipeline runs the shipped default.',
-                );
+                this.say('This project has no companion.yml yet — the pipeline runs the shipped default.');
                 return;
             }
             await vscode.window.showTextDocument(vscode.Uri.file(file));
         },
+
         openNode: async message => {
             const node = this.nodeSource(message.command, message.nodeId);
             if (node) {
@@ -130,70 +130,7 @@ export class PipelineBuilderPanel {
             }
             await this.openInBuiltCommand(message.command, message.nodeId);
         },
-        replaceNode: async message => {
-            const own = this.projectNodePath(message.command, message.nodeId);
-            if (fs.existsSync(own)) {
-                await vscode.window.showTextDocument(vscode.Uri.file(own));
-                return;
-            }
-            const shipped = this.nodeSource(message.command, message.nodeId);
-            if (!shipped) {
-                void vscode.window.showWarningMessage(
-                    `Cannot find the shipped ${message.nodeId} node to copy from.`);
-                return;
-            }
-            fs.mkdirSync(path.dirname(own), { recursive: true });
-            fs.copyFileSync(shipped, own);
-            await vscode.window.showTextDocument(vscode.Uri.file(own));
-            void vscode.window.showInformationMessage(
-                `${message.nodeId} is now this project's. Build the pipeline to use it.`,
-                'Build',
-            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
-            await this.send();
-        },
-        reorderNodes: async message => {
-            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
-            if (!script) {
-                void vscode.window.showWarningMessage(
-                    'Reordering needs the companion spec-kit extension.');
-                return;
-            }
-            const refused = await writeNodeOrder(
-                script, this.workspaceRoot, message.command, message.order);
-            if (refused) {
-                // The drag is already undone: the panel redraws from the file,
-                // which the script left untouched.
-                void vscode.window.showWarningMessage(refused);
-                await this.send();
-                return;
-            }
-            await this.send();
-            void vscode.window.showInformationMessage(
-                `${message.command} reordered in companion.yml. Build to apply it.`,
-                'Build',
-            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
-        },
-        addHook: async message => {
-            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
-            if (!script) {
-                void vscode.window.showWarningMessage(
-                    'Attaching work needs the companion spec-kit extension.');
-                return;
-            }
-            const draft = await this.askForHook(message.when, message.anchor);
-            if (!draft) { return; }
 
-            const refused = await writeHook(script, this.workspaceRoot, message.command, draft);
-            if (refused) {
-                void vscode.window.showWarningMessage(refused);
-                return;
-            }
-            await this.send();
-            void vscode.window.showInformationMessage(
-                `Added ${draft.type} ${message.when} ${message.anchor}. Build to apply it.`,
-                'Build',
-            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
-        },
         readNode: async message => {
             const file = this.nodeSource(message.command, message.nodeId);
             if (!file) { return; }
@@ -202,120 +139,98 @@ export class PipelineBuilderPanel {
                 type: 'nodeBody', command: message.command, nodeId: message.nodeId, body, parts,
             });
         },
-        selectWorkflow: async message => {
-            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
-            if (!script) {
-                void vscode.window.showWarningMessage(
-                    'Switching workflows needs the companion spec-kit extension.');
-                return;
-            }
-            const refused = await writeWorkflow(script, this.workspaceRoot, message.name);
-            if (refused) {
-                void vscode.window.showWarningMessage(refused);
-                return;
-            }
-            await this.send();
-            void vscode.window.showInformationMessage(
-                `Now running "${message.name}". Build to apply it.`, 'Build',
-            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
-        },
-        newWorkflow: async message => {
-            const name = await vscode.window.showInputBox({
-                title: 'New workflow',
-                prompt: 'A name for this way of working',
-                placeHolder: 'bugfix',
-                validateInput: text => {
-                    const value = text.trim();
-                    if (!value) { return 'Give it a name.'; }
-                    if (!/^[a-z0-9][a-z0-9-]*$/.test(value)) {
-                        return 'Lowercase letters, digits and dashes — it becomes a filename.';
-                    }
-                    if (value === SHIPPED_WORKFLOW) { return `"${SHIPPED_WORKFLOW}" is taken.`; }
-                    return undefined;
-                },
-            });
-            if (!name?.trim()) { return; }
 
-            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
-            if (!script) {
-                void vscode.window.showWarningMessage(
-                    'Creating a workflow needs the companion spec-kit extension.');
-                return;
+        replaceNode: async message => {
+            const own = this.projectNodePath(message.command, message.nodeId);
+            if (!fs.existsSync(own)) {
+                const shipped = this.nodeSource(message.command, message.nodeId);
+                if (!shipped) {
+                    this.say(`Cannot find the shipped ${message.nodeId} node to copy from.`);
+                    return;
+                }
+                fs.mkdirSync(path.dirname(own), { recursive: true });
+                fs.copyFileSync(shipped, own);
             }
-            const refused = await createWorkflow(
-                script, this.workspaceRoot, name.trim(), message.from);
-            if (refused) {
-                void vscode.window.showWarningMessage(refused);
-                return;
-            }
+            await vscode.window.showTextDocument(vscode.Uri.file(own));
             await this.send();
-            await vscode.window.showTextDocument(vscode.Uri.file(path.join(
-                this.workspaceRoot, WORKFLOWS_REL, `${name.trim()}.yml`)));
         },
+
         restoreNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);
             if (!fs.existsSync(own)) { return; }
-            const pick = await vscode.window.showWarningMessage(
-                `Delete this project's ${message.nodeId} and go back to the shipped node?`,
-                { modal: true },
-                'Delete',
-            );
-            if (pick !== 'Delete') { return; }
             fs.unlinkSync(own);
             await this.send();
+        },
+
+        reorderNodes: async message => {
+            await this.write(
+                script => writeNodeOrder(
+                    script, this.workspaceRoot, message.command, message.order),
+                'Reordering');
+        },
+
+        addHook: async message => {
+            await this.write(script => {
+                const draft: HookDraft = {
+                    type: message.hookType, when: message.when, anchor: message.anchor,
+                };
+                if (message.hookType === 'skill' || message.hookType === 'node') {
+                    draft.ref = message.value;
+                    if (message.note) { draft.text = message.note; }
+                } else if (message.hookType === 'command') {
+                    draft.run = message.value;
+                } else {
+                    draft.text = message.value;
+                }
+                return writeHook(script, this.workspaceRoot, message.command, draft);
+            }, 'Attaching work');
+        },
+
+        selectWorkflow: async message => {
+            await this.write(
+                script => writeWorkflow(script, this.workspaceRoot, message.name),
+                'Switching workflows');
+        },
+
+        newWorkflow: async message => {
+            const made = await this.write(
+                script => createWorkflow(script, this.workspaceRoot, message.name, message.from),
+                'Creating a workflow');
+            if (!made) { return; }
+            await vscode.window.showTextDocument(vscode.Uri.file(path.join(
+                this.workspaceRoot, WORKFLOWS_REL, `${message.name}.yml`)));
         },
     };
 
     /**
-     * Ask what to attach at a boundary.
+     * Run one configuration write and redraw.
      *
-     * Four kinds, and the one worth reaching for first is a skill: a project
-     * that wrote one has already written the instructions, so the pipeline
-     * should point at it rather than hold a copy that forks from it.
+     * Everything the panel changes goes through here so a refusal comes back to
+     * the panel as a notice rather than a toast the panel cannot see — this view
+     * is meant to run outside VS Code, where there is nothing to show a toast on.
      */
-    private async askForHook(
-        when: HookWhen,
-        anchor: string,
-    ): Promise<HookDraft | undefined> {
-        const kind = await vscode.window.showQuickPick(
-            [
-                { label: 'Skill', detail: 'Invoke a skill this project already has', type: 'skill' },
-                { label: 'Instruction', detail: 'A line for the assistant to follow', type: 'prompt' },
-                { label: 'Command', detail: 'A shell line to run at this point', type: 'command' },
-            ] as const,
-            { title: `Attach ${when} ${anchor}`, placeHolder: 'What should happen here?' },
-        );
-        if (!kind) { return undefined; }
-
-        const prompts = {
-            skill: { prompt: 'Skill name', placeHolder: 'verify-code-review' },
-            prompt: { prompt: 'What should the assistant do here?', placeHolder: '' },
-            command: { prompt: 'Command to run', placeHolder: 'npm run lint-spec' },
-        }[kind.type];
-
-        const value = await vscode.window.showInputBox({
-            ...prompts,
-            title: `Attach ${when} ${anchor}`,
-            validateInput: text => text.trim() ? undefined : 'This cannot be empty.',
-        });
-        if (!value?.trim()) { return undefined; }
-
-        const draft: HookDraft = { type: kind.type, when, anchor };
-        if (kind.type === 'skill') { draft.ref = value.trim(); }
-        else if (kind.type === 'command') { draft.run = value.trim(); }
-        else { draft.text = value.trim(); }
-
-        if (kind.type === 'skill') {
-            // Optional, because a skill that needs a note is the exception.
-            const note = await vscode.window.showInputBox({
-                title: `Attach ${when} ${anchor}`,
-                prompt: 'Anything to add? (optional)',
-                placeHolder: 'Leave empty to just invoke the skill',
-            });
-            if (note?.trim()) { draft.text = note.trim(); }
+    private async write(
+        run: (script: string) => Promise<string | null>,
+        what: string,
+    ): Promise<boolean> {
+        const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
+        if (!script) {
+            this.say(`${what} needs the companion spec-kit extension.`);
+            return false;
         }
-        return draft;
+        const refused = await run(script);
+        // The file is untouched on a refusal, so redrawing puts the panel back
+        // to what is on disk — the drag or the form undoes itself.
+        await this.send();
+        if (refused) { this.say(refused); return false; }
+        return true;
     }
+
+    /** Tell the panel, not the editor. */
+    private say(text: string): void {
+        void this.post({ type: 'notice', text });
+    }
+
 
     /** Where this project's own copy of a node lives, whether or not it exists. */
     private projectNodePath(command: string, nodeId: string): string {

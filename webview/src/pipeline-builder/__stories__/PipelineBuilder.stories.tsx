@@ -42,7 +42,8 @@ function phase(name: string, nodes: PipelineNode[], hooks: PipelineHook[] = []):
 
 function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep> = {}): PipelineStep {
     return {
-        name, inSequence: name !== 'auto', phases, decisions: [], artifacts: [], template: null,
+        name, inSequence: name !== 'auto', stockHooks: [], phases,
+        decisions: [], artifacts: [], template: null,
         changes: { ...NO_CHANGES }, ...over,
     };
 }
@@ -59,6 +60,7 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
             phases: steps.reduce((n, s) => n + s.phases.length, 0),
             nodes: steps.reduce((n, s) => n + s.phases.reduce((m, p) => m + p.nodes.length, 0), 0),
             hooks: 0,
+            stockHooks: 0,
         },
         ...over,
     };

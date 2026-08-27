@@ -35,6 +35,9 @@ _QUOTED_SPAN = re.compile(r"\"[^\"]*\"|'[^']*'")
 #: real-world anchor names (`shared.spec`, `caps/auth`) but deliberately excludes
 #: `&`/`>` so shell operators (`a && b`) never read as anchors.
 _ANCHOR_DEF = re.compile(r"(?:^|(?<=[\s,\[{]))&([A-Za-z0-9_.+/-]+)(?=[\s,\]}]|$)")
+#: A line that opens its own mapping key, so it ends a wrapped plain scalar.
+_CONTINUATION_STOP = re.compile(r"[A-Za-z0-9_.\"'-]+:(\s|$)")
+
 #: An alias reference. Lexically identical to a glob (`- *bundle`), so this is only
 #: an alias when the file also defines that anchor — otherwise it is a glob, and
 #: rejecting the file over it would throw away a config for no reason.
@@ -86,6 +89,10 @@ def _scalar(s: str):
         return int(s)
     if s in ("true", "false"):
         return s == "true"
+    # YAML's null spellings. Read as the string "null" they were truthy, so a
+    # `condition: null` hook looked conditional and was reported as one.
+    if s in ("null", "Null", "NULL", "~"):
+        return None
     return s
 
 
@@ -260,12 +267,43 @@ def load_yaml(text: str):
             key, val = _split_key(stripped)
             pos[0] += 1
             if not val:
-                out[key] = parse_block(ind + 1)
+                # A block sequence may sit at the SAME indent as its key. That is
+                # ordinary YAML, and the style spec-kit's own `extensions.yml` is
+                # written in — refusing it meant we could not read the file the
+                # tool we extend generates.
+                nxt = pos[0]
+                if (nxt < len(lines) and _indent(lines[nxt]) == ind
+                        and lines[nxt].lstrip().startswith("- ")):
+                    out[key] = _parse_seq(ind)
+                else:
+                    out[key] = parse_block(ind + 1)
             elif val.startswith("{") or val.startswith("["):
                 out[key] = _parse_flow(val)
             else:
-                out[key] = _scalar(val)
+                out[key] = _scalar(_join_wrapped(val, ind))
         return out
+
+    def _join_wrapped(val: str, ind: int) -> str:
+        """Absorb a plain scalar that wrapped onto deeper-indented lines.
+
+        Emitters wrap long values — spec-kit's own `extensions.yml` carries
+        descriptions folded this way — and YAML joins them with a space. Reading
+        only the first line stopped the parse mid-file, so a registry we had to
+        read looked malformed.
+        """
+        parts = [val]
+        while pos[0] < len(lines):
+            line = lines[pos[0]]
+            if _indent(line) <= ind:
+                break
+            rest = line.strip()
+            # A deeper line that opens its own key or list item is structure,
+            # not continuation.
+            if rest.startswith("- ") or _CONTINUATION_STOP.match(rest):
+                break
+            parts.append(rest)
+            pos[0] += 1
+        return " ".join(parts)
 
     result = parse_block(0)
     if pos[0] < len(lines):

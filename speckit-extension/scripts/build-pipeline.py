@@ -82,6 +82,55 @@ def _read_yaml(path: str, label: str) -> dict:
         raise BuildError(f"{label}: {err}") from err
 
 
+#: Stock spec-kit's own extension registry. A Companion run fires these too.
+EXTENSIONS_REL = os.path.join(".specify", "extensions.yml")
+
+
+def stock_hooks(project_root: str, command: str) -> list:
+    """Hooks stock spec-kit extensions attach to this step, before and after.
+
+    These are a second, independent hook system: `.specify/extensions.yml` is
+    spec-kit's own registry, keyed by lifecycle step, and a Companion run fires
+    it alongside `companion.yml`. Drawing only Companion's half told a project
+    it had nine hooks when it had fifteen — a panel that is wrong by omission.
+
+    Never raises: a registry that cannot be read is reported as no hooks, the
+    same silent-skip the command bodies apply at run time.
+    """
+    path = os.path.join(project_root, EXTENSIONS_REL)
+    if not os.path.isfile(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            registry = cc.load_yaml(fh.read()) or {}
+    except (ValueError, SystemExit, OSError):
+        return []
+
+    hooks = registry.get("hooks")
+    if not isinstance(hooks, dict):
+        return []
+
+    out = []
+    for when in cc.WHENS:
+        for entry in hooks.get(f"{when}_{command}") or []:
+            if not isinstance(entry, dict):
+                continue
+            # Absent `enabled` means enabled, matching the command bodies.
+            if entry.get("enabled") is False:
+                continue
+            out.append({
+                "when": when,
+                "extension": str(entry.get("extension") or "an extension"),
+                "command": str(entry.get("command") or ""),
+                "description": str(entry.get("description") or "").strip(),
+                "optional": bool(entry.get("optional")),
+                # A condition is the HookExecutor's to evaluate, not ours — so
+                # the panel says "sometimes" rather than promising it will run.
+                "conditional": bool(str(entry.get("condition") or "").strip()),
+            })
+    return out
+
+
 def available_workflows(project_root: str) -> list:
     """Named workflows this project has written, by name, sorted."""
     directory = os.path.join(project_root, WORKFLOWS_REL)

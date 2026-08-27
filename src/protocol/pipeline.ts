@@ -17,6 +17,26 @@ export type HookWhen = 'before' | 'after';
 /** How a hook acts when it fires. Mirrors `HOOK_TYPES` in companion_config.py. */
 export type HookType = 'command' | 'prompt' | 'node' | 'skill';
 
+/**
+ * A hook stock spec-kit's own extension registry attaches to a step.
+ *
+ * `.specify/extensions.yml` is spec-kit's, keyed by lifecycle step, and a
+ * Companion run fires it alongside `companion.yml`. Drawing only Companion's
+ * half told a project it had nine hooks when it had twenty-one.
+ */
+export interface StockHook {
+    when: HookWhen;
+    /** Which installed extension registered it. */
+    extension: string;
+    /** The command it dispatches. */
+    command: string;
+    description: string;
+    /** Optional hooks prompt before running; mandatory ones just run. */
+    optional: boolean;
+    /** Guarded by a condition the run evaluates, so it may not fire. */
+    conditional: boolean;
+}
+
 export interface PipelineHook {
     when: HookWhen;
     type: HookType;
@@ -83,6 +103,8 @@ export interface PipelineTemplate {
 
 export interface PipelineStep {
     name: string;
+    /** Hooks stock spec-kit extensions attach to this step. Not ours, and not editable here. */
+    stockHooks: StockHook[];
     /**
      * Whether this step takes a turn in the run.
      *
@@ -114,7 +136,13 @@ export interface PipelineGraph {
     /** Whether anything differs from the shipped pipeline. */
     customised: boolean;
     warnings: string[];
-    counts: { steps: number; phases: number; nodes: number; hooks: number };
+    counts: {
+        steps: number; phases: number; nodes: number;
+        /** Hooks this project declared in companion.yml. */
+        hooks: number;
+        /** Hooks stock spec-kit extensions contribute. */
+        stockHooks: number;
+    };
 }
 
 /**
@@ -154,17 +182,37 @@ export type BuilderToExtensionMessage =
     | { type: 'restoreNode'; command: string; nodeId: string }
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
     | { type: 'reorderNodes'; command: string; order: string[] }
-    /** Attach work at a boundary. The panel asks what kind and collects the detail. */
-    | { type: 'addHook'; command: string; anchor: string; when: HookWhen }
+    /**
+     * Attach work at a boundary. The panel collects all of it — a native
+     * dialog covered the thing you were pointing at.
+     */
+    | {
+        type: 'addHook';
+        command: string;
+        anchor: string;
+        when: HookWhen;
+        hookType: HookType;
+        /** The skill name, node ref, shell line or instruction text. */
+        value: string;
+        /** An optional extra line, used by a skill hook. */
+        note?: string;
+    }
     /** Read a node's instructions to show them here rather than in the editor. */
     | { type: 'readNode'; command: string; nodeId: string }
     /** Switch the whole configuration. `shipped` is Companion with nothing changed. */
     | { type: 'selectWorkflow'; name: string }
     /** Start a new workflow, optionally seeded from the active one. */
-    | { type: 'newWorkflow'; from: string };
+    | { type: 'newWorkflow'; from: string; name: string };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
     | { type: 'busy'; busy: boolean }
     /** A node's instructions, with the frontmatter and shared-part fences taken out. */
-    | { type: 'nodeBody'; command: string; nodeId: string; body: string; parts: string[] };
+    | { type: 'nodeBody'; command: string; nodeId: string; body: string; parts: string[] }
+    /**
+     * Something to tell the person, shown in the panel.
+     *
+     * Not a toast: this view is meant to run outside VS Code too, and a message
+     * the panel cannot draw is a message that does not exist there.
+     */
+    | { type: 'notice'; text: string };

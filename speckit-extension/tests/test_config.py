@@ -401,10 +401,36 @@ class NothingAcceptedTodayIsNarrowedTests(unittest.TestCase):
             cc.load_yaml("a: &shared\nb: [*shared]")
         self.assertIn("anchors and aliases", str(ctx.exception))
 
-    def test_a_zero_indent_sequence_is_rejected_with_an_actionable_hint(self) -> None:
-        with self.assertRaises(ValueError) as ctx:
-            cc.load_yaml("capabilities:\n- name: auth\n")
-        self.assertIn("indent", str(ctx.exception))
+    def test_a_sequence_at_its_key_s_own_indent_parses(self) -> None:
+        # Ordinary YAML, and the style spec-kit's own `extensions.yml` is written
+        # in — refusing it meant we could not read the registry of the tool we
+        # extend, so a project's installed-extension hooks were invisible.
+        self.assertEqual(
+            cc.load_yaml("capabilities:\n- name: auth\n"),
+            {"capabilities": [{"name": "auth"}]},
+        )
+        self.assertEqual(cc.load_yaml("installed:\n- companion\n"),
+                         {"installed": ["companion"]})
+
+    def test_an_indented_sequence_still_parses_the_same_way(self) -> None:
+        self.assertEqual(cc.load_yaml("capabilities:\n  - name: auth\n"),
+                         {"capabilities": [{"name": "auth"}]})
+
+    def test_a_plain_scalar_wrapped_onto_the_next_line_is_joined(self) -> None:
+        # Emitters wrap long values; YAML joins them with a space. Reading only
+        # the first line stopped the parse mid-file.
+        cfg = cc.load_yaml(
+            "hooks:\n"
+            "  after_specify:\n"
+            "  - command: speckit.companion.after-specify\n"
+            "    description: Record specify completion\n"
+            "      into .spec-context.json\n"
+            "    optional: false\n"
+        )
+        entry = cfg["hooks"]["after_specify"][0]
+        self.assertEqual(entry["description"],
+                         "Record specify completion into .spec-context.json")
+        self.assertIs(entry["optional"], False)
 
     def test_a_marker_character_later_in_a_value_stays_ordinary_text(self) -> None:
         cfg = cc.load_yaml(

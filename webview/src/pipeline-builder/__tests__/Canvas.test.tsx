@@ -24,6 +24,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name: 'specify',
         inSequence: true,
+        stockHooks: [],
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
             {
@@ -50,7 +51,7 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
         configured: false,
         customised: false,
         warnings: [],
-        counts: { steps: 1, phases: 2, nodes: 2, hooks: 0 },
+        counts: { steps: 1, phases: 2, nodes: 2, hooks: 0, stockHooks: 0 },
         ...overrides,
     };
 }
@@ -138,10 +139,19 @@ describe('the run reads left to right', () => {
         expect(stepEl.querySelectorAll('.pb-phase')[0].querySelectorAll('.pb-node')).toHaveLength(1);
     });
 
-    it('shows a node by its human name, with the id as metadata', () => {
+    // "Resolve the spec folder" over "resolve-dir" said the same thing twice.
+    // The id is a handle, and it belongs where you go to work on the node.
+    it('shows a node by its name, and does not repeat it as a slug', () => {
         const { host } = canvas();
         expect(host.querySelector('.pb-node-name')?.textContent).toBe('Resolve the spec folder');
-        expect(host.querySelector('.pb-node-id')?.textContent).toBe('resolve-dir');
+        expect(host.querySelector('.pb-node-id')).toBeNull();
+    });
+
+    it('keeps the meta line for what a node produces, and drops it otherwise', () => {
+        const { host } = canvas();
+        const cards = host.querySelectorAll('.pb-node');
+        expect(cards[0].querySelector('.pb-node-meta')).toBeNull();
+        expect(cards[1].querySelector('.pb-writes')?.textContent).toBe('spec.md');
     });
 });
 
@@ -297,10 +307,14 @@ describe('a node says whether it can move, and why not', () => {
         expect(nodes[1].querySelector('.pb-grip--pinned')).toBeNull();
     });
 
-    it('puts the reason on the grip rather than leaving it a mystery', () => {
+    // A bare padlock read as "you may not touch this". It only stops reordering.
+    it('says what the lock stops, and what it does not', () => {
         const { host } = canvas(pinned());
-        expect(host.querySelector('.pb-grip')?.getAttribute('title'))
-            .toBe('load-living-specs has to run after it');
+        const title = host.querySelector('.pb-grip')?.getAttribute('title') ?? '';
+
+        expect(title).toContain('Cannot be reordered');
+        expect(title).toContain('load-living-specs has to run after it');
+        expect(title).toContain('rewrite it');
     });
 
     it('refuses to start a drag from a pinned node', () => {
