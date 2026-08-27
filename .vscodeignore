@@ -89,6 +89,7 @@ speckit-extension/**
 .qwen/**
 .windsurf/**
 .storybook/**
+design/**
 storybook-static/**
 **/*.stories.tsx
 assets/mascot/**
