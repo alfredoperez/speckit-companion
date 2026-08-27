@@ -54,6 +54,8 @@ manifest_mod = importlib.import_module("manifest")
 CONFIG_REL = os.path.join(".specify", "companion.yml")
 TEMPLATES_REL = os.path.join(".specify", "templates")
 FRAGMENTS_REL = os.path.join(".specify", "companion", "fragments")
+#: A project's own node files, which a `type: node` hook may name by id.
+USER_NODES_REL = os.path.join(".specify", "companion", "nodes")
 DEFAULT_OUT_REL = os.path.join(".specify", "extensions", "companion", "commands")
 
 
@@ -74,6 +76,22 @@ def load_config(project_root: str) -> dict:
         # configuration must say so rather than fall back to the defaults and
         # look like it applied one.
         raise BuildError(f"{CONFIG_REL}: {err}") from err
+
+
+#: Set for the project being built, so a `type: node` hook can name a file the
+#: project wrote. Empty means the extension's own parts only.
+_user_nodes_dir = None
+
+
+def hook_node_dirs() -> list:
+    """Where a `type: node` ref is looked for: the project first, then the extension."""
+    return ([_user_nodes_dir] if _user_nodes_dir else []) + [
+        os.path.join(EXT, "presets", "_parts")]
+
+
+def use_project_hook_nodes(project_root: str) -> None:
+    global _user_nodes_dir
+    _user_nodes_dir = os.path.join(project_root, USER_NODES_REL) if project_root else None
 
 
 def plan_build(config: dict) -> tuple[dict, list]:
@@ -114,7 +132,7 @@ def plan_build(config: dict) -> tuple[dict, list]:
 
         try:
             hooks, hook_warnings = cc.merge_hooks(
-                config, command, anchors, nodes_dir=os.path.join(EXT, "presets", "_parts")
+                config, command, anchors, nodes_dir=hook_node_dirs()
             )
         except cc.ConfigError as err:
             raise BuildError(f"{command}: {err}") from err
@@ -159,9 +177,7 @@ def plan_templates(config: dict, project_root: str) -> dict:
 def render(command: str, entry: dict) -> str:
     """The finished body: nodes in the resolved order, hooks and any routing change spliced in."""
     body = assemble.assemble_command(command, order=entry["order"])
-    body = hook_render.insert_hooks(
-        body, entry["hooks"], nodes_dir=os.path.join(EXT, "presets", "_parts")
-    )
+    body = hook_render.insert_hooks(body, entry["hooks"], nodes_dir=hook_node_dirs())
 
     # A project that changed where a verdict routes has to tell the assistant,
     # which is the thing that acts on the verdict. The note goes after the node
@@ -243,6 +259,7 @@ def main() -> int:
     # A project's own node files replace the shipped ones of the same id, so this
     # has to be in force before anything reads a node.
     use_project_nodes(project)
+    use_project_hook_nodes(project)
 
     try:
         config = load_config(project)

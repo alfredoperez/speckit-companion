@@ -65,13 +65,14 @@ def render_hook(entry: dict, nodes_dir: str | None = None) -> str:
         if note:
             lines.append(note)
     elif kind == "node":
+        import companion_config as cc
+
         ref = str(hook.get("ref", "")).strip()
         body = ""
-        if nodes_dir:
-            path = os.path.join(nodes_dir, f"{ref}.md")
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    body = _strip_frontmatter(fh.read())
+        path = cc.find_node_file(ref, nodes_dir) if nodes_dir else None
+        if path:
+            with open(path, encoding="utf-8") as fh:
+                body = _strip_frontmatter(fh.read())
         lines = [body.rstrip("\n")] if body else [f"<!-- node hook '{ref}' had no body -->"]
     else:
         return ""

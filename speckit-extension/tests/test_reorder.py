@@ -203,6 +203,53 @@ class AHookPointsAtASkillTheProjectAlreadyHas(unittest.TestCase):
         self.assertIn("`verify-code-review`", body)
 
 
+class ANodeHookCanNameAFileTheProjectWrote(unittest.TestCase):
+    """`.specify/companion/nodes/<id>.md` — documented since the format shipped.
+
+    It had never worked: refs resolved only against the extension's own parts, so
+    the documented way to add your own work as a node refused to build.
+    """
+
+    def project_with_node(self, node_id: str, body: str):
+        tmp = tempfile.TemporaryDirectory()
+        nodes = Path(tmp.name) / ".specify" / "companion" / "nodes"
+        nodes.mkdir(parents=True)
+        (nodes / f"{node_id}.md").write_text(f"---\nid: {node_id}\n---\n\n{body}\n", encoding="utf-8")
+        (Path(tmp.name) / ".specify" / "companion.yml").write_text(
+            "commands:\n  plan:\n    hooks:\n      after:\n        plan-doc:\n"
+            f"          - {{ type: node, ref: {node_id} }}\n",
+            encoding="utf-8",
+        )
+        return tmp
+
+    def tearDown(self):
+        build.use_project_hook_nodes(None)
+
+    def test_the_projects_node_reaches_the_built_body(self):
+        with self.project_with_node("review", "Review it our way.") as project:
+            build.use_project_hook_nodes(project)
+            config = build.load_config(project)
+            plan, _warnings = build.plan_build(config)
+            body = build.render("plan", plan["plan"])
+        self.assertIn("Review it our way.", body)
+
+    def test_the_extensions_own_parts_still_resolve(self):
+        # `debug-timing` lives in presets/_parts and this repo's own config uses it.
+        self.assertIsNotNone(
+            __import__("companion_config").find_node_file(
+                "debug-timing", build.hook_node_dirs()))
+
+    def test_a_ref_in_neither_place_says_where_it_looked(self):
+        import companion_config as cc
+
+        config = {"commands": {"plan": {"hooks": {"after": {"plan-doc": [
+            {"type": "node", "ref": "nowhere"}]}}}}}
+        with self.assertRaises(cc.ConfigError) as caught:
+            cc.merge_hooks(config, "plan", ["plan-doc"], nodes_dir=build.hook_node_dirs())
+        self.assertIn("nowhere", str(caught.exception))
+        self.assertIn("_parts", str(caught.exception))
+
+
 class AddingAHookLeavesTheRestOfTheFileAlone(unittest.TestCase):
     def test_an_empty_file_gets_the_whole_nesting(self):
         out = config_write.add_hook(

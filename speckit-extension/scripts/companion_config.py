@@ -324,13 +324,35 @@ def resolve_order(config: dict, command: str, default_order: list) -> list:
     return list(nodes) if isinstance(nodes, list) and nodes else list(default_order)
 
 
-def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir: str = None):
+def node_hook_dirs(nodes_dir) -> list:
+    """The directories a `type: node` ref is looked up in, in order.
+
+    Accepts one path or several. A project's own directory is passed first by its
+    caller, so a hook can name a node file the project wrote — which is what this
+    format has always documented.
+    """
+    if not nodes_dir:
+        return []
+    return [nodes_dir] if isinstance(nodes_dir, str) else [d for d in nodes_dir if d]
+
+
+def find_node_file(ref: str, nodes_dir):
+    """The first `<dir>/<ref>.md` that exists, or None."""
+    for directory in node_hook_dirs(nodes_dir):
+        path = os.path.join(directory, f"{ref}.md")
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir=None):
     """Return (ordered_hooks, warnings).
 
     ordered_hooks is a flat list of dicts: {when, anchor, index, hook}. Hooks at a
     given (when, anchor) keep their declared order. An anchor not in active_nodes is
     warned + skipped. A `type: node` hook with no `ref` always raises ConfigError;
-    when `nodes_dir` is given, a `ref` whose `.md` file is absent also raises.
+    when `nodes_dir` is given, a `ref` found in none of those directories also
+    raises. `nodes_dir` may be one path or several, searched in order.
     """
     warnings = []
     ordered = []
@@ -353,10 +375,11 @@ def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir: str =
                     continue
                 if hook["type"] == "node":
                     ref = hook.get("ref")
-                    ref_path = os.path.join(nodes_dir, f"{ref}.md") if nodes_dir else None
-                    if not ref or (ref_path and not os.path.isfile(ref_path)):
+                    if not ref or (nodes_dir and not find_node_file(ref, nodes_dir)):
+                        looked = ", ".join(node_hook_dirs(nodes_dir))
                         raise ConfigError(
-                            f"hook {command}.{when}.{anchor}[{i}] type:node ref '{ref}' has no node file"
+                            f"hook {command}.{when}.{anchor}[{i}] type:node ref '{ref}' has no "
+                            f"node file" + (f" in {looked}" if looked else "")
                         )
                 # A skill hook names something the assistant resolves, not a file
                 # this build can see — so the name is all there is to check. An

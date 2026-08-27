@@ -68,6 +68,7 @@ def _hook(entry: dict) -> dict:
 
 def build_graph(project_root: str) -> dict:
     use_project_nodes(project_root)
+    build.use_project_hook_nodes(project_root)
     config = build.load_config(project_root)
     plan, warnings = build.plan_build(config)
     templates = build.plan_templates(config, project_root)
