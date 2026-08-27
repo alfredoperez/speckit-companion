@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **A Pipeline Builder panel.** "SpecKit Companion: Open Pipeline Builder" shows the pipeline your project actually runs — every step, the phases inside it, the nodes inside those, the hooks attached to either, where the classifier's verdict routes, and which files each step produces. A chip in the header says whether anything differs from the pipeline as it ships and expands to list what; clicking a node opens the built command at that node, which is the text the assistant reads. It draws whatever your configuration resolves to, so a project that has changed nothing sees exactly what ships.
+- **Build your pipeline from the editor.** "Build Pipeline from companion.yml" applies your configuration; "Preview Pipeline Build" shows what would change and writes nothing. Both report into the SpecKit Companion output channel, because what a build has to say is a diff.
+- **A stale pipeline says so.** When `companion.yml` is newer than the commands built from it, the two disagree — the file says one thing and the command your assistant is handed says another, with nothing about a run looking wrong. That is now stated once per session, with the rebuild a click away.
+
 ### Removed
 
 - **Seven command-palette entries that did nothing have been removed.** The workflow-editor commands (edit source, refine section, remove section, add user story, approve and continue, regenerate, navigate to phase) were left over from an editor that no longer exists — running any of them wrote a line to an output channel and nothing else. Their right-click menu entries are gone with them.

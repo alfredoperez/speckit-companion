@@ -136,6 +136,30 @@ The Companion commands are assembled from composable **nodes**: small named sect
 
 The specs themselves get smaller, too. Same four steps, smaller output: the specs the Companion pipeline writes skip sections a typical change never needs (formal user stories among them), order tasks by the files they touch and what depends on what, and leave no throwaway side files.
 
+### Build what you configured
+
+`companion.yml` used to be able to describe a pipeline that never ran: a recipe or a hook was read, checked, and then the shipped commands ran anyway. Building closes that.
+
+```bash
+python3 .specify/extensions/companion/scripts/build-pipeline.py --dry-run   # what would change
+python3 .specify/extensions/companion/scripts/build-pipeline.py             # apply it
+```
+
+A build resolves four things and writes the commands your assistant reads:
+
+| You configure | What a build does |
+|---|---|
+| `nodes:` on a step | runs exactly those, in that order |
+| `hooks:` on a node **or a phase** | renders your command, instruction, or node into the body at that point |
+| `templates:` sections | swaps a named section of a template for a fragment of yours |
+| `decisions:` verdicts | changes where the size verdict routes, and tells the assistant it changed |
+
+Nothing is written until every command has assembled, so a build that cannot finish leaves the working pipeline exactly as it was — and it says which line, node, or section it could not resolve. Every build also states what a run will produce and how many directives each command carries.
+
+Steps are grouped into named **phases** (gather, author, check, wrap-up). A phase is where a hook can attach without naming a single node; it is not a separate dispatch, so the command your assistant receives is still one command.
+
+If you use the [VS Code companion](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), the **Pipeline Builder** panel draws all of this and runs the build for you.
+
 ## Fast path: a small change skips the ceremony
 
 Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.

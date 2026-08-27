@@ -94,6 +94,22 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
      (C6) pointing back at this extension. -->
 [![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](./docs/getting-started.md#install-the-spec-kit-extension)
 
+### See the pipeline your project runs
+
+The Companion pipeline is assembled from blocks: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
+
+**SpecKit Companion: Open Pipeline Builder** draws whatever that configuration resolves to: every step and phase, the nodes inside them, the hooks attached, where each verdict goes, and the files each step produces. A chip says whether anything differs from the pipeline as it ships, and expands to list exactly what. Clicking a node opens the built command at that node — the text your assistant reads.
+
+Build from the same panel, or from the palette:
+
+| Command | What it does |
+|---|---|
+| **Open Pipeline Builder** | Draw the pipeline your configuration resolves to |
+| **Preview Pipeline Build** | Show what a build would change, writing nothing |
+| **Build Pipeline from companion.yml** | Apply the configuration |
+
+When `companion.yml` is newer than the commands built from it, the extension says so once per session — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](./docs/getting-started.md#install-the-spec-kit-extension), which holds the pipeline sources.
+
 ## No lock-in, no server
 
 Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](./docs/getting-started.md).

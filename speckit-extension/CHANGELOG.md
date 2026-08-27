@@ -8,7 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
 
+- **A project can build its own pipeline.** `build-pipeline.py` turns `.specify/companion.yml` into the commands the assistant reads: it resolves which nodes each step runs, splices in the hooks the project declared, resolves any template it reshaped, and writes the bodies with a manifest beside them. Until now the configuration could describe a different pipeline and the shipped one ran regardless — the recipe and the hooks were resolved and then discarded. Preview first with `--dry-run`, which diffs against what is currently built and writes nothing. A build that cannot finish — a recipe naming a node that does not exist, one that drops a node another still needs, a configuration outside the readable subset — says which, and leaves the working pipeline exactly as it was.
+- **Phases: the middle block.** Each step's nodes are now grouped into named phases (gather, author, check, wrap-up). A hook can attach to a whole phase instead of naming a single node, and the step is still one dispatched command, so nothing about the instruction budget changes.
+- **Hooks reach the command body.** A hook declared in `companion.yml` is now rendered where it attaches: a command becomes a runnable block, a prompt becomes an instruction, and a node hook splices another node's text in whole. Each lands outside the block it attaches to, so it never edits that block's own instructions.
+- **A step's template can be reshaped.** A project can replace a named section of a template — addressed by its heading, which is what a template already has — with a fragment of its own. The specimen case is a project that wants its specs written around outcomes instead of user stories, which previously existed only as a hardcoded branch nobody could ask for. The stock template is never edited in place; the resolved copy is written beside the built commands, so an upgrade cannot quietly discard the change.
+- **Routing is a declaration.** Where the classifier's verdict sends a run — fold toward implement, or run everything — was written in three places and expressible in none. It is data now, and a project can move it; the build states the routing it resolved and tells the assistant when the project changed it.
+- **Every node's contribution is marked in the assembled command,** so a hook or a replacement can name an exact point instead of matching the prose around it. The markers are HTML comments: invisible when the body renders, and the instructions are unchanged — the build proves it by stripping them and comparing to the frozen bodies.
+- **Every build says what a run will produce,** attributed to the node that promised each file, and `--verify` reports anything a run did not leave on disk. That declaration had sat in the node files for a long time with nothing reading it.
+- **The directive count per command is printed on every build,** own instructions separated from the parts shared with every other command.
+
+### Fixed
 
 - The implement step now runs the project's own tests and build before calling the work done, and a spec is not marked complete over a failing suite the run introduced. It used to satisfy "validate against the spec" by reading the code — so a run could write tests, never execute them, and finish looking green. Where the checks genuinely cannot be run, that is recorded as a concern rather than written up as a verification that happened.
 ### Fixed
