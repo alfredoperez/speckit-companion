@@ -107,6 +107,37 @@ class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
                                  (SCRIPTS / "write-context.py").read_text()).group(1).split("|"))
         self.assertEqual(emitted, accepted)
 
+    def test_the_workflow_file_routes_on_a_verdict_the_classifier_emits(self):
+        """The routing switch is the one consumer no test had ever opened, and it
+        branched on `small` — a word the classifier never emits — so the folded
+        path was unreachable and every spec silently took the full pipeline."""
+        import re
+        emitted = set(re.search(r"size=<([^>]+)>", self.BODY.read_text()).group(1).split("|"))
+        workflow = (REPO / "speckit-extension" / "workflows"
+                    / "speckit-companion.workflow.yml").read_text()
+
+        cases_block = workflow.split("cases:", 1)[1]
+        # Case keys are the lines indented one level under `cases:`; stop at the
+        # first line that dedents back out of the block (`default:` is a sibling
+        # of `cases:`, not a case).
+        keys = []
+        for line in cases_block.splitlines()[1:]:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            indent = len(line) - len(line.lstrip())
+            if indent < 6:
+                break
+            if indent == 6 and line.rstrip().endswith(":"):
+                keys.append(line.strip().rstrip(":"))
+
+        self.assertRegex(workflow, r"(?m)^ {4}default:",
+                         "the safe fallback that keeps an unmatched size on the full pipeline is gone")
+        self.assertTrue(keys, "the switch routes on nothing")
+        for key in keys:
+            self.assertIn(key, emitted,
+                          f"the workflow routes on '{key}', which the classifier never emits "
+                          f"(it emits {sorted(emitted)}) — that branch is unreachable")
+
 
 class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
     """#584 — a spec joining mid-run must be pinned before the next dispatch."""

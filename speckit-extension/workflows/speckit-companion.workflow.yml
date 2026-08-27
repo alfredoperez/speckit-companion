@@ -60,22 +60,25 @@ steps:
     type: switch
     expression: "{{ steps.classify.output.size }}"
     cases:
-      small:
+      # `simple` is the verdict the classifier emits (presets/_parts/routing.md:
+      # "`small` names the *bar*, never the verdict"). This key read `small`
+      # once, so no run ever matched it and every spec took the full default.
+      simple:
         # Folded path — less ceremony for a small change: plan and tasks still
         # run (implement reads tasks.md, so it can't be skipped), but WITHOUT the
         # review-gate pauses. That is the "fold toward implement" — fewer stops,
         # not fewer artifacts.
-        - id: small-plan
+        - id: simple-plan
           command: speckit.companion.plan
           integration: "{{ inputs.integration }}"
           input:
             args: "{{ inputs.spec }}"
-        - id: small-tasks
+        - id: simple-tasks
           command: speckit.companion.tasks
           integration: "{{ inputs.integration }}"
           input:
             args: "{{ inputs.spec }}"
-        - id: small-implement
+        - id: simple-implement
           command: speckit.companion.implement
           integration: "{{ inputs.integration }}"
           input:
