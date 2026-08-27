@@ -151,6 +151,24 @@ commands:
 
 In v1 this changes *assembly order only*, not the per-node output text — true add/drop-a-section composition is a later step. A recipe that drops a node which a kept node still `reads:` is a **load-time error**, so a recipe can't silently break the pipeline.
 
+### Replacing a node's instructions
+
+A recipe decides *which* nodes run; a replacement decides *what one says*. Put a file at `.specify/companion/nodes/<command>/<node_id>.md` — same frontmatter, your own body — and it is read instead of the shipped node of that id:
+
+```
+.specify/companion/nodes/specify/draft-spec.md    # replaces nodes/specify/draft-spec.md
+```
+
+The resolution is one seam (`node_source` in `_command_parts.py`), so everything that reads a node picks it up: the built body, the phase grouping, `reads:` validation, the artifact manifest, and the graph the Pipeline Builder draws. A build prints which nodes came from the project.
+
+Three properties this deliberately keeps:
+
+- **The shipped sources are never written to.** An upgrade replaces `nodes/` wholesale and cannot touch a project's copy — and cannot silently revert it either.
+- **Parity never points at a project.** The overlay is off unless a build turns it on for one project root, so `assemble-nodes.py --check` compares the shipped goldens to the shipped nodes no matter what any project has replaced.
+- **A replacement is still a node.** It keeps its id, its phase, its `reads:` and `writes:`, so hooks anchored to it still fire and the manifest still attributes its artifact to it.
+
+To go back, delete the file — there is no state anywhere else recording that a node was replaced.
+
 ### Failure table
 
 | Situation | Behavior |

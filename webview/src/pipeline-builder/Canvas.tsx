@@ -19,9 +19,15 @@ const KIND_LABEL: Record<string, string> = {
     control: 'CTRL',
 };
 
+type NodeAction = (command: string, nodeId: string) => void;
+
 interface Props {
     graph: PipelineGraph;
-    onOpenNode: (command: string, nodeId: string) => void;
+    onOpenNode: NodeAction;
+    /** Take a shipped node over: copy it into the project and open the copy. */
+    onReplaceNode: NodeAction;
+    /** Drop the project's copy and go back to the shipped node. */
+    onRestoreNode: NodeAction;
 }
 
 function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
@@ -38,30 +44,43 @@ function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
     );
 }
 
-function Node({ node, step, onOpenNode }: {
-    node: PipelineNode; step: string; onOpenNode: Props['onOpenNode'];
+type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'>;
+
+function Node({ node, step, actions }: {
+    node: PipelineNode; step: string; actions: NodeActions;
 }) {
     return (
-        <div class="pb-node">
-            <button class="pb-node-main" onClick={() => onOpenNode(step, node.id)}>
+        <div class={`pb-node ${node.replaced ? 'pb-node--replaced' : ''}`}>
+            <button class="pb-node-main" onClick={() => actions.onOpenNode(step, node.id)}
+                title={node.replaced
+                    ? "Open this project's instructions for this node"
+                    : 'Open the instructions this node contributes'}>
                 <span class="pb-node-name">{node.name}</span>
                 <span class="pb-node-meta">
                     <span class="pb-node-id">{node.id}</span>
                     <span class={`pb-kind pb-kind--${node.kind}`}>
                         {KIND_LABEL[node.kind] ?? node.kind}
                     </span>
+                    {node.replaced && <span class="pb-own">YOURS</span>}
                     {node.writes.map(file => (
                         <span key={file} class="pb-writes" title="produced by this node">{file}</span>
                     ))}
                 </span>
             </button>
+            {node.replaced ? (
+                <button class="pb-node-action" title="Delete your copy and use the shipped node"
+                    onClick={() => actions.onRestoreNode(step, node.id)}>Use shipped</button>
+            ) : (
+                <button class="pb-node-action" title="Copy this node into your project and edit it"
+                    onClick={() => actions.onReplaceNode(step, node.id)}>Replace</button>
+            )}
             <HookChips hooks={node.hooks} />
         </div>
     );
 }
 
-function Phase({ phase, step, onOpenNode }: {
-    phase: PipelinePhase; step: string; onOpenNode: Props['onOpenNode'];
+function Phase({ phase, step, actions }: {
+    phase: PipelinePhase; step: string; actions: NodeActions;
 }) {
     return (
         <div class="pb-phase">
@@ -71,7 +90,7 @@ function Phase({ phase, step, onOpenNode }: {
             </div>
             <div class="pb-phase-nodes">
                 {phase.nodes.map(node => (
-                    <Node key={node.id} node={node} step={step} onOpenNode={onOpenNode} />
+                    <Node key={node.id} node={node} step={step} actions={actions} />
                 ))}
             </div>
         </div>
@@ -104,10 +123,10 @@ function Decisions({ step }: { step: PipelineStep }) {
     );
 }
 
-function Step({ step, onOpenNode }: { step: PipelineStep; onOpenNode: Props['onOpenNode'] }) {
+function Step({ step, actions }: { step: PipelineStep; actions: NodeActions }) {
     const changed = step.changes.added.length || step.changes.removed.length
         || step.changes.reordered || step.changes.hooks || step.changes.decisions.length
-        || step.template;
+        || step.changes.replaced.length || step.template;
     return (
         <section class={`pb-step ${changed ? 'pb-step--changed' : ''}`}>
             <header class="pb-step-head">
@@ -130,7 +149,7 @@ function Step({ step, onOpenNode }: { step: PipelineStep; onOpenNode: Props['onO
             </header>
 
             {step.phases.map(phase => (
-                <Phase key={phase.name} phase={phase} step={step.name} onOpenNode={onOpenNode} />
+                <Phase key={phase.name} phase={phase} step={step.name} actions={actions} />
             ))}
 
             <Decisions step={step} />
@@ -144,12 +163,13 @@ function Step({ step, onOpenNode }: { step: PipelineStep; onOpenNode: Props['onO
     );
 }
 
-export function Canvas({ graph, onOpenNode }: Props) {
+export function Canvas({ graph, onOpenNode, onReplaceNode, onRestoreNode }: Props) {
+    const actions: NodeActions = { onOpenNode, onReplaceNode, onRestoreNode };
     return (
         <main class="pb-canvas">
             {graph.steps.map((step, index) => (
                 <div key={step.name} class="pb-chain-item">
-                    <Step step={step} onOpenNode={onOpenNode} />
+                    <Step step={step} actions={actions} />
                     {index < graph.steps.length - 1 && (
                         <div class="pb-link" aria-hidden="true" />
                     )}

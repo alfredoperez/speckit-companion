@@ -98,7 +98,9 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 The Companion pipeline is assembled from blocks: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-**SpecKit Companion: Open Pipeline Builder** draws whatever that configuration resolves to: every step and phase, the nodes inside them, the hooks attached, where each verdict goes, and the files each step produces. A chip says whether anything differs from the pipeline as it ships, and expands to list exactly what. Clicking a node opens the built command at that node — the text your assistant reads.
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. It draws whatever that configuration resolves to: every step and phase, the nodes inside them, the hooks attached, where each verdict goes, and the files each step produces. A chip says whether anything differs from the pipeline as it ships, and expands to list exactly what. Clicking a node opens the node itself — the instructions that node contributes, not the whole assembled command.
+
+**Rewrite a node in your own words.** Press **Replace** on any node and its instructions are copied to `.specify/companion/nodes/<step>/<node>.md`, where you can edit them. Build, and your version is what your assistant reads; the node is marked **YOURS** in the panel until you press **Use shipped** to hand it back. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
 
 Build from the same panel, or from the palette:
 

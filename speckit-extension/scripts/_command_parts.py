@@ -403,9 +403,38 @@ def parse_phases(path: str) -> list:
     return phases
 
 
+#: A project's own node files, which replace the shipped ones of the same id.
+PROJECT_NODES_REL = os.path.join(".specify", "companion", "nodes")
+
+#: Set by a build for one project; unset means shipped nodes only. Golden parity
+#: never sets it, so a project's replacements can never move the shipped goldens.
+_project_root = None
+
+
+def use_project_nodes(root):
+    """Point node reads at one project's replacements. `None` restores shipped-only."""
+    global _project_root
+    _project_root = root
+
+
+def project_node_path(command: str, node_id: str):
+    """Where this project's replacement for a node would live, or None if unset."""
+    if not _project_root:
+        return None
+    return os.path.join(_project_root, PROJECT_NODES_REL, command, f"{node_id}.md")
+
+
+def node_source(command: str, node_id: str) -> tuple:
+    """Return (path, replaced) for a node — the project's copy when it has one."""
+    own = project_node_path(command, node_id)
+    if own and os.path.isfile(own):
+        return own, True
+    return os.path.join(nodes_command_dir(command), f"{node_id}.md"), False
+
+
 def read_node(command: str, node_id: str) -> tuple:
     """Return (meta_dict, body) for a node file, or raise if missing."""
-    path = os.path.join(nodes_command_dir(command), f"{node_id}.md")
+    path, _replaced = node_source(command, node_id)
     if not os.path.isfile(path):
         raise SystemExit(f"[nodes] missing node file: {command}/{node_id}.md")
     with open(path, encoding="utf-8") as fh:

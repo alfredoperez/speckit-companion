@@ -45,6 +45,9 @@ function changeSummary(graph: PipelineGraph): string[] {
         if (step.changes.hooks) {
             bits.push(`${step.changes.hooks} hook${step.changes.hooks === 1 ? '' : 's'}`);
         }
+        if (step.changes.replaced.length) {
+            bits.push(`your own: ${step.changes.replaced.join(', ')}`);
+        }
         if (step.changes.decisions.length) {
             bits.push(`routing: ${step.changes.decisions.join(', ')}`);
         }

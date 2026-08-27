@@ -40,7 +40,13 @@ import companion_config as cc  # noqa: E402
 import decision_routes as decisions_mod  # noqa: E402
 import hook_render  # noqa: E402
 import template_render  # noqa: E402
-from _command_parts import decomposed_commands, nodes_command_dir  # noqa: E402
+from _command_parts import (  # noqa: E402
+    PROJECT_NODES_REL,
+    decomposed_commands,
+    node_source,
+    nodes_command_dir,
+    use_project_nodes,
+)
 
 assemble = importlib.import_module("assemble-nodes")
 manifest_mod = importlib.import_module("manifest")
@@ -115,7 +121,8 @@ def plan_build(config: dict) -> tuple[dict, list]:
 
         plan[command] = {"order": order, "hooks": hooks, "default": default,
                          "phases": phases, "decisions": resolved,
-                         "decisionsChanged": changed}
+                         "decisionsChanged": changed,
+                         "replaced": [n for n in order if node_source(command, n)[1]]}
     return plan, warnings
 
 
@@ -178,6 +185,9 @@ def describe(command: str, entry: dict) -> str:
         bits.append("reordered")
     if entry["hooks"]:
         bits.append(f"{len(entry['hooks'])} hook" + ("" if len(entry["hooks"]) == 1 else "s"))
+    replaced = entry.get("replaced") or []
+    if replaced:
+        bits.append(f"{len(replaced)} replaced ({', '.join(replaced)})")
     return f"  {command}: " + (", ".join(bits) if bits else "shipped default")
 
 
@@ -223,6 +233,10 @@ def main() -> int:
     project = os.path.abspath(args.project)
     out_dir = os.path.abspath(args.out) if args.out else os.path.join(project, DEFAULT_OUT_REL)
 
+    # A project's own node files replace the shipped ones of the same id, so this
+    # has to be in force before anything reads a node.
+    use_project_nodes(project)
+
     try:
         config = load_config(project)
         plan, warnings = plan_build(config)
@@ -249,6 +263,14 @@ def main() -> int:
             print(decisions_mod.render(entry["decisions"]))
             if entry.get("decisionsChanged"):
                 print(f"    (this project changed: {', '.join(entry['decisionsChanged'])})")
+
+    replaced = {c: e["replaced"] for c, e in plan.items() if e.get("replaced")}
+    if replaced:
+        total = sum(len(v) for v in replaced.values())
+        print(f"[build] {total} node" + ("" if total == 1 else "s") +
+              f" replaced from {PROJECT_NODES_REL}:")
+        for command, ids in sorted(replaced.items()):
+            print(f"  {command}: {', '.join(ids)}")
 
     if templates:
         print("[build] templates resolved:")

@@ -4,33 +4,40 @@
 import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
-import type { PipelineGraph, PipelineStep } from '../../../../src/protocol/pipeline';
+import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/protocol/pipeline';
+
+function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
+    return {
+        id: 'resolve-dir', name: 'Resolve the spec folder', kind: 'control',
+        reads: [], writes: [], hooks: [],
+        source: '/ext/nodes/specify/resolve-dir.md', replaced: false,
+        ...overrides,
+    };
+}
+
+const NO_CHANGES = {
+    added: [], removed: [], reordered: false, hooks: 0, decisions: [], replaced: [],
+};
 
 function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name: 'specify',
         phases: [
-            {
-                name: 'gather',
-                hooks: [],
-                nodes: [{
-                    id: 'resolve-dir', name: 'Resolve the spec folder', kind: 'control',
-                    reads: [], writes: [], hooks: [],
-                }],
-            },
+            { name: 'gather', hooks: [], nodes: [node()] },
             {
                 name: 'author',
                 hooks: [],
-                nodes: [{
+                nodes: [node({
                     id: 'draft-spec', name: 'Draft the spec', kind: 'author',
-                    reads: ['resolve-dir'], writes: ['spec.md'], hooks: [],
-                }],
+                    reads: ['resolve-dir'], writes: ['spec.md'],
+                    source: '/ext/nodes/specify/draft-spec.md',
+                })],
             },
         ],
         decisions: [],
         artifacts: ['spec.md'],
         template: null,
-        changes: { added: [], removed: [], reordered: false, hooks: 0, decisions: [] },
+        changes: { ...NO_CHANGES },
         ...overrides,
     };
 }
@@ -46,18 +53,32 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     };
 }
 
-function mount(node: preact.ComponentChild): HTMLElement {
+function mount(child: preact.ComponentChild): HTMLElement {
     const host = document.createElement('div');
     document.body.appendChild(host);
-    render(node as never, host);
+    render(child as never, host);
     return host;
+}
+
+type Calls = string[][];
+
+/** Mount the canvas and hand back the DOM plus what each node action recorded. */
+function canvas(g: PipelineGraph = graph()) {
+    const opened: Calls = [], replaced: Calls = [], restored: Calls = [];
+    const host = mount(
+        <Canvas graph={g}
+            onOpenNode={(c, n) => opened.push([c, n])}
+            onReplaceNode={(c, n) => replaced.push([c, n])}
+            onRestoreNode={(c, n) => restored.push([c, n])} />,
+    );
+    return { host, opened, replaced, restored };
 }
 
 afterEach(() => { document.body.innerHTML = ''; });
 
 describe('the canvas draws the three levels as containment', () => {
     it('puts every phase inside its step, and every node inside its phase', () => {
-        const host = mount(<Canvas graph={graph()} onOpenNode={() => undefined} />);
+        const { host } = canvas(graph());
 
         const stepEl = host.querySelector('.pb-step');
         expect(stepEl).not.toBeNull();
@@ -67,20 +88,20 @@ describe('the canvas draws the three levels as containment', () => {
     });
 
     it('shows a node by its human name, with the id as metadata', () => {
-        const host = mount(<Canvas graph={graph()} onOpenNode={() => undefined} />);
+        const { host } = canvas(graph());
 
         expect(host.querySelector('.pb-node-name')?.textContent).toBe('Resolve the spec folder');
         expect(host.querySelector('.pb-node-id')?.textContent).toBe('resolve-dir');
     });
 
     it('names the artifact a node is declared to produce', () => {
-        const host = mount(<Canvas graph={graph()} onOpenNode={() => undefined} />);
+        const { host } = canvas(graph());
         expect(host.textContent).toContain('spec.md');
     });
 
     it('links steps to each other, never a node to a step', () => {
         const two = graph({ steps: [step(), step({ name: 'plan' })] });
-        const host = mount(<Canvas graph={two} onOpenNode={() => undefined} />);
+        const { host } = canvas(two);
 
         // One link, between the two step containers.
         expect(host.querySelectorAll('.pb-link')).toHaveLength(1);
@@ -99,7 +120,7 @@ describe('the canvas draws the three levels as containment', () => {
                 }],
             })],
         });
-        const host = mount(<Canvas graph={withDecision} onOpenNode={() => undefined} />);
+        const { host } = canvas(withDecision);
 
         const text = host.querySelector('.pb-decisions')?.textContent ?? '';
         expect(text).toContain('classify-size decides');
@@ -113,15 +134,14 @@ describe('the canvas draws the three levels as containment', () => {
                 phases: [{
                     name: 'author',
                     hooks: [{ when: 'after', type: 'command', summary: 'npm run lint-spec' }],
-                    nodes: [{
+                    nodes: [node({
                         id: 'draft-spec', name: 'Draft the spec', kind: 'author',
-                        reads: [], writes: [],
                         hooks: [{ when: 'before', type: 'prompt', summary: 'check the canvas' }],
-                    }],
+                    })],
                 }],
             })],
         });
-        const host = mount(<Canvas graph={hooked} onOpenNode={() => undefined} />);
+        const { host } = canvas(hooked);
 
         const phaseHook = host.querySelector('.pb-phase-head .pb-hook');
         expect(phaseHook?.textContent).toContain('after');
@@ -133,10 +153,7 @@ describe('the canvas draws the three levels as containment', () => {
     });
 
     it('opens the node someone clicks', () => {
-        const opened: string[][] = [];
-        const host = mount(
-            <Canvas graph={graph()} onOpenNode={(c, n) => opened.push([c, n])} />,
-        );
+        const { host, opened } = canvas();
         (host.querySelector('.pb-node-main') as HTMLButtonElement).click();
         expect(opened).toEqual([['specify', 'resolve-dir']]);
     });
@@ -144,11 +161,57 @@ describe('the canvas draws the three levels as containment', () => {
     it('marks only the steps this project changed', () => {
         const mixed = graph({
             steps: [
-                step({ changes: { added: [], removed: ['quality-checklist'], reordered: false, hooks: 0, decisions: [] } }),
+                step({ changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 0 } }),
                 step({ name: 'plan' }),
             ],
         });
-        const host = mount(<Canvas graph={mixed} onOpenNode={() => undefined} />);
+        const { host } = canvas(mixed);
+        expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
+    });
+});
+
+describe('a project can take a node over', () => {
+    /** A graph whose one node is the project's own copy. */
+    function owned() {
+        return graph({
+            steps: [step({
+                phases: [{
+                    name: 'author',
+                    hooks: [],
+                    nodes: [node({
+                        id: 'draft-spec', name: 'Draft the spec', kind: 'author',
+                        source: '/proj/.specify/companion/nodes/specify/draft-spec.md',
+                        replaced: true,
+                    })],
+                }],
+                changes: { ...NO_CHANGES, replaced: ['draft-spec'] },
+            })],
+        });
+    }
+
+    it('offers to replace a node that is still the shipped one', () => {
+        const { host, replaced } = canvas();
+        const action = host.querySelector('.pb-node-action') as HTMLButtonElement;
+
+        expect(action.textContent).toBe('Replace');
+        action.click();
+        expect(replaced).toEqual([['specify', 'resolve-dir']]);
+    });
+
+    it('marks a node the project owns, and offers the shipped one back', () => {
+        const { host, restored } = canvas(owned());
+
+        expect(host.querySelector('.pb-node--replaced')).not.toBeNull();
+        expect(host.querySelector('.pb-own')?.textContent).toBe('YOURS');
+
+        const action = host.querySelector('.pb-node-action') as HTMLButtonElement;
+        expect(action.textContent).toBe('Use shipped');
+        action.click();
+        expect(restored).toEqual([['specify', 'draft-spec']]);
+    });
+
+    it('counts a replaced node as a change to its step', () => {
+        const { host } = canvas(owned());
         expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
     });
 });
@@ -168,7 +231,7 @@ describe('the header says what this pipeline is', () => {
         const customised = graph({
             customised: true,
             steps: [step({
-                changes: { added: [], removed: ['quality-checklist'], reordered: false, hooks: 2, decisions: [] },
+                changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 2 },
             })],
         });
         const host = mount(

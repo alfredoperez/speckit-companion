@@ -76,6 +76,10 @@ function App() {
                 graph={graph}
                 onOpenNode={(command, nodeId) =>
                     vscode.postMessage({ type: 'openNode', command, nodeId })}
+                onReplaceNode={(command, nodeId) =>
+                    vscode.postMessage({ type: 'replaceNode', command, nodeId })}
+                onRestoreNode={(command, nodeId) =>
+                    vscode.postMessage({ type: 'restoreNode', command, nodeId })}
             />
         </div>
     );

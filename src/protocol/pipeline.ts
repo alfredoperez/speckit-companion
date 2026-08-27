@@ -35,6 +35,10 @@ export interface PipelineNode {
     /** Files this node is declared to produce. */
     writes: string[];
     hooks: PipelineHook[];
+    /** The file these instructions were read from — what opening the node opens. */
+    source: string;
+    /** Whether that file is the project's own copy rather than the shipped one. */
+    replaced: boolean;
 }
 
 /** The middle block: a named group of nodes, and a place a hook can attach. */
@@ -65,6 +69,8 @@ export interface PipelineChanges {
     reordered: boolean;
     hooks: number;
     decisions: string[];
+    /** Nodes this project replaced with its own instructions. */
+    replaced: string[];
 }
 
 export interface PipelineTemplate {
@@ -123,7 +129,11 @@ export type BuilderToExtensionMessage =
     | { type: 'build' }
     | { type: 'preview' }
     | { type: 'openConfig' }
-    | { type: 'openNode'; command: string; nodeId: string };
+    | { type: 'openNode'; command: string; nodeId: string }
+    /** Take ownership of a node: copy the shipped instructions in to edit. */
+    | { type: 'replaceNode'; command: string; nodeId: string }
+    /** Give it back: drop the project's copy and return to the shipped node. */
+    | { type: 'restoreNode'; command: string; nodeId: string };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }

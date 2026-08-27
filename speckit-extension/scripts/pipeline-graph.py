@@ -25,7 +25,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
-from _command_parts import decomposed_commands, read_node  # noqa: E402
+from _command_parts import (  # noqa: E402
+    decomposed_commands,
+    node_source,
+    read_node,
+    use_project_nodes,
+)
 
 build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
@@ -34,8 +39,13 @@ manifest_mod = importlib.import_module("manifest")
 def _node(command: str, node_id: str, hooks: list) -> dict:
     meta, _body = read_node(command, node_id)
     writes = meta.get("writes")
+    source, replaced = node_source(command, node_id)
     return {
         "id": node_id,
+        # Where these instructions actually came from, so the builder opens the
+        # file someone can edit instead of the assembled body they cannot.
+        "source": source,
+        "replaced": replaced,
         # The id is a handle; the name is what a person reads. A node without one
         # falls back to its id rather than showing nothing.
         "name": meta.get("name") or node_id,
@@ -57,6 +67,7 @@ def _hook(entry: dict) -> dict:
 
 
 def build_graph(project_root: str) -> dict:
+    use_project_nodes(project_root)
     config = build.load_config(project_root)
     plan, warnings = build.plan_build(config)
     templates = build.plan_templates(config, project_root)
@@ -91,12 +102,14 @@ def build_graph(project_root: str) -> dict:
                 "reordered": order != default and not set(order) ^ set(default),
                 "hooks": len(hooks),
                 "decisions": entry.get("decisionsChanged") or [],
+                "replaced": entry.get("replaced") or [],
             },
         })
 
     customised = any(
         s["changes"]["added"] or s["changes"]["removed"] or s["changes"]["reordered"]
-        or s["changes"]["hooks"] or s["changes"]["decisions"] or s["template"]
+        or s["changes"]["hooks"] or s["changes"]["decisions"] or s["changes"]["replaced"]
+        or s["template"]
         for s in steps
     )
     return {

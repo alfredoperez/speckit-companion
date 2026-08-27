@@ -23,6 +23,10 @@ import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineB
 import { readPipelineGraph, resolveGraphScript } from '../specs/pipelineGraph';
 
 const VIEW_TYPE = 'speckit.pipelineBuilder';
+const BUILD_COMMAND = 'speckit.companion.buildPipeline';
+
+/** Mirrors `PROJECT_NODES_REL` in `_command_parts.py` — a project's own nodes. */
+const PROJECT_NODES_REL = path.join('.specify', 'companion', 'nodes');
 
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -52,13 +56,15 @@ export class PipelineBuilderPanel {
 
         // Rebuilding elsewhere, or editing the configuration, should be visible
         // here without anyone remembering to refresh.
-        const watcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(workspaceRoot, '.specify/companion.yml'),
-        );
-        watcher.onDidChange(() => void this.send(), null, this.disposables);
-        watcher.onDidCreate(() => void this.send(), null, this.disposables);
-        watcher.onDidDelete(() => void this.send(), null, this.disposables);
-        this.disposables.push(watcher);
+        for (const pattern of ['.specify/companion.yml', '.specify/companion/nodes/**/*.md']) {
+            const watcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(workspaceRoot, pattern),
+            );
+            watcher.onDidChange(() => void this.send(), null, this.disposables);
+            watcher.onDidCreate(() => void this.send(), null, this.disposables);
+            watcher.onDidDelete(() => void this.send(), null, this.disposables);
+            this.disposables.push(watcher);
+        }
     }
 
     static show(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): void {
@@ -89,7 +95,7 @@ export class PipelineBuilderPanel {
     private readonly handlers: DispatcherMap<BuilderToExtensionMessage, []> = {
         ready: () => this.send(),
         refresh: () => this.send(),
-        build: () => this.run('speckit.companion.buildPipeline'),
+        build: () => this.run(BUILD_COMMAND),
         preview: () => this.run('speckit.companion.previewPipelineBuild'),
         openConfig: async () => {
             const file = path.join(this.workspaceRoot, COMPANION_CONFIG_REL);
@@ -102,29 +108,90 @@ export class PipelineBuilderPanel {
             await vscode.window.showTextDocument(vscode.Uri.file(file));
         },
         openNode: async message => {
-            // A node's instructions live in the extension's sources, which a
-            // consuming project does not have. Opening the built command is the
-            // honest fallback: it is what the assistant actually reads.
-            const built = path.join(
-                this.workspaceRoot, '.specify', 'extensions', 'companion', 'commands',
-                `speckit.companion.${message.command}.md`,
-            );
-            if (!fs.existsSync(built)) {
-                void vscode.window.showInformationMessage(
-                    `Build the pipeline to read ${message.nodeId}'s instructions as the assistant sees them.`,
-                );
+            const node = this.nodeSource(message.command, message.nodeId);
+            if (node) {
+                await vscode.window.showTextDocument(vscode.Uri.file(node));
                 return;
             }
-            const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(built));
-            const editor = await vscode.window.showTextDocument(doc);
-            const marker = doc.getText().indexOf(`speckit-companion:node ${message.nodeId}`);
-            if (marker >= 0) {
-                const at = doc.positionAt(marker);
-                editor.revealRange(new vscode.Range(at, at), vscode.TextEditorRevealType.AtTop);
-                editor.selection = new vscode.Selection(at, at);
+            await this.openInBuiltCommand(message.command, message.nodeId);
+        },
+        replaceNode: async message => {
+            const own = this.projectNodePath(message.command, message.nodeId);
+            if (fs.existsSync(own)) {
+                await vscode.window.showTextDocument(vscode.Uri.file(own));
+                return;
             }
+            const shipped = this.nodeSource(message.command, message.nodeId);
+            if (!shipped) {
+                void vscode.window.showWarningMessage(
+                    `Cannot find the shipped ${message.nodeId} node to copy from.`);
+                return;
+            }
+            fs.mkdirSync(path.dirname(own), { recursive: true });
+            fs.copyFileSync(shipped, own);
+            await vscode.window.showTextDocument(vscode.Uri.file(own));
+            void vscode.window.showInformationMessage(
+                `${message.nodeId} is now this project's. Build the pipeline to use it.`,
+                'Build',
+            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
+            await this.send();
+        },
+        restoreNode: async message => {
+            const own = this.projectNodePath(message.command, message.nodeId);
+            if (!fs.existsSync(own)) { return; }
+            const pick = await vscode.window.showWarningMessage(
+                `Delete this project's ${message.nodeId} and go back to the shipped node?`,
+                { modal: true },
+                'Delete',
+            );
+            if (pick !== 'Delete') { return; }
+            fs.unlinkSync(own);
+            await this.send();
         },
     };
+
+    /** Where this project's own copy of a node lives, whether or not it exists. */
+    private projectNodePath(command: string, nodeId: string): string {
+        return path.join(this.workspaceRoot, PROJECT_NODES_REL, command, `${nodeId}.md`);
+    }
+
+    /**
+     * The node file to open: the project's copy, then the installed extension's,
+     * then the one bundled in this extension. All three are real places a node
+     * can live, and only the first is editable without being overwritten.
+     */
+    private nodeSource(command: string, nodeId: string): string | undefined {
+        const candidates = [
+            this.projectNodePath(command, nodeId),
+            path.join(this.workspaceRoot, '.specify', 'extensions', 'companion',
+                'nodes', command, `${nodeId}.md`),
+            path.join(this.context.extensionPath, 'speckit-extension',
+                'nodes', command, `${nodeId}.md`),
+        ];
+        return candidates.find(file => fs.existsSync(file));
+    }
+
+    /** Last resort: show the node's region of the body the assistant reads. */
+    private async openInBuiltCommand(command: string, nodeId: string): Promise<void> {
+        const built = path.join(
+            this.workspaceRoot, '.specify', 'extensions', 'companion', 'commands',
+            `speckit.companion.${command}.md`,
+        );
+        if (!fs.existsSync(built)) {
+            void vscode.window.showInformationMessage(
+                `Build the pipeline to read ${nodeId}'s instructions as the assistant sees them.`,
+            );
+            return;
+        }
+        const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(built));
+        const editor = await vscode.window.showTextDocument(doc);
+        const marker = doc.getText().indexOf(`speckit-companion:node ${nodeId}`);
+        if (marker >= 0) {
+            const at = doc.positionAt(marker);
+            editor.revealRange(new vscode.Range(at, at), vscode.TextEditorRevealType.AtTop);
+            editor.selection = new vscode.Selection(at, at);
+        }
+    }
 
     private readonly route = createDispatcher(this.handlers, {
         onUnhandled: message => this.outputChannel.appendLine(
