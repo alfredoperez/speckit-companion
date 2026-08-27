@@ -6,8 +6,10 @@ import {
     formatElapsed,
     formatAbsolute,
 } from '../../relativeTime';
+import { STEP_NAMES } from '../../../../../src/core/types/specContext';
 
-const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
+// The canonical step order, imported rather than restated.
+const STEP_ORDER: readonly string[] = STEP_NAMES;
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 
 /** Span length in ms, but only for extension-stamped (trusted) steps; 0 otherwise. */

@@ -167,6 +167,16 @@ export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai' | 'derive';
 /** Every author a writer may stamp on a history entry. */
 export const HISTORY_ENTRY_BY: HistoryEntryBy[] = ['extension', 'user', 'cli', 'ai', 'derive'];
 
+/**
+ * The steps a default pipeline dispatches and measures, in order.
+ *
+ * A narrower list than `STEP_NAMES`: clarify and analyze are optional and are
+ * not part of the default path, so they are not expected to be timed. A project
+ * whose workflow defines its own steps overrides this — it is the fallback, not
+ * a definition of what a pipeline may contain.
+ */
+export const DEFAULT_PIPELINE_STEPS: readonly StepName[] = ['specify', 'plan', 'tasks', 'implement'];
+
 /** Discriminates between a step/substep start and a step/substep completion. */
 export type HistoryEntryKind = 'start' | 'complete';
 

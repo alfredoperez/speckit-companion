@@ -28,6 +28,7 @@ import {
     CheckpointStatus,
     ReviewComment,
     LivingSpecsView,
+    DEFAULT_PIPELINE_STEPS,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
 import { deriveStepHistory, deriveTimingSummary } from '../specs/stepHistoryDerivation';
@@ -352,7 +353,7 @@ export function deriveViewerState(
     // Denominator counts only timed steps; `untimed` ones (e.g. mark-complete) never measure.
     const expectedTimingPhases = workflowSteps?.length
         ? workflowSteps.filter(step => !step.untimed).map(step => step.name)
-        : ['specify', 'plan', 'tasks', 'implement'];
+        : DEFAULT_PIPELINE_STEPS;
     return {
         status: ctx.status,
         activeStep,

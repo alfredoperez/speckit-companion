@@ -1,6 +1,7 @@
 import type { ViewerState, ViewerCoverageRow } from '../types';
 import { formatElapsed } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
+import { STEP_NAMES } from '../../../../src/core/types/specContext';
 
 /**
  * The Overview's sections, ordered by what a future session needs:
@@ -10,7 +11,9 @@ import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 
 const CONSTRAINT_PREFIX = 'constraint: ';
 const AREA_PREFIX = 'area: ';
-const PHASE_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement'];
+// The canonical step order, imported rather than restated — this was one of
+// three copies that had to be found and edited to add a step.
+const PHASE_ORDER: readonly string[] = STEP_NAMES;
 
 function phaseNames(state: ViewerState): string[] {
     const keys = Object.keys(state.stepHistory ?? {});

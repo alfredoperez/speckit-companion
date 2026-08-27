@@ -52,3 +52,32 @@ describe('the viewer protocol has one home', () => {
         }
     });
 });
+
+/**
+ * The step vocabulary was the most-copied knowledge in the codebase: the same
+ * list of names appeared in five production files across two languages, so
+ * adding a step meant finding every one of them. Production code reads it from
+ * the contract now; this keeps it that way.
+ */
+describe('the step vocabulary has one home', () => {
+    const productionSources = [
+        'src/features/spec-viewer/stateDerivation.ts',
+        'src/features/specs/stepHistoryDerivation.ts',
+        'webview/src/spec-viewer/components/OverviewDossier.tsx',
+        'webview/src/spec-viewer/components/cards/PhasesCard.tsx',
+    ];
+
+    it('is not re-declared as a literal in the code that reads it', () => {
+        for (const file of productionSources) {
+            const source = read(file);
+            expect(source).not.toMatch(/\[\s*'specify',\s*'plan',\s*'tasks',\s*'implement'\s*\]/);
+            expect(source).not.toMatch(/\[\s*'specify',\s*'clarify',\s*'plan',/);
+        }
+    });
+
+    it('declares the step lists once, in the contract', () => {
+        const contract = read('src/core/types/specContext.ts');
+        expect(contract).toContain('export const DEFAULT_PIPELINE_STEPS');
+        expect(contract).toContain('export const STEP_NAMES');
+    });
+});
