@@ -544,6 +544,16 @@
         "command": "speckit.companion.dismissInstallNudge",
         "title": "Dismiss Companion Install Prompt",
         "category": "SpecKit Companion"
+      },
+      {
+        "command": "speckit.companion.buildPipeline",
+        "title": "Build Pipeline from companion.yml",
+        "category": "SpecKit Companion"
+      },
+      {
+        "command": "speckit.companion.previewPipelineBuild",
+        "title": "Preview Pipeline Build",
+        "category": "SpecKit Companion"
       }
     ],
     "submenus": [
