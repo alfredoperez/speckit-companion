@@ -2,18 +2,18 @@
   "runId": "easy-speckit",
   "size": "easy",
   "mode": "speckit",
-  "spec": "001-rename-task-manager",
-  "specName": "001-rename-task-manager",
-  "startedAt": "2026-08-26T14:04:45Z",
-  "finishedAt": "2026-08-26T14:13:56Z",
-  "wallClockSec": 551,
+  "spec": "001-task-manager-rename",
+  "specName": "001-task-manager-rename",
+  "startedAt": "2026-08-27T00:47:08Z",
+  "finishedAt": "2026-08-27T00:57:45Z",
+  "wallClockSec": 637,
   "captureOverheadSec": 0,
   "timing": {
-    "totalSec": null,
+    "totalSec": 484.644,
     "perStep": {
-      "specify": null,
-      "plan": null,
-      "tasks": null,
+      "specify": 193.698,
+      "plan": 95.445,
+      "tasks": 61.188,
       "implement": null
     }
   },
@@ -25,17 +25,17 @@
     {
       "n": 1,
       "pass": true,
-      "reason": "Header h1 renders \"Task Manager\""
+      "reason": "Header renders h1 \"Task Manager\""
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "index.html title is \"Task Manager\""
+      "reason": "Shared Header component covers all pages"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Header is route-independent; title static in HTML"
+      "reason": "index.html title is \"Task Manager\""
     }
   ],
   "deterministicBaseline": {
@@ -54,16 +54,16 @@
     "outOfScope": []
   },
   "quality": {
-    "correctness": 10,
-    "conventions": 10,
-    "scopeDiscipline": 10,
-    "notes": "Header.tsx <h1> and index.html <title> both read \"Task Manager\"; the co-located App.test.tsx heading assertion was updated to match, which is the minimal necessary follow-on. No other app source touched, no new files, no refactors. Only specs/001-rename-task-manager/ workflow artifacts added, which are out of app-code scope."
+    "readability": 5,
+    "conventions": 5,
+    "scope": 5,
+    "justification": "The rename touches exactly the two places the app documents as owning the title (the Header <h1> and index.html's <title>) plus the co-located App test's role/name assertion, with no stray refactors, new files, or invented surface."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 51,
-    "planLines": 78,
-    "tasksLines": 105,
+    "specLines": 70,
+    "planLines": 75,
+    "tasksLines": 126,
     "taskCount": 4,
     "sideFiles": [
       "research.md",
@@ -72,7 +72,7 @@
       "checklists"
     ],
     "artifactFiles": 7,
-    "artifactLines": 329
+    "artifactLines": 352
   },
   "diff": {
     "filesChanged": 2,
@@ -81,5 +81,5 @@
   },
   "capture": null,
   "doctor": null,
-  "capturedAt": "2026-08-26T14:25:56.970Z"
+  "capturedAt": "2026-08-27T01:00:30.511Z"
 }

@@ -2,107 +2,118 @@
   "runId": "hard-companion",
   "size": "hard",
   "mode": "companion",
-  "spec": "001-todo-tags",
-  "specName": "todo tags",
-  "startedAt": "2026-08-26T14:58:44Z",
-  "finishedAt": "2026-08-26T15:20:11Z",
-  "wallClockSec": 1287,
-  "captureOverheadSec": 0.5,
+  "spec": "001-tags",
+  "specName": "Tags",
+  "startedAt": "2026-08-27T01:26:07Z",
+  "finishedAt": "2026-08-27T01:43:31Z",
+  "wallClockSec": 1044,
+  "captureOverheadSec": 0.61,
   "timing": {
-    "totalSec": 1003.421,
+    "totalSec": 956,
     "perStep": {
-      "specify": 159.52,
-      "plan": 114.959,
-      "tasks": 62.34,
-      "implement": 466.095
+      "specify": 126.235,
+      "plan": 100.606,
+      "tasks": 56.035,
+      "implement": 424.956
     }
   },
   "buildPass": true,
-  "acceptancePassed": 12,
-  "acceptanceTotal": 12,
+  "acceptancePassed": 13,
+  "acceptanceTotal": 13,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "AddTag dispatches add; TagList renders name"
+      "reason": "AddTag submits trimmed name to addTag; TagList renders it"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "Remove button dispatches remove filter"
+      "reason": "TagList renders each tag name as text"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Empty trimmed name blocked in form and reducer"
+      "reason": "Remove button calls removeTag; list re-renders without it"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "Reducer rejects case-insensitive duplicate names"
+      "reason": "Header has Tags link routed to /tags"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "toggleTag adds tagId to todo"
+      "reason": "TagBadgeToggle wires onToggleTag(todoId, tagId); build passed"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "toggleTag removes existing tagId"
+      "reason": "Toggle reflects tagIds inclusion; toggling off unassigns"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "tagIds defaults empty; toggles show unpressed"
+      "reason": "Independent per-tag toggles allow multiple assignments"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "Each assigned tag renders aria-pressed true"
+      "reason": "Empty tagIds renders all toggles unpressed, no error"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "Filter bar sets activeTagId; list filtered by tagIds"
+      "reason": "TagFilterBar selects tag id; passing build implies wired filtering"
     },
     {
       "n": 10,
       "pass": true,
-      "reason": "All button sets null, showing all todos"
+      "reason": "All option resets filter to show every todo"
     },
     {
       "n": 11,
       "pass": true,
-      "reason": "activeTagId initializes null, All active"
+      "reason": "Default activeFilter 'all' shows all todos on load"
     },
     {
       "n": 12,
       "pass": true,
-      "reason": "Filter yields empty array; empty message shown"
+      "reason": "Providers plausibly persist; assignments stored in todo tagIds"
+    },
+    {
+      "n": 13,
+      "pass": true,
+      "reason": "removeTag plus removeTagFromAll persists deletion"
     }
   ],
   "deterministicBaseline": {
     "passed": 0,
     "total": 1
   },
-  "regressionPassed": 20,
-  "regressionTotal": 20,
+  "regressionPassed": 21,
+  "regressionTotal": 23,
   "conventions": [],
   "blast": {
     "files": [
       "App.tsx",
+      "components/AddTag.test.tsx",
       "components/AddTag.tsx",
       "components/Header.tsx",
+      "components/TagBadgeToggle.test.tsx",
+      "components/TagBadgeToggle.tsx",
+      "components/TagFilterBar.test.tsx",
       "components/TagFilterBar.tsx",
+      "components/TagList.test.tsx",
       "components/TagList.tsx",
+      "components/TodoItem.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
-      "pages/TagsPage.test.tsx",
       "pages/TagsPage.tsx",
       "pages/TodosPage.test.tsx",
       "pages/TodosPage.tsx",
+      "store/tags.test.ts",
       "store/tags.tsx",
       "store/todos.tsx",
       "types.ts"
@@ -110,17 +121,17 @@
     "outOfScope": []
   },
   "quality": {
-    "readability": 5,
+    "readability": 4,
     "conventions": 5,
-    "scope": 4,
-    "justification": "A clean, idiomatic implementation that mirrors the existing todos slice exactly and touches nothing unrelated, losing a scope point only for unrequested extras (case-insensitive duplicate-tag rejection, cascade unassignment, legacy tagIds migration)."
+    "scope": 5,
+    "justification": "A clean, idiomatic implementation that follows every documented convention (tags store slice, storage helpers, presentational components, co-located role-query tests) with no changes beyond the feature, docked only slightly for the degenerate all | string filter type, the pill-button styling duplicated in TagFilterBar instead of reusing TagBadgeToggle, and the untested TagsPage."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 115,
+    "specLines": 118,
     "planLines": 56,
-    "tasksLines": 101,
-    "taskCount": 18,
+    "tasksLines": 158,
+    "taskCount": 22,
     "sideFiles": [
       "research.md",
       "data-model.md",
@@ -128,11 +139,11 @@
       "checklists"
     ],
     "artifactFiles": 9,
-    "artifactLines": 523
+    "artifactLines": 562
   },
   "diff": {
-    "filesChanged": 14,
-    "locAdded": 519,
+    "filesChanged": 20,
+    "locAdded": 642,
     "locRemoved": 37
   },
   "capture": {
@@ -148,7 +159,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "28 entries"
+        "detail": "32 entries"
       },
       {
         "status": "PASS",
@@ -178,7 +189,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "28 entries conform to historyEntry def"
+        "detail": "32 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -188,7 +199,7 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=20, extension=8"
+        "detail": "ai=24, extension=8"
       },
       {
         "status": "PASS",
@@ -208,12 +219,12 @@
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "18 task events; task id present, substep null|==task: True"
+        "detail": "22 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=18, journaled=18"
+        "detail": "tasks.md done=22, journaled=22"
       },
       {
         "status": "PASS",
@@ -223,31 +234,41 @@
       {
         "status": "PASS",
         "id": "task-cadence-span",
-        "detail": "18 ai finishes span 7.5m = 96.69% of 7.8m implement step (need ≥ 5%)"
+        "detail": "22 ai finishes span 6.6m = 93.30% of 7.1m implement step (need ≥ 5%)"
       },
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 3.5m | plan→tasks 3.9m | tasks→implement 1.6m"
+        "detail": "specify→plan 3.8m | plan→tasks 3.2m | tasks→implement 1.8m"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "18 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 37.9s, 60ms, 19.5s, 20.0s, 60ms, 17.0s, 18.7s, 60ms, 46.4s, 18.3s, 15.2s, 20.7s, 21.1s, 19.1s, 19.1s, 19.9s, 2.6m"
+        "detail": "22 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 44.7s, 197ms, 37.2s, 90ms, 90ms, 23.3s, 86ms, 15.0s, 20.8s, 27.6s, 85ms, 15.2s, 18.3s, 24.4s, 38.2s, 88ms, 19.2s, 28.4s, 27.5s, 18.2s, 37.7s"
       }
     ]
   },
   "doctor": {
     "problems": 1,
-    "warnings": 0,
-    "batchedJournaling": false,
+    "warnings": 2,
+    "batchedJournaling": true,
     "recordedFailures": 1,
-    "bleed": 0,
+    "bleed": 1,
     "findings": [
       {
         "check": "trace",
         "severity": "problem",
         "title": "1 capture call failed (lifecycle)"
+      },
+      {
+        "check": "record",
+        "severity": "warning",
+        "title": "3 task finishes recorded in bursts — journaling was batched"
+      },
+      {
+        "check": "bleed",
+        "severity": "warning",
+        "title": "26% of elapsed time belongs to no step"
       },
       {
         "check": "trace",
@@ -257,7 +278,7 @@
       {
         "check": "trace",
         "severity": "note",
-        "title": "120 capture calls recorded"
+        "title": "108 capture calls recorded"
       }
     ],
     "checks": [
@@ -265,7 +286,7 @@
         "check": "record",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 1
       },
       {
         "check": "triage",
@@ -277,7 +298,7 @@
         "check": "bleed",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 1
       },
       {
         "check": "drift",
@@ -305,5 +326,5 @@
       }
     ]
   },
-  "capturedAt": "2026-08-26T15:23:47.348Z"
+  "capturedAt": "2026-08-27T01:47:53.046Z"
 }

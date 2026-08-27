@@ -2,12 +2,12 @@
   "runId": "hard-speckit",
   "size": "hard",
   "mode": "speckit",
-  "spec": "001-tag-management",
-  "specName": "001-tag-management",
-  "startedAt": "2026-08-26T14:58:15Z",
-  "finishedAt": "2026-08-26T15:13:16Z",
-  "wallClockSec": 901,
-  "captureOverheadSec": 0,
+  "spec": "001-add-tags",
+  "specName": "001-add-tags",
+  "startedAt": "2026-08-27T01:23:24Z",
+  "finishedAt": "2026-08-27T01:38:24Z",
+  "wallClockSec": 900,
+  "captureOverheadSec": null,
   "timing": {
     "totalSec": null,
     "perStep": {
@@ -18,107 +18,122 @@
     }
   },
   "buildPass": true,
-  "acceptancePassed": 9,
-  "acceptanceTotal": 9,
+  "acceptancePassed": 11,
+  "acceptanceTotal": 11,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "AddTag dispatches add; TagList renders new tag"
+      "reason": "TagsPage form creates; TagList shows names"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "Remove button dispatches remove; filtered out"
+      "reason": "Remove button calls removeTag, list updates"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Tags loaded from storage on init, saved on change"
+      "reason": "Header nav links Tags to /tags route"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "TodoItem tag button toggles on, shows pressed"
+      "reason": "Per-tag toggle calls toggleTodoTag, assigns"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "toggleTag removes existing tagId from todo"
+      "reason": "Toggle again unassigns via same handler"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "todos with tagIds persisted and reloaded"
+      "reason": "TodoItem renders all tags with aria-pressed state"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "TagFilter sets selectedTagId; todos filtered by tagIds"
+      "reason": "Add/complete/delete handlers unchanged, wired intact"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "All button sets null; unfiltered todos shown"
+      "reason": "TagFilterBar shows All plus one per tag"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "Empty filter result renders empty-state message"
+      "reason": "visibleTodos filters by todoTags assignment"
+    },
+    {
+      "n": 10,
+      "pass": true,
+      "reason": "All sets null, every todo shown"
+    },
+    {
+      "n": 11,
+      "pass": true,
+      "reason": "activeTagId defaults null, behaves as All"
     }
   ],
   "deterministicBaseline": {
     "passed": 0,
     "total": 1
   },
-  "regressionPassed": 5,
-  "regressionTotal": 5,
+  "regressionPassed": 28,
+  "regressionTotal": 28,
   "conventions": [],
   "blast": {
     "files": [
+      "App.test.tsx",
       "App.tsx",
-      "components/AddTag.tsx",
       "components/Header.tsx",
-      "components/TagFilter.tsx",
+      "components/TagCreateForm.test.tsx",
+      "components/TagCreateForm.tsx",
+      "components/TagFilterBar.test.tsx",
+      "components/TagFilterBar.tsx",
+      "components/TagList.test.tsx",
       "components/TagList.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
       "pages/TagsPage.tsx",
       "pages/TodosPage.tsx",
+      "store/tags.test.tsx",
       "store/tags.tsx",
-      "store/todos.tsx",
       "types.ts"
     ],
     "outOfScope": []
   },
   "quality": {
-    "readability": 5,
-    "conventions": 4,
-    "scope": 5,
-    "justification": "Clean, idiomatic implementation that mirrors the existing store/storage/presentational-component layering with no scope creep; the only real gap is that no co-located tests were added for the new tags surface (deliberately skipped per tasks.md), plus a little duplicated pill-style code between TagFilter and TodoItem."
+    "readability": 4,
+    "conventions": 5,
+    "scope": 4,
+    "justification": "A textbook implementation that follows every documented convention — a tags store slice mirroring todos.tsx, persistence through lib/storage, prop-driven components, co-located role/label-based tests — with only minor blemishes: copy-pasted inline button styles in TagFilterBar/TodoItem, an FR-id comment, an isTagAssigned helper used only by a test harness, and a few invented behaviors (case-insensitive duplicate rejection, filter fallback) beyond the ask."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 120,
-    "planLines": 96,
-    "tasksLines": 153,
-    "taskCount": 15,
+    "specLines": 113,
+    "planLines": 92,
+    "tasksLines": 199,
+    "taskCount": 26,
     "sideFiles": [
       "research.md",
       "data-model.md",
       "quickstart.md",
+      "contracts",
       "checklists"
     ],
-    "artifactFiles": 7,
-    "artifactLines": 578
+    "artifactFiles": 8,
+    "artifactLines": 623
   },
   "diff": {
-    "filesChanged": 12,
-    "locAdded": 312,
-    "locRemoved": 35
+    "filesChanged": 16,
+    "locAdded": 651,
+    "locRemoved": 17
   },
   "capture": null,
   "doctor": null,
-  "capturedAt": "2026-08-26T15:23:31.339Z"
+  "capturedAt": "2026-08-27T01:47:27.585Z"
 }

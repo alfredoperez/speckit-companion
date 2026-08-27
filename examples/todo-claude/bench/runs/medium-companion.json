@@ -2,19 +2,19 @@
   "runId": "medium-companion",
   "size": "medium",
   "mode": "companion",
-  "spec": "001-optional-due-dates",
-  "specName": "Optional Due Dates",
-  "startedAt": "2026-08-26T14:28:02Z",
-  "finishedAt": "2026-08-26T14:51:14Z",
-  "wallClockSec": 1392,
-  "captureOverheadSec": 1.97,
+  "spec": "001-due-dates",
+  "specName": "Todo Due Dates",
+  "startedAt": "2026-08-27T01:02:02Z",
+  "finishedAt": "2026-08-27T01:19:02Z",
+  "wallClockSec": 1020,
+  "captureOverheadSec": 0.710154,
   "timing": {
-    "totalSec": 1054.579,
+    "totalSec": 823.873,
     "perStep": {
-      "specify": 131.511,
-      "plan": 169.92,
-      "tasks": 150.236,
-      "implement": 402.267
+      "specify": 109.752,
+      "plan": 107.836,
+      "tasks": 42.776,
+      "implement": 305.722
     }
   },
   "buildPass": true,
@@ -25,62 +25,62 @@
     {
       "n": 1,
       "pass": true,
-      "reason": "Date input dispatches setDueDate; value renders"
+      "reason": "date input dispatches setDueDate with picked value"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "setDueDate replaces existing value"
+      "reason": "empty value maps to undefined, clearing dueDate"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Empty string maps to undefined"
+      "reason": "todos saved to storage, loaded on init"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "Reducer state saved to localStorage, loaded on init"
+      "reason": "absent dueDate persists as absent"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "isOverdue true for date < todayLocal"
+      "reason": "isOverdue true when dueDate < today, renders Overdue"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "Equal date returns false"
+      "reason": "strict less-than excludes today"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "Later date returns false"
+      "reason": "future date fails comparison, no indicator"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "Undefined dueDate returns false"
+      "reason": "undefined dueDate returns false early"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "sortByDueDate ascending applied when toggled"
+      "reason": "sorted copy ascends by dueDate string"
     },
     {
       "n": 10,
       "pass": true,
-      "reason": "Undated todos sorted last"
+      "reason": "undated todos sorted after dated ones"
     },
     {
       "n": 11,
       "pass": true,
-      "reason": "Toggle off renders original todos array"
+      "reason": "toggle off returns original todos array"
     },
     {
       "n": 12,
       "pass": true,
-      "reason": "Derived per render, so re-enabling re-sorts"
+      "reason": "memo re-sorts when toggle re-enabled"
     }
   ],
   "deterministicBaseline": {
@@ -88,15 +88,13 @@
     "total": 1
   },
   "regressionPassed": 14,
-  "regressionTotal": 15,
+  "regressionTotal": 14,
   "conventions": [],
   "blast": {
     "files": [
       "App.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
-      "lib/dueDate.test.ts",
-      "lib/dueDate.ts",
       "pages/TodosPage.tsx",
       "store/todos.tsx",
       "types.ts"
@@ -104,28 +102,28 @@
     "outOfScope": []
   },
   "quality": {
-    "readability": 5,
+    "readability": 4,
     "conventions": 5,
     "scope": 5,
-    "justification": "A minimal, well-named change: a pure src/lib/dueDate.ts (todayLocal/isOverdue/sortByDueDate) feeding a prop-driven date input and Overdue badge, a setDueDate action on the existing todos store slice that persists through storage.ts unchanged, a page-local sort toggle, and co-located tests that query by role/label with no invented test ids and nothing touched beyond the ask."
+    "justification": "A tight, well-named implementation that adds dueDate to the type, a setDueDate action in the existing store slice, an aria-labelled date input and Overdue badge in TodoItem, and a memoized page-level sort toggle, with no stray edits; only minor readability nits (the inline today-string construction and the pure isOverdue helper living in a component file, plus a slightly dense sort comparator) keep it from full marks."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 98,
-    "planLines": 50,
-    "tasksLines": 94,
-    "taskCount": 15,
+    "specLines": 92,
+    "planLines": 38,
+    "tasksLines": 89,
+    "taskCount": 11,
     "sideFiles": [
       "research.md",
       "data-model.md",
       "checklists"
     ],
     "artifactFiles": 8,
-    "artifactLines": 458
+    "artifactLines": 424
   },
   "diff": {
-    "filesChanged": 8,
-    "locAdded": 203,
+    "filesChanged": 6,
+    "locAdded": 166,
     "locRemoved": 5
   },
   "capture": {
@@ -141,7 +139,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "25 entries"
+        "detail": "22 entries"
       },
       {
         "status": "PASS",
@@ -171,7 +169,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "25 entries conform to historyEntry def"
+        "detail": "22 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -181,12 +179,12 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=17, extension=8"
+        "detail": "ai=16, extension=6"
       },
       {
         "status": "PASS",
         "id": "hook-or-derive-captured",
-        "detail": "extension=8, derive=0"
+        "detail": "extension=6, derive=0"
       },
       {
         "status": "INFO",
@@ -196,17 +194,17 @@
       {
         "status": "PASS",
         "id": "timestamps-real",
-        "detail": "0/8 deterministic writes look hand-typed (round ms) — all real"
+        "detail": "0/6 deterministic writes look hand-typed (round ms) — all real"
       },
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "15 task events; task id present, substep null|==task: True"
+        "detail": "11 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=15, journaled=15"
+        "detail": "tasks.md done=11, journaled=11"
       },
       {
         "status": "PASS",
@@ -216,36 +214,51 @@
       {
         "status": "PASS",
         "id": "task-cadence-span",
-        "detail": "15 ai finishes span 6.3m = 94.53% of 6.7m implement step (need ≥ 5%)"
+        "detail": "11 ai finishes span 4.8m = 95.07% of 5.1m implement step (need ≥ 5%)"
       },
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 4.0m | plan→tasks 3.6m | tasks→implement 3.3m"
+        "detail": "specify→plan 3.3m | plan→tasks 4.0m | tasks→implement 83.0s"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "15 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 55.0s, 159ms, 25.2s, 154ms, 42.0s, 28.4s, 43.1s, 42.9s, 161ms, 10.6s, 25.8s, 49.1s, 152ms, 57.6s"
+        "detail": "11 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 43.4s, 71.3s, 311ms, 314ms, 17.2s, 25.3s, 28.7s, 32.6s, 18.6s, 53.0s"
       }
     ]
   },
   "doctor": {
-    "problems": 2,
-    "warnings": 0,
-    "batchedJournaling": false,
-    "recordedFailures": 2,
-    "bleed": 0,
+    "problems": 1,
+    "warnings": 4,
+    "batchedJournaling": true,
+    "recordedFailures": 1,
+    "bleed": 1,
     "findings": [
       {
         "check": "trace",
         "severity": "problem",
-        "title": "16 capture calls failed (lifecycle)"
+        "title": "1 capture call failed (lifecycle)"
       },
       {
-        "check": "trace",
-        "severity": "problem",
-        "title": "1 capture call failed (unknown)"
+        "check": "record",
+        "severity": "warning",
+        "title": "3 task finishes recorded in bursts — journaling was batched"
+      },
+      {
+        "check": "record",
+        "severity": "warning",
+        "title": "Step `plan` was closed by `ai`"
+      },
+      {
+        "check": "record",
+        "severity": "warning",
+        "title": "Step `tasks` was closed by `ai`"
+      },
+      {
+        "check": "bleed",
+        "severity": "warning",
+        "title": "31% of elapsed time belongs to no step"
       },
       {
         "check": "trace",
@@ -255,7 +268,7 @@
       {
         "check": "trace",
         "severity": "note",
-        "title": "115 capture calls recorded"
+        "title": "99 capture calls recorded"
       }
     ],
     "checks": [
@@ -263,7 +276,7 @@
         "check": "record",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 3
       },
       {
         "check": "triage",
@@ -275,7 +288,7 @@
         "check": "bleed",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 1
       },
       {
         "check": "drift",
@@ -299,9 +312,9 @@
         "check": "trace",
         "state": "ran",
         "reason": null,
-        "findings": 4
+        "findings": 3
       }
     ]
   },
-  "capturedAt": "2026-08-26T14:55:25.721Z"
+  "capturedAt": "2026-08-27T01:22:39.515Z"
 }

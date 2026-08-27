@@ -4,9 +4,9 @@
   "mode": "speckit",
   "spec": "001-due-dates",
   "specName": "001-due-dates",
-  "startedAt": "2026-08-26T14:27:26Z",
-  "finishedAt": "2026-08-26T14:48:33Z",
-  "wallClockSec": 1267,
+  "startedAt": "2026-08-27T01:02:20Z",
+  "finishedAt": "2026-08-27T01:12:15Z",
+  "wallClockSec": 595,
   "captureOverheadSec": 0,
   "timing": {
     "totalSec": null,
@@ -18,124 +18,123 @@
     }
   },
   "buildPass": true,
-  "acceptancePassed": 13,
-  "acceptanceTotal": 13,
+  "acceptancePassed": 12,
+  "acceptanceTotal": 12,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "Date input dispatches setDueDate; value renders from todo"
+      "reason": "setDueDate reducer updates; date input shows value"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "Empty value maps to undefined, clearing the date"
+      "reason": "empty input maps to null, input shows empty"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "dueDate saved in todos via localStorage effect"
+      "reason": "provider saves todos to storage, loads on init"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "setDueDate replaces dueDate on each change"
+      "reason": "setDueDate overwrites existing dueDate"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "isOverdue true when dueDate < today"
+      "reason": "isOverdue string-compares dueDate < today, renders Overdue"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "Strict less-than excludes today"
+      "reason": "strict less-than excludes today"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "Future date not less than today"
+      "reason": "future date fails comparison, no indicator"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "isOverdue returns false for undefined"
+      "reason": "null dueDate short-circuits isOverdue"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "Badge recomputes on state change"
+      "reason": "toggle applies ascending sortTodosByDueDate"
     },
     {
       "n": 10,
       "pass": true,
-      "reason": "sortByDueDate ascending applied when toggle on"
+      "reason": "null dueDates sort last"
     },
     {
       "n": 11,
       "pass": true,
-      "reason": "Undated todos sort to end"
+      "reason": "sort copies array; off shows original state order"
     },
     {
       "n": 12,
       "pass": true,
-      "reason": "Unsorted renders original todos array unmutated"
-    },
-    {
-      "n": 13,
-      "pass": true,
-      "reason": "Toggle recomputes sorted view each render"
+      "reason": "toggle re-applies sort from state each render"
     }
   ],
   "deterministicBaseline": {
     "passed": 0,
     "total": 1
   },
-  "regressionPassed": 17,
-  "regressionTotal": 17,
+  "regressionPassed": 28,
+  "regressionTotal": 28,
   "conventions": [],
   "blast": {
     "files": [
       "App.test.tsx",
+      "components/SortToggle.tsx",
+      "components/TodoItem.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
       "lib/dueDate.test.ts",
       "lib/dueDate.ts",
       "pages/TodosPage.tsx",
+      "store/todos.test.tsx",
       "store/todos.tsx",
       "types.ts"
     ],
-    "outOfScope": []
+    "outOfScope": [
+      "components/SortToggle.tsx"
+    ]
   },
   "quality": {
     "readability": 5,
     "conventions": 5,
     "scope": 5,
-    "justification": "A small pure src/lib/dueDate.ts (todayISODate/isOverdue/sortByDueDate) plus a setDueDate action on the existing todos store keeps the feature clear, convention-perfect, and confined to exactly the files the ask requires."
+    "justification": "Clean, minimal implementation: a pure dueDate helper module, a nullable dueDate on the Todo type with a setDueDate reducer action persisting through the existing storage layer, a prop-driven SortToggle and aria-labelled date input, co-located role/label-based tests, and no changes beyond the ask."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 108,
-    "planLines": 81,
-    "tasksLines": 181,
-    "taskCount": 16,
+    "specLines": 102,
+    "planLines": 83,
+    "tasksLines": 170,
+    "taskCount": 18,
     "sideFiles": [
       "research.md",
       "data-model.md",
       "quickstart.md",
-      "contracts",
       "checklists"
     ],
-    "artifactFiles": 8,
-    "artifactLines": 561
+    "artifactFiles": 7,
+    "artifactLines": 503
   },
   "diff": {
-    "filesChanged": 8,
-    "locAdded": 222,
-    "locRemoved": 4
+    "filesChanged": 11,
+    "locAdded": 316,
+    "locRemoved": 5
   },
   "capture": null,
   "doctor": null,
-  "capturedAt": "2026-08-26T14:55:09.435Z"
+  "capturedAt": "2026-08-27T01:22:21.182Z"
 }

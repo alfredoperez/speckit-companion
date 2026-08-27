@@ -3,85 +3,77 @@
   "size": "easy",
   "mode": "companion",
   "spec": "001-task-manager-rename",
-  "specName": "task manager rename",
-  "startedAt": "2026-08-26T14:04:36Z",
-  "finishedAt": "2026-08-26T14:13:14Z",
-  "wallClockSec": 518,
-  "captureOverheadSec": 0.25,
+  "specName": "Task Manager Rename",
+  "startedAt": "2026-08-27T00:47:02Z",
+  "finishedAt": "2026-08-27T00:51:49Z",
+  "wallClockSec": 287,
+  "captureOverheadSec": 2,
   "timing": {
-    "totalSec": 337.132,
+    "totalSec": 196.004,
     "perStep": {
-      "specify": 119.484,
-      "plan": 0.088,
-      "tasks": 0.088,
-      "implement": 51.093
+      "specify": 110.086,
+      "plan": 0.101,
+      "tasks": 0.085,
+      "implement": 22.683
     }
   },
   "buildPass": true,
-  "acceptancePassed": 3,
-  "acceptanceTotal": 3,
+  "acceptancePassed": 2,
+  "acceptanceTotal": 2,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "Header h1 renders \"Task Manager\""
+      "reason": "Header renders h1 \"Task Manager\""
     },
     {
       "n": 2,
       "pass": true,
       "reason": "index.html title is \"Task Manager\""
-    },
-    {
-      "n": 3,
-      "pass": true,
-      "reason": "No \"Todo App\" in header or title"
     }
   ],
   "deterministicBaseline": {
     "passed": 1,
     "total": 1
   },
-  "regressionPassed": 5,
+  "regressionPassed": 4,
   "regressionTotal": 5,
   "conventions": [],
   "blast": {
     "files": [
-      "App.test.tsx",
       "components/Header.tsx",
       "index.html"
     ],
     "outOfScope": []
   },
   "quality": {
-    "correctness": 10,
-    "conventions": 10,
-    "scopeDiscipline": 10,
-    "notes": "Header.tsx h1 and index.html <title> both read \"Task Manager\"; only other app-file edit is the pre-existing App.test.tsx heading assertion updated to match, which the rename required. No new files, routes, components, or refactors."
+    "readability": 5,
+    "conventions": 3,
+    "scope": 5,
+    "justification": "Both user-visible surfaces were renamed with clean, minimal, verbatim edits and nothing extra was touched, but the co-located App.test.tsx still asserts the level-1 heading is 'Todo App', so the change ships a failing test suite."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 64,
-    "planLines": 4,
-    "tasksLines": 6,
-    "taskCount": 3,
+    "specLines": 53,
+    "planLines": 2,
+    "tasksLines": 5,
+    "taskCount": 2,
     "sideFiles": [
       "checklists"
     ],
     "artifactFiles": 6,
-    "artifactLines": 150
+    "artifactLines": 138
   },
   "diff": {
-    "filesChanged": 2,
-    "locAdded": 2,
-    "locRemoved": 2
+    "filesChanged": 1,
+    "locAdded": 1,
+    "locRemoved": 1
   },
   "capture": {
     "pass": 19,
-    "fail": 1,
-    "failing": [
-      "task-cadence-span"
-    ],
+    "fail": 0,
+    "failing": [],
     "checks": [
       {
         "status": "PASS",
@@ -91,7 +83,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "11 entries"
+        "detail": "10 entries"
       },
       {
         "status": "PASS",
@@ -121,7 +113,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "11 entries conform to historyEntry def"
+        "detail": "10 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -131,7 +123,7 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=3, extension=8"
+        "detail": "ai=2, extension=8"
       },
       {
         "status": "PASS",
@@ -151,22 +143,17 @@
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "3 task events; task id present, substep null|==task: True"
+        "detail": "2 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=3, journaled=3"
+        "detail": "tasks.md done=2, journaled=2"
       },
       {
         "status": "PASS",
         "id": "per-task-no-duplicates",
         "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
-      },
-      {
-        "status": "FAIL",
-        "id": "task-cadence-span",
-        "detail": "3 ai finishes span 335ms = 0.66% of 51.1s implement step (need ≥ 5%) — finishes clustered into one end-of-step burst"
       },
       {
         "status": "PASS",
@@ -201,36 +188,46 @@
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 2.2m | plan→tasks 176ms | tasks→implement 2.5m"
+        "detail": "specify→plan 1.8m | plan→tasks 206ms | tasks→implement 62.9s"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "3 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 165ms, 170ms"
+        "detail": "2 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 8.6s"
       }
     ]
   },
   "doctor": {
-    "problems": 2,
+    "problems": 4,
     "warnings": 1,
-    "batchedJournaling": true,
-    "recordedFailures": 2,
-    "bleed": 0,
+    "batchedJournaling": false,
+    "recordedFailures": 4,
+    "bleed": 1,
     "findings": [
       {
         "check": "trace",
         "severity": "problem",
-        "title": "4 capture calls failed (lifecycle)"
+        "title": "2 capture calls failed (lifecycle)"
       },
       {
         "check": "trace",
         "severity": "problem",
-        "title": "1 capture call failed (fold-living-spec)"
+        "title": "2 capture calls failed (lifecycle)"
       },
       {
-        "check": "record",
+        "check": "trace",
+        "severity": "problem",
+        "title": "1 capture call failed (lifecycle)"
+      },
+      {
+        "check": "trace",
+        "severity": "problem",
+        "title": "2 capture calls could not resolve a spec and wrote nothing"
+      },
+      {
+        "check": "bleed",
         "severity": "warning",
-        "title": "3 task finishes recorded inside 0s — journaling was batched"
+        "title": "32% of elapsed time belongs to no step"
       },
       {
         "check": "bleed",
@@ -245,7 +242,7 @@
       {
         "check": "trace",
         "severity": "note",
-        "title": "36 capture calls recorded"
+        "title": "39 capture calls recorded"
       }
     ],
     "checks": [
@@ -253,7 +250,7 @@
         "check": "record",
         "state": "ran",
         "reason": null,
-        "findings": 1
+        "findings": 0
       },
       {
         "check": "triage",
@@ -265,7 +262,7 @@
         "check": "bleed",
         "state": "ran",
         "reason": null,
-        "findings": 1
+        "findings": 2
       },
       {
         "check": "drift",
@@ -289,9 +286,9 @@
         "check": "trace",
         "state": "ran",
         "reason": null,
-        "findings": 4
+        "findings": 6
       }
     ]
   },
-  "capturedAt": "2026-08-26T14:26:14.871Z"
+  "capturedAt": "2026-08-27T01:00:44.860Z"
 }
