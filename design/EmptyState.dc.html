@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    a { color: #c99cf5; } a:hover { color: #d9b8f8; }
+    .mono { font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .node { display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+            background: #252526; border: 1px solid #333334; border-radius: 6px; }
+    .phase { display: flex; align-items: center; gap: 9px; padding: 11px 2px 5px; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 780px; background: #1e1e1e; color: #d4d4d4; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 42px; background: #252526; border-bottom: 1px solid #3c3c3c; flex-shrink: 0;">
+    <span style="font-size: 13px; font-weight: 600; color: #e4e4e4;">Pipeline</span>
+    <div style="display: flex; align-items: center; gap: 7px; padding: 4px 9px; background: #2f2f30; border: 1px solid #3c3c3c; border-radius: 4px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#9d9d9d" stroke-width="1.4" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h7"/></svg>
+      <span style="font-size: 13px; color: #d0d0d0;">As it ships</span>
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#9d9d9d" stroke-width="1.5" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <span style="font-size: 11px; color: #8c8c8c;">24 nodes in 16 phases</span>
+    <span style="width: 1px; height: 18px; background: #3c3c3c;"></span>
+    <span style="font-size: 13px; color: #6b6b6b; padding: 5px 11px; border: 1px solid #333334; border-radius: 4px;">Preview</span>
+    <span style="font-size: 13px; color: #6b6b6b; padding: 5px 13px; border: 1px solid #333334; border-radius: 4px;">Build</span>
+  </div>
+
+  <!-- the one first-run line -->
+  <div style="display: flex; align-items: center; gap: 14px; padding: 15px 20px; background: #212122; border-bottom: 1px solid #3c3c3c; flex-shrink: 0;">
+    <div style="flex-grow: 1;">
+      <div style="font-size: 13px; color: #e4e4e4;">This is the pipeline exactly as Companion ships it. Nothing here has been changed.</div>
+      <div style="font-size: 13px; color: #9d9d9d; margin-top: 5px; max-width: 82ch;">
+        Attach your own work at any phase, rewrite a node in your own words, or swap a section of a template. Whatever you change is written to <span class="mono" style="color: #d0d0d0;">.specify/companion.yml</span> in your repository — reviewable, and revertable with git.
+      </div>
+    </div>
+    <span style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: #ffffff; padding: 7px 14px; background: #0e639c; border-radius: 4px; flex-shrink: 0;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+      Attach your first hook
+    </span>
+  </div>
+
+  <!-- steps, quiet -->
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 14px; flex-grow: 1; overflow: hidden; align-items: start;">
+
+    <div style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">01</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">specify</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">9 nodes</span>
+        </div>
+      </div>
+      <div style="padding: 4px 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">gather</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Resolve the spec folder</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">resolve-dir</div></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Load living specs</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">load-living-specs</div></div></div>
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">author</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Draft the spec</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">draft-spec</div></div><span class="mono" style="font-size: 11px; color: #89b87a; background: #1f261c; border-radius: 4px; padding: 2px 6px;">spec.md</span></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Quality checklist</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">quality-checklist</div></div></div>
+        <div style="display: flex; align-items: center; gap: 7px; padding: 8px 2px 0; font-size: 11px; color: #8c8c8c;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4" stroke-linecap="round"><path d="M4 6.5l4 4 4-4"/></svg>
+          5 more nodes in 2 phases
+        </div>
+      </div>
+    </div>
+
+    <div style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">02</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">plan</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">6 nodes</span>
+        </div>
+      </div>
+      <div style="padding: 4px 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">gather</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Apply the size budget</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">size-budget</div></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Gather context</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">gather-context</div></div></div>
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">author</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Write the plan</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">plan-doc</div></div><span class="mono" style="font-size: 11px; color: #89b87a; background: #1f261c; border-radius: 4px; padding: 2px 6px;">plan.md</span></div>
+        <div style="display: flex; align-items: center; gap: 7px; padding: 8px 2px 0; font-size: 11px; color: #8c8c8c;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4" stroke-linecap="round"><path d="M4 6.5l4 4 4-4"/></svg>
+          3 more nodes in 2 phases
+        </div>
+      </div>
+    </div>
+
+    <div style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">03</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">tasks</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">4 nodes</span>
+        </div>
+      </div>
+      <div style="padding: 4px 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">gather</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Apply the size budget</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">size-budget</div></div></div>
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">author</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Write the task list</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">tasks-doc</div></div><span class="mono" style="font-size: 11px; color: #89b87a; background: #1f261c; border-radius: 4px; padding: 2px 6px;">tasks.md</span></div>
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">check</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Review for gaps</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">review-gaps</div></div></div>
+      </div>
+    </div>
+
+    <div style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">04</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">implement</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">3 nodes</span>
+        </div>
+      </div>
+      <div style="padding: 4px 10px 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">execute</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Execute the tasks</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">implement-exec</div></div><span class="mono" style="font-size: 11px; color: #89b87a; background: #1f261c; border-radius: 4px; padding: 2px 6px;">code</span></div>
+        <div class="phase"><span style="font-size: 11px; color: #9d9d9d;">wrap-up</span><div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Mark the spec complete</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">complete</div></div></div>
+        <div class="node"><div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Hand off at the end</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">handoff</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

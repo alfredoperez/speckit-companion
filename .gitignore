@@ -76,5 +76,6 @@ specs/_*/
 !specs/_02_demo-tasked/
 !specs/_03_demo-living/
 
-# Design canvas working files — the published artifact is the deliverable.
-/design/*.html
+# The seeded design-canvas payload (~2MB of editor). The .dc.html artboards it
+# is built from are the sources and stay tracked.
+/design/pipeline-builder-redesign.html

@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    a { color: #c99cf5; } a:hover { color: #d9b8f8; }
+    .mono { font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .node { display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+            background: #252526; border: 1px solid #333334; border-radius: 6px; }
+    .opt { display: flex; align-items: flex-start; gap: 11px; padding: 11px 13px;
+           border: 1px solid #333334; border-radius: 6px; background: #252526; }
+  </style>
+</helmet>
+
+<div style="width: 1120px; height: 820px; background: #1e1e1e; color: #d4d4d4; display: flex; overflow: hidden;">
+
+  <!-- left: the step, with ONE attach affordance per phase -->
+  <div style="width: 420px; flex-shrink: 0; border-right: 1px solid #3c3c3c; padding: 20px; display: flex; flex-direction: column; gap: 5px;">
+    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px;">
+      <span class="mono" style="font-size: 11px; color: #8c8c8c;">04</span>
+      <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">implement</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 9px; padding: 10px 2px 5px;">
+      <span style="font-size: 11px; color: #9d9d9d;">execute</span>
+      <div style="flex-grow: 1; height: 1px; background: #2e2e2e;"></div>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8c8c8c; padding: 3px 9px; border: 1px solid #3c3c3c; border-radius: 4px;">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+        Attach
+      </span>
+    </div>
+    <div class="node">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5-8 8-3.5 1 1-3.5z"/></svg>
+      <div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Execute the tasks</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">implement-exec</div></div>
+    </div>
+
+    <!-- the phase being attached to: highlighted -->
+    <div style="display: flex; align-items: center; gap: 9px; padding: 14px 2px 5px;">
+      <span style="font-size: 11px; color: #ffffff;">wrap-up</span>
+      <div style="flex-grow: 1; height: 1px; background: #0e639c;"></div>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #ffffff; padding: 3px 9px; background: #0e639c; border-radius: 4px;">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+        Attach
+      </span>
+    </div>
+    <div class="node">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><circle cx="4" cy="4" r="1.8"/><circle cx="4" cy="12" r="1.8"/><circle cx="12" cy="8" r="1.8"/><path d="M4 5.8v4.4"/><path d="M5.8 4H8a2 2 0 0 1 2 2v.4"/><path d="M5.8 12H8a2 2 0 0 0 2-2v-.4"/></svg>
+      <div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Mark the spec complete</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">complete</div></div>
+    </div>
+    <div class="node">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M3 8h10"/><path d="M10 5l3 3-3 3"/></svg>
+      <div style="flex-grow: 1;"><div style="font-size: 13px; color: #d0d0d0;">Hand off at the end</div><div class="mono" style="font-size: 11px; color: #8c8c8c;">handoff</div></div>
+    </div>
+
+    <div style="flex-grow: 1;"></div>
+    <div style="font-size: 11px; color: #6b6b6b; line-height: 1.55;">
+      One <span style="color: #9d9d9d;">Attach</span> per phase — 16 in the whole pipeline, instead of a pair on every node and every phase.
+    </div>
+  </div>
+
+  <!-- right: the sheet -->
+  <div style="flex-grow: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;">
+
+    <div>
+      <div style="font-size: 16px; font-weight: 600; color: #e4e4e4;">Attach work in <span style="color: #ffffff;">wrap-up</span></div>
+      <div style="font-size: 13px; color: #9d9d9d; margin-top: 5px;">This becomes an instruction in the command body, at the point you pick.</div>
+    </div>
+
+    <!-- what -->
+    <div>
+      <div style="font-size: 11px; color: #9d9d9d; margin-bottom: 8px;">What should happen</div>
+      <div style="display: flex; flex-direction: column; gap: 7px;">
+        <div class="opt" style="border-color: #0e639c; background: #1d2c38;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#4fc1ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 1px;"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>
+          <div style="flex-grow: 1;">
+            <div style="font-size: 13px; color: #ffffff;">Run a skill you already have</div>
+            <div style="font-size: 11px; color: #9dbcd4; margin-top: 3px;">The instructions stay in the skill. Edit the skill later and the pipeline follows.</div>
+          </div>
+        </div>
+        <div class="opt">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 1px;"><path d="M13.5 9.5a1.5 1.5 0 0 1-1.5 1.5H5l-3 2.5V3.5A1.5 1.5 0 0 1 3.5 2h8.5A1.5 1.5 0 0 1 13.5 3.5z"/></svg>
+          <div style="flex-grow: 1;">
+            <div style="font-size: 13px; color: #d0d0d0;">Say something to the assistant</div>
+            <div style="font-size: 11px; color: #8c8c8c; margin-top: 3px;">One instruction, written here, kept in companion.yml.</div>
+          </div>
+        </div>
+        <div class="opt">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round" style="margin-top: 1px;"><path d="M3 4l3.5 3.5L3 11"/><path d="M8 12h5"/></svg>
+          <div style="flex-grow: 1;">
+            <div style="font-size: 13px; color: #d0d0d0;">Run a command</div>
+            <div style="font-size: 11px; color: #8c8c8c; margin-top: 3px;">A shell line. The assistant needs a terminal for this one.</div>
+          </div>
+        </div>
+        <div class="opt">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" style="margin-top: 1px;"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 8h5"/></svg>
+          <div style="flex-grow: 1;">
+            <div style="font-size: 13px; color: #d0d0d0;">Splice in one of your nodes</div>
+            <div style="font-size: 11px; color: #8c8c8c; margin-top: 3px;">A file from <span class="mono" style="color: #9d9d9d;">.specify/companion/nodes/</span>. Reusable in more than one place.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- which skill -->
+    <div>
+      <div style="font-size: 11px; color: #9d9d9d; margin-bottom: 8px;">Which skill</div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 9px 12px; background: #1a1a1b; border: 1px solid #454546; border-radius: 4px;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4"><circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2L13.5 13.5"/></svg>
+        <span class="mono" style="font-size: 13px; color: #ffffff;">verify-code-review</span>
+        <span style="width: 1px; height: 14px; background: #3c3c3c;"></span>
+        <span class="mono" style="font-size: 11px; color: #6b6b6b;">found in .claude/skills/</span>
+      </div>
+    </div>
+
+    <!-- where exactly -->
+    <div>
+      <div style="font-size: 11px; color: #9d9d9d; margin-bottom: 8px;">Where in wrap-up</div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #333334; border-radius: 6px; background: #252526;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><circle cx="8" cy="8" r="5.4"/></svg>
+          <span style="font-size: 13px; color: #d0d0d0;">Before the whole phase</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #333334; border-radius: 6px; background: #252526;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><circle cx="8" cy="8" r="5.4"/></svg>
+          <span style="font-size: 13px; color: #d0d0d0;">Before <span class="mono">complete</span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #0e639c; border-radius: 6px; background: #1d2c38;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#4fc1ff" stroke-width="1.4"><circle cx="8" cy="8" r="5.4"/><circle cx="8" cy="8" r="2.4" fill="#4fc1ff" stroke="none"/></svg>
+          <span style="font-size: 13px; color: #ffffff;">After <span class="mono">handoff</span></span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #9dbcd4;">the last thing the step does</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1;"></div>
+
+    <!-- what it will write -->
+    <div style="padding: 12px 14px; background: #1a1a1b; border: 1px solid #333334; border-radius: 6px;">
+      <div style="font-size: 11px; color: #8c8c8c; margin-bottom: 7px;">Adds to <span class="mono">companion.yml</span></div>
+      <div class="mono" style="font-size: 11px; color: #c99cf5; line-height: 1.6;">after:<br>&nbsp;&nbsp;handoff:<br>&nbsp;&nbsp;&nbsp;&nbsp;- { type: skill, ref: verify-code-review }</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 9px;">
+      <span style="font-size: 13px; color: #ffffff; padding: 6px 14px; background: #0e639c; border-radius: 4px;">Attach</span>
+      <span style="font-size: 13px; color: #d0d0d0; padding: 6px 14px; border: 1px solid #3c3c3c; border-radius: 4px;">Cancel</span>
+      <div style="flex-grow: 1;"></div>
+      <span style="font-size: 11px; color: #8c8c8c;">You will still need to Build.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
