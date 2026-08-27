@@ -40,16 +40,53 @@ export function writeNodeOrder(
     command: string,
     order: string[],
 ): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot,
+        ['--command', command, '--nodes', order.join(',')]);
+}
+
+/** What one hook needs to be written. `ref` names a node or a skill. */
+export interface HookDraft {
+    type: 'command' | 'prompt' | 'node' | 'skill';
+    when: 'before' | 'after';
+    anchor: string;
+    ref?: string;
+    run?: string;
+    text?: string;
+}
+
+/** Append a hook to the project's configuration. Returns the reason on refusal. */
+export function writeHook(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    hook: HookDraft,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command,
+        '--hook', hook.type,
+        '--when', hook.when,
+        '--anchor', hook.anchor,
+        '--ref', hook.ref ?? '',
+        '--run', hook.run ?? '',
+        '--text', hook.text ?? '',
+    ]);
+}
+
+function runConfigWrite(
+    script: string,
+    workspaceRoot: string,
+    args: string[],
+): Promise<string | null> {
     const { execFile } = require('child_process');
     return new Promise<string | null>(resolve => {
         execFile(
             'python3',
-            [script, '--project', workspaceRoot, '--command', command, '--nodes', order.join(',')],
+            [script, '--project', workspaceRoot, ...args],
             { cwd: workspaceRoot, timeout: GRAPH_TIMEOUT_MS },
             (err: Error | null, stdout: string, stderr: string) => {
                 if (!err) { resolve(null); return; }
                 const said = (stdout || stderr || '').replace(/^\[config]\s*/m, '').trim();
-                resolve(said || `the order could not be saved: ${err.message}`);
+                resolve(said || `companion.yml could not be written: ${err.message}`);
             },
         );
     });

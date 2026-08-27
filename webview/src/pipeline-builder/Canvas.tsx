@@ -30,6 +30,8 @@ interface Props {
     onRestoreNode: NodeAction;
     /** Save a step's whole node order after a drag. */
     onReorder: (command: string, order: string[]) => void;
+    /** Attach work at a boundary — the extension asks what kind. */
+    onAddHook: (command: string, anchor: string, when: 'before' | 'after') => void;
 }
 
 /**
@@ -67,7 +69,21 @@ function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
 type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'> & {
     /** Called when a node is dropped onto another within the same phase. */
     onDrop: (moved: string, target: string) => void;
+    /** Called for the `+` on a block, with what it attaches to. */
+    onAdd: (anchor: string, when: 'before' | 'after') => void;
 };
+
+/** The `+` that attaches work at one boundary. */
+function AddHere({ anchor, when, onAdd }: {
+    anchor: string; when: 'before' | 'after'; onAdd: NodeActions['onAdd'];
+}) {
+    return (
+        <button class="pb-add" title={`Attach a skill, instruction or command ${when} ${anchor}`}
+            onClick={() => onAdd(anchor, when)}>
+            + {when}
+        </button>
+    );
+}
 
 function Node({ node, step, actions }: {
     node: PipelineNode; step: string; actions: NodeActions;
@@ -111,13 +127,17 @@ function Node({ node, step, actions }: {
                     ))}
                 </span>
             </button>
-            {node.replaced ? (
-                <button class="pb-node-action" title="Delete your copy and use the shipped node"
-                    onClick={() => actions.onRestoreNode(step, node.id)}>Use shipped</button>
-            ) : (
-                <button class="pb-node-action" title="Copy this node into your project and edit it"
-                    onClick={() => actions.onReplaceNode(step, node.id)}>Replace</button>
-            )}
+            <span class="pb-node-actions">
+                <AddHere anchor={node.id} when="before" onAdd={actions.onAdd} />
+                {node.replaced ? (
+                    <button class="pb-node-action" title="Delete your copy and use the shipped node"
+                        onClick={() => actions.onRestoreNode(step, node.id)}>Use shipped</button>
+                ) : (
+                    <button class="pb-node-action" title="Copy this node into your project and edit it"
+                        onClick={() => actions.onReplaceNode(step, node.id)}>Replace</button>
+                )}
+                <AddHere anchor={node.id} when="after" onAdd={actions.onAdd} />
+            </span>
             <HookChips hooks={node.hooks} />
         </div>
     );
@@ -131,6 +151,10 @@ function Phase({ phase, step, actions }: {
             <div class="pb-phase-head">
                 <span class="pb-phase-name">PHASE · {phase.name}</span>
                 <HookChips hooks={phase.hooks} />
+                <span class="pb-phase-add">
+                    <AddHere anchor={phase.name} when="before" onAdd={actions.onAdd} />
+                    <AddHere anchor={phase.name} when="after" onAdd={actions.onAdd} />
+                </span>
             </div>
             <div class="pb-phase-nodes">
                 {phase.nodes.map(node => (
@@ -167,15 +191,19 @@ function Decisions({ step }: { step: PipelineStep }) {
     );
 }
 
-function Step({ step, actions, onReorder }: {
-    step: PipelineStep; actions: Omit<NodeActions, 'onDrop'>; onReorder: Props['onReorder'];
+function Step({ step, actions, onReorder, onAddHook }: {
+    step: PipelineStep;
+    actions: Omit<NodeActions, 'onDrop' | 'onAdd'>;
+    onReorder: Props['onReorder'];
+    onAddHook: Props['onAddHook'];
 }) {
-    const withDrop: NodeActions = {
+    const bound: NodeActions = {
         ...actions,
         onDrop: (moved, target) =>
             onReorder(step.name, reordered(flatOrder(step), moved, target)),
+        onAdd: (anchor, when) => onAddHook(step.name, anchor, when),
     };
-    return <StepBody step={step} actions={withDrop} />;
+    return <StepBody step={step} actions={bound} />;
 }
 
 function StepBody({ step, actions }: { step: PipelineStep; actions: NodeActions }) {
@@ -218,13 +246,16 @@ function StepBody({ step, actions }: { step: PipelineStep; actions: NodeActions 
     );
 }
 
-export function Canvas({ graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder }: Props) {
+export function Canvas(
+    { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook }: Props,
+) {
     const actions = { onOpenNode, onReplaceNode, onRestoreNode };
     return (
         <main class="pb-canvas">
             {graph.steps.map((step, index) => (
                 <div key={step.name} class="pb-chain-item">
-                    <Step step={step} actions={actions} onReorder={onReorder} />
+                    <Step step={step} actions={actions}
+                        onReorder={onReorder} onAddHook={onAddHook} />
                     {index < graph.steps.length - 1 && (
                         <div class="pb-link" aria-hidden="true" />
                     )}

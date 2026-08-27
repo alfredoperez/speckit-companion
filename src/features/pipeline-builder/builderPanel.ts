@@ -16,14 +16,17 @@ import * as vscode from 'vscode';
 import {
     BuilderToExtensionMessage,
     ExtensionToBuilderMessage,
+    HookWhen,
     PipelineGraphResult,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
+    HookDraft,
     resolveConfigWriteScript,
     resolveGraphScript,
+    writeHook,
     writeNodeOrder,
 } from '../specs/pipelineGraph';
 
@@ -163,6 +166,27 @@ export class PipelineBuilderPanel {
                 'Build',
             ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
         },
+        addHook: async message => {
+            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
+            if (!script) {
+                void vscode.window.showWarningMessage(
+                    'Attaching work needs the companion spec-kit extension.');
+                return;
+            }
+            const draft = await this.askForHook(message.when, message.anchor);
+            if (!draft) { return; }
+
+            const refused = await writeHook(script, this.workspaceRoot, message.command, draft);
+            if (refused) {
+                void vscode.window.showWarningMessage(refused);
+                return;
+            }
+            await this.send();
+            void vscode.window.showInformationMessage(
+                `Added ${draft.type} ${message.when} ${message.anchor}. Build to apply it.`,
+                'Build',
+            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
+        },
         restoreNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);
             if (!fs.existsSync(own)) { return; }
@@ -176,6 +200,57 @@ export class PipelineBuilderPanel {
             await this.send();
         },
     };
+
+    /**
+     * Ask what to attach at a boundary.
+     *
+     * Four kinds, and the one worth reaching for first is a skill: a project
+     * that wrote one has already written the instructions, so the pipeline
+     * should point at it rather than hold a copy that forks from it.
+     */
+    private async askForHook(
+        when: HookWhen,
+        anchor: string,
+    ): Promise<HookDraft | undefined> {
+        const kind = await vscode.window.showQuickPick(
+            [
+                { label: 'Skill', detail: 'Invoke a skill this project already has', type: 'skill' },
+                { label: 'Instruction', detail: 'A line for the assistant to follow', type: 'prompt' },
+                { label: 'Command', detail: 'A shell line to run at this point', type: 'command' },
+            ] as const,
+            { title: `Attach ${when} ${anchor}`, placeHolder: 'What should happen here?' },
+        );
+        if (!kind) { return undefined; }
+
+        const prompts = {
+            skill: { prompt: 'Skill name', placeHolder: 'verify-code-review' },
+            prompt: { prompt: 'What should the assistant do here?', placeHolder: '' },
+            command: { prompt: 'Command to run', placeHolder: 'npm run lint-spec' },
+        }[kind.type];
+
+        const value = await vscode.window.showInputBox({
+            ...prompts,
+            title: `Attach ${when} ${anchor}`,
+            validateInput: text => text.trim() ? undefined : 'This cannot be empty.',
+        });
+        if (!value?.trim()) { return undefined; }
+
+        const draft: HookDraft = { type: kind.type, when, anchor };
+        if (kind.type === 'skill') { draft.ref = value.trim(); }
+        else if (kind.type === 'command') { draft.run = value.trim(); }
+        else { draft.text = value.trim(); }
+
+        if (kind.type === 'skill') {
+            // Optional, because a skill that needs a note is the exception.
+            const note = await vscode.window.showInputBox({
+                title: `Attach ${when} ${anchor}`,
+                prompt: 'Anything to add? (optional)',
+                placeHolder: 'Leave empty to just invoke the skill',
+            });
+            if (note?.trim()) { draft.text = note.trim(); }
+        }
+        return draft;
+    }
 
     /** Where this project's own copy of a node lives, whether or not it exists. */
     private projectNodePath(command: string, nodeId: string): string {

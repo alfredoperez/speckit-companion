@@ -135,7 +135,9 @@ export type BuilderToExtensionMessage =
     /** Give it back: drop the project's copy and return to the shipped node. */
     | { type: 'restoreNode'; command: string; nodeId: string }
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
-    | { type: 'reorderNodes'; command: string; order: string[] };
+    | { type: 'reorderNodes'; command: string; order: string[] }
+    /** Attach work at a boundary. The panel asks what kind and collects the detail. */
+    | { type: 'addHook'; command: string; anchor: string; when: HookWhen };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }

@@ -154,5 +154,116 @@ class WritingBackLeavesTheRestOfTheFileAlone(unittest.TestCase):
         self.assertEqual(parsed["debug"], False)
 
 
+class AHookPointsAtASkillTheProjectAlreadyHas(unittest.TestCase):
+    """A project that wrote a skill has written the instructions; do not copy them."""
+
+    def render(self, when: str, anchor: str, **hook) -> str:
+        import hook_render
+
+        entry = {"when": when, "anchor": anchor, "index": 0,
+                 "hook": {"type": "skill", **hook}}
+        return hook_render.render_hook(entry)
+
+    def test_it_names_the_skill_to_invoke(self):
+        out = self.render("after", "check", ref="verify-code-review")
+        self.assertIn("`verify-code-review`", out)
+        self.assertIn("check", out)
+
+    def test_a_note_rides_along_when_there_is_one(self):
+        out = self.render("before", "plan-doc", ref="read-adrs", text="Skip drafts.")
+        self.assertIn("`read-adrs`", out)
+        self.assertIn("Skip drafts.", out)
+
+    def test_the_skill_body_is_never_inlined(self):
+        # The whole point: the pipeline points at the skill rather than holding
+        # a copy that forks from it the first time the skill is edited.
+        out = self.render("after", "check", ref="verify-code-review")
+        self.assertLess(len(out.splitlines()), 5)
+
+    def test_a_skill_hook_with_no_ref_is_refused(self):
+        import companion_config as cc
+
+        config = {"commands": {"plan": {"hooks": {"after": {"plan-doc": [{"type": "skill"}]}}}}}
+        with self.assertRaises(cc.ConfigError) as caught:
+            cc.merge_hooks(config, "plan", ["plan-doc"])
+        self.assertIn("name the skill", str(caught.exception))
+
+    def test_it_reaches_the_built_body(self):
+        with tempfile.TemporaryDirectory() as project:
+            specify = Path(project) / ".specify"
+            specify.mkdir()
+            (specify / "companion.yml").write_text(
+                "commands:\n  plan:\n    hooks:\n      after:\n        check:\n"
+                "          - { type: skill, ref: verify-code-review }\n",
+                encoding="utf-8",
+            )
+            config = build.load_config(project)
+            plan, _warnings = build.plan_build(config)
+            body = build.render("plan", plan["plan"])
+        self.assertIn("`verify-code-review`", body)
+
+
+class AddingAHookLeavesTheRestOfTheFileAlone(unittest.TestCase):
+    def test_an_empty_file_gets_the_whole_nesting(self):
+        out = config_write.add_hook(
+            "", "plan", "after", "check", {"type": "skill", "ref": "verify"})
+        self.assertEqual(
+            out,
+            "commands:\n  plan:\n    hooks:\n      after:\n        check:\n"
+            '          - { type: skill, ref: "verify" }\n',
+        )
+
+    def test_a_second_hook_at_one_anchor_is_appended_not_replaced(self):
+        once = config_write.add_hook(
+            "", "plan", "after", "check", {"type": "skill", "ref": "verify"})
+        twice = config_write.add_hook(
+            once, "plan", "after", "check", {"type": "prompt", "text": "Then say why."})
+        self.assertEqual(twice.count("- {"), 2)
+        self.assertIn('ref: "verify"', twice)
+        self.assertIn('text: "Then say why."', twice)
+
+    def test_a_new_anchor_joins_the_existing_when_block(self):
+        once = config_write.add_hook(
+            "", "plan", "after", "check", {"type": "skill", "ref": "verify"})
+        twice = config_write.add_hook(
+            once, "plan", "after", "gather", {"type": "prompt", "text": "Read the ADRs."})
+        self.assertEqual(twice.count("after:"), 1)
+        self.assertIn("        gather:", twice)
+        self.assertIn("        check:", twice)
+
+    def test_an_existing_node_order_on_the_same_command_survives(self):
+        with_nodes = config_write.set_nodes("", "plan", ["a", "b"])
+        out = config_write.add_hook(
+            with_nodes, "plan", "before", "a", {"type": "command", "run": "npm test"})
+        self.assertIn("      - a\n      - b\n", out)
+        self.assertIn('run: "npm test"', out)
+
+    def test_what_was_written_reads_back_as_what_was_asked_for(self):
+        import companion_config as cc
+
+        out = config_write.add_hook(
+            "", "plan", "after", "check",
+            {"type": "skill", "ref": "verify", "text": 'say "why", then stop'})
+        hooks = cc.load_yaml(out)["commands"]["plan"]["hooks"]["after"]["check"]
+        self.assertEqual(hooks[0]["type"], "skill")
+        self.assertEqual(hooks[0]["ref"], "verify")
+        self.assertEqual(hooks[0]["text"], 'say "why", then stop')
+
+    def test_text_holding_both_quote_characters_is_refused_not_mangled(self):
+        # The reader strips quotes without unescaping, so there is no escape
+        # that survives a round trip — refusing beats writing something that
+        # reads back different from what was typed.
+        with self.assertRaises(config_write.ConfigWriteError):
+            config_write.add_hook(
+                "", "plan", "after", "check",
+                {"type": "prompt", "text": "say \"why\" and don't stop"})
+
+    def test_a_hook_missing_what_it_needs_is_refused(self):
+        for hook in ({"type": "skill"}, {"type": "prompt"}, {"type": "command"},
+                     {"type": "invented", "text": "x"}):
+            with self.assertRaises(config_write.ConfigWriteError):
+                config_write.add_hook("", "plan", "after", "check", hook)
+
+
 if __name__ == "__main__":
     unittest.main()

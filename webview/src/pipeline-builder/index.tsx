@@ -82,6 +82,8 @@ function App() {
                     vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                 onReorder={(command, order) =>
                     vscode.postMessage({ type: 'reorderNodes', command, order })}
+                onAddHook={(command, anchor, when) =>
+                    vscode.postMessage({ type: 'addHook', command, anchor, when })}
             />
         </div>
     );

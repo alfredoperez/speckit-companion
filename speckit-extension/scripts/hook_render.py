@@ -10,10 +10,16 @@ A hook attaches before or after a node, which is exactly where the node boundary
 markers now are, so rendering is an insertion at a marker rather than a guess
 about surrounding prose.
 
-Three kinds, and each becomes what the assistant can act on:
+Four kinds, and each becomes what the assistant can act on:
   command — a shell line to run at that point
   prompt  — an instruction to follow at that point
   node    — another node's body, spliced in whole
+  skill   — an instruction to invoke a skill the project already has
+
+`skill` is the one that does not carry its own text. A project that has written
+a skill has already written the instructions; copying them into a node would
+fork them. The hook names it and the assistant loads it, the same way a person
+would ask for it.
 
 Stdlib only.
 """
@@ -49,6 +55,15 @@ def render_hook(entry: dict, nodes_dir: str | None = None) -> str:
     elif kind == "prompt":
         text = str(hook.get("text", "")).strip()
         lines = [text]
+    elif kind == "skill":
+        ref = str(hook.get("ref", "")).strip()
+        note = str(hook.get("text", "")).strip()
+        lines = [
+            f"Invoke the `{ref}` skill before continuing." if entry["when"] == "before"
+            else f"Invoke the `{ref}` skill now that `{entry['anchor']}` is done.",
+        ]
+        if note:
+            lines.append(note)
     elif kind == "node":
         ref = str(hook.get("ref", "")).strip()
         body = ""

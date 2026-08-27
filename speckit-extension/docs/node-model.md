@@ -139,6 +139,28 @@ commands:
 
   Use it for slow, independent work (a test run, a build, a notification). **Don't** put it on anything that writes `.spec-context.json` (the timing/capture calls): those are fast already, and two of them racing in the background can lose an update on the shared file. Background is for side-effects, not bookkeeping.
 
+### Hook types
+
+| type | carries | use it for |
+|---|---|---|
+| `prompt` | `text` | one instruction at that point |
+| `command` | `run` | a shell line to run |
+| `node` | `ref` → a file in `presets/_parts/` | another node's body, spliced in whole |
+| `skill` | `ref` → a skill name, optional `text` | work the project has already written down |
+
+`skill` is the one that carries no text of its own. A project that has written a skill has already written the instructions; copying them into a node forks them the first time the skill is edited. The hook names it and the assistant loads it, the same way a person would ask for it:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        check:
+          - { type: skill, ref: verify-code-review, text: "Fail the plan on a regression." }
+```
+
+The build cannot see whether that skill exists — the assistant resolves it — so the only thing checked is that a name was given. An unnamed one would render an instruction to invoke nothing.
+
 ### Recipes
 
 A recipe replaces a command's node order with `nodes: [...]`:

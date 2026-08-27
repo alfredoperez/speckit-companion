@@ -288,9 +288,22 @@ body {
     grid-column: 1 / -1;
 }
 
+.pb-node-actions {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+}
+
+.pb-phase-add {
+    display: flex;
+    gap: var(--space-1);
+    margin-left: auto;
+}
+
 /* Taking a node over is the rarer act, so its button stays out of the way until
    you are on the node — but never `display: none`, or a keyboard could not
    reach it. */
+.pb-add,
 .pb-node-action {
     align-self: stretch;
     padding: 0 var(--space-2);
@@ -306,13 +319,23 @@ body {
 }
 
 .pb-node:hover .pb-node-action,
+.pb-node:hover .pb-add,
+.pb-phase:hover .pb-phase-add .pb-add,
 .pb-node-action:focus-visible,
+.pb-add:focus-visible,
 .pb-node--replaced .pb-node-action {
     opacity: 1;
 }
 
-.pb-node-action:hover {
+.pb-node-action:hover,
+.pb-add:hover {
     background: var(--bg-hover);
+    border-color: var(--purple);
+}
+
+.pb-add {
+    font-family: var(--font-mono);
+    white-space: nowrap;
 }
 
 /* Dragging reorders within a phase. The node being carried fades; the one it

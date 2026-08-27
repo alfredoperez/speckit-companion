@@ -100,6 +100,10 @@ The Companion pipeline is assembled from blocks: steps hold **phases**, phases h
 
 Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. It draws whatever that configuration resolves to: every step and phase, the nodes inside them, the hooks attached, where each verdict goes, and the files each step produces. A chip says whether anything differs from the pipeline as it ships, and expands to list exactly what. Clicking a node opens the node itself — the instructions that node contributes, not the whole assembled command.
 
+**Rearrange it.** Drag a node to move it within its phase; the new order is saved to `companion.yml` and everything else in the file is left alone. An order the pipeline cannot honour is refused with the reason rather than half-applied.
+
+**Attach your own work.** The `+` on any node or phase asks what should happen there — invoke a **skill** you already have, follow an **instruction**, or run a **command**. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
+
 **Rewrite a node in your own words.** Press **Replace** on any node and its instructions are copied to `.specify/companion/nodes/<step>/<node>.md`, where you can edit them. Build, and your version is what your assistant reads; the node is marked **YOURS** in the panel until you press **Use shipped** to hand it back. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
 
 Build from the same panel, or from the palette:

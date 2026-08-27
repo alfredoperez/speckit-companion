@@ -66,14 +66,16 @@ type Calls = string[][];
 function canvas(g: PipelineGraph = graph()) {
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [];
     const orders: Array<[string, string[]]> = [];
+    const added: Calls = [];
     const host = mount(
         <Canvas graph={g}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
-            onReorder={(c, order) => orders.push([c, order])} />,
+            onReorder={(c, order) => orders.push([c, order])}
+            onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders };
+    return { host, opened, replaced, restored, orders, added };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -187,6 +189,27 @@ describe('the canvas draws the three levels as containment', () => {
         });
         const { host } = canvas(mixed);
         expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
+    });
+});
+
+describe('work can be attached at a boundary', () => {
+    it('offers both sides of every node and every phase', () => {
+        const { host } = canvas();   // two phases, one node each
+        // 2 phases × before/after + 2 nodes × before/after.
+        expect(host.querySelectorAll('.pb-add')).toHaveLength(8);
+    });
+
+    it('names the phase and the side it attaches to', () => {
+        const { host, added } = canvas();
+        (host.querySelector('.pb-phase-add .pb-add') as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'gather', 'before']]);
+    });
+
+    it('names the node and the side it attaches to', () => {
+        const { host, added } = canvas();
+        const onNode = host.querySelectorAll('.pb-node .pb-add');
+        (onNode[onNode.length - 1] as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'draft-spec', 'after']]);
     });
 });
 

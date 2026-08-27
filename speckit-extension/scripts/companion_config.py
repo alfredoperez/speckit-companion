@@ -23,7 +23,7 @@ import re
 import stat
 import tempfile
 
-HOOK_TYPES = {"command", "prompt", "node"}
+HOOK_TYPES = {"command", "prompt", "node", "skill"}
 WHENS = ("before", "after")
 
 #: A block-scalar header: `|` or `>` with an optional chomping marker and indent digit.
@@ -358,6 +358,14 @@ def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir: str =
                         raise ConfigError(
                             f"hook {command}.{when}.{anchor}[{i}] type:node ref '{ref}' has no node file"
                         )
+                # A skill hook names something the assistant resolves, not a file
+                # this build can see — so the name is all there is to check. An
+                # unnamed one would render an instruction to invoke nothing.
+                if hook["type"] == "skill" and not str(hook.get("ref", "")).strip():
+                    raise ConfigError(
+                        f"hook {command}.{when}.{anchor}[{i}] type:skill has no ref — "
+                        f"name the skill to invoke"
+                    )
                 ordered.append({"when": when, "anchor": anchor, "index": i, "hook": hook})
     return ordered, warnings
 

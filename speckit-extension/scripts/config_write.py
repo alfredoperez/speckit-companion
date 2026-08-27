@@ -124,6 +124,105 @@ def write_nodes(path: str, command: str, nodes: list) -> str:
     return updated
 
 
+def _quote(value: str) -> str:
+    """A quoted scalar this project's reader gives back unchanged.
+
+    The constrained subset strips a matching pair of quotes and does not
+    unescape, so `\\"` would read back literally. There is therefore no escape to
+    reach for: pick the quote the value does not contain, and refuse a value that
+    contains both rather than write one that reads back wrong.
+    """
+    text = str(value)
+    if "\n" in text:
+        raise ConfigWriteError("a hook's text has to be one line here — edit companion.yml for more")
+    if '"' not in text:
+        return f'"{text}"'
+    if "'" not in text:
+        return f"'{text}'"
+    raise ConfigWriteError(
+        "this text mixes both quote characters, which this file's format cannot "
+        "hold on one line — edit companion.yml directly"
+    )
+
+
+def _hook_line(hook: dict) -> str:
+    """One hook as an inline flow map — one line, which is what a diff wants."""
+    pairs = [f"type: {hook['type']}"]
+    for key in ("ref", "run", "text"):
+        if hook.get(key):
+            pairs.append(f"{key}: {_quote(hook[key])}")
+    return "{ " + ", ".join(pairs) + " }"
+
+
+def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str:
+    """Return `text` with one hook appended under `commands.<command>.hooks.<when>.<anchor>`.
+
+    Appended, never replaced: hooks at one anchor run in declared order, so a
+    second one is a second line rather than an overwrite. Every level of nesting
+    that is missing gets created; everything present is left as it was.
+    """
+    if when not in ("before", "after"):
+        raise ConfigWriteError(f"a hook runs before or after, not '{when}'")
+    if hook.get("type") not in ("command", "prompt", "node", "skill"):
+        raise ConfigWriteError(f"unknown hook type '{hook.get('type')}'")
+    if hook["type"] in ("node", "skill") and not str(hook.get("ref", "")).strip():
+        raise ConfigWriteError(f"a {hook['type']} hook needs a ref")
+    if hook["type"] == "prompt" and not str(hook.get("text", "")).strip():
+        raise ConfigWriteError("a prompt hook needs its text")
+    if hook["type"] == "command" and not str(hook.get("run", "")).strip():
+        raise ConfigWriteError("a command hook needs something to run")
+
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    line = _hook_line(hook)
+
+    def emit(indent: int, *keys: str) -> list:
+        """The missing nesting, each level one deeper, ending with the hook."""
+        out = []
+        for depth, key in enumerate(keys):
+            out.append(f"{' ' * (indent + depth * len(INDENT))}{key}:")
+        return out + [f"{' ' * (indent + len(keys) * len(INDENT))}- {line}"]
+
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        block = ["commands:"] + emit(len(INDENT), command, "hooks", when, anchor)
+        body = lines + ([""] if lines and lines[-1].strip() else []) + block
+        return "\n".join(body) + ("\n" if trailing_newline else "")
+
+    commands_end = _block_end(lines, commands_at, 0, len(lines))
+    cmd_indent = next(
+        (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+         if not _is_blank(lines[i])),
+        len(INDENT),
+    )
+    command_at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
+    if command_at is None:
+        block = emit(cmd_indent, command, "hooks", when, anchor)
+        out = lines[:commands_end] + block + lines[commands_end:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    # Walk hooks -> when -> anchor, creating the first level that is absent.
+    at, end, indent = command_at, _block_end(lines, command_at, cmd_indent, commands_end), cmd_indent
+    for depth, key in enumerate(("hooks", when, anchor)):
+        step = next(
+            (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
+            indent + len(INDENT),
+        )
+        found = _find_key(lines, key, at + 1, end, step)
+        if found is None:
+            block = emit(step, *("hooks", when, anchor)[depth:])
+            out = lines[:at + 1] + block + lines[at + 1:]
+            return "\n".join(out) + ("\n" if trailing_newline else "")
+        at, indent = found, step
+        end = _block_end(lines, found, step, end)
+
+    # The anchor exists: append after its last entry, keeping declared order.
+    last = max((i for i in range(at + 1, end) if not _is_blank(lines[i])), default=at)
+    item_indent = _indent_of(lines[last]) if last > at else indent + len(INDENT)
+    out = lines[:last + 1] + [f"{' ' * item_indent}- {line}"] + lines[last + 1:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
 def check_order(command: str, nodes: list) -> None:
     """Refuse an order the pipeline cannot honour, before it reaches the file.
 
@@ -172,13 +271,36 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default=os.getcwd())
     ap.add_argument("--command", required=True)
-    ap.add_argument("--nodes", required=True, help="comma-separated node ids, in order")
+    ap.add_argument("--nodes", help="comma-separated node ids, in order")
+    ap.add_argument("--hook", help="hook type: command | prompt | node | skill")
+    ap.add_argument("--when", choices=("before", "after"))
+    ap.add_argument("--anchor", help="the node or phase the hook attaches to")
+    ap.add_argument("--ref", default="")
+    ap.add_argument("--run", default="")
+    ap.add_argument("--text", default="")
     args = ap.parse_args()
 
-    nodes = [n.strip() for n in args.nodes.split(",") if n.strip()]
+    path = os.path.join(os.path.abspath(args.project), ".specify", "companion.yml")
     try:
+        if args.hook:
+            if not args.when or not args.anchor:
+                raise ConfigWriteError("a hook needs --when and --anchor")
+            hook = {"type": args.hook, "ref": args.ref, "run": args.run, "text": args.text}
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            updated = add_hook(existing, args.command, args.when, args.anchor, hook)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(updated)
+            print(f"[config] {args.command}: {args.hook} hook added {args.when} {args.anchor}")
+            return 0
+
+        if not args.nodes:
+            raise ConfigWriteError("nothing to write — pass --nodes or --hook")
+        nodes = [n.strip() for n in args.nodes.split(",") if n.strip()]
         check_order(args.command, nodes)
-        path = os.path.join(os.path.abspath(args.project), ".specify", "companion.yml")
         write_nodes(path, args.command, nodes)
     except ConfigWriteError as err:
         print(f"[config] {err}")
