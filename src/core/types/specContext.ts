@@ -158,6 +158,9 @@ export interface HistoryEntryFrom {
 
 export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai' | 'derive';
 
+/** Every author a writer may stamp on a history entry. */
+export const HISTORY_ENTRY_BY: HistoryEntryBy[] = ['extension', 'user', 'cli', 'ai', 'derive'];
+
 /** Discriminates between a step/substep start and a step/substep completion. */
 export type HistoryEntryKind = 'start' | 'complete';
 
