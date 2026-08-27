@@ -477,6 +477,21 @@ def _lost_entries(feature_dir: Path) -> list:
     return out
 
 
+#: A write that did not land because a guard correctly refused it. The commonest
+#: is a late hook trying to re-close a spec that mark-complete already finished —
+#: the system defending itself, not failing. Reporting those as problems put a
+#: false alarm in every single run, which is how a report stops being read.
+_EXPECTED_DECLINE = re.compile(
+    r"not regressing|already at currentStep|already (complete|completed)|"
+    r"left untouched|nothing to (do|sync)",
+    re.I,
+)
+
+
+def _is_expected_decline(event: dict) -> bool:
+    return bool(_EXPECTED_DECLINE.search(str(event.get("reason") or "")))
+
+
 def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
     """What the self-trace recorded: failures with reasons, volumes, churn.
 
@@ -500,7 +515,18 @@ def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
         ), []
 
     findings = []
-    failures = read.failures()
+    all_failures = read.failures()
+    declined = [e for e in all_failures if _is_expected_decline(e)]
+    failures = [e for e in all_failures if not _is_expected_decline(e)]
+    if declined:
+        findings.append(Finding(
+            "trace", "note",
+            f"{plural(len(declined), 'write')} correctly refused by a guard",
+            "a guard declined these rather than letting them land — most often a late hook "
+            "trying to re-close a spec that was already finished. Recorded so the count is "
+            "complete, not because anything went wrong: " + str(declined[0].get("reason"))[:160],
+            {"count": len(declined)},
+        ))
     if failures:
         by_reason: dict = {}
         for e in failures:
