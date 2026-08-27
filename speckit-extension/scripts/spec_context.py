@@ -429,26 +429,28 @@ def atomic_write(target: Path, ctx: dict) -> None:
     """
     _guard_append_only(target, ctx)
     try:
-        import companion_config as cc
-
-        cc.atomic_write_text(str(target),
-                             json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
-        return
-    except ImportError:
-        pass
-    finally:
-        _release_lock(target)
-    tmp = target.with_suffix(target.suffix + ".tmp")
-    try:
-        tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        os.replace(tmp, target)
-    except OSError:
         try:
-            tmp.unlink(missing_ok=True)  # don't litter on a failed write
-        except OSError:
+            import companion_config as cc
+
+            cc.atomic_write_text(str(target),
+                                 json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
+            return
+        except ImportError:
             pass
-        raise
+        tmp = target.with_suffix(target.suffix + ".tmp")
+        try:
+            tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            os.replace(tmp, target)
+        except OSError:
+            try:
+                tmp.unlink(missing_ok=True)  # don't litter on a failed write
+            except OSError:
+                pass
+            raise
     finally:
+        # One release, after the publish or its failure, on whichever path ran.
+        # Releasing in a finally attached to the first try let the fallback path
+        # publish unlocked, which is the window the lock exists to close.
         _release_lock(target)
 
 
