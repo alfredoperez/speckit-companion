@@ -100,12 +100,19 @@ def insert_hooks(body: str, entries: list, nodes_dir: str | None = None) -> str:
         rendered = "".join(render_hook(entry, nodes_dir) for entry in group)
         if not rendered:
             continue
-        if when == "before":
-            marker = f"<!-- speckit-companion:node {anchor} -->\n"
-            body = body.replace(marker, rendered + marker, 1)
-        else:
-            marker = f"<!-- /speckit-companion:node {anchor} -->\n"
-            body = body.replace(marker, marker + rendered, 1)
+        # An anchor names a node or a phase. The design calls a phase the hook
+        # boundary — the coarser place to attach, so a project can wrap a whole
+        # group of nodes without naming each one. A node anchor still works, and
+        # is what the finer cases need.
+        for kind in ("node", "phase"):
+            open_marker = f"<!-- speckit-companion:{kind} {anchor} -->\n"
+            close_marker = f"<!-- /speckit-companion:{kind} {anchor} -->\n"
+            marker = open_marker if when == "before" else close_marker
+            if marker not in body:
+                continue
+            body = (body.replace(marker, rendered + marker, 1) if when == "before"
+                    else body.replace(marker, marker + rendered, 1))
+            break
     return body
 
 

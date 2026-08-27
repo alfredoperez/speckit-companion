@@ -74,6 +74,7 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** split by `⟶ Wait …` join lines — a dependency map where tasks within a wave are independent and a `⟶ Wait` marks where the next tasks depend on what came before. Build each task inline, in turn, stopping at each `⟶ Wait` line until the wave above is done. (A host with subagents *may* parallelize a wave whose tasks are each heavy enough to be worth a separate worker, but inline is the default and usually faster for ordinary edits.) Each task's finish is logged as it completes; then mark the spec complete.
+<!-- speckit-companion:phase execute -->
 <!-- speckit-companion:node implement-exec -->
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md` (and `data-model.md` / `contracts/` if present). Then record the **implement START** so the step's duration begins now (the script stamps the real clock; do not hand-write implement timing):
    ```bash
@@ -116,6 +117,8 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
 <!-- /speckit-companion:node implement-exec -->
+<!-- /speckit-companion:phase execute -->
+<!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node complete -->
 7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
 
@@ -206,6 +209,7 @@ This is one step in the Companion pipeline. How the run continues depends on the
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
 ```
 <!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts

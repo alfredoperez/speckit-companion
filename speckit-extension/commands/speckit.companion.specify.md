@@ -74,6 +74,7 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Produce a feature specification: prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria, then a quality checklist.
+<!-- speckit-companion:phase gather -->
 <!-- speckit-companion:node resolve-dir -->
 1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
@@ -99,6 +100,8 @@ Produce a feature specification: prioritized user stories with acceptance scenar
      Read each match's `spec` path (centralized capabilities resolve to `capabilities/<name>/spec.md`; colocated ones carry their own path): the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any the resolver marked `"exists": false` (or missing on disk); load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves. This reading is best-effort context; the recorder above is the reliable write.
 
 <!-- /speckit-companion:node load-living-specs -->
+<!-- /speckit-companion:phase gather -->
+<!-- speckit-companion:phase author -->
 <!-- speckit-companion:node draft-spec -->
 2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
@@ -163,6 +166,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
    ```
 
 <!-- /speckit-companion:node quality-checklist -->
+<!-- /speckit-companion:phase author -->
+<!-- speckit-companion:phase classify -->
 <!-- speckit-companion:node classify-size -->
 5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below — the same one the standalone size step uses, so the small/large bar is authored in exactly one place. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
 
@@ -209,6 +214,8 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
    python3 .specify/extensions/companion/scripts/write-context.py --classification '{"projectedFiles": <n>, "projectedTasks": <n>, "scopeSignal": "<larger|smaller|none>", "verdict": "<simple|normal|oversized>"}'
    ```
 <!-- /speckit-companion:node persist-size -->
+<!-- /speckit-companion:phase classify -->
+<!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node branch -->
 6. **Branch on the verdict.**
 
@@ -320,6 +327,7 @@ This is one step in the Companion pipeline. How the run continues depends on the
 - **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
 <!-- /speckit-companion:part self-advance -->
 <!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts

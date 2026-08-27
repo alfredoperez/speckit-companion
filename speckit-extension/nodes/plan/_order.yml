@@ -7,3 +7,18 @@ order:
   - constitution-check
   - side-files
   - handoff
+
+# `phases:` is the middle block: it groups these same nodes, in this same order,
+# so a hook has a coarser place to attach than a single node and the builder has
+# something to show between a step and its nodes. The flat `order:` above stays
+# the authority on sequence; the phases must list exactly the same ids.
+
+phases:
+  - name: gather
+    nodes: [size-budget, gather-context]
+  - name: author
+    nodes: [plan-doc]
+  - name: check
+    nodes: [constitution-check]
+  - name: wrap-up
+    nodes: [side-files, handoff]

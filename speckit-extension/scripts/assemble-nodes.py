@@ -32,6 +32,7 @@ from _command_parts import (
     golden_path,
     nodes_command_dir,
     parse_order,
+    parse_phases,
     part_path,
     read_node,
     strip_node_markers,
@@ -60,6 +61,44 @@ def _wrap_node(node_id: str, body: str) -> str:
     )
 
 
+def phases_for(command: str, order: list) -> list:
+    """The phase grouping for an order — `[{name, nodes}, ...]`.
+
+    A command whose `_order.yml` declares no phases gets none, and assembles
+    exactly as it did before. When a recipe changes the order, each phase keeps
+    only the nodes the recipe still runs, and a phase left with nothing is
+    dropped rather than rendered empty.
+    """
+    declared = parse_phases(os.path.join(nodes_command_dir(command), "_order.yml"))
+    if not declared:
+        return []
+    kept = set(order)
+    grouped = []
+    seen = set()
+    for phase in declared:
+        nodes = [n for n in phase["nodes"] if n in kept]
+        if nodes:
+            grouped.append({"name": phase["name"], "nodes": nodes})
+            seen.update(nodes)
+    # A recipe may name a node no phase claims. It still runs — order is the
+    # authority — so it goes in a trailing phase rather than being dropped.
+    unclaimed = [n for n in order if n not in seen]
+    if unclaimed:
+        grouped.append({"name": "other", "nodes": unclaimed})
+    return grouped
+
+
+def _wrap_phase(name: str, body: str) -> str:
+    """Fence one phase's nodes. Pure line insertion, like the node markers."""
+    if not body.endswith("\n"):
+        body += "\n"
+    return (
+        f"<!-- speckit-companion:phase {name} -->\n"
+        f"{body}"
+        f"<!-- /speckit-companion:phase {name} -->\n"
+    )
+
+
 def assemble_command(command: str, order: list = None, debug: bool = False,
                      markers: bool = True) -> str:
     """Return the full command body assembled from nodes/<command>/.
@@ -80,9 +119,18 @@ def assemble_command(command: str, order: list = None, debug: bool = False,
             out = fh.read()
 
     ids = order if order is not None else parse_order(os.path.join(cdir, "_order.yml"))
-    for node_id in ids:
+
+    def node_text(node_id: str) -> str:
         _, body = read_node(command, node_id)
-        out += _wrap_node(node_id, body) if markers else body
+        return _wrap_node(node_id, body) if markers else body
+
+    grouped = phases_for(command, ids) if markers else []
+    if grouped:
+        for phase in grouped:
+            out += _wrap_phase(phase["name"], "".join(node_text(n) for n in phase["nodes"]))
+    else:
+        for node_id in ids:
+            out += node_text(node_id)
 
     rel = f"commands/speckit.companion.{command}.md"
     out = fill_parts(out, rel)

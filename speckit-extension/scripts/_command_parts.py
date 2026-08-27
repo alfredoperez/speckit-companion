@@ -45,6 +45,16 @@ PART_CLOSE = re.compile(r"<!-- /speckit-companion:part ([\w-]+) -->")
 # the prose around it.
 NODE_OPEN = re.compile(r"<!-- speckit-companion:node ([\w-]+) -->")
 NODE_CLOSE = re.compile(r"<!-- /speckit-companion:node ([\w-]+) -->")
+# Phase boundary: the middle block. A phase groups the nodes of one step and is
+# where a hook attaches — the design's "a phase is a hook boundary, not a
+# dispatch boundary", so a step remains one dispatched command.
+PHASE_OPEN = re.compile(r"<!-- speckit-companion:phase ([\w-]+) -->")
+PHASE_CLOSE = re.compile(r"<!-- /speckit-companion:phase ([\w-]+) -->")
+PHASE_FENCE = re.compile(
+    r"<!-- speckit-companion:phase ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:phase \1 -->\n?",
+    re.DOTALL,
+)
+
 NODE_FENCE = re.compile(
     r"<!-- speckit-companion:node ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:node \1 -->\n?",
     re.DOTALL,
@@ -54,13 +64,13 @@ NODE_FENCE = re.compile(
 # generalized part fences). Content survives; only the convention scaffolding
 # is normalized away, so a marker rename is not counted as a content change.
 _MARKER_LINE = re.compile(
-    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|node [\w-]+|timing) -->[ \t]*\n?",
+    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|node [\w-]+|phase [\w-]+|timing) -->[ \t]*\n?",
     re.MULTILINE,
 )
 
-#: Node boundaries alone — whole lines, newline included.
+#: Node and phase boundaries alone — whole lines, newline included.
 _NODE_MARKER_LINE = re.compile(
-    r"^[ \t]*<!-- /?speckit-companion:node [\w-]+ -->[ \t]*\n?",
+    r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w-]+ -->[ \t]*\n?",
     re.MULTILINE,
 )
 
@@ -342,6 +352,55 @@ def parse_order(path: str) -> list:
         elif in_order and not s.startswith("- "):
             break
     return ids
+
+
+def parse_phases(path: str) -> list:
+    """Read an `_order.yml` `phases:` block — `[{name, nodes: [...]}, ...]`.
+
+    Returns `[]` for a file that declares only a flat `order:`. Both shapes are
+    supported: phases are the middle block the design asks for, and a command
+    that has not been grouped into them still assembles exactly as before.
+    """
+    phases = []
+    current = None
+    in_phases = False
+    in_nodes = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("phases:"):
+            in_phases = True
+            continue
+        if not in_phases:
+            continue
+        if s.startswith("- name:"):
+            if current:
+                phases.append(current)
+            current = {"name": s[len("- name:"):].strip(), "nodes": []}
+            in_nodes = False
+            continue
+        if current is None:
+            continue
+        if s.startswith("nodes:"):
+            rest = s[len("nodes:"):].strip()
+            if rest.startswith("[") and rest.endswith("]"):
+                inner = rest[1:-1].strip()
+                if inner:
+                    current["nodes"].extend(x.strip() for x in inner.split(","))
+                in_nodes = False
+            else:
+                in_nodes = True
+            continue
+        if in_nodes and s.startswith("- "):
+            current["nodes"].append(s[2:].strip())
+        elif not s.startswith("- "):
+            in_nodes = False
+    if current:
+        phases.append(current)
+    return phases
 
 
 def read_node(command: str, node_id: str) -> tuple:

@@ -92,15 +92,22 @@ def plan_build(config: dict) -> tuple[dict, list]:
         except cc.ConfigError as err:
             raise BuildError(f"{command}: {err}") from err
 
+        # A hook may anchor on a node or on a phase — the design's coarser
+        # boundary — so both are valid anchor names. Without the phase names
+        # here, a hook attached to one is warned about and silently skipped.
+        phases = assemble.phases_for(command, order)
+        anchors = list(order) + [phase["name"] for phase in phases]
+
         try:
             hooks, hook_warnings = cc.merge_hooks(
-                config, command, order, nodes_dir=os.path.join(EXT, "presets", "_parts")
+                config, command, anchors, nodes_dir=os.path.join(EXT, "presets", "_parts")
             )
         except cc.ConfigError as err:
             raise BuildError(f"{command}: {err}") from err
 
         warnings.extend(hook_warnings)
-        plan[command] = {"order": order, "hooks": hooks, "default": default}
+        plan[command] = {"order": order, "hooks": hooks, "default": default,
+                         "phases": phases}
     return plan, warnings
 
 

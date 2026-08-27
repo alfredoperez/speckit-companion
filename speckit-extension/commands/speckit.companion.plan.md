@@ -74,6 +74,7 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts).
+<!-- speckit-companion:phase gather -->
 <!-- speckit-companion:node size-budget -->
 **Right-size this plan to the change.** Before anything else, read the recorded size from the spec's context — `.spec-context.json` → the `size` field (treat a missing value as `normal`). That size sets the budget for the steps below; **apply it to them, omitting anything it says to skip.**
 
@@ -98,14 +99,20 @@ This budget governs every step that follows. Where a later step would produce so
 
    **Pull the architecture tier ONLY for an architecture-significant plan (lazy, opt-in, read-only).** A capability's living spec ships a cold sibling — `<spec>.arch.md` (structure, diagrams, the decisions behind the area's shape) — that the hot `.spec.md` deliberately leaves out. Load it **only when this plan is architecture-significant**, judged by the same recorded size signal the budget above uses: read `.spec-context.json` → `size` and load the arch tier when it is **`normal` or `oversized`**, and **never** when it is **`simple`** (a small fast-path change must not pay to pull the cold tier). Do not hardcode the `.arch.md` filename — ask the resolver for each loaded capability's tier paths and read the `arch` one when it exists: `python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --all --json` returns each capability's `tiers.arch.path` and `tiers.arch.exists`. For every capability you loaded above, if `tiers.arch.exists` is true read `tiers.arch.path` into context as the structural frame for the plan; skip any whose arch tier is absent. This is best-effort and read-only exactly like the spec load — a missing config, missing tier, or unavailable resolver is skipped silently and never blocks or fails the plan, and you never write an `.arch.md` from here.
 <!-- /speckit-companion:node gather-context -->
+<!-- /speckit-companion:phase gather -->
+<!-- speckit-companion:phase author -->
 <!-- speckit-companion:node plan-doc -->
 2. Create `<feature_directory>/plan.md` with these sections, in order (this is the full, `normal`/`oversized` shape — the **size budget above governs**: at `simple` size it keeps only the Summary and skips the rest unless genuinely needed). Lead each with prose; reserve `inline code` for real identifiers (paths, types, packages), not ordinary nouns — a sentence that is mostly code spans is a rewrite.
    - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach. If a stack choice genuinely isn't obvious from the codebase (a new language, a newly-added dependency, a non-default storage or test setup), name it in a sentence here; otherwise don't restate the project's known stack.
    - **Project Structure** — the concrete source layout this feature touches, as a short tree of real directories/files, plus a one-line **Structure Decision**. Use the actual paths; do not leave placeholder option-trees in the output. *(Skipped at `simple` size per the budget — the task list already names every file.)*
 <!-- /speckit-companion:node plan-doc -->
+<!-- /speckit-companion:phase author -->
+<!-- speckit-companion:phase check -->
 <!-- speckit-companion:node constitution-check -->
 3. **Constitution Check** — add a `## Constitution Check` section to `plan.md` as a table: one row per constitution principle with a PASS / justified-violation assessment. This is a gate before Phase 0 research, re-checked after Phase 1 design. If a violation is genuinely necessary, justify it in a short **Complexity Tracking** table (violation | why needed | simpler alternative rejected). Omit Complexity Tracking when there are no violations; ERROR on an unjustified gate failure.
 <!-- /speckit-companion:node constitution-check -->
+<!-- /speckit-companion:phase check -->
+<!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node side-files -->
 4. **Phase 0 — Research (first).** Write `<feature_directory>/research.md` before the Phase 1 docs, since they build on its decisions. *(The size budget above governs: at `simple` size, fold the rationale into a short Key Decisions note in `plan.md` instead of a separate `research.md`.)* For each genuine unknown the plan leaves open — a stack or dependency choice the codebase doesn't already settle, an integration, or a significant design choice — record a short entry as **Decision** (what you chose) / **Rationale** (why) / **Alternatives considered** (what else, and why not). Resolve every `NEEDS CLARIFICATION` here — this is where a maintainer sees *why* the design is shaped this way.
 
@@ -180,6 +187,7 @@ This is one step in the Companion pipeline. How the run continues depends on the
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
 ```
 <!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts

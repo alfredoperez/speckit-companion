@@ -11,6 +11,7 @@ $ARGUMENTS
 ## Outline
 
 Run the **entire** Companion pipeline end-to-end and unattended. Walk every step in order — specify → plan → tasks → implement → mark-complete — dispatching the same per-step `/speckit.companion.*` commands, never pausing for approval in between, and finish the spec at `status: completed`.
+<!-- speckit-companion:phase gather -->
 <!-- speckit-companion:node resolve-dir -->
 1. **Resolve the feature directory — mint a fresh dir for new work.** Auto is a fresh-spec entry point, exactly like specify. `.specify/feature.json` is an **output**, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
@@ -20,6 +21,8 @@ Run the **entire** Companion pipeline end-to-end and unattended. Walk every step
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specifying --kind start --by extension
    ```
 <!-- /speckit-companion:node resolve-dir -->
+<!-- /speckit-companion:phase gather -->
+<!-- speckit-companion:phase orchestrate -->
 <!-- speckit-companion:node orchestrate -->
 
 ## Run the pipeline — every step, no pauses
@@ -48,6 +51,8 @@ Run the full Companion pipeline by **invoking each per-step command for real**, 
 
 5. **Degrade gracefully on a one-shot environment.** Auto needs an agent that keeps acting after each step finishes. If your environment runs one command and then stops (a plain / one-shot terminal), you cannot chain the steps yourself: run the first step, record its progress, and stop. The run stays valid and resumable — the remaining steps are triggered the normal one-step-at-a-time way (by the developer or the companion panel). No error; auto simply behaves like the manual flow there.
 <!-- /speckit-companion:node orchestrate -->
+<!-- /speckit-companion:phase orchestrate -->
+<!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
@@ -101,6 +106,7 @@ What `unattended: true` means for hooks:
 If a project has no checkpoint hooks, `unattended: true` simply has nothing to act on — set it anyway so any hook added later inherits the contract.
 <!-- /speckit-companion:part unattended -->
 <!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts
