@@ -91,15 +91,25 @@ describe('sidebar contributions', () => {
     });
 
     describe('specs title toolbar', () => {
-        it('shows at most four actions, in the target order', () => {
+        // The cap is the point: a title bar is the one place a command can be
+        // added without anyone noticing it got crowded, so every addition is a
+        // decision recorded here rather than a line in package.json.
+        it('shows at most five actions, in the target order', () => {
             const actions = specsTitleActions();
-            expect(actions).toHaveLength(4);
+            expect(actions).toHaveLength(5);
             expect(actions.map(a => a.id)).toEqual([
                 'speckit.specs.filter',
                 'speckit.specs.sort',
                 'speckit.specs.titleMenu',
+                'speckit.companion.openPipelineBuilder',
                 'speckit.create',
             ]);
+        });
+
+        it('shows the pipeline builder only where its extension is installed', () => {
+            const entry = viewTitle.find(
+                e => e.command === 'speckit.companion.openPipelineBuilder')!;
+            expect(entry.when).toContain('speckit.companion.installed');
         });
 
         it('places New Spec last', () => {

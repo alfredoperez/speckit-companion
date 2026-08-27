@@ -49,12 +49,15 @@ Clicking a **document** row still opens that document, exactly as before.
 
 ## Title toolbar
 
-The Specs title bar shows **at most four actions**, always in this order:
+The Specs title bar shows **at most five actions**, always in this order:
 
 1. **Filter…** (`$(filter)`)
 2. **Sort…** (`$(sort-precedence)`)
 3. **More Actions…** (`$(ellipsis)`)
-4. **New Spec** (`$(plus)`) — the trailing, rightmost primary action
+4. **Open Pipeline Builder** (`$(circuit-board)`) — only when the spec-kit extension is installed, since it holds the pipeline the panel draws
+5. **New Spec** (`$(plus)`) — the trailing, rightmost primary action
+
+The cap is enforced by a test, so a fifth entry is a decision someone made rather than a line nobody noticed.
 
 Everything that used to crowd the toolbar now lives behind **More Actions**, which is a **native VS Code menu** — it drops open directly under the `…` button, and VS Code owns its rendering, hover, keyboard navigation, and theming. Its entries are gated by the same conditions the old title buttons used:
 

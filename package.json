@@ -558,7 +558,8 @@
       {
         "command": "speckit.companion.openPipelineBuilder",
         "title": "Open Pipeline Builder",
-        "category": "SpecKit Companion"
+        "category": "SpecKit Companion",
+        "icon": "$(circuit-board)"
       }
     ],
     "submenus": [
@@ -589,6 +590,11 @@
           "submenu": "speckit.specs.titleMenu",
           "when": "view == speckit.views.explorer",
           "group": "navigation@3"
+        },
+        {
+          "command": "speckit.companion.openPipelineBuilder",
+          "when": "view == speckit.views.explorer && speckit.companion.installed",
+          "group": "navigation@8"
         },
         {
           "command": "speckit.create",
