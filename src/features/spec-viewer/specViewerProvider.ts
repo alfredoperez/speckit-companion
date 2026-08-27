@@ -4,6 +4,7 @@
  * Supports multiple panels - one per spec directory.
  */
 
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { scanDocuments } from "./documentScanner";
@@ -62,7 +63,7 @@ import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { isCompanionInstalled } from "../settings/companionPresetReconciler";
 import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
-import { deriveViewerState, isStepCompleted, findRunningStep } from "./stateDerivation";
+import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
 import { enrichLivingSpecs } from "./livingSpecsContent";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
@@ -1176,6 +1177,17 @@ export class SpecViewerProvider {
           ? (specCtx.currentStep as StepName)
           : (specCtx.currentStep as StepName) || 'specify';
         const derivedVs = deriveViewerState(specCtx, active, wfSteps);
+        // Coverage is the same shape of enrichment: the derivation cannot open a
+        // file, so the table would otherwise present a named test that is not
+        // there exactly like one that is.
+        {
+          const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (wsRoot) {
+            derivedVs.coverage = markMissingTests(derivedVs.coverage, rel =>
+              fs.existsSync(path.isAbsolute(rel) ? rel : path.join(wsRoot, rel))
+            );
+          }
+        }
         // Living-specs content is filesystem-derived, so it's enriched here at
         // the provider seam rather than inside the pure derivation.
         if (derivedVs.livingSpecs) {

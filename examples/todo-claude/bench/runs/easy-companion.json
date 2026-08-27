@@ -1,137 +1,87 @@
 {
-  "runId": "medium-companion",
-  "size": "medium",
+  "runId": "easy-companion",
+  "size": "easy",
   "mode": "companion",
-  "spec": "001-optional-due-dates",
-  "specName": "Optional Due Dates",
-  "startedAt": "2026-08-26T14:28:02Z",
-  "finishedAt": "2026-08-26T14:51:14Z",
-  "wallClockSec": 1392,
-  "captureOverheadSec": 1.97,
+  "spec": "001-task-manager-rename",
+  "specName": "task manager rename",
+  "startedAt": "2026-08-26T14:04:36Z",
+  "finishedAt": "2026-08-26T14:13:14Z",
+  "wallClockSec": 518,
+  "captureOverheadSec": 0.25,
   "timing": {
-    "totalSec": 1054.579,
+    "totalSec": 337.132,
     "perStep": {
-      "specify": 131.511,
-      "plan": 169.92,
-      "tasks": 150.236,
-      "implement": 402.267
+      "specify": 119.484,
+      "plan": 0.088,
+      "tasks": 0.088,
+      "implement": 51.093
     }
   },
   "buildPass": true,
-  "acceptancePassed": 12,
-  "acceptanceTotal": 12,
+  "acceptancePassed": 3,
+  "acceptanceTotal": 3,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "Date input dispatches setDueDate; value renders"
+      "reason": "Header h1 renders \"Task Manager\""
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "setDueDate replaces existing value"
+      "reason": "index.html title is \"Task Manager\""
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Empty string maps to undefined"
-    },
-    {
-      "n": 4,
-      "pass": true,
-      "reason": "Reducer state saved to localStorage, loaded on init"
-    },
-    {
-      "n": 5,
-      "pass": true,
-      "reason": "isOverdue true for date < todayLocal"
-    },
-    {
-      "n": 6,
-      "pass": true,
-      "reason": "Equal date returns false"
-    },
-    {
-      "n": 7,
-      "pass": true,
-      "reason": "Later date returns false"
-    },
-    {
-      "n": 8,
-      "pass": true,
-      "reason": "Undefined dueDate returns false"
-    },
-    {
-      "n": 9,
-      "pass": true,
-      "reason": "sortByDueDate ascending applied when toggled"
-    },
-    {
-      "n": 10,
-      "pass": true,
-      "reason": "Undated todos sorted last"
-    },
-    {
-      "n": 11,
-      "pass": true,
-      "reason": "Toggle off renders original todos array"
-    },
-    {
-      "n": 12,
-      "pass": true,
-      "reason": "Derived per render, so re-enabling re-sorts"
+      "reason": "No \"Todo App\" in header or title"
     }
   ],
   "deterministicBaseline": {
-    "passed": 0,
+    "passed": 1,
     "total": 1
   },
-  "regressionPassed": 14,
-  "regressionTotal": 15,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
   "conventions": [],
   "blast": {
     "files": [
       "App.test.tsx",
-      "components/TodoItem.tsx",
-      "components/TodoList.tsx",
-      "lib/dueDate.test.ts",
-      "lib/dueDate.ts",
-      "pages/TodosPage.tsx",
-      "store/todos.tsx",
-      "types.ts"
+      "components/Header.tsx",
+      "index.html"
     ],
     "outOfScope": []
   },
   "quality": {
-    "readability": 5,
-    "conventions": 5,
-    "scope": 5,
-    "justification": "A minimal, well-named change: a pure src/lib/dueDate.ts (todayLocal/isOverdue/sortByDueDate) feeding a prop-driven date input and Overdue badge, a setDueDate action on the existing todos store slice that persists through storage.ts unchanged, a page-local sort toggle, and co-located tests that query by role/label with no invented test ids and nothing touched beyond the ask."
+    "correctness": 10,
+    "conventions": 10,
+    "scopeDiscipline": 10,
+    "notes": "Header.tsx h1 and index.html <title> both read \"Task Manager\"; only other app-file edit is the pre-existing App.test.tsx heading assertion updated to match, which the rename required. No new files, routes, components, or refactors."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 98,
-    "planLines": 50,
-    "tasksLines": 94,
-    "taskCount": 15,
+    "specLines": 64,
+    "planLines": 4,
+    "tasksLines": 6,
+    "taskCount": 3,
     "sideFiles": [
-      "research.md",
-      "data-model.md",
       "checklists"
     ],
-    "artifactFiles": 8,
-    "artifactLines": 458
+    "artifactFiles": 6,
+    "artifactLines": 150
   },
   "diff": {
-    "filesChanged": 8,
-    "locAdded": 203,
-    "locRemoved": 5
+    "filesChanged": 2,
+    "locAdded": 2,
+    "locRemoved": 2
   },
   "capture": {
-    "pass": 15,
-    "fail": 0,
-    "failing": [],
+    "pass": 19,
+    "fail": 1,
+    "failing": [
+      "task-cadence-span"
+    ],
     "checks": [
       {
         "status": "PASS",
@@ -141,7 +91,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "25 entries"
+        "detail": "11 entries"
       },
       {
         "status": "PASS",
@@ -171,7 +121,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "25 entries conform to historyEntry def"
+        "detail": "11 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -181,7 +131,7 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=17, extension=8"
+        "detail": "ai=3, extension=8"
       },
       {
         "status": "PASS",
@@ -201,12 +151,12 @@
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "15 task events; task id present, substep null|==task: True"
+        "detail": "3 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=15, journaled=15"
+        "detail": "tasks.md done=3, journaled=3"
       },
       {
         "status": "PASS",
@@ -214,38 +164,78 @@
         "detail": "each task has a single finish (≤1 complete; ≤1 legacy start)"
       },
       {
-        "status": "PASS",
+        "status": "FAIL",
         "id": "task-cadence-span",
-        "detail": "15 ai finishes span 6.3m = 94.53% of 6.7m implement step (need ≥ 5%)"
+        "detail": "3 ai finishes span 335ms = 0.66% of 51.1s implement step (need ≥ 5%) — finishes clustered into one end-of-step burst"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-plan-folded",
+        "detail": "plan: 1 extension start / 1 extension complete"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-tasks-folded",
+        "detail": "tasks: 1 extension start / 1 extension complete"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-fold-ordered",
+        "detail": "specify→plan→tasks boundaries parse, each folded step has a positive span, and they run forward"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-ready-to-implement",
+        "detail": "status=completed"
+      },
+      {
+        "status": "PASS",
+        "id": "fast-path-approach",
+        "detail": "approach recorded for the Overview card"
+      },
+      {
+        "status": "INFO",
+        "id": "fast-path-living-specs",
+        "detail": "no living specs recorded (no covered area matched, or feature off)"
       },
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 4.0m | plan→tasks 3.6m | tasks→implement 3.3m"
+        "detail": "specify→plan 2.2m | plan→tasks 176ms | tasks→implement 2.5m"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "15 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 55.0s, 159ms, 25.2s, 154ms, 42.0s, 28.4s, 43.1s, 42.9s, 161ms, 10.6s, 25.8s, 49.1s, 152ms, 57.6s"
+        "detail": "3 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 165ms, 170ms"
       }
     ]
   },
   "doctor": {
     "problems": 2,
-    "warnings": 0,
-    "batchedJournaling": false,
+    "warnings": 1,
+    "batchedJournaling": true,
     "recordedFailures": 2,
     "bleed": 0,
     "findings": [
       {
         "check": "trace",
         "severity": "problem",
-        "title": "16 capture calls failed (lifecycle)"
+        "title": "4 capture calls failed (lifecycle)"
       },
       {
         "check": "trace",
         "severity": "problem",
-        "title": "1 capture call failed (unknown)"
+        "title": "1 capture call failed (fold-living-spec)"
+      },
+      {
+        "check": "record",
+        "severity": "warning",
+        "title": "3 task finishes recorded inside 0s — journaling was batched"
+      },
+      {
+        "check": "bleed",
+        "severity": "note",
+        "title": "`specify` took longer than `implement`"
       },
       {
         "check": "trace",
@@ -255,7 +245,7 @@
       {
         "check": "trace",
         "severity": "note",
-        "title": "115 capture calls recorded"
+        "title": "36 capture calls recorded"
       }
     ],
     "checks": [
@@ -263,7 +253,7 @@
         "check": "record",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 1
       },
       {
         "check": "triage",
@@ -275,7 +265,7 @@
         "check": "bleed",
         "state": "ran",
         "reason": null,
-        "findings": 0
+        "findings": 1
       },
       {
         "check": "drift",
@@ -303,5 +293,5 @@
       }
     ]
   },
-  "capturedAt": "2026-08-26T14:55:25.721Z"
+  "capturedAt": "2026-08-26T14:26:14.871Z"
 }

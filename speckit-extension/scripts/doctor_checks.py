@@ -453,6 +453,30 @@ def check_template(feature_dir: Path) -> tuple:
     return CheckStatus("template", "ran"), findings
 
 
+def _lost_entries(feature_dir: Path) -> list:
+    """Calls that did work the trace could not record.
+
+    The trace is the evidence a capture happened. When appending to it fails but
+    the capture itself succeeded, the run holds a write nothing recorded — and a
+    reader presenting its short count as a total is exactly the false clean this
+    check exists to prevent. `run_trace` leaves a marker; read it.
+    """
+    try:
+        import run_trace as rt
+    except ImportError:
+        return []
+    out = []
+    for path in (Path(feature_dir) / rt.LOST_NAME,
+                 Path(feature_dir).parent / rt.LOST_NAME):
+        try:
+            if path.is_file():
+                out += [ln.strip() for ln in path.read_text(encoding="utf-8").splitlines()
+                        if ln.strip()]
+        except OSError:
+            continue
+    return out
+
+
 def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
     """What the self-trace recorded: failures with reasons, volumes, churn.
 
@@ -500,10 +524,22 @@ def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
         ))
 
     qualifier = "" if read.exact else " (at least — earlier entries rolled off)"
+    lost = _lost_entries(feature_dir)
+    if lost:
+        findings.append(Finding(
+            "trace", "problem",
+            f"{plural(len(lost), 'call')} succeeded but could not be recorded in the trace",
+            "the run performed work the trace does not contain, so every count below is a "
+            "lower bound — most often an unwritable spec directory: " + lost[0],
+            {"lost": lost[:5]},
+        ))
+
     findings.append(Finding(
         "trace", "note",
         f"{plural(len(read.events), 'capture call')} recorded{qualifier}",
         f"{read.bytes_written()} bytes written, {read.bytes_read()} bytes of input carried"
+        + (" — and at least one call could not be recorded at all, so these are "
+           "lower bounds rather than totals" if lost else "")
         + (f"; {read.unparseable} unreadable line(s) skipped" if read.unparseable else ""),
         {"calls": len(read.events), "failures": len(failures),
          "bytes_written": read.bytes_written(), "bytes_read": read.bytes_read(),

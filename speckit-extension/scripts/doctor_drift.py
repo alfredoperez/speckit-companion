@@ -167,19 +167,115 @@ def _recorded_claims(ctx: dict) -> list:
             # "['no drift']", which matched the clean pattern and accused the run
             # of a claim it never made.
             continue
+        result = entry.get("result") if isinstance(entry, dict) else None
         if isinstance(text, str) and text.strip() and "drift" in blob.lower():
-            out.append({"source": "verified[]", "text": text, "at": at, "blob": blob})
+            out.append({
+                "source": "verified[]",
+                "text": text,
+                "result": result if isinstance(result, str) else None,
+                "at": at,
+                "blob": blob,
+            })
     return out
 
 
-# Whole words only. Substring matching read "cleaned up two stale entries" as a
-# drift-clean assertion and accused the run of a claim it never made.
-_CLEAN_CLAIM = re.compile(
-    r"\b(in sync|no drift|drift[- ]clean|clean)\b", re.I)
+#: Words that flip a nearby drift word into its opposite, matched in a short
+#: window rather than a fixed-width lookbehind — the negator in "no real drift
+#: found" is two words back, and the one in "not in sync" is adjacent. Fixed
+#: widths got one of those right and the other wrong, repeatedly.
+_NEGATORS = {"not", "no", "never", "without", "zero", "isn't", "aren't",
+             "wasn't", "longer", "n't"}
+
+#: A check that did not run asserts nothing about the project.
+_DID_NOT_RUN = re.compile(r"\b(skipped|not run|unavailable|could not)\b", re.I)
+
+#: An outcome carrying no verdict of its own, so the subject is all there is.
+_GENERIC_OUTCOME = re.compile(r"^\s*(pass(ed)?|ok|done|yes|true|\u2713|\u2714)?\s*$", re.I)
+
+#: A verdict that plainly reports failure without naming drift at all.
+_PLAIN_FAILURE = re.compile(r"\b(fail(ed|ure|s)?|blocked|out of sync)\b", re.I)
+
+_DRIFT_WORD = re.compile(r"\bdrift(ed|s|ing)?\b", re.I)
+_IN_SYNC = re.compile(r"\bin sync\b", re.I)
+#: What must follow a drift word for it to be *reporting* drift rather than
+#: naming the subject: "drift found", "drift in auth", "3 files drifted in auth".
+_DRIFT_REPORTED = re.compile(r"^\W*(found|detected|in|across)\b", re.I)
+
+
+def _negated(text: str, start: int) -> bool:
+    """True when a negator sits within four words before position `start`."""
+    before = re.findall(r"[\w']+", text[:start])[-4:]
+    return any(w.lower().strip(".,;:\u2014-") in _NEGATORS for w in before)
+
+
+def _signals(text: str) -> tuple:
+    """Read `text` for what it says about drift: (says-clean, says-drifted).
+
+    Both are read from the same words, because the same word means opposite
+    things depending on what negates it: "no drift found" is clean and "drift
+    found" is not, and no catalogue of phrases survives that. Negation is applied
+    to the drift word itself rather than to a fixed list of clean phrases.
+    """
+    clean = drifted = False
+    if not text or _DID_NOT_RUN.search(text):
+        return (False, False)
+
+    for m in _DRIFT_WORD.finditer(text):
+        if _negated(text, m.start()):
+            clean = True                      # "no drift", "no real drift found"
+        elif _DRIFT_REPORTED.match(text[m.end():]):
+            drifted = True                    # "drift found", "3 files drifted in auth"
+
+    for m in _IN_SYNC.finditer(text):
+        if _negated(text, m.start()):
+            drifted = True                    # "not in sync", "no longer in sync"
+        else:
+            clean = True
+
+    if _PLAIN_FAILURE.search(text):
+        drifted = True
+    return (clean, drifted)
+
+
+def _asserts_clean(text: str) -> bool:
+    """True when `text` states, on its own, that there is no drift."""
+    clean, drifted = _signals(text)
+    return clean and not drifted
 
 
 def _claims_clean(claim: dict) -> bool:
-    return bool(_CLEAN_CLAIM.search(claim["blob"]))
+    """Did this recorded entry assert that living specs are in sync?
+
+    **Which way this errs, and why.** A false positive accuses a run of dishonesty
+    it is not guilty of, and that is corrosive to trust in everything else this
+    check says. A false negative is only silence \u2014 the state before the feature
+    existed. They are not symmetric, so this errs toward silence: it requires a
+    definite drift verdict, and reads a bare "clean" as saying nothing at all.
+
+    That last choice is deliberate and it costs a real detection. `living-spec
+    drift check \u2014 clean` and `checked the drift wiring \u2014 clean` are structurally
+    identical, and nothing in the text separates the claim from the note about
+    tooling. Something has to give; this gives up the accusation.
+
+    Subject and outcome are read as what they are and never concatenated. The
+    subject names the check; the outcome carries the verdict. Serializing the
+    whole entry let an unrelated field supply the verdict \u2014 a note reading "the
+    registry is in sync" turned a run reporting drift into a run accused of lying
+    about it.
+    """
+    outcome = (claim.get("result") or "").strip()
+    subject = (claim.get("text") or "").strip()
+
+    if outcome and not _GENERIC_OUTCOME.match(outcome):
+        clean, drifted = _signals(outcome)
+        if drifted:
+            return False                      # the outcome settles it
+        if clean:
+            return True
+        # The outcome ran but said nothing definite ("clean", "looks clean"). Per
+        # the asymmetry above, that is silence rather than a claim.
+        return False
+    return _asserts_clean(subject)
 
 
 def check_drift(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
@@ -234,6 +330,7 @@ def check_drift(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
                 "drift", "problem",
                 "A recorded drift-clean claim contradicts the recomputation",
                 f"the run recorded \"{claim['text']}\""
+                + (f" \u2014 \"{claim['result']}\"" if claim.get("result") else "")
                 + (f" at {claim['at']}" if claim.get("at") else "")
                 + f", but recomputing now finds real drift in: {names}",
                 {"claim": claim, "contradicted_by": names},

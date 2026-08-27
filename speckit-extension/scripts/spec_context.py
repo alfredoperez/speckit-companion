@@ -224,6 +224,16 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
     return None
 
 
+#: A title still carrying template scaffolding — `[FEATURE NAME]`, `<feature>`,
+#: `TODO` — is not a name, and recording it as one is worse than recording nothing:
+#: the fallback would have derived something readable from the directory.
+_PLACEHOLDER = re.compile(r"^\s*([\[<{].*[\]>}]|TBD|TODO|FEATURE NAME)\s*$", re.I)
+
+
+def _is_placeholder(title: str) -> bool:
+    return bool(_PLACEHOLDER.match(title))
+
+
 def _spec_name(feature_dir: Path) -> str:
     spec_md = feature_dir / "spec.md"
     if spec_md.is_file():
@@ -234,11 +244,23 @@ def _spec_name(feature_dir: Path) -> str:
                     title = line[2:].strip()
                     # Drop a leading "Feature Specification:" / "Spec:" label.
                     title = re.sub(r"^(Feature Specification|Spec|Feature)\s*:\s*", "", title)
-                    if title:
+                    # `# Feature Specification: [FEATURE NAME]` is the shipped
+                    # template's own first line. Resolving it on the first write —
+                    # which happens before the spec is drafted — froze the
+                    # placeholder in as the feature's name forever.
+                    if title and not _is_placeholder(title):
                         return title
         except OSError:
             pass
-    # Fallback: humanized slug from the dir name (strip NNN- prefix).
+    return _fallback_name(feature_dir)
+
+
+def _fallback_name(feature_dir: Path) -> str:
+    """Humanized slug from the directory name, stripping the NNN- prefix.
+
+    Named so the refresh above can tell "still the fallback" from "someone chose
+    this" — a recorded name equal to the fallback has not been decided yet.
+    """
     slug = PREFIX_RE.sub("", feature_dir.name)
     return slug.replace("-", " ").strip() or feature_dir.name
 
@@ -340,6 +362,62 @@ def read_ctx(target: Path) -> dict:
     return {}
 
 
+def _entry_key(e) -> tuple:
+    """Identity of one history entry, for recognising it across a re-read."""
+    if not isinstance(e, dict):
+        return ("raw", repr(e))
+    return (e.get("step"), e.get("substep"), e.get("task"), e.get("kind"), e.get("at"))
+
+
+def _guard_append_only(target: Path, ctx: dict) -> None:
+    """Refuse to publish a history shorter than the one already on disk.
+
+    `history` is append-only by contract and by nothing else. A writer that read a
+    context whose `history` was not a list — a torn read, a hand-edit, a legacy
+    shape — got `[]` back from `canonical_log`, appended one entry, and published a
+    log of one, destroying everything before it. That was observed once: a step's
+    real start time simply gone, with a later timestamp in its place and every
+    check passing.
+
+    Rather than trust the caller, compare against disk and splice: keep every entry
+    that was there, then add whatever this write is contributing that is genuinely
+    new. Order is preserved and nothing is lost.
+    """
+    outgoing = ctx.get("history")
+    if not isinstance(outgoing, list):
+        return
+    try:
+        if not target.is_file():
+            return
+        on_disk = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    existing = on_disk.get("history") if isinstance(on_disk, dict) else None
+    if existing is not None and not isinstance(existing, list):
+        # Unreadable rather than absent. The entries cannot be merged, but they can
+        # be kept: overwriting them is how a run's history disappears with nothing
+        # said. Park them beside the new log so the loss is recoverable and visible.
+        ctx["historyQuarantined"] = existing
+        print(
+            f"[companion] Warning: {target} had a `history` that is not a list "
+            f"({type(existing).__name__}). Starting a fresh log and keeping the old "
+            f"value under `historyQuarantined` — nothing was discarded.",
+            file=sys.stderr,
+        )
+        return
+    if not isinstance(existing, list) or len(outgoing) >= len(existing):
+        return
+    seen = {_entry_key(e) for e in existing}
+    added = [e for e in outgoing if _entry_key(e) not in seen]
+    ctx["history"] = existing + added
+    print(
+        f"[companion] Warning: refused to shorten the run history in {target} "
+        f"({len(existing)} entries on disk, {len(outgoing)} in this write). "
+        f"Kept all {len(existing)} and added {len(added)} — history is append-only.",
+        file=sys.stderr,
+    )
+
+
 def atomic_write(target: Path, ctx: dict) -> None:
     """Crash-safe write: serialize to a unique temp file, then rename over the target.
 
@@ -349,6 +427,7 @@ def atomic_write(target: Path, ctx: dict) -> None:
     which the reader then swallows as `{}`), a flush to disk before the rename,
     and no debris when the write fails.
     """
+    _guard_append_only(target, ctx)
     try:
         import companion_config as cc
 
@@ -397,7 +476,15 @@ def commit_log(ctx: dict, log: list) -> None:
 def fill_required(ctx: dict, feature_dir: Path, branch: str) -> None:
     """Set required keys only when missing (read-then-merge preserves the rest)."""
     ctx.setdefault("workflow", "speckit")
-    ctx.setdefault("specName", _spec_name(feature_dir))
+    # setdefault froze whatever the first write saw. The first write happens before
+    # the spec is drafted, so the frozen answer was the template placeholder and no
+    # later write ever corrected it. Re-resolve while the recorded name is still a
+    # fallback; once it is real, leave it alone so a rename by hand survives.
+    recorded = ctx.get("specName")
+    if not recorded or _is_placeholder(str(recorded)) or recorded == _fallback_name(feature_dir):
+        resolved = _spec_name(feature_dir)
+        if resolved:
+            ctx["specName"] = resolved
     ctx.setdefault("branch", branch)
 
 

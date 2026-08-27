@@ -3,54 +3,83 @@
   "size": "easy",
   "mode": "speckit",
   "spec": "001-rename-task-manager",
-  "specName": "Rename Task Manager",
-  "startedAt": null,
-  "finishedAt": null,
-  "wallClockSec": null,
+  "specName": "001-rename-task-manager",
+  "startedAt": "2026-08-26T14:04:45Z",
+  "finishedAt": "2026-08-26T14:13:56Z",
+  "wallClockSec": 551,
+  "captureOverheadSec": 0,
   "timing": {
-    "totalSec": 903.381,
+    "totalSec": null,
     "perStep": {
-      "specify": 318.216,
-      "plan": 154.163,
-      "tasks": 57.661,
-      "implement": 192.409
+      "specify": null,
+      "plan": null,
+      "tasks": null,
+      "implement": null
     }
   },
   "buildPass": true,
-  "acceptancePassed": 1,
-  "acceptanceTotal": 1,
+  "acceptancePassed": 3,
+  "acceptanceTotal": 3,
+  "acceptanceSource": "behavioral",
+  "behavioralVerdicts": [
+    {
+      "n": 1,
+      "pass": true,
+      "reason": "Header h1 renders \"Task Manager\""
+    },
+    {
+      "n": 2,
+      "pass": true,
+      "reason": "index.html title is \"Task Manager\""
+    },
+    {
+      "n": 3,
+      "pass": true,
+      "reason": "Header is route-independent; title static in HTML"
+    }
+  ],
+  "deterministicBaseline": {
+    "passed": 1,
+    "total": 1
+  },
   "regressionPassed": 5,
   "regressionTotal": 5,
   "conventions": [],
   "blast": {
     "files": [
       "App.test.tsx",
-      "components/Header.tsx"
+      "components/Header.tsx",
+      "index.html"
     ],
     "outOfScope": []
   },
   "quality": {
-    "readability": 5,
-    "conventions": 5,
-    "scope": 5,
-    "justification": "Clean exact rename touching only the header <h1>, the <title>, and the matching App.test.tsx expectation, with the precise text 'Task Manager' and zero out-of-scope churn."
+    "correctness": 10,
+    "conventions": 10,
+    "scopeDiscipline": 10,
+    "notes": "Header.tsx <h1> and index.html <title> both read \"Task Manager\"; the co-located App.test.tsx heading assertion was updated to match, which is the minimal necessary follow-on. No other app source touched, no new files, no refactors. Only specs/001-rename-task-manager/ workflow artifacts added, which are out of app-code scope."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 54,
-    "planLines": 75,
-    "tasksLines": 123,
-    "taskCount": 6,
+    "specLines": 51,
+    "planLines": 78,
+    "tasksLines": 105,
+    "taskCount": 4,
     "sideFiles": [
       "research.md",
       "data-model.md",
-      "quickstart.md"
-    ]
+      "quickstart.md",
+      "checklists"
+    ],
+    "artifactFiles": 7,
+    "artifactLines": 329
   },
   "diff": {
     "filesChanged": 2,
     "locAdded": 2,
     "locRemoved": 2
   },
-  "capture": null
+  "capture": null,
+  "doctor": null,
+  "capturedAt": "2026-08-26T14:25:56.970Z"
 }

@@ -157,6 +157,42 @@ function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
     return rows;
 }
 
+/**
+ * Confirm the tests a requirement names actually exist.
+ *
+ * Every cell in the coverage table is a string an assistant typed once. Nothing
+ * opened the path, so a requirement pointing at a deleted or misspelled test
+ * rendered exactly like one pointing at a real, passing suite — rung-one text
+ * wearing rung-three authority.
+ *
+ * `exists` is injected rather than imported so this stays pure and testable; the
+ * provider supplies a real filesystem check. Anything that is plainly not a path
+ * (a bare test name, a `describe` title) is left alone — the point is to catch a
+ * file that should be there and is not, never to demand a particular format.
+ */
+export function markMissingTests(
+    rows: ViewerCoverageRow[] | undefined,
+    exists: (relPath: string) => boolean
+): ViewerCoverageRow[] | undefined {
+    if (!rows) { return rows; }
+    return rows.map(row => {
+        const paths = row.tests.filter(looksLikePath);
+        if (paths.length === 0) { return row; }
+        const missing = paths.filter(p => !exists(stripTestSuffix(p)));
+        return missing.length ? { ...row, missingTests: missing } : row;
+    });
+}
+
+/** A test reference that names a file, rather than a suite or a case name. */
+function looksLikePath(ref: string): boolean {
+    return /[\\/]/.test(ref) && /\.[a-z]{2,4}$/i.test(ref.split('::')[0].split('#')[0].trim());
+}
+
+/** `src/x.test.ts::renders` and `src/x.test.ts#renders` both name one file. */
+function stripTestSuffix(ref: string): string {
+    return ref.split('::')[0].split('#')[0].trim();
+}
+
 function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
     const v = (ctx as Record<string, unknown>)['classification'];
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;

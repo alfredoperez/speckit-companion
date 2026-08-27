@@ -54,6 +54,12 @@ A spec's lifecycle SHALL be recorded in a single per-spec context file whose his
 - **WHEN** a component rewrites the context file
 - **THEN** fields it does not recognize survive the write unchanged
 
+A recorded coverage row SHALL be able to carry which of its named tests were confirmed to exist, distinguished from the case where nobody checked. "Checked and not found" and "not checked" are different facts and MUST NOT collapse into one, because only the first is a finding.
+
+#### Scenario: coverage is recorded without a workspace to resolve against
+- **WHEN** no check could be performed
+- **THEN** the row records that nobody checked, rather than recording that nothing was found
+
 ### The recorded status and the recorded step must not disagree
 
 Status values and step names SHALL form one lifecycle where each non-terminal status names the step that owns it and whether that step is still running or settled. A status ahead of the history log is an invalid state and MUST NOT be written: it renders as work in progress that nobody is doing.

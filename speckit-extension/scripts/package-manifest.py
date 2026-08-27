@@ -68,6 +68,10 @@ RUNTIME_SCRIPTS = frozenset({
 })
 
 BUILD_ONLY = frozenset({
+    # Build-time analysis. It could ship — stdlib-only and read-only — but nothing
+    # shipped invokes it, and the gate is right that a packaged script no command
+    # reaches is dead weight. It ships when the builder calls it (PRD R027).
+    "instruction-budget.py",
     "build-commands.py",
     "check-shape-parity.py",
     "assemble-nodes.py",

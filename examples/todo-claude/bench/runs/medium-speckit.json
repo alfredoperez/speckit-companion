@@ -3,56 +3,123 @@
   "size": "medium",
   "mode": "speckit",
   "spec": "001-due-dates",
-  "specName": "Due Dates",
-  "startedAt": null,
-  "finishedAt": null,
-  "wallClockSec": null,
-  "captureOverheadSec": null,
+  "specName": "001-due-dates",
+  "startedAt": "2026-08-26T14:27:26Z",
+  "finishedAt": "2026-08-26T14:48:33Z",
+  "wallClockSec": 1267,
+  "captureOverheadSec": 0,
   "timing": {
-    "totalSec": 1036.885,
+    "totalSec": null,
     "perStep": {
-      "specify": 96.885,
-      "plan": 246.25,
-      "tasks": 132.6,
-      "implement": 463.346
+      "specify": null,
+      "plan": null,
+      "tasks": null,
+      "implement": null
     }
   },
   "buildPass": true,
-  "acceptancePassed": 1,
-  "acceptanceTotal": 1,
-  "regressionPassed": 23,
-  "regressionTotal": 23,
+  "acceptancePassed": 13,
+  "acceptanceTotal": 13,
+  "acceptanceSource": "behavioral",
+  "behavioralVerdicts": [
+    {
+      "n": 1,
+      "pass": true,
+      "reason": "Date input dispatches setDueDate; value renders from todo"
+    },
+    {
+      "n": 2,
+      "pass": true,
+      "reason": "Empty value maps to undefined, clearing the date"
+    },
+    {
+      "n": 3,
+      "pass": true,
+      "reason": "dueDate saved in todos via localStorage effect"
+    },
+    {
+      "n": 4,
+      "pass": true,
+      "reason": "setDueDate replaces dueDate on each change"
+    },
+    {
+      "n": 5,
+      "pass": true,
+      "reason": "isOverdue true when dueDate < today"
+    },
+    {
+      "n": 6,
+      "pass": true,
+      "reason": "Strict less-than excludes today"
+    },
+    {
+      "n": 7,
+      "pass": true,
+      "reason": "Future date not less than today"
+    },
+    {
+      "n": 8,
+      "pass": true,
+      "reason": "isOverdue returns false for undefined"
+    },
+    {
+      "n": 9,
+      "pass": true,
+      "reason": "Badge recomputes on state change"
+    },
+    {
+      "n": 10,
+      "pass": true,
+      "reason": "sortByDueDate ascending applied when toggle on"
+    },
+    {
+      "n": 11,
+      "pass": true,
+      "reason": "Undated todos sort to end"
+    },
+    {
+      "n": 12,
+      "pass": true,
+      "reason": "Unsorted renders original todos array unmutated"
+    },
+    {
+      "n": 13,
+      "pass": true,
+      "reason": "Toggle recomputes sorted view each render"
+    }
+  ],
+  "deterministicBaseline": {
+    "passed": 0,
+    "total": 1
+  },
+  "regressionPassed": 17,
+  "regressionTotal": 17,
   "conventions": [],
   "blast": {
     "files": [
-      "components/SortToggle.tsx",
-      "components/TodoItem.test.tsx",
+      "App.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
       "lib/dueDate.test.ts",
       "lib/dueDate.ts",
-      "pages/TodosPage.test.tsx",
       "pages/TodosPage.tsx",
-      "store/todos.test.tsx",
       "store/todos.tsx",
       "types.ts"
     ],
-    "outOfScope": [
-      "components/SortToggle.tsx"
-    ]
+    "outOfScope": []
   },
   "quality": {
     "readability": 5,
-    "conventions": 4.5,
+    "conventions": 5,
     "scope": 5,
-    "justification": "Clean naming, pure injectable helpers in lib/dueDate.ts, verbatim test-ids, and thorough co-located tests; feature-only scope with no churn. State follows the store-slice pattern; the sort toggle uses local useState (defensible as view-local ephemeral state, a slight nuance vs. the 'cross-component state → store slice' convention)."
+    "justification": "A small pure src/lib/dueDate.ts (todayISODate/isOverdue/sortByDueDate) plus a setDueDate action on the existing todos store keeps the feature clear, convention-perfect, and confined to exactly the files the ask requires."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 104,
-    "planLines": 84,
-    "tasksLines": 186,
-    "taskCount": 19,
+    "specLines": 108,
+    "planLines": 81,
+    "tasksLines": 181,
+    "taskCount": 16,
     "sideFiles": [
       "research.md",
       "data-model.md",
@@ -61,13 +128,14 @@
       "checklists"
     ],
     "artifactFiles": 8,
-    "artifactLines": 646
+    "artifactLines": 561
   },
   "diff": {
-    "filesChanged": 11,
-    "locAdded": 273,
+    "filesChanged": 8,
+    "locAdded": 222,
     "locRemoved": 4
   },
   "capture": null,
-  "capturedAt": "2026-06-16T00:46:19.544Z"
+  "doctor": null,
+  "capturedAt": "2026-08-26T14:55:09.435Z"
 }

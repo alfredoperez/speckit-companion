@@ -3,127 +3,107 @@
   "size": "hard",
   "mode": "companion",
   "spec": "001-todo-tags",
-  "specName": "Todo Tags",
-  "startedAt": null,
-  "finishedAt": null,
-  "wallClockSec": null,
-  "captureOverheadSec": null,
+  "specName": "todo tags",
+  "startedAt": "2026-08-26T14:58:44Z",
+  "finishedAt": "2026-08-26T15:20:11Z",
+  "wallClockSec": 1287,
+  "captureOverheadSec": 0.5,
   "timing": {
-    "totalSec": 2292.697,
+    "totalSec": 1003.421,
     "perStep": {
-      "specify": 216.291,
-      "plan": 264.418,
-      "tasks": 240.303,
-      "implement": 452.776
+      "specify": 159.52,
+      "plan": 114.959,
+      "tasks": 62.34,
+      "implement": 466.095
     }
   },
   "buildPass": true,
-  "acceptancePassed": 15,
-  "acceptanceTotal": 15,
+  "acceptancePassed": 12,
+  "acceptanceTotal": 12,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "AddTag→addTag, TagList renders name"
+      "reason": "AddTag dispatches add; TagList renders name"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "TagList renders every tag name"
+      "reason": "Remove button dispatches remove filter"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Remove button calls removeTag"
+      "reason": "Empty trimmed name blocked in form and reducer"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "Header has Tags link to /tags"
+      "reason": "Reducer rejects case-insensitive duplicate names"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "checkbox calls toggleTodoTag on"
+      "reason": "toggleTag adds tagId to todo"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "same toggle unassigns when checked"
+      "reason": "toggleTag removes existing tagId"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "TodoItem maps all tags as checkboxes"
+      "reason": "tagIds defaults empty; toggles show unpressed"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "tagIds array holds multiple"
+      "reason": "Each assigned tag renders aria-pressed true"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "TagFilter shows All plus each tag"
+      "reason": "Filter bar sets activeTagId; list filtered by tagIds"
     },
     {
       "n": 10,
       "pass": true,
-      "reason": "visibleTodos filters by tagId"
+      "reason": "All button sets null, showing all todos"
     },
     {
       "n": 11,
       "pass": true,
-      "reason": "All returns all todos"
+      "reason": "activeTagId initializes null, All active"
     },
     {
       "n": 12,
       "pass": true,
-      "reason": "empty filter yields empty list"
-    },
-    {
-      "n": 13,
-      "pass": true,
-      "reason": "persistence test confirms tags restored"
-    },
-    {
-      "n": 14,
-      "pass": true,
-      "reason": "todo tagIds restored on remount"
-    },
-    {
-      "n": 15,
-      "pass": true,
-      "reason": "removed tag stays gone after reload"
+      "reason": "Filter yields empty array; empty message shown"
     }
   ],
   "deterministicBaseline": {
     "passed": 0,
     "total": 1
   },
-  "regressionPassed": 29,
-  "regressionTotal": 29,
+  "regressionPassed": 20,
+  "regressionTotal": 20,
   "conventions": [],
   "blast": {
     "files": [
       "App.tsx",
       "components/AddTag.tsx",
       "components/Header.tsx",
-      "components/TagFilter.test.tsx",
-      "components/TagFilter.tsx",
+      "components/TagFilterBar.tsx",
       "components/TagList.tsx",
-      "components/TodoItem.test.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
       "pages/TagsPage.test.tsx",
       "pages/TagsPage.tsx",
       "pages/TodosPage.test.tsx",
       "pages/TodosPage.tsx",
-      "store/persistence.test.tsx",
-      "store/tags.test.tsx",
       "store/tags.tsx",
-      "store/todos.test.tsx",
       "store/todos.tsx",
       "types.ts"
     ],
@@ -132,28 +112,28 @@
   "quality": {
     "readability": 5,
     "conventions": 5,
-    "scope": 5,
-    "justification": "Clean, well-named reducer/context/hook/page/component split that mirrors the todos slice exactly, with persistence through lib/storage and proper App.tsx provider nesting. Implements every required behavior (tag CRUD on /tags, per-todo toggles, filter row with All, persisted tags + assignments) plus correct cleanup of removed tags from todos, with no scope creep."
+    "scope": 4,
+    "justification": "A clean, idiomatic implementation that mirrors the existing todos slice exactly and touches nothing unrelated, losing a scope point only for unrequested extras (case-insensitive duplicate-tag rejection, cascade unassignment, legacy tagIds migration)."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 133,
-    "planLines": 54,
-    "tasksLines": 161,
-    "taskCount": 23,
+    "specLines": 115,
+    "planLines": 56,
+    "tasksLines": 101,
+    "taskCount": 18,
     "sideFiles": [
       "research.md",
       "data-model.md",
       "contracts",
       "checklists"
     ],
-    "artifactFiles": 7,
-    "artifactLines": 547
+    "artifactFiles": 9,
+    "artifactLines": 523
   },
   "diff": {
-    "filesChanged": 19,
-    "locAdded": 607,
-    "locRemoved": 15
+    "filesChanged": 14,
+    "locAdded": 519,
+    "locRemoved": 37
   },
   "capture": {
     "pass": 15,
@@ -168,7 +148,7 @@
       {
         "status": "PASS",
         "id": "canonical-history",
-        "detail": "34 entries"
+        "detail": "28 entries"
       },
       {
         "status": "PASS",
@@ -198,7 +178,7 @@
       {
         "status": "PASS",
         "id": "entries-match-format",
-        "detail": "34 entries conform to historyEntry def"
+        "detail": "28 entries conform to historyEntry def"
       },
       {
         "status": "PASS",
@@ -208,12 +188,12 @@
       {
         "status": "INFO",
         "id": "authorship",
-        "detail": "ai=28, extension=6"
+        "detail": "ai=20, extension=8"
       },
       {
         "status": "PASS",
         "id": "hook-or-derive-captured",
-        "detail": "extension=6, derive=0"
+        "detail": "extension=8, derive=0"
       },
       {
         "status": "INFO",
@@ -223,17 +203,17 @@
       {
         "status": "PASS",
         "id": "timestamps-real",
-        "detail": "0/6 deterministic writes look hand-typed (round ms) — all real"
+        "detail": "0/8 deterministic writes look hand-typed (round ms) — all real"
       },
       {
         "status": "PASS",
         "id": "per-task-substeps",
-        "detail": "23 task events; task id present, substep null|==task: True"
+        "detail": "18 task events; task id present, substep null|==task: True"
       },
       {
         "status": "PASS",
         "id": "per-task-matches-tasksmd",
-        "detail": "tasks.md done=23, journaled=23"
+        "detail": "tasks.md done=18, journaled=18"
       },
       {
         "status": "PASS",
@@ -243,19 +223,87 @@
       {
         "status": "PASS",
         "id": "task-cadence-span",
-        "detail": "23 ai finishes span 6.4m = 84.24% of 7.5m implement step (need ≥ 5%)"
+        "detail": "18 ai finishes span 7.5m = 96.69% of 7.8m implement step (need ≥ 5%)"
       },
       {
         "status": "INFO",
         "id": "step-timing",
-        "detail": "specify→plan 4.9m | plan→tasks 20.8m | tasks→implement 4.9m"
+        "detail": "specify→plan 3.5m | plan→tasks 3.9m | tasks→implement 1.6m"
       },
       {
         "status": "INFO",
         "id": "task-cadence",
-        "detail": "23 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 20.7s, 18.6s, 16.8s, 31.5s, 53ms, 26.8s, 51ms, 12.5s, 22.4s, 52ms, 36.0s, 30.5s, 53ms, 17.3s, 12.6s, 14.2s, 61.2s, 56ms, 15.0s, 21.0s, 24.0s, 53ms"
+        "detail": "18 tasks; source=live (by:ai, script-stamped) — honest cadence; gaps 37.9s, 60ms, 19.5s, 20.0s, 60ms, 17.0s, 18.7s, 60ms, 46.4s, 18.3s, 15.2s, 20.7s, 21.1s, 19.1s, 19.1s, 19.9s, 2.6m"
       }
     ]
   },
-  "capturedAt": "2026-06-18T15:03:12.165Z"
+  "doctor": {
+    "problems": 1,
+    "warnings": 0,
+    "batchedJournaling": false,
+    "recordedFailures": 1,
+    "bleed": 0,
+    "findings": [
+      {
+        "check": "trace",
+        "severity": "problem",
+        "title": "1 capture call failed (lifecycle)"
+      },
+      {
+        "check": "trace",
+        "severity": "note",
+        "title": "File rewrite counts"
+      },
+      {
+        "check": "trace",
+        "severity": "note",
+        "title": "120 capture calls recorded"
+      }
+    ],
+    "checks": [
+      {
+        "check": "record",
+        "state": "ran",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "triage",
+        "state": "not-applicable",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "bleed",
+        "state": "ran",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "drift",
+        "state": "not-applicable",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "completion",
+        "state": "ran",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "template",
+        "state": "ran",
+        "reason": null,
+        "findings": 0
+      },
+      {
+        "check": "trace",
+        "state": "ran",
+        "reason": null,
+        "findings": 3
+      }
+    ]
+  },
+  "capturedAt": "2026-08-26T15:23:47.348Z"
 }

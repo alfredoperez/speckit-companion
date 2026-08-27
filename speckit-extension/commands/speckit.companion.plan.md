@@ -76,7 +76,8 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts).
 **Right-size this plan to the change.** Before anything else, read the recorded size from the spec's context — `.spec-context.json` → the `size` field (treat a missing value as `normal`). That size sets the budget for the steps below; **apply it to them, omitting anything it says to skip.**
 
-- **`normal` or `oversized`** — produce the full plan and every design artifact exactly as the steps describe. No trimming.
+- **`normal`** — produce the full plan and every design artifact exactly as the step describes. No trimming.
+- **`oversized`** — produce the same full plan and every design artifact, and open it with a short **Scale note**: one or two sentences naming how many files and areas the change spans and what a reader should watch for. Size never trims here — an oversized change gets *more* signposting, not less.
 - **`simple`** — a small change does not need the full ceremony. Produce a **lean** plan:
   - `plan.md`: keep the **Summary** only. **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
   - **Skip `data-model.md`** — fold the one or two types into the plan's prose.
