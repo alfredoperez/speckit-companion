@@ -33,17 +33,43 @@ from _command_parts import (
     parse_order,
     part_path,
     read_node,
+    strip_node_markers,
 )
 
 ORCHESTRATOR = "orchestrator"
 
 
-def assemble_command(command: str, order: list = None, debug: bool = False) -> str:
+def _wrap_node(node_id: str, body: str) -> str:
+    """Fence one node's contribution with its boundary markers.
+
+    Pure line insertion: a marker line goes before the body and another after it,
+    and the body is not touched — no trimming, no added or removed blank lines.
+    That makes wrapping the exact inverse of `strip_node_markers`, which is the
+    property `--check` leans on to prove the markers changed nothing.
+
+    Node bodies end with a newline (the reader guarantees it), so the closing
+    marker always starts at a line boundary.
+    """
+    if not body.endswith("\n"):
+        body += "\n"
+    return (
+        f"<!-- speckit-companion:node {node_id} -->\n"
+        f"{body}"
+        f"<!-- /speckit-companion:node {node_id} -->\n"
+    )
+
+
+def assemble_command(command: str, order: list = None, debug: bool = False,
+                     markers: bool = True) -> str:
     """Return the full command body assembled from nodes/<command>/.
 
     With `debug`, the debug-timing part is appended after the orchestrator part.
     Without it the part is absent from the output entirely — not present and
     inactive — so an off render stays byte-identical to the frozen golden.
+
+    Each node's contribution is fenced with its id so a hook or a replacement can
+    name an exact point in the finished command. `markers=False` renders the same
+    body without them, which is what the golden comparison uses.
     """
     cdir = nodes_command_dir(command)
     frame_path = os.path.join(cdir, "_frame.md")
@@ -55,7 +81,7 @@ def assemble_command(command: str, order: list = None, debug: bool = False) -> s
     ids = order if order is not None else parse_order(os.path.join(cdir, "_order.yml"))
     for node_id in ids:
         _, body = read_node(command, node_id)
-        out += body
+        out += _wrap_node(node_id, body) if markers else body
 
     rel = f"commands/speckit.companion.{command}.md"
     out = fill_parts(out, rel)
@@ -135,12 +161,16 @@ def main() -> int:
             if not os.path.isfile(gpath):
                 drift.append((command, f"missing golden for {command}"))
                 continue
-            golden = open(gpath, encoding="utf-8").read()
-            if assembled != golden:
+            with open(gpath, encoding="utf-8") as fh:
+                golden = fh.read()
+            # The goldens stay marker-free, so this comparison is what proves the
+            # boundaries are additive: strip the marker lines and the body must be
+            # byte-identical to the contract frozen before they existed.
+            if strip_node_markers(assembled) != golden:
                 diff = "".join(
                     difflib.unified_diff(
                         golden.splitlines(keepends=True),
-                        assembled.splitlines(keepends=True),
+                        strip_node_markers(assembled).splitlines(keepends=True),
                         fromfile=f"{command} (golden)",
                         tofile=f"{command} (assembled)",
                     )

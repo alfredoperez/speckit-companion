@@ -30,7 +30,10 @@ class NodeAssemblyParityTests(unittest.TestCase):
                 assembled = asm.assemble_command(command)
                 gpath = cp.golden_path(f"commands/speckit.companion.{command}.md")
                 golden = Path(gpath).read_text(encoding="utf-8")
-                self.assertEqual(assembled, golden, f"{command} assembly drifted from golden")
+                # The goldens are kept marker-free, so this comparison doubles as
+                # the proof that node boundaries add nothing but their own lines.
+                self.assertEqual(cp.strip_node_markers(assembled), golden,
+                                 f"{command} assembly drifted from golden")
 
     def test_order_lists_only_existing_nodes(self) -> None:
         for command in cp.decomposed_commands():
@@ -64,8 +67,10 @@ class RecipeOverrideTests(unittest.TestCase):
 
     def test_default_assembly_still_matches_golden(self) -> None:
         golden = Path(cp.golden_path("commands/speckit.companion.plan.md")).read_text(encoding="utf-8")
-        self.assertEqual(asm.assemble_command("plan", order=asm.default_order("plan")), golden)
-        self.assertEqual(asm.assemble_command("plan"), golden)
+        self.assertEqual(
+            cp.strip_node_markers(asm.assemble_command("plan", order=asm.default_order("plan"))),
+            golden)
+        self.assertEqual(cp.strip_node_markers(asm.assemble_command("plan")), golden)
 
     def test_valid_recipe_passes_reads_validation(self) -> None:
         recipe = [n for n in asm.default_order("plan") if n != "constitution-check"]

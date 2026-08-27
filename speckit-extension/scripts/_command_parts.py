@@ -34,11 +34,33 @@ PART_FENCE = re.compile(
 PART_OPEN = re.compile(r"<!-- speckit-companion:part ([\w-]+) -->")
 PART_CLOSE = re.compile(r"<!-- /speckit-companion:part ([\w-]+) -->")
 
+# Node boundary: <!-- speckit-companion:node ID -->\n<body>\n<!-- /speckit-companion:node ID -->
+#
+# A separate namespace segment from `part` on purpose. The part fences are
+# filled by `fill_parts`, which raises on a name it does not recognise, so a
+# node marker sharing that namespace would abort assembly.
+#
+# These exist so a hook or a replacement can name an exact point in an assembled
+# command. Without them the only way to target a node's contribution was to match
+# the prose around it.
+NODE_OPEN = re.compile(r"<!-- speckit-companion:node ([\w-]+) -->")
+NODE_CLOSE = re.compile(r"<!-- /speckit-companion:node ([\w-]+) -->")
+NODE_FENCE = re.compile(
+    r"<!-- speckit-companion:node ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:node \1 -->\n?",
+    re.DOTALL,
+)
+
 # Marker-comment lines stripped before golden comparison (legacy timing + the
 # generalized part fences). Content survives; only the convention scaffolding
 # is normalized away, so a marker rename is not counted as a content change.
 _MARKER_LINE = re.compile(
-    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|timing) -->[ \t]*\n?",
+    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|node [\w-]+|timing) -->[ \t]*\n?",
+    re.MULTILINE,
+)
+
+#: Node boundaries alone — whole lines, newline included.
+_NODE_MARKER_LINE = re.compile(
+    r"^[ \t]*<!-- /?speckit-companion:node [\w-]+ -->[ \t]*\n?",
     re.MULTILINE,
 )
 
@@ -210,6 +232,21 @@ def debug_on(root: str = None) -> bool:
 def canonical(text: str) -> str:
     """Strip fence/marker comment lines so golden compares content, not convention."""
     return _MARKER_LINE.sub("", text)
+
+
+def strip_node_markers(text: str) -> str:
+    """Remove node boundary lines, leaving every node's body exactly as it was.
+
+    This is what makes the boundaries provably additive: the golden bodies are
+    kept marker-free, and assembly is checked against them through this function.
+    A marker that shifted a line, swallowed a blank one, or reordered anything
+    fails that comparison.
+
+    Whole lines are removed, including the newline that ends them, and nothing
+    else is normalised — no whitespace collapsing, which would let a real
+    difference hide behind the tidying.
+    """
+    return _NODE_MARKER_LINE.sub("", text)
 
 
 def fill_parts(text: str, rel: str) -> str:

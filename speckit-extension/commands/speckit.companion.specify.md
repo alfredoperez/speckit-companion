@@ -74,6 +74,7 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Produce a feature specification: prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria, then a quality checklist.
+<!-- speckit-companion:node resolve-dir -->
 1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
    - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. **Never write into a directory that already contains a `spec.md`** — that's a stale pointer to a prior spec, not this feature.
@@ -82,6 +83,8 @@ Produce a feature specification: prioritized user stories with acceptance scenar
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specifying --kind start --by extension
    ```
 
+<!-- /speckit-companion:node resolve-dir -->
+<!-- speckit-companion:node load-living-specs -->
 **Load living specs — arrive pre-briefed (best-effort, opt-in, read-only).** Before drafting, check whether this project keeps **living specs** for the areas this change touches, and if so fold them into your context so you are not re-learning the codebase from scratch. This whole step is **opt-in by presence** and must **never** fail or slow the command — on any miss (no config, feature off, no resolver, no spec file) skip silently and draft as usual. It is strictly **read-only**: never create or edit a `capabilities/<name>/spec.md` from here.
 
    - **Record deterministically first — never hand-judge the gate.** Don't decide "is this project configured?" or "which capabilities apply?" yourself; that judgment is exactly what silently skipped the load on real runs. Run the deterministic recorder with the files this change will touch (the surface you've identified for the feature; if none are known yet, skip the load). It re-reads the registry (`living-specs.yml`, or a legacy `livingSpecs` block in `.specify/companion.yml`), gates on `enabled`, runs the resolver, writes the matched capabilities (leaf-first) onto `livingSpecs.loaded`, **and writes the one-line `last_action` audit breadcrumb itself** — so "correctly did nothing" and "capture broke" stay distinguishable without any AI prose:
@@ -95,6 +98,8 @@ Produce a feature specification: prioritized user stories with acceptance scenar
      ```
      Read each match's `spec` path (centralized capabilities resolve to `capabilities/<name>/spec.md`; colocated ones carry their own path): the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any the resolver marked `"exists": false` (or missing on disk); load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves. This reading is best-effort context; the recorder above is the reliable write.
 
+<!-- /speckit-companion:node load-living-specs -->
+<!-- speckit-companion:node draft-spec -->
 2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
    - **User Scenarios & Testing** *(mandatory)* — the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:
@@ -116,6 +121,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 ```
 
 3. Keep it business-readable. Every vague requirement should fail a "testable and unambiguous" check — tighten it. Remove a section that genuinely does not apply rather than leaving it as "N/A". The one exception to "no implementation detail" is **Verbatim Constraints**: an exact value the *user* specified is a requirement, and dropping it (forcing a later step to guess) is a defect.
+<!-- /speckit-companion:node draft-spec -->
+<!-- speckit-companion:node quality-checklist -->
 4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables — Companion defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
 
    ```markdown
@@ -155,6 +162,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
    - Items marked incomplete require spec updates before clarify or plan
    ```
 
+<!-- /speckit-companion:node quality-checklist -->
+<!-- speckit-companion:node classify-size -->
 5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below — the same one the standalone size step uses, so the small/large bar is authored in exactly one place. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
 
 <!-- speckit-companion:part sizing -->
@@ -187,6 +196,8 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
 
      Exactly-at-threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling — it does **not** warn and stays eligible for `simple`.
 
+<!-- /speckit-companion:node classify-size -->
+<!-- speckit-companion:node persist-size -->
 6. **Persist the size verdict** so the later steps (`plan`, `tasks`) can right-size their output without re-deciding it. Right after classifying, record the verdict on the spec's context from the repository root:
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --set size=<simple|normal|oversized>
@@ -197,6 +208,8 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --classification '{"projectedFiles": <n>, "projectedTasks": <n>, "scopeSignal": "<larger|smaller|none>", "verdict": "<simple|normal|oversized>"}'
    ```
+<!-- /speckit-companion:node persist-size -->
+<!-- speckit-companion:node branch -->
 6. **Branch on the verdict.**
 
    - **`simple` — minimal mode.** Write **three lean files** in this one pass so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold — never a single combined `spec.md`:
@@ -209,6 +222,8 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
      Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `/speckit.companion.plan` or `/speckit.companion.tasks` — the three lean files plus the lifecycle fold below record those steps as satisfied.
    - **`normal` — full pipeline.** Write `spec.md` only (no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold). The existing pipeline continues unchanged: plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
 
+<!-- /speckit-companion:node branch -->
+<!-- speckit-companion:node finalize -->
 **Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
 
 **Capture the context (the C of Intent/Context/Expectations).** Record what this run worked *from* — the living specs loaded above (when any), the key files/areas you investigated, and the constraints you honored — one short entry each (best-effort; skip silently if `python3` is unavailable; omit entirely when there is nothing worth recording):
@@ -254,6 +269,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 After the fold, the spec sits at the **tasks** step with `status: ready-to-implement`; the developer triggers implement next. Do **not** write a `completed` status — the final completed gate stays a user action.
 
 
+<!-- /speckit-companion:node finalize -->
+<!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
@@ -302,6 +319,7 @@ This is one step in the Companion pipeline. How the run continues depends on the
 - **Terminal step after implement.** After the implementation step finishes (and any commit step), the workflow's final step is `mark-complete`. Run it so the spec lands at `status: completed`. That step writes `completed` only through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented` — never introduce a second completed-writer.
 - **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
 <!-- /speckit-companion:part self-advance -->
+<!-- /speckit-companion:node handoff -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts
