@@ -22,7 +22,14 @@ reads: []
 
 4. **After each wave, reconcile, then cross the join line.** Type-check/build the wave's files together and fix any seam drift, then run `--materialize` once more as a backstop — it is idempotent, so re-folding never double-counts, and it catches any finish whose fold was missed. `tasks.md` is owned only through `--materialize` (the script flips the boxes), so it never diverges from the journal. Now move past the `⟶ Wait` line to the next wave.
 
-5. On completion, validate the result against the spec's **Functional Requirements** and **Success Criteria**, and report a short summary of what was built and anything left undone.
+5. **Run the project's own checks before you call this done.** Validating against the spec's **Functional Requirements** and **Success Criteria** by reading is not validation — a test you wrote and never executed is a guess about your own code. Run the suite and the type-check/build the project actually uses (read them from its `package.json` scripts, `Makefile`, or the repo's own instructions; do not invent a command).
+
+   - **A test you authored that fails is your task, not a follow-up.** Fix it now. Shipping a red suite is a defect the run introduced, and it is the single most common way a finished-looking run is not finished.
+   - **A pre-existing test your change invalidated is also yours.** Renaming what a component shows breaks the test asserting the old text; updating it is part of the change, not scope creep.
+   - **A test file that does not compile counts as failing.** Check the suite actually ran, not merely that the command exited.
+   - **If you genuinely cannot run them** — no test script exists, or the environment forbids it — say so explicitly in the summary and record it as a concern below. Do not describe a read-through as though it were a run.
+
+   Then report a short summary of what was built and anything left undone.
 
 6. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
    ```bash
@@ -33,6 +40,8 @@ reads: []
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --step-summary '{"summary": "<what shipped in one line>"}'
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set last_action="<final breadcrumb, e.g. 'all tasks done — 18/18 tests pass'>"
    ```
+   The `--verified` entries are where "did it actually run" is settled, so record the command you ran and its real outcome — `"result": "142/142 pass"` — never a restatement of intent. If a check could not be run, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it: a verification entry for a check that never happened is worse than no entry, because every later reader trusts it.
+
    One `--verified` per real check (tests, build, manual pass — include warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction — on a clean run record none (the empty list is itself the signal). All additive and de-duped; re-runs never duplicate.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.

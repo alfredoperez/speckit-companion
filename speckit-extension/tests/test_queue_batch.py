@@ -192,3 +192,48 @@ class AWriteWithNoTraceEntryIsVisible(unittest.TestCase):
              str(d / "specs" / "001-x")], capture_output=True, text=True).stdout
         self.assertIn("could not be recorded", out)
         self.assertIn("lower bound", out)
+
+
+class ImplementVerifiesItsOwnWork(unittest.TestCase):
+    """Three of six bench cells shipped a failing suite; stock shipped none.
+
+    The pipeline wrote tests and never ran them, and 'validate against the spec'
+    was satisfied by reading. These pin the instruction that closes that gap.
+    """
+
+    BODY = COMMANDS / "speckit.companion.implement.md"
+
+    def setUp(self):
+        self.text = self.BODY.read_text()
+
+    def test_the_step_requires_running_the_projects_checks(self):
+        self.assertIn("Run the project's own checks before you call this done", self.text)
+        self.assertIn("a test you wrote and never executed is a guess about your own code", self.text)
+        self.assertIn("do not invent a command", self.text)
+
+    def test_a_failing_test_it_authored_is_its_own_task(self):
+        self.assertIn("is your task, not a follow-up", self.text)
+
+    def test_a_test_invalidated_by_the_change_counts_too(self):
+        self.assertIn("pre-existing test your change invalidated is also yours", self.text)
+
+    def test_a_file_that_does_not_compile_counts_as_failing(self):
+        self.assertIn("does not compile counts as failing", self.text)
+
+    def test_an_unrunnable_check_is_declared_not_implied(self):
+        self.assertIn("Do not describe a read-through as though it were a run", self.text)
+        self.assertIn("do **not** record a `--verified` for it", self.text)
+
+    def test_completion_is_gated_on_the_checks_having_passed(self):
+        self.assertIn("MUST NOT be marked complete over a failing suite", self.text)
+        self.assertIn("finished, unverified", self.text)
+
+    def test_the_cost_is_bounded(self):
+        # The counter exists so this is measured rather than argued (#614).
+        import json
+        out = subprocess.run(
+            [sys.executable, str(SCRIPTS / "instruction-budget.py"), "--json"],
+            capture_output=True, text=True).stdout
+        impl = next(c for c in json.loads(out)["commands"]
+                    if c["command"] == "speckit.companion.implement.md")
+        self.assertLess(impl["total"], 60, "the verification rules must not blow the budget")

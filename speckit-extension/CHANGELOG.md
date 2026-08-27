@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 
+
+- The implement step now runs the project's own tests and build before calling the work done, and a spec is not marked complete over a failing suite the run introduced. It used to satisfy "validate against the spec" by reading the code — so a run could write tests, never execute them, and finish looking green. Where the checks genuinely cannot be run, that is recorded as a concern rather than written up as a verification that happened.
 ### Fixed
 
 - The health check's drift audit decides more carefully whether a run claimed its living specs were in sync. It reads the check's name and its outcome as separate things instead of searching the whole entry, so an unrelated note can no longer supply the verdict, and it understands negation — "no drift found" reads as clean, "not in sync" does not. It deliberately stays quiet on a bare "clean", because nothing distinguishes a clean project from a clean note about tooling, and wrongly accusing a run of dishonesty costs more than missing one.
