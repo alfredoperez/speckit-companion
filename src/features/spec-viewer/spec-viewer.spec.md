@@ -36,6 +36,20 @@ Everything the reader sees about *where the spec stands* — the status badge, w
 - **THEN** those earlier steps are treated as completed by their position in the ordering
 - **AND** no step is left falsely pulsing
 
+### Displayed coverage is verified, and an empty result is stated rather than hidden
+
+The requirement-to-test table renders with the visual authority of a check, so it MUST behave like one. A test a requirement names SHALL be confirmed to exist before the table presents it as coverage, and a named test that cannot be found SHALL render in a state distinct from both a confirmed test and a requirement that was never mapped — a link resolving to nothing is worse than an honest gap, because it reads as coverage that exists. Where several tests are named, the label SHALL say how many were found, so a partly-real link is not read as whole. The distinction MUST survive without colour.
+
+Coverage is the one section exempt from hiding itself when empty. Nothing traced is a finding, not an absence, and the header strip reports the count whether the section renders or not — so hiding it left the page stating the zero and withholding the explanation at the same time.
+
+#### Scenario: a requirement names a test that is not on disk
+- **WHEN** a linked test path does not resolve in the workspace
+- **THEN** that row renders in its own state and the label says how many of the named tests were found
+
+#### Scenario: no requirement has a linked test
+- **WHEN** coverage rows exist and none is traced
+- **THEN** the section renders, states the zero, and lists the untraced requirements
+
 ### Timing is reported by real wall-clock spans, and only timed steps count toward coverage
 
 The viewer MUST derive a timing summary from the spec's recorded step history and surface a step's wall-clock duration only when both of that step's boundaries were stamped by a deterministic writer, fall in order, and the close is at least as authoritative as the start — so a run driven entirely through the CLI (boundaries stamped by the agent's own writer script) is trusted, while a premature agent finish stamped over an extension-started span, or a phase advanced with no start, is not; a span that fails that trust test is withheld rather than shown as a guessed or capped figure. When the run is not fully trusted the viewer reports a plain "X of Y phases" coverage statement instead. The coverage denominator MUST count only steps that are expected to be timed — a step declared untimed (one that merely flips the spec's status without ever writing a start/complete boundary, such as the terminal completion step) SHALL be excluded from Y, so a fully-captured completed run reaches its full coverage and shows its elapsed span rather than stalling one short.

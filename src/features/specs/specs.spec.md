@@ -8,6 +8,18 @@ This capability owns a spec's whole life: creating it, listing it, showing where
 
 ## Requirements
 
+### One answer about whether a config is usable
+
+A configuration file read by more than one reader MUST get one verdict. The editor SHALL refuse exactly what the runtime refuses, so a file every command rejects cannot render as a healthy tree in the sidebar while the terminal reports it unreadable. Where the two must be implemented separately, they SHALL be pinned against a shared set of fixtures so they cannot drift apart again, and the reason a config was rejected — with the line at fault — SHALL be visible from the editor rather than only from a terminal the user may never open.
+
+#### Scenario: a config the runtime cannot read
+- **WHEN** a registry uses syntax outside the runtime's supported subset
+- **THEN** the editor rejects it too, naming the line, rather than showing it as working
+
+#### Scenario: a config both readers accept
+- **WHEN** a file is inside the supported subset
+- **THEN** it behaves exactly as before — this narrows nothing that already works
+
 ### A spec's lifecycle state is recorded, never inferred from files
 
 Each spec directory SHALL carry one state record holding the workflow it runs, the step it is on, its canonical status, and an ordered log of lifecycle events. Step completion MUST NOT be inferred from the presence of a document on disk: an AI can write `plan.md` and never finish planning, and a finished step can leave no new file at all. Where a document's own content matters (a stub vs. a real document), it refines what a *document row* renders, never what the *workflow* believes.

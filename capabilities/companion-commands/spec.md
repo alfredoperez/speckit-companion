@@ -98,6 +98,18 @@ Ceremony is matched to the change without any user-facing setting. A thin classi
 - **WHEN** the size is oversized
 - **THEN** a warning is shown and every phase still runs
 
+Every size the product documents MUST be reachable and MUST behave differently from its neighbours. A size that no classification can produce, or that prescribes exactly what another size prescribes, is a distinction the product advertises and does not make — and it is worse than having one size fewer, because a reader plans around it.
+
+The vocabulary MUST be the same everywhere. Every step that records a size, and every step that reads one, uses one set of words; a step that emits a word its readers do not understand drops the classification in silence and the full ceremony runs regardless.
+
+#### Scenario: the largest size is chosen
+- **WHEN** a change is judged well beyond the small bar
+- **THEN** that size is recorded, and the resulting documents differ observably from the middle size
+
+#### Scenario: a size is classified on its own rather than during a run
+- **WHEN** the standalone classification step reports a size
+- **THEN** the value it records is one every reader of the recorded size understands
+
 ### Completion is an explicit terminal step with exactly one writer
 
 The Companion pipeline ends at a dedicated completion command; the stock pipeline has no terminal step and simply stops. That command writes the terminal status through the shared writer and never by hand, refuses a spec whose work is outstanding, and is a no-op on a spec already shipped. This is the pipeline's completion gate — a second writer of that status MUST NOT be introduced anywhere.

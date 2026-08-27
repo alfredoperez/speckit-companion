@@ -2,19 +2,19 @@
   "runId": "hard-speckit",
   "size": "hard",
   "mode": "speckit",
-  "spec": "001-todo-tags",
-  "specName": "Todo Tags",
-  "startedAt": null,
-  "finishedAt": null,
-  "wallClockSec": null,
-  "captureOverheadSec": null,
+  "spec": "001-tag-management",
+  "specName": "001-tag-management",
+  "startedAt": "2026-08-26T14:58:15Z",
+  "finishedAt": "2026-08-26T15:13:16Z",
+  "wallClockSec": 901,
+  "captureOverheadSec": 0,
   "timing": {
-    "totalSec": 2365.803,
+    "totalSec": null,
     "perStep": {
-      "specify": 122.803,
-      "plan": 245.527,
-      "tasks": 169.067,
-      "implement": 506.908
+      "specify": null,
+      "plan": null,
+      "tasks": null,
+      "implement": null
     }
   },
   "buildPass": true,
@@ -25,73 +25,68 @@
     {
       "n": 1,
       "pass": true,
-      "reason": "TagManager create wired to addTag"
+      "reason": "AddTag dispatches add; TagList renders new tag"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "handleRemove calls removeTag, list updates"
+      "reason": "Remove button dispatches remove; filtered out"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "Header Tags link to /tags route exists"
+      "reason": "Tags loaded from storage on init, saved on change"
     },
     {
       "n": 4,
       "pass": true,
-      "reason": "Per-tag checkbox calls toggleTag on"
+      "reason": "TodoItem tag button toggles on, shows pressed"
     },
     {
       "n": 5,
       "pass": true,
-      "reason": "Same toggle unassigns the tag"
+      "reason": "toggleTag removes existing tagId from todo"
     },
     {
       "n": 6,
       "pass": true,
-      "reason": "TodoItem maps a toggle per tag"
+      "reason": "todos with tagIds persisted and reloaded"
     },
     {
       "n": 7,
       "pass": true,
-      "reason": "TodosPage filters visible by active tag"
+      "reason": "TagFilter sets selectedTagId; todos filtered by tagIds"
     },
     {
       "n": 8,
       "pass": true,
-      "reason": "All sentinel shows all todos"
+      "reason": "All button sets null; unfiltered todos shown"
     },
     {
       "n": 9,
       "pass": true,
-      "reason": "TagFilter renders All plus each tag"
+      "reason": "Empty filter result renders empty-state message"
     }
   ],
   "deterministicBaseline": {
     "passed": 0,
     "total": 1
   },
-  "regressionPassed": 30,
-  "regressionTotal": 30,
+  "regressionPassed": 5,
+  "regressionTotal": 5,
   "conventions": [],
   "blast": {
     "files": [
-      "App.test.tsx",
       "App.tsx",
+      "components/AddTag.tsx",
       "components/Header.tsx",
-      "components/TagFilter.test.tsx",
       "components/TagFilter.tsx",
-      "components/TagManager.test.tsx",
-      "components/TagManager.tsx",
+      "components/TagList.tsx",
       "components/TodoItem.tsx",
       "components/TodoList.tsx",
-      "pages/TagsPage.test.tsx",
       "pages/TagsPage.tsx",
       "pages/TodosPage.tsx",
-      "store/tags.test.tsx",
       "store/tags.tsx",
-      "store/todos.test.tsx",
       "store/todos.tsx",
       "types.ts"
     ],
@@ -99,31 +94,31 @@
   },
   "quality": {
     "readability": 5,
-    "conventions": 5,
+    "conventions": 4,
     "scope": 5,
-    "justification": "Clean, idiomatic code with a tags store slice that mirrors todos.tsx exactly and prop-driven components; every requirement is met (tag CRUD on /tags, per-todo toggles, filter row + All, tags and assignments persisting across remount) with thoughtful correctness-completing edge handling (removing a tag untags it everywhere and the active filter self-heals to All) rather than scope creep."
+    "justification": "Clean, idiomatic implementation that mirrors the existing store/storage/presentational-component layering with no scope creep; the only real gap is that no co-located tests were added for the new tags surface (deliberately skipped per tasks.md), plus a little duplicated pill-style code between TagFilter and TodoItem."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 108,
+    "specLines": 120,
     "planLines": 96,
-    "tasksLines": 202,
-    "taskCount": 27,
+    "tasksLines": 153,
+    "taskCount": 15,
     "sideFiles": [
       "research.md",
       "data-model.md",
       "quickstart.md",
-      "contracts",
       "checklists"
     ],
-    "artifactFiles": 10,
-    "artifactLines": 703
+    "artifactFiles": 7,
+    "artifactLines": 578
   },
   "diff": {
-    "filesChanged": 17,
-    "locAdded": 655,
-    "locRemoved": 34
+    "filesChanged": 12,
+    "locAdded": 312,
+    "locRemoved": 35
   },
   "capture": null,
-  "capturedAt": "2026-06-18T15:02:52.237Z"
+  "doctor": null,
+  "capturedAt": "2026-08-26T15:23:31.339Z"
 }

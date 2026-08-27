@@ -33,6 +33,22 @@ The spec context is a shared document written by several independent producers �
 - **WHEN** a write is interrupted before it completes
 - **THEN** the on-disk context is either the previous state or the new state, never a partial one
 
+Atomicity is not isolation, and the append-only guarantee needs both. A writer SHALL hold a lock across its whole read-modify-write, not merely around the publish, so two captures issued at the same moment cannot each start from the same copy and have the second silently discard the first one's work. Readers never take that lock and are never blocked by it. The lock MUST NOT be kept inside the feature directory, which is the user's, and MUST NOT be the context file itself, which is replaced by rename on every publish.
+
+Where the guarantee cannot be met, it MUST be defended rather than assumed: a write that would leave the lifecycle log shorter than the copy on disk SHALL keep every recorded entry and add only what is genuinely new, and a log that is present but unreadable SHALL be preserved beside the fresh one rather than overwritten. Both SHALL say so.
+
+#### Scenario: two captures are issued at the same moment
+- **WHEN** several writes to one feature overlap
+- **THEN** every one of them is present afterwards, and the document is readable
+
+#### Scenario: a writer would shorten the history
+- **WHEN** a write publishes fewer entries than the file already holds
+- **THEN** the recorded entries are kept, the new ones are added, and the refusal is reported
+
+#### Scenario: the recorded history is not a list
+- **WHEN** a context carries a history that cannot be read as a log
+- **THEN** it is preserved under a separate key and a fresh log begins, with nothing discarded silently
+
 ### Lifecycle status moves forward only, and the terminal state has exactly one writer
 
 Any path that sets a spec's status MUST check that the spec has not already moved past the step being written, not merely that it is non-terminal. Re-running an earlier step, or a hook firing twice, records the finish but MUST NOT drag the spec backwards. Promotion to the terminal completed state is reserved to a single explicit writer (`--mark-complete`), which refuses a spec with work outstanding and is a no-op on a spec already shipped. Generic field-setting MUST refuse lifecycle keys outright, so no side door exists around this guard.
@@ -83,6 +99,18 @@ Anything computed from the journal — most visibly the task checklist's checkbo
 - **WHEN** a worker finishes its task
 - **THEN** it records only its finish
 - **AND** the checkbox is flipped later by the single derivation pass
+
+### An unresolvable pointer is named, not passed over
+
+Resolution is best-effort and MUST NOT raise, but failing in silence is how a stale or misspelled pointer becomes an audit of the wrong spec — or of nothing at all — that still reports clean. Where the active-spec pointer exists and cannot be used, the runtime SHALL say which file, and whether it is stale or carries no key it recognises, then continue trying the remaining ways of finding the spec rather than stopping.
+
+#### Scenario: the pointer names a directory that is gone
+- **WHEN** the recorded active spec no longer exists
+- **THEN** the run says the pointer is stale, names the file, and still resolves by other means where it can
+
+#### Scenario: the pointer carries an unrecognised key
+- **WHEN** the pointer file parses but holds no key the resolver reads
+- **THEN** the run names the file, the keys that would have worked, and what it actually found
 
 ### The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses
 
@@ -139,6 +167,18 @@ Summary output SHALL state both what was examined and what was not. A run that s
 #### Scenario: some capabilities could not be checked
 - **WHEN** a drift run examines part of the configured set
 - **THEN** the summary names both the checked and unchecked counts and the reason
+
+A count SHALL be presented as a total only when it is one. Where the evidence a count is drawn from is known to be incomplete — entries rolled off a capped log, or a call whose record could not be written — the report SHALL say the figure is a lower bound and raise the incompleteness itself as a finding.
+
+Reporting tools exit successfully by default, and that default does not change. But a constraint nobody can fail is a constraint nobody can demonstrate, so a caller MAY ask for a strict verdict that exits non-zero when a problem-severity finding is present, for use as a gate in a surrounding workflow.
+
+#### Scenario: a call did work the trace could not record
+- **WHEN** a capture succeeds but its trace entry cannot be written
+- **THEN** the run says so, leaves evidence beside the trace, and the report calls its counts lower bounds rather than totals
+
+#### Scenario: a caller wants a gate
+- **WHEN** a strict verdict is requested and a problem-severity finding is present
+- **THEN** the command exits non-zero, while the default invocation still succeeds
 
 ### Living-spec path resolution stops at a nested project boundary
 
