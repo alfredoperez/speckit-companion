@@ -18,6 +18,7 @@ Stdlib only.
 """
 import difflib
 import importlib
+import json
 import os
 import sys
 
@@ -140,6 +141,30 @@ def _report_budget(commands) -> None:
     print("[assemble] directives — " + ", ".join(parts))
 
 
+def _report_manifest(write: bool) -> None:
+    """State what a run of the assembled pipeline is expected to produce.
+
+    A build that cannot say what it will write cannot be checked against what a
+    run actually wrote, which is how a step that stopped producing its document
+    looked identical to one that produced it.
+
+    Never fails the build — the manifest reports; the run checks against it.
+    """
+    try:
+        manifest_mod = importlib.import_module("manifest")
+        manifest = manifest_mod.build()
+    except Exception:  # noqa: BLE001 — reporting must never break assembly
+        return
+    print(manifest_mod.render(manifest))
+    if write:
+        try:
+            with open(manifest_mod.MANIFEST_PATH, "w", encoding="utf-8") as fh:
+                json.dump(manifest, fh, indent=2)
+                fh.write("\n")
+        except OSError as err:
+            print(f"[assemble] could not write the manifest: {err}")
+
+
 def main() -> int:
     check = "--check" in sys.argv[1:]
     commands = decomposed_commands()
@@ -188,6 +213,7 @@ def main() -> int:
     verb = "checked" if check else "assembled"
     print(f"[assemble] OK — {verb} {len(commands)} command bodies from nodes")
     _report_budget(commands)
+    _report_manifest(write=not check)
     return 0
 
 

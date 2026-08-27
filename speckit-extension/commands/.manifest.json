@@ -1,0 +1,34 @@
+{
+  "commands": {
+    "auto": [],
+    "implement": [
+      {
+        "artifact": "tasks.md",
+        "node": "implement-exec"
+      }
+    ],
+    "plan": [
+      {
+        "artifact": "plan.md",
+        "node": "plan-doc"
+      }
+    ],
+    "specify": [
+      {
+        "artifact": "spec.md",
+        "node": "draft-spec"
+      },
+      {
+        "artifact": "checklists/requirements.md",
+        "node": "quality-checklist"
+      }
+    ],
+    "tasks": [
+      {
+        "artifact": "tasks.md",
+        "node": "tasks-doc"
+      }
+    ]
+  },
+  "artifactCount": 5
+}

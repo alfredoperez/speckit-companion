@@ -79,6 +79,10 @@ BUILD_ONLY = frozenset({
     "_command_parts.py",
     "package-manifest.py",
     "check-command-emissions.py",
+    # Derives the artifact manifest from the node graph and reports what a run
+    # did not produce. Build-only while nothing shipped calls it; it moves to
+    # RUNTIME_SCRIPTS the moment a command body does.
+    "manifest.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

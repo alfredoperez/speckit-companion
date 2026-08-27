@@ -62,6 +62,9 @@ jobs:
       - name: Report the instruction budget per command
         run: python3 speckit-extension/scripts/instruction-budget.py
 
+      - name: Report what a run of the pipeline is expected to produce
+        run: python3 speckit-extension/scripts/manifest.py
+
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |
           python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/509-timing-capture
