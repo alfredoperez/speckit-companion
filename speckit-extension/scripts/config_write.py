@@ -295,6 +295,95 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
     return path
 
 
+def _render_phases(phases: list, indent: str) -> list:
+    """A `phases:` block. One node per line, so a regroup reads as a diff."""
+    out = [f"{indent}phases:"]
+    for phase in phases:
+        out.append(f"{indent}{INDENT}- name: {_quote(phase['name'])}")
+        out.append(f"{indent}{INDENT}  nodes:")
+        for node in phase["nodes"]:
+            out.append(f"{indent}{INDENT}    - {node}")
+    return out
+
+
+def set_phases(text: str, command: str, phases: list) -> str:
+    """Return `text` with `commands.<command>.phases` set.
+
+    Writing the whole grouping rather than a patch: a phase list is small, and a
+    partial one would leave the reader guessing which nodes are where.
+    """
+    if not phases:
+        raise ConfigWriteError("a step needs at least one phase")
+    names = [p["name"] for p in phases]
+    if len(set(names)) != len(names):
+        raise ConfigWriteError("two phases cannot share a name")
+    placed = [n for p in phases for n in p["nodes"]]
+    if len(set(placed)) != len(placed):
+        raise ConfigWriteError("a node cannot be in two phases")
+
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        block = ["commands:", f"{INDENT}{command}:"] + _render_phases(phases, INDENT * 2)
+        body = lines + ([""] if lines and lines[-1].strip() else []) + block
+        return "\n".join(body) + ("\n" if trailing_newline else "")
+
+    commands_end = _block_end(lines, commands_at, 0, len(lines))
+    cmd_indent = next(
+        (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+         if not _is_blank(lines[i])),
+        len(INDENT),
+    )
+    command_at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
+    if command_at is None:
+        block = ([f"{' ' * cmd_indent}{command}:"]
+                 + _render_phases(phases, ' ' * (cmd_indent * 2)))
+        out = lines[:commands_end] + block + lines[commands_end:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    command_end = _block_end(lines, command_at, cmd_indent, commands_end)
+    key_indent = next(
+        (_indent_of(lines[i]) for i in range(command_at + 1, command_end)
+         if not _is_blank(lines[i])),
+        cmd_indent * 2,
+    )
+    block = _render_phases(phases, " " * key_indent)
+    phases_at = _find_key(lines, "phases", command_at + 1, command_end, key_indent)
+    if phases_at is None:
+        out = lines[:command_at + 1] + block + lines[command_at + 1:]
+    else:
+        phases_end = _block_end(lines, phases_at, key_indent, command_end)
+        out = lines[:phases_at] + block + lines[phases_end:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
+def check_phases(command: str, phases: list) -> None:
+    """Refuse a grouping the pipeline could not build, before it reaches the file."""
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    assemble = importlib.import_module("assemble-nodes")
+
+    default = assemble.default_order(command)
+    placed = [n for p in phases for n in p["nodes"]]
+    unknown = [n for n in placed if n not in default]
+    if unknown:
+        raise ConfigWriteError(f"{command}: no such node: {', '.join(unknown)}")
+    missing = [n for n in default if n not in placed]
+    if missing:
+        raise ConfigWriteError(
+            f"{command}: every node needs a phase — {', '.join(missing)} has none")
+    for phase in phases:
+        if not str(phase.get("name", "")).strip():
+            raise ConfigWriteError(f"{command}: a phase needs a name")
+
+    # The flattened grouping is the order, so it has to satisfy `reads:`.
+    check_order(command, placed)
+
+
 def check_order(command: str, nodes: list) -> None:
     """Refuse an order the pipeline cannot honour, before it reaches the file.
 
@@ -350,6 +439,7 @@ def main() -> int:
     ap.add_argument("--ref", default="")
     ap.add_argument("--run", default="")
     ap.add_argument("--text", default="")
+    ap.add_argument("--phases", help="JSON list of {name, nodes} to set for --command")
     ap.add_argument("--workflow", help="switch to this workflow")
     ap.add_argument("--new-workflow", help="create this workflow and switch to it")
     ap.add_argument("--seed-from", default="", help="workflow to copy when creating one")
@@ -400,6 +490,22 @@ def main() -> int:
 
         if not args.command:
             raise ConfigWriteError("nothing to write — pass --command, --workflow or --new-workflow")
+
+        if args.phases:
+            import json
+
+            phases = json.loads(args.phases)
+            check_phases(args.command, phases)
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(set_phases(existing, args.command, phases))
+            print(f"[config] {args.command}: phases saved to .specify/companion.yml")
+            return 0
+
         if not args.nodes:
             raise ConfigWriteError("nothing to write — pass --nodes or --hook")
         nodes = [n.strip() for n in args.nodes.split(",") if n.strip()]

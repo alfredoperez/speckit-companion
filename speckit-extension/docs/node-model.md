@@ -173,6 +173,33 @@ commands:
 
 In v1 this changes *assembly order only*, not the per-node output text — true add/drop-a-section composition is a later step. A recipe that drops a node which a kept node still `reads:` is a **load-time error**, so a recipe can't silently break the pipeline.
 
+### Naming and grouping the phases
+
+The shipped grouping lives in each command's `_order.yml`. A project replaces it wholesale:
+
+```yaml
+commands:
+  specify:
+    phases:
+      - name: set up
+        nodes: [resolve-dir, load-living-specs]
+      - name: our review
+        nodes: [draft-spec, quality-checklist]
+      - name: size it
+        nodes: [classify-size, persist-size]
+      - name: finish
+        nodes: [branch, finalize, handoff]
+```
+
+A phase name is a hook anchor, so renaming one is a real edit: `hooks.after.our review` works the moment the phase exists. Four things are refused, because each would build something other than what was asked for:
+
+- a node in two phases, or in none
+- two phases with the same name — a hook anchored there could not say which
+- a phase naming a node that does not exist
+- an order, flattened from the grouping, that puts a node before something it `reads:`
+
+Whole rather than partial on purpose: the grouping is small, and half of one leaves the reader guessing where the rest of the nodes went.
+
 ### Several workflows in one project
 
 A workflow is a whole named configuration:

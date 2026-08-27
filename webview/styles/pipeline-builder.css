@@ -366,16 +366,6 @@ body {
     color: var(--text-muted);
 }
 
-.pb-template {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 0 var(--space-3) var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
 .pb-step-body {
     display: flex;
     flex-direction: column;
@@ -631,14 +621,6 @@ body {
 
 .pb-verdict { font-family: var(--font-mono); color: var(--text-body); }
 .pb-verdict-arrow { padding: 0 var(--space-1); color: var(--text-muted); }
-
-.pb-artifacts {
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-}
 
 /* ============================================
    Inspector — a node, read here
@@ -1075,4 +1057,130 @@ body {
     background: transparent;
     border: none;
     cursor: pointer;
+}
+
+/* ============================================
+   What a step produces — with its name, not below its nodes
+   ============================================ */
+
+.pb-step-produces {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-1) var(--space-2);
+}
+
+.pb-produces {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--success);
+    background: var(--success-subtle);
+    border-radius: 999px;
+    cursor: default;
+}
+
+.pb-template {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    cursor: default;
+}
+
+/* ============================================
+   Hooks — one heading per side, its actions beneath
+   ============================================ */
+
+.pb-hooks-body {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pb-hooks-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--review);
+}
+
+.pb-hooks-icon {
+    display: inline-flex;
+    color: var(--review);
+}
+
+.pb-hooks-anchor {
+    font-family: var(--font-mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.pb-hooks-add {
+    margin-left: auto;
+    padding: 0 var(--space-1);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    color: var(--review);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.pb-hooks:hover .pb-hooks-add,
+.pb-hooks-add:focus-visible { opacity: 1; }
+
+.pb-hooks-add:hover { text-decoration: underline; }
+
+/* Each action reads as a branch off the heading above it. */
+.pb-hook {
+    position: relative;
+    padding-left: var(--space-4);
+}
+
+.pb-hook::before {
+    content: '';
+    position: absolute;
+    left: var(--space-2);
+    top: 0;
+    bottom: 50%;
+    border-left: 1px solid var(--review);
+    border-bottom: 1px solid var(--review);
+    width: 5px;
+    opacity: 0.6;
+}
+
+/* ============================================
+   A phase name is editable in place
+   ============================================ */
+
+.pb-phase-name {
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+    cursor: text;
+}
+
+.pb-phase-name:hover {
+    background: var(--bg-hover);
+}
+
+.pb-phase-name:focus {
+    outline: 1px solid var(--accent);
+    outline-offset: 0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }

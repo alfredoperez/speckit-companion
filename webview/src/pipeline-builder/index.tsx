@@ -144,6 +144,8 @@ function App() {
                         vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
+                    onSetPhases={(command, phases) =>
+                        send({ type: 'setPhases', command, phases })}
                     onAddHook={(command, anchor) => {
                         setNotice(null);
                         setSide({ kind: 'attach', at: { command, anchor } });

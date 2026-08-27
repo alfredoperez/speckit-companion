@@ -27,6 +27,7 @@ import type {
 
 const NO_CHANGES = {
     added: [], removed: [], reordered: false, hooks: 0, decisions: [], replaced: [],
+    phases: [],
 };
 
 function node(id: string, name: string, over: Partial<PipelineNode> = {}): PipelineNode {

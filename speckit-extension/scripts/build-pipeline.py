@@ -201,6 +201,16 @@ def plan_build(config: dict) -> tuple[dict, list]:
     """
     plan = {}
     warnings = []
+    # A project may name and regroup the phases, so that is resolved before
+    # anything reads one.
+    try:
+        assemble.use_project_phases({
+            command: cc.resolve_phases(config, command)
+            for command in decomposed_commands()
+        })
+    except cc.ConfigError as err:
+        raise BuildError(str(err)) from err
+
     for command in decomposed_commands():
         default = assemble.default_order(command)
         order = cc.resolve_order(config, command, default)
@@ -220,6 +230,14 @@ def plan_build(config: dict) -> tuple[dict, list]:
         # boundary — so both are valid anchor names. Without the phase names
         # here, a hook attached to one is warned about and silently skipped.
         phases = assemble.phases_for(command, order)
+        unknown = [
+            n for phase in assemble.declared_phases(command) for n in phase["nodes"]
+            if n not in default
+        ]
+        if unknown:
+            raise BuildError(
+                f"{command}: phases name nodes that do not exist: {', '.join(unknown)}")
+
         stray = assemble.unexpressible_order(command, order)
         if stray:
             raise BuildError(
@@ -243,9 +261,14 @@ def plan_build(config: dict) -> tuple[dict, list]:
         if problems:
             raise BuildError(f"{command}: " + "; ".join(problems))
 
+        shipped_phases = assemble.shipped_phases(command)
         plan[command] = {"order": order, "hooks": hooks, "default": default,
                          "phases": phases, "decisions": resolved,
                          "decisionsChanged": changed,
+                         "phasesChanged": [
+                             p["name"] for p in phases
+                             if p["name"] not in {s["name"] for s in shipped_phases}
+                         ],
                          "replaced": [n for n in order if node_source(command, n)[1]]}
     return plan, warnings
 
@@ -310,6 +333,9 @@ def describe(command: str, entry: dict) -> str:
     replaced = entry.get("replaced") or []
     if replaced:
         bits.append(f"{len(replaced)} replaced ({', '.join(replaced)})")
+    renamed = entry.get("phasesChanged") or []
+    if renamed:
+        bits.append(f"phases: {', '.join(renamed)}")
     return f"  {command}: " + (", ".join(bits) if bits else "shipped default")
 
 

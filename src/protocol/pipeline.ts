@@ -93,6 +93,8 @@ export interface PipelineChanges {
     decisions: string[];
     /** Nodes this project replaced with its own instructions. */
     replaced: string[];
+    /** Phases this project named itself. */
+    phases: string[];
 }
 
 export interface PipelineTemplate {
@@ -182,6 +184,13 @@ export type BuilderToExtensionMessage =
     | { type: 'restoreNode'; command: string; nodeId: string }
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
     | { type: 'reorderNodes'; command: string; order: string[] }
+    /**
+     * Save a step's whole phase grouping — names and membership together.
+     *
+     * Whole rather than a patch: the grouping is small, and half of one leaves
+     * the reader guessing which nodes are where.
+     */
+    | { type: 'setPhases'; command: string; phases: Array<{ name: string; nodes: string[] }> }
     /**
      * Attach work at a boundary. The panel collects all of it — a native
      * dialog covered the thing you were pointing at.

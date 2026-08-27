@@ -38,8 +38,10 @@ interface Props {
     onRestoreNode: NodeAction;
     /** Save a step's whole node order after a drag. */
     onReorder: (command: string, order: string[]) => void;
-    /** Attach work at a boundary — the extension asks what kind. */
+    /** Attach work at a boundary — the panel asks what kind. */
     onAddHook: (command: string, anchor: string, when: 'before' | 'after') => void;
+    /** Save a step's whole phase grouping after a rename or a move. */
+    onSetPhases: (command: string, phases: Array<{ name: string; nodes: string[] }>) => void;
     /** The node whose instructions are open in the inspector, if any. */
     selected?: { command: string; nodeId: string } | null;
 }
@@ -110,27 +112,60 @@ const HOOK_VERB: Record<string, string> = {
 
 type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'> & {
     onDrop: (moved: string, target: string) => void;
+    onAdd: (anchor: string) => void;
     selected?: Props['selected'];
     step: string;
 };
 
-function Hooks({ hooks, side }: { hooks: PipelineHook[]; side: 'before' | 'after' }) {
+function HookIcon() {
+    return (
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true" focusable="false">
+            <path d="M10 2v6a3 3 0 0 1-6 0" />
+            <path d="M4 11.5v2" />
+        </svg>
+    );
+}
+
+/**
+ * One side's hooks, headed by what they run against.
+ *
+ * "before draft-spec" said once, then the actions beneath it — rather than
+ * repeating the side and the anchor on every chip.
+ */
+function Hooks({ hooks, side, anchor, onAdd }: {
+    hooks: PipelineHook[];
+    side: 'before' | 'after';
+    anchor: string;
+    onAdd?: () => void;
+}) {
     if (hooks.length === 0) { return null; }
     return (
         <div class={`pb-hooks pb-hooks--${side}`}>
             <div class="pb-hooks-arm" aria-hidden="true" />
-            <ul class="pb-hooks-list">
-                {hooks.map((hook, i) => (
-                    <li key={i} class="pb-hook" title={hook.summary}>
-                        <span class="pb-hook-verb">
-                            {HOOK_VERB[hook.type] ?? hook.type}
-                        </span>
-                        <span class={hook.type === 'prompt' ? 'pb-hook-text' : 'pb-hook-ref'}>
-                            {clip(hook.summary)}
-                        </span>
-                    </li>
-                ))}
-            </ul>
+            <div class="pb-hooks-body">
+                <p class="pb-hooks-head">
+                    <span class="pb-hooks-icon"><HookIcon /></span>
+                    {side} <span class="pb-hooks-anchor">{anchor}</span>
+                    {onAdd && (
+                        <button class="pb-hooks-add" onClick={onAdd}
+                            title={`Attach something else ${side} ${anchor}`}>add</button>
+                    )}
+                </p>
+                <ul class="pb-hooks-list">
+                    {hooks.map((hook, i) => (
+                        <li key={i} class="pb-hook" title={hook.summary}>
+                            <span class="pb-hook-verb">
+                                {HOOK_VERB[hook.type] ?? hook.type}
+                            </span>
+                            <span class={hook.type === 'prompt' ? 'pb-hook-text' : 'pb-hook-ref'}>
+                                {clip(hook.summary)}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }
@@ -144,7 +179,8 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
 
     return (
         <div class="pb-node-group">
-            <Hooks hooks={before} side="before" />
+            <Hooks hooks={before} side="before" anchor={node.id}
+                onAdd={() => actions.onAdd(node.id)} />
             <div
                 class={[
                     'pb-node',
@@ -210,36 +246,61 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
                         onClick={() => actions.onReplaceNode(actions.step, node.id)}>Make mine</button>
                 )}
             </div>
-            <Hooks hooks={after} side="after" />
+            <Hooks hooks={after} side="after" anchor={node.id}
+                onAdd={() => actions.onAdd(node.id)} />
         </div>
     );
 }
 
 // ── Phases ──────────────────────────────────────────────
 
-function Phase({ phase, actions, onAdd }: {
+function Phase({ phase, actions, onRename }: {
     phase: PipelinePhase;
     actions: NodeActions;
-    onAdd: (anchor: string) => void;
+    onRename: (from: string, to: string) => void;
 }) {
     const before = phase.hooks.filter(hook => hook.when === 'before');
     const after = phase.hooks.filter(hook => hook.when === 'after');
+
+    const rename = (event: Event) => {
+        const el = event.currentTarget as HTMLElement;
+        const next = (el.textContent ?? '').trim();
+        if (next && next !== phase.name) { onRename(phase.name, next); }
+        else { el.textContent = phase.name; }
+    };
+
     return (
         <section class="pb-phase">
             <header class="pb-phase-head">
-                <h3 class="pb-phase-name">{phase.name}</h3>
-                <button class="pb-attach" onClick={() => onAdd(phase.name)}
+                {/* A phase name is the project's to choose — it is also a hook
+                    anchor, so renaming it is a real edit, not a label. */}
+                <h3 class="pb-phase-name" contentEditable spellcheck={false}
+                    title="Rename this phase"
+                    onBlur={rename}
+                    onKeyDown={event => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            (event.currentTarget as HTMLElement).blur();
+                        }
+                        if (event.key === 'Escape') {
+                            (event.currentTarget as HTMLElement).textContent = phase.name;
+                            (event.currentTarget as HTMLElement).blur();
+                        }
+                    }}>{phase.name}</h3>
+                <button class="pb-attach" onClick={() => actions.onAdd(phase.name)}
                     title={`Attach a skill, an instruction or a command in ${phase.name}`}>
                     Attach
                 </button>
             </header>
-            <Hooks hooks={before} side="before" />
+            <Hooks hooks={before} side="before" anchor={phase.name}
+                onAdd={() => actions.onAdd(phase.name)} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map(node => (
                     <Node key={node.id} node={node} actions={actions} />
                 ))}
             </div>
-            <Hooks hooks={after} side="after" />
+            <Hooks hooks={after} side="after" anchor={phase.name}
+                onAdd={() => actions.onAdd(phase.name)} />
         </section>
     );
 }
@@ -306,21 +367,62 @@ function Decisions({ decisions }: { decisions: PipelineDecision[] }) {
 function changed(step: PipelineStep): boolean {
     const c = step.changes;
     return Boolean(c.added.length || c.removed.length || c.reordered || c.hooks
-        || c.decisions.length || c.replaced.length || step.template?.sections.length);
+        || c.decisions.length || c.replaced.length || c.phases.length
+        || step.template?.sections.length);
 }
 
-function Step({ step, index, actions, onReorder, onAddHook }: {
+function FilesIcon() {
+    return (
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+            stroke-width="1.3" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M3.5 2h5l3 3v9h-8z" />
+            <path d="M8.5 2v3h3" />
+        </svg>
+    );
+}
+
+function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions, 'onDrop' | 'step'>;
+    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd'>;
     onReorder: Props['onReorder'];
     onAddHook: Props['onAddHook'];
+    onSetPhases: Props['onSetPhases'];
 }) {
+    const grouping = () => step.phases.map(p => ({
+        name: p.name, nodes: p.nodes.map(n => n.id),
+    }));
+
     const bound: NodeActions = {
         ...actions,
         step: step.name,
-        onDrop: (moved, target) =>
-            onReorder(step.name, reordered(flatOrder(step), moved, target)),
+        onDrop: (moved, target) => {
+            // Dropping onto a node in another phase moves it between phases, so
+            // the grouping and the order change together — writing one without
+            // the other would leave a node in a phase the order contradicts.
+            const from = step.phases.find(p => p.nodes.some(n => n.id === moved));
+            const to = step.phases.find(p => p.nodes.some(n => n.id === target));
+            if (from && to && from.name !== to.name) {
+                onSetPhases(step.name, grouping().map(phase => {
+                    if (phase.name === from.name) {
+                        return { ...phase, nodes: phase.nodes.filter(id => id !== moved) };
+                    }
+                    if (phase.name === to.name) {
+                        const at = phase.nodes.indexOf(target);
+                        return {
+                            ...phase,
+                            nodes: [
+                                ...phase.nodes.slice(0, at), moved, ...phase.nodes.slice(at),
+                            ],
+                        };
+                    }
+                    return phase;
+                }));
+                return;
+            }
+            onReorder(step.name, reordered(flatOrder(step), moved, target));
+        },
+        onAdd: anchor => onAddHook(step.name, anchor, 'before'),
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
@@ -332,31 +434,38 @@ function Step({ step, index, actions, onReorder, onAddHook }: {
                 <span class="pb-step-counts">{nodes} nodes</span>
             </header>
 
-            {step.template && (
-                <div class={`pb-template ${step.template.sections.length ? 'pb-template--yours' : ''}`}>
-                    <span class="pb-template-file">{step.template.file}</span>
-                    {step.template.sections.length > 0 && (
-                        <span class="pb-yours"
-                            title={`replaced: ${step.template.sections.join(', ')}`}>
-                            {step.template.sections.length} section
-                            {step.template.sections.length === 1 ? '' : 's'} yours
-                        </span>
-                    )}
-                </div>
-            )}
+            {/* What the step leaves behind belongs with its name, not at the
+                bottom of a lane you have to scroll to reach. */}
+            <div class="pb-step-produces">
+                {step.artifacts.length > 0 && (
+                    <span class="pb-produces"
+                        title={`produces ${step.artifacts.join(', ')}`}>
+                        <FilesIcon />
+                        {step.artifacts.length}
+                    </span>
+                )}
+                {step.template && (
+                    <span class={`pb-template ${step.template.sections.length ? 'pb-template--yours' : ''}`}
+                        title={step.template.sections.length
+                            ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
+                            : step.template.file}>
+                        <span class="pb-template-file">{step.template.file}</span>
+                        {step.template.sections.length > 0 && (
+                            <span class="pb-yours">{step.template.sections.length} §</span>
+                        )}
+                    </span>
+                )}
+            </div>
 
             <div class="pb-step-body">
                 {step.phases.map(phase => (
                     <Phase key={phase.name} phase={phase} actions={bound}
-                        onAdd={anchor => onAddHook(step.name, anchor, 'before')} />
+                        onRename={(from, to) => onSetPhases(step.name, grouping().map(
+                            p => p.name === from ? { ...p, name: to } : p))} />
                 ))}
                 <Decisions decisions={step.decisions} />
                 <StockHooks hooks={step.stockHooks} />
             </div>
-
-            {step.artifacts.length > 0 && (
-                <footer class="pb-artifacts">produces {step.artifacts.join(', ')}</footer>
-            )}
         </section>
     );
 }
@@ -364,7 +473,8 @@ function Step({ step, index, actions, onReorder, onAddHook }: {
 // ── The canvas ──────────────────────────────────────────
 
 export function Canvas(
-    { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook, selected }: Props,
+    { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook,
+        onSetPhases, selected }: Props,
 ) {
     const actions = { onOpenNode, onReplaceNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -387,7 +497,8 @@ export function Canvas(
             <div class="pb-run" style={`--pb-steps: ${sequence.length}`}>
                 {sequence.map((step, index) => (
                     <Step key={step.name} step={step} index={index} actions={actions}
-                        onReorder={onReorder} onAddHook={onAddHook} />
+                        onReorder={onReorder} onAddHook={onAddHook}
+                        onSetPhases={onSetPhases} />
                 ))}
             </div>
         </main>

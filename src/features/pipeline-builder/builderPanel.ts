@@ -30,6 +30,7 @@ import {
     resolveGraphScript,
     writeHook,
     writeNodeOrder,
+    writePhases,
     writeWorkflow,
 } from '../specs/pipelineGraph';
 
@@ -167,6 +168,13 @@ export class PipelineBuilderPanel {
                 script => writeNodeOrder(
                     script, this.workspaceRoot, message.command, message.order),
                 'Reordering');
+        },
+
+        setPhases: async message => {
+            await this.write(
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases),
+                'Regrouping the phases');
         },
 
         addHook: async message => {

@@ -26,6 +26,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import config_write  # noqa: E402
 
+assemble = importlib.import_module("assemble-nodes")
 build = importlib.import_module("build-pipeline")
 graph_mod = importlib.import_module("pipeline-graph")
 
@@ -246,6 +247,132 @@ class TheOtherHookSystemIsVisibleToo(unittest.TestCase):
         self.assertEqual(graph["counts"]["stockHooks"], 2)
         # They are not the project's own hooks and must not be counted as them.
         self.assertEqual(graph["counts"]["hooks"], 0)
+
+
+class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
+    """The middle block was the one thing a project could see and not touch."""
+
+    GROUPED = (
+        "commands:\n"
+        "  specify:\n"
+        "    phases:\n"
+        "      - name: set up\n"
+        "        nodes: [resolve-dir, load-living-specs]\n"
+        "      - name: our review\n"
+        "        nodes: [draft-spec, quality-checklist]\n"
+        "      - name: size it\n"
+        "        nodes: [classify-size, persist-size]\n"
+        "      - name: finish\n"
+        "        nodes: [branch, finalize, handoff]\n"
+    )
+
+    def tearDown(self):
+        assemble.use_project_phases({})
+
+    def test_the_projects_names_reach_the_built_body(self):
+        with project(self.GROUPED) as root:
+            config = build.load_config(root)
+            plan, _warnings = build.plan_build(config)
+            body = build.render("specify", plan["specify"])
+
+        for name in ("set up", "our review", "size it", "finish"):
+            self.assertIn(f"speckit-companion:phase {name}", body)
+        self.assertNotIn("speckit-companion:phase gather", body)
+
+    def test_a_build_reports_which_phases_the_project_named(self):
+        with project(self.GROUPED) as root:
+            plan, _warnings = build.plan_build(build.load_config(root))
+        self.assertEqual(
+            plan["specify"]["phasesChanged"],
+            ["set up", "our review", "size it", "finish"])
+
+    def test_the_shipped_grouping_reports_no_change(self):
+        with project("") as root:
+            plan, _warnings = build.plan_build(build.load_config(root))
+        self.assertEqual(plan["specify"]["phasesChanged"], [])
+
+    def test_a_hook_can_anchor_on_a_phase_the_project_named(self):
+        config = self.GROUPED + (
+            "    hooks:\n"
+            "      after:\n"
+            "        our review:\n"
+            "          - { type: prompt, text: \"read it aloud\" }\n"
+        )
+        with project(config) as root:
+            plan, warnings = build.plan_build(build.load_config(root))
+            body = build.render("specify", plan["specify"])
+        self.assertEqual(warnings, [])
+        self.assertIn("read it aloud", body)
+
+    def test_two_phases_with_one_name_are_refused(self):
+        bad = ("commands:\n  specify:\n    phases:\n"
+               "      - name: same\n        nodes: [resolve-dir]\n"
+               "      - name: same\n        nodes: [draft-spec]\n")
+        with project(bad) as root:
+            with self.assertRaises(build.BuildError) as caught:
+                build.plan_build(build.load_config(root))
+        self.assertIn("both called", str(caught.exception))
+
+    def test_a_node_in_two_phases_is_refused(self):
+        bad = ("commands:\n  specify:\n    phases:\n"
+               "      - name: one\n        nodes: [resolve-dir]\n"
+               "      - name: two\n        nodes: [resolve-dir]\n")
+        with project(bad) as root:
+            with self.assertRaises(build.BuildError) as caught:
+                build.plan_build(build.load_config(root))
+        self.assertIn("more than one phase", str(caught.exception))
+
+    def test_a_phase_naming_a_node_that_does_not_exist_is_refused(self):
+        bad = ("commands:\n  specify:\n    phases:\n"
+               "      - name: one\n        nodes: [invented]\n")
+        with project(bad) as root:
+            with self.assertRaises(build.BuildError) as caught:
+                build.plan_build(build.load_config(root))
+        self.assertIn("invented", str(caught.exception))
+
+
+class WritingTheGrouping(unittest.TestCase):
+    def test_it_writes_a_readable_block(self):
+        out = config_write.set_phases("", "specify", [
+            {"name": "set up", "nodes": ["resolve-dir"]},
+        ])
+        self.assertIn('- name: "set up"', out)
+        self.assertIn("          - resolve-dir", out)
+
+    def test_regrouping_replaces_rather_than_stacks(self):
+        once = config_write.set_phases("", "specify", [{"name": "a", "nodes": ["x"]}])
+        twice = config_write.set_phases(once, "specify", [{"name": "b", "nodes": ["y"]}])
+        self.assertEqual(twice.count("phases:"), 1)
+        self.assertNotIn("name: \"a\"", twice)
+
+    def test_a_hook_on_the_same_command_survives_a_regroup(self):
+        out = config_write.set_phases(HOOKED, "plan", [{"name": "a", "nodes": ["plan-doc"]}])
+        self.assertIn("check it", out)
+        self.assertIn("phases:", out)
+
+    def test_it_reads_back_as_what_was_written(self):
+        import companion_config as cc
+
+        out = config_write.set_phases("", "specify", [
+            {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
+        ])
+        phases = cc.load_yaml(out)["commands"]["specify"]["phases"]
+        self.assertEqual(phases, [
+            {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]}])
+
+    def test_a_grouping_that_leaves_a_node_homeless_is_refused(self):
+        with self.assertRaises(config_write.ConfigWriteError) as caught:
+            config_write.check_phases("specify", [{"name": "one", "nodes": ["resolve-dir"]}])
+        self.assertIn("every node needs a phase", str(caught.exception))
+
+    def test_a_grouping_that_breaks_reads_is_refused(self):
+        with self.assertRaises(config_write.ConfigWriteError):
+            config_write.check_phases("specify", [
+                {"name": "backwards",
+                 "nodes": ["quality-checklist", "draft-spec", "resolve-dir",
+                           "load-living-specs", "classify-size", "persist-size",
+                           "branch", "finalize", "handoff"]},
+            ])
 
 
 if __name__ == "__main__":

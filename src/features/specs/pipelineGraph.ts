@@ -72,6 +72,17 @@ export function writeHook(
     ]);
 }
 
+/** Save a step's phase grouping. Returns the reason on refusal. */
+export function writePhases(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    phases: Array<{ name: string; nodes: string[] }>,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot,
+        ['--command', command, '--phases', JSON.stringify(phases)]);
+}
+
 /** Switch the project to a named workflow. Returns the reason on refusal. */
 export function writeWorkflow(
     script: string,

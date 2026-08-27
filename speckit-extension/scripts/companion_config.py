@@ -383,6 +383,44 @@ def find_node_file(ref: str, nodes_dir):
     return None
 
 
+def resolve_phases(config: dict, command: str) -> list:
+    """A project's own phase grouping for a command, or `[]` for the shipped one.
+
+    Phases were the one block a project could see and not touch: the nodes were
+    reorderable and replaceable, the hooks attachable, and the group they sat in
+    belonged to the extension alone.
+    """
+    cmd = (config.get("commands") or {}).get(command) or {}
+    phases = cmd.get("phases")
+    if not isinstance(phases, list) or not phases:
+        return []
+
+    out = []
+    for i, phase in enumerate(phases):
+        if not isinstance(phase, dict):
+            raise ConfigError(f"{command}: phases[{i}] is not a name and a node list")
+        name = str(phase.get("name") or "").strip()
+        if not name:
+            raise ConfigError(f"{command}: phases[{i}] has no name")
+        nodes = phase.get("nodes")
+        if not isinstance(nodes, list):
+            raise ConfigError(f"{command}: phase '{name}' has no nodes")
+        out.append({"name": name, "nodes": [str(n) for n in nodes]})
+
+    names = [p["name"] for p in out]
+    duplicate = next((n for n in names if names.count(n) > 1), None)
+    if duplicate:
+        raise ConfigError(
+            f"{command}: two phases are both called '{duplicate}' — a hook anchored "
+            f"there could not say which")
+
+    placed = [n for phase in out for n in phase["nodes"]]
+    twice = next((n for n in placed if placed.count(n) > 1), None)
+    if twice:
+        raise ConfigError(f"{command}: node '{twice}' is in more than one phase")
+    return out
+
+
 def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir=None):
     """Return (ordered_hooks, warnings).
 

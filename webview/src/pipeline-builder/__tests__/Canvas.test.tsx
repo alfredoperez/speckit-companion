@@ -18,6 +18,7 @@ function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
 
 const NO_CHANGES = {
     added: [], removed: [], reordered: false, hooks: 0, decisions: [], replaced: [],
+    phases: [],
 };
 
 function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
@@ -68,15 +69,17 @@ type Calls = string[][];
 function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId: string }) {
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
+    const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
+            onSetPhases={(c, phases) => grouped.push([c, phases])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders, added };
+    return { host, opened, replaced, restored, orders, added, grouped };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -272,7 +275,11 @@ describe('one hue marks everything the project owns', () => {
         });
         const { host } = canvas(swapped);
         expect(host.querySelector('.pb-template--yours')).not.toBeNull();
-        expect(host.querySelector('.pb-template .pb-yours')?.textContent).toContain('1 section');
+        // The count is a chip in the lane head; the section names are the title,
+        // since a lane is 300px and a heading can be any length.
+        expect(host.querySelector('.pb-template .pb-yours')?.textContent).toBe('1 §');
+        expect(host.querySelector('.pb-template')?.getAttribute('title'))
+            .toContain('Requirements');
     });
 
     it('leaves a shipped node and a stock template unmarked', () => {
@@ -335,6 +342,59 @@ describe('a node says whether it can move, and why not', () => {
         const { host, orders } = canvas(free);
         drag(host, 2, 0);
         expect(orders).toEqual([['specify', ['c', 'a', 'b']]]);
+    });
+});
+
+describe('what a step produces sits with its name', () => {
+    it('counts the artifacts at the top and names them on hover', () => {
+        const { host } = canvas();
+        const chip = host.querySelector('.pb-step-produces .pb-produces');
+
+        expect(chip?.textContent).toContain('1');
+        expect(chip?.getAttribute('title')).toBe('produces spec.md');
+        // It used to be a footer line below every node in the lane.
+        expect(host.querySelector('.pb-artifacts')).toBeNull();
+    });
+
+    it('says nothing when a step produces no file', () => {
+        const { host } = canvas(graph({ steps: [step({ artifacts: [] })] }));
+        expect(host.querySelector('.pb-produces')).toBeNull();
+    });
+});
+
+describe('phases are the project\'s to name and group', () => {
+    it('renames a phase in place, and sends the whole grouping', () => {
+        const { host, grouped } = canvas();
+        const name = host.querySelector('.pb-phase-name') as HTMLElement;
+
+        expect(name.getAttribute('contenteditable')).toBe('true');
+        name.textContent = 'set up';
+        name.dispatchEvent(new Event('blur', { bubbles: true }));
+
+        expect(grouped).toEqual([['specify', [
+            { name: 'set up', nodes: ['resolve-dir'] },
+            { name: 'author', nodes: ['draft-spec'] },
+        ]]]);
+    });
+
+    it('says nothing when the name did not change', () => {
+        const { host, grouped } = canvas();
+        const name = host.querySelector('.pb-phase-name') as HTMLElement;
+        name.dispatchEvent(new Event('blur', { bubbles: true }));
+        expect(grouped).toEqual([]);
+    });
+
+    // Dropping across phases moves a node between them; the order and the
+    // grouping have to change together or they contradict each other.
+    it('moves a node to another phase when it is dropped there', () => {
+        const { host, grouped, orders } = canvas();
+        drag(host, 0, 1);
+
+        expect(orders).toEqual([]);
+        expect(grouped).toEqual([['specify', [
+            { name: 'gather', nodes: [] },
+            { name: 'author', nodes: ['resolve-dir', 'draft-spec'] },
+        ]]]);
     });
 });
 

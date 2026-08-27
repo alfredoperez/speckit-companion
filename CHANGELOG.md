@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Phases are yours to name and group.** The middle block was the one part of the pipeline you could see and not touch — the nodes were reorderable and replaceable, hooks attached anywhere, and the group they sat in belonged to the extension. Rename a phase in place in the panel, or drag a node from one phase into another; both write the whole grouping to `companion.yml`. A grouping that leaves a node homeless, names a phase twice, or breaks a `reads:` dependency is refused with the reason.
+- **A step says what it produces at the top,** as a count you can hover for the filenames, next to the template it uses. It used to be a line at the bottom of the lane, below every node.
+- **Hooks read as a list under what they attach to** — "before complete", then the actions beneath it — instead of repeating the side and the anchor on every chip. Each group has an **add** for putting another one at the same place.
 - **Every hook, not just ours.** The panel showed the hooks you wrote in `companion.yml` and nothing else — but a Companion run also fires the hooks your installed spec-kit extensions register in `.specify/extensions.yml`. This repository's own panel said 9 when the answer was 21. Both are shown now, the extension ones listed under the step they fire on, marked with which extension registered them and whether they ask first.
 - **The panel does its own asking.** Attaching work and naming a new workflow used editor pop-ups that covered the thing you were pointing at; both are forms in the panel now, and a refusal comes back as a line in the panel rather than a toast. Nothing about the view depends on being inside VS Code any more.
 - **The steps are a board.** Lanes keep a readable width and scroll sideways instead of squeezing to fit, and a lane is a column between hairlines rather than a card.

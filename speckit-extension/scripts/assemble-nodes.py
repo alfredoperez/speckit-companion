@@ -61,6 +61,33 @@ def _wrap_node(node_id: str, body: str) -> str:
     )
 
 
+#: Phase groupings a project declared, per command. Empty means shipped only.
+_project_phases = {}
+
+
+def use_project_phases(by_command: dict) -> None:
+    """Let a project name and group its own phases. `{}` restores the shipped ones."""
+    global _project_phases
+    _project_phases = dict(by_command or {})
+
+
+def shipped_phases(command: str) -> list:
+    """The grouping as Companion ships it, whatever the project declared."""
+    return parse_phases(os.path.join(nodes_command_dir(command), "_order.yml"))
+
+
+def declared_phases(command: str) -> list:
+    """The phase grouping in force: the project's when it declared one, else shipped.
+
+    A project could rename nothing and group nothing — the middle block was the
+    one part of the pipeline it could see and not touch.
+    """
+    own = _project_phases.get(command)
+    if own:
+        return [dict(phase) for phase in own]
+    return shipped_phases(command)
+
+
 def phases_for(command: str, order: list) -> list:
     """The phase grouping for an order — `[{name, nodes}, ...]`.
 
@@ -73,7 +100,7 @@ def phases_for(command: str, order: list) -> list:
     honoured here. `unexpressible_order` names that case; this function does not
     raise, because the builder has to be able to draw such a project.
     """
-    declared = parse_phases(os.path.join(nodes_command_dir(command), "_order.yml"))
+    declared = declared_phases(command)
     if not declared:
         return []
     kept = set(order)

@@ -128,12 +128,14 @@ def build_graph(project_root: str) -> dict:
                 "hooks": len(hooks),
                 "decisions": entry.get("decisionsChanged") or [],
                 "replaced": entry.get("replaced") or [],
+                "phases": entry.get("phasesChanged") or [],
             },
         })
 
     customised = any(
         s["changes"]["added"] or s["changes"]["removed"] or s["changes"]["reordered"]
         or s["changes"]["hooks"] or s["changes"]["decisions"] or s["changes"]["replaced"]
+        or s["changes"]["phases"]
         or s["template"]
         for s in steps
     )
