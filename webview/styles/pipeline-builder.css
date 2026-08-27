@@ -180,136 +180,221 @@ body {
     color: var(--text-body);
 }
 
+
 /* ============================================
-   Canvas — containment, not connectors
+   Workflow switcher
    ============================================ */
 
+.builder-workflow { position: relative; }
+
+.builder-workflow-current {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.builder-workflow-current:hover { background: var(--bg-hover); }
+
+.builder-workflow-menu {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    z-index: 5;
+    min-width: 260px;
+    margin: 0;
+    padding: var(--space-1);
+    list-style: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.builder-workflow-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.builder-workflow-option:hover { background: var(--bg-hover); }
+
+.builder-workflow-option--active {
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--accent-subtle);
+}
+
+.builder-workflow-note {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.builder-workflow-new {
+    margin-top: var(--space-1);
+    padding-top: var(--space-1);
+    border-top: 1px solid var(--border);
+}
+
+/* ============================================
+   Canvas — the run, left to right
+   ============================================ */
+
+.builder-body {
+    display: flex;
+    align-items: stretch;
+    flex-grow: 1;
+    min-height: 0;
+}
+
 .pb-canvas {
+    flex-grow: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    padding: var(--space-5) var(--space-4) var(--space-8);
+    gap: var(--space-3);
+    padding: var(--space-4);
+    overflow: auto;
 }
 
-.pb-chain-item {
+/* `auto` runs the others: a band above the row, never a column in it. */
+.pb-aside {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-hover);
+    border-radius: var(--radius-md);
 }
 
-/* Steps are linked edge to edge — the link belongs between containers, never
-   between a node and a step. */
-.pb-link {
-    width: 2px;
-    height: var(--space-5);
-    margin-left: var(--space-6);
-    background: var(--border-hover);
+.pb-aside-name {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+}
+
+.pb-aside-note { font-size: var(--text-sm); color: var(--text-secondary); }
+
+.pb-aside-counts {
+    margin-left: auto;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-run {
+    display: grid;
+    grid-template-columns: repeat(var(--pb-steps, 4), minmax(0, 1fr));
+    /* min-width 0 lets a grid track shrink below its content; the floor is the
+       column, set by the container queries below. */
+    gap: var(--space-3);
+    align-items: start;
 }
 
 .pb-step {
-    border: 1.5px solid var(--border-hover);
-    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
     background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
-.pb-step--changed {
-    border-color: var(--info);
-}
+.pb-step--changed { border-color: var(--border-hover); }
 
 .pb-step-head {
     display: flex;
     align-items: baseline;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--border);
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3) var(--space-2);
 }
 
-.pb-phase-name,
-.pb-step-counts,
-.pb-node-id,
-.pb-kind,
-.pb-template,
-.pb-artifacts {
+.pb-step-index {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.06em;
     color: var(--text-muted);
 }
 
 .pb-step-name {
     margin: 0;
-    font-family: var(--font-family);
     font-size: var(--text-base);
     font-weight: 600;
-    letter-spacing: 0;
     color: var(--text-primary);
-}
-
-.pb-template {
-    padding: 1px var(--space-2);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    letter-spacing: 0;
 }
 
 .pb-step-counts {
     margin-left: auto;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
 }
 
-/* A phase is a band inside the step — the middle block, visible as such. */
-.pb-phase {
-    margin: var(--space-3);
-    padding: var(--space-2);
-    background: var(--bg-elevated);
-    border-radius: var(--radius-md);
+.pb-template {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3) var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
 }
+
+.pb-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0 var(--space-2) var(--space-2);
+}
+
+.pb-phase { padding: var(--space-1) 0; }
 
 .pb-phase-head {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 0 var(--space-2) var(--space-2);
+    padding: var(--space-2) var(--space-1) var(--space-1);
 }
 
-.pb-phase-nodes {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+.pb-phase-name {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-secondary);
 }
 
-.pb-node {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-1);
+.pb-phase-head::after {
+    content: '';
+    flex-grow: 1;
+    height: 1px;
+    background: var(--border);
+    order: 1;
 }
 
-.pb-node > .pb-hooks {
-    grid-column: 1 / -1;
-}
-
-.pb-node-actions {
-    display: flex;
-    align-items: stretch;
-    gap: var(--space-1);
-}
-
-.pb-phase-add {
-    display: flex;
-    gap: var(--space-1);
-    margin-left: auto;
-}
-
-/* Taking a node over is the rarer act, so its button stays out of the way until
-   you are on the node — but never `display: none`, or a keyboard could not
-   reach it. */
-.pb-add,
-.pb-node-action {
-    align-self: stretch;
-    padding: 0 var(--space-2);
+/* One Attach per phase — not a pair on every node and every phase. */
+.pb-attach {
+    order: 2;
+    padding: 1px var(--space-2);
     font-family: inherit;
     font-size: var(--text-xs);
-    color: var(--text-body);
-    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    background: transparent;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -317,74 +402,62 @@ body {
     transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 
-.pb-node:hover .pb-node-action,
-.pb-node:hover .pb-add,
-.pb-phase:hover .pb-phase-add .pb-add,
-.pb-node-action:focus-visible,
-.pb-add:focus-visible,
-.pb-node--replaced .pb-node-action {
-    opacity: 1;
-}
+.pb-phase:hover .pb-attach,
+.pb-attach:focus-visible { opacity: 1; }
 
-.pb-node-action:hover,
-.pb-add:hover {
-    background: var(--bg-hover);
-    border-color: var(--purple);
-}
+.pb-attach:hover { color: var(--text-primary); background: var(--bg-hover); }
 
-.pb-add {
-    font-family: var(--font-mono);
-    white-space: nowrap;
-}
-
-/* Dragging reorders within a phase. The node being carried fades; the one it
-   would land above shows the line it would land on. */
-.pb-node--dragging {
-    opacity: 0.4;
-}
-
-.pb-node--over > .pb-node-main {
-    border-top: 2px solid var(--purple);
-}
-
-/* A node this project owns reads differently from one it merely runs. */
-.pb-node--replaced .pb-node-main {
-    border-color: var(--purple);
-}
-
-.pb-own {
-    padding: 1px 6px;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--purple);
-    background: var(--review-subtle);
-    border-radius: 999px;
-}
-
-.pb-node-main {
+.pb-phase-nodes {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    text-align: left;
+    gap: var(--space-1);
+}
+
+.pb-node-group { display: flex; flex-direction: column; }
+
+.pb-node {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+    min-width: 0;
     background: var(--bg-primary);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-family: inherit;
-    transition: background var(--transition-fast);
 }
 
-.pb-node-main:hover {
-    background: var(--bg-hover);
+.pb-node--over { border-color: var(--accent); }
+.pb-node--dragging { opacity: 0.4; }
+.pb-node--open { border-color: var(--accent); background: var(--accent-subtle); }
+
+.pb-grip {
+    display: flex;
+    align-items: center;
+    padding-left: var(--space-2);
+    color: var(--text-muted);
+    cursor: grab;
+}
+
+.pb-grip--pinned { cursor: default; opacity: 0.55; }
+
+.pb-node-main {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2);
+    text-align: left;
+    font-family: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
 .pb-node-name {
     font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-body);
+    overflow-wrap: break-word;
 }
 
 .pb-node-meta {
@@ -394,101 +467,353 @@ body {
     gap: var(--space-2);
 }
 
-.pb-kind {
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: var(--bg-inset, var(--bg-elevated));
-}
-
-.pb-kind--author { color: var(--success); background: var(--success-subtle); }
-.pb-kind--investigate { color: var(--info); background: var(--info-subtle); }
-.pb-kind--gate { color: var(--warning); background: var(--warning-subtle); }
-
+.pb-node-id,
 .pb-writes {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.pb-writes { color: var(--success); }
+
+.pb-node-action {
+    align-self: stretch;
+    padding: 0 var(--space-2);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    white-space: nowrap;
     color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--border);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 
-.pb-hooks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-    padding-left: var(--space-3);
-}
+.pb-node:hover .pb-node-action,
+.pb-node-action:focus-visible { opacity: 1; }
 
-.pb-hook {
-    padding: 1px var(--space-2);
+.pb-node-action:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+/* ---- One hue for everything the project owns ----
+   Hooks, replaced nodes and replaced template sections share it, and nothing
+   else in the panel does, so "what did we change" needs no reading. */
+
+.pb-node--yours { border-color: var(--review); }
+
+.pb-yours {
+    padding: 0 var(--space-2);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--purple);
+    color: var(--review);
     background: var(--review-subtle);
-    border: 1px solid var(--purple);
     border-radius: 999px;
 }
 
-/* A decision says where it routes. The design tried wires; they crossed the
-   canvas without saying more than a sentence does. */
+.pb-template--yours .pb-template-file { color: var(--review); }
+
+/* ---- Hooks: drawn on the side they run, pointing at their anchor ---- */
+
+.pb-hooks {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+    padding-left: var(--space-4);
+}
+
+.pb-hooks-arm {
+    position: relative;
+    flex-shrink: 0;
+    width: 9px;
+    border-left: 1px solid var(--review);
+}
+
+/* The arrowhead sits on the edge nearest the block the hook attaches to. */
+.pb-hooks-arm::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    width: 7px;
+    height: 7px;
+    border-left: 1px solid var(--review);
+    border-bottom: 1px solid var(--review);
+}
+
+.pb-hooks--before .pb-hooks-arm::after { bottom: 0; transform: rotate(-45deg); }
+.pb-hooks--after .pb-hooks-arm::after { top: 0; transform: rotate(135deg); }
+
+.pb-hooks--before { padding-bottom: 2px; }
+.pb-hooks--after { padding-top: 2px; }
+
+.pb-hooks-list {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pb-hook {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: var(--review-subtle);
+    border-radius: var(--radius-sm);
+}
+
+.pb-hook-verb { font-size: var(--text-xs); color: var(--review); opacity: 0.85; }
+
+.pb-hook-text {
+    font-size: var(--text-xs);
+    color: var(--review);
+    overflow-wrap: break-word;
+}
+
+.pb-hook-ref {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--review);
+    overflow-wrap: anywhere;
+}
+
+/* ---- The decision ---- */
+
 .pb-decisions {
-    margin: 0 var(--space-3) var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border: 1px dashed var(--purple);
-    border-radius: var(--radius-md);
+    margin: var(--space-2) var(--space-1) 0;
+    padding: var(--space-2);
+    border: 1px dashed var(--border-hover);
+    border-radius: var(--radius-sm);
 }
 
 .pb-decision-node {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--purple);
+    color: var(--text-secondary);
 }
 
 .pb-verdicts {
     margin: var(--space-1) 0 0;
-    padding-left: var(--space-4);
-    font-size: var(--text-sm);
-    line-height: var(--leading-relaxed);
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
 }
 
-.pb-verdict {
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-}
+.pb-verdict { font-family: var(--font-mono); color: var(--text-body); }
+.pb-verdict-arrow { padding: 0 var(--space-1); color: var(--text-muted); }
 
 .pb-artifacts {
-    padding: var(--space-2) var(--space-4);
-    letter-spacing: 0;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
     border-top: 1px solid var(--border);
 }
 
-/* At a narrow split pane the head stacks rather than squeezing. */
-@media (max-width: 620px) {
-    .builder-facts {
-        margin-left: 0;
-        flex-basis: 100%;
-    }
+/* ============================================
+   Inspector — a node, read here
+   ============================================ */
 
-    .pb-step-head {
-        flex-wrap: wrap;
-    }
-
-    .pb-step-counts {
-        margin-left: 0;
-        flex-basis: 100%;
-    }
+.pb-inspector {
+    flex-shrink: 0;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border);
+    overflow: auto;
 }
 
-/* A hook drawn above its node needs the same indent as one drawn below, or the
-   two sides read as different kinds of thing. */
-.pb-hooks--before {
-    padding-bottom: var(--space-1);
+.pb-inspector-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--border);
 }
 
-/* `auto` is not a turn in the run: it sits apart, without a link into it. */
-.pb-step--aside {
-    border-style: dashed;
+.pb-inspector-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
-.pb-step-aside-note {
+.pb-inspector-close {
+    align-self: start;
+    padding: var(--space-1);
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.pb-inspector-close:hover { color: var(--text-primary); }
+
+.pb-inspector-where {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-inspector-id { font-family: var(--font-mono); }
+
+.pb-facts {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-sm);
+}
+
+.pb-facts dt {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    padding-top: 2px;
+}
+
+.pb-facts dd { margin: 0; color: var(--text-body); overflow-wrap: anywhere; }
+
+.pb-facts-mono,
+.pb-facts-path { font-family: var(--font-mono); font-size: var(--text-xs); }
+
+.pb-facts-path { display: block; margin-top: 2px; color: var(--text-muted); }
+
+.pb-doc { flex-grow: 1; padding: var(--space-3) var(--space-4); }
+
+.pb-doc-label {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.pb-doc-heading {
+    margin: var(--space-4) 0 var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pb-doc-p {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--text-body);
+}
+
+.pb-doc-waiting { color: var(--text-secondary); }
+
+.pb-doc-list {
+    margin: 0 0 var(--space-3);
+    padding-left: var(--space-4);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    color: var(--text-body);
+}
+
+.pb-doc-list li { margin-bottom: var(--space-1); }
+
+.pb-doc-code {
+    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--code-text);
+    background: var(--bg-code);
+    border: 1px solid var(--border-code);
+    border-radius: var(--radius-sm);
+}
+
+.pb-doc-inline {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--code-variable);
+}
+
+.pb-doc-parts {
+    margin: var(--space-4) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
     font-size: var(--text-xs);
     color: var(--text-secondary);
+}
+
+.pb-inspector-actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+}
+
+.pb-inspector-action {
+    padding: var(--space-1) var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-inspector-action:hover { background: var(--bg-hover); }
+
+.pb-inspector-action--yours {
+    color: var(--review);
+    border-color: var(--review);
+    background: var(--review-subtle);
+}
+
+.pb-inspector-action--quiet {
+    margin-left: auto;
+    color: var(--text-secondary);
+    border-color: transparent;
+}
+
+/* ============================================
+   Narrow — a split pane is a container, not a window
+   ============================================ */
+
+.builder,
+.pb-canvas { container: builder / inline-size; }
+
+/* Four columns need room. Below it, two; below that, one — never four squeezed
+   to the width of a word. */
+@container builder (max-width: 1180px) {
+    .pb-run { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container builder (max-width: 620px) {
+    .pb-run { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container builder (max-width: 720px) {
+    .builder-body { flex-direction: column; }
+
+    .pb-inspector {
+        width: auto;
+        border-left: none;
+        border-top: 1px solid var(--border);
+    }
+
+    .builder-facts { margin-left: 0; flex-basis: 100%; }
 }

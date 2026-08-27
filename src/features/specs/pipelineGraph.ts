@@ -72,6 +72,26 @@ export function writeHook(
     ]);
 }
 
+/** Switch the project to a named workflow. Returns the reason on refusal. */
+export function writeWorkflow(
+    script: string,
+    workspaceRoot: string,
+    name: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, ['--workflow', name]);
+}
+
+/** Create a workflow, seeded from `from`, and switch to it. */
+export function createWorkflow(
+    script: string,
+    workspaceRoot: string,
+    name: string,
+    from: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot,
+        ['--new-workflow', name, '--seed-from', from]);
+}
+
 function runConfigWrite(
     script: string,
     workspaceRoot: string,

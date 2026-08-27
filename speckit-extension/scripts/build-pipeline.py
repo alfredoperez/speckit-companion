@@ -56,15 +56,19 @@ TEMPLATES_REL = os.path.join(".specify", "templates")
 FRAGMENTS_REL = os.path.join(".specify", "companion", "fragments")
 #: A project's own node files, which a `type: node` hook may name by id.
 USER_NODES_REL = os.path.join(".specify", "companion", "nodes")
+#: Whole named configurations a project can switch between.
+WORKFLOWS_REL = os.path.join(".specify", "companion", "workflows")
 DEFAULT_OUT_REL = os.path.join(".specify", "extensions", "companion", "commands")
+
+#: The name for "Companion with nothing changed" — always offered, never a file.
+SHIPPED_WORKFLOW = "shipped"
 
 
 class BuildError(Exception):
     """A build that cannot complete. Nothing has been written when this is raised."""
 
 
-def load_config(project_root: str) -> dict:
-    path = os.path.join(project_root, CONFIG_REL)
+def _read_yaml(path: str, label: str) -> dict:
     if not os.path.isfile(path):
         return {}
     with open(path, encoding="utf-8") as fh:
@@ -75,7 +79,53 @@ def load_config(project_root: str) -> dict:
         # The reader names the line it refused; a build that cannot read the
         # configuration must say so rather than fall back to the defaults and
         # look like it applied one.
-        raise BuildError(f"{CONFIG_REL}: {err}") from err
+        raise BuildError(f"{label}: {err}") from err
+
+
+def available_workflows(project_root: str) -> list:
+    """Named workflows this project has written, by name, sorted."""
+    directory = os.path.join(project_root, WORKFLOWS_REL)
+    if not os.path.isdir(directory):
+        return []
+    return sorted(
+        f[:-4] for f in os.listdir(directory)
+        if f.endswith(".yml") and not f.startswith("_")
+    )
+
+
+def active_workflow(project_root: str) -> str:
+    """Which workflow `companion.yml` selects. Absent means companion.yml itself."""
+    base = _read_yaml(os.path.join(project_root, CONFIG_REL), CONFIG_REL)
+    name = base.get("workflow")
+    return str(name).strip() if isinstance(name, str) and name.strip() else ""
+
+
+def load_config(project_root: str) -> dict:
+    """The configuration a build works from.
+
+    `companion.yml` is the project's configuration. A `workflow: <name>` in it
+    hands over to `.specify/companion/workflows/<name>.yml` INSTEAD — switching
+    workflows switches the whole configuration at once, which is the point, so
+    the two are never merged into a third thing nobody wrote.
+
+    The reserved name `shipped` selects no configuration at all.
+    """
+    base = _read_yaml(os.path.join(project_root, CONFIG_REL), CONFIG_REL)
+    name = active_workflow(project_root)
+    if not name:
+        return base
+    if name == SHIPPED_WORKFLOW:
+        return {}
+
+    path = os.path.join(project_root, WORKFLOWS_REL, f"{name}.yml")
+    if not os.path.isfile(path):
+        known = available_workflows(project_root)
+        raise BuildError(
+            f"{CONFIG_REL}: workflow '{name}' has no file at "
+            f"{os.path.join(WORKFLOWS_REL, name + '.yml')}"
+            + (f" — this project has: {', '.join(known)}" if known else "")
+        )
+    return _read_yaml(path, os.path.join(WORKFLOWS_REL, f"{name}.yml"))
 
 
 #: Set for the project being built, so a `type: node` hook can name a file the

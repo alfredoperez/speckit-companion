@@ -1,11 +1,11 @@
 /**
  * The pipeline builder webview.
  *
- * Draws the containment the design settled on — a step is an outlined container,
- * a phase a band inside it, a node a box inside that — because the three levels
- * only mean something if you can see one inside the other. The decision states
- * where its verdicts route in words rather than as crossing wires, which is what
- * the design round concluded after trying it both ways.
+ * Draws the run left to right — the pipeline is a sequence and the layout says
+ * so — with `auto` out of the row because it runs the others rather than taking
+ * a turn among them. One hue marks everything the project owns. A node opens
+ * here rather than in the editor, since the file starts with frontmatter and
+ * fences nobody opened it to read.
  */
 
 import { render } from 'preact';
@@ -13,19 +13,36 @@ import { useEffect, useState } from 'preact/hooks';
 import {
     ExtensionToBuilderMessage,
     PipelineBuildKind,
+    PipelineGraph,
     PipelineGraphResult,
+    PipelineNode,
     isGraphError,
 } from '../../../src/protocol/pipeline';
 import { Canvas } from './Canvas';
 import { Header } from './Header';
+import { Inspector } from './Inspector';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
+
+interface Selection { command: string; nodeId: string }
+
+/** Find the selected node in the graph, so the inspector follows a rebuild. */
+function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
+    const step = graph.steps.find(s => s.name === at.command);
+    for (const phase of step?.phases ?? []) {
+        const node = phase.nodes.find(n => n.id === at.nodeId);
+        if (node) { return node; }
+    }
+    return null;
+}
 
 function App() {
     const [graph, setGraph] = useState<PipelineGraphResult | null>(null);
     const [buildState, setBuildState] = useState<PipelineBuildKind>('unconfigured');
     const [busy, setBusy] = useState(false);
+    const [selected, setSelected] = useState<Selection | null>(null);
+    const [body, setBody] = useState<{ key: string; body: string; parts: string[] } | null>(null);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -35,6 +52,12 @@ function App() {
                 setBuildState(message.buildState);
             } else if (message.type === 'busy') {
                 setBusy(message.busy);
+            } else if (message.type === 'nodeBody') {
+                setBody({
+                    key: `${message.command}/${message.nodeId}`,
+                    body: message.body,
+                    parts: message.parts,
+                });
             }
         };
         window.addEventListener('message', onMessage);
@@ -62,8 +85,17 @@ function App() {
         );
     }
 
+    const openNode = (command: string, nodeId: string) => {
+        setSelected({ command, nodeId });
+        setBody(null);
+        vscode.postMessage({ type: 'readNode', command, nodeId });
+    };
+
+    const node = selected ? findNode(graph, selected) : null;
+    const key = selected ? `${selected.command}/${selected.nodeId}` : '';
+
     return (
-        <div class="builder">
+        <div class={`builder ${node ? 'builder--inspecting' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
@@ -71,20 +103,47 @@ function App() {
                 onBuild={() => vscode.postMessage({ type: 'build' })}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
+                onSelectWorkflow={name => vscode.postMessage({ type: 'selectWorkflow', name })}
+                onNewWorkflow={() =>
+                    vscode.postMessage({ type: 'newWorkflow', from: graph.workflows.active })}
             />
-            <Canvas
-                graph={graph}
-                onOpenNode={(command, nodeId) =>
-                    vscode.postMessage({ type: 'openNode', command, nodeId })}
-                onReplaceNode={(command, nodeId) =>
-                    vscode.postMessage({ type: 'replaceNode', command, nodeId })}
-                onRestoreNode={(command, nodeId) =>
-                    vscode.postMessage({ type: 'restoreNode', command, nodeId })}
-                onReorder={(command, order) =>
-                    vscode.postMessage({ type: 'reorderNodes', command, order })}
-                onAddHook={(command, anchor, when) =>
-                    vscode.postMessage({ type: 'addHook', command, anchor, when })}
-            />
+            <div class="builder-body">
+                <Canvas
+                    graph={graph}
+                    selected={selected}
+                    onOpenNode={openNode}
+                    onReplaceNode={(command, nodeId) =>
+                        vscode.postMessage({ type: 'replaceNode', command, nodeId })}
+                    onRestoreNode={(command, nodeId) =>
+                        vscode.postMessage({ type: 'restoreNode', command, nodeId })}
+                    onReorder={(command, order) =>
+                        vscode.postMessage({ type: 'reorderNodes', command, order })}
+                    onAddHook={(command, anchor, when) =>
+                        vscode.postMessage({ type: 'addHook', command, anchor, when })}
+                />
+                {node && selected && (
+                    <Inspector
+                        node={node}
+                        step={selected.command}
+                        body={body?.key === key ? body.body : null}
+                        parts={body?.key === key ? body.parts : []}
+                        onClose={() => { setSelected(null); setBody(null); }}
+                        onOpenFile={() => vscode.postMessage({
+                            type: 'openNode', command: selected.command, nodeId: selected.nodeId,
+                        })}
+                        onReplace={() => vscode.postMessage({
+                            type: 'replaceNode', command: selected.command, nodeId: selected.nodeId,
+                        })}
+                        onRestore={() => vscode.postMessage({
+                            type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
+                        })}
+                        onAttach={() => vscode.postMessage({
+                            type: 'addHook', command: selected.command,
+                            anchor: selected.nodeId, when: 'before',
+                        })}
+                    />
+                )}
+            </div>
         </div>
     );
 }

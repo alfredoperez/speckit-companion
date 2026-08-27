@@ -4,12 +4,13 @@
 import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
+import { Inspector } from '../Inspector';
 import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/protocol/pipeline';
 
 function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
     return {
         id: 'resolve-dir', name: 'Resolve the spec folder', kind: 'control',
-        reads: [], writes: [], hooks: [],
+        reads: [], writes: [], hooks: [], pinned: '',
         source: '/ext/nodes/specify/resolve-dir.md', replaced: false,
         ...overrides,
     };
@@ -30,8 +31,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
                 hooks: [],
                 nodes: [node({
                     id: 'draft-spec', name: 'Draft the spec', kind: 'author',
-                    reads: ['resolve-dir'], writes: ['spec.md'],
-                    source: '/ext/nodes/specify/draft-spec.md',
+                    writes: ['spec.md'], source: '/ext/nodes/specify/draft-spec.md',
                 })],
             },
         ],
@@ -46,6 +46,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
 function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps: [step()],
+        workflows: { available: ['shipped'], active: '' },
         configured: false,
         customised: false,
         warnings: [],
@@ -63,13 +64,11 @@ function mount(child: preact.ComponentChild): HTMLElement {
 
 type Calls = string[][];
 
-/** Mount the canvas and hand back the DOM plus what each node action recorded. */
-function canvas(g: PipelineGraph = graph()) {
-    const opened: Calls = [], replaced: Calls = [], restored: Calls = [];
+function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId: string }) {
+    const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
-    const added: Calls = [];
     const host = mount(
-        <Canvas graph={g}
+        <Canvas graph={g} selected={selected}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
@@ -99,306 +98,336 @@ function drag(host: HTMLElement, from: number, to: number): void {
 
 afterEach(() => { document.body.innerHTML = ''; });
 
-describe('the canvas draws the three levels as containment', () => {
-    it('puts every phase inside its step, and every node inside its phase', () => {
-        const { host } = canvas(graph());
+describe('the run reads left to right', () => {
+    it('gives every step in the sequence a column, in order', () => {
+        const four = graph({
+            steps: ['specify', 'plan', 'tasks', 'implement'].map(name => step({ name })),
+        });
+        const { host } = canvas(four);
 
-        const stepEl = host.querySelector('.pb-step');
-        expect(stepEl).not.toBeNull();
-        const phases = stepEl!.querySelectorAll('.pb-phase');
-        expect(phases).toHaveLength(2);
-        expect(phases[0].querySelectorAll('.pb-node')).toHaveLength(1);
+        const run = host.querySelector('.pb-run') as HTMLElement;
+        expect(run.style.getPropertyValue('--pb-steps')).toBe('4');
+        expect(Array.from(run.querySelectorAll('.pb-step-name')).map(el => el.textContent))
+            .toEqual(['specify', 'plan', 'tasks', 'implement']);
+    });
+
+    it('numbers the steps by their place in the run', () => {
+        const two = graph({ steps: [step({ name: 'specify' }), step({ name: 'plan' })] });
+        const { host } = canvas(two);
+        expect(Array.from(two.steps.length ? host.querySelectorAll('.pb-step-index') : [])
+            .map(el => el.textContent)).toEqual(['1', '2']);
+    });
+
+    // `auto` runs the others. Drawn as a peer it reads as a fifth step.
+    it('keeps a step outside the run out of the row', () => {
+        const withAuto = graph({
+            steps: [step({ name: 'specify' }), step({ name: 'auto', inSequence: false })],
+        });
+        const { host } = canvas(withAuto);
+
+        expect(host.querySelectorAll('.pb-run .pb-step')).toHaveLength(1);
+        const aside = host.querySelector('.pb-aside');
+        expect(aside?.textContent).toContain('auto');
+        expect(aside?.textContent).toContain('not a step of its own');
+    });
+
+    it('puts every phase inside its step, and every node inside its phase', () => {
+        const { host } = canvas();
+        const stepEl = host.querySelector('.pb-step')!;
+        expect(stepEl.querySelectorAll('.pb-phase')).toHaveLength(2);
+        expect(stepEl.querySelectorAll('.pb-phase')[0].querySelectorAll('.pb-node')).toHaveLength(1);
     });
 
     it('shows a node by its human name, with the id as metadata', () => {
-        const { host } = canvas(graph());
-
+        const { host } = canvas();
         expect(host.querySelector('.pb-node-name')?.textContent).toBe('Resolve the spec folder');
         expect(host.querySelector('.pb-node-id')?.textContent).toBe('resolve-dir');
     });
+});
 
-    it('names the artifact a node is declared to produce', () => {
-        const { host } = canvas(graph());
-        expect(host.textContent).toContain('spec.md');
-    });
-
-    it('links steps to each other, never a node to a step', () => {
-        const two = graph({ steps: [step(), step({ name: 'plan' })] });
-        const { host } = canvas(two);
-
-        // One link, between the two step containers.
-        expect(host.querySelectorAll('.pb-link')).toHaveLength(1);
-        expect(host.querySelectorAll('.pb-node .pb-link')).toHaveLength(0);
-    });
-
-    it('states where a decision routes instead of drawing wires', () => {
-        const withDecision = graph({
-            steps: [step({
-                decisions: [{
-                    node: 'classify-size',
-                    verdicts: [
-                        { name: 'simple', folds: ['plan', 'tasks'], warns: '' },
-                        { name: 'normal', folds: [], warns: '' },
+describe('a hook is drawn on the side it runs', () => {
+    const hooked = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'wrap-up', hooks: [],
+                nodes: [node({
+                    id: 'complete', name: 'Mark the spec complete',
+                    hooks: [
+                        { when: 'before', type: 'command', summary: 'doctor.py --chat' },
+                        { when: 'after', type: 'skill', summary: 'create-pr' },
                     ],
-                }],
-            })],
-        });
-        const { host } = canvas(withDecision);
-
-        const text = host.querySelector('.pb-decisions')?.textContent ?? '';
-        expect(text).toContain('classify-size decides');
-        expect(text).toContain('skips plan, tasks');
-        expect(text).toContain('runs everything');
+                })],
+            }],
+        })],
     });
 
-    // A hook drawn on the wrong side is worse than one not drawn: it says the
-    // pipeline does something in an order it does not.
-    it('draws a before-hook above its node and an after-hook below it', () => {
-        const both = graph({
+    it('puts before above the node and after below it', () => {
+        const { host } = canvas(hooked());
+        const group = host.querySelector('.pb-node-group')!;
+        const kinds = Array.from(group.children).map(el => el.className);
+
+        expect(kinds[0]).toContain('pb-hooks--before');
+        expect(kinds[1]).toContain('pb-node');
+        expect(kinds[2]).toContain('pb-hooks--after');
+    });
+
+    it('separates the two sides, never mixing them into one list', () => {
+        const { host } = canvas(hooked());
+        expect(host.querySelector('.pb-hooks--before')?.textContent).toContain('doctor.py');
+        expect(host.querySelector('.pb-hooks--before')?.textContent).not.toContain('create-pr');
+        expect(host.querySelector('.pb-hooks--after')?.textContent).toContain('create-pr');
+    });
+
+    it('draws one connector per side, however many hooks share it', () => {
+        const many = graph({
             steps: [step({
                 phases: [{
                     name: 'wrap-up', hooks: [],
                     nodes: [node({
-                        id: 'complete', name: 'Mark the spec complete',
                         hooks: [
-                            { when: 'before', type: 'command', summary: 'doctor.py --chat' },
+                            { when: 'after', type: 'prompt', summary: 'one' },
+                            { when: 'after', type: 'prompt', summary: 'two' },
                             { when: 'after', type: 'skill', summary: 'create-pr' },
                         ],
                     })],
                 }],
             })],
         });
-        const { host } = canvas(both);
-
-        const nodeEl = host.querySelector('.pb-node')!;
-        const parts = Array.from(nodeEl.children).map(el => el.className);
-        expect(parts[0]).toContain('pb-hooks--before');
-        expect(parts[parts.length - 1]).toContain('pb-hooks');
-        expect(parts[parts.length - 1]).not.toContain('--before');
-
-        expect(nodeEl.querySelector('.pb-hooks--before')?.textContent).toContain('doctor.py');
-        expect(nodeEl.querySelector('.pb-hooks--before')?.textContent).not.toContain('create-pr');
+        const { host } = canvas(many);
+        expect(host.querySelectorAll('.pb-hooks-arm')).toHaveLength(1);
+        expect(host.querySelectorAll('.pb-hook')).toHaveLength(3);
     });
 
-    it('cuts a long hook at a word, never mid-token', () => {
+    it('says what a hook does in a verb, not its type name', () => {
+        const { host } = canvas(hooked());
+        expect(host.querySelector('.pb-hooks--after .pb-hook-verb')?.textContent)
+            .toBe('run the skill');
+    });
+
+    it('cuts a long hook at a word, and keeps the whole of it on the title', () => {
+        const full = 'Read the doctor report above and act on it by this rule, fixing only bookkeeping';
         const long = graph({
             steps: [step({
                 phases: [{
                     name: 'wrap-up', hooks: [],
-                    nodes: [node({
-                        hooks: [{
-                            when: 'after', type: 'prompt',
-                            summary: 'Read the doctor report above and act on it by this rule, fixing only bookkeeping',
-                        }],
-                    })],
+                    nodes: [node({ hooks: [{ when: 'after', type: 'prompt', summary: full }] })],
                 }],
             })],
         });
         const { host } = canvas(long);
-        const shown = host.querySelector('.pb-hook')!.textContent ?? '';
+        const chip = host.querySelector('.pb-hook')!;
+        const shown = chip.querySelector('.pb-hook-text')!.textContent!.replace('…', '');
 
-        expect(shown).toContain('…');
-        // The visible tail is a whole word, and the full text is still reachable.
-        const body = shown.split(': ')[1].replace('…', '');
-        expect(body.endsWith(' ')).toBe(false);
-        expect('Read the doctor report above and act on it by this rule, fixing only bookkeeping')
-            .toContain(body);
-        expect(host.querySelector('.pb-hook')?.getAttribute('title'))
-            .toContain('fixing only bookkeeping');
+        expect(chip.getAttribute('title')).toBe(full);
+        expect(full).toContain(shown);
+        expect(shown.endsWith(' ')).toBe(false);
     });
 
-    it('links one step to the next, but never into a step outside the run', () => {
-        const withAuto = graph({
-            steps: [
-                step({ name: 'specify' }),
-                step({ name: 'implement' }),
-                step({ name: 'auto', inSequence: false }),
-            ],
-        });
-        const { host } = canvas(withAuto);
-        // specify → implement only. Nothing points into auto.
-        expect(host.querySelectorAll('.pb-link')).toHaveLength(1);
-        expect(host.querySelectorAll('.pb-step--aside')).toHaveLength(1);
-    });
-
-    it('shows a hook beside the block it attaches to', () => {
-        const hooked = graph({
+    it('hangs a phase hook off the phase, not off a node', () => {
+        const onPhase = graph({
             steps: [step({
                 phases: [{
                     name: 'author',
-                    hooks: [{ when: 'after', type: 'command', summary: 'npm run lint-spec' }],
-                    nodes: [node({
-                        id: 'draft-spec', name: 'Draft the spec', kind: 'author',
-                        hooks: [{ when: 'before', type: 'prompt', summary: 'check the canvas' }],
-                    })],
+                    hooks: [{ when: 'before', type: 'prompt', summary: 'read the steering docs' }],
+                    nodes: [node()],
                 }],
             })],
         });
-        const { host } = canvas(hooked);
+        const { host } = canvas(onPhase);
+        const phase = host.querySelector('.pb-phase')!;
+        expect(phase.querySelector(':scope > .pb-hooks--before')?.textContent)
+            .toContain('read the steering docs');
+        expect(host.querySelector('.pb-node-group .pb-hooks')).toBeNull();
+    });
+});
 
-        const phaseHook = host.querySelector('.pb-phase-head .pb-hook');
-        expect(phaseHook?.textContent).toContain('after');
-        expect(phaseHook?.textContent).toContain('npm run lint-spec');
-
-        const nodeHook = host.querySelector('.pb-node .pb-hook');
-        expect(nodeHook?.textContent).toContain('before');
-        expect(nodeHook?.textContent).toContain('check the canvas');
+describe('one hue marks everything the project owns', () => {
+    it('marks a replaced node and says whose it is', () => {
+        const ours = graph({
+            steps: [step({
+                phases: [{
+                    name: 'author', hooks: [],
+                    nodes: [node({ id: 'draft-spec', name: 'Draft the spec', replaced: true })],
+                }],
+            })],
+        });
+        const { host } = canvas(ours);
+        expect(host.querySelector('.pb-node--yours')).not.toBeNull();
+        expect(host.querySelector('.pb-yours')?.textContent).toBe('yours');
     });
 
-    it('opens the node someone clicks', () => {
+    it('marks a template whose sections the project replaced', () => {
+        const swapped = graph({
+            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'] } })],
+        });
+        const { host } = canvas(swapped);
+        expect(host.querySelector('.pb-template--yours')).not.toBeNull();
+        expect(host.querySelector('.pb-template .pb-yours')?.textContent).toContain('1 section');
+    });
+
+    it('leaves a shipped node and a stock template unmarked', () => {
+        const plain = graph({
+            steps: [step({ template: { file: 'spec-template.md', sections: [] } })],
+        });
+        const { host } = canvas(plain);
+        expect(host.querySelector('.pb-node--yours')).toBeNull();
+        expect(host.querySelector('.pb-yours')).toBeNull();
+    });
+});
+
+describe('a node says whether it can move, and why not', () => {
+    const pinned = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'gather', hooks: [],
+                nodes: [
+                    node({ id: 'resolve-dir', pinned: 'load-living-specs has to run after it' }),
+                    node({ id: 'load-living-specs', name: 'Load living specs' }),
+                ],
+            }],
+        })],
+    });
+
+    it('offers a grip only on a node that is free to move', () => {
+        const { host } = canvas(pinned());
+        const nodes = host.querySelectorAll('.pb-node');
+        expect(nodes[0].getAttribute('draggable')).toBe('false');
+        expect(nodes[1].getAttribute('draggable')).toBe('true');
+        expect(nodes[0].querySelector('.pb-grip--pinned')).not.toBeNull();
+        expect(nodes[1].querySelector('.pb-grip--pinned')).toBeNull();
+    });
+
+    it('puts the reason on the grip rather than leaving it a mystery', () => {
+        const { host } = canvas(pinned());
+        expect(host.querySelector('.pb-grip')?.getAttribute('title'))
+            .toBe('load-living-specs has to run after it');
+    });
+
+    it('refuses to start a drag from a pinned node', () => {
+        const { host, orders } = canvas(pinned());
+        drag(host, 0, 1);
+        expect(orders).toEqual([]);
+    });
+
+    it('sends the step\'s whole order when a free node is dragged', () => {
+        const free = graph({
+            steps: [step({
+                phases: [{
+                    name: 'wrap-up', hooks: [],
+                    nodes: [node({ id: 'a' }), node({ id: 'b' }), node({ id: 'c' })],
+                }],
+            })],
+        });
+        const { host, orders } = canvas(free);
+        drag(host, 2, 0);
+        expect(orders).toEqual([['specify', ['c', 'a', 'b']]]);
+    });
+});
+
+describe('attaching work', () => {
+    it('offers one Attach per phase, not a pair on every block', () => {
+        const { host } = canvas();   // two phases, one node each
+        expect(host.querySelectorAll('.pb-attach')).toHaveLength(2);
+    });
+
+    it('names the phase it would attach to', () => {
+        const { host, added } = canvas();
+        (host.querySelector('.pb-attach') as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'gather', 'before']]);
+    });
+});
+
+describe('opening a node', () => {
+    it('asks for the node someone clicked', () => {
         const { host, opened } = canvas();
         (host.querySelector('.pb-node-main') as HTMLButtonElement).click();
         expect(opened).toEqual([['specify', 'resolve-dir']]);
     });
 
-    it('marks only the steps this project changed', () => {
-        const mixed = graph({
-            steps: [
-                step({ changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 0 } }),
-                step({ name: 'plan' }),
-            ],
-        });
-        const { host } = canvas(mixed);
-        expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
+    it('marks the open node so the canvas and the inspector agree', () => {
+        const { host } = canvas(graph(), { command: 'specify', nodeId: 'draft-spec' });
+        const open = host.querySelectorAll('.pb-node--open');
+        expect(open).toHaveLength(1);
+        expect(open[0].textContent).toContain('Draft the spec');
     });
 });
 
-describe('work can be attached at a boundary', () => {
-    it('offers both sides of every node and every phase', () => {
-        const { host } = canvas();   // two phases, one node each
-        // 2 phases × before/after + 2 nodes × before/after.
-        expect(host.querySelectorAll('.pb-add')).toHaveLength(8);
+describe('the inspector reads a node here', () => {
+    const noop = () => undefined;
+    const actions = {
+        onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
+    };
+
+    it('renders the instructions instead of the raw file', () => {
+        const host = mount(
+            <Inspector node={node({ name: 'Draft the spec' })} step="specify"
+                body={'## Write it\n\n- Load `spec-template.md`\n- Keep every section'}
+                parts={[]} {...actions} />,
+        );
+        expect(host.querySelector('.pb-doc-heading')?.textContent).toBe('Write it');
+        expect(host.querySelectorAll('.pb-doc-list li')).toHaveLength(2);
+        expect(host.querySelector('.pb-doc-inline')?.textContent).toBe('spec-template.md');
     });
 
-    it('names the phase and the side it attaches to', () => {
-        const { host, added } = canvas();
-        (host.querySelector('.pb-phase-add .pb-add') as HTMLButtonElement).click();
-        expect(added).toEqual([['specify', 'gather', 'before']]);
+    it('names the shared blocks rather than showing the fences', () => {
+        const host = mount(
+            <Inspector node={node()} step="specify" body="" parts={['timing', 'self-advance']}
+                {...actions} />,
+        );
+        expect(host.querySelector('.pb-doc-parts')?.textContent).toContain('timing, self-advance');
+        expect(host.textContent).toContain('no instructions of its own');
     });
 
-    it('names the node and the side it attaches to', () => {
-        const { host, added } = canvas();
-        const onNode = host.querySelectorAll('.pb-node .pb-add');
-        (onNode[onNode.length - 1] as HTMLButtonElement).click();
-        expect(added).toEqual([['specify', 'draft-spec', 'after']]);
-    });
-});
-
-describe('dragging a node reorders the step', () => {
-    /** One phase holding three nodes, so a drag has somewhere to land. */
-    function threeInAPhase() {
-        return graph({
-            steps: [step({
-                phases: [{
-                    name: 'wrap-up',
-                    hooks: [],
-                    nodes: [
-                        node({ id: 'branch', name: 'Create the branch' }),
-                        node({ id: 'finalize', name: 'Finalize' }),
-                        node({ id: 'handoff', name: 'Hand off' }),
-                    ],
-                }],
-            })],
-        });
-    }
-
-    it('sends the step\'s whole order, with the dragged node in its new place', () => {
-        const { host, orders } = canvas(threeInAPhase());
-        drag(host, 2, 0);   // handoff, dropped onto branch
-        expect(orders).toEqual([['specify', ['handoff', 'branch', 'finalize']]]);
+    it('says why a node is held in place', () => {
+        const host = mount(
+            <Inspector node={node({ pinned: 'quality-checklist has to run after it' })}
+                step="specify" body="x" parts={[]} {...actions} />,
+        );
+        expect(host.textContent).toContain('quality-checklist has to run after it');
     });
 
-    it('sends nothing when a node is dropped on itself', () => {
-        const { host, orders } = canvas(threeInAPhase());
-        drag(host, 1, 1);
-        expect(orders).toEqual([]);
+    it('offers to take a shipped node over, and to hand a replaced one back', () => {
+        const shipped = mount(
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...actions} />);
+        expect(shipped.textContent).toContain('Make it mine');
+
+        document.body.innerHTML = '';
+        const ours = mount(
+            <Inspector node={node({ replaced: true })} step="specify" body="x" parts={[]}
+                {...actions} />);
+        expect(ours.textContent).toContain('Use the shipped node');
     });
 
-    it('carries the nodes of every phase, since the file stores one flat list', () => {
-        const { host, orders } = canvas();   // two phases, one node each
-        drag(host, 1, 0);
-        expect(orders).toEqual([['specify', ['draft-spec', 'resolve-dir']]]);
-    });
-
-    it('marks every node draggable', () => {
-        const { host } = canvas(threeInAPhase());
-        const nodes = Array.from(host.querySelectorAll('.pb-node'));
-        expect(nodes.every(n => n.getAttribute('draggable') !== null)).toBe(true);
-    });
-});
-
-describe('a project can take a node over', () => {
-    /** A graph whose one node is the project's own copy. */
-    function owned() {
-        return graph({
-            steps: [step({
-                phases: [{
-                    name: 'author',
-                    hooks: [],
-                    nodes: [node({
-                        id: 'draft-spec', name: 'Draft the spec', kind: 'author',
-                        source: '/proj/.specify/companion/nodes/specify/draft-spec.md',
-                        replaced: true,
-                    })],
-                }],
-                changes: { ...NO_CHANGES, replaced: ['draft-spec'] },
-            })],
-        });
-    }
-
-    it('offers to replace a node that is still the shipped one', () => {
-        const { host, replaced } = canvas();
-        const action = host.querySelector('.pb-node-action') as HTMLButtonElement;
-
-        expect(action.textContent).toBe('Replace');
-        action.click();
-        expect(replaced).toEqual([['specify', 'resolve-dir']]);
-    });
-
-    it('marks a node the project owns, and offers the shipped one back', () => {
-        const { host, restored } = canvas(owned());
-
-        expect(host.querySelector('.pb-node--replaced')).not.toBeNull();
-        expect(host.querySelector('.pb-own')?.textContent).toBe('YOURS');
-
-        const action = host.querySelector('.pb-node-action') as HTMLButtonElement;
-        expect(action.textContent).toBe('Use shipped');
-        action.click();
-        expect(restored).toEqual([['specify', 'draft-spec']]);
-    });
-
-    it('counts a replaced node as a change to its step', () => {
-        const { host } = canvas(owned());
-        expect(host.querySelectorAll('.pb-step--changed')).toHaveLength(1);
+    it('waits visibly rather than showing an empty body', () => {
+        const host = mount(
+            <Inspector node={node()} step="specify" body={null} parts={[]} {...actions} />);
+        expect(host.querySelector('.pb-doc-waiting')?.textContent).toBe('Reading…');
     });
 });
 
 describe('the header says what this pipeline is', () => {
     const noop = () => undefined;
+    const HEAD = {
+        onBuild: noop, onPreview: noop, onOpenConfig: noop,
+        onSelectWorkflow: noop, onNewWorkflow: noop,
+    };
 
     it('reads as the shipped default when nothing was changed', () => {
         const host = mount(
-            <Header graph={graph()} buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
         expect(host.querySelector('.builder-chip')?.textContent).toContain('Shipped default');
     });
 
     it('expands to say what changed', async () => {
         const customised = graph({
             customised: true,
-            steps: [step({
-                changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 2 },
-            })],
+            steps: [step({ changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 2 } })],
         });
         const host = mount(
-            <Header graph={customised} buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+            <Header graph={customised} buildState="current" busy={false} {...HEAD} />);
         expect(host.querySelector('.builder-changes')).toBeNull();
 
         (host.querySelector('.builder-chip') as HTMLButtonElement).click();
-        // Preact re-renders on a microtask; read the DOM after it has flushed.
         await new Promise(resolve => setTimeout(resolve, 0));
         const listed = host.querySelector('.builder-changes')?.textContent ?? '';
         expect(listed).toContain('quality-checklist');
@@ -407,26 +436,19 @@ describe('the header says what this pipeline is', () => {
 
     it('says plainly when the built commands are behind the configuration', () => {
         const host = mount(
-            <Header graph={graph()} buildState="stale" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+            <Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
         expect(host.querySelector('.builder-notice')?.textContent)
             .toContain('still reading the old commands');
     });
 
     it('says nothing about staleness when the build is current', () => {
         const host = mount(
-            <Header graph={graph()} buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
         expect(host.querySelector('.builder-notice')).toBeNull();
     });
 
     it('disables the actions while a build is running', () => {
-        const host = mount(
-            <Header graph={graph()} buildState="current" busy
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+        const host = mount(<Header graph={graph()} buildState="current" busy {...HEAD} />);
         const primary = host.querySelector('.builder-action--primary') as HTMLButtonElement;
         expect(primary.disabled).toBe(true);
         expect(primary.textContent).toContain('Building');
@@ -435,9 +457,70 @@ describe('the header says what this pipeline is', () => {
     it('surfaces a warning the build reported', () => {
         const host = mount(
             <Header graph={graph({ warnings: ['hook anchor nope not in active recipe — skipped'] })}
-                buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop} />,
-        );
+                buildState="current" busy={false} {...HEAD} />);
         expect(host.textContent).toContain('not in active recipe');
+    });
+});
+
+describe('switching workflows', () => {
+    const noop = () => undefined;
+
+    function header(g: PipelineGraph) {
+        const picked: string[] = [];
+        let created = 0;
+        const host = mount(
+            <Header graph={g} buildState="current" busy={false}
+                onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                onSelectWorkflow={name => picked.push(name)}
+                onNewWorkflow={() => { created += 1; }} />,
+        );
+        return { host, picked, count: () => created };
+    }
+
+    it('names the workflow in force', () => {
+        const { host } = header(graph({
+            workflows: { available: ['shipped', 'bugfix'], active: 'bugfix' },
+        }));
+        expect(host.querySelector('.builder-workflow-current')?.textContent).toContain('bugfix');
+    });
+
+    it('calls an unnamed configuration what it is, not blank', () => {
+        const { host } = header(graph());
+        expect(host.querySelector('.builder-workflow-current')?.textContent)
+            .toContain('This project');
+    });
+
+    it('lists every workflow, with shipped explained', async () => {
+        const { host } = header(graph({
+            workflows: { available: ['shipped', 'bugfix', 'client'], active: '' },
+        }));
+        (host.querySelector('.builder-workflow-current') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const options = Array.from(host.querySelectorAll('.builder-workflow-option'));
+        expect(options.map(el => el.textContent)).toEqual([
+            'As it shipsCompanion with nothing changed', 'bugfix', 'client', 'New workflow…',
+        ]);
+    });
+
+    it('reports the one someone picked', async () => {
+        const { host, picked } = header(graph({
+            workflows: { available: ['shipped', 'bugfix'], active: '' },
+        }));
+        (host.querySelector('.builder-workflow-current') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        (host.querySelectorAll('.builder-workflow-option')[1] as HTMLButtonElement).click();
+
+        expect(picked).toEqual(['bugfix']);
+    });
+
+    it('offers to start a new one', async () => {
+        const { host, count } = header(graph());
+        (host.querySelector('.builder-workflow-current') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const options = host.querySelectorAll('.builder-workflow-option');
+        (options[options.length - 1] as HTMLButtonElement).click();
+
+        expect(count()).toBe(1);
     });
 });

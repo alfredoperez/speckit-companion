@@ -173,6 +173,27 @@ commands:
 
 In v1 this changes *assembly order only*, not the per-node output text — true add/drop-a-section composition is a later step. A recipe that drops a node which a kept node still `reads:` is a **load-time error**, so a recipe can't silently break the pipeline.
 
+### Several workflows in one project
+
+A workflow is a whole named configuration:
+
+```
+.specify/companion/workflows/bugfix.yml     # a short loop
+.specify/companion/workflows/client.yml     # with a sign-off gate after every step
+```
+
+`companion.yml` picks one:
+
+```yaml
+workflow: bugfix
+```
+
+The selected file **replaces** `companion.yml` rather than merging with it. Switching is meant to swap the pipeline whole — order, hooks, templates, routing — and a merge would produce a third configuration nobody wrote. The reserved name `shipped` selects nothing at all, which is the thing to compare against.
+
+Nodes and fragments are shared: `.specify/companion/nodes/` and `.specify/companion/fragments/` belong to the project, not to a workflow, so a node written once is available to all of them (or to none — which workflow uses it is the workflow's business).
+
+A `workflow:` naming a file that is not there is a build error listing the workflows that do exist, rather than a silent fall back to the defaults.
+
 ### Replacing a node's instructions
 
 A recipe decides *which* nodes run; a replacement decides *what one says*. Put a file at `.specify/companion/nodes/<command>/<node_id>.md` — same frontmatter, your own body — and it is read instead of the shipped node of that id:

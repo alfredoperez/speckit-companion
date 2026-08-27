@@ -35,6 +35,8 @@ export interface PipelineNode {
     /** Files this node is declared to produce. */
     writes: string[];
     hooks: PipelineHook[];
+    /** Why this node cannot be dragged, or empty when it can. */
+    pinned: string;
     /** The file these instructions were read from — what opening the node opens. */
     source: string;
     /** Whether that file is the project's own copy rather than the shipped one. */
@@ -96,8 +98,17 @@ export interface PipelineStep {
     changes: PipelineChanges;
 }
 
+/** The named configurations this project can switch between. */
+export interface PipelineWorkflows {
+    /** Every workflow, `shipped` first — that one is always offered and has no file. */
+    available: string[];
+    /** Which one `companion.yml` selects. Empty means companion.yml itself. */
+    active: string;
+}
+
 export interface PipelineGraph {
     steps: PipelineStep[];
+    workflows: PipelineWorkflows;
     /** Whether the project has a companion.yml at all. */
     configured: boolean;
     /** Whether anything differs from the shipped pipeline. */
@@ -144,8 +155,16 @@ export type BuilderToExtensionMessage =
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
     | { type: 'reorderNodes'; command: string; order: string[] }
     /** Attach work at a boundary. The panel asks what kind and collects the detail. */
-    | { type: 'addHook'; command: string; anchor: string; when: HookWhen };
+    | { type: 'addHook'; command: string; anchor: string; when: HookWhen }
+    /** Read a node's instructions to show them here rather than in the editor. */
+    | { type: 'readNode'; command: string; nodeId: string }
+    /** Switch the whole configuration. `shipped` is Companion with nothing changed. */
+    | { type: 'selectWorkflow'; name: string }
+    /** Start a new workflow, optionally seeded from the active one. */
+    | { type: 'newWorkflow'; from: string };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
-    | { type: 'busy'; busy: boolean };
+    | { type: 'busy'; busy: boolean }
+    /** A node's instructions, with the frontmatter and shared-part fences taken out. */
+    | { type: 'nodeBody'; command: string; nodeId: string; body: string; parts: string[] };

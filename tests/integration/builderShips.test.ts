@@ -28,7 +28,7 @@ const shipped = new Set(
 const REQUIRED_SCRIPTS = [
     'build-pipeline.py',      // applies a project's configuration
     'pipeline-graph.py',      // the structure the panel draws
-    'config_write.py',        // saves a reorder back to companion.yml
+    'config_write.py',        // saves a reorder, a hook or a workflow switch
     'assemble-nodes.py',      // both of the above assemble through it
     '_command_parts.py',      // …which reads the node files through this
     'hook_render.py',         // hooks into the body

@@ -223,6 +223,78 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
     return "\n".join(out) + ("\n" if trailing_newline else "")
 
 
+def set_workflow(text: str, name: str) -> str:
+    """Return `text` with a top-level `workflow: <name>` set, replacing any existing one.
+
+    Switching workflows is one key, at the top of the file, because that is what
+    a person reviewing the diff needs to see: which way of working this project
+    is on. The rest of `companion.yml` is left exactly as it is.
+    """
+    if not name.strip():
+        raise ConfigWriteError("a workflow needs a name")
+
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    line = f"workflow: {_quote(name.strip())}"
+
+    at = _find_key(lines, "workflow", 0, len(lines), 0)
+    if at is not None:
+        out = lines[:at] + [line] + lines[_block_end(lines, at, 0, len(lines)):]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    # New: above `commands:` if there is one, so the selection reads first.
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        body = ([line] + ([""] + lines if lines else []))
+    else:
+        body = lines[:commands_at] + [line, ""] + lines[commands_at:]
+    return "\n".join(body) + ("\n" if trailing_newline else "")
+
+
+def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
+    """Create `.specify/companion/workflows/<name>.yml` and return its path.
+
+    Seeded from the configuration currently in force when one is named, so
+    "like what we run now, but…" does not start from a blank file.
+    """
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
+        raise ConfigWriteError(
+            f"'{name}' cannot be a workflow name — it becomes a filename, so use "
+            f"lowercase letters, digits and dashes")
+
+    directory = os.path.join(project_root, ".specify", "companion", "workflows")
+    path = os.path.join(directory, f"{name}.yml")
+    if os.path.exists(path):
+        raise ConfigWriteError(f"a workflow called '{name}' already exists")
+
+    source = ""
+    if seed_from:
+        origin = (os.path.join(directory, f"{seed_from}.yml") if seed_from != "shipped"
+                  else None)
+        if origin is None:
+            source = ""
+        elif os.path.isfile(origin):
+            with open(origin, encoding="utf-8") as fh:
+                source = fh.read()
+        else:
+            base = os.path.join(project_root, ".specify", "companion.yml")
+            if os.path.isfile(base):
+                with open(base, encoding="utf-8") as fh:
+                    # The selection itself does not travel into the copy.
+                    source = "\n".join(
+                        l for l in fh.read().splitlines()
+                        if not l.startswith("workflow:")
+                    ).strip() + "\n"
+
+    os.makedirs(directory, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(f"# {name} — a way of working for this project.\n"
+                 f"# Switch to it from the pipeline panel, or set `workflow: {name}`\n"
+                 f"# in .specify/companion.yml.\n\n")
+        fh.write(source or "commands: {}\n")
+    return path
+
+
 def check_order(command: str, nodes: list) -> None:
     """Refuse an order the pipeline cannot honour, before it reaches the file.
 
@@ -270,7 +342,7 @@ def main() -> int:
 
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default=os.getcwd())
-    ap.add_argument("--command", required=True)
+    ap.add_argument("--command", help="the step to edit (not needed for a workflow)")
     ap.add_argument("--nodes", help="comma-separated node ids, in order")
     ap.add_argument("--hook", help="hook type: command | prompt | node | skill")
     ap.add_argument("--when", choices=("before", "after"))
@@ -278,11 +350,40 @@ def main() -> int:
     ap.add_argument("--ref", default="")
     ap.add_argument("--run", default="")
     ap.add_argument("--text", default="")
+    ap.add_argument("--workflow", help="switch to this workflow")
+    ap.add_argument("--new-workflow", help="create this workflow and switch to it")
+    ap.add_argument("--seed-from", default="", help="workflow to copy when creating one")
     args = ap.parse_args()
 
-    path = os.path.join(os.path.abspath(args.project), ".specify", "companion.yml")
+    project = os.path.abspath(args.project)
+    path = os.path.join(project, ".specify", "companion.yml")
     try:
+        if args.new_workflow:
+            created = new_workflow(project, args.new_workflow, args.seed_from)
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(set_workflow(existing, args.new_workflow))
+            print(f"[config] created {os.path.relpath(created, project)} and switched to it")
+            return 0
+
+        if args.workflow:
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(set_workflow(existing, args.workflow))
+            print(f"[config] now running '{args.workflow}'")
+            return 0
+
         if args.hook:
+            if not args.command:
+                raise ConfigWriteError("a hook needs --command")
             if not args.when or not args.anchor:
                 raise ConfigWriteError("a hook needs --when and --anchor")
             hook = {"type": args.hook, "ref": args.ref, "run": args.run, "text": args.text}
@@ -297,6 +398,8 @@ def main() -> int:
             print(f"[config] {args.command}: {args.hook} hook added {args.when} {args.anchor}")
             return 0
 
+        if not args.command:
+            raise ConfigWriteError("nothing to write — pass --command, --workflow or --new-workflow")
         if not args.nodes:
             raise ConfigWriteError("nothing to write — pass --nodes or --hook")
         nodes = [n.strip() for n in args.nodes.split(",") if n.strip()]

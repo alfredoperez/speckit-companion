@@ -20,14 +20,17 @@ import {
     PipelineGraphResult,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
+import { readableNode } from './readableNode';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
     HookDraft,
+    createWorkflow,
     resolveConfigWriteScript,
     resolveGraphScript,
     writeHook,
     writeNodeOrder,
+    writeWorkflow,
 } from '../specs/pipelineGraph';
 
 const VIEW_TYPE = 'speckit.pipelineBuilder';
@@ -35,6 +38,10 @@ const BUILD_COMMAND = 'speckit.companion.buildPipeline';
 
 /** Mirrors `PROJECT_NODES_REL` in `_command_parts.py` — a project's own nodes. */
 const PROJECT_NODES_REL = path.join('.specify', 'companion', 'nodes');
+
+/** Mirrors `WORKFLOWS_REL` / `SHIPPED_WORKFLOW` in build-pipeline.py. */
+const WORKFLOWS_REL = path.join('.specify', 'companion', 'workflows');
+const SHIPPED_WORKFLOW = 'shipped';
 
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -186,6 +193,64 @@ export class PipelineBuilderPanel {
                 `Added ${draft.type} ${message.when} ${message.anchor}. Build to apply it.`,
                 'Build',
             ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
+        },
+        readNode: async message => {
+            const file = this.nodeSource(message.command, message.nodeId);
+            if (!file) { return; }
+            const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
+            await this.post({
+                type: 'nodeBody', command: message.command, nodeId: message.nodeId, body, parts,
+            });
+        },
+        selectWorkflow: async message => {
+            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
+            if (!script) {
+                void vscode.window.showWarningMessage(
+                    'Switching workflows needs the companion spec-kit extension.');
+                return;
+            }
+            const refused = await writeWorkflow(script, this.workspaceRoot, message.name);
+            if (refused) {
+                void vscode.window.showWarningMessage(refused);
+                return;
+            }
+            await this.send();
+            void vscode.window.showInformationMessage(
+                `Now running "${message.name}". Build to apply it.`, 'Build',
+            ).then(pick => { if (pick === 'Build') { void this.run(BUILD_COMMAND); } });
+        },
+        newWorkflow: async message => {
+            const name = await vscode.window.showInputBox({
+                title: 'New workflow',
+                prompt: 'A name for this way of working',
+                placeHolder: 'bugfix',
+                validateInput: text => {
+                    const value = text.trim();
+                    if (!value) { return 'Give it a name.'; }
+                    if (!/^[a-z0-9][a-z0-9-]*$/.test(value)) {
+                        return 'Lowercase letters, digits and dashes — it becomes a filename.';
+                    }
+                    if (value === SHIPPED_WORKFLOW) { return `"${SHIPPED_WORKFLOW}" is taken.`; }
+                    return undefined;
+                },
+            });
+            if (!name?.trim()) { return; }
+
+            const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
+            if (!script) {
+                void vscode.window.showWarningMessage(
+                    'Creating a workflow needs the companion spec-kit extension.');
+                return;
+            }
+            const refused = await createWorkflow(
+                script, this.workspaceRoot, name.trim(), message.from);
+            if (refused) {
+                void vscode.window.showWarningMessage(refused);
+                return;
+            }
+            await this.send();
+            await vscode.window.showTextDocument(vscode.Uri.file(path.join(
+                this.workspaceRoot, WORKFLOWS_REL, `${name.trim()}.yml`)));
         },
         restoreNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);

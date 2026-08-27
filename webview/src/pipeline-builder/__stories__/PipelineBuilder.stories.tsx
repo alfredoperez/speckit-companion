@@ -32,7 +32,7 @@ const NO_CHANGES = {
 function node(id: string, name: string, over: Partial<PipelineNode> = {}): PipelineNode {
     return {
         id, name, kind: 'control', reads: [], writes: [], hooks: [],
-        source: `/ext/nodes/${id}.md`, replaced: false, ...over,
+        source: `/ext/nodes/${id}.md`, replaced: false, pinned: '', ...over,
     };
 }
 
@@ -50,6 +50,7 @@ function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep>
 function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps,
+        workflows: { available: ['shipped'], active: '' },
         configured: false,
         customised: false,
         warnings: [],
@@ -105,7 +106,10 @@ const CANVAS_ACTIONS = {
     onOpenNode: noop, onReplaceNode: noop, onRestoreNode: noop,
     onReorder: noop, onAddHook: noop,
 };
-const HEADER_ACTIONS = { onBuild: noop, onPreview: noop, onOpenConfig: noop };
+const HEADER_ACTIONS = {
+    onBuild: noop, onPreview: noop, onOpenConfig: noop,
+    onSelectWorkflow: noop, onNewWorkflow: noop,
+};
 
 const meta: Meta = { title: 'Pipeline Builder/Situations' };
 export default meta;
@@ -116,7 +120,7 @@ type Story = StoryObj;
 export const ShippedDefault: Story = {
     name: '1 · Nothing changed',
     render: () => (
-        <div>
+        <div class="builder">
             <Header graph={graph([SPECIFY, PLAN])} buildState="unconfigured" busy={false} {...HEADER_ACTIONS} />
             <Canvas graph={graph([SPECIFY, PLAN])} {...CANVAS_ACTIONS} />
         </div>
@@ -139,7 +143,7 @@ export const OneNodeReplaced: Story = {
         ], { changes: { ...NO_CHANGES, replaced: ['draft-spec'] } });
         const g = graph([ours], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -157,7 +161,7 @@ export const TemplateSectionReplaced: Story = {
             artifacts: ['spec.md'],
         })], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -187,7 +191,7 @@ export const EveryHookType: Story = {
             ], [{ when: 'before', type: 'prompt', summary: 'Read the doctor report above and act on it.' }]),
         ], { changes: { ...NO_CHANGES, hooks: 5 } })], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -249,7 +253,7 @@ export const RoutingChanged: Story = {
         });
         const g = graph([moved], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -267,7 +271,7 @@ export const NodeDropped: Story = {
         ], { changes: { ...NO_CHANGES, removed: ['quality-checklist'] } })],
             { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="never-built" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -285,7 +289,7 @@ export const NodesReordered: Story = {
             ]),
         ], { changes: { ...NO_CHANGES, reordered: true } })], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -312,7 +316,7 @@ export const EverythingChangedAtOnce: Story = {
             },
         })], { configured: true, customised: true, counts: { steps: 1, phases: 1, nodes: 1, hooks: 1 } });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -386,7 +390,7 @@ export const TheWholePipeline: Story = {
             ]),
         ], { configured: true, customised: true });
         return (
-            <div>
+            <div class="builder">
                 <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
                 <Canvas graph={g} {...CANVAS_ACTIONS} />
             </div>
@@ -407,6 +411,39 @@ export const NoPhases: Story = {
     name: '18 · A step with no phases declared',
     render: () => (
         <Canvas graph={graph([step('doctor', [])])} {...CANVAS_ACTIONS} />
+    ),
+};
+
+export const SeveralWorkflows: Story = {
+    name: '20 · Several saved workflows',
+    render: () => (
+        <Header
+            graph={graph([SPECIFY], {
+                configured: true, customised: true,
+                workflows: { available: ['shipped', 'bugfix', 'client'], active: 'bugfix' },
+            })}
+            buildState="current" busy={false} {...HEADER_ACTIONS} />
+    ),
+};
+
+export const APinnedNode: Story = {
+    name: '21 · A node nothing can be dragged past',
+    render: () => (
+        <Canvas graph={graph([step('specify', [
+            phase('gather', [
+                node('resolve-dir', 'Resolve the spec folder', {
+                    pinned: 'load-living-specs has to run after it',
+                }),
+                node('load-living-specs', 'Load living specs', {
+                    kind: 'investigate', reads: ['resolve-dir'],
+                    pinned: 'it has to run after resolve-dir',
+                }),
+            ]),
+            phase('wrap-up', [
+                node('finalize', 'Finalize'),
+                node('handoff', 'Hand off to the next step'),
+            ]),
+        ])])} {...CANVAS_ACTIONS} />
     ),
 };
 

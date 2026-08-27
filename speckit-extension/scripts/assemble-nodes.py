@@ -95,6 +95,63 @@ def phases_for(command: str, order: list) -> list:
     return grouped
 
 
+def _reads_satisfied(reads_map: dict, ordering: list) -> bool:
+    """Every node's inputs come before it, considering only nodes in `ordering`."""
+    seen = set()
+    present = set(ordering)
+    for node_id in ordering:
+        if any(dep in present and dep not in seen for dep in reads_map.get(node_id, ())):
+            return False
+        seen.add(node_id)
+    return True
+
+
+def movability(command: str, order: list) -> dict:
+    """`{node_id: reason_it_cannot_move}` — an empty reason means it can.
+
+    A node moves only within its phase, and only where its inputs still come
+    first. That is not the same as "has a dependency": in `[a, b, c]` where `c`
+    reads `a`, `a` can still take the middle place. So the answer is whether ANY
+    other position in the phase is valid, not whether the node has an edge.
+
+    Working this out is what the panel could not do, so every node looked
+    draggable and most were not.
+    """
+    reasons = {}
+    for phase in phases_for(command, order) or [{"name": "", "nodes": list(order)}]:
+        nodes = phase["nodes"]
+        reads_map = {n: read_node(command, n)[0].get("reads") or [] for n in nodes}
+
+        if len(nodes) < 2:
+            for node_id in nodes:
+                reasons[node_id] = "it is the only node in its phase"
+            continue
+
+        for node_id in nodes:
+            rest = [n for n in nodes if n != node_id]
+            movable = any(
+                _reads_satisfied(reads_map, rest[:i] + [node_id] + rest[i:])
+                for i in range(len(rest) + 1)
+                if rest[:i] + [node_id] + rest[i:] != nodes
+            )
+            if movable:
+                reasons[node_id] = ""
+                continue
+            blockers = [d for d in reads_map[node_id] if d in reads_map]
+            holders = [n for n in nodes if node_id in reads_map[n]]
+            if blockers and holders:
+                reasons[node_id] = (
+                    f"it has to run after {', '.join(blockers)} "
+                    f"and before {', '.join(holders)}")
+            elif blockers:
+                reasons[node_id] = f"it has to run after {', '.join(blockers)}"
+            elif holders:
+                reasons[node_id] = f"{', '.join(holders)} has to run after it"
+            else:
+                reasons[node_id] = "there is nowhere else for it to go"
+    return reasons
+
+
 def unexpressible_order(command: str, order: list):
     """The first node an order moves across a phase boundary, or None.
 

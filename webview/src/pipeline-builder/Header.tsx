@@ -17,6 +17,17 @@ interface Props {
     onBuild: () => void;
     onPreview: () => void;
     onOpenConfig: () => void;
+    /** Switch the whole configuration to another saved workflow. */
+    onSelectWorkflow: (name: string) => void;
+    /** Start a new workflow, seeded from the one in force. */
+    onNewWorkflow: () => void;
+}
+
+/** How a workflow reads in the switcher. The stored name is a filename. */
+function workflowLabel(name: string): string {
+    if (name === '') { return 'This project'; }
+    if (name === 'shipped') { return 'As it ships'; }
+    return name;
 }
 
 /** What the build state means, in the words a person would use. */
@@ -61,15 +72,62 @@ function changeSummary(graph: PipelineGraph): string[] {
     return lines;
 }
 
-export function Header({ graph, buildState, busy, onBuild, onPreview, onOpenConfig }: Props) {
+export function Header(props: Props) {
+    const { graph, buildState, busy, onBuild, onPreview, onOpenConfig } = props;
     const [open, setOpen] = useState(false);
+    const [pickingWorkflow, setPickingWorkflow] = useState(false);
     const notice = buildNotice(buildState);
     const changes = changeSummary(graph);
 
     return (
         <header class="builder-header">
             <div class="builder-identity">
-                <span class="builder-title">Pipeline Builder</span>
+                <span class="builder-title">Pipeline</span>
+
+                <div class="builder-workflow">
+                    <button class="builder-workflow-current"
+                        aria-expanded={pickingWorkflow}
+                        onClick={() => setPickingWorkflow(!pickingWorkflow)}
+                        title="The way of working this project is on">
+                        {workflowLabel(graph.workflows.active)}
+                        <span class="builder-chip-caret" aria-hidden="true">
+                            {pickingWorkflow ? '\u25b4' : '\u25be'}
+                        </span>
+                    </button>
+                    {pickingWorkflow && (
+                        <ul class="builder-workflow-menu">
+                            {graph.workflows.available.map(name => (
+                                <li key={name}>
+                                    <button
+                                        class={`builder-workflow-option ${
+                                            name === graph.workflows.active
+                                                ? 'builder-workflow-option--active' : ''}`}
+                                        onClick={() => {
+                                            setPickingWorkflow(false);
+                                            props.onSelectWorkflow(name);
+                                        }}>
+                                        {workflowLabel(name)}
+                                        {name === 'shipped' && (
+                                            <span class="builder-workflow-note">
+                                                Companion with nothing changed
+                                            </span>
+                                        )}
+                                    </button>
+                                </li>
+                            ))}
+                            <li class="builder-workflow-new">
+                                <button class="builder-workflow-option"
+                                    onClick={() => {
+                                        setPickingWorkflow(false);
+                                        props.onNewWorkflow();
+                                    }}>
+                                    New workflow…
+                                </button>
+                            </li>
+                        </ul>
+                    )}
+                </div>
+
                 <button
                     class={`builder-chip ${graph.customised ? 'builder-chip--customised' : ''}`}
                     aria-expanded={open}

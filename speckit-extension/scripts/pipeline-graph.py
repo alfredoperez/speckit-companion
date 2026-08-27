@@ -32,16 +32,20 @@ from _command_parts import (  # noqa: E402
     use_project_nodes,
 )
 
+assemble = importlib.import_module("assemble-nodes")
 build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
 
 
-def _node(command: str, node_id: str, hooks: list) -> dict:
+def _node(command: str, node_id: str, hooks: list, pinned: str = "") -> dict:
     meta, _body = read_node(command, node_id)
     writes = meta.get("writes")
     source, replaced = node_source(command, node_id)
     return {
         "id": node_id,
+        # Why this node cannot be dragged, or "" when it can. A node that looks
+        # draggable and refuses is worse than one that never offered.
+        "pinned": pinned,
         # Where these instructions actually came from, so the builder opens the
         # file someone can edit instead of the assembled body they cannot.
         "source": source,
@@ -93,11 +97,12 @@ def build_graph(project_root: str) -> dict:
         hooks = entry["hooks"]
         phases = entry.get("phases") or []
 
+        pinned = assemble.movability(command, entry["order"])
         drawn_phases = []
         for phase in phases:
             drawn_phases.append({
                 "name": phase["name"],
-                "nodes": [_node(command, n, hooks) for n in phase["nodes"]],
+                "nodes": [_node(command, n, hooks, pinned.get(n, "")) for n in phase["nodes"]],
                 "hooks": [_hook(h) for h in hooks if h["anchor"] == phase["name"]],
             })
 
@@ -129,8 +134,16 @@ def build_graph(project_root: str) -> dict:
         or s["template"]
         for s in steps
     )
+    workflows = build.available_workflows(project_root)
+    active = build.active_workflow(project_root)
     return {
         "steps": steps,
+        "workflows": {
+            # `shipped` is always offered and is never a file: it is Companion
+            # with nothing changed, which is the thing you compare against.
+            "available": [build.SHIPPED_WORKFLOW] + workflows,
+            "active": active,
+        },
         "configured": bool(config),
         "customised": customised,
         "warnings": warnings,

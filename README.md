@@ -98,11 +98,15 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 The Companion pipeline is assembled from blocks: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. It draws whatever that configuration resolves to: every step and phase, the nodes inside them, the hooks attached, where each verdict goes, and the files each step produces. A chip says whether anything differs from the pipeline as it ships, and expands to list exactly what. Clicking a node opens the node itself — the instructions that node contributes, not the whole assembled command.
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The four steps are columns in run order, with `auto` above the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached — each drawn on the side it runs, with a connector into the block it acts on.
 
-**Rearrange it.** Drag a node to move it within its phase; the new order is saved to `companion.yml` and everything else in the file is left alone. An order the pipeline cannot honour is refused with the reason rather than half-applied.
+**One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
 
-**Attach your own work.** The `+` on any node or phase asks what should happen there — invoke a **skill** you already have, follow an **instruction**, or run a **command**. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
+**Several ways of working.** A workflow is a whole named configuration in `.specify/companion/workflows/`. Switch between them from the header and everything swaps at once — node order, hooks, templates, routing — so a one-line fix and a client deliverable can run different pipelines out of the same repository. Nodes and fragments are shared across all of them, and "as it ships" is always there to compare against.
+
+**Rearrange it.** Drag a node to move it within its phase. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
+
+**Attach your own work.** **Attach** on any phase asks what should happen there — invoke a **skill** you already have, follow an **instruction**, or run a **command**. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
 
 **Rewrite a node in your own words.** Press **Replace** on any node and its instructions are copied to `.specify/companion/nodes/<step>/<node>.md`, where you can edit them. Build, and your version is what your assistant reads; the node is marked **YOURS** in the panel until you press **Use shipped** to hand it back. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
 
