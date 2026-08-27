@@ -186,6 +186,42 @@ class HooksLandOutsideTheirNode(unittest.TestCase):
                          assemble.assemble_command("specify", markers=False))
 
 
+class ThePreviewSaysWhatWouldChange(unittest.TestCase):
+    """R009 — a build overwrites what the assistant reads, so the question worth
+    answering first is what changes, not what it will contain."""
+
+    def test_an_unbuilt_command_reads_as_new(self):
+        with tempfile.TemporaryDirectory() as out:
+            lines = build.preview({"plan": "body\n"}, out)
+        self.assertIn("plan: new", lines[0])
+
+    def test_an_identical_rebuild_reads_as_unchanged(self):
+        with tempfile.TemporaryDirectory() as out:
+            Path(out, "speckit.companion.plan.md").write_text("body\n", encoding="utf-8")
+            lines = build.preview({"plan": "body\n"}, out)
+        self.assertIn("plan: unchanged", lines[0])
+
+    def test_a_changed_body_reports_counts_and_the_lines(self):
+        with tempfile.TemporaryDirectory() as out:
+            Path(out, "speckit.companion.plan.md").write_text("keep\ngone\n", encoding="utf-8")
+            lines = build.preview({"plan": "keep\nadded\n"}, out)
+        summary = lines[0]
+        self.assertIn("+1", summary)
+        self.assertIn("−1", summary)
+        self.assertTrue(any(line.strip() == "+added" for line in lines))
+        self.assertTrue(any(line.strip() == "-gone" for line in lines))
+
+    def test_a_dry_run_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as out:
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--dry-run", "--out", out],
+                capture_output=True, text=True, cwd=str(EXT.parent),
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("what would change", result.stdout)
+            self.assertEqual(list(Path(out).iterdir()), [])
+
+
 class ItReadsThisRepositorysOwnConfiguration(unittest.TestCase):
     """The build has a real configuration to prove itself against: this one."""
 

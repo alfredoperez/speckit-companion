@@ -26,6 +26,7 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import difflib
 import importlib
 import json
 import os
@@ -126,6 +127,36 @@ def describe(command: str, entry: dict) -> str:
     return f"  {command}: " + (", ".join(bits) if bits else "shipped default")
 
 
+def preview(bodies: dict, out_dir: str) -> list:
+    """How each command's body differs from what is built right now.
+
+    A build overwrites the commands the assistant reads, so the question worth
+    answering before writing is not "what will it contain" but "what changes".
+    An unbuilt command is reported as new rather than as a diff against nothing.
+    """
+    lines = []
+    for command, body in sorted(bodies.items()):
+        target = os.path.join(out_dir, f"speckit.companion.{command}.md")
+        if not os.path.isfile(target):
+            lines.append(f"  {command}: new — {len(body.splitlines())} lines")
+            continue
+        with open(target, encoding="utf-8") as fh:
+            current = fh.read()
+        if current == body:
+            lines.append(f"  {command}: unchanged")
+            continue
+        diff = list(difflib.unified_diff(
+            current.splitlines(), body.splitlines(),
+            fromfile=f"{command} (built)", tofile=f"{command} (next)", lineterm="",
+        ))
+        added = sum(1 for d in diff if d.startswith("+") and not d.startswith("+++"))
+        removed = sum(1 for d in diff if d.startswith("-") and not d.startswith("---"))
+        lines.append(f"  {command}: +{added} −{removed} lines")
+        lines.extend(f"    {d}" for d in diff if d.startswith(("+", "-")) and
+                     not d.startswith(("+++", "---")))
+    return lines
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default=os.getcwd(),
@@ -160,6 +191,9 @@ def main() -> int:
     print(manifest_mod.render(manifest))
 
     if args.dry_run:
+        print("[build] what would change:")
+        for line in preview(bodies, out_dir):
+            print(line)
         return 0
 
     os.makedirs(out_dir, exist_ok=True)
