@@ -13,106 +13,61 @@ export interface VSCodeApi {
 }
 
 // ============================================
-// Document Types (mirrored from extension)
+// The wire contract
 // ============================================
 
-export type CoreDocumentType = 'spec' | 'plan' | 'tasks';
-export type DocumentType = CoreDocumentType | string;
+// The document vocabulary, payload shapes and message unions are declared
+// once, in `src/protocol/viewer.ts`, and compiled by both sides. This file
+// used to re-declare all of it, which is how the extension came to have
+// three message variants the webview had never heard of.
+export * from '../../../src/protocol/viewer';
 
-export interface SpecDocument {
-    type: DocumentType;
-    label: string;
-    fileName: string;
-    filePath: string;
-    exists: boolean;
-    isCore: boolean;
-    category?: 'core' | 'related' | 'action';
-    parentStep?: string;
-}
+// The `.spec-context.json` shapes the viewer renders are declared once, in the
+// contract module, and re-exported here. Only the two types below stay local:
+// they are the *serialized* wire form of the footer, which drops the
+// `visibleWhen` predicate the extension-side `FooterAction` carries.
+export type {
+    CapabilityContentView,
+    CheckpointStatus,
+    ClassificationEntry,
+    ConcernEntry,
+    FooterScope,
+    HistoryEntry,
+    HistoryEntryFrom,
+    LivingSpecsView,
+    ReviewComment,
+    ReviewCommentAnchor,
+    ReviewCommentStatus,
+    StepBadgeState,
+    StepHistoryEntry,
+    SubstepEntry,
+    TaskSummary,
+    TimingSummary,
+    ViewerCoverageRow,
+    ViewerDecision,
+    ViewerVerification,
+} from '../../../src/core/types/specContext';
 
-/**
- * Enhancement button configuration
- */
-export interface EnhancementButton {
-    label: string;
-    command: string;
-    icon: string;
-    tooltip?: string;
-}
+import type {
+    CheckpointStatus,
+    FooterScope,
+    ReviewCommentStatus,
+    ClassificationEntry,
+    ConcernEntry,
+    HistoryEntry,
+    LivingSpecsView,
+    ReviewComment,
+    StepBadgeState,
+    StepHistoryEntry,
+    TaskSummary,
+    TimingSummary,
+    ViewerCoverageRow,
+    ViewerDecision,
+    ViewerVerification,
+} from '../../../src/core/types/specContext';
 
-/**
- * Staleness information for a single document
- */
-export interface StalenessInfo {
-    isStale: boolean;
-    staleReason: string;
-    newerUpstream: string;
-}
 
-/**
- * Map of document type to its staleness state
- */
-export type StalenessMap = Record<DocumentType, StalenessInfo>;
-
-/**
- * Navigation state for message-based updates.
- *
- * Footer-relevant duplicates (`footerState`, `runningStep*`) were removed: the
- * footer now derives entirely from `ViewerState`. `NavState` carries only
- * navigation/document concerns plus the workflow-derived `enhancementButtons`.
- */
-/**
- * Capability facts shown in the header for a living spec.
- *
- * Every optional field is absent — never zeroed — when it could not be
- * determined, so "no coverage tier" stays distinguishable from "nothing
- * covered". Mirrors `LivingHeaderMeta` on the extension side.
- */
-export interface LivingHeaderMeta {
-    capabilityName: string;
-    specPath: string;
-    location: 'centralized' | 'colocated';
-    match: string[];
-    requirements?: number;
-    scenarios?: number;
-    coverage?: { covered: number; total: number };
-    drifted?: boolean;
-}
-
-export interface NavState {
-    /** Living-spec mode: hide the workflow stepper and footer. */
-    livingMode?: boolean;
-    /** Capability facts for the header; living-spec mode only. */
-    livingMeta?: LivingHeaderMeta | null;
-    /** Header title came from the document's own H1, so skip slug casing. */
-    titleFromHeading?: boolean;
-    coreDocs: SpecDocument[];
-    relatedDocs: SpecDocument[];
-    currentDoc: DocumentType;
-    workflowPhase: string;
-    taskCompletionPercent: number;
-    isViewingRelatedDoc: boolean;
-    enhancementButtons?: EnhancementButton[];
-    stalenessMap?: StalenessMap;
-    specStatus?: string;
-    currentTask?: string | null;
-    activeStep?: string | null;
-    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>;
-    badgeText?: string | null;
-    createdDate?: string | null;
-    lastUpdatedDate?: string | null;
-    specContextName?: string | null;
-    branch?: string | null;
-    currentStep?: string | null;
-    filePath?: string | null;
-    docTypeLabel?: string | null;
-    /** Whether the Activity toggle is shown (from `speckit.viewer.activityPanel` setting). */
-    activityPanelEnabled?: boolean;
-    /** Whether to render the install banner inside the Activity panel (viewer only). */
-    showInstallPrompt?: boolean;
-    /** Run-recovery affordance for a quiet in-flight run (issue #418). */
-    runRecovery?: { show: boolean; mode: 'stalled' | 'stale'; message: string; minutesQuiet: number };
-}
+import type { ViewerToExtensionMessage } from '../../../src/protocol/viewer';
 
 // ============================================
 // Webview State
@@ -136,8 +91,6 @@ export interface ViewerWebviewState {
 // Viewer State (derived from SpecContext)
 // ============================================
 
-export type StepBadgeState = 'not-started' | 'in-progress' | 'completed';
-export type FooterScope = 'spec' | 'step';
 
 /** Serializable footer action — visibleWhen function is stripped before send. */
 export interface SerializedFooterAction {
@@ -147,129 +100,11 @@ export interface SerializedFooterAction {
     tooltip: string;
 }
 
-export interface HistoryEntryFrom {
-    step: string | null;
-    substep: string | null;
-}
-
-export interface HistoryEntry {
-    step: string;
-    substep: string | null;
-    /** Per-task id on implement entries (substep is null on these). */
-    task?: string;
-    kind?: 'start' | 'complete';
-    /** Legacy, read-only: writers no longer emit it. Present on old records. */
-    from?: HistoryEntryFrom;
-    by: string;
-    at: string;
-}
-
-/** @deprecated Renamed to `HistoryEntryFrom`. */
-export type TransitionFrom = HistoryEntryFrom;
-/** @deprecated Renamed to `HistoryEntry`. */
-export type Transition = HistoryEntry;
-
-export interface SubstepEntry {
-    name: string;
-    startedAt: string;
-    completedAt: string | null;
-}
-
-export interface StepHistoryEntry {
-    startedAt: string;
-    completedAt: string | null;
-    /** Array form on some specs, Record form on others — normalize at consumer. */
-    substeps?: SubstepEntry[] | Record<string, { startedAt: string; completedAt: string | null }>;
-    /** True only when both boundaries were extension-stamped — spans safe to present as durations. */
-    durationTrusted?: boolean;
-    /** True when the step was stamped as a fast-path fold — render "folded into", never a duration. */
-    folded?: boolean;
-}
-
-export interface TimingSummary {
-    measuredPhases: number;
-    expectedPhases: number;
-    complete: boolean;
-    startedAt?: string;
-    endedAt?: string;
-    elapsedMs?: number;
-}
-
-export interface TaskSummary {
-    status: string;
-    did?: string;
-    files?: string[];
-    concerns?: string[];
-}
-
-export interface ConcernEntry {
-    task?: string;
-    note: string;
-}
-
-export interface CheckpointStatus {
-    commit?: boolean;
-    pr?: boolean;
-}
-
-/** Normalized reasoning-trail entries (mirror of the extension's Viewer* types). */
-export interface ViewerDecision {
-    decision: string;
-    why?: string;
-    rejected?: string;
-}
-
-export interface ViewerVerification {
-    what: string;
-    result?: string;
-    command?: string;
-    warnings?: string[];
-}
-
-export interface ViewerCoverageRow {
-    req: string;
-    title?: string;
-    tasks: string[];
-    tests: string[];
-    /**
-     * Which of `tests` were confirmed to exist on disk. A named test that is not
-     * there is the case the table used to render exactly like a real one — the
-     * string was typed once and nothing ever read it back.
-     *
-     * `undefined` means nobody checked (no workspace to resolve against), which
-     * is different from "checked and found nothing" and must render differently.
-     */
-    missingTests?: string[];
-}
-
-export interface ClassificationEntry {
-    projectedFiles?: number;
-    projectedTasks?: number;
-    scopeSignal?: string;
-    verdict: string;
-}
 
 // ============================================
 // Persisted review comments
 // ============================================
 
-export type ReviewCommentStatus = 'pending' | 'applied';
-
-export interface ReviewCommentAnchor {
-    heading: string | null;
-    blockText: string;
-    line: number;
-}
-
-/** A persisted inline review comment (mirrors the extension `ReviewComment`). */
-export interface ReviewComment {
-    id: string;
-    doc: DocumentType;
-    anchor: ReviewCommentAnchor;
-    comment: string;
-    status: ReviewCommentStatus;
-    createdAt: string;
-}
 
 export interface ViewerState {
     status: string;
@@ -306,89 +141,6 @@ export interface ViewerState {
     classification?: ClassificationEntry;
 }
 
-/** Normalized living-specs view: loaded into context + folded back at completion. */
-export interface LivingSpecsView {
-    loaded: string[];
-    synced: string[];
-    /**
-     * Per-capability run-log chip metadata (name, resolved spec path, synced /
-     * delta state) — never the spec text itself, which the Living Specs viewer
-     * shows. Absent on legacy payloads (render the names-only list). Every
-     * loaded/synced name appears exactly once.
-     */
-    capabilities?: CapabilityContentView[];
-}
-
-/** One touched capability, resolved to a clickable run-log chip. */
-export interface CapabilityContentView {
-    name: string;
-    /** False when the capability couldn't be resolved to a spec path within the workspace. */
-    available: boolean;
-    /** Workspace-relative path to the capability spec; absent when unresolved/out-of-root. */
-    specPath?: string;
-    synced: boolean;
-    /** Fold-back counts from the feature spec's delta blocks; absent when none (never zeros). */
-    delta?: { added?: number; modified?: number; removed?: number; renamed?: number };
-}
-
-// ============================================
-// Message Types: Webview → Extension
-// ============================================
-
-export type ViewerToExtensionMessage =
-    | { type: 'switchDocument'; documentType: DocumentType }
-    | { type: 'editDocument' }
-    | { type: 'refreshContent' }
-    | { type: 'ready' }
-    // Hover action messages
-    | { type: 'refineLine'; lineNum: number; content: string; instruction: string }
-    | { type: 'editLine'; lineNum: number; newText: string }
-    | { type: 'removeLine'; lineNum: number }
-    // Task checkbox toggle
-    | { type: 'toggleCheckbox'; lineNum: number; checked: boolean }
-    // Footer action messages
-    | { type: 'editSource' }
-    | { type: 'regenerate' }
-    | { type: 'approve' }
-    | { type: 'clarify'; command?: string }
-    | { type: 'footerAction'; id: string }
-    // Lifecycle actions
-    | { type: 'completeSpec' }
-    | { type: 'archiveSpec' }
-    | { type: 'reactivateSpec' }
-    // Run-recovery affordance (issue #418) — quiet in-flight run
-    | { type: 'resumeRun' }
-    | { type: 'setStatus' }
-    // Living-spec drift → fold the changed code back into the spec
-    | { type: 'livingUpdate' }
-    // Stepper navigation
-    | { type: 'stepperClick'; phase: string }
-    // Persisted review comments — written to .spec-context.json on each mutation
-    | { type: 'addComment'; id: string; doc: DocumentType; lineNum: number; lineContent: string; comment: string }
-    | { type: 'removeComment'; id: string }
-    | { type: 'editComment'; id: string; comment: string }
-    // Run refinement for one document's pending comments (from the Activity list)
-    | { type: 'runDocRefinement'; doc: DocumentType }
-    // File reference click
-    | { type: 'openFile'; filename: string }
-    // Living-specs chip click — open the capability in the Living Specs viewer
-    | { type: 'openLivingSpec'; capabilityName: string; specPath?: string }
-    // Webview render-time error (reported by error boundaries)
-    | { type: 'webviewError'; source: string; message: string; stack?: string };
-
-// ============================================
-// Message Types: Extension → Webview
-// ============================================
-
-export type ExtensionToViewerMessage =
-    | { type: 'contentUpdated'; content: string; documentType: DocumentType; specName: string; navState?: NavState; viewerState?: ViewerState }
-    | { type: 'documentsUpdated'; documents: SpecDocument[]; currentDocument: DocumentType }
-    | { type: 'error'; message: string; recoverable: boolean }
-    | { type: 'fileDeleted'; filePath: string }
-    | { type: 'navStateUpdated'; navState: NavState }
-    | { type: 'viewerStateUpdated'; viewerState: ViewerState; navState?: NavState }
-    | { type: 'livingHealthResolved'; livingMeta: LivingHeaderMeta }
-    | { type: 'actionToast'; message: string };
 
 // ============================================
 // Refinement Types (GitHub-style review)

@@ -117,6 +117,12 @@ export interface SubstepEntry {
 export interface StepHistoryEntry {
     startedAt: string;
     completedAt: string | null;
+    /**
+     * The array form is what the deriver emits and what every consumer reads.
+     * Old specs persisted a record keyed by substep name; that shape reaches the
+     * viewer only as input to `normalizeSubsteps`, which is where the tolerance
+     * is declared — it is not part of this contract.
+     */
     substeps?: SubstepEntry[];
     /**
      * True only when BOTH boundaries were stamped by the extension's own clock
