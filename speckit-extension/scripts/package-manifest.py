@@ -89,6 +89,7 @@ BUILD_ONLY = frozenset({
     # step is deliberate and separate; the gate is what will ask for it.
     "build-pipeline.py",
     "hook_render.py",
+    "template_render.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

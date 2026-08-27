@@ -125,12 +125,36 @@ def _strip_comment(line: str) -> str:
     return line
 
 
+def _unquote(text: str) -> str:
+    """Drop one matched pair of surrounding quotes.
+
+    A key often has to be quoted — a section heading with a colon or an ampersand
+    in it, for instance — and the quotes are YAML syntax, not part of the name.
+    Keeping them produced a key nothing could match, so a configuration addressing
+    `"User Scenarios & Testing"` silently addressed nothing.
+    """
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        return text[1:-1]
+    return text
+
+
 def _split_key(body: str) -> tuple:
-    """Split `key: value` at the colon that ends the key; a line with no such colon is all key."""
+    """Split `key: value` at the colon that ends the key; a line with no such colon is all key.
+
+    A quoted key is split at the colon *after* its closing quote, so a colon
+    inside the quotes stays part of the name.
+    """
+    if body[:1] in "\"'":
+        quote = body[0]
+        close = body.find(quote, 1)
+        if close != -1:
+            rest = body[close + 1:]
+            if rest.startswith(":") and (len(rest) == 1 or rest[1] == " "):
+                return _unquote(body[:close + 1]), rest[1:].strip()
     for ci, ch in enumerate(body):
         if ch == ":" and (ci + 1 == len(body) or body[ci + 1] == " "):
-            return body[:ci].strip(), body[ci + 1:].strip()
-    return body, ""
+            return _unquote(body[:ci].strip()), body[ci + 1:].strip()
+    return _unquote(body), ""
 
 
 def _anchor_names(lines: list) -> set:
@@ -228,8 +252,12 @@ def load_yaml(text: str):
             stripped = line.strip()
             if ":" not in stripped:
                 raise ValueError(f"map line without ':' -> {stripped!r}")
-            key, val = stripped.split(":", 1)
-            key, val = key.strip(), val.strip()
+            # A quoted key is split after its closing quote, so a colon inside the
+            # quotes stays part of the name — and the quotes come off, because they
+            # are YAML syntax rather than part of the key. Keeping them produced a
+            # key nothing could match, which made a configuration addressing
+            # `"User Scenarios & Testing"` silently address nothing.
+            key, val = _split_key(stripped)
             pos[0] += 1
             if not val:
                 out[key] = parse_block(ind + 1)

@@ -38,12 +38,15 @@ sys.path.insert(0, HERE)
 
 import companion_config as cc  # noqa: E402
 import hook_render  # noqa: E402
+import template_render  # noqa: E402
 from _command_parts import decomposed_commands, nodes_command_dir  # noqa: E402
 
 assemble = importlib.import_module("assemble-nodes")
 manifest_mod = importlib.import_module("manifest")
 
 CONFIG_REL = os.path.join(".specify", "companion.yml")
+TEMPLATES_REL = os.path.join(".specify", "templates")
+FRAGMENTS_REL = os.path.join(".specify", "companion", "fragments")
 DEFAULT_OUT_REL = os.path.join(".specify", "extensions", "companion", "commands")
 
 
@@ -99,6 +102,29 @@ def plan_build(config: dict) -> tuple[dict, list]:
         warnings.extend(hook_warnings)
         plan[command] = {"order": order, "hooks": hooks, "default": default}
     return plan, warnings
+
+
+def plan_templates(config: dict, project_root: str) -> dict:
+    """Resolve every template a project asked to change. `{command: (name, text, sections)}`.
+
+    Raises before anything is written when a section named in the configuration
+    is not in the template, or names a fragment the project has not written — a
+    template override that quietly does nothing is the same silence as a hook
+    that never fires.
+    """
+    templates_dir = os.path.join(project_root, TEMPLATES_REL)
+    fragments_dir = os.path.join(project_root, FRAGMENTS_REL)
+    resolved = {}
+    for command in decomposed_commands():
+        try:
+            name, text, changed = template_render.resolve(
+                command, config, templates_dir, fragments_dir
+            )
+        except template_render.TemplateError as err:
+            raise BuildError(str(err)) from err
+        if name and text is not None:
+            resolved[command] = (name, text, changed)
+    return resolved
 
 
 def render(command: str, entry: dict) -> str:
@@ -172,9 +198,10 @@ def main() -> int:
     try:
         config = load_config(project)
         plan, warnings = plan_build(config)
-        # Every body is rendered before any is written: a build that cannot
-        # finish must leave the working pipeline in place.
+        # Every body and template is resolved before any is written: a build that
+        # cannot finish must leave the working pipeline in place.
         bodies = {command: render(command, entry) for command, entry in plan.items()}
+        templates = plan_templates(config, project)
     except BuildError as err:
         print(f"[build] cannot build — nothing was written\n  {err}", file=sys.stderr)
         return 1
@@ -186,6 +213,12 @@ def main() -> int:
           f"{len(bodies)} commands from {CONFIG_REL if config else 'the shipped defaults'}")
     for command, entry in plan.items():
         print(describe(command, entry))
+
+    if templates:
+        print("[build] templates resolved:")
+        for command, (name, _, changed) in sorted(templates.items()):
+            detail = f"{', '.join(changed)} replaced" if changed else "used as-is"
+            print(f"  {command}: {name} — {detail}")
 
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
     print(manifest_mod.render(manifest))
@@ -201,6 +234,13 @@ def main() -> int:
         target = os.path.join(out_dir, f"speckit.companion.{command}.md")
         with open(target, "w", encoding="utf-8") as fh:
             fh.write(body)
+    if templates:
+        template_out = os.path.join(os.path.dirname(out_dir), "templates")
+        os.makedirs(template_out, exist_ok=True)
+        for _command, (name, text, _changed) in templates.items():
+            with open(os.path.join(template_out, name), "w", encoding="utf-8") as fh:
+                fh.write(text)
+
     with open(os.path.join(out_dir, ".manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=2)
         fh.write("\n")
