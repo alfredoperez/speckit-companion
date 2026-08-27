@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed
+
+- **Seven command-palette entries that did nothing have been removed.** The workflow-editor commands (edit source, refine section, remove section, add user story, approve and continue, regenerate, navigate to phase) were left over from an editor that no longer exists — running any of them wrote a line to an output channel and nothing else. Their right-click menu entries are gone with them.
+
 ## [0.32.0] - 2026-08-26
 
 ### Added

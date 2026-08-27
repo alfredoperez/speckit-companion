@@ -426,48 +426,6 @@
         "icon": "$(book)"
       },
       {
-        "command": "speckit.workflowEditor.editSource",
-        "title": "Edit Source",
-        "category": "SpecKit",
-        "icon": "$(edit)"
-      },
-      {
-        "command": "speckit.workflowEditor.refineSection",
-        "title": "Refine Section",
-        "category": "SpecKit",
-        "icon": "$(sparkle)"
-      },
-      {
-        "command": "speckit.workflowEditor.removeSection",
-        "title": "Remove Section",
-        "category": "SpecKit",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "speckit.workflowEditor.addUserStory",
-        "title": "Add User Story",
-        "category": "SpecKit",
-        "icon": "$(add)"
-      },
-      {
-        "command": "speckit.workflowEditor.approveAndContinue",
-        "title": "Approve & Continue",
-        "category": "SpecKit",
-        "icon": "$(check)"
-      },
-      {
-        "command": "speckit.workflowEditor.regenerate",
-        "title": "Regenerate",
-        "category": "SpecKit",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "speckit.workflowEditor.navigateToPhase",
-        "title": "Navigate to Phase",
-        "category": "SpecKit",
-        "icon": "$(arrow-right)"
-      },
-      {
         "command": "speckit.openSpecEditor",
         "title": "Open Spec Editor",
         "category": "SpecKit",
@@ -869,34 +827,6 @@
         }
       ],
       "commandPalette": [
-                {
-                    "command": "speckit.workflowEditor.refineSection",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.removeSection",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.addUserStory",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.approveAndContinue",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.regenerate",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.navigateToPhase",
-                    "when": "false"
-                },
-                {
-                    "command": "speckit.workflowEditor.editSource",
-                    "when": "false"
-                },
         {
           "command": "speckit.create"
         },

@@ -143,34 +143,26 @@ class CaptureWritesAreAtomic(unittest.TestCase):
         self.assertEqual(leftovers, [], "a completed write left temp debris")
 
 
-class SilentPaletteCommandsAreHidden(unittest.TestCase):
-    """#593 — a command that only writes a log line must not be reachable."""
-
-    STUBS = {
-        "speckit.workflowEditor.removeSection", "speckit.workflowEditor.addUserStory",
-        "speckit.workflowEditor.approveAndContinue", "speckit.workflowEditor.regenerate",
-        "speckit.workflowEditor.navigateToPhase", "speckit.workflowEditor.editSource",
-    }
+class SilentPaletteCommandsAreGone(unittest.TestCase):
+    """#593 hid six commands that only wrote a log line; the editor they belonged
+    to has since been deleted, so the stronger property holds: they do not exist."""
 
     def setUp(self):
         self.pkg = json.loads((REPO / "package.json").read_text())
 
-    def test_every_silent_stub_is_suppressed_from_the_palette(self):
-        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
-               if str(e.get("when", "")).strip() == "false"}
-        self.assertTrue(self.STUBS <= pal, f"still reachable: {sorted(self.STUBS - pal)}")
-
-    def test_no_workflow_editor_command_is_palette_reachable(self):
-        # refineSection dispatches real work, but only when the webview passes it
-        # (uri, sectionId, prompt). From the palette it gets none of them and
-        # sends an undefined prompt to the terminal — the same defect as the six
-        # silent stubs, so it is suppressed too. It stays fully usable in-webview.
+    def test_no_workflow_editor_command_is_contributed_at_all(self):
         contributed = {c["command"] for c in self.pkg["contributes"]["commands"]
                        if c["command"].startswith("speckit.workflowEditor.")}
-        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
-               if str(e.get("when", "")).strip() == "false"}
-        self.assertTrue(contributed <= pal,
-                        f"palette-reachable and argument-dependent: {sorted(contributed - pal)}")
+        self.assertEqual(contributed, set(), f"still contributed: {sorted(contributed)}")
+
+    def test_no_menu_entry_points_at_a_workflow_editor_command(self):
+        offenders = sorted(
+            e["command"]
+            for entries in self.pkg["contributes"]["menus"].values()
+            for e in entries
+            if str(e.get("command", "")).startswith("speckit.workflowEditor.")
+        )
+        self.assertEqual(offenders, [], f"menu entries survive their command: {offenders}")
 
 
 class PartialCaptureIsNotClean(unittest.TestCase):

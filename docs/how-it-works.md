@@ -242,33 +242,29 @@ sequenceDiagram
 
 ### 2. Webview Communication
 
-The extension has three webview UIs: the **Workflow Editor** (`webview/src/workflow.ts`), the **Spec Viewer** (`webview/src/spec-viewer/`), and the **Spec Editor** (`webview/src/spec-editor/`). All use the same message-passing pattern between extension and browser context.
+The extension has two webview UIs: the **Spec Viewer** (`webview/src/spec-viewer/`) and the **Spec Editor** (`webview/src/spec-editor/`). Both use the same message-passing pattern between extension and browser context.
 
-**Files (Workflow Editor example):**
-- `src/features/workflow-editor/workflowEditorCommands.ts`
-- `webview/src/workflow.ts`
-- `src/core/types.ts`
+**Files (Spec Viewer example):**
+- `src/features/spec-viewer/specViewerProvider.ts` — creates the panel, posts state to the webview
+- `src/features/spec-viewer/messageHandlers.ts` — the typed handler map for messages coming back
+- `src/features/spec-viewer/types.ts` — the message unions, mirrored in `webview/src/spec-viewer/types.ts`
 
-#### Message Types (`core/types.ts:6-23`)
+#### Message Types (`src/features/spec-viewer/types.ts`)
 
 ```typescript
 // Extension → Webview
-type ExtensionToWebviewMessage =
-    | { type: 'documentChanged'; content: string }
-    | { type: 'updatePhaseInfo'; specInfo: SpecInfo };
+export type ExtensionToViewerMessage =
+    | { type: 'contentUpdate'; ... }
+    | { type: 'viewerState'; ... };
 
 // Webview → Extension
-type WebviewToExtensionMessage =
-    | { type: 'editSource' }
-    | { type: 'refineLine'; lineNum: number; content: string; instruction: string }
-    | { type: 'editLine'; lineNum: number; newText: string }
-    | { type: 'removeLine'; lineNum: number }
-    | { type: 'approveAndContinue' }
-    | { type: 'regenerate' }
-    | { type: 'navigateToPhase'; phase: string }
-    | { type: 'enhance'; command: string }
-    | { type: 'switchTab'; fileName: string };
+export type ViewerToExtensionMessage =
+    | { type: 'approve' }
+    | { type: 'executeStep'; step: string }
+    | { type: 'saveComment'; ... };
 ```
+
+Handlers are registered in a `DispatcherMap` (`src/core/utils/dispatcher.ts`), so every variant of the union must have a handler or the build fails.
 
 #### Message Flow
 
@@ -280,14 +276,13 @@ sequenceDiagram
 
     Note over Ext,WV: Bidirectional Communication
 
-    WV->>Ext: postMessage({ type: 'refineLine', ... })
-    Ext->>Ext: WorkflowEditorProvider.handleMessage()
-    Ext->>Ext: WorkflowActionHandlers.refineLine()
-    Ext->>FS: vscode.workspace.applyEdit()
-    FS-->>Ext: File saved
-    Ext->>WV: postMessage({ type: 'documentChanged', content })
-    WV->>WV: renderContent()
-    WV->>WV: DOM manipulation
+    WV->>Ext: postMessage({ type: 'approve' })
+    Ext->>Ext: messageHandlers dispatch map
+    Ext->>Ext: stepLifecycle.startStep()
+    Ext->>FS: write .spec-context.json
+    FS-->>Ext: saved
+    Ext->>WV: postMessage({ type: 'contentUpdate', ... })
+    WV->>WV: signals update, Preact re-renders
 ```
 
 ### 3. File Watcher System
@@ -459,32 +454,23 @@ context.subscriptions.push(
 
 ### Adding Webview Functionality
 
-1. **Define message type** (`src/core/types.ts`):
+1. **Define the message** (`src/features/spec-viewer/types.ts`, then mirror it in `webview/src/spec-viewer/types.ts`):
 ```typescript
-export type WebviewToExtensionMessage =
+export type ViewerToExtensionMessage =
     // ...existing
     | { type: 'myNewAction'; data: string };
 ```
 
-2. **Handle in commands** (`src/features/workflow-editor/workflowEditorCommands.ts`):
+2. **Add the handler** (`src/features/spec-viewer/messageHandlers.ts`) — the dispatcher map is exhaustive, so a missing handler is a compile error:
 ```typescript
-case 'myNewAction':
-    await this.actionHandlers.myNewAction(document, message.data);
-    break;
+myNewAction: async (message, deps) => {
+    await doTheThing(message.data);
+},
 ```
 
-3. **Implement handler** (`actionHandlers.ts`):
+3. **Dispatch it from the webview** (a component under `webview/src/spec-viewer/`):
 ```typescript
-async myNewAction(document: vscode.TextDocument, data: string): Promise<void> {
-    // Implementation
-}
-```
-
-4. **Add UI trigger** (`webview/src/workflow.ts`):
-```typescript
-button.addEventListener('click', () => {
-    vscode.postMessage({ type: 'myNewAction', data: 'value' });
-});
+dispatch({ type: 'myNewAction', data: 'value' });
 ```
 
 ---

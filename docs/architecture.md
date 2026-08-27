@@ -39,7 +39,7 @@ Shared helpers live alongside the providers: `promptBuilder.ts` assembles the ca
 
 ### `src/core/`
 
-Cross-cutting infrastructure. Watches the filesystem (`src/core/fileWatchers.ts`, 1-second debounce on `.claude/` changes), resolves the user's spec directory list (`src/core/specDirectoryResolver.ts`), and exposes the canonical constants table (`src/core/constants.ts`) and shared types (`src/core/types.ts`). Sub-directories `core/errors/`, `core/managers/`, `core/providers/` hold base classes (`src/core/providers/BaseTreeDataProvider.ts` is the parent for all sidebar providers); `core/utils/` holds the small-helper grab-bag (config reading, file opening, sanitization, terminal helpers).
+Cross-cutting infrastructure. Watches the filesystem (`src/core/fileWatchers.ts`, 1-second debounce on `.claude/` changes), resolves the user's spec directory list (`src/core/specDirectoryResolver.ts`), and exposes the canonical constants table (`src/core/constants.ts`) and the `.spec-context.json` contract (`src/core/types/specContext.ts`). Sub-directories `core/errors/`, `core/managers/`, `core/providers/` hold base classes (`src/core/providers/BaseTreeDataProvider.ts` is the parent for all sidebar providers); `core/utils/` holds the small-helper grab-bag (config reading, file opening, sanitization, terminal helpers).
 
 ### `src/features/`
 
@@ -50,7 +50,7 @@ The two most active features:
 - **`features/specs/`** — the spec sidebar (`specExplorerProvider.ts`), the command pack (`src/features/specs/specCommands.ts`: create, mark-complete, archive, sort, filter, etc.), the `.spec-context.json` read/write split (`specContextReader.ts` / `specContextWriter.ts`, with `specContextBackfill.ts` and `specContextReconciler.ts` handling migration, and `specContextManager.ts` as a documented compatibility shim returning the legacy `FeatureWorkflowContext` shape for callers that haven't migrated to the canonical `SpecContext` type yet), step lifecycle (`stepLifecycle.ts`, `stepHistoryDerivation.ts`), the sidebar filter/sort state (`specsFilterState.ts`, `specsSortState.ts`, `fuzzyMatch.ts`), and the custom-command config normaliser (`customCommandConfig.ts`).
 - **`features/spec-viewer/`** — the custom-editor surface (`specViewerProvider.ts`), the webview message router (`messageHandlers.ts`), the pure derivation pipeline (`panelStateComputer.ts` — extracted in Phase 3 to share between the full-render and tab-click paths), the panel-instance registry (`panelRegistry.ts` — Phase 12, owns the `Map<specDir, PanelInstance>` plus debounce-timer cleanup so the provider deals with a typed API not raw Map ops), and the helpers around them (`stateDerivation.ts`, `phaseCalculation.ts`, `staleness.ts`, `footerActions.ts`, `documentScanner.ts`). `messageHandlers.ts` was restructured in Phase 4: the 140-line switch is now a typed dispatch map built on the generic `createDispatcher` utility in `src/core/utils/dispatcher.ts` (Phase 10), the three duplicate command-resolution loops in `handleClarify` collapsed behind a shared `matchesCommand` + `dispatchEnhancement` pair, and the module-scope `commentWriteQueues` Map became an encapsulated `CommentMutationQueue` class. `specViewerProvider.ts` dropped from 1110 LOC (pre-refactor) to ~920 LOC after Phases 3 and 12.
 
-Other feature folders: `features/spec-editor/` (draft editor + temp-file lifecycle), `features/steering/` (project + user steering docs), `features/agents/`, `features/skills/`, `features/permission/`, `features/workflows/`, `features/workflow-editor/`, `features/settings/`. Each follows the same manager + provider + commands pattern.
+Other feature folders: `features/spec-editor/` (draft editor + temp-file lifecycle), `features/steering/` (project + user steering docs), `features/agents/`, `features/skills/`, `features/permission/`, `features/workflows/`, `features/settings/`. Each follows the same manager + provider + commands pattern.
 
 ### `src/speckit/`
 
@@ -60,16 +60,12 @@ The SpecKit CLI integration. Detects `specify` on PATH, runs `specify init`, pol
 
 The webview is in a partial Preact migration. Components live under `webview/src/spec-viewer/components/` (`App.tsx`, `FooterActions.tsx`, `NavigationBar.tsx`, `StepTab.tsx`, the `cards/` subtree, etc.) with module-scoped signals in `webview/src/spec-viewer/signals.ts` carrying the shared state (`navState`, `viewerState`, `activityVisible`). Stories sit alongside their components as `*.stories.tsx` and are the visual baseline.
 
-The migration is **not complete**. A parallel imperative pipeline still owns markdown rendering: `webview/src/spec-viewer/markdown/renderer.ts` produces an HTML string that the App component injects via `dangerouslySetInnerHTML`, then imperative helpers (`webview/src/spec-viewer/editor/inlineEditor.ts`, `webview/src/spec-viewer/editor/refinements.ts`, `webview/src/spec-viewer/actions.ts`, `webview/src/spec-viewer/toc.ts` (the orphan `modal.ts` was deleted in Phase 5b — its modal was unreached after the dynamic `webview/src/ui/refinePopover.ts` took over the refine flow)) manually mount components into slots the string left behind. This hybrid is the subject of refactor Phase 5 — the goal is to make `renderMarkdown()` return JSX directly and delete the imperative helpers.
+The migration is **not complete**. A parallel imperative pipeline still owns markdown rendering: `webview/src/spec-viewer/markdown/renderer.ts` produces an HTML string that the App component injects via `dangerouslySetInnerHTML`, then imperative helpers (`webview/src/spec-viewer/editor/inlineEditor.ts`, `webview/src/spec-viewer/editor/refinements.ts`, `webview/src/spec-viewer/actions.ts`, `webview/src/spec-viewer/toc.ts`) manually mount components into slots the string left behind. This hybrid is the subject of refactor Phase 5 — the goal is to make `renderMarkdown()` return JSX directly and delete the imperative helpers.
 
 Shared webview surfaces:
 
-- `webview/src/markdown/` — markdown classification + parsing utilities shared across viewer and editor.
-- `webview/src/render/` — block/line/content renderers used by the imperative pipeline (will shrink with Phase 5).
-- `webview/src/ui/` — small composable UI primitives (inline-edit input, phase pill, refine popover).
 - `webview/src/spec-editor/` — the draft editor entry (`index.ts`) plus its Storybook mock (`CreateSpecMock.tsx`).
-- `webview/src/workflow.ts` — the workflow editor webview.
-- `webview/src/shared/` — reusable components (`UndoToast.tsx`) and hooks (`useInlineConfirm.ts`).
+- `webview/src/shared/` — reusable components and hooks.
 
 Stylesheets live in `webview/styles/`, with the spec viewer's CSS broken into modular partials under `webview/styles/spec-viewer/`.
 

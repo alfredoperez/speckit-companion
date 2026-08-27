@@ -48,48 +48,6 @@ const extensionConfig = {
 };
 
 /**@type {import('webpack').Configuration}*/
-const webviewConfig = {
-  target: 'web', // Webview runs in browser context
-  mode: 'none',
-
-  entry: './webview/src/workflow.ts', // Webview entry point
-  output: {
-    path: path.resolve(__dirname, 'dist', 'webview'),
-    filename: 'workflow.js',
-    libraryTarget: 'window'
-  },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js']
-  },
-  module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: 'ts-loader',
-            options: {
-              configFile: 'tsconfig.webview.json'
-            }
-          }
-        ]
-      }
-    ]
-  },
-  devtool: 'nosources-source-map',
-  plugins: [
-    new CopyPlugin({
-      patterns: [
-        // Copy CSS files to webview output
-        { from: 'webview/styles/workflow.css', to: 'workflow.css' },
-        { from: 'webview/styles/spec-markdown.css', to: 'spec-markdown.css' }
-      ]
-    })
-  ]
-};
-
-/**@type {import('webpack').Configuration}*/
 const specEditorConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
@@ -178,4 +136,4 @@ const specViewerConfig = {
   ]
 };
 
-module.exports = [extensionConfig, webviewConfig, specEditorConfig, specViewerConfig];
+module.exports = [extensionConfig, specEditorConfig, specViewerConfig];
