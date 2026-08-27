@@ -38,18 +38,6 @@ from _command_parts import (
     read,
 )
 
-# Commands whose CONTENT is intentionally changed by this feature (so golden
-# equality no longer applies — they still pass region equality). US2 rewrites the
-# specify classification prose to single-source the sizing bar; US3 adds the
-# self-advance part to the pipeline bodies. Behavior is preserved; only the text
-# changes, so these are exempt from the byte-for-byte golden compare.
-INTENTIONALLY_CHANGED = {
-    "commands/speckit.companion.specify.md",
-    "commands/speckit.companion.plan.md",
-    "commands/speckit.companion.tasks.md",
-    "commands/speckit.companion.implement.md",
-}
-
 # Carriers that must keep the shared timing block as a fence (single-sourced),
 # never a pasted copy. Asserted by check (c).
 STANDARD_CARRIER_PREFIX = "presets/companion-standard/commands/"
@@ -93,14 +81,22 @@ def main() -> int:
         if missing_timing_fence(rel, body):
             problems.append(f"missing timing fence: {rel}")
 
-        # (b) golden equality (content-frozen commands only)
-        if rel in INTENTIONALLY_CHANGED:
-            continue
+        # (b) golden equality — every tracked body, no exemptions.
+        #
+        # Four commands were exempt here, carried over from a migration that
+        # rewrote their prose. The rewrite finished; the exemptions did not, and
+        # they were disabling this check on exactly the four commands the node
+        # work touches most. Each was verified equal to its golden before the
+        # set was deleted, so removing it changed no result — it only stopped
+        # the gate from being off.
         gpath = golden_path(rel)
         if not os.path.isfile(gpath):
             problems.append(f"missing golden: {rel}")
-        elif canonical(body) != canonical(open(gpath, encoding="utf-8").read()):
-            problems.append(f"golden drift: {rel}")
+        else:
+            with open(gpath, encoding="utf-8") as fh:
+                golden = fh.read()
+            if canonical(body) != canonical(golden):
+                problems.append(f"golden drift: {rel}")
 
     if problems:
         print("[shape-parity] DRIFT")
