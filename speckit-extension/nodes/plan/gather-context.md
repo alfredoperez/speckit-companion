@@ -1,5 +1,6 @@
 ---
 id: gather-context
+name: Gather context
 kind: investigate
 command: plan
 reads: []

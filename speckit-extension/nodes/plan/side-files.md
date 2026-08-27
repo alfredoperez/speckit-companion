@@ -1,5 +1,6 @@
 ---
 id: side-files
+name: Write the design side files
 kind: author
 command: plan
 reads: [plan-doc]

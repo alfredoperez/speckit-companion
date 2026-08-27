@@ -14,6 +14,7 @@ import { ensureStandardFamily } from './features/settings/companionPresetReconci
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerPipelineBuildCommands, notifyIfPipelineStale } from './features/specs/pipelineBuildCommands';
+import { registerPipelineBuilderCommands } from './features/pipeline-builder/builderPanel';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
 import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } from './features/workflows';
@@ -252,6 +253,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // Register spec editor commands
     registerSpecEditorCommands(context, outputChannel);
     registerPipelineBuildCommands(context, outputChannel);
+    registerPipelineBuilderCommands(context, outputChannel);
 
     // Set up spec viewer file watcher (specViewer was created above before setupFileWatchers)
     setupSpecViewerWatcher(context, specViewer, outputChannel);

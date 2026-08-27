@@ -1,0 +1,400 @@
+/**
+ * Pipeline builder.
+ *
+ * Rides the shared host-derived tokens (`tokens.css`) rather than the viewer's
+ * owned palette, so this panel tracks the user's VS Code theme like every other
+ * surface outside the spec viewer. The scoping test enforces that split.
+ *
+ * Shape follows the design: containment over connectors, one accent reserved for
+ * the forward action, mono reserved for identifiers and counts.
+ */
+
+@import './tokens.css';
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: var(--bg-primary);
+}
+
+.builder {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.builder-empty,
+.builder-error {
+    padding: var(--space-6);
+    color: var(--text-secondary);
+}
+
+.builder-error h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+}
+
+.builder-error-detail {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--error);
+    background: var(--error-subtle);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    white-space: pre-wrap;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+
+.builder-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.builder-identity {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.builder-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.builder-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.builder-chip--customised {
+    color: var(--info);
+    border-color: var(--info);
+    background: var(--info-subtle);
+}
+
+.builder-chip-caret {
+    opacity: 0.7;
+}
+
+.builder-facts {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+}
+
+.builder-count {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.builder-action {
+    padding: var(--space-1) var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.builder-action:hover:not(:disabled) {
+    background: var(--bg-hover);
+}
+
+.builder-action:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* The single forward action carries the accent fill; nothing else does. */
+.builder-action--primary {
+    color: var(--accent-ink);
+    background: var(--accent-strong);
+    border-color: transparent;
+    font-weight: 600;
+}
+
+.builder-action--primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.builder-notice {
+    flex-basis: 100%;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+}
+
+.builder-notice--warning {
+    color: var(--warning);
+    background: var(--warning-subtle);
+}
+
+.builder-changes {
+    flex-basis: 100%;
+    padding: var(--space-3);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.builder-changes-empty {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.builder-changes-list {
+    margin: 0;
+    padding-left: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--text-body);
+}
+
+/* ============================================
+   Canvas — containment, not connectors
+   ============================================ */
+
+.pb-canvas {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--space-5) var(--space-4) var(--space-8);
+}
+
+.pb-chain-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Steps are linked edge to edge — the link belongs between containers, never
+   between a node and a step. */
+.pb-link {
+    width: 2px;
+    height: var(--space-5);
+    margin-left: var(--space-6);
+    background: var(--border-hover);
+}
+
+.pb-step {
+    border: 1.5px solid var(--border-hover);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.pb-step--changed {
+    border-color: var(--info);
+}
+
+.pb-step-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.pb-step-kicker,
+.pb-phase-name,
+.pb-step-counts,
+.pb-node-id,
+.pb-kind,
+.pb-template,
+.pb-artifacts {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.pb-step-name {
+    margin: 0;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-primary);
+}
+
+.pb-template {
+    padding: 1px var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    letter-spacing: 0;
+}
+
+.pb-step-counts {
+    margin-left: auto;
+}
+
+/* A phase is a band inside the step — the middle block, visible as such. */
+.pb-phase {
+    margin: var(--space-3);
+    padding: var(--space-2);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+}
+
+.pb-phase-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-2) var(--space-2);
+}
+
+.pb-phase-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.pb-node {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.pb-node-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background var(--transition-fast);
+}
+
+.pb-node-main:hover {
+    background: var(--bg-hover);
+}
+
+.pb-node-name {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pb-node-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.pb-kind {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--bg-inset, var(--bg-elevated));
+}
+
+.pb-kind--author { color: var(--success); background: var(--success-subtle); }
+.pb-kind--investigate { color: var(--info); background: var(--info-subtle); }
+.pb-kind--gate { color: var(--warning); background: var(--warning-subtle); }
+
+.pb-writes {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-hooks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding-left: var(--space-3);
+}
+
+.pb-hook {
+    padding: 1px var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--purple);
+    background: var(--review-subtle);
+    border: 1px solid var(--purple);
+    border-radius: 999px;
+}
+
+/* A decision says where it routes. The design tried wires; they crossed the
+   canvas without saying more than a sentence does. */
+.pb-decisions {
+    margin: 0 var(--space-3) var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--purple);
+    border-radius: var(--radius-md);
+}
+
+.pb-decision-node {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--purple);
+}
+
+.pb-verdicts {
+    margin: var(--space-1) 0 0;
+    padding-left: var(--space-4);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+}
+
+.pb-verdict {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+.pb-artifacts {
+    padding: var(--space-2) var(--space-4);
+    letter-spacing: 0;
+    border-top: 1px solid var(--border);
+}
+
+/* At a narrow split pane the head stacks rather than squeezing. */
+@media (max-width: 620px) {
+    .builder-facts {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+
+    .pb-step-head {
+        flex-wrap: wrap;
+    }
+
+    .pb-step-counts {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+}

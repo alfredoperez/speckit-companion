@@ -554,6 +554,11 @@
         "command": "speckit.companion.previewPipelineBuild",
         "title": "Preview Pipeline Build",
         "category": "SpecKit Companion"
+      },
+      {
+        "command": "speckit.companion.openPipelineBuilder",
+        "title": "Open Pipeline Builder",
+        "category": "SpecKit Companion"
       }
     ],
     "submenus": [

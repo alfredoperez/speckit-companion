@@ -1,5 +1,6 @@
 ---
 id: branch
+name: Create the feature branch
 kind: control
 command: specify
 reads: [classify-size]

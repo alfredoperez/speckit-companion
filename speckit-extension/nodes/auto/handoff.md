@@ -1,5 +1,6 @@
 ---
 id: handoff
+name: Hand off at the end
 kind: control
 command: auto
 reads: []

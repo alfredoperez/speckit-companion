@@ -1,5 +1,6 @@
 ---
 id: quality-checklist
+name: Write the quality checklist
 kind: author
 command: specify
 writes: checklists/requirements.md

@@ -1,5 +1,6 @@
 ---
 id: complete
+name: Mark the spec complete
 kind: control
 command: implement
 reads: []

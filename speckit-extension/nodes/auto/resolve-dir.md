@@ -1,5 +1,6 @@
 ---
 id: resolve-dir
+name: Resolve the spec folder
 kind: control
 command: auto
 reads: []

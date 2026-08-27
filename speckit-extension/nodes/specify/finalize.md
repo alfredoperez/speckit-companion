@@ -1,5 +1,6 @@
 ---
 id: finalize
+name: Finalise the spec
 kind: control
 command: specify
 reads: [branch]

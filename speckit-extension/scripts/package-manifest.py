@@ -91,6 +91,9 @@ BUILD_ONLY = frozenset({
     "hook_render.py",
     "template_render.py",
     "decision_routes.py",
+    # Emits the pipeline structure the builder panel draws. Runs from the
+    # extension's own sources like the build command it mirrors.
+    "pipeline-graph.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

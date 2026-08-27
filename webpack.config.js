@@ -136,4 +136,44 @@ const specViewerConfig = {
   ]
 };
 
-module.exports = [extensionConfig, specEditorConfig, specViewerConfig];
+/**@type {import('webpack').Configuration}*/
+const pipelineBuilderConfig = {
+  target: 'web',
+  mode: 'none',
+
+  entry: './webview/src/pipeline-builder/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist', 'webview'),
+    filename: 'pipeline-builder.js',
+    libraryTarget: 'window'
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.webview.json'
+            }
+          }
+        ]
+      }
+    ]
+  },
+  devtool: 'nosources-source-map',
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: 'webview/styles/pipeline-builder.css', to: 'pipeline-builder.css' }
+      ]
+    })
+  ]
+};
+
+module.exports = [extensionConfig, specEditorConfig, specViewerConfig, pipelineBuilderConfig];

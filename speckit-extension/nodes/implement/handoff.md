@@ -1,5 +1,6 @@
 ---
 id: handoff
+name: Hand off to the next step
 kind: control
 command: implement
 reads: []
