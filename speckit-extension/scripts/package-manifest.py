@@ -83,6 +83,12 @@ BUILD_ONLY = frozenset({
     # did not produce. Build-only while nothing shipped calls it; it moves to
     # RUNTIME_SCRIPTS the moment a command body does.
     "manifest.py",
+    # The build command and its hook renderer. Build-only for the same reason —
+    # they run from the extension's own sources, and shipping them is the
+    # packaging change that makes a user's own `companion.yml` buildable. That
+    # step is deliberate and separate; the gate is what will ask for it.
+    "build-pipeline.py",
+    "hook_render.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(
