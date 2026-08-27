@@ -8,6 +8,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
+    inFlightStatusForStep,
     SpecContext,
     STATUS_OWNING_STEP,
     StepName,
@@ -185,7 +186,7 @@ export async function reactivate(
         await updateSpecContext(
             specDir,
             ctx => {
-                const status = deriveInProgressStatus(ctx.currentStep);
+                const status = inFlightStatusForStep(ctx.currentStep);
                 const at = new Date().toISOString();
                 return appendTransition(
                     { ...ctx, status },
@@ -205,20 +206,6 @@ export async function reactivate(
     }
 }
 
-function deriveInProgressStatus(step: StepName): Status {
-    switch (step) {
-        case 'specify':
-        case 'clarify':
-            return 'specifying';
-        case 'plan':
-            return 'planning';
-        case 'tasks':
-        case 'analyze':
-            return 'tasking';
-        case 'implement':
-            return 'implementing';
-    }
-}
 
 export async function completeSubstep(
     specDir: string,

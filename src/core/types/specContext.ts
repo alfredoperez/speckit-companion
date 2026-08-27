@@ -68,6 +68,39 @@ export function isInFlightStatus(status?: string | null): boolean {
 }
 
 /**
+ * The status a step owns while it runs and once it has finished — the single
+ * home for that pairing on the TypeScript side. Mirrored by
+ * `STEP_COMPLETED_STATUS` in `speckit-extension/scripts/spec_context.py`; the
+ * vocabulary consistency test holds the two together.
+ *
+ * `clarify` is a sub-phase of specify and `analyze` a sub-phase of tasks, so
+ * each reuses its parent's pair rather than adding statuses.
+ *
+ * Note where `implement` lands: finishing it means the code is written, not
+ * that the spec is closed. The step settles at `implemented`, and only the
+ * user's Mark Completed advances that to `completed` — a copy of this map that
+ * returns `completed` here silently skips that gate.
+ */
+export const STEP_STATUS: Readonly<Record<StepName, { inFlight: Status; completed: Status }>> = {
+    specify: { inFlight: 'specifying', completed: 'specified' },
+    clarify: { inFlight: 'specifying', completed: 'specified' },
+    plan: { inFlight: 'planning', completed: 'planned' },
+    tasks: { inFlight: 'tasking', completed: 'ready-to-implement' },
+    analyze: { inFlight: 'tasking', completed: 'ready-to-implement' },
+    implement: { inFlight: 'implementing', completed: 'implemented' },
+};
+
+/** The status a step carries while it is running. */
+export function inFlightStatusForStep(step: StepName): Status {
+    return STEP_STATUS[step].inFlight;
+}
+
+/** The status a step advances to when it finishes. */
+export function completedStatusForStep(step: StepName): Status {
+    return STEP_STATUS[step].completed;
+}
+
+/**
  * Per-substep timing entry. Derived in-memory by the viewer from
  * `history[]`; not persisted on disk.
  */

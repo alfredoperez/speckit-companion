@@ -236,7 +236,9 @@ export interface CheckpointContext {
 export const WORKFLOW_NAME_PATTERN = /^[a-z][a-z0-9-]*$/;
 
 /**
- * File name for feature workflow context
+ * File name for feature workflow context.
+ *
+ * Re-exported from the reader that owns it so the name is declared once.
  */
-export const FEATURE_CONTEXT_FILE = '.spec-context.json';
+export { SPEC_CONTEXT_FILENAME as FEATURE_CONTEXT_FILE } from '../specs/specContextReader';
 

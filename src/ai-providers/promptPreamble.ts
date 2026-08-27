@@ -1,4 +1,4 @@
-import { CANONICAL_SUBSTEPS } from '../core/types/specContext';
+import { CANONICAL_SUBSTEPS, completedStatusForStep } from '../core/types/specContext';
 
 export type PromptStep = keyof typeof CANONICAL_SUBSTEPS;
 
@@ -166,18 +166,10 @@ function captureBlock(step: PromptStep, featureDir: string, writerPath: string):
     ];
 }
 
-const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
-    specify: 'specified',
-    clarify: 'specified',
-    plan: 'planned',
-    tasks: 'ready-to-implement',
-    analyze: 'ready-to-implement',
-    // F8: implement ends at `implemented` (NOT `completed`). The final
-    // `completed` status is the user's explicit Mark-Completed click in
-    // the viewer — keeps closure under the user's control even when
-    // manual verification steps remain (build/test/eyeball UI).
-    implement: 'implemented',
-};
+// The status each step ends at comes from the one map in specContext.ts, so
+// what the prompt tells the assistant and what the extension writes can never
+// disagree. Note that implement settles at `implemented`, not `completed` —
+// the final status is the user's Mark Completed click.
 
 const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     specify: 'Done specifying',
@@ -277,7 +269,7 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
     const substepsLine = substepsList.length === 0
         ? `Canonical substeps for ${step}: none — single-pass step.`
         : `Canonical substeps for ${step}: ${substepsList.join(', ')}. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at } the moment it ends (fresh \`date -u\`) — one per substep, never two sharing a timestamp, never a separate start. The delta between finishes is each substep's duration.`;
-    const completedStatus = COMPLETED_STATUS_BY_STEP[step];
+    const completedStatus = completedStatusForStep(step);
     const donePhrase = DONE_PHRASE_BY_STEP[step];
     const capture = captureBlock(step, specDir, writerPath);
     return [
