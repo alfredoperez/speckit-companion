@@ -56,6 +56,12 @@ jobs:
       - name: Check command inventory (emissions, install records, and docs match the manifest)
         run: python3 speckit-extension/scripts/check-command-emissions.py
 
+      # Reported, not gated: the ceiling is a guardrail for the composable work,
+      # and today's bodies are already over it. Printing it on every build is what
+      # makes a change to the budget visible in the diff that caused it.
+      - name: Report the instruction budget per command
+        run: python3 speckit-extension/scripts/instruction-budget.py
+
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |
           python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/509-timing-capture

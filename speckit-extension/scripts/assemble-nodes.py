@@ -17,6 +17,7 @@ This is a behavior-preserving refactor: the output must equal the frozen golden
 Stdlib only.
 """
 import difflib
+import importlib
 import os
 import sys
 
@@ -79,6 +80,40 @@ def command_path(command: str) -> str:
     return os.path.join(EXT, "commands", f"speckit.companion.{command}.md")
 
 
+def _report_budget(commands) -> None:
+    """Print each assembled command's directive count, own vs shared.
+
+    Printed here because assembly is the moment the number changes, and so the
+    only moment anyone is placed to act on it. Measured-but-unreported is how a
+    command reached seventy-five directives unremarked — and how it went unnoticed
+    that most of that load is the shared parts, which every additional dispatch
+    would re-pay.
+
+    Never fails the build. This reports; `instruction-budget.py --strict` gates.
+    """
+    try:
+        budget = importlib.import_module("instruction-budget")
+    except Exception:  # noqa: BLE001 — reporting must never break assembly
+        return
+    rows = []
+    for command in commands:
+        path = command_path(command)
+        if os.path.isfile(path):
+            rows.append(budget.measure(path))
+    if not rows:
+        return
+    rows.sort(key=lambda r: -r["total"])
+    parts = []
+    for r in rows:
+        name = r["command"]
+        if name.startswith("speckit.companion."):
+            name = name[len("speckit.companion."):]
+        if name.endswith(".md"):
+            name = name[: -len(".md")]
+        parts.append(f"{name} {r['total']} ({r['own']} own)")
+    print("[assemble] directives — " + ", ".join(parts))
+
+
 def main() -> int:
     check = "--check" in sys.argv[1:]
     commands = decomposed_commands()
@@ -122,6 +157,7 @@ def main() -> int:
         return 1
     verb = "checked" if check else "assembled"
     print(f"[assemble] OK — {verb} {len(commands)} command bodies from nodes")
+    _report_budget(commands)
     return 0
 
 
