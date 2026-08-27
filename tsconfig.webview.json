@@ -23,7 +23,8 @@
   "include": [
     "webview/src/**/*",
     "src/protocol/**/*",
-    "src/core/types/**/*"
+    "src/core/types/**/*",
+    "src/core/utils/dispatcher.ts"
   ],
   "exclude": [
     "node_modules",

@@ -4,13 +4,13 @@
  */
 
 import { render } from 'preact';
-import type { VSCodeApi, ExtensionToViewerMessage, NavState } from './types';
-import { navState, markdownHtml, viewerState, historyEntries } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
+import type { VSCodeApi, NavState } from './types';
+import { navState, markdownHtml } from './signals';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
 import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
-import { showToast } from '../shared/components/Toast';
+import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
 
@@ -56,83 +56,7 @@ function updateContent(content: string): void {
 // Message Handler
 // ============================================
 
-function handleMessage(event: MessageEvent): void {
-    const message = event.data as ExtensionToViewerMessage;
-
-    switch (message.type) {
-        case 'contentUpdated':
-            if (message.navState?.currentTask !== undefined) {
-                setCurrentTask(message.navState.currentTask);
-            }
-            setHasSpecContext(!!(message.navState?.specContextName || message.navState?.badgeText));
-            setLivingMode(!!message.navState?.livingMode);
-            if (message.navState) {
-                navState.value = message.navState;
-            }
-            if (message.viewerState) {
-                viewerState.value = message.viewerState;
-                historyEntries.value = message.viewerState.history ?? [];
-                setTaskSummaries(message.viewerState.taskSummaries ?? null);
-            }
-            updateContent(message.content);
-            break;
-
-        case 'navStateUpdated':
-            navState.value = message.navState;
-            // Keep the renderer flags in lockstep with navState so a later render
-            // (or a livingMode flip) doesn't paint with a stale mode.
-            if (message.navState) {
-                setLivingMode(!!message.navState.livingMode);
-                setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
-                if (message.navState.currentTask !== undefined) {
-                    setCurrentTask(message.navState.currentTask);
-                }
-            }
-            break;
-
-        case 'livingHealthResolved':
-            if (navState.value) {
-                navState.value = { ...navState.value, livingMeta: message.livingMeta };
-            }
-            break;
-
-        case 'viewerStateUpdated':
-            viewerState.value = message.viewerState;
-            historyEntries.value = message.viewerState.history ?? [];
-            // `viewerStateUpdated` now carries a COMPLETE navState (same shared
-            // builder as `contentUpdated`), so it fully replaces the prior
-            // snapshot — no merge, and no early-arrival race (it can stand alone
-            // before the first contentUpdated).
-            if (message.navState) {
-                navState.value = message.navState;
-                if (message.navState.currentTask !== undefined) {
-                    setCurrentTask(message.navState.currentTask);
-                }
-                setHasSpecContext(!!(message.navState.specContextName || message.navState.badgeText));
-                setLivingMode(!!message.navState.livingMode);
-            }
-            break;
-
-        case 'documentsUpdated':
-            break;
-
-        case 'error':
-            console.error('[SpecViewer] Error:', message.message);
-            break;
-
-        case 'fileDeleted': {
-            const contentArea = document.getElementById('content-area');
-            if (contentArea) {
-                contentArea.innerHTML = `<div class="empty-state">The file has been deleted.</div>`;
-            }
-            break;
-        }
-
-        case 'actionToast':
-            showToast('action-toast', message.message);
-            break;
-    }
-}
+const handleMessage = createMessageRouter(updateContent);
 
 // ============================================
 // State Persistence

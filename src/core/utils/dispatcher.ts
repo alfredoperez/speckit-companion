@@ -7,9 +7,12 @@
  * TypeScript fail the build if a new variant is added without an entry.
  *
  * This generic version lifts the pattern out of the spec-viewer feature so
- * other dispatch surfaces (workflow-editor action handlers, spec-editor
- * message routing, future webviews) can reuse it without re-deriving the
- * type plumbing.
+ * every dispatch surface reuses it instead of re-deriving the type plumbing.
+ * The webview compiles this module too — it is deliberately free of `vscode`
+ * imports — so both ends of the protocol route messages the same way, and a
+ * new variant fails the build on both sides rather than silently doing nothing
+ * on one of them. Handlers may be synchronous; the returned dispatch is always
+ * awaitable.
  *
  * Usage:
  *
@@ -37,7 +40,7 @@ export type DispatcherHandler<
     U extends Tagged,
     K extends U['type'],
     Args extends readonly unknown[],
-> = (msg: Extract<U, { type: K }>, ...args: Args) => Promise<void>;
+> = (msg: Extract<U, { type: K }>, ...args: Args) => void | Promise<void>;
 
 /**
  * A complete dispatcher map — one handler per variant. TS exhaustiveness:
@@ -65,7 +68,7 @@ export function createDispatcher<
 ): (message: U, ...args: Args) => Promise<void> {
     return async (message: U, ...args: Args) => {
         const handler = handlers[message.type as U['type']] as
-            | ((m: U, ...rest: Args) => Promise<void>)
+            | ((m: U, ...rest: Args) => void | Promise<void>)
             | undefined;
         if (!handler) {
             // Unknown / forward-compat message variant. The DispatcherMap
