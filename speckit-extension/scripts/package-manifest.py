@@ -90,6 +90,7 @@ BUILD_ONLY = frozenset({
     "build-pipeline.py",
     "hook_render.py",
     "template_render.py",
+    "decision_routes.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

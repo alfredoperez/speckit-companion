@@ -37,6 +37,7 @@ EXT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 import companion_config as cc  # noqa: E402
+import decision_routes as decisions_mod  # noqa: E402
 import hook_render  # noqa: E402
 import template_render  # noqa: E402
 from _command_parts import decomposed_commands, nodes_command_dir  # noqa: E402
@@ -106,8 +107,15 @@ def plan_build(config: dict) -> tuple[dict, list]:
             raise BuildError(f"{command}: {err}") from err
 
         warnings.extend(hook_warnings)
+        declared = decisions_mod.decisions_for(command, os.path.join(EXT, "nodes"))
+        resolved, changed = decisions_mod.apply_overrides(declared, config, command)
+        problems = decisions_mod.validate(resolved, set(decomposed_commands()))
+        if problems:
+            raise BuildError(f"{command}: " + "; ".join(problems))
+
         plan[command] = {"order": order, "hooks": hooks, "default": default,
-                         "phases": phases}
+                         "phases": phases, "decisions": resolved,
+                         "decisionsChanged": changed}
     return plan, warnings
 
 
@@ -135,11 +143,24 @@ def plan_templates(config: dict, project_root: str) -> dict:
 
 
 def render(command: str, entry: dict) -> str:
-    """The finished body for one command: nodes in the resolved order, hooks spliced in."""
+    """The finished body: nodes in the resolved order, hooks and any routing change spliced in."""
     body = assemble.assemble_command(command, order=entry["order"])
-    return hook_render.insert_hooks(
+    body = hook_render.insert_hooks(
         body, entry["hooks"], nodes_dir=os.path.join(EXT, "presets", "_parts")
     )
+
+    # A project that changed where a verdict routes has to tell the assistant,
+    # which is the thing that acts on the verdict. The note goes after the node
+    # that decides, so it is read with the decision rather than out of context.
+    note = decisions_mod.render_override_note(
+        entry.get("decisions") or [], entry.get("decisionsChanged") or [])
+    if note:
+        for decision in entry["decisions"]:
+            marker = f"<!-- /speckit-companion:node {decision['node']} -->\n"
+            if marker in body:
+                body = body.replace(marker, marker + note + "\n", 1)
+                break
+    return body
 
 
 def describe(command: str, entry: dict) -> str:
@@ -220,6 +241,14 @@ def main() -> int:
           f"{len(bodies)} commands from {CONFIG_REL if config else 'the shipped defaults'}")
     for command, entry in plan.items():
         print(describe(command, entry))
+
+    routed = [(c, e) for c, e in plan.items() if e.get("decisions")]
+    if routed:
+        print("[build] decisions:")
+        for command, entry in routed:
+            print(decisions_mod.render(entry["decisions"]))
+            if entry.get("decisionsChanged"):
+                print(f"    (this project changed: {', '.join(entry['decisionsChanged'])})")
 
     if templates:
         print("[build] templates resolved:")

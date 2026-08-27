@@ -25,3 +25,23 @@ phases:
     nodes: [classify-size, persist-size]
   - name: wrap-up
     nodes: [branch, finalize, handoff]
+
+# The step's decision points, as data rather than prose.
+#
+# `classify-size` is the one real branch in the pipeline: its verdict decides
+# whether later steps run in full or fold toward implement. That routing was
+# stated in three places — the shared routing part, the workflow file's switch,
+# and the classifier's own instructions — and expressible in none of them, so a
+# project could not change it and nothing could draw it.
+#
+# `folds:` names the steps a verdict skips. `warns:` is the visible notice a
+# verdict prints before continuing. A verdict that does neither runs everything.
+decisions:
+  - node: classify-size
+    verdicts:
+      - name: simple
+        folds: [plan, tasks]
+      - name: normal
+      - name: oversized
+        warns: Oversized change — running the full pipeline, no phase skipped
+
