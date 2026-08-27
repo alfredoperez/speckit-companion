@@ -1,0 +1,7 @@
+{
+  "comment": "The one answer both parsers must give for tasks.md in this directory. Ids are in document order. Loaded by src/core/utils/__tests__/taskCheckboxes.test.ts and speckit-extension/tests/test_task_sync.py — change this file and both suites move together.",
+  "allTaskIds": ["T001", "T002", "T003", "T004", "T005", "T006", "T007"],
+  "completedTaskIds": ["T001", "T003", "T005", "T006", "T007"],
+  "total": 7,
+  "checked": 5
+}

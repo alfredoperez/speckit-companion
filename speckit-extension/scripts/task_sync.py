@@ -35,26 +35,55 @@ from spec_context import (
 # `**` is optional: matches the turbo/companion bold form `- [x] **T001**` AND the
 # standard tasks-template plain form `- [x] T001 …`. A `T\d+` is still required right
 # after the checkbox, so non-task checkboxes never false-match.
-COMPLETED_TASK_RE = re.compile(r"^\s*[-*]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")
-PENDING_TASK_RE = re.compile(r"^\s*[-*]\s*\[\s\]\s*(?:\*\*)?(T\d+)")
+#
+# This grammar matches `taskCheckboxes.ts` on the VS Code side, because the two
+# decide the same question — whether every task is done — from opposite sides of
+# the product. `tests/fixtures/task-grammar/` holds the cases they must agree
+# on, and both test suites read it.
+COMPLETED_TASK_RE = re.compile(r"^\s*[-*+]\s*\[[xX]\]\s*(?:\*\*)?(T\d+)")
+PENDING_TASK_RE = re.compile(r"^\s*[-*+]\s*\[\s\]\s*(?:\*\*)?(T\d+)")
+_FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
+_INLINE_CODE_RE = re.compile(r"(`+)[^`]*?\1")
+
+
+def prose_lines(content: str):
+    """The document's lines with fenced blocks dropped and code spans blanked.
+
+    A checkbox inside a code fence is documentation showing the syntax, not
+    work — counting it once let this side report a task list complete while
+    the viewer, which has always skipped fences, still showed tasks left.
+    """
+    open_fence: str | None = None
+    for raw in content.splitlines():
+        fence = _FENCE_RE.match(raw)
+        marker = fence.group(1) if fence else None
+        if open_fence:
+            if marker and marker[0] == open_fence[0] and len(marker) >= len(open_fence):
+                open_fence = None
+            continue
+        if marker:
+            open_fence = marker
+            continue
+        yield _INLINE_CODE_RE.sub("", raw)
 
 
 def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
     """Return (all_task_ids, completed_task_ids) in document order from tasks.md."""
+    try:
+        content = tasks_md.read_text(encoding="utf-8")
+    except OSError:
+        return [], []
     all_ids: list[str] = []
     done_ids: list[str] = []
-    try:
-        for line in tasks_md.read_text(encoding="utf-8").splitlines():
-            m = COMPLETED_TASK_RE.match(line)
-            if m:
-                all_ids.append(m.group(1))
-                done_ids.append(m.group(1))
-                continue
-            m = PENDING_TASK_RE.match(line)
-            if m:
-                all_ids.append(m.group(1))
-    except OSError:
-        pass
+    for line in prose_lines(content):
+        m = COMPLETED_TASK_RE.match(line)
+        if m:
+            all_ids.append(m.group(1))
+            done_ids.append(m.group(1))
+            continue
+        m = PENDING_TASK_RE.match(line)
+        if m:
+            all_ids.append(m.group(1))
     return all_ids, done_ids
 
 

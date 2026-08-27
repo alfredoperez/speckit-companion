@@ -56,7 +56,7 @@ describe('getPhaseNumber', () => {
 
 describe('calculateTaskCompletion', () => {
     it('returns 0 when the doc type is not tasks', () => {
-        expect(calculateTaskCompletion('- [x] done\n- [x] done', CORE_DOCUMENTS.SPEC)).toBe(0);
+        expect(calculateTaskCompletion('- [x] T001 done\n- [x] T002 done', CORE_DOCUMENTS.SPEC)).toBe(0);
     });
 
     it('returns 0 when content is empty', () => {
@@ -68,16 +68,16 @@ describe('calculateTaskCompletion', () => {
     });
 
     it('counts uppercase X as completed', () => {
-        expect(calculateTaskCompletion('- [X] one\n- [ ] two', CORE_DOCUMENTS.TASKS)).toBe(50);
+        expect(calculateTaskCompletion('- [X] T001 one\n- [ ] T002 two', CORE_DOCUMENTS.TASKS)).toBe(50);
     });
 
     it('rounds the percentage', () => {
         // 1/3 = 33.33… → rounds to 33
-        expect(calculateTaskCompletion('- [x] a\n- [ ] b\n- [ ] c', CORE_DOCUMENTS.TASKS)).toBe(33);
+        expect(calculateTaskCompletion('- [x] T001 a\n- [ ] T002 b\n- [ ] T003 c', CORE_DOCUMENTS.TASKS)).toBe(33);
     });
 
     it('returns 100 when all checkboxes are complete', () => {
-        expect(calculateTaskCompletion('- [x] a\n- [x] b\n- [x] c', CORE_DOCUMENTS.TASKS)).toBe(100);
+        expect(calculateTaskCompletion('- [x] T001 a\n- [x] T002 b\n- [x] T003 c', CORE_DOCUMENTS.TASKS)).toBe(100);
     });
 
     it('ignores a checkbox shown inside an inline code span', () => {
@@ -93,8 +93,8 @@ describe('calculateTaskCompletion', () => {
     it('ignores checkboxes inside a fenced code block', () => {
         const content = [
             '```markdown',
-            '- [ ] example task',
-            '- [ ] another example',
+            '- [ ] T900 example task',
+            '- [ ] T901 another example',
             '```',
             '',
             '- [x] **T001** Real task',
@@ -103,11 +103,11 @@ describe('calculateTaskCompletion', () => {
     });
 
     it('counts indented / nested task items', () => {
-        expect(calculateTaskCompletion('- [x] parent\n  - [ ] child', CORE_DOCUMENTS.TASKS)).toBe(50);
+        expect(calculateTaskCompletion('- [x] T001 parent\n  - [ ] T002 child', CORE_DOCUMENTS.TASKS)).toBe(50);
     });
 
     it('ignores a checkbox mid-sentence — a task is a list item', () => {
-        expect(calculateTaskCompletion('Write it as - [ ] here.\n- [x] real', CORE_DOCUMENTS.TASKS)).toBe(100);
+        expect(calculateTaskCompletion('Write it as - [ ] T900 here.\n- [x] T001 real', CORE_DOCUMENTS.TASKS)).toBe(100);
     });
 });
 

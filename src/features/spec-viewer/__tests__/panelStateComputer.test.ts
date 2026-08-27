@@ -232,7 +232,7 @@ describe('computePanelDerivedState (integration of pure pieces)', () => {
             {
                 documents: docs,
                 doc: docs[2],
-                tasksContent: '- [x] one\n- [x] two\n',
+                tasksContent: '- [x] T001 one\n- [x] T002 two\n',
                 featureCtx: undefined,
             },
             [],
