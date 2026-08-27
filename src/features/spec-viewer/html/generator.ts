@@ -14,7 +14,7 @@ import {
     NavState,
     LivingHeaderMeta
 } from '../types';
-import { escapeHtml, escapeHtmlAttribute, generateNonce } from '../utils';
+import { escapeHtml, encodeBase64Utf8, generateNonce } from '../utils';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
 
@@ -70,7 +70,7 @@ export function generateHtml(
 
     // Generate content or empty state
     const contentHtml = content
-        ? `<div id="markdown-content" data-raw="${escapeHtmlAttribute(content)}"></div>`
+        ? `<div id="markdown-content" data-raw="${encodeBase64Utf8(content)}"></div>`
         : `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
 
     // Build initial navState for Preact components. The rail renders the full
@@ -128,7 +128,7 @@ export function generateHtml(
 </head>
 <body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}">
     <div class="viewer-container" id="app-root"></div>
-    <template id="initial-content" data-raw="${content ? escapeHtmlAttribute(content) : ''}"></template>
+    <template id="initial-content" data-raw="${content ? encodeBase64Utf8(content) : ''}"></template>
     <script nonce="${nonce}">
         window.__INITIAL_NAV_STATE__ = ${JSON.stringify(initialNavState).replace(/</g, '\\u003c')};
     </script>

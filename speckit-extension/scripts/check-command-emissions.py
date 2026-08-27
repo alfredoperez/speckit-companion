@@ -44,7 +44,12 @@ REPO_ROOT = os.path.dirname(EXT_ROOT)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-from _command_parts import declared_command_names  # noqa: E402
+from _command_parts import (  # noqa: E402
+    body_description,
+    declared_command_names,
+    declared_commands,
+    declared_descriptions,
+)
 
 PREFIX = "speckit.companion."
 DASHED_PREFIX = "speckit-companion-"
@@ -264,8 +269,31 @@ def check_docs(names, docs: dict) -> list:
     return problems
 
 
+def check_descriptions() -> list:
+    """The catalog shows the manifest's description; the agent's command list shows
+    the body's. They are written in two places, so they drifted — sixteen of
+    nineteen disagreed, and one pair said the opposite of the other."""
+    problems = []
+    manifest = declared_descriptions()
+    for name, rel in declared_commands():
+        stated = manifest.get(name)
+        if stated is None:
+            problems.append(f"{name}: no description in extension.yml provides.commands")
+            continue
+        actual = body_description(rel)
+        if actual is None:
+            problems.append(f"{name}: {rel} states no description in its frontmatter")
+        elif actual != stated:
+            problems.append(
+                f"{name}: extension.yml and {rel} describe it differently\n"
+                f"      manifest: {stated}\n"
+                f"      body:     {actual}"
+            )
+    return problems
+
+
 def check(root: str = REPO_ROOT, docs: dict | None = None) -> list:
-    """Compose the four comparisons. `root`/`docs` are parameters so a test can drive
+    """Compose the five comparisons. `root`/`docs` are parameters so a test can drive
     the real composition against a synthetic tree."""
     names = declared_command_names()
     problems = check_areas(names, root)
@@ -277,6 +305,7 @@ def check(root: str = REPO_ROOT, docs: dict | None = None) -> list:
         os.path.join(root, EXTENSIONS_YML),
     )
     problems += check_docs(names, DOCS if docs is None else docs)
+    problems += check_descriptions()
     return sorted(problems)
 
 

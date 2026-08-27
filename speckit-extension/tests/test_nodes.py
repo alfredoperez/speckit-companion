@@ -110,9 +110,6 @@ class TimingFencePresenceTests(unittest.TestCase):
         self.assertFalse(parity.missing_timing_fence("commands/speckit.companion.classify.md", "no fence"))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class DebugRenderTests(unittest.TestCase):
     """Off means the instrumentation is absent, not dormant."""
@@ -189,3 +186,7 @@ class DebugRenderRegressionTests(unittest.TestCase):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
             self.assertIsNone(cp.project_root(tmp))
+
+
+if __name__ == "__main__":
+    unittest.main()

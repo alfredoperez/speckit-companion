@@ -119,8 +119,10 @@ export function escapeHtml(text: string): string {
 }
 
 /**
- * Escape for HTML attribute (more aggressive escaping)
+ * Base64 for carrying a document through an HTML attribute — the webview reads
+ * it back with `decodeBase64Utf8`. Named for what it does: it is not an escaper,
+ * and `escapeHtml` above is safe for element content only, never an attribute.
  */
-export function escapeHtmlAttribute(text: string): string {
+export function encodeBase64Utf8(text: string): string {
     return Buffer.from(text).toString('base64');
 }

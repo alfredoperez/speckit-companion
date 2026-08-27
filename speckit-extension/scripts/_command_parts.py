@@ -54,6 +54,8 @@ _COMMANDS_BLOCK = re.compile(
 )
 _COMMAND_NAME = re.compile(r"^\s*-\s*name:\s*(\S+)\s*$", re.MULTILINE)
 _COMMAND_FILE = re.compile(r"^\s*file:\s*(\S+)\s*$", re.MULTILINE)
+_COMMAND_DESC = re.compile(r"^\s*description:\s*(.+)$", re.MULTILINE)
+_BODY_DESC = re.compile(r"^description:\s*(.+)$", re.MULTILINE)
 
 
 def declared_commands(path: str | None = None) -> list:
@@ -87,6 +89,32 @@ def declared_commands(path: str | None = None) -> list:
 
 def declared_command_names() -> list:
     return [name for name, _ in declared_commands()]
+
+
+def declared_descriptions(path: str | None = None) -> dict:
+    """`{command name: description}` as the manifest states it."""
+    path = path or os.path.join(EXT, MANIFEST)
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    block = _COMMANDS_BLOCK.search(text)
+    if not block:
+        raise SystemExit(f"[parts] no provides.commands block in {MANIFEST}")
+    body = block.group(1)
+    starts = [(m.start(), m.group(1)) for m in _COMMAND_NAME.finditer(body)]
+    out = {}
+    for i, (pos, name) in enumerate(starts):
+        end = starts[i + 1][0] if i + 1 < len(starts) else len(body)
+        found = _COMMAND_DESC.search(body, pos, end)
+        if found:
+            out[name] = found.group(1).strip().strip('"')
+    return out
+
+
+def body_description(rel: str) -> str | None:
+    """The `description:` a command body states in its own frontmatter — what the
+    agent's command list shows, against the manifest's, which the catalog shows."""
+    found = _BODY_DESC.search(read(rel))
+    return found.group(1).strip().strip('"') if found else None
 
 
 def golden_path(rel: str) -> str:
