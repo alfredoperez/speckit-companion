@@ -14,8 +14,8 @@ export type NodeKind = 'investigate' | 'author' | 'gate' | 'control';
 /** Where a hook attaches relative to its anchor. */
 export type HookWhen = 'before' | 'after';
 
-/** How a hook acts when it fires. */
-export type HookType = 'command' | 'prompt' | 'node';
+/** How a hook acts when it fires. Mirrors `HOOK_TYPES` in companion_config.py. */
+export type HookType = 'command' | 'prompt' | 'node' | 'skill';
 
 export interface PipelineHook {
     when: HookWhen;
@@ -81,6 +81,13 @@ export interface PipelineTemplate {
 
 export interface PipelineStep {
     name: string;
+    /**
+     * Whether this step takes a turn in the run.
+     *
+     * `auto` runs the others rather than sitting among them, so drawing it as a
+     * peer reads like a fifth step. Steps arrive in run order, not alphabetical.
+     */
+    inSequence: boolean;
     phases: PipelinePhase[];
     decisions: PipelineDecision[];
     /** What a run of this step is expected to produce. */

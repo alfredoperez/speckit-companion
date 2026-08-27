@@ -75,3 +75,6 @@ specs/_*/
 !specs/_01_demo-planned/
 !specs/_02_demo-tasked/
 !specs/_03_demo-living/
+
+# Design canvas working files — the published artifact is the deliverable.
+/design/*.html

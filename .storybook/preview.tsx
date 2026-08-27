@@ -3,6 +3,10 @@ import { navState } from '../webview/src/spec-viewer/signals';
 
 // Import all spec-viewer CSS
 import '../webview/styles/spec-viewer/index.css';
+// The builder panel rides the shared tokens rather than the viewer's owned
+// palette, so it needs both files to render the way the panel does.
+import '../webview/styles/tokens.css';
+import '../webview/styles/pipeline-builder.css';
 // Codicon font so file-ref icons render in stories (the real viewer loads this
 // from the extension; without it the glyph shows as an empty square).
 import '@vscode/codicons/dist/codicon.css';

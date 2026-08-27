@@ -52,14 +52,26 @@ function reordered(order: string[], moved: string, target: string): string[] {
     return [...without.slice(0, at), moved, ...without.slice(at)];
 }
 
-function HookChips({ hooks }: { hooks: PipelineNode['hooks'] }) {
+/** Cut at a word boundary, so a chip never ends mid-token. */
+function clip(text: string, limit = 48): string {
+    if (text.length <= limit) { return text; }
+    const cut = text.slice(0, limit);
+    const space = cut.lastIndexOf(' ');
+    return `${(space > limit * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+function HookChips({ hooks, side }: {
+    hooks: PipelineNode['hooks'];
+    /** Which edge these attach to, when they are drawn apart from their anchor. */
+    side?: 'before' | 'after';
+}) {
     if (hooks.length === 0) { return null; }
     return (
-        <div class="pb-hooks">
+        <div class={`pb-hooks ${side ? `pb-hooks--${side}` : ''}`}>
             {hooks.map((hook, i) => (
                 <span key={i} class={`pb-hook pb-hook--${hook.type}`} title={hook.summary}>
                     {hook.when} · {hook.type}
-                    {hook.summary ? `: ${hook.summary.slice(0, 48)}` : ''}
+                    {hook.summary ? `: ${clip(hook.summary)}` : ''}
                 </span>
             ))}
         </div>
@@ -88,6 +100,10 @@ function AddHere({ anchor, when, onAdd }: {
 function Node({ node, step, actions }: {
     node: PipelineNode; step: string; actions: NodeActions;
 }) {
+    // A before-hook runs before this node, so it is drawn above it. Both used to
+    // render in one list underneath, which put "before" after the thing it
+    // precedes — the reason a hook was impossible to read off the canvas.
+    const before = node.hooks.filter(hook => hook.when === 'before');
     return (
         <div class={`pb-node ${node.replaced ? 'pb-node--replaced' : ''}`}
             draggable
@@ -111,6 +127,7 @@ function Node({ node, step, actions }: {
                 const moved = event.dataTransfer?.getData('text/plain');
                 if (moved && moved !== node.id) { actions.onDrop(moved, node.id); }
             }}>
+            <HookChips hooks={before} side="before" />
             <button class="pb-node-main" onClick={() => actions.onOpenNode(step, node.id)}
                 title={node.replaced
                     ? "Open this project's instructions for this node"
@@ -138,7 +155,7 @@ function Node({ node, step, actions }: {
                 )}
                 <AddHere anchor={node.id} when="after" onAdd={actions.onAdd} />
             </span>
-            <HookChips hooks={node.hooks} />
+            <HookChips hooks={node.hooks.filter(h => h.when === 'after')} />
         </div>
     );
 }
@@ -211,10 +228,12 @@ function StepBody({ step, actions }: { step: PipelineStep; actions: NodeActions 
         || step.changes.reordered || step.changes.hooks || step.changes.decisions.length
         || step.changes.replaced.length || step.template;
     return (
-        <section class={`pb-step ${changed ? 'pb-step--changed' : ''}`}>
+        <section class={`pb-step ${changed ? 'pb-step--changed' : ''} ${step.inSequence ? '' : 'pb-step--aside'}`}>
             <header class="pb-step-head">
-                <span class="pb-step-kicker">STEP</span>
                 <h2 class="pb-step-name">{step.name}</h2>
+                {!step.inSequence && (
+                    <span class="pb-step-aside-note">runs the steps above, hands-off</span>
+                )}
                 {step.template && (
                     <span class="pb-template" title={
                         step.template.sections.length
@@ -252,15 +271,21 @@ export function Canvas(
     const actions = { onOpenNode, onReplaceNode, onRestoreNode };
     return (
         <main class="pb-canvas">
-            {graph.steps.map((step, index) => (
-                <div key={step.name} class="pb-chain-item">
-                    <Step step={step} actions={actions}
-                        onReorder={onReorder} onAddHook={onAddHook} />
-                    {index < graph.steps.length - 1 && (
-                        <div class="pb-link" aria-hidden="true" />
-                    )}
-                </div>
-            ))}
+            {graph.steps.map((step, index) => {
+                // The link means "then this runs". It belongs between two steps
+                // of the sequence and nowhere else — a line into `auto` would
+                // claim a run order that does not exist.
+                const next = graph.steps[index + 1];
+                return (
+                    <div key={step.name} class="pb-chain-item">
+                        <Step step={step} actions={actions}
+                            onReorder={onReorder} onAddHook={onAddHook} />
+                        {step.inSequence && next?.inSequence && (
+                            <div class="pb-link" aria-hidden="true" />
+                        )}
+                    </div>
+                );
+            })}
         </main>
     );
 }

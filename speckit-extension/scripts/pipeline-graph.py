@@ -66,6 +66,19 @@ def _hook(entry: dict) -> dict:
     }
 
 
+#: The order a run goes through the pipeline. `decomposed_commands` is sorted by
+#: name because a build does not care, but a drawing does: alphabetical puts
+#: implement before plan and auto before everything, which is the opposite of
+#: what happens.
+RUN_ORDER = ["specify", "plan", "tasks", "implement"]
+
+
+def _sequence(commands: list) -> list:
+    """Commands in run order, with anything outside the sequence after it."""
+    ranked = [c for c in RUN_ORDER if c in commands]
+    return ranked + sorted(c for c in commands if c not in RUN_ORDER)
+
+
 def build_graph(project_root: str) -> dict:
     use_project_nodes(project_root)
     build.use_project_hook_nodes(project_root)
@@ -75,7 +88,7 @@ def build_graph(project_root: str) -> dict:
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
 
     steps = []
-    for command in decomposed_commands():
+    for command in _sequence(decomposed_commands()):
         entry = plan[command]
         hooks = entry["hooks"]
         phases = entry.get("phases") or []
@@ -93,6 +106,9 @@ def build_graph(project_root: str) -> dict:
         template = templates.get(command)
         steps.append({
             "name": command,
+            # `auto` runs the others rather than taking a turn among them. Drawn
+            # as a peer it reads like a fifth step, which it is not.
+            "inSequence": command in RUN_ORDER,
             "phases": drawn_phases,
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),

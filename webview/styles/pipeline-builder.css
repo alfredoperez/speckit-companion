@@ -224,7 +224,6 @@ body {
     border-bottom: 1px solid var(--border);
 }
 
-.pb-step-kicker,
 .pb-phase-name,
 .pb-step-counts,
 .pb-node-id,
@@ -476,4 +475,20 @@ body {
         margin-left: 0;
         flex-basis: 100%;
     }
+}
+
+/* A hook drawn above its node needs the same indent as one drawn below, or the
+   two sides read as different kinds of thing. */
+.pb-hooks--before {
+    padding-bottom: var(--space-1);
+}
+
+/* `auto` is not a turn in the run: it sits apart, without a link into it. */
+.pb-step--aside {
+    border-style: dashed;
+}
+
+.pb-step-aside-note {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
 }

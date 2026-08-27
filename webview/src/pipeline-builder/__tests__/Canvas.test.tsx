@@ -22,6 +22,7 @@ const NO_CHANGES = {
 function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name: 'specify',
+        inSequence: true,
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
             {
@@ -148,6 +149,76 @@ describe('the canvas draws the three levels as containment', () => {
         expect(text).toContain('classify-size decides');
         expect(text).toContain('skips plan, tasks');
         expect(text).toContain('runs everything');
+    });
+
+    // A hook drawn on the wrong side is worse than one not drawn: it says the
+    // pipeline does something in an order it does not.
+    it('draws a before-hook above its node and an after-hook below it', () => {
+        const both = graph({
+            steps: [step({
+                phases: [{
+                    name: 'wrap-up', hooks: [],
+                    nodes: [node({
+                        id: 'complete', name: 'Mark the spec complete',
+                        hooks: [
+                            { when: 'before', type: 'command', summary: 'doctor.py --chat' },
+                            { when: 'after', type: 'skill', summary: 'create-pr' },
+                        ],
+                    })],
+                }],
+            })],
+        });
+        const { host } = canvas(both);
+
+        const nodeEl = host.querySelector('.pb-node')!;
+        const parts = Array.from(nodeEl.children).map(el => el.className);
+        expect(parts[0]).toContain('pb-hooks--before');
+        expect(parts[parts.length - 1]).toContain('pb-hooks');
+        expect(parts[parts.length - 1]).not.toContain('--before');
+
+        expect(nodeEl.querySelector('.pb-hooks--before')?.textContent).toContain('doctor.py');
+        expect(nodeEl.querySelector('.pb-hooks--before')?.textContent).not.toContain('create-pr');
+    });
+
+    it('cuts a long hook at a word, never mid-token', () => {
+        const long = graph({
+            steps: [step({
+                phases: [{
+                    name: 'wrap-up', hooks: [],
+                    nodes: [node({
+                        hooks: [{
+                            when: 'after', type: 'prompt',
+                            summary: 'Read the doctor report above and act on it by this rule, fixing only bookkeeping',
+                        }],
+                    })],
+                }],
+            })],
+        });
+        const { host } = canvas(long);
+        const shown = host.querySelector('.pb-hook')!.textContent ?? '';
+
+        expect(shown).toContain('…');
+        // The visible tail is a whole word, and the full text is still reachable.
+        const body = shown.split(': ')[1].replace('…', '');
+        expect(body.endsWith(' ')).toBe(false);
+        expect('Read the doctor report above and act on it by this rule, fixing only bookkeeping')
+            .toContain(body);
+        expect(host.querySelector('.pb-hook')?.getAttribute('title'))
+            .toContain('fixing only bookkeeping');
+    });
+
+    it('links one step to the next, but never into a step outside the run', () => {
+        const withAuto = graph({
+            steps: [
+                step({ name: 'specify' }),
+                step({ name: 'implement' }),
+                step({ name: 'auto', inSequence: false }),
+            ],
+        });
+        const { host } = canvas(withAuto);
+        // specify → implement only. Nothing points into auto.
+        expect(host.querySelectorAll('.pb-link')).toHaveLength(1);
+        expect(host.querySelectorAll('.pb-step--aside')).toHaveLength(1);
     });
 
     it('shows a hook beside the block it attaches to', () => {
