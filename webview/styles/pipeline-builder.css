@@ -342,17 +342,6 @@ body {
     background: var(--bg-primary);
 }
 
-.pb-step--changed .pb-step-name::after {
-    content: '';
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    margin-left: var(--space-2);
-    vertical-align: middle;
-    background: var(--review);
-    border-radius: 50%;
-}
-
 .pb-step-head {
     display: flex;
     align-items: baseline;

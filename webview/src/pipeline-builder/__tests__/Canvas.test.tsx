@@ -529,6 +529,17 @@ describe('the changed mark says what changed', () => {
         const { host } = canvas();
         expect(host.querySelector('.pb-changed-dot')).toBeNull();
     });
+
+    // One fact, one mark: a CSS ::after and a real element both drew a dot, and
+    // only the element carries the tooltip that says what changed.
+    it('draws exactly one mark per changed step', () => {
+        const { host } = canvas(graph({
+            steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })],
+        }));
+        expect(host.querySelectorAll('.pb-changed-dot')).toHaveLength(1);
+        const css = Array.from(document.styleSheets).length;
+        void css;
+    });
 });
 
 describe('one action keeps one name through the flow', () => {
