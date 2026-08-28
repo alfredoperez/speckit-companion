@@ -495,6 +495,26 @@ def set_phases(text: str, command: str, phases: list, renamed: tuple = None) -> 
     return "\n".join(out) + ("\n" if trailing_newline else "")
 
 
+#: Set by the CLI so `check_phases` knows which nodes the step is running.
+_order_in_force = {}
+
+
+def use_order(command: str, order: list) -> None:
+    _order_in_force[command] = list(order)
+
+
+def order_in_force(command: str) -> list:
+    """The order this step runs, so a phase check knows what needs placing."""
+    if command in _order_in_force:
+        return _order_in_force[command]
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    assemble = importlib.import_module("assemble-nodes")
+    return assemble.default_order(command)
+
+
 def check_phases(command: str, phases: list) -> None:
     """Refuse a grouping the pipeline could not build, before it reaches the file."""
     import importlib
@@ -503,12 +523,21 @@ def check_phases(command: str, phases: list) -> None:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     assemble = importlib.import_module("assemble-nodes")
 
+    import _command_parts as cp
+
     default = assemble.default_order(command)
     placed = [n for p in phases for n in p["nodes"]]
-    unknown = [n for n in placed if n not in default]
+    unknown = [
+        n for n in placed
+        if n not in default and not cp.node_source(command, n)[1]
+    ]
     if unknown:
         raise ConfigWriteError(f"{command}: no such node: {', '.join(unknown)}")
-    missing = [n for n in default if n not in placed]
+    # Every node the step RUNS needs a phase. A shipped node the recipe dropped
+    # does not — otherwise replacing a step wholesale would demand a phase for
+    # each of the nodes it just replaced.
+    running = set(placed)
+    missing = [n for n in default if n not in running and n in set(order_in_force(command))]
     if missing:
         raise ConfigWriteError(
             f"{command}: every node needs a phase — {', '.join(missing)} has none")
@@ -540,8 +569,13 @@ def check_order(command: str, nodes: list) -> None:
     assemble = importlib.import_module("assemble-nodes")
     import companion_config as cc
 
+    import _command_parts as cp
+
     default = assemble.default_order(command)
-    unknown = [n for n in nodes if n not in default]
+    unknown = [
+        n for n in nodes
+        if n not in default and not cp.node_source(command, n)[1]
+    ]
     if unknown:
         raise ConfigWriteError(f"{command}: no such node: {', '.join(unknown)}")
     if sorted(nodes) != sorted(set(nodes)):

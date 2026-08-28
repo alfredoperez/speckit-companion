@@ -77,19 +77,21 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
     const edited: Calls = [];
     const addedNodes: Array<Record<string, unknown>> = [];
     const frames: string[] = [];
+    const replacedSteps: string[] = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
+            onReplaceStep={c => replacedSteps.push(c)}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, frames };
+    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, frames, replacedSteps };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -557,6 +559,16 @@ describe("a step has instructions of its own", () => {
         const { host, frames } = canvas();
         (host.querySelector('.pb-step-open') as HTMLButtonElement).click();
         expect(frames).toEqual(['specify']);
+    });
+
+    // Rewriting each shipped node in place is the wrong shape for "use their
+    // plan instead of ours" — you want one file to paste into.
+    it('hands the whole step to one document of your own', () => {
+        const { host, replacedSteps } = canvas();
+        const button = host.querySelector('.pb-step-replace') as HTMLButtonElement;
+        expect(button.textContent).toBe('Make it ours');
+        button.click();
+        expect(replacedSteps).toEqual(['specify']);
     });
 });
 

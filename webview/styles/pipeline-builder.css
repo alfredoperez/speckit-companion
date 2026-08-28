@@ -1315,3 +1315,26 @@ body {
 }
 
 .pb-step-open:hover { text-decoration: underline; }
+
+/* Handing a whole step to a document of your own. */
+.pb-step-replace {
+    padding: 1px var(--space-2);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.pb-step:hover .pb-step-replace,
+.pb-step-replace:focus-visible { opacity: 1; }
+
+.pb-step-replace:hover {
+    color: var(--review);
+    border-color: var(--review);
+    background: var(--review-subtle);
+}

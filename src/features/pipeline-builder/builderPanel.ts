@@ -167,6 +167,27 @@ export class PipelineBuilderPanel {
                 'Adding a node');
         },
 
+        replaceStep: async message => {
+            const step = `${message.command}-ours`;
+            const own = this.projectNodePath(message.command, step);
+            if (!fs.existsSync(own)) {
+                // Seeded from what the step says today, because "use theirs
+                // instead" almost always means "adapt from ours".
+                const seed = this.stepInstructions(message.command);
+                fs.mkdirSync(path.dirname(own), { recursive: true });
+                fs.writeFileSync(own, seed, 'utf8');
+            }
+            const written = await this.write(
+                script => writePhases(script, this.workspaceRoot, message.command,
+                    [{ name: `our ${message.command}`, nodes: [step] }]),
+                'Replacing the step');
+            if (!written) { return; }
+            await this.write(
+                script => writeNodeOrder(script, this.workspaceRoot, message.command, [step]),
+                'Replacing the step');
+            await vscode.window.showTextDocument(vscode.Uri.file(own));
+        },
+
         replaceNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);
             if (!fs.existsSync(own)) {
@@ -274,6 +295,50 @@ export class PipelineBuilderPanel {
         void this.post({ type: 'notice', text });
     }
 
+
+    /**
+     * Everything a step currently tells the assistant, as one document.
+     *
+     * The frame plus every node's instructions, with the frontmatter and the
+     * shared-part fences taken out — what someone replacing the step would
+     * otherwise have to assemble by hand from a dozen files.
+     */
+    private stepInstructions(command: string): string {
+        const parts: string[] = [];
+        const frame = this.nodeSource(command, '_frame');
+        if (frame) {
+            const { body } = readableNode(fs.readFileSync(frame, 'utf8'));
+            if (body) { parts.push(body); }
+        }
+
+        const dir = path.dirname(this.projectNodePath(command, 'x'));
+        const shipped = path.join(
+            this.context.extensionPath, 'speckit-extension', 'nodes', command);
+        const source = fs.existsSync(shipped) ? shipped : dir;
+        if (fs.existsSync(source)) {
+            for (const file of fs.readdirSync(source).sort()) {
+                if (!file.endsWith('.md') || file.startsWith('_')) { continue; }
+                const found = this.nodeSource(command, file.slice(0, -3));
+                if (!found) { continue; }
+                const { body } = readableNode(fs.readFileSync(found, 'utf8'));
+                if (body) { parts.push(body); }
+            }
+        }
+
+        return [
+            '---',
+            `id: ${command}-ours`,
+            `name: ${command} — ours`,
+            'kind: author',
+            '---',
+            '',
+            `<!-- This is the whole ${command} step, yours to adapt or replace.`,
+            '     What follows is what it says today. -->',
+            '',
+            parts.join('\n\n'),
+            '',
+        ].join('\n');
+    }
 
     /** Where this project's own copy of a node lives, whether or not it exists. */
     private projectNodePath(command: string, nodeId: string): string {

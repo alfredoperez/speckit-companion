@@ -134,6 +134,65 @@ class ARewrittenNodeIsStillTheSameNode(unittest.TestCase):
         self.assertEqual(node["name"], "Our handover")
 
 
+class AWholeStepCanBeHandedToOneDocument(unittest.TestCase):
+    """Replacing what a step DOES, not each node it happens to be made of.
+
+    A recipe could only name nodes that ship, so "use their plan instead of
+    ours" meant rewriting six shipped nodes in place. A step can now be handed
+    to one node the project wrote.
+    """
+
+    def project_with_own_step(self):
+        tmp = tempfile.TemporaryDirectory()
+        own = Path(tmp.name) / cp.PROJECT_NODES_REL / "plan"
+        own.mkdir(parents=True)
+        (own / "our-plan.md").write_text(
+            "---\nid: our-plan\nname: Plan, our way\nkind: author\nwrites: plan.md\n---\n\n"
+            "Write the plan the way we adapted it.\n", encoding="utf-8")
+        (Path(tmp.name) / ".specify").mkdir(exist_ok=True)
+        (Path(tmp.name) / ".specify" / "companion.yml").write_text(
+            "commands:\n  plan:\n    nodes: [our-plan]\n", encoding="utf-8")
+        return tmp
+
+    def tearDown(self):
+        cp.use_project_nodes(None)
+
+    def test_the_step_becomes_the_projects_document(self):
+        with self.project_with_own_step() as project:
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--project", project],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            body = (Path(project) / ".specify" / "extensions" / "companion" / "commands"
+                    / "speckit.companion.plan.md").read_text(encoding="utf-8")
+
+        self.assertIn("Write the plan the way we adapted it.", body)
+        # The shipped nodes are gone from the step, not merely reordered.
+        self.assertNotIn("speckit-companion:node gather-context", body)
+        self.assertNotIn("speckit-companion:node constitution-check", body)
+
+    def test_the_artifact_is_attributed_to_the_projects_node(self):
+        with self.project_with_own_step() as project:
+            graph = graph_mod.build_graph(project)
+        plan = next(s for s in graph["steps"] if s["name"] == "plan")
+        self.assertEqual(plan["artifacts"], ["plan.md"])
+        node = plan["phases"][0]["nodes"][0]
+        self.assertEqual(node["id"], "our-plan")
+        self.assertTrue(node["replaced"])
+
+    def test_a_name_that_is_neither_shipped_nor_written_is_still_refused(self):
+        build = importlib.import_module("build-pipeline")
+        with tempfile.TemporaryDirectory() as project:
+            specify = Path(project) / ".specify"
+            specify.mkdir()
+            (specify / "companion.yml").write_text(
+                "commands:\n  plan:\n    nodes: [invented]\n", encoding="utf-8")
+            with self.assertRaises(build.BuildError) as caught:
+                build.use_project_nodes(project)
+                build.plan_build(build.load_config(project))
+        self.assertIn("invented", str(caught.exception))
+
+
 class ParityNeverPointsAtAProject(unittest.TestCase):
     """A project's replacement must not be able to move the shipped goldens."""
 

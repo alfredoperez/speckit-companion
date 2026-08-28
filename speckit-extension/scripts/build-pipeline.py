@@ -257,10 +257,18 @@ def plan_build(config: dict) -> tuple[dict, list]:
         default = assemble.default_order(command)
         order = cc.resolve_order(config, command, default)
 
-        missing = [n for n in order if n not in default]
+        # A recipe may name a node the project wrote, not only one that ships.
+        # Without this, replacing what a whole step DOES meant rewriting each
+        # shipped node in place — you could not hand the step to one document of
+        # your own and adapt it.
+        missing = [
+            n for n in order
+            if n not in default and not node_source(command, n)[1]
+        ]
         if missing:
             raise BuildError(
-                f"{command}: recipe names nodes that do not exist: {', '.join(missing)}"
+                f"{command}: names nodes that are neither shipped nor in "
+                f"{os.path.join(PROJECT_NODES_REL, command)}: {', '.join(missing)}"
             )
 
         try:
@@ -274,7 +282,7 @@ def plan_build(config: dict) -> tuple[dict, list]:
         phases = assemble.phases_for(command, order)
         unknown = [
             n for phase in assemble.declared_phases(command) for n in phase["nodes"]
-            if n not in default
+            if n not in default and not node_source(command, n)[1]
         ]
         if unknown:
             raise BuildError(

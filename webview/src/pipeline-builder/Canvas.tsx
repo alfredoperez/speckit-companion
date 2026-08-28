@@ -49,6 +49,8 @@ interface Props {
     ) => void;
     /** Read a step's own preamble — the text every node in it sits under. */
     onOpenFrame: (command: string) => void;
+    /** Hand the whole step to one document of your own, seeded from this one. */
+    onReplaceStep: (command: string) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,
@@ -506,7 +508,7 @@ function FilesIcon() {
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame }: {
+    onAddNode, onOpenFrame, onReplaceStep }: {
     step: PipelineStep;
     index: number;
     actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook'>;
@@ -516,6 +518,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onSetPhases: Props['onSetPhases'];
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
+    onReplaceStep: Props['onReplaceStep'];
 }) {
     const grouping = () => step.phases.map(p => ({
         name: p.name, nodes: p.nodes.map(n => n.id),
@@ -600,6 +603,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     )}
                 </div>
                 <span class="pb-step-counts">{nodes} nodes</span>
+                <button class="pb-step-replace"
+                    title={`Hand ${step.name} to one document of your own, seeded from what it says today`}
+                    onClick={() => onReplaceStep(step.name)}>Make it ours</button>
             </header>
 
             <div class="pb-step-body">
@@ -676,7 +682,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 
 export function Canvas(
     { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook,
-        onEditHook, onSetPhases, onAddNode, onOpenFrame, selected }: Props,
+        onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep, selected }: Props,
 ) {
     const actions = { onOpenNode, onReplaceNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -701,7 +707,8 @@ export function Canvas(
                     <Step key={step.name} step={step} index={index} actions={actions}
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
-                        onAddNode={onAddNode} onOpenFrame={onOpenFrame} />
+                        onAddNode={onAddNode} onOpenFrame={onOpenFrame}
+                        onReplaceStep={onReplaceStep} />
                 ))}
             </div>
         </main>

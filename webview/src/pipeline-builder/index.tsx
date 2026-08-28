@@ -168,6 +168,7 @@ function App() {
                         send({ type: 'setPhases', command, phases, renamed })}
                     onAddNode={(command, nodeId, phase, order, phases) =>
                         send({ type: 'addNode', command, nodeId, phase, order, phases })}
+                    onReplaceStep={command => send({ type: 'replaceStep', command })}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);

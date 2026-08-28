@@ -245,6 +245,14 @@ export type BuilderToExtensionMessage =
     /** Read a step's own preamble. `_frame` is a node id like any other. */
     | { type: 'readFrame'; command: string }
     /**
+     * Hand a whole step to one document of your own.
+     *
+     * Rewriting each shipped node in place is the wrong shape for "use their
+     * plan instead of ours": you want one file to paste into and adapt. The
+     * step's current instructions seed it, so adapting starts from what it does.
+     */
+    | { type: 'replaceStep'; command: string }
+    /**
      * Put a node the recipe dropped back, in one phase.
      *
      * Order and grouping move together: a node in the order with no phase, or in

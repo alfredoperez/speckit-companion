@@ -72,6 +72,9 @@ function changeSummary(graph: PipelineGraph): string[] {
         if (step.changes.replaced.length) {
             bits.push(`your own: ${step.changes.replaced.join(', ')}`);
         }
+        if (step.changes.phases.length) {
+            bits.push(`phases: ${step.changes.phases.join(', ')}`);
+        }
         if (step.changes.decisions.length) {
             bits.push(`routing: ${step.changes.decisions.join(', ')}`);
         }
