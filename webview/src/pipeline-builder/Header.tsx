@@ -23,6 +23,19 @@ interface Props {
     onNewWorkflow: () => void;
 }
 
+/** Drawn, so it takes the warning hue rather than a font's idea of one. */
+function WarningIcon() {
+    return (
+        <svg class="builder-notice-icon" width="14" height="14" viewBox="0 0 16 16"
+            fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+            aria-hidden="true" focusable="false">
+            <circle cx="8" cy="8" r="6" />
+            <path d="M8 5v3.5" />
+            <path d="M8 10.8h.01" />
+        </svg>
+    );
+}
+
 /** How a workflow reads in the switcher. The stored name is a filename. */
 function workflowLabel(name: string): string {
     if (name === '') { return 'This project'; }
@@ -157,7 +170,10 @@ export function Header(props: Props) {
             </div>
 
             {notice && (
-                <div class={`builder-notice builder-notice--${notice.tone}`}>{notice.text}</div>
+                <div class={`builder-notice builder-notice--${notice.tone}`}>
+                    <WarningIcon />
+                    {notice.text}
+                </div>
             )}
 
             {graph.warnings.length > 0 && (
