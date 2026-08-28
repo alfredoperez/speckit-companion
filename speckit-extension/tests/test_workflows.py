@@ -249,6 +249,83 @@ class TheOtherHookSystemIsVisibleToo(unittest.TestCase):
         self.assertEqual(graph["counts"]["hooks"], 0)
 
 
+class AnEditGoesWhereTheConfigurationLives(unittest.TestCase):
+    """A project on a named workflow keeps its configuration in that file.
+
+    Every write went to `companion.yml` regardless, so on a workflow the hooks,
+    phases and reorders landed in a file the build does not read — reported as
+    applied, doing nothing. Only the node replacement worked, because nodes are
+    shared rather than workflow-scoped.
+    """
+
+    def test_without_a_workflow_it_is_companion_yml(self):
+        with project(HOOKED) as root:
+            self.assertTrue(config_write.config_path(root).endswith("companion.yml"))
+
+    def test_on_a_workflow_it_is_that_workflow_s_file(self):
+        with project("workflow: bugfix\n", {"bugfix": "commands: {}\n"}) as root:
+            self.assertTrue(
+                config_write.config_path(root).endswith("workflows/bugfix.yml"))
+
+    def test_on_shipped_there_is_nowhere_to_write_and_it_says_so(self):
+        with project("workflow: shipped\n") as root:
+            with self.assertRaises(config_write.ConfigWriteError) as caught:
+                config_write.config_path(root)
+        self.assertIn("cannot be edited", str(caught.exception))
+
+    def test_a_new_workflow_can_be_added_to_straight_away(self):
+        # It used to be seeded with `commands: {}` — an inline value the writers
+        # then appended keys under, producing a file nothing could read.
+        with project("") as root:
+            config_write.new_workflow(root, "fresh", seed_from="")
+            path = Path(root) / ".specify" / "companion" / "workflows" / "fresh.yml"
+            text = path.read_text(encoding="utf-8")
+            path.write_text(
+                config_write.add_hook(text, "plan", "after", "plan-doc",
+                                      {"type": "prompt", "text": "check it"}),
+                encoding="utf-8")
+            import companion_config as cc
+            parsed = cc.load_yaml(path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            parsed["commands"]["plan"]["hooks"]["after"]["plan-doc"][0]["text"], "check it")
+
+
+class RenamingAPhaseCarriesItsHooks(unittest.TestCase):
+    """A phase name is a hook anchor, so a rename that drops them is not one."""
+
+    CONFIG = ("commands:\n  specify:\n    hooks:\n      after:\n        author:\n"
+              "          - { type: prompt, text: \"read it aloud\" }\n")
+
+    def test_the_anchor_follows_the_new_name(self):
+        out = config_write.set_phases(
+            self.CONFIG, "specify",
+            [{"name": "our review", "nodes": assemble.default_order("specify")}],
+            renamed=("author", "our review"))
+        import companion_config as cc
+        hooks = cc.load_yaml(out)["commands"]["specify"]["hooks"]["after"]
+        self.assertIn("our review", hooks)
+        self.assertNotIn("author", hooks)
+        self.assertEqual(hooks["our review"][0]["text"], "read it aloud")
+
+    def test_the_build_no_longer_warns_that_the_anchor_is_gone(self):
+        out = config_write.set_phases(
+            self.CONFIG, "specify",
+            [{"name": "our review", "nodes": assemble.default_order("specify")}],
+            renamed=("author", "our review"))
+        with project(out) as root:
+            _plan, warnings = build.plan_build(build.load_config(root))
+        self.assertEqual(warnings, [])
+
+    def test_without_the_rename_the_hook_is_left_behind(self):
+        # The behaviour the rename exists to prevent, stated so it stays fixed.
+        out = config_write.set_phases(
+            self.CONFIG, "specify",
+            [{"name": "our review", "nodes": assemble.default_order("specify")}])
+        with project(out) as root:
+            _plan, warnings = build.plan_build(build.load_config(root))
+        self.assertTrue(any("author" in w for w in warnings))
+
+
 class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
     """The middle block was the one thing a project could see and not touch."""
 

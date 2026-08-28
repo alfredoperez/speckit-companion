@@ -25,6 +25,7 @@ import sys
 from _command_parts import (
     DEBUG_TIMING,
     EXT,
+    frame_source,
     append_part,
     debug_on,
     decomposed_commands,
@@ -217,7 +218,7 @@ def assemble_command(command: str, order: list = None, debug: bool = False,
     body without them, which is what the golden comparison uses.
     """
     cdir = nodes_command_dir(command)
-    frame_path = os.path.join(cdir, "_frame.md")
+    frame_path, _replaced = frame_source(command)
     out = ""
     if os.path.isfile(frame_path):
         with open(frame_path, encoding="utf-8") as fh:

@@ -28,6 +28,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
         inSequence: true,
         stockHooks: [],
         dropped: [],
+        frame: { source: '/ext/nodes/specify/_frame.md', replaced: false },
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
             {
@@ -74,17 +75,21 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
     const orders: Array<[string, string[]]> = [];
     const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
     const edited: Calls = [];
+    const addedNodes: Array<Record<string, unknown>> = [];
+    const frames: string[] = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
+            onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
+            onOpenFrame={c => frames.push(c)}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped, edited };
+    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, frames };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -423,6 +428,135 @@ describe('phases are the project\'s to name and group', () => {
             { name: 'gather', nodes: ['b'] },
             { name: 'author', nodes: ['a', 'c'] },
         ]]]);
+    });
+});
+
+describe('a phase is a block a project owns', () => {
+    /** Three phases, so moving and removing have somewhere to go. */
+    function three() {
+        return graph({
+            steps: [step({
+                dropped: ['branch', 'finalize'],
+                phases: [
+                    { name: 'gather', hooks: [], nodes: [node({ id: 'a' }), node({ id: 'b' })] },
+                    { name: 'author', hooks: [], nodes: [node({ id: 'c' })] },
+                    { name: 'wrap-up', hooks: [], nodes: [node({ id: 'd' })] },
+                ],
+            })],
+        });
+    }
+
+    // The add-node select shares the class, so ask for buttons.
+    const tools = (host: HTMLElement, phase: number) =>
+        Array.from(host.querySelectorAll('.pb-phase')[phase]
+            .querySelectorAll('button.pb-phase-tool')) as HTMLButtonElement[];
+
+    it('moves a phase later, and the order follows it', () => {
+        const { host, grouped } = canvas(three());
+        // The tools read [up, down, add, remove].
+        tools(host, 0)[1].click();
+        expect(grouped[0][1].map(p => p.name)).toEqual(['author', 'gather', 'wrap-up']);
+    });
+
+    it('moves a phase earlier', () => {
+        const { host, grouped } = canvas(three());
+        tools(host, 2)[0].click();
+        expect(grouped[0][1].map(p => p.name)).toEqual(['gather', 'wrap-up', 'author']);
+    });
+
+    it('cannot move the first phase up or the last one down', () => {
+        const { host } = canvas(three());
+        expect(tools(host, 0)[0].disabled).toBe(true);
+        expect(tools(host, 2)[1].disabled).toBe(true);
+    });
+
+    // A phase's nodes have to land somewhere; dropping them would drop work.
+    it('folds a removed phase into the one above it', () => {
+        const { host, grouped } = canvas(three());
+        tools(host, 1)[3].click();
+        expect(grouped[0][1]).toEqual([
+            { name: 'gather', nodes: ['a', 'b', 'c'] },
+            { name: 'wrap-up', nodes: ['d'] },
+        ]);
+    });
+
+    it('folds the first phase into the one below it', () => {
+        const { host, grouped } = canvas(three());
+        tools(host, 0)[3].click();
+        expect(grouped[0][1]).toEqual([
+            { name: 'author', nodes: ['a', 'b', 'c'] },
+            { name: 'wrap-up', nodes: ['d'] },
+        ]);
+    });
+
+    it('will not remove the only phase a step has', () => {
+        const { host } = canvas(graph({
+            steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
+        }));
+        expect(tools(host, 0)[3].disabled).toBe(true);
+    });
+
+    // A new phase is born empty, and an empty phase cannot be written — so it
+    // takes a node from the phase it follows.
+    it('adds a phase by splitting the one before it', () => {
+        const { host, grouped } = canvas(three());
+        tools(host, 0)[2].click();
+        expect(grouped[0][1]).toEqual([
+            { name: 'gather', nodes: ['a'] },
+            { name: 'new phase', nodes: ['b'] },
+            { name: 'author', nodes: ['c'] },
+            { name: 'wrap-up', nodes: ['d'] },
+        ]);
+    });
+
+    it('will not split a phase that has only one node', () => {
+        const { host, grouped } = canvas(three());
+        tools(host, 1)[2].click();
+        expect(grouped).toEqual([]);
+    });
+});
+
+describe('a dropped node can be put back', () => {
+    const withDropped = () => graph({
+        steps: [step({
+            dropped: ['branch', 'finalize'],
+            phases: [{ name: 'gather', hooks: [], nodes: [node({ id: 'a' })] }],
+        })],
+    });
+
+    it('offers only the nodes this step actually dropped', () => {
+        const { host } = canvas(withDropped());
+        const options = Array.from(host.querySelectorAll('.pb-phase-add-node option'))
+            .map(el => el.getAttribute('value'));
+        expect(options).toEqual(['', 'branch', 'finalize']);
+    });
+
+    it('offers nothing when the step is running everything it ships with', () => {
+        const { host } = canvas();
+        expect(host.querySelector('.pb-phase-add-node')).toBeNull();
+    });
+
+    // The order says when it runs and the phase says where it sits; one without
+    // the other is a pipeline that contradicts itself.
+    it('sends the order and the grouping together', () => {
+        const { host, addedNodes } = canvas(withDropped());
+        const select = host.querySelector('.pb-phase-add-node') as HTMLSelectElement;
+        select.value = 'branch';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        expect(addedNodes).toEqual([{
+            c: 'specify', id: 'branch', phase: 'gather',
+            order: ['a', 'branch'],
+            phases: [{ name: 'gather', nodes: ['a', 'branch'] }],
+        }]);
+    });
+});
+
+describe("a step has instructions of its own", () => {
+    it('opens them from the step name', () => {
+        const { host, frames } = canvas();
+        (host.querySelector('.pb-step-open') as HTMLButtonElement).click();
+        expect(frames).toEqual(['specify']);
     });
 });
 

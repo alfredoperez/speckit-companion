@@ -142,6 +142,31 @@ export class PipelineBuilderPanel {
             });
         },
 
+        readFrame: async message => {
+            const file = this.nodeSource(message.command, '_frame');
+            if (!file) { return; }
+            const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
+            await this.post({
+                type: 'nodeBody', command: message.command, nodeId: '_frame', body, parts,
+            });
+        },
+
+        addNode: async message => {
+            // Two writes, one intent: the order says when it runs and the phase
+            // says where it sits. Writing one without the other leaves a
+            // pipeline that disagrees with itself, so a refusal on the second
+            // has to leave neither.
+            const written = await this.write(
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases),
+                'Adding a node');
+            if (!written) { return; }
+            await this.write(
+                script => writeNodeOrder(
+                    script, this.workspaceRoot, message.command, message.order),
+                'Adding a node');
+        },
+
         replaceNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);
             if (!fs.existsSync(own)) {
@@ -181,7 +206,8 @@ export class PipelineBuilderPanel {
         setPhases: async message => {
             await this.write(
                 script => writePhases(
-                    script, this.workspaceRoot, message.command, message.phases),
+                    script, this.workspaceRoot, message.command, message.phases,
+                    message.renamed),
                 'Regrouping the phases');
         },
 

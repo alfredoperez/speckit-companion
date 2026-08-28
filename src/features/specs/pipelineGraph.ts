@@ -96,9 +96,12 @@ export function writePhases(
     workspaceRoot: string,
     command: string,
     phases: Array<{ name: string; nodes: string[] }>,
+    renamed?: { from: string; to: string },
 ): Promise<string | null> {
-    return runConfigWrite(script, workspaceRoot,
-        ['--command', command, '--phases', JSON.stringify(phases)]);
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command, '--phases', JSON.stringify(phases),
+        ...(renamed ? ['--renamed', renamed.from, renamed.to] : []),
+    ]);
 }
 
 /** Switch the project to a named workflow. Returns the reason on refusal. */

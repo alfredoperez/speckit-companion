@@ -40,7 +40,22 @@ type Side =
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
 function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
     const step = graph.steps.find(s => s.name === at.command);
-    for (const phase of step?.phases ?? []) {
+    if (!step) { return null; }
+
+    // The frame is the step's own preamble rather than a node in any phase, and
+    // it reads in the same panel — so it is described as the node it behaves like.
+    if (at.nodeId === '_frame') {
+        return {
+            id: '_frame',
+            name: `${step.name} — the step's own instructions`,
+            kind: 'control',
+            reads: [], writes: [], hooks: [],
+            pinned: 'the frame always comes first — it is what every node sits under',
+            source: step.frame.source,
+            replaced: step.frame.replaced,
+        };
+    }
+    for (const phase of step.phases) {
         const node = phase.nodes.find(n => n.id === at.nodeId);
         if (node) { return node; }
     }
@@ -149,8 +164,16 @@ function App() {
                         vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
-                    onSetPhases={(command, phases) =>
-                        send({ type: 'setPhases', command, phases })}
+                    onSetPhases={(command, phases, renamed) =>
+                        send({ type: 'setPhases', command, phases, renamed })}
+                    onAddNode={(command, nodeId, phase, order, phases) =>
+                        send({ type: 'addNode', command, nodeId, phase, order, phases })}
+                    onOpenFrame={command => {
+                        setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
+                        setNotice(null);
+                        setBody(null);
+                        vscode.postMessage({ type: 'readFrame', command });
+                    }}
                     onEditHook={(command, hook) => {
                         setNotice(null);
                         setSide({ kind: 'attach', at: { command, anchor: hook.anchor, hook } });

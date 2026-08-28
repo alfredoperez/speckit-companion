@@ -1256,3 +1256,62 @@ body {
     background: var(--review);
     cursor: help;
 }
+
+/* ============================================
+   Phase controls — add, remove, reorder
+   ============================================ */
+
+.pb-phase-tools {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.pb-phase:hover .pb-phase-tools,
+.pb-phase-tools:focus-within { opacity: 1; }
+
+.pb-phase-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 var(--space-1);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-phase-tool:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.pb-phase-tool:disabled { opacity: 0.35; cursor: default; }
+
+.pb-phase-tool--remove:hover:not(:disabled) {
+    color: var(--error);
+    border-color: var(--error);
+    background: var(--error-subtle);
+}
+
+.pb-phase-add-node { padding-right: var(--space-1); }
+
+/* A step's name opens the step's own instructions. */
+.pb-step-open {
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.pb-step-open:hover { text-decoration: underline; }

@@ -425,11 +425,21 @@ def project_node_path(command: str, node_id: str):
 
 
 def node_source(command: str, node_id: str) -> tuple:
-    """Return (path, replaced) for a node — the project's copy when it has one."""
+    """Return (path, replaced) for a node — the project's copy when it has one.
+
+    `_frame` is the step's own preamble rather than a node in the order, but it
+    is a file of instructions like any other, so a project can replace it the
+    same way. It was the one piece of a step's text nothing could reach.
+    """
     own = project_node_path(command, node_id)
     if own and os.path.isfile(own):
         return own, True
     return os.path.join(nodes_command_dir(command), f"{node_id}.md"), False
+
+
+def frame_source(command: str) -> tuple:
+    """Return (path, replaced) for a step's frame."""
+    return node_source(command, "_frame")
 
 
 def read_node(command: str, node_id: str) -> tuple:

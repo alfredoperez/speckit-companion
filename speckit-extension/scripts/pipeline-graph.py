@@ -27,6 +27,7 @@ sys.path.insert(0, HERE)
 
 from _command_parts import (  # noqa: E402
     decomposed_commands,
+    frame_source,
     node_source,
     read_node,
     use_project_nodes,
@@ -140,6 +141,13 @@ def build_graph(project_root: str) -> dict:
             # Stock spec-kit's own extension hooks, which a Companion run fires
             # alongside its own. Showing only ours understated the pipeline.
             "stockHooks": build.stock_hooks(project_root, command),
+            # The step's own preamble — its frontmatter and the lead-in every
+            # node sits under. A step DOES have instructions of its own; they
+            # were simply the one piece nothing in the panel could reach.
+            "frame": {
+                "source": frame_source(command)[0],
+                "replaced": frame_source(command)[1],
+            },
             # `auto` runs the others rather than taking a turn among them. Drawn
             # as a peer it reads like a fifth step, which it is not.
             "inSequence": command in RUN_ORDER,

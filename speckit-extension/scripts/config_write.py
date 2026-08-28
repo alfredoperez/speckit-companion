@@ -34,6 +34,18 @@ def _is_blank(line: str) -> bool:
     return not line.strip() or line.lstrip().startswith("#")
 
 
+def _open_block(lines: list, at: int) -> None:
+    """Turn `key: {}` or `key: []` into `key:` so entries can be added under it.
+
+    An empty inline collection is a value. Appending indented keys after one
+    produces a file the reader stops at — which is what a freshly created
+    workflow did the first time anything was added to it.
+    """
+    match = _KEY.match(lines[at])
+    if match and match.group(3).strip() in ("{}", "[]"):
+        lines[at] = f"{match.group(1)}{match.group(2)}:"
+
+
 def _find_key(lines: list, key: str, start: int, end: int, indent: int):
     """The index of `key:` at exactly `indent` within [start, end), or None."""
     for i in range(start, end):
@@ -79,6 +91,7 @@ def set_nodes(text: str, command: str, nodes: list) -> str:
         body = lines + ([""] if lines and lines[-1].strip() else []) + block
         return "\n".join(body) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, commands_at)
     commands_end = _block_end(lines, commands_at, 0, len(lines))
     # The indent a command entry sits at — taken from the file, not assumed, so
     # a configuration written with four spaces stays written with four.
@@ -189,6 +202,7 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
         body = lines + ([""] if lines and lines[-1].strip() else []) + block
         return "\n".join(body) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, commands_at)
     commands_end = _block_end(lines, commands_at, 0, len(lines))
     cmd_indent = next(
         (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
@@ -231,6 +245,7 @@ def _hook_items(lines: list, command: str, when: str, anchor: str):
     commands_at = _find_key(lines, "commands", 0, len(lines), 0)
     if commands_at is None:
         return [], 0
+    _open_block(lines, commands_at)
     commands_end = _block_end(lines, commands_at, 0, len(lines))
     cmd_indent = next(
         (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
@@ -365,7 +380,7 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
         fh.write(f"# {name} — a way of working for this project.\n"
                  f"# Switch to it from the pipeline panel, or set `workflow: {name}`\n"
                  f"# in .specify/companion.yml.\n\n")
-        fh.write(source or "commands: {}\n")
+        fh.write(source or "")
     return path
 
 
@@ -380,7 +395,51 @@ def _render_phases(phases: list, indent: str) -> list:
     return out
 
 
-def set_phases(text: str, command: str, phases: list) -> str:
+def rename_anchor(text: str, command: str, old: str, new: str) -> str:
+    """Point this command's hooks at a phase's new name.
+
+    A phase name is a hook anchor. Renaming the phase without renaming the
+    anchor leaves the hooks pointing at something that no longer exists — the
+    build warns and skips them, so a rename quietly detaches work.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        return text
+    _open_block(lines, commands_at)
+    commands_end = _block_end(lines, commands_at, 0, len(lines))
+    cmd_indent = next(
+        (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+         if not _is_blank(lines[i])), len(INDENT))
+    command_at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
+    if command_at is None:
+        return text
+    command_end = _block_end(lines, command_at, cmd_indent, commands_end)
+
+    hooks_indent = next(
+        (_indent_of(lines[i]) for i in range(command_at + 1, command_end)
+         if not _is_blank(lines[i])), cmd_indent * 2)
+    hooks_at = _find_key(lines, "hooks", command_at + 1, command_end, hooks_indent)
+    if hooks_at is None:
+        return text
+    hooks_end = _block_end(lines, hooks_at, hooks_indent, command_end)
+
+    for when in ("before", "after"):
+        when_indent = hooks_indent + len(INDENT)
+        when_at = _find_key(lines, when, hooks_at + 1, hooks_end, when_indent)
+        if when_at is None:
+            continue
+        when_end = _block_end(lines, when_at, when_indent, hooks_end)
+        anchor_indent = when_indent + len(INDENT)
+        at = _find_key(lines, old, when_at + 1, when_end, anchor_indent)
+        if at is not None:
+            lines[at] = f"{' ' * anchor_indent}{_quote(new)}:"
+    return "\n".join(lines) + ("\n" if trailing_newline else "")
+
+
+def set_phases(text: str, command: str, phases: list, renamed: tuple = None) -> str:
     """Return `text` with `commands.<command>.phases` set.
 
     Writing the whole grouping rather than a patch: a phase list is small, and a
@@ -388,6 +447,8 @@ def set_phases(text: str, command: str, phases: list) -> str:
     """
     if not phases:
         raise ConfigWriteError("a step needs at least one phase")
+    if renamed:
+        text = rename_anchor(text, command, renamed[0], renamed[1])
     names = [p["name"] for p in phases]
     if len(set(names)) != len(names):
         raise ConfigWriteError("two phases cannot share a name")
@@ -404,6 +465,7 @@ def set_phases(text: str, command: str, phases: list) -> str:
         body = lines + ([""] if lines and lines[-1].strip() else []) + block
         return "\n".join(body) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, commands_at)
     commands_end = _block_end(lines, commands_at, 0, len(lines))
     cmd_indent = next(
         (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
@@ -506,6 +568,33 @@ def check_order(command: str, nodes: list) -> None:
                 )
 
 
+def config_path(project_root: str) -> str:
+    """The file an edit belongs in.
+
+    A project on a named workflow has its configuration in that workflow's file,
+    not in `companion.yml` — `companion.yml` only says which one is active.
+    Writing edits there anyway put every hook, phase and reorder in a file the
+    build does not read: reported as applied, doing nothing.
+
+    `shipped` is Companion unchanged and has no file, so an edit has nowhere to
+    go and says so instead of landing somewhere silent.
+    """
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    build = importlib.import_module("build-pipeline")
+
+    active = build.active_workflow(project_root)
+    if not active:
+        return os.path.join(project_root, ".specify", "companion.yml")
+    if active == build.SHIPPED_WORKFLOW:
+        raise ConfigWriteError(
+            "this project is on \"As it ships\", which is Companion unchanged and "
+            "cannot be edited — switch to a workflow, or create one, first")
+    return os.path.join(project_root, build.WORKFLOWS_REL, f"{active}.yml")
+
+
 def main() -> int:
     import argparse
 
@@ -520,6 +609,8 @@ def main() -> int:
     ap.add_argument("--run", default="")
     ap.add_argument("--text", default="")
     ap.add_argument("--phases", help="JSON list of {name, nodes} to set for --command")
+    ap.add_argument("--renamed", nargs=2, metavar=("FROM", "TO"),
+                    help="a phase this write renames, so its hooks follow it")
     ap.add_argument("--edit-index", type=int,
                     help="replace the hook at this index under --when/--anchor")
     ap.add_argument("--remove-index", type=int,
@@ -530,8 +621,12 @@ def main() -> int:
     args = ap.parse_args()
 
     project = os.path.abspath(args.project)
-    path = os.path.join(project, ".specify", "companion.yml")
+    selection_path = os.path.join(project, ".specify", "companion.yml")
     try:
+        # The selection lives in companion.yml; everything else lives in
+        # whichever file that selection points at.
+        path = (selection_path if (args.workflow or args.new_workflow)
+                else config_path(project))
         if args.new_workflow:
             created = new_workflow(project, args.new_workflow, args.seed_from)
             existing = ""
@@ -597,13 +692,14 @@ def main() -> int:
 
             phases = json.loads(args.phases)
             check_phases(args.command, phases)
+            renamed = tuple(args.renamed) if args.renamed else None
             existing = ""
             if os.path.isfile(path):
                 with open(path, encoding="utf-8") as fh:
                     existing = fh.read()
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8") as fh:
-                fh.write(set_phases(existing, args.command, phases))
+                fh.write(set_phases(existing, args.command, phases, renamed))
             print(f"[config] {args.command}: phases saved to .specify/companion.yml")
             return 0
 

@@ -109,10 +109,19 @@ export interface PipelineTemplate {
     sections: string[];
 }
 
+/** A step's own preamble — the text every node in it sits under. */
+export interface PipelineFrame {
+    source: string;
+    /** Whether the project replaced it with its own. */
+    replaced: boolean;
+}
+
 export interface PipelineStep {
     name: string;
     /** Nodes this step ships with that the recipe is not running — what can be added back. */
     dropped: string[];
+    /** The step's own instructions, which nothing could reach before. */
+    frame: PipelineFrame;
     /** Hooks stock spec-kit extensions attach to this step. Not ours, and not editable here. */
     stockHooks: StockHook[];
     /**
@@ -205,7 +214,13 @@ export type BuilderToExtensionMessage =
      * Whole rather than a patch: the grouping is small, and half of one leaves
      * the reader guessing which nodes are where.
      */
-    | { type: 'setPhases'; command: string; phases: Array<{ name: string; nodes: string[] }> }
+    | {
+        type: 'setPhases';
+        command: string;
+        phases: Array<{ name: string; nodes: string[] }>;
+        /** A phase this write renames, so the hooks anchored to it follow. */
+        renamed?: { from: string; to: string };
+    }
     /**
      * Attach work at a boundary. The panel collects all of it — a native
      * dialog covered the thing you were pointing at.
@@ -227,6 +242,22 @@ export type BuilderToExtensionMessage =
     | { type: 'removeHook'; command: string; anchor: string; when: HookWhen; index: number }
     /** Read a node's instructions to show them here rather than in the editor. */
     | { type: 'readNode'; command: string; nodeId: string }
+    /** Read a step's own preamble. `_frame` is a node id like any other. */
+    | { type: 'readFrame'; command: string }
+    /**
+     * Put a node the recipe dropped back, in one phase.
+     *
+     * Order and grouping move together: a node in the order with no phase, or in
+     * a phase but not the order, is a pipeline that contradicts itself.
+     */
+    | {
+        type: 'addNode';
+        command: string;
+        nodeId: string;
+        phase: string;
+        order: string[];
+        phases: Array<{ name: string; nodes: string[] }>;
+    }
     /** Switch the whole configuration. `shipped` is Companion with nothing changed. */
     | { type: 'selectWorkflow'; name: string }
     /** Start a new workflow, optionally seeded from the active one. */
