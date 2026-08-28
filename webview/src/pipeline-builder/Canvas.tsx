@@ -429,34 +429,31 @@ function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
 
     return (
         <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}>
+            {/* What the step leaves behind sits on its own line, not as a row
+                of its own and not at the bottom of a lane you must scroll to. */}
             <header class="pb-step-head">
                 {step.inSequence && <span class="pb-step-index">{index + 1}</span>}
                 <h2 class="pb-step-name">{step.name}</h2>
+                <div class="pb-step-produces">
+                    {step.artifacts.length > 0 && (
+                        <span class="pb-produces"
+                            title={`produces ${step.artifacts.join(', ')}`}>
+                            <FilesIcon />
+                            {step.artifacts.length}
+                        </span>
+                    )}
+                    {/* The template is only news when the project reshaped it.
+                        A second file glyph beside the produced-files count read
+                        as two of the same thing. */}
+                    {step.template && step.template.sections.length > 0 && (
+                        <span class="pb-template pb-template--yours"
+                            title={`${step.template.file} — you replaced: ${step.template.sections.join(', ')}`}>
+                            <span class="pb-yours">{step.template.sections.length} §</span>
+                        </span>
+                    )}
+                </div>
                 <span class="pb-step-counts">{nodes} nodes</span>
             </header>
-
-            {/* What the step leaves behind belongs with its name, not at the
-                bottom of a lane you have to scroll to reach. */}
-            <div class="pb-step-produces">
-                {step.artifacts.length > 0 && (
-                    <span class="pb-produces"
-                        title={`produces ${step.artifacts.join(', ')}`}>
-                        <FilesIcon />
-                        {step.artifacts.length}
-                    </span>
-                )}
-                {step.template && (
-                    <span class={`pb-template ${step.template.sections.length ? 'pb-template--yours' : ''}`}
-                        title={step.template.sections.length
-                            ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
-                            : step.template.file}>
-                        <span class="pb-template-file">{step.template.file}</span>
-                        {step.template.sections.length > 0 && (
-                            <span class="pb-yours">{step.template.sections.length} §</span>
-                        )}
-                    </span>
-                )}
-            </div>
 
             <div class="pb-step-body">
                 {step.phases.map(phase => (

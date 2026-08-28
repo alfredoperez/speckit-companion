@@ -103,6 +103,37 @@ class ReplacementReachesTheBuiltBody(unittest.TestCase):
         self.assertTrue(Path(nodes["resolve-dir"]["source"]).is_file())
 
 
+class ARewrittenNodeIsStillTheSameNode(unittest.TestCase):
+    """A copy that dropped the frontmatter should not lose the node's name."""
+
+    def test_it_keeps_the_shipped_name_when_the_copy_has_none(self):
+        with tempfile.TemporaryDirectory() as project:
+            own = Path(project) / cp.PROJECT_NODES_REL / "specify"
+            own.mkdir(parents=True)
+            (own / "handoff.md").write_text("Hand it over our way.\n", encoding="utf-8")
+            graph = graph_mod.build_graph(project)
+        cp.use_project_nodes(None)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        node = next(n for p in specify["phases"] for n in p["nodes"] if n["id"] == "handoff")
+        self.assertTrue(node["replaced"])
+        # Not "handoff" — that is the handle, and this is the same node.
+        self.assertEqual(node["name"], "Hand off to the next step")
+
+    def test_the_copy_s_own_name_wins_when_it_has_one(self):
+        with tempfile.TemporaryDirectory() as project:
+            own = Path(project) / cp.PROJECT_NODES_REL / "specify"
+            own.mkdir(parents=True)
+            (own / "handoff.md").write_text(
+                "---\nid: handoff\nname: Our handover\n---\n\nOurs.\n", encoding="utf-8")
+            graph = graph_mod.build_graph(project)
+        cp.use_project_nodes(None)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        node = next(n for p in specify["phases"] for n in p["nodes"] if n["id"] == "handoff")
+        self.assertEqual(node["name"], "Our handover")
+
+
 class ParityNeverPointsAtAProject(unittest.TestCase):
     """A project's replacement must not be able to move the shipped goldens."""
 

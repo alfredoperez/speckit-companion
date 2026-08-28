@@ -5,6 +5,7 @@ import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { Inspector } from '../Inspector';
+import { AttachForm } from '../AttachForm';
 import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/protocol/pipeline';
 
 function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
@@ -432,6 +433,32 @@ describe('opening a node', () => {
         const open = host.querySelectorAll('.pb-node--open');
         expect(open).toHaveLength(1);
         expect(open[0].textContent).toContain('Draft the spec');
+    });
+});
+
+describe('one action keeps one name through the flow', () => {
+    const noop = () => undefined;
+
+    it('says "Add hook" on the phase, in the sheet, and on the confirm', () => {
+        const { host } = canvas();
+        expect(host.querySelector('.pb-attach')?.textContent).toContain('Add hook');
+
+        document.body.innerHTML = '';
+        const sheet = mount(
+            <AttachForm step={step()} anchor="gather"
+                onCancel={noop} onAttach={noop} />,
+        );
+        expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
+        expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Add hook');
+    });
+
+    it('names the anchor field for where it goes, not what it is', () => {
+        const sheet = mount(
+            <AttachForm step={step()} anchor="gather" onCancel={noop} onAttach={noop} />);
+        const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
+            .map(el => el.textContent);
+        expect(labels).toContain('Where');
+        expect(labels).not.toContain('What');
     });
 });
 

@@ -140,7 +140,7 @@ export function Inspector(props: Props) {
 
             <dl class="pb-facts">
                 <dt>Kind</dt>
-                <dd>{node.kind} — {KIND_MEANS[node.kind] ?? 'part of the step'}</dd>
+                <dd>{KIND_MEANS[node.kind] ?? 'part of the step'}</dd>
 
                 {node.writes.length > 0 && (
                     <>
@@ -155,12 +155,14 @@ export function Inspector(props: Props) {
                     </>
                 )}
                 <dt>Order</dt>
-                <dd>{node.pinned ? `Held in place — ${node.pinned}.` : 'Free to move in its phase.'}</dd>
+                <dd>{node.pinned
+                    ? `Held in place — ${node.pinned}.`
+                    : 'Free to move, including into another phase.'}</dd>
 
                 <dt>Source</dt>
                 <dd>
                     {node.replaced ? 'Yours — this project replaced it.' : 'Ships with Companion.'}
-                    <span class="pb-facts-path">{node.source}</span>
+                    <span class="pb-facts-path" title={node.source}>{node.source}</span>
                 </dd>
             </dl>
 
@@ -193,7 +195,7 @@ export function Inspector(props: Props) {
                         onClick={props.onReplace}>
                         Make it mine
                     </button>}
-                <button class="pb-inspector-action" onClick={props.onAttach}>Attach work</button>
+                <button class="pb-inspector-action" onClick={props.onAttach}>Add hook</button>
                 <button class="pb-inspector-action pb-inspector-action--quiet"
                     onClick={props.onOpenFile}>Open the file</button>
             </footer>

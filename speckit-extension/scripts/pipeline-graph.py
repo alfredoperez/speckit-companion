@@ -50,14 +50,34 @@ def _node(command: str, node_id: str, hooks: list, pinned: str = "") -> dict:
         # file someone can edit instead of the assembled body they cannot.
         "source": source,
         "replaced": replaced,
-        # The id is a handle; the name is what a person reads. A node without one
-        # falls back to its id rather than showing nothing.
-        "name": meta.get("name") or node_id,
+        # The id is a handle; the name is what a person reads. A project's copy
+        # may have dropped the frontmatter, and it is still the same node — so
+        # the shipped name stands in before the id does.
+        "name": meta.get("name") or _shipped_name(command, node_id) or node_id,
         "kind": meta.get("kind") or "control",
         "reads": list(meta.get("reads") or []),
         "writes": ([writes] if isinstance(writes, str) else list(writes or [])),
         "hooks": [_hook(h) for h in hooks if h["anchor"] == node_id],
     }
+
+
+def _shipped_name(command: str, node_id: str) -> str:
+    """The name Companion gave this node, whatever a project's copy says."""
+    path = os.path.join(EXT, "nodes", command, f"{node_id}.md")
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as fh:
+        head = fh.read(600)
+    # Only the frontmatter: a `name:` in the body is prose, not the node's name.
+    # The opening `---` is optional — several shipped nodes start straight at the
+    # keys — so the closing one is the first `---` that is not line zero.
+    for i, line in enumerate(head.split("\n")):
+        stripped = line.strip()
+        if stripped.startswith("name:"):
+            return stripped.split(":", 1)[1].strip()
+        if stripped == "---" and i > 0:
+            break
+    return ""
 
 
 def _hook(entry: dict) -> dict:

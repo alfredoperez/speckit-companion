@@ -155,8 +155,14 @@ body {
 }
 
 .builder-notice--warning {
-    color: var(--warning);
-    background: var(--warning-subtle);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--text-body);
+    background: transparent;
+    border-left: 2px solid var(--warning);
+    border-radius: 0;
+    padding-left: var(--space-3);
 }
 
 .builder-changes {
@@ -344,7 +350,7 @@ body {
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-3) var(--space-2);
+    padding: var(--space-3) var(--space-1) var(--space-2);
 }
 
 .pb-step-index {
@@ -486,7 +492,13 @@ body {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
-    overflow-wrap: anywhere;
+    /* A path is a name. Broken across lines it stops being readable as one —
+       `checklists/requiremen` / `ts.md` — so it ends in an ellipsis and the
+       whole of it is on the title. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .pb-writes { color: var(--success); }
@@ -871,12 +883,31 @@ body {
 .pb-side-step { font-family: var(--font-mono); color: var(--text-secondary); }
 
 .pb-form {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    align-content: start;
     gap: var(--space-4);
     padding: var(--space-4);
     overflow: auto;
     min-height: 0;
+}
+
+.pb-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 0;
+}
+
+/* The confirm sits at the foot of the column, not halfway up it. */
+.pb-form-actions {
+    align-self: end;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+}
+
+.pb-field--place {
+    align-items: end;
 }
 
 .pb-field {
@@ -941,7 +972,10 @@ body {
     background: var(--accent-subtle);
 }
 
-.pb-choice input { margin-top: 3px; }
+.pb-choice input {
+    margin-top: 3px;
+    accent-color: var(--accent-strong);
+}
 
 .pb-choice-body { display: flex; flex-direction: column; gap: 2px; }
 
@@ -1028,10 +1062,11 @@ body {
 
 .pb-stock-hook {
     display: flex;
-    flex-wrap: wrap;
     align-items: baseline;
     gap: var(--space-2);
     font-size: var(--text-xs);
+    /* One hook, one line: wrapped, the chips read as loose words. */
+    white-space: nowrap;
 }
 
 .pb-stock-when { color: var(--text-muted); }
@@ -1039,12 +1074,14 @@ body {
 .pb-stock-command {
     font-family: var(--font-mono);
     color: var(--text-secondary);
-    overflow-wrap: break-word;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pb-stock-from,
 .pb-stock-note {
+    flex-shrink: 0;
     padding: 0 var(--space-1);
     font-size: var(--text-xs);
     color: var(--text-muted);
@@ -1069,10 +1106,9 @@ body {
 
 .pb-step-produces {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-    padding: 0 var(--space-1) var(--space-2);
+    min-width: 0;
 }
 
 .pb-produces {

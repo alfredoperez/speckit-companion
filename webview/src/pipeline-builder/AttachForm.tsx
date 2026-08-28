@@ -83,9 +83,9 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
     };
 
     return (
-        <aside class="pb-side" aria-label="Attach work">
+        <aside class="pb-side" aria-label="Add hook">
             <header class="pb-side-head">
-                <h2 class="pb-side-title">Attach work</h2>
+                <h2 class="pb-side-title">Add hook</h2>
                 <button class="pb-side-close" onClick={onCancel} title="Cancel">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                         stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
@@ -95,6 +95,7 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
             </header>
 
             <form class="pb-form" onSubmit={submit}>
+                <div class="pb-form-fields">
                 <fieldset class="pb-field">
                     <legend class="pb-field-label">What should happen</legend>
                     {KINDS.map(option => (
@@ -137,7 +138,7 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
                     </label>
                 )}
 
-                <div class="pb-field pb-field--row">
+                <div class="pb-field pb-field--row pb-field--place">
                     <label class="pb-field">
                         <span class="pb-field-label">When</span>
                         <select class="pb-input" value={when}
@@ -147,7 +148,7 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
                         </select>
                     </label>
                     <label class="pb-field pb-field--grow">
-                        <span class="pb-field-label">What</span>
+                        <span class="pb-field-label">Where</span>
                         <select class="pb-input" value={where}
                             onChange={e => setWhere((e.target as HTMLSelectElement).value)}>
                             {places.map(place => (
@@ -160,10 +161,11 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
                 <p class="pb-form-preview">
                     Adds to <span class="pb-mono">companion.yml</span>. You will still need to build.
                 </p>
+                </div>
 
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit" disabled={!ready}>
-                        Attach
+                        Add hook
                     </button>
                     <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
                 </div>
@@ -211,6 +213,7 @@ export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflow
             </header>
 
             <form class="pb-form" onSubmit={submit}>
+                <div class="pb-form-fields">
                 <label class="pb-field">
                     <span class="pb-field-label">Name</span>
                     <input class="pb-input pb-input--mono" type="text" value={name} autofocus
@@ -224,6 +227,7 @@ export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflow
                         .specify/companion/workflows/{clean || 'name'}.yml
                     </span> and switches to it. Your nodes and fragments stay shared.
                 </p>
+                </div>
 
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit"
