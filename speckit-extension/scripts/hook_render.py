@@ -46,7 +46,10 @@ def render_hook(entry: dict, nodes_dir: str | None = None) -> str:
     if kind == "command":
         run = str(hook.get("run", "")).strip()
         lines = [
-            f"Run this before continuing (project hook, {entry['when']} `{entry['anchor']}`):",
+            # Bolded because it is an instruction, and the instruction counter
+            # reads a bolded lead-in as one. Left as plain prose, attaching a
+            # command hook cost nothing in the budget while still being work.
+            f"**Run this now** - project hook, {entry['when']} `{entry['anchor']}`:",
             "",
             "```bash",
             run,

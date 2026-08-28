@@ -221,6 +221,23 @@ Nodes and fragments are shared: `.specify/companion/nodes/` and `.specify/compan
 
 A `workflow:` naming a file that is not there is a build error listing the workflows that do exist, rather than a silent fall back to the defaults.
 
+### Replacing a whole step
+
+A recipe may name a node the **project** wrote, not only one that ships:
+
+```yaml
+commands:
+  plan:
+    nodes: [our-plan]
+    phases:
+      - name: our plan
+        nodes: [our-plan]
+```
+
+with the instructions in `.specify/companion/nodes/plan/our-plan.md`. That is how a project hands a whole step to one document — someone else's plan, adapted — instead of rewriting each shipped node in place. A node named in a recipe that is neither shipped nor written is still refused, by name.
+
+A step's own preamble, `_frame.md`, resolves through the same seam, so `.specify/companion/nodes/<command>/_frame.md` replaces it.
+
 ### Replacing a node's instructions
 
 A recipe decides *which* nodes run; a replacement decides *what one says*. Put a file at `.specify/companion/nodes/<command>/<node_id>.md` — same frontmatter, your own body — and it is read instead of the shipped node of that id:

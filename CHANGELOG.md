@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **A whole step can be handed to one document of your own.** "Make it ours" on any step writes a node holding everything that step currently tells the assistant — the frame and every node's instructions, frontmatter and fences stripped — and points the step at it. Replacing what a step *does* used to mean rewriting each of the nodes it happens to be made of.
+- **Phases can be added, removed and reordered** from the panel, not only renamed. A removed phase folds its nodes into its neighbour rather than dropping work, and a new one splits the phase it follows, because a phase with nothing in it cannot be saved.
+- **A node the recipe dropped can be put back**, into a phase you pick. The order and the grouping are written together.
+- **A step's own instructions are readable.** Click the step's name. `_frame.md` — the preamble every node sits under — was the one piece of a step's text nothing could reach, and it can be replaced like any other node.
 - **`plan` says it writes four files, not one.** `research.md`, `data-model.md` and `contracts/` were produced by a node that declared none of them, so the manifest, the builder and the verifier all had `plan` down for a single document. A node can now declare what it *may* write as well as what it always writes — the size budget is allowed to fold those away at `simple`, and a run that does is working, not failing.
 - **A hook can be changed or taken out.** Every hook could be added and none could be touched again; getting one wrong meant opening `companion.yml`. Click any hook to edit it in place, or remove it — and the anchor it was the last hook on goes with it.
 - **A hook is picked, not remembered.** The skill and node fields offer what this project actually has — 35 skills and 9 node files in this repository — rather than a blank box where a typo produces a hook that invokes nothing.
