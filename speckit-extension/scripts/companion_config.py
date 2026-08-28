@@ -403,8 +403,11 @@ def resolve_phases(config: dict, command: str) -> list:
         if not name:
             raise ConfigError(f"{command}: phases[{i}] has no name")
         nodes = phase.get("nodes")
-        if not isinstance(nodes, list):
-            raise ConfigError(f"{command}: phase '{name}' has no nodes")
+        # Absent and empty are the same mistake, and deserve the same sentence.
+        if not isinstance(nodes, list) or not nodes:
+            raise ConfigError(
+                f"{command}: phase '{name}' has no nodes — remove the phase, "
+                f"or give it one")
         out.append({"name": name, "nodes": [str(n) for n in nodes]})
 
     names = [p["name"] for p in out]

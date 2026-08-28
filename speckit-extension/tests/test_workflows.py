@@ -322,6 +322,24 @@ class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
                 build.plan_build(build.load_config(root))
         self.assertIn("more than one phase", str(caught.exception))
 
+    def test_an_empty_phase_is_refused_at_every_layer(self):
+        # The panel wrote one by moving a phase's only node elsewhere, and the
+        # project could not be read back at all until the file was hand-edited.
+        bad = ("commands:\n  specify:\n    phases:\n"
+               "      - name: gather\n        nodes: []\n"
+               "      - name: rest\n        nodes: [resolve-dir]\n")
+        with project(bad) as root:
+            with self.assertRaises(build.BuildError) as caught:
+                build.plan_build(build.load_config(root))
+        self.assertIn("gather", str(caught.exception))
+        self.assertIn("no nodes", str(caught.exception))
+
+        with self.assertRaises(config_write.ConfigWriteError):
+            config_write.check_phases("specify", [
+                {"name": "gather", "nodes": []},
+                {"name": "rest", "nodes": assemble.default_order("specify")},
+            ])
+
     def test_a_phase_naming_a_node_that_does_not_exist_is_refused(self):
         bad = ("commands:\n  specify:\n    phases:\n"
                "      - name: one\n        nodes: [invented]\n")

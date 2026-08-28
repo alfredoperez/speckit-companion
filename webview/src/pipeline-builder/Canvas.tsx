@@ -342,7 +342,8 @@ function StockHooks({ hooks }: { hooks: StockHook[] }) {
     if (hooks.length === 0) { return null; }
     return (
         <div class="pb-stock">
-            <span class="pb-stock-label">also fires here, from your spec-kit extensions</span>
+            {/* No label: every row already names the extension that registered
+                it, which is the only thing the sentence added. */}
             <ul class="pb-stock-list">
                 {hooks.map((hook, i) => (
                     <li key={i} class="pb-stock-hook"
@@ -435,6 +436,17 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         name: p.name, nodes: p.nodes.map(n => n.id),
     }));
 
+    /**
+     * The grouping as it should be written.
+     *
+     * Moving the last node out of a phase leaves that phase with nothing in it,
+     * and a phase with no nodes renders nothing and cannot be written — so an
+     * emptied phase is a removed phase. Writing it empty produced a
+     * configuration the panel could not read back.
+     */
+    const settled = (phases: Array<{ name: string; nodes: string[] }>) =>
+        phases.filter(phase => phase.nodes.length > 0);
+
     const bound: NodeActions = {
         ...actions,
         step: step.name,
@@ -445,7 +457,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
             const from = step.phases.find(p => p.nodes.some(n => n.id === moved));
             const to = step.phases.find(p => p.nodes.some(n => n.id === target));
             if (from && to && from.name !== to.name) {
-                onSetPhases(step.name, grouping().map(phase => {
+                onSetPhases(step.name, settled(grouping().map(phase => {
                     if (phase.name === from.name) {
                         return { ...phase, nodes: phase.nodes.filter(id => id !== moved) };
                     }
@@ -459,7 +471,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         };
                     }
                     return phase;
-                }));
+                })));
                 return;
             }
             onReorder(step.name, reordered(flatOrder(step), moved, target));
@@ -503,8 +515,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
             <div class="pb-step-body">
                 {step.phases.map(phase => (
                     <Phase key={phase.name} phase={phase} actions={bound}
-                        onRename={(from, to) => onSetPhases(step.name, grouping().map(
-                            p => p.name === from ? { ...p, name: to } : p))} />
+                        onRename={(from, to) => onSetPhases(step.name, settled(grouping().map(
+                            p => p.name === from ? { ...p, name: to } : p)))} />
                 ))}
                 <Decisions decisions={step.decisions} />
                 <StockHooks hooks={step.stockHooks} />

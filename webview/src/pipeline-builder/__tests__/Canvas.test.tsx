@@ -399,9 +399,29 @@ describe('phases are the project\'s to name and group', () => {
         drag(host, 0, 1);
 
         expect(orders).toEqual([]);
+        // `gather` is gone: moving its only node out emptied it, and a phase
+        // with nothing in it renders nothing and cannot be written. Writing it
+        // empty produced a configuration the panel could not read back.
         expect(grouped).toEqual([['specify', [
-            { name: 'gather', nodes: [] },
             { name: 'author', nodes: ['resolve-dir', 'draft-spec'] },
+        ]]]);
+    });
+
+    it('keeps a phase that still has something in it', () => {
+        const two = graph({
+            steps: [step({
+                phases: [
+                    { name: 'gather', hooks: [], nodes: [node({ id: 'a' }), node({ id: 'b' })] },
+                    { name: 'author', hooks: [], nodes: [node({ id: 'c' })] },
+                ],
+            })],
+        });
+        const { host, grouped } = canvas(two);
+        drag(host, 0, 2);
+
+        expect(grouped).toEqual([['specify', [
+            { name: 'gather', nodes: ['b'] },
+            { name: 'author', nodes: ['a', 'c'] },
         ]]]);
     });
 });

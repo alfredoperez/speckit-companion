@@ -453,6 +453,12 @@ def check_phases(command: str, phases: list) -> None:
     for phase in phases:
         if not str(phase.get("name", "")).strip():
             raise ConfigWriteError(f"{command}: a phase needs a name")
+        # A phase with nothing in it renders nothing and cannot be read back.
+        # Emptying one means removing it, so refuse rather than write it.
+        if not phase.get("nodes"):
+            raise ConfigWriteError(
+                f"{command}: phase '{phase.get('name')}' has no nodes — "
+                f"remove the phase instead of leaving it empty")
 
     # The flattened grouping is the order, so it has to satisfy `reads:`.
     check_order(command, placed)

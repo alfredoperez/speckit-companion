@@ -322,6 +322,10 @@ body {
     align-items: start;
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    /* The board's scrollbar is drawn over the content, so the last row of a
+       lane needs room to clear it. */
+    padding-bottom: var(--space-4);
+    scrollbar-width: thin;
 }
 
 .pb-step {
@@ -1040,11 +1044,6 @@ body {
     margin: var(--space-2) var(--space-1) 0;
     padding-top: var(--space-2);
     border-top: 1px dashed var(--border);
-}
-
-.pb-stock-label {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
 }
 
 .pb-stock-list {
