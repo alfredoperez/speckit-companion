@@ -288,8 +288,9 @@ function Phase({ phase, actions, onRename }: {
                         }
                     }}>{phase.name}</h3>
                 <button class="pb-attach" onClick={() => actions.onAdd(phase.name)}
-                    title={`Attach a skill, an instruction or a command in ${phase.name}`}>
-                    Attach
+                    title={`Add a hook in ${phase.name} — a skill, an instruction or a command`}>
+                    <HookIcon />
+                    Add hook
                 </button>
             </header>
             <Hooks hooks={before} side="before" anchor={phase.name}

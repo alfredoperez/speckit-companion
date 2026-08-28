@@ -399,9 +399,18 @@ describe('phases are the project\'s to name and group', () => {
 });
 
 describe('attaching work', () => {
-    it('offers one Attach per phase, not a pair on every block', () => {
+    it('offers one add-hook per phase, not a pair on every block', () => {
         const { host } = canvas();   // two phases, one node each
         expect(host.querySelectorAll('.pb-attach')).toHaveLength(2);
+    });
+
+    // "Attach" read as "add a block". It adds a hook, and says so.
+    it('says a hook is what it adds', () => {
+        const { host } = canvas();
+        const button = host.querySelector('.pb-attach')!;
+        expect(button.textContent).toContain('Add hook');
+        expect(button.getAttribute('title')).toContain('Add a hook in gather');
+        expect(button.querySelector('svg')).not.toBeNull();
     });
 
     it('names the phase it would attach to', () => {

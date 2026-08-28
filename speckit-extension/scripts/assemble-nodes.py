@@ -136,46 +136,43 @@ def _reads_satisfied(reads_map: dict, ordering: list) -> bool:
 def movability(command: str, order: list) -> dict:
     """`{node_id: reason_it_cannot_move}` — an empty reason means it can.
 
-    A node moves only within its phase, and only where its inputs still come
-    first. That is not the same as "has a dependency": in `[a, b, c]` where `c`
-    reads `a`, `a` can still take the middle place. So the answer is whether ANY
-    other position in the phase is valid, not whether the node has an edge.
+    The question is whether ANY other position in the step is valid, across the
+    whole order rather than within one phase: a node can be dragged into another
+    phase, which regroups the phases and reorders in one go. Asking it per phase
+    called nine of this pipeline's nodes immovable for being alone in a phase —
+    a lock that was true of the drawing and not of the pipeline.
 
-    Working this out is what the panel could not do, so every node looked
-    draggable and most were not.
+    A node is held only by `reads:`: something it needs, or something that needs
+    it, on both sides with no room left between them.
     """
+    reads_map = {n: read_node(command, n)[0].get("reads") or [] for n in order}
     reasons = {}
-    for phase in phases_for(command, order) or [{"name": "", "nodes": list(order)}]:
-        nodes = phase["nodes"]
-        reads_map = {n: read_node(command, n)[0].get("reads") or [] for n in nodes}
 
-        if len(nodes) < 2:
-            for node_id in nodes:
-                reasons[node_id] = "it is the only node in its phase"
+    for node_id in order:
+        rest = [n for n in order if n != node_id]
+        movable = any(
+            _reads_satisfied(reads_map, candidate)
+            for candidate in (
+                rest[:i] + [node_id] + rest[i:] for i in range(len(rest) + 1)
+            )
+            if candidate != order
+        )
+        if movable:
+            reasons[node_id] = ""
             continue
 
-        for node_id in nodes:
-            rest = [n for n in nodes if n != node_id]
-            movable = any(
-                _reads_satisfied(reads_map, rest[:i] + [node_id] + rest[i:])
-                for i in range(len(rest) + 1)
-                if rest[:i] + [node_id] + rest[i:] != nodes
-            )
-            if movable:
-                reasons[node_id] = ""
-                continue
-            blockers = [d for d in reads_map[node_id] if d in reads_map]
-            holders = [n for n in nodes if node_id in reads_map[n]]
-            if blockers and holders:
-                reasons[node_id] = (
-                    f"it has to run after {', '.join(blockers)} "
-                    f"and before {', '.join(holders)}")
-            elif blockers:
-                reasons[node_id] = f"it has to run after {', '.join(blockers)}"
-            elif holders:
-                reasons[node_id] = f"{', '.join(holders)} has to run after it"
-            else:
-                reasons[node_id] = "there is nowhere else for it to go"
+        needs = [d for d in reads_map[node_id] if d in reads_map]
+        needed_by = [n for n in order if node_id in reads_map[n]]
+        if needs and needed_by:
+            reasons[node_id] = (
+                f"it has to run after {', '.join(needs)} "
+                f"and before {', '.join(needed_by)}")
+        elif needs:
+            reasons[node_id] = f"it has to run after {', '.join(needs)}"
+        elif needed_by:
+            reasons[node_id] = f"{', '.join(needed_by)} has to run after it"
+        else:
+            reasons[node_id] = "it is the only node in this step"
     return reasons
 
 

@@ -400,6 +400,10 @@ body {
 /* One Attach per phase — not a pair on every node and every phase. */
 .pb-attach {
     order: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
     padding: 1px var(--space-2);
     font-family: inherit;
     font-size: var(--text-xs);

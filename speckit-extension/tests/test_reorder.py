@@ -60,6 +60,47 @@ class AReorderInsideAPhaseIsHonoured(unittest.TestCase):
         self.assertIsNone(assemble.unexpressible_order("plan", PLAN_SWAPPED))
 
 
+class ALockMeansHeldByADependency(unittest.TestCase):
+    """A lock is about `reads:`, not about the shape of the drawing.
+
+    Movability used to be asked one phase at a time, which called every node
+    alone in a phase immovable — nine of this pipeline's twenty-four. A node
+    can be dragged into another phase, so the question is whether any position
+    in the whole step is valid.
+    """
+
+    def test_a_node_alone_in_its_phase_can_still_move(self):
+        order = assemble.default_order("plan")
+        # `constitution-check` is the only node in `check` and reads nothing.
+        self.assertEqual(assemble.movability("plan", order)["constitution-check"], "")
+
+    def test_a_node_nothing_depends_on_can_move(self):
+        order = assemble.default_order("specify")
+        self.assertEqual(assemble.movability("specify", order)["handoff"], "")
+
+    def test_a_node_boxed_in_on_both_sides_cannot(self):
+        order = assemble.default_order("plan")
+        why = assemble.movability("plan", order)["plan-doc"]
+        self.assertIn("after gather-context", why)
+        self.assertIn("before", why)
+
+    def test_a_node_two_others_read_has_to_stay_first(self):
+        order = assemble.default_order("specify")
+        why = assemble.movability("specify", order)["resolve-dir"]
+        self.assertIn("has to run after it", why)
+
+    def test_most_of_the_shipped_pipeline_is_free_to_move(self):
+        import _command_parts as cp
+
+        locked = [
+            n for cmd in cp.decomposed_commands()
+            for n, why in assemble.movability(cmd, assemble.default_order(cmd)).items()
+            if why
+        ]
+        # Two, both genuinely boxed in by `reads:`.
+        self.assertEqual(sorted(locked), ["plan-doc", "resolve-dir"])
+
+
 class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
     def test_the_node_that_crosses_is_named(self):
         crossing = ["size-budget", "constitution-check", "gather-context",
