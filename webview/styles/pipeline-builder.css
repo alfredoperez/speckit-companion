@@ -1231,3 +1231,40 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
 }
+
+/* A hook is a control now: click it to change or remove it. */
+.pb-hook {
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+}
+
+.pb-hook:hover {
+    background: var(--bg-hover);
+}
+
+.pb-field-help {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-action--remove {
+    margin-left: auto;
+    color: var(--error);
+    border-color: transparent;
+}
+
+.pb-action--remove:hover {
+    background: var(--error-subtle);
+}
+
+/* The mark that says a step differs from the shipped pipeline. */
+.pb-changed-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--review);
+    cursor: help;
+}

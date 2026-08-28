@@ -85,8 +85,14 @@ def _hook(entry: dict) -> dict:
     return {
         "when": entry["when"],
         "type": hook.get("type"),
+        # Where this hook lives in the configuration, so the panel can edit or
+        # remove it. Without an identity a hook could only ever be added.
+        "anchor": entry["anchor"],
+        "index": entry["index"],
         # One line describing what this hook does, since that is what a chip shows.
         "summary": (hook.get("run") or hook.get("text") or hook.get("ref") or "").strip(),
+        # The extra line a skill hook may carry alongside its name.
+        "note": (hook.get("text") or "").strip() if hook.get("type") == "skill" else "",
     }
 
 
@@ -141,6 +147,10 @@ def build_graph(project_root: str) -> dict:
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),
             "template": ({"file": template[0], "sections": template[2]} if template else None),
+            # Nodes this step ships with that the recipe is not running. They
+            # are the only nodes that can be added back, so the panel offers
+            # exactly these rather than a free-text box that build-errors.
+            "dropped": [n for n in default if n not in order],
             "changes": {
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],
@@ -160,6 +170,10 @@ def build_graph(project_root: str) -> dict:
         for s in steps
     )
     workflows = build.available_workflows(project_root)
+    choices = {
+        "skills": build.available_skills(project_root),
+        "nodes": build.available_hook_nodes(project_root),
+    }
     active = build.active_workflow(project_root)
     return {
         "steps": steps,
@@ -169,6 +183,9 @@ def build_graph(project_root: str) -> dict:
             "available": [build.SHIPPED_WORKFLOW] + workflows,
             "active": active,
         },
+        # What a hook can be pointed at in this project, so the form offers
+        # names instead of asking you to remember them.
+        "choices": choices,
         "configured": bool(config),
         "customised": customised,
         "warnings": warnings,

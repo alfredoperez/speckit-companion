@@ -52,6 +52,8 @@ export interface HookDraft {
     ref?: string;
     run?: string;
     text?: string;
+    /** Replace the hook already at this index instead of appending one. */
+    editIndex?: number;
 }
 
 /** Append a hook to the project's configuration. Returns the reason on refusal. */
@@ -69,6 +71,22 @@ export function writeHook(
         '--ref', hook.ref ?? '',
         '--run', hook.run ?? '',
         '--text', hook.text ?? '',
+        ...(hook.editIndex === undefined ? [] : ['--edit-index', String(hook.editIndex)]),
+    ]);
+}
+
+/** Take a hook out of the project's configuration. */
+export function removeHook(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    when: string,
+    anchor: string,
+    index: number,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command, '--when', when, '--anchor', anchor,
+        '--remove-index', String(index),
     ]);
 }
 

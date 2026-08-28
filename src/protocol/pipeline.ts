@@ -42,6 +42,12 @@ export interface PipelineHook {
     type: HookType;
     /** One line describing what it does — the chip's label. */
     summary: string;
+    /** The node or phase it attaches to. Its address, with `when` and `index`. */
+    anchor: string;
+    /** Its place among the hooks at that anchor, so it can be edited or removed. */
+    index: number;
+    /** The extra line a skill hook may carry. */
+    note: string;
 }
 
 export interface PipelineNode {
@@ -105,6 +111,8 @@ export interface PipelineTemplate {
 
 export interface PipelineStep {
     name: string;
+    /** Nodes this step ships with that the recipe is not running — what can be added back. */
+    dropped: string[];
     /** Hooks stock spec-kit extensions attach to this step. Not ours, and not editable here. */
     stockHooks: StockHook[];
     /**
@@ -130,9 +138,16 @@ export interface PipelineWorkflows {
     active: string;
 }
 
+/** What a hook in this project can be pointed at, so a name is picked not typed. */
+export interface PipelineChoices {
+    skills: string[];
+    nodes: string[];
+}
+
 export interface PipelineGraph {
     steps: PipelineStep[];
     workflows: PipelineWorkflows;
+    choices: PipelineChoices;
     /** Whether the project has a companion.yml at all. */
     configured: boolean;
     /** Whether anything differs from the shipped pipeline. */
@@ -205,7 +220,11 @@ export type BuilderToExtensionMessage =
         value: string;
         /** An optional extra line, used by a skill hook. */
         note?: string;
+        /** Set to replace the hook already at this index rather than add one. */
+        editIndex?: number;
     }
+    /** Take a hook out. A hook could only ever be added before this. */
+    | { type: 'removeHook'; command: string; anchor: string; when: HookWhen; index: number }
     /** Read a node's instructions to show them here rather than in the editor. */
     | { type: 'readNode'; command: string; nodeId: string }
     /** Switch the whole configuration. `shipped` is Companion with nothing changed. */

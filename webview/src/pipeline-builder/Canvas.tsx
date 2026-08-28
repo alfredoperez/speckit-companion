@@ -40,6 +40,8 @@ interface Props {
     onReorder: (command: string, order: string[]) => void;
     /** Attach work at a boundary — the panel asks what kind. */
     onAddHook: (command: string, anchor: string, when: 'before' | 'after') => void;
+    /** Open a hook that is already there, so it can be changed or taken out. */
+    onEditHook: (command: string, hook: PipelineHook) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (command: string, phases: Array<{ name: string; nodes: string[] }>) => void;
     /** The node whose instructions are open in the inspector, if any. */
@@ -62,6 +64,22 @@ function reordered(order: string[], moved: string, target: string): string[] {
     const at = without.indexOf(target);
     if (at < 0) { return order; }
     return [...without.slice(0, at), moved, ...without.slice(at)];
+}
+
+/**
+ * A shell line by the part that identifies it.
+ *
+ * `python3 .specify/extensions/companion/scripts/doctor.py --chat` wrapped over
+ * three lines and the only distinguishing part was at the end. The script name
+ * and its arguments say which command this is; the path says where it lives,
+ * which the title still carries.
+ */
+function shellName(line: string): string {
+    const parts = line.trim().split(/\s+/);
+    const script = parts.findIndex(p => p.includes('/') || p.endsWith('.py') || p.endsWith('.sh'));
+    if (script < 0) { return line; }
+    const base = parts[script].split('/').pop() ?? parts[script];
+    return [base, ...parts.slice(script + 1)].join(' ');
 }
 
 /** Cut at a word boundary, so a chip never ends mid-token. */
@@ -113,6 +131,7 @@ const HOOK_VERB: Record<string, string> = {
 type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string) => void;
+    onEditHook: (hook: PipelineHook) => void;
     selected?: Props['selected'];
     step: string;
 };
@@ -134,11 +153,12 @@ function HookIcon() {
  * "before draft-spec" said once, then the actions beneath it — rather than
  * repeating the side and the anchor on every chip.
  */
-function Hooks({ hooks, side, anchor, onAdd }: {
+function Hooks({ hooks, side, anchor, onAdd, onEdit }: {
     hooks: PipelineHook[];
     side: 'before' | 'after';
     anchor: string;
     onAdd?: () => void;
+    onEdit?: (hook: PipelineHook) => void;
 }) {
     if (hooks.length === 0) { return null; }
     return (
@@ -155,13 +175,17 @@ function Hooks({ hooks, side, anchor, onAdd }: {
                 </p>
                 <ul class="pb-hooks-list">
                     {hooks.map((hook, i) => (
-                        <li key={i} class="pb-hook" title={hook.summary}>
-                            <span class="pb-hook-verb">
-                                {HOOK_VERB[hook.type] ?? hook.type}
-                            </span>
-                            <span class={hook.type === 'prompt' ? 'pb-hook-text' : 'pb-hook-ref'}>
-                                {clip(hook.summary)}
-                            </span>
+                        <li key={i}>
+                            <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
+                                onClick={() => onEdit?.(hook)}>
+                                <span class="pb-hook-verb">
+                                    {HOOK_VERB[hook.type] ?? hook.type}
+                                </span>
+                                <span class={hook.type === 'prompt' ? 'pb-hook-text' : 'pb-hook-ref'}>
+                                    {clip(hook.type === 'command'
+                                        ? shellName(hook.summary) : hook.summary)}
+                                </span>
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -180,7 +204,7 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
     return (
         <div class="pb-node-group">
             <Hooks hooks={before} side="before" anchor={node.id}
-                onAdd={() => actions.onAdd(node.id)} />
+                onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
             <div
                 class={[
                     'pb-node',
@@ -247,7 +271,7 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
                 )}
             </div>
             <Hooks hooks={after} side="after" anchor={node.id}
-                onAdd={() => actions.onAdd(node.id)} />
+                onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
         </div>
     );
 }
@@ -294,14 +318,14 @@ function Phase({ phase, actions, onRename }: {
                 </button>
             </header>
             <Hooks hooks={before} side="before" anchor={phase.name}
-                onAdd={() => actions.onAdd(phase.name)} />
+                onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map(node => (
                     <Node key={node.id} node={node} actions={actions} />
                 ))}
             </div>
             <Hooks hooks={after} side="after" anchor={phase.name}
-                onAdd={() => actions.onAdd(phase.name)} />
+                onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
         </section>
     );
 }
@@ -365,6 +389,22 @@ function Decisions({ decisions }: { decisions: PipelineDecision[] }) {
 
 // ── Steps ───────────────────────────────────────────────
 
+/** What this project changed about a step, for the mark that says it did. */
+function changeSummary(step: PipelineStep): string {
+    const c = step.changes;
+    const bits: string[] = [];
+    if (c.removed.length) { bits.push(`dropped ${c.removed.join(', ')}`); }
+    if (c.added.length) { bits.push(`added ${c.added.join(', ')}`); }
+    if (c.reordered) { bits.push('reordered'); }
+    if (c.hooks) { bits.push(`${c.hooks} hook${c.hooks === 1 ? '' : 's'}`); }
+    if (c.replaced.length) { bits.push(`rewrote ${c.replaced.join(', ')}`); }
+    if (c.phases.length) { bits.push(`phases named ${c.phases.join(', ')}`); }
+    if (step.template?.sections.length) {
+        bits.push(`template § ${step.template.sections.join(', ')}`);
+    }
+    return `You changed this step: ${bits.join(' · ')}`;
+}
+
 function changed(step: PipelineStep): boolean {
     const c = step.changes;
     return Boolean(c.added.length || c.removed.length || c.reordered || c.hooks
@@ -382,12 +422,13 @@ function FilesIcon() {
     );
 }
 
-function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
+function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd'>;
+    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook'>;
     onReorder: Props['onReorder'];
     onAddHook: Props['onAddHook'];
+    onEditHook: Props['onEditHook'];
     onSetPhases: Props['onSetPhases'];
 }) {
     const grouping = () => step.phases.map(p => ({
@@ -424,6 +465,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
             onReorder(step.name, reordered(flatOrder(step), moved, target));
         },
         onAdd: anchor => onAddHook(step.name, anchor, 'before'),
+        onEditHook: hook => onEditHook(step.name, hook),
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
@@ -434,6 +476,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
             <header class="pb-step-head">
                 {step.inSequence && <span class="pb-step-index">{index + 1}</span>}
                 <h2 class="pb-step-name">{step.name}</h2>
+                {changed(step) && (
+                    <span class="pb-changed-dot" title={changeSummary(step)} aria-label="changed" />
+                )}
                 <div class="pb-step-produces">
                     {step.artifacts.length > 0 && (
                         <span class="pb-produces"
@@ -472,7 +517,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onSetPhases }: {
 
 export function Canvas(
     { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook,
-        onSetPhases, selected }: Props,
+        onEditHook, onSetPhases, selected }: Props,
 ) {
     const actions = { onOpenNode, onReplaceNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -496,7 +541,7 @@ export function Canvas(
                 {sequence.map((step, index) => (
                     <Step key={step.name} step={step} index={index} actions={actions}
                         onReorder={onReorder} onAddHook={onAddHook}
-                        onSetPhases={onSetPhases} />
+                        onEditHook={onEditHook} onSetPhases={onSetPhases} />
                 ))}
             </div>
         </main>

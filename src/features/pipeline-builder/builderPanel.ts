@@ -29,6 +29,7 @@ import {
     resolveConfigWriteScript,
     resolveGraphScript,
     writeHook,
+    removeHook,
     writeNodeOrder,
     writePhases,
     writeWorkflow,
@@ -170,6 +171,13 @@ export class PipelineBuilderPanel {
                 'Reordering');
         },
 
+        removeHook: async message => {
+            await this.write(
+                script => removeHook(script, this.workspaceRoot, message.command,
+                    message.when, message.anchor, message.index),
+                'Removing a hook');
+        },
+
         setPhases: async message => {
             await this.write(
                 script => writePhases(
@@ -181,6 +189,7 @@ export class PipelineBuilderPanel {
             await this.write(script => {
                 const draft: HookDraft = {
                     type: message.hookType, when: message.when, anchor: message.anchor,
+                    editIndex: message.editIndex,
                 };
                 if (message.hookType === 'skill' || message.hookType === 'node') {
                     draft.ref = message.value;

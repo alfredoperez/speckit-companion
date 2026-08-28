@@ -58,7 +58,7 @@ reads: [gather-context]    # advisory ordering, validated against the active rec
 - **gate** — a check or pause that may abort or skip (e.g. `constitution-check`).
 - **control** — side-effecting orchestration: setup (`resolve-dir`), routing (`classify-size`, `branch`), finish (`finalize`), or the cross-cutting `handoff` that carries the trailing parts.
 
-`writes:` is metadata in v1 — the assembled body is still prose that makes the AI produce the same document in one pass. Real section-level composition (recipes that add or drop sections) is a later step.
+A node declares its output two ways. `writes:` is what the step always produces; `may-write:` is what it produces unless the size budget folds it away — `plan` writes `research.md` and `data-model.md` at `normal` and above and folds them into `plan.md` at `simple`. Both appear in the manifest and in the builder's artifact count, because a panel showing `plan` producing one file undercounts the step by three. Only `writes:` is checked by `--verify`: calling a `simple` run incomplete for doing what it was told is the manifest crying wolf.
 
 ## specify decomposition — the spike result
 

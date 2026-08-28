@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **`plan` says it writes four files, not one.** `research.md`, `data-model.md` and `contracts/` were produced by a node that declared none of them, so the manifest, the builder and the verifier all had `plan` down for a single document. A node can now declare what it *may* write as well as what it always writes — the size budget is allowed to fold those away at `simple`, and a run that does is working, not failing.
+- **A hook can be changed or taken out.** Every hook could be added and none could be touched again; getting one wrong meant opening `companion.yml`. Click any hook to edit it in place, or remove it — and the anchor it was the last hook on goes with it.
+- **A hook is picked, not remembered.** The skill and node fields offer what this project actually has — 35 skills and 9 node files in this repository — rather than a blank box where a typo produces a hook that invokes nothing.
+- **A shell hook reads as its command.** `python3 .specify/extensions/companion/scripts/doctor.py --chat` wrapped over three lines with the identifying part at the end; it shows as `doctor.py --chat`, with the path on hover.
+- **The mark on a changed step says what changed** rather than being an unexplained dot.
 - **Phases are yours to name and group.** The middle block was the one part of the pipeline you could see and not touch — the nodes were reorderable and replaceable, hooks attached anywhere, and the group they sat in belonged to the extension. Rename a phase in place in the panel, or drag a node from one phase into another; both write the whole grouping to `companion.yml`. A grouping that leaves a node homeless, names a phase twice, or breaks a `reads:` dependency is refused with the reason.
 - **A step says what it produces at the top,** as a count you can hover for the filenames, next to the template it uses. It used to be a line at the bottom of the lane, below every node.
 - **Hooks read as a list under what they attach to** — "before complete", then the actions beneath it — instead of repeating the side and the anchor on every chip. Each group has an **add** for putting another one at the same place, and the button on a phase says **Add hook** rather than the ambiguous "Attach".

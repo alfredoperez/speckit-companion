@@ -8,7 +8,9 @@
  */
 
 import { useState } from 'preact/hooks';
-import { HookType, HookWhen, PipelineStep } from '../../../src/protocol/pipeline';
+import {
+    HookType, HookWhen, PipelineChoices, PipelineHook, PipelineStep,
+} from '../../../src/protocol/pipeline';
 
 export interface Attachment {
     anchor: string;
@@ -16,14 +18,21 @@ export interface Attachment {
     hookType: HookType;
     value: string;
     note: string;
+    /** Set when this replaces a hook rather than adding one. */
+    editIndex?: number;
 }
 
 interface Props {
     step: PipelineStep;
-    /** The phase or node the Attach button was pressed on. */
+    /** The phase or node the button was pressed on. */
     anchor: string;
+    /** What this project can point a hook at, so a name is picked not typed. */
+    choices: PipelineChoices;
+    /** The hook being changed, when this is an edit rather than an addition. */
+    editing?: PipelineHook | null;
     onCancel: () => void;
     onAttach: (attachment: Attachment) => void;
+    onRemove?: () => void;
 }
 
 const KINDS: Array<{ type: HookType; label: string; help: string; placeholder: string }> = [
@@ -65,27 +74,33 @@ function anchors(step: PipelineStep): Array<{ id: string; label: string }> {
     return out;
 }
 
-export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
-    const [hookType, setHookType] = useState<HookType>('skill');
-    const [value, setValue] = useState('');
-    const [note, setNote] = useState('');
-    const [where, setWhere] = useState(anchor);
-    const [when, setWhen] = useState<HookWhen>('before');
+export function AttachForm(props: Props) {
+    const { step, anchor, choices, editing, onCancel, onAttach } = props;
+    const [hookType, setHookType] = useState<HookType>(editing?.type ?? 'skill');
+    const [value, setValue] = useState(editing?.summary ?? '');
+    const [note, setNote] = useState(editing?.note ?? '');
+    const [where, setWhere] = useState(editing?.anchor ?? anchor);
+    const [when, setWhen] = useState<HookWhen>(editing?.when ?? 'before');
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const places = anchors(step);
+    const named = hookType === 'skill' ? choices.skills
+        : hookType === 'node' ? choices.nodes : [];
     const ready = value.trim().length > 0;
 
     const submit = (event: Event) => {
         event.preventDefault();
         if (!ready) { return; }
-        onAttach({ anchor: where, when, hookType, value: value.trim(), note: note.trim() });
+        onAttach({
+            anchor: where, when, hookType, value: value.trim(), note: note.trim(),
+            editIndex: editing?.index,
+        });
     };
 
     return (
-        <aside class="pb-side" aria-label="Add hook">
+        <aside class="pb-side" aria-label={editing ? 'Edit hook' : 'Add hook'}>
             <header class="pb-side-head">
-                <h2 class="pb-side-title">Add hook</h2>
+                <h2 class="pb-side-title">{editing ? 'Edit hook' : 'Add hook'}</h2>
                 <button class="pb-side-close" onClick={onCancel} title="Cancel">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                         stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
@@ -123,9 +138,25 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
                             placeholder={kind.placeholder}
                             onInput={e => setValue((e.target as HTMLTextAreaElement).value)} />
                     ) : (
-                        <input class="pb-input pb-input--mono" type="text" value={value}
-                            placeholder={kind.placeholder}
-                            onInput={e => setValue((e.target as HTMLInputElement).value)} />
+                        <>
+                            {/* A name typed from memory is a hook that invokes
+                                nothing. The list is what this project has; the
+                                field stays free so a new one can still be named. */}
+                            <input class="pb-input pb-input--mono" type="text" value={value}
+                                list={named.length ? `pb-known-${hookType}` : undefined}
+                                placeholder={kind.placeholder}
+                                onInput={e => setValue((e.target as HTMLInputElement).value)} />
+                            {named.length > 0 && (
+                                <datalist id={`pb-known-${hookType}`}>
+                                    {named.map(name => <option key={name} value={name} />)}
+                                </datalist>
+                            )}
+                        </>
+                    )}
+                    {named.length > 0 && (
+                        <span class="pb-field-help">
+                            {named.length} in this project — start typing to filter
+                        </span>
                     )}
                 </label>
 
@@ -165,9 +196,13 @@ export function AttachForm({ step, anchor, onCancel, onAttach }: Props) {
 
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit" disabled={!ready}>
-                        Add hook
+                        {editing ? 'Save hook' : 'Add hook'}
                     </button>
                     <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
+                    {editing && props.onRemove && (
+                        <button class="pb-action pb-action--remove" type="button"
+                            onClick={props.onRemove}>Remove</button>
+                    )}
                 </div>
             </form>
         </aside>

@@ -15,6 +15,7 @@ import {
     PipelineBuildKind,
     PipelineGraph,
     PipelineGraphResult,
+    PipelineHook,
     PipelineNode,
     isGraphError,
 } from '../../../src/protocol/pipeline';
@@ -27,7 +28,7 @@ declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void 
 const vscode = acquireVsCodeApi();
 
 interface Selection { command: string; nodeId: string }
-interface Attaching { command: string; anchor: string }
+interface Attaching { command: string; anchor: string; hook?: PipelineHook }
 
 /** Only one thing occupies the side column at a time. */
 type Side =
@@ -150,6 +151,10 @@ function App() {
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
                     onSetPhases={(command, phases) =>
                         send({ type: 'setPhases', command, phases })}
+                    onEditHook={(command, hook) => {
+                        setNotice(null);
+                        setSide({ kind: 'attach', at: { command, anchor: hook.anchor, hook } });
+                    }}
                     onAddHook={(command, anchor) => {
                         setNotice(null);
                         setSide({ kind: 'attach', at: { command, anchor } });
@@ -160,14 +165,25 @@ function App() {
                     <AttachForm
                         step={attachStep}
                         anchor={attaching.anchor}
+                        choices={graph.choices}
+                        editing={attaching.hook ?? null}
                         onCancel={() => setSide(null)}
                         onAttach={(a: Attachment) => {
                             setSide(null);
                             send({
                                 type: 'addHook', command: attaching.command, anchor: a.anchor,
                                 when: a.when, hookType: a.hookType, value: a.value, note: a.note,
+                                editIndex: a.editIndex,
                             });
                         }}
+                        onRemove={attaching.hook ? () => {
+                            const hook = attaching.hook!;
+                            setSide(null);
+                            send({
+                                type: 'removeHook', command: attaching.command,
+                                anchor: hook.anchor, when: hook.when, index: hook.index,
+                            });
+                        } : undefined}
                     />
                 )}
 

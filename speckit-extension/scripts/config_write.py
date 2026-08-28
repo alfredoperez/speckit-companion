@@ -223,6 +223,80 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
     return "\n".join(out) + ("\n" if trailing_newline else "")
 
 
+def _hook_items(lines: list, command: str, when: str, anchor: str):
+    """Line numbers of the hook entries at one anchor, in declared order.
+
+    Returns `(indices, item_indent)`, or `([], 0)` when the anchor has none.
+    """
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        return [], 0
+    commands_end = _block_end(lines, commands_at, 0, len(lines))
+    cmd_indent = next(
+        (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+         if not _is_blank(lines[i])), len(INDENT))
+
+    at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
+    if at is None:
+        return [], 0
+    end = _block_end(lines, at, cmd_indent, commands_end)
+    indent = cmd_indent
+
+    for key in ("hooks", when, anchor):
+        step = next(
+            (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
+            indent + len(INDENT))
+        found = _find_key(lines, key, at + 1, end, step)
+        if found is None:
+            return [], 0
+        at, indent = found, step
+        end = _block_end(lines, found, step, end)
+
+    item_indent = next(
+        (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
+        indent + len(INDENT))
+    return [
+        i for i in range(at + 1, end)
+        if not _is_blank(lines[i])
+        and _indent_of(lines[i]) == item_indent
+        and lines[i].lstrip().startswith("- ")
+    ], item_indent
+
+
+def replace_hook(text: str, command: str, when: str, anchor: str,
+                 index: int, hook) -> str:
+    """Replace or remove the hook at `index` under one anchor.
+
+    `hook` is a new hook dict, or `None` to remove it. A hook could only ever be
+    added: written wrong, the only fix was to open the file.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    items, item_indent = _hook_items(lines, command, when, anchor)
+    if index < 0 or index >= len(items):
+        raise ConfigWriteError(
+            f"{command}: there is no hook {index + 1} {when} {anchor}")
+
+    at = items[index]
+    # An entry may run onto continuation lines; take them with it.
+    stop = at + 1
+    while stop < len(lines) and not _is_blank(lines[stop]) \
+            and _indent_of(lines[stop]) > item_indent:
+        stop += 1
+
+    if hook is None:
+        out = lines[:at] + lines[stop:]
+        # An anchor with nothing left under it is a key pointing at nothing.
+        remaining, _ = _hook_items(out, command, when, anchor)
+        if not remaining:
+            key = _find_key(out, anchor, 0, len(out), item_indent - len(INDENT))
+            if key is not None:
+                out = out[:key] + out[_block_end(out, key, item_indent - len(INDENT), len(out)):]
+    else:
+        out = lines[:at] + [f"{' ' * item_indent}- {_hook_line(hook)}"] + lines[stop:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
 def set_workflow(text: str, name: str) -> str:
     """Return `text` with a top-level `workflow: <name>` set, replacing any existing one.
 
@@ -440,6 +514,10 @@ def main() -> int:
     ap.add_argument("--run", default="")
     ap.add_argument("--text", default="")
     ap.add_argument("--phases", help="JSON list of {name, nodes} to set for --command")
+    ap.add_argument("--edit-index", type=int,
+                    help="replace the hook at this index under --when/--anchor")
+    ap.add_argument("--remove-index", type=int,
+                    help="remove the hook at this index under --when/--anchor")
     ap.add_argument("--workflow", help="switch to this workflow")
     ap.add_argument("--new-workflow", help="create this workflow and switch to it")
     ap.add_argument("--seed-from", default="", help="workflow to copy when creating one")
@@ -471,6 +549,19 @@ def main() -> int:
             print(f"[config] now running '{args.workflow}'")
             return 0
 
+        if args.remove_index is not None:
+            if not (args.command and args.when and args.anchor):
+                raise ConfigWriteError("removing a hook needs --command, --when and --anchor")
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(replace_hook(
+                    existing, args.command, args.when, args.anchor, args.remove_index, None))
+            print(f"[config] removed a hook {args.when} {args.anchor}")
+            return 0
+
         if args.hook:
             if not args.command:
                 raise ConfigWriteError("a hook needs --command")
@@ -481,7 +572,11 @@ def main() -> int:
             if os.path.isfile(path):
                 with open(path, encoding="utf-8") as fh:
                     existing = fh.read()
-            updated = add_hook(existing, args.command, args.when, args.anchor, hook)
+            if args.edit_index is not None:
+                updated = replace_hook(
+                    existing, args.command, args.when, args.anchor, args.edit_index, hook)
+            else:
+                updated = add_hook(existing, args.command, args.when, args.anchor, hook)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(updated)

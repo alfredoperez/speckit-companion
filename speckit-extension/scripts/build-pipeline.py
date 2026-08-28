@@ -131,6 +131,48 @@ def stock_hooks(project_root: str, command: str) -> list:
     return out
 
 
+#: Where an agent keeps its skills. A skill hook names one of these.
+SKILL_DIRS = [
+    os.path.join(".claude", "skills"),
+    os.path.join(".agents", "skills"),
+    os.path.join(".specify", "skills"),
+]
+
+
+def available_skills(project_root: str) -> list:
+    """Skill names this project has, so a hook can be picked rather than typed.
+
+    A skill hook was a free-text box: you had to already know the name, and a
+    typo produced a hook that silently invoked nothing.
+    """
+    found = set()
+    for rel in SKILL_DIRS:
+        directory = os.path.join(project_root, rel)
+        if not os.path.isdir(directory):
+            continue
+        for entry in os.listdir(directory):
+            path = os.path.join(directory, entry)
+            if os.path.isdir(path) and os.path.isfile(os.path.join(path, "SKILL.md")):
+                found.add(entry)
+            elif entry.endswith(".md") and not entry.startswith("_"):
+                found.add(entry[:-3])
+    return sorted(found)
+
+
+def available_hook_nodes(project_root: str) -> list:
+    """Node files a `type: node` hook can name — the project's, then the shipped parts."""
+    found = set()
+    for directory in ([os.path.join(project_root, USER_NODES_REL)]
+                      + [os.path.join(EXT, "presets", "_parts")]):
+        if not os.path.isdir(directory):
+            continue
+        found.update(
+            f[:-3] for f in os.listdir(directory)
+            if f.endswith(".md") and not f.startswith("_")
+        )
+    return sorted(found)
+
+
 def available_workflows(project_root: str) -> list:
     """Named workflows this project has written, by name, sorted."""
     directory = os.path.join(project_root, WORKFLOWS_REL)

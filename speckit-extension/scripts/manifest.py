@@ -32,22 +32,33 @@ MANIFEST_PATH = os.path.join(EXT, "commands", ".manifest.json")
 
 
 def _declared_artifacts(command: str, order: list) -> list:
-    """`writes:` for each node in the order, in the order they run.
+    """What each node in the order produces, in the order they run.
 
     A node may name one artifact or several. The node's id travels with it: an
     artifact nobody can attribute is a report nobody can act on.
+
+    Two kinds. `writes:` is what the step always produces. `may-write:` is what
+    it produces unless the size budget folds it away — `plan` writes research
+    and data-model at `normal` and above, and folds them into `plan.md` at
+    `simple`. Both belong in the manifest, because a panel that showed `plan`
+    producing one file was undercounting the step by three. Only the first kind
+    is checked: calling a `simple` run incomplete for doing what it was told is
+    the manifest crying wolf.
     """
     out = []
     for node_id in order:
         meta, _ = read_node(command, node_id)
-        writes = meta.get("writes")
-        if not writes:
-            continue
-        names = writes if isinstance(writes, list) else [writes]
-        for name in names:
-            name = str(name).strip()
-            if name:
-                out.append({"artifact": name, "node": node_id})
+        for key, conditional in (("writes", False), ("may-write", True)):
+            declared = meta.get(key)
+            if not declared:
+                continue
+            names = declared if isinstance(declared, list) else [declared]
+            for name in names:
+                name = str(name).strip()
+                if name:
+                    out.append({
+                        "artifact": name, "node": node_id, "conditional": conditional,
+                    })
     return out
 
 
@@ -79,10 +90,15 @@ def unproduced(manifest: dict, command: str, feature_dir: str) -> list:
     reports success either way — and that silence is the failure this turns into
     a statement.
 
+    A `may-write` artifact is skipped: the size budget is allowed to fold it
+    away, so its absence is the pipeline working, not failing.
+
     Returns `[{artifact, node}]`, empty when every declared artifact is there.
     """
     missing = []
     for entry in manifest["commands"].get(command, []):
+        if entry.get("conditional"):
+            continue
         target = os.path.join(feature_dir, entry["artifact"])
         if not os.path.isfile(target):
             missing.append(entry)

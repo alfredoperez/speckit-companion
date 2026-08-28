@@ -43,7 +43,7 @@ function phase(name: string, nodes: PipelineNode[], hooks: PipelineHook[] = []):
 
 function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep> = {}): PipelineStep {
     return {
-        name, inSequence: name !== 'auto', stockHooks: [], phases,
+        name, inSequence: name !== 'auto', stockHooks: [], dropped: [], phases,
         decisions: [], artifacts: [], template: null,
         changes: { ...NO_CHANGES }, ...over,
     };
@@ -53,6 +53,7 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
     return {
         steps,
         workflows: { available: ['shipped'], active: '' },
+        choices: { skills: [], nodes: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -181,17 +182,17 @@ export const EveryHookType: Story = {
             phase('wrap-up', [
                 node('complete', 'Mark the spec complete', {
                     hooks: [
-                        { when: 'before', type: 'command', summary: 'python3 .specify/extensions/companion/scripts/doctor.py --chat || true' },
-                        { when: 'before', type: 'node', summary: 'debug-timing' },
+                        { when: 'before', type: 'command', summary: 'python3 .specify/extensions/companion/scripts/doctor.py --chat || true', anchor: '', index: 0, note: ''  },
+                        { when: 'before', type: 'node', summary: 'debug-timing', anchor: '', index: 0, note: ''  },
                     ],
                 }),
                 node('handoff', 'Hand off at the end', {
                     hooks: [
-                        { when: 'after', type: 'prompt', summary: 'Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find.' },
-                        { when: 'after', type: 'skill', summary: 'create-pr' },
+                        { when: 'after', type: 'prompt', summary: 'Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find.', anchor: '', index: 0, note: ''  },
+                        { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
                     ],
                 }),
-            ], [{ when: 'before', type: 'prompt', summary: 'Read the doctor report above and act on it.' }]),
+            ], [{ when: 'before', type: 'prompt', summary: 'Read the doctor report above and act on it.', anchor: '', index: 0, note: ''  }]),
         ], { changes: { ...NO_CHANGES, hooks: 5 } })], { configured: true, customised: true });
         return (
             <div class="builder">
@@ -208,7 +209,7 @@ export const OneVeryLongHook: Story = {
         const g = graph([step('implement', [
             phase('wrap-up', [node('complete', 'Mark the spec complete', {
                 hooks: [{
-                    when: 'before', type: 'prompt',
+                    when: 'before', type: 'prompt', anchor: '', index: 0, note: '',
                     summary: 'Read the doctor report above and act on it by this rule. FIX IN THIS RUN only what is this run\'s own unfinished bookkeeping — tasks completed but never journaled, a living-spec delta not yet folded. Those are yours and they are cheap. DO NOT fix anything else here: drift, template violations, step bleed, and capture failures are separate work, and folding them into the tail of an unrelated spec produces a diff nobody can review.',
                 }],
             })]),
@@ -223,9 +224,9 @@ export const ManyHooksOneAnchor: Story = {
         const g = graph([step('implement', [
             phase('wrap-up', [node('handoff', 'Hand off at the end', {
                 hooks: [
-                    { when: 'after', type: 'prompt', summary: 'Self-review your full diff against the project conventions.' },
-                    { when: 'after', type: 'prompt', summary: 'Run the code-simplifier agent on the files you changed.' },
-                    { when: 'after', type: 'skill', summary: 'create-pr' },
+                    { when: 'after', type: 'prompt', summary: 'Self-review your full diff against the project conventions.', anchor: '', index: 0, note: ''  },
+                    { when: 'after', type: 'prompt', summary: 'Run the code-simplifier agent on the files you changed.', anchor: '', index: 0, note: ''  },
+                    { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
                 ],
             })]),
         ], { changes: { ...NO_CHANGES, hooks: 3 } })], { configured: true, customised: true });
@@ -307,7 +308,7 @@ export const EverythingChangedAtOnce: Story = {
             phase('author', [
                 node('draft-spec', 'Draft the spec (ours)', {
                     kind: 'author', writes: ['spec.md'], replaced: true,
-                    hooks: [{ when: 'after', type: 'skill', summary: 'verify-code-review' }],
+                    hooks: [{ when: 'after', type: 'skill', summary: 'verify-code-review', anchor: '', index: 0, note: ''  }],
                 }),
             ]),
         ], {

@@ -27,6 +27,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
         name: 'specify',
         inSequence: true,
         stockHooks: [],
+        dropped: [],
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
             {
@@ -50,6 +51,7 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps: [step()],
         workflows: { available: ['shipped'], active: '' },
+        choices: { skills: [], nodes: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -71,16 +73,18 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
     const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
+    const edited: Calls = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
+            onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped };
+    return { host, opened, replaced, restored, orders, added, grouped, edited };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -167,8 +171,8 @@ describe('a hook is drawn on the side it runs', () => {
                 nodes: [node({
                     id: 'complete', name: 'Mark the spec complete',
                     hooks: [
-                        { when: 'before', type: 'command', summary: 'doctor.py --chat' },
-                        { when: 'after', type: 'skill', summary: 'create-pr' },
+                        { when: 'before', type: 'command', summary: 'doctor.py --chat', anchor: '', index: 0, note: ''  },
+                        { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
                     ],
                 })],
             }],
@@ -199,9 +203,9 @@ describe('a hook is drawn on the side it runs', () => {
                     name: 'wrap-up', hooks: [],
                     nodes: [node({
                         hooks: [
-                            { when: 'after', type: 'prompt', summary: 'one' },
-                            { when: 'after', type: 'prompt', summary: 'two' },
-                            { when: 'after', type: 'skill', summary: 'create-pr' },
+                            { when: 'after', type: 'prompt', summary: 'one', anchor: '', index: 0, note: ''  },
+                            { when: 'after', type: 'prompt', summary: 'two', anchor: '', index: 0, note: ''  },
+                            { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
                         ],
                     })],
                 }],
@@ -224,7 +228,10 @@ describe('a hook is drawn on the side it runs', () => {
             steps: [step({
                 phases: [{
                     name: 'wrap-up', hooks: [],
-                    nodes: [node({ hooks: [{ when: 'after', type: 'prompt', summary: full }] })],
+                    nodes: [node({ hooks: [{
+                        when: 'after', type: 'prompt', summary: full,
+                        anchor: 'resolve-dir', index: 0, note: '',
+                    }] })],
                 }],
             })],
         });
@@ -232,7 +239,7 @@ describe('a hook is drawn on the side it runs', () => {
         const chip = host.querySelector('.pb-hook')!;
         const shown = chip.querySelector('.pb-hook-text')!.textContent!.replace('…', '');
 
-        expect(chip.getAttribute('title')).toBe(full);
+        expect(chip.getAttribute('title')).toContain(full);
         expect(full).toContain(shown);
         expect(shown.endsWith(' ')).toBe(false);
     });
@@ -242,7 +249,7 @@ describe('a hook is drawn on the side it runs', () => {
             steps: [step({
                 phases: [{
                     name: 'author',
-                    hooks: [{ when: 'before', type: 'prompt', summary: 'read the steering docs' }],
+                    hooks: [{ when: 'before', type: 'prompt', summary: 'read the steering docs', anchor: '', index: 0, note: ''  }],
                     nodes: [node()],
                 }],
             })],
@@ -436,6 +443,94 @@ describe('opening a node', () => {
     });
 });
 
+describe('a hook can be changed once it is there', () => {
+    const hooked = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'wrap-up', hooks: [],
+                nodes: [node({
+                    id: 'complete',
+                    hooks: [{
+                        when: 'before', type: 'command', anchor: 'complete', index: 0, note: '',
+                        summary: 'python3 .specify/extensions/companion/scripts/doctor.py --chat',
+                    }],
+                })],
+            }],
+        })],
+    });
+
+    // Every hook could be added and none could be touched again.
+    it('opens the hook someone clicks, with its address', () => {
+        const { host, edited } = canvas(hooked());
+        (host.querySelector('.pb-hook') as HTMLButtonElement).click();
+        expect(edited).toEqual([['specify', 'complete', '0']]);
+    });
+
+    // The path is where it lives; the script name is which command it is.
+    it('shows a shell hook by its script, not its whole path', () => {
+        const { host } = canvas(hooked());
+        const shown = host.querySelector('.pb-hook-ref')?.textContent ?? '';
+        expect(shown).toBe('doctor.py --chat');
+        expect(host.querySelector('.pb-hook')?.getAttribute('title'))
+            .toContain('.specify/extensions/companion/scripts/doctor.py');
+    });
+
+    it('offers what the project has, rather than asking you to remember', () => {
+        const noop = () => undefined;
+        const sheet = mount(
+            <AttachForm step={step()} anchor="gather"
+                choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'] }}
+                onCancel={noop} onAttach={noop} />,
+        );
+        const options = Array.from(sheet.querySelectorAll('datalist option'))
+            .map(el => el.getAttribute('value'));
+        expect(options).toEqual(['create-pr', 'verify-code-review']);
+        expect(sheet.querySelector('.pb-field-help')?.textContent).toContain('2 in this project');
+    });
+
+    it('fills the form from the hook it is editing, and offers to remove it', () => {
+        const noop = () => undefined;
+        const sheet = mount(
+            <AttachForm step={step()} anchor="complete"
+                choices={{ skills: [], nodes: [] }}
+                editing={{
+                    when: 'after', type: 'skill', summary: 'create-pr',
+                    anchor: 'complete', index: 1, note: 'only on green',
+                }}
+                onCancel={noop} onAttach={noop} onRemove={noop} />,
+        );
+        expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Edit hook');
+        expect((sheet.querySelector('.pb-input--mono') as HTMLInputElement).value)
+            .toBe('create-pr');
+        expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Save hook');
+        expect(sheet.querySelector('.pb-action--remove')).not.toBeNull();
+    });
+
+    it('says nothing about removing when it is a new hook', () => {
+        const noop = () => undefined;
+        const sheet = mount(
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
+                onCancel={noop} onAttach={noop} />);
+        expect(sheet.querySelector('.pb-action--remove')).toBeNull();
+    });
+});
+
+describe('the changed mark says what changed', () => {
+    it('names the change on the dot', () => {
+        const { host } = canvas(graph({
+            steps: [step({ changes: { ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'] } })],
+        }));
+        const title = host.querySelector('.pb-changed-dot')?.getAttribute('title') ?? '';
+        expect(title).toContain('2 hooks');
+        expect(title).toContain('rewrote draft-spec');
+    });
+
+    it('shows no mark on a step the project left alone', () => {
+        const { host } = canvas();
+        expect(host.querySelector('.pb-changed-dot')).toBeNull();
+    });
+});
+
 describe('one action keeps one name through the flow', () => {
     const noop = () => undefined;
 
@@ -445,7 +540,7 @@ describe('one action keeps one name through the flow', () => {
 
         document.body.innerHTML = '';
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather"
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
@@ -454,7 +549,8 @@ describe('one action keeps one name through the flow', () => {
 
     it('names the anchor field for where it goes, not what it is', () => {
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" onCancel={noop} onAttach={noop} />);
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
+                onCancel={noop} onAttach={noop} />);
         const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
             .map(el => el.textContent);
         expect(labels).toContain('Where');
