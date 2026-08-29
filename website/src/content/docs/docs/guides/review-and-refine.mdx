@@ -35,7 +35,9 @@ A card starts collapsed, showing your text and whether it's **Pending** or **App
 | **Edit** | Any time the spec is active |
 | **Delete** | Any time the spec is active |
 
-Edit rewrites the comment in place, keeping its position and its state. Delete removes it outright, and there's no undo, so it's the wrong tool for "I've dealt with this". Refining is what marks a comment handled.
+Edit replaces the comment's text and keeps everything else: its id, where it's anchored, whether it's pending, and when it was written. Blank text is ignored rather than clearing the card.
+
+Delete drops the comment from the record entirely, so it's the wrong tool for "I've dealt with this". Refining is what marks a comment handled.
 
 ## Comments persist
 

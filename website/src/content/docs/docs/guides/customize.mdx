@@ -45,7 +45,7 @@ A bare string is the short form: `"review"` becomes `/speckit.review`. The objec
 | `requiresSpecDir` | Whether the command needs the spec directory. Defaults to true. |
 | `autoExecute` | Whether to run it in the terminal automatically. Defaults to true. |
 
-Write `${specDir}` anywhere in the command and it's substituted with the spec's directory. With `requiresSpecDir` set and no placeholder anywhere in the string, the directory is appended to the end instead.
+Write `${specDir}` anywhere in the command and it's substituted with the spec's directory. With `requiresSpecDir` set and no `${specDir}` anywhere in the string, the directory is appended to the end instead.
 
 **Where they show up in the viewer.** In a collapsed **Other actions** menu in the footer, scoped to the tab or step you assigned them to. It's a menu, not a toolbar, and it renders only when the spec is still active, isn't at its closure gate, and the list isn't empty. If you defined a command and can't find it, one of those three is the reason.
 

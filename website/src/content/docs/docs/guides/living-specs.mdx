@@ -75,15 +75,20 @@ The split down the middle of that table matters. Drift and coverage are backed b
 
 ## How a run folds back
 
-A **delta** is a small block a run writes to say what it changed about a capability, in the run's own words, using four verbs.
+A **delta** is a block a run appends to its own `spec.md` to say what it changed about a capability. There are four of them, one per verb, and each names the capability it belongs to.
 
-```text
-ADDED    The viewer re-anchors comments after an external edit.
-MODIFIED Coverage rows now distinguish a missing test file from no test.
-REMOVED  The separate Start button.
+```markdown
+## ADDED Requirements
+<!-- capability: spec-viewer -->
+
+- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
 ```
 
-At mark-complete the assistant authors those blocks, and a script folds them into each capability's spec. The fold is deterministic, and folding the same deltas again is a no-op, so a re-run can't duplicate a requirement.
+The other three headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block with no capability comment routes to whichever capability the run's changed files matched.
+
+At mark-complete the assistant authors those blocks, and a script folds each one into the capability spec it belongs to. The fold is deterministic, and folding the same deltas again is a no-op, so a re-run can't duplicate a requirement.
+
+Because the blocks land in the feature's own spec first, they show up in that feature's diff, which is where they get reviewed.
 
 The standard specify, plan, tasks pipeline emits no deltas, so a run folds only if the completion step did its part. Every capability the run loaded has to end with either a delta or a recorded skip note. When one has neither, the fold prints a named receipt saying the loop didn't close. It never blocks the run.
 
