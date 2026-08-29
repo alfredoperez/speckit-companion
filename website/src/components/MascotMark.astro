@@ -1,0 +1,118 @@
+---
+/*
+  The logo mark. The painted pose renders are the mascot; this is the mark, and
+  the two are not interchangeable. At 20px in a nav bar the painted fur, the
+  catchlights and the soft shadow collapse into a green smudge, so the mark
+  throws all of it away and keeps only what still reads at that size: the round
+  body, the two-leaf sprout, and two eyes.
+
+  No raster anywhere. Four shapes total.
+
+  The eyes are holes, not dots. Body and eyes are one path with fill-rule
+  evenodd, so whatever surface the mark sits on shows through them and the mark
+  needs no third colour to work on the ground, on a panel, or on a light card.
+
+  Colour is prop-driven and defaults to the two brand greens. mono collapses the
+  whole mark onto currentColor, which is what a monochrome context wants: a
+  favicon mask, a button label, a print sheet.
+
+  The body is SCALLOPED, not a circle. That is the one thing the mark takes from
+  the painted character: a smooth disc reads as a pea, and the creature is moss.
+  Ten shallow lobes around the circumference are enough to say fuzzy at 20px and
+  still resolve cleanly at 96 — deeper lobes turn to mush at nav size, and more
+  of them alias into a wobbly edge.
+
+  Geometry, in the 24 viewBox:
+    body    ten lobes on an r 7.9 circle at 12,15.3, lobe depth 0.55
+    eyes    r 1.7 at 9.2,15 and 14.8,15, cut as holes
+    stem    12,7.7 up to 12,4.9, stroked 1.9 with a round cap
+    leaves  two mirrored blades splaying from the stem head into a wide V
+  At size 20 that is a 13px body, 3px eyes 4.7px apart, and a 10.5px leaf span.
+  At 96 the same numbers scale with no hinting to lose: nothing here is hairline
+  and nothing depends on a half pixel landing right.
+
+  The path data is generated, not hand-typed, so the lobe count and depth stay
+  editable and the curve never drifts out of round.
+*/
+
+/* One rounded bump per lobe: the curve ENDS in the valleys, on the inner
+   radius, and bulges out through a control point on the outer radius. Ending on
+   the peaks instead is what turns the silhouette into a faceted polygon. */
+function mossBody(cx: number, cy: number, r: number, lobes: number, depth: number): string {
+  const n = (v: number) => Math.round(v * 100) / 100;
+  const at = (angle: number, rad: number): [number, number] => [
+    cx + Math.cos(angle) * rad,
+    cy + Math.sin(angle) * rad,
+  ];
+  const step = (Math.PI * 2) / lobes;
+  // start at the bottom, so the seam never lands on the silhouette's top edge
+  const base = Math.PI / 2;
+
+  const [sx, sy] = at(base, r - depth);
+  let d = `M${n(sx)} ${n(sy)}`;
+  for (let i = 0; i < lobes; i++) {
+    // the control point overshoots the outer radius, because a quadratic only
+    // reaches about half way to its control
+    const [px, py] = at(base + (i + 0.5) * step, r + depth * 0.9);
+    const [vx, vy] = at(base + (i + 1) * step, r - depth);
+    d += `Q${n(px)} ${n(py)} ${n(vx)} ${n(vy)}`;
+  }
+  return `${d}Z`;
+}
+
+const BODY = mossBody(12, 15.3, 7.5, 11, 0.85);
+interface Props {
+  size?: number;
+  title?: string;
+  body?: string;
+  leaf?: string;
+  mono?: boolean;
+  class?: string;
+}
+
+const {
+  size = 24,
+  title,
+  body = 'var(--green)',
+  leaf = 'var(--green-leaf)',
+  mono = false,
+  class: className,
+} = Astro.props;
+
+const bodyFill = mono ? 'currentColor' : body;
+const leafFill = mono ? 'currentColor' : leaf;
+const labelled = Boolean(title);
+---
+
+<svg
+  class:list={['mascot-mark', className]}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  role={labelled ? 'img' : undefined}
+  aria-label={labelled ? title : undefined}
+  aria-hidden={labelled ? undefined : 'true'}
+  focusable="false"
+>
+  {title && <title>{title}</title>}
+
+  {/* Body and both eyes in one path. evenodd turns the eye subpaths into holes. */}
+  <path
+    fill={bodyFill}
+    fill-rule="evenodd"
+    d={`${BODY}M7.5 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0ZM13.1 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z`}
+  ></path>
+
+  <path d="M12 7.7V4.9" stroke={leafFill} stroke-width="1.9" stroke-linecap="round"></path>
+
+  <path fill={leafFill} d="M12 5.2C11.2 2.3 8.8 0.8 5.7 1.4C5.3 4.5 8.2 6.1 12 5.2Z"></path>
+  <path fill={leafFill} d="M12 5.2C12.8 2.3 15.2 0.8 18.3 1.4C18.7 4.5 15.8 6.1 12 5.2Z"></path>
+</svg>
+
+<style>
+  .mascot-mark {
+    display: block;
+    flex: none;
+  }
+</style>

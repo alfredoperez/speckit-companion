@@ -28,3 +28,8 @@
 # The .raw.html inputs are tracked: those come from a hand-driven VS Code
 # devtools session and no script in this repo can reproduce them.
 **/assets/sidebar/*.frag.html
+
+# Web-encoded clip outputs (WebM, MP4 fallback, poster, 16:9 crop).
+# Named by media/manifest.json, produced by the web render branch, copied into
+# the site at build time. Regenerable, so not tracked.
+web/

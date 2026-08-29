@@ -1,0 +1,89 @@
+---
+/*
+  One mascot pose, served from the derivatives scripts/build-mascot-assets.mjs
+  writes into public/mascot/. Never point this at assets/mascot/: those are
+  2048px sources, they are not copied into the build, and the URL would 404.
+
+  Poses keep the aspect ratio of their own alpha bounding box, so each one has
+  its own shape. manifest.json carries the exact pixel dimensions of every
+  derivative, and this component turns the requested display width into a
+  matching height. Both land on the img as width and height attributes, so the
+  box is reserved at parse time and nothing below the mascot moves when the
+  bytes arrive.
+
+  WebP first, PNG behind it, and a three-step srcset so a retina screen pulls
+  the 2x file and a phone does not.
+
+  alt is required and has no default. Pass a sentence describing what the mascot
+  is doing when the image carries meaning; pass an empty string when the text
+  beside it already says the same thing and the mascot is only decoration.
+*/
+import manifest from '../../public/mascot/manifest.json';
+
+type Pose = keyof typeof manifest;
+
+interface Props {
+  pose: Pose;
+  width: number;
+  alt: string;
+  loading?: 'eager' | 'lazy';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  pose,
+  width,
+  alt,
+  loading = 'lazy',
+  fetchpriority,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const entry = manifest[pose];
+if (!entry) {
+  throw new Error(
+    `No derived mascot pose named "${pose}". Run node scripts/build-mascot-assets.mjs and check public/mascot/manifest.json.`,
+  );
+}
+
+const steps = Object.values(entry.sizes).sort((a, b) => a.width - b.width);
+// The largest step sets the aspect ratio; the middle one is the plain src, so a
+// browser that ignores srcset lands on the middle file rather than the biggest.
+const intrinsic = steps[steps.length - 1];
+const fallback = steps[Math.floor((steps.length - 1) / 2)];
+const height = Math.round((width * intrinsic.height) / intrinsic.width);
+
+const webpSrcset = steps.map((step) => `${step.webp} ${step.width}w`).join(', ');
+const pngSrcset = steps.map((step) => `${step.png} ${step.width}w`).join(', ');
+const sizes = `${width}px`;
+---
+
+<picture class:list={['mascot-pose', className]} {...rest}>
+  <source type="image/webp" srcset={webpSrcset} sizes={sizes} />
+  <img
+    src={fallback.png}
+    srcset={pngSrcset}
+    sizes={sizes}
+    width={width}
+    height={height}
+    alt={alt}
+    loading={loading}
+    decoding="async"
+    fetchpriority={fetchpriority}
+  />
+</picture>
+
+<style>
+  .mascot-pose {
+    display: block;
+    flex: none;
+  }
+
+  .mascot-pose img {
+    display: block;
+    height: auto;
+  }
+</style>

@@ -1,0 +1,122 @@
+---
+title: Getting started
+description: Install both halves, create your first spec, run it, and read the record it leaves behind.
+tableOfContents: false
+---
+
+import Button from '../../../../components/Button.astro';
+import CodeLine from '../../../../components/CodeLine.astro';
+import GuidedStep from '../../../../components/docs/GuidedStep.astro';
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
+
+{/* The full --from URL form, verbatim. The short catalog form does not work,
+    because the extension is not listed in the spec-kit catalog. */}
+export const ENGINE_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
+
+SpecKit Companion is two halves that meet in one file. Five steps take you from nothing installed to a finished spec you can read.
+
+<GuidedStep n={1} title="Install the VS Code extension">
+
+The workspace half: the spec viewer, review comments, and the Specs sidebar.
+
+<div slot="action">
+  <Button
+    href={MARKETPLACE}
+    external
+    size="md"
+    data-analytics="install_click_vscode"
+    data-analytics-placement="getting-started"
+  >
+    Get it on the Marketplace
+  </Button>
+  <div class="gstep-fallback">
+    <p>Or from a terminal:</p>
+    <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
+  </div>
+</div>
+
+<div slot="result">
+
+A SpecKit icon in the activity bar, with an empty **Specs** view behind it. It's on Open VSX too, if that's where your editor looks.
+
+</div>
+
+</GuidedStep>
+
+<GuidedStep n={2} title="Add the Spec Kit extension">
+
+The half that rides your runs. It writes `.spec-context.json` next to each spec, and the VS Code extension reads that file. Needs spec-kit 0.9.5 or newer.
+
+<div slot="action">
+  <CodeLine
+    command={ENGINE_COMMAND}
+    data-analytics="install_click_speckit_copy"
+    data-analytics-placement="getting-started"
+  />
+</div>
+
+<div slot="result">
+
+The `/speckit.companion.*` commands in your assistant, alongside the stock `/speckit.*` ones. The two families coexist. A **Living Specs** view joins the sidebar, and SpecKit Companion stops being marked install to enable.
+
+The same command updates it later, because `companion-latest` always serves the newest build.
+
+</div>
+
+</GuidedStep>
+
+<GuidedStep n={3} title="Create your first spec">
+
+Click the SpecKit icon, then the `+` button in the Specs view. Create New Spec lists every workflow with its description. Describe what you want to build and let it run.
+
+<div slot="result">
+
+A new spec under **Active**, named from what you typed, with the workflow recorded on it. Expand it and each document carries its own state.
+
+</div>
+
+<MediaSlot slot="media" feature="specs-sidebar" shows="The Specs sidebar after a first spec: lifecycle groups with live counts, the new spec expanded to its documents, and the Living Specs and Steering views under it." />
+
+</GuidedStep>
+
+<GuidedStep n={4} title="Run the pipeline">
+
+Open the spec and use **Approve** in the viewer footer. It records the current step complete, records the next one starting, refreshes the viewer, and hands that step's command to the AI provider you picked.
+
+Approve isn't always there. It's hidden on implement, when the tab you're reading isn't the spec's current step, when a later step is already ahead in history, when the step never started, and while the step is in flight.
+
+Create New Spec also has an **Auto** button, which dispatches `/speckit.companion.auto` and runs specify through mark-complete without pauses.
+
+<div slot="result">
+
+While a step runs, the forward buttons drop and the footer reads "Step running, actions unlock when it settles". During implement the step tab shows a live percentage counted from checked boxes in `tasks.md`. When every task is checked, the extension's own file watcher closes the step, without waiting on a hook or a terminal.
+
+</div>
+
+<MediaSlot slot="media" feature="run-in-flight" shows="The viewer one step in: the header's phase count, and the rail with specification closed while the later steps are still empty circles." />
+
+</GuidedStep>
+
+<GuidedStep n={5} title="Read what came out">
+
+Switch to **Overview**, the second view inside the spec viewer. It exists only for a spec that recorded something.
+
+<div slot="result">
+
+The run's intent, approach, working area and size. Under that, the expectations fence, the decisions with what each one rejected, and a coverage table counted as "N/M traced". A phase shows an elapsed time only when the timing holds up; otherwise the header reads "Timing coverage: N of M phases".
+
+</div>
+
+<MediaSlot slot="media" feature="overview" shows="The Overview read top to bottom: intent, the per-phase run timeline, the approach, working area and size, the living specs it loaded, the expectations fence, each verified check with the command it ran, the decisions with what they rejected, and the coverage table." />
+
+</GuidedStep>
+
+## What the extension isn't doing
+
+It hands your assistant the command text, then reads whatever lands on disk. It never reads the chat back, and it gets no completion callback.
+
+The Overview's verifications are a recorded report: the check, the command the assistant says it ran, and the outcome it reported. Nothing re-executes. One thing gets re-checked, and only for existence: a coverage test reference that looks like a file path is checked to see whether that file is there.
+
+Everything is plain files in your repo, both committable, with no extension-owned database. Install just the VS Code extension and the viewer, review comments, and Specs sidebar still work; Living Specs, the Resume button, and the Companion pipeline are what the Spec Kit half adds.

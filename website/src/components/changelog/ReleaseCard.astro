@@ -1,0 +1,56 @@
+---
+/**
+ * One release, from one of the two CHANGELOG.md files.
+ *
+ * The entry HTML arrives already rendered from the page, which owns the single
+ * markdown processor. Nothing in here rewrites entry text: release notes are
+ * shown as their file wrote them, internal names and all.
+ */
+import type { ProductId } from './parseChangelog';
+import type { ReleaseImage } from './releaseMedia';
+
+interface Props {
+  id: string;
+  product: ProductId;
+  productLabel: string;
+  version: string | null;
+  date: string | null;
+  unreleased: boolean;
+  sections: { title: string | null; html: string }[];
+  image?: ReleaseImage;
+}
+
+const { id, product, productLabel, version, date, unreleased, sections, image } = Astro.props;
+---
+
+<article class="cl-release" id={id} data-product={product} data-unreleased={unreleased ? 'true' : 'false'}>
+  <header class="cl-release-head">
+    <h2 class="cl-release-title">
+      <span class:list={['cl-product', `cl-product--${product}`]}>{productLabel}</span>
+      <span class="cl-version">{unreleased ? 'Not released yet' : version}</span>
+    </h2>
+    {date && (
+      <a class="cl-date" href={`#${id}`}>
+        <time datetime={date}>{date}</time>
+      </a>
+    )}
+  </header>
+
+  {image && (
+    <figure class="cl-figure">
+      <div class="cl-figure-frame">
+        <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+      </div>
+      {image.caption && <figcaption>{image.caption}</figcaption>}
+    </figure>
+  )}
+
+  <div class="cl-body">
+    {sections.map((section) => (
+      <section class="cl-section">
+        {section.title && <h3 class="cl-section-title">{section.title}</h3>}
+        <div class="cl-prose" set:html={section.html} />
+      </section>
+    ))}
+  </div>
+</article>

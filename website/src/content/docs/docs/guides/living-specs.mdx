@@ -1,0 +1,60 @@
+---
+title: Living specs
+description: One durable spec per capability, kept next to the code, updated by the runs that change it.
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+One durable spec per capability, registered in one file, read in the same viewer your feature specs open in.
+
+<MediaSlot feature="living-specs" shows="The Living Specs tree with per-capability coverage counts and a drift flag, beside one capability's spec open in the viewer: its LIVING badge, the globs it covers, its purpose, and its WHEN and THEN requirement rows." />
+
+Living specs are off until you add a registry. Create `living-specs.yml` at the repo root:
+
+```yaml
+enabled: true
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: workflows
+    match: ["src/features/workflows/**", "speckit-extension/workflows/**"]
+```
+
+Each capability names the files it owns. Give it a `spec:` path and the spec sits next to that code. Leave `spec:` out and it lives at `capabilities/<name>/spec.md`. With no registry, or with `enabled` unset, every living-specs command behaves as if the feature weren't there.
+
+The `/speckit.companion.living-*` commands and the sidebar's Living Specs view both come from the Spec Kit extension. Install only the VS Code extension and neither is there.
+
+## The four commands
+
+| Command | What it does |
+| --- | --- |
+| `living-adopt` | Drafts a spec for one code area you name, then a script registers the capability. The drafting is assistant work, read from the code's surface, and every draft is marked as a starting point. |
+| `living-sync` | Rewrites the affected specs from your current changes. Also assistant work. "Update, don't regenerate" is an instruction in the command, not something a script enforces. |
+| `living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. |
+| `living-coverage` | Reads each capability's `.coverage.md` sibling and reports what it finds. |
+
+Drift and coverage are backed by scripts that compute the answer. Adopt and sync are prompts your assistant follows.
+
+## How a run folds back
+
+At mark-complete the assistant authors `ADDED` / `MODIFIED` / `REMOVED` / `RENAMED` requirement blocks, and a script folds them into each capability's spec. The fold is deterministic, and folding the same deltas again is a no-op.
+
+The standard specify, plan, tasks pipeline emits no deltas, so a run folds only if the completion step did its part. Every capability the run loaded has to end with either a delta or a recorded skip note. When one has neither, the fold prints a named receipt saying the loop didn't close. It never blocks the run.
+
+## What won't happen
+
+Nothing here updates a spec on its own. A spec stays current because a delta block was authored at mark-complete, or because someone ran `living-sync`. Skip both and the spec ages quietly.
+
+Drift and coverage are read-only reports that always exit zero. A CI job wrapped around them can treat their findings as a gate. The commands themselves never are.
+
+A capability whose spec isn't committed yet, or a CI checkout without enough history, is skipped with the reason named and counted. The all-clear line is reserved for a run where every capability was actually examined.
+
+The resolver derives an `.arch.md` and a `.coverage.md` sibling for every capability, but nothing writes them. They're recognized paths you author yourself. No coverage file means no coverage number in the sidebar, which looks exactly like zero coverage.
+
+## This repo as the worked example
+
+SpecKit Companion keeps living specs for its own codebase. Its `living-specs.yml` registers fourteen capabilities: ten point at a spec beside the code they describe, four fall back to `capabilities/<name>/spec.md`.
+
+None of the fourteen has an `.arch.md` or a `.coverage.md` sibling. So this is a worked example of the spec tier only, not of a fully tiered setup. Read the counts off the file rather than off this page, because they move.

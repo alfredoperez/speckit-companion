@@ -1,0 +1,366 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Button from './Button.astro';
+import MascotPose from './MascotPose.astro';
+import SoonChip from './SoonChip.astro';
+
+/*
+  The shell both unshipped pages share: /workflow-builder and /course.
+
+  The whole page has one job, which is to be plainly a future thing. The SOON
+  chip sits next to the heading, the standing line under it says outright that
+  the thing is not built, and nothing on the page describes the future tense as
+  if it were shipped.
+
+  Slots:
+    lead     the two sentences saying what it will be
+    default  whatever is true and useful today
+    back     the links out
+
+  The waitlist form posts nowhere. See the script at the bottom.
+
+  Each page brings its own mascot pose into the masthead. It sits beside the
+  heading rather than above it, so the copy still opens the page and the art
+  does not push the standing line below the fold. poseAlt is required alongside
+  pose: an empty string is a real answer, it just has to be a deliberate one.
+*/
+interface Props {
+  title: string;
+  description: string;
+  headline: string;
+  standing: string;
+  waitlistId: string;
+  waitlistNote: string;
+  pose?: 'reading' | 'thinking';
+  poseAlt?: string;
+}
+
+const {
+  title,
+  description,
+  headline,
+  standing,
+  waitlistId,
+  waitlistNote,
+  pose,
+  poseAlt = '',
+} = Astro.props;
+const fieldId = `${waitlistId}-email`;
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="masthead">
+    <div class="inner">
+      <div class="masthead-row">
+        <div class="masthead-copy">
+          <p class="eyebrow">
+            <span>NOT BUILT YET</span>
+            <SoonChip />
+          </p>
+
+          <h1>{headline}</h1>
+
+          <div class="lead">
+            <slot name="lead" />
+          </div>
+        </div>
+
+        {pose && <MascotPose class="masthead-art" pose={pose} width={132} alt={poseAlt} loading="eager" />}
+      </div>
+
+      <p class="standing">{standing}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="inner">
+      <div class="waitlist">
+        <div class="waitlist-copy">
+          <p class="kicker">WAITLIST</p>
+          <h2>Get told when it lands</h2>
+          <p class="waitlist-body">{waitlistNote}</p>
+        </div>
+
+        <form class="waitlist-form" data-waitlist={waitlistId} novalidate>
+          <div class="field">
+            <label for={fieldId}>Email address</label>
+            <input
+              id={fieldId}
+              name="email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              aria-describedby={`${waitlistId}-status`}
+            />
+          </div>
+
+          <Button type="submit" size="md">Join the list</Button>
+
+          <p class="form-note" id={`${waitlistId}-status`} role="status" aria-live="polite" data-waitlist-status>
+            This form has no backend yet, so nothing you type here is stored or sent.
+          </p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <slot />
+
+  <section class="section section--back">
+    <div class="inner">
+      <p class="kicker">WHILE YOU WAIT</p>
+      <div class="back-links">
+        <slot name="back" />
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .inner {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--pad-section-x);
+  }
+
+  .section {
+    padding: 56px 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ------------------------------------------------------------- masthead */
+
+  .masthead {
+    padding: 40px 0 64px;
+    background-image: var(--hero-grid);
+    background-size: var(--hero-grid-size);
+  }
+
+  .masthead-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-40);
+  }
+
+  .masthead-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .masthead-art {
+    margin-top: var(--space-6);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    margin: 0 0 var(--space-20);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow-lg);
+  }
+
+  h1 {
+    margin: 0 0 var(--space-24);
+    max-width: var(--measure-lead);
+    font-size: clamp(34px, 7.2vw, var(--fs-display));
+    font-weight: var(--fw-black);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+    text-wrap: balance;
+  }
+
+  .lead :global(p) {
+    margin: 0;
+    max-width: var(--measure-lead);
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-prose);
+  }
+
+  .standing {
+    margin: var(--space-20) 0 0;
+    max-width: var(--measure-lead);
+    padding-left: var(--space-16);
+    border-left: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  /* ------------------------------------------------------------- waitlist */
+
+  .kicker {
+    margin: 0 0 var(--space-12);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-eyebrow-sm);
+  }
+
+  .waitlist {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-40);
+    align-items: start;
+    padding: var(--space-26) var(--space-24);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .waitlist h2 {
+    margin: 0 0 var(--space-10);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-h2-stat);
+  }
+
+  .waitlist-body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  .waitlist-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-14);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    width: 100%;
+  }
+
+  .field label {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow-sm);
+    text-transform: uppercase;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-button-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  input::placeholder {
+    color: var(--text-dim);
+  }
+
+  input:hover {
+    border-color: var(--border-panel);
+  }
+
+  input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-color: var(--border-accent);
+  }
+
+  .form-note {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  /* ------------------------------------------------------------ back out */
+
+  .back-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-14);
+  }
+
+  .back-links :global(a) {
+    display: inline-flex;
+    align-items: center;
+    padding: 11px 18px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-button-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+    transition:
+      border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .back-links :global(a:hover) {
+    border-color: var(--border-accent-strong);
+    color: var(--accent-hover);
+  }
+
+  @media (max-width: 860px) {
+    .inner {
+      padding: 0 var(--space-20);
+    }
+
+    .waitlist {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-24);
+    }
+
+    .masthead-row {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      gap: var(--space-24);
+    }
+  }
+</style>
+
+<script>
+  /*
+    TODO(waitlist): post the address to PostHog surveys, which is the chosen
+    backend for both of these lists. Analytics is wired now, but only the
+    interest signal is: waitlist_submit records that someone asked, and the
+    address itself still has nowhere to go.
+
+    So the handler deliberately stores nothing and says so. Do not swap this for
+    a success message before the post exists: telling someone they are on a list
+    that does not exist is the one failure mode this page cannot have. And do not
+    put the address in the event either. The counter is the whole point of it.
+
+    The event is fired by hand rather than through a data-analytics attribute,
+    because the thing worth counting is the submit, not a click on the button.
+    It goes out as a DOM event that Analytics.astro listens for, so this file
+    never names the analytics vendor and a build with no key ships no trace of
+    one.
+  */
+  document.querySelectorAll('[data-waitlist]').forEach((form) => {
+    const status = form.querySelector('[data-waitlist-status]');
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      document.dispatchEvent(
+        new CustomEvent('site-analytics', {
+          detail: { name: 'waitlist_submit', props: { list: form.dataset.waitlist || '' } },
+        }),
+      );
+
+      if (!status) return;
+      status.textContent =
+        'Nothing was sent. The list has no backend yet, so your address was not stored. Watch the GitHub repo and you will see the release the day it happens.';
+    });
+  });
+</script>

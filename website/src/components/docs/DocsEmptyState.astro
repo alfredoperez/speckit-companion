@@ -1,0 +1,69 @@
+---
+/*
+  The empty state a docs page uses when it has no content yet. The mascot is the
+  only thing on it that is not an apology, which is the whole point: an unwritten
+  page should feel like a page that is coming, not a page that is broken.
+
+  alt is empty on purpose. The heading and the sentence under it already say the
+  page is a placeholder, so a screen reader gains nothing from a second telling
+  of the same fact through the picture.
+
+  The pose sits at 96px, which is where a 2x screen picks the 256px derivative
+  and a 1x screen picks the 128px one, so the docs never fetch the large file.
+*/
+import MascotPose from '../MascotPose.astro';
+
+interface Props {
+  heading: string;
+}
+
+const { heading } = Astro.props;
+---
+
+<div class="docs-empty">
+  <MascotPose pose="welcoming" width={96} alt="" />
+  <div class="docs-empty-copy">
+    <p class="docs-empty-heading">{heading}</p>
+    <p class="docs-empty-body"><slot /></p>
+  </div>
+</div>
+
+<style>
+  .docs-empty {
+    display: flex;
+    align-items: center;
+    gap: var(--space-24);
+    margin: var(--space-24) 0 var(--space-40);
+    padding: var(--space-24);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .docs-empty-copy {
+    min-width: 0;
+  }
+
+  .docs-empty-heading {
+    margin: 0 0 var(--space-8);
+    color: var(--text-primary);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-h2-stat);
+  }
+
+  .docs-empty-body {
+    margin: 0;
+    color: var(--text-body);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-prose);
+  }
+
+  @media (max-width: 600px) {
+    .docs-empty {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-16);
+    }
+  }
+</style>

@@ -1,0 +1,110 @@
+---
+title: Pick a pipeline
+description: Choose stock SpecKit or SpecKit Companion, then bend either one into a workflow of your own.
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+Open **SpecKit: Create New Spec**. The **Workflow** choice is the whole decision, and it comes pre-selected.
+
+<MediaSlot feature="own-workflow" shows="Create New Spec listing every workflow with its description: the two that ship in the box, and a custom one defined in settings underneath them." />
+
+## The two workflows
+
+| Workflow | Steps |
+| --- | --- |
+| SpecKit | specify, plan, tasks, implement |
+| SpecKit Companion | specify, plan, tasks, implement, mark-complete |
+
+The difference is the fifth step. Companion ends with a terminal step that marks the spec complete. Whichever you pick is recorded on the spec, and every later dispatch resolves that workflow's command for the step you're on.
+
+## Set the default
+
+<MediaSlot feature="make-it-yours" shows="The default-workflow setting as it reads in settings.json: one line naming the pipeline Create New Spec pre-selects." />
+
+```json
+{
+  "speckit.defaultWorkflow": "companion"
+}
+```
+
+`"speckit"` or `"companion"`. The setting picks which pipeline Create Spec pre-selects and nothing else. There's no template-profile, turbo, or fast-path toggle, because those three were retired and folded into this one choice.
+
+Leave it unset and installing the Spec Kit extension is enough to make Companion the pre-selected workflow. An explicit value at any scope always wins, including an explicit `"speckit"`.
+
+## When the Spec Kit extension is missing
+
+Companion still appears in Create New Spec, marked install to enable, instead of being hidden.
+
+Dispatch a Companion step anyway and the four pipeline commands downgrade to their stock twins with a one-click install prompt. Commands that have no stock twin are suppressed rather than dispatched.
+
+## The Auto button
+
+Create New Spec carries an **Auto** button. It dispatches `/speckit.companion.auto`, which runs specify through mark-complete without pauses. It needs the Spec Kit extension, and without it the button aborts with a message.
+
+Auto is one command handed to your assistant, which then follows it. The extension isn't stepping through the pipeline itself.
+
+## Define your own workflow
+
+This is settings-file work. There's no workflow editor.
+
+```json
+{
+  "speckit.customWorkflows": [
+    {
+      "name": "my-workflow",
+      "displayName": "My Workflow",
+      "steps": [
+        { "name": "specify",   "label": "Specify",   "command": "myflow.specify",   "file": "spec.md" },
+        { "name": "plan",      "label": "Design",    "command": "myflow.plan",      "file": "design.md" },
+        { "name": "tasks",     "label": "Tasks",     "command": "myflow.tasks",     "file": "tasks.md" },
+        { "name": "implement", "label": "Implement", "command": "myflow.implement", "actionOnly": true }
+      ]
+    }
+  ]
+}
+```
+
+Custom workflows are validated, deduplicated, and offered in Create Spec next to the two built-ins, the way the third entry does in the Create New Spec shot at the top of this page. The sidebar and the viewer build their document lists and step rails from whatever your workflow declares.
+
+## Custom commands in the quick pick
+
+**SpecKit: Run Custom Command** lists everything in `speckit.customCommands`.
+
+```json
+{
+  "speckit.customCommands": [
+    "review",
+    {
+      "name": "pr",
+      "title": "Create PR",
+      "command": "/speckit.pr",
+      "step": "tasks",
+      "requiresSpecDir": false
+    }
+  ]
+}
+```
+
+Write `${specDir}` anywhere in the command and it's substituted. With `requiresSpecDir` set and no placeholder, the spec directory is appended instead.
+
+## Attach your own work around a node
+
+`.specify/companion.yml` attaches your own work before or after any named node, in three forms: a shell command, an inline instruction, or one of your own node files.
+
+```yaml
+commands:
+  implement:
+    hooks:
+      before:
+        handoff:
+          - { type: command, run: "npm test" }
+          - { type: prompt, text: "Confirm the CHANGELOG is updated." }
+      after:
+        implement-exec:
+          - { type: node, ref: review }
+```
+
+It's deltas only. With no file, every command runs exactly as shipped.
+
+What won't happen: nothing executes this file for you. The assistant reads `companion.yml` at run time and acts on it, because those instructions are appended to each command body. It's prose your agent follows rather than an engine, which is also why a `command` hook needs a provider that has a terminal tool.

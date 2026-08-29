@@ -1,0 +1,96 @@
+---
+title: Anatomy of the spec viewer
+description: 'Every part of the spec viewer named in order: the header, the pipeline rail, requirement rows, acceptance scenarios, task phases, mermaid, and the footer.'
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+The spec viewer opens your spec markdown as a page instead of a file. Same bytes on disk, rendered against the structure spec-kit already writes into them.
+
+<MediaSlot feature="spec-viewer" shows="The whole surface at once: the title-leading header, the pipeline rail down the left, requirements as labeled FR rows, and the On this page outline on the right." />
+
+## The header
+
+The header leads with the spec's recorded name, then a status badge, the branch, and the date the spec was created. All of it comes out of the `.spec-context.json` file next to the spec, which is the same file the Specs sidebar reads, so the two can't disagree.
+
+A living spec's header carries different facts, because a capability isn't a run: requirement and scenario counts, the globs the capability claims, where its spec lives, and an `N/M covered` count. That count appears only when a `.coverage.md` sibling is on disk. No file means no number, which reads the same as zero coverage without being it.
+
+## The pipeline rail
+
+The rail lists the documents of whichever workflow the spec recorded at creation, so a custom workflow gets its own rail rather than a translation of the built-in one. A step's own sub-documents nest under it. The Overview sits at the top of the rail as its own destination, and it exists only for a spec that recorded something.
+
+<MediaSlot feature="workflow-documents" shows="The rail with three steps closed and the Plan step opened to its Research and Data Model sub-documents, the body showing the plan itself." />
+
+### Every state a step can be in
+
+| State | What it means |
+| --- | --- |
+| Not started | Its document doesn't exist yet and the run hasn't reached it. |
+| Current | The tab you're looking at right now. |
+| Done | Its document exists, or the run recorded the step complete and the document is there to back that up. A check mark sits in the badge. |
+| In flight | The step is running. A spinning glyph replaces the check mark, and a timer counts the step's elapsed time. |
+| Locked | Disabled, under one narrow condition only. |
+
+Locked is the one worth being exact about. A tab is disabled only when three things are true at once: a step is currently running, the tab sits after that step in the rail, and its own document doesn't exist yet. That's the entire rule.
+
+The rail does not enforce sequential approval. Any step whose document exists stays freely clickable, including steps you already went past and steps ahead of where the run stopped.
+
+### Implement counts itself
+
+During implement, the step tab carries a live percentage next to the spinning glyph. It's counted from checked boxes in tasks.md and refreshed by a file watcher on a 500ms debounce, so it advances as the work lands rather than when a hook reports in.
+
+The same watcher closes the step: when every task in tasks.md is checked and implement is underway, the extension records the close itself, without a hook firing or a terminal reporting back.
+
+## Requirements render as rows
+
+A bullet written the way spec-kit writes them, `- **FR-001** The system must ...`, renders as the labeled row in the picture at the top. The prefix in front of the number becomes a `data-kind` the stylesheet colors, so FR, NFR and SC rows read as separate families without anyone labeling them by hand. A bullet that doesn't match that shape stays an ordinary bullet.
+
+## Acceptance scenarios stay sentences
+
+An `**Acceptance Scenarios**:` section followed by a numbered list becomes an ordered list where Given, When and Then are emphasized in place.
+
+<MediaSlot feature="step-rail" shows="A user story card followed by its acceptance scenarios, each one a single sentence with Given, When and Then picked out inside it." />
+
+That's the whole transformation, and the restraint is the point. Each scenario stays one flowing sentence. It isn't split into a Given/When/Then table and it isn't stacked into three lines. A scenario that wrapped across several lines in the source is joined back into one first, so the sentence survives however it was typed.
+
+## Task phases and task lines
+
+In tasks.md, a `## Phase N: Title` heading renders as a phase header, with an MVP marker and a P1 through P5 priority lifted out of the title into their own chips.
+
+A task line like `- [ ] **T001** [P] [US2] Add the parser` renders as a checkbox followed by compact chips: the task ID, `[P]` when the task runs in parallel with its wave, `[US#]` for the user story it serves. Sub-bullets fold into a details group rather than sprawling down the page, and where the run captured something for that task, a one-line summary of what it did and the files it touched render underneath.
+
+## Mermaid
+
+A mermaid code fence renders as a diagram in the page, and each diagram gets its own control strip: zoom out, Reset, zoom in. The range is 0.5x to 3x in 0.25 steps, applied as a CSS scale. There's no pan, no drag, and no fullscreen, and the zoom isn't remembered across a re-render.
+
+## What isn't matched, and what can't be commented on
+
+Every rendering above is a shape match against spec-kit's own conventions. Prose that doesn't follow them renders as ordinary markdown, which is the right outcome.
+
+The same boundary decides what you can annotate. Paragraphs, headings, list items, tasks, blockquotes, requirement rows and acceptance scenario items each render inside a line wrapper carrying a hover comment button. Code blocks, tables and rendered mermaid containers don't, so they carry no comment button at all. [Review and refine](/docs/guides/review-and-refine) covers the rest of that flow.
+
+## The footer
+
+The footer renders from a catalog of five entries: Archive, Reactivate, Mark Completed, Regenerate, and Approve. Refine is a separate button the webview owns, and it isn't part of that catalog.
+
+At most one of the five is forward motion, and it's labeled with the next step's own name rather than the word Approve. A context line above the buttons names it, reading `Next: Plan` and so on. Approve records completion for the current step, records the start of the next one, refreshes the viewer, and dispatches that step's configured command to your AI provider.
+
+### There often isn't a forward button
+
+Five real states show no forward action at all:
+
+- the implement step, where closure belongs to Mark Completed instead
+- when the tab you're viewing isn't the spec's current step
+- when a later step is already ahead in the recorded history
+- when the step never started
+- while the current step is in flight
+
+The last is the one you'll meet most often. While the step runs, the forward-motion buttons are dropped and the context line reads "Step running, actions unlock when it settles". The closure actions, archive, complete, reactivate and refine, are unaffected.
+
+### Other actions
+
+Custom commands you've configured show up in a collapsed "Other actions" menu in the footer, scoped to the tab or step you assign them to. It's a menu, not a toolbar, and it renders only when the spec is still active, isn't at its closure gate, and the list isn't empty. The same commands are reachable from a "Run SpecKit Custom Command" quick pick.
+
+## The other view
+
+The rail's second destination is the Overview, the record a finished run leaves behind. [Anatomy of the Overview](/docs/anatomy/anatomy-of-the-overview/) takes that page apart the same way this one takes the viewer apart.

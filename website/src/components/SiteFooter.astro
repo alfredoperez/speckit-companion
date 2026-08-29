@@ -1,0 +1,104 @@
+---
+import SoonChip from './SoonChip.astro';
+
+/*
+  The footer link row.
+
+  The artboard lists the workflow builder here with nothing marking it as
+  unshipped, which contradicts the nav. The chip is kept in both places, since
+  nothing on the site may read as if the builder exists.
+
+  Set flush when the row sits inside a block that already draws the rule above
+  it, so the hairline is not doubled.
+*/
+interface Props {
+  flush?: boolean;
+  class?: string;
+}
+
+const { flush = false, class: className } = Astro.props;
+
+const links = [
+  { label: 'github', href: 'https://github.com/alfredoperez/speckit-companion', external: true, soon: false },
+  { label: 'docs', href: '/docs/', external: false, soon: false },
+  { label: 'workflow builder', href: '/workflow-builder/', external: false, soon: true },
+  { label: 'changelog', href: '/changelog/', external: false, soon: false },
+  {
+    label: 'MIT',
+    href: 'https://github.com/alfredoperez/speckit-companion/blob/main/LICENSE',
+    external: true,
+    soon: false,
+  },
+];
+---
+
+<footer class:list={['site-footer', flush && 'is-flush', className]}>
+  <ul>
+    {
+      links.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noreferrer noopener' : undefined}
+          >
+            {link.label}
+          </a>
+          {link.soon && <SoonChip />}
+        </li>
+      ))
+    }
+  </ul>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--rule);
+  }
+
+  .site-footer.is-flush {
+    border-top: 0;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-24);
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: var(--space-24) var(--pad-section-x);
+    list-style: none;
+  }
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  a {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+    transition: color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  a:hover {
+    color: var(--accent-hover);
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 860px) {
+    ul {
+      gap: var(--space-16);
+      padding: var(--space-24) var(--space-20);
+    }
+  }
+</style>

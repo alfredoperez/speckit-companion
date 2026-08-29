@@ -1,0 +1,46 @@
+---
+title: Review and refine
+description: Comment on a spec line by line, keep the comments in the repo, and hand the pending ones to your AI.
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+Open a spec in the viewer and hover any line. A comment button appears on it. Click it, type, and the card pins directly beneath the line it annotates.
+
+<MediaSlot feature="inline-comments" shows="Comment cards pinned under the spec lines they annotate: two still pending, one already dispatched and marked applied." />
+
+The composer reads what kind of line you're on, user story, task, section, acceptance scenario or paragraph, and offers a matching quick action. Those are suggestion phrasings that fill in the comment text. They don't edit anything themselves.
+
+## What you can comment on
+
+Paragraphs, headings, list items, tasks, blockquotes, requirement rows and acceptance scenario items each render inside a line wrapper that carries the hover button.
+
+Code blocks, tables and rendered mermaid diagrams don't. To say something about a diagram, comment on the heading or the paragraph above it.
+
+## Comments persist
+
+Adding a comment writes it straight into the spec's `.spec-context.json`, under `reviewComments`. Writes for one spec are serialized through a per-spec queue, so two quick comments can't clobber each other.
+
+Reopen the tab and every stored comment for that document is re-anchored onto the freshly rendered page. Restoration is idempotent, so a re-render doesn't duplicate cards.
+
+Re-anchoring is best effort, and it helps to know how. A comment stays with its block of text, not with an exact source line number. If the spec is edited underneath it and that block no longer matches anything inline, the comment isn't lost. It stays in the Activity list under Run log.
+
+`.spec-context.json` sits in the spec's own directory and is ordinary JSON. Commit it and the review travels with the branch. The write is skipped and logged when that file is missing or unreadable, though the viewer creates it on first open, so normally it's there.
+
+## Refine
+
+The Refine button is hidden while nothing is pending, and reads "Refine (N)" once you have N pending comments on the document you're looking at. Each pending card also carries its own Refine action.
+
+Refine builds one prompt from the pending comments for the current document, not from your whole review. Each comment becomes a bullet naming the line and its section heading, quoting the source block, then your comment. The prompt tells the AI to edit that one file in place, not to regenerate it from a template and not to run any setup script.
+
+The prompt goes to whichever provider you configured, so it lands in a terminal CLI, an IDE chat, or the Claude Code panel. The Activity panel's per-document run refinement action uses the same path.
+
+## Refine dispatches, it doesn't verify
+
+Once the prompt is handed over, the dispatched comments flip to applied and are kept as history. That flip records that the comments were sent, not that the file changed. The extension never reads the file back and gets no completion callback from your AI.
+
+So read applied as "sent to your AI as an in-place edit request". Check the diff yourself, and comment again on anything the AI missed.
+
+## Completed and archived specs
+
+When a spec's status is completed or archived, its comment cards still render with their text and state, but Refine, Edit and Delete aren't offered. The review stays readable as a record.

@@ -141,19 +141,19 @@ export const C1ReadmeHero: Story = {
             >
                 <div style="display: flex; align-items: baseline; justify-content: space-between; flex-shrink: 0;">
                     <div style="display: flex; align-items: baseline; gap: 16px;">
-                        <div style="font: 600 32px/1.2 var(--vscode-font-family); color: #ececec; letter-spacing: -0.01em;">
+                        <div style="font: 600 32px/1.2 var(--vscode-font-family); color: var(--vscode-editor-foreground); letter-spacing: -0.01em;">
                             Spec Kit Companion
                         </div>
-                        <div style="font: 400 16.5px/1.4 var(--vscode-font-family); color: #9a9a9a;">
+                        <div style="font: 400 16.5px/1.4 var(--vscode-font-family); color: var(--vscode-descriptionForeground);">
                             Spec-driven development, visualized.
                         </div>
                     </div>
-                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: #6f6f6f; letter-spacing: 0.04em;">
+                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); letter-spacing: 0.04em;">
                         Specify · Plan · Tasks · Done
                     </div>
                 </div>
                 <div style="display: flex; gap: 22px; flex: 1; min-height: 0;">
-                    <div style="width: 340px; flex-shrink: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
+                    <div style="width: 340px; flex-shrink: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
                         <SidebarShell
                             panes={[
                                 specsPane(true, false),
@@ -162,7 +162,7 @@ export const C1ReadmeHero: Story = {
                             ]}
                         />
                     </div>
-                    <div style="flex: 1; min-width: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; position: relative;">
+                    <div style="flex: 1; min-width: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; position: relative;">
                         <ScrollTo headingId="user-scenarios" offset={150}>
                         <InteractiveViewer
                             ctx={ctxPlanning}
@@ -208,13 +208,13 @@ export const C1ReadmeHero: Story = {
 function StatTile({ value, label, sub }: { value: string; label: string; sub: string }) {
     return (
         <div style="flex: 1; box-sizing: border-box; padding: 18px 20px 16px; background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-editorWidget-border); border-radius: 8px; display: flex; flex-direction: column; gap: 5px;">
-            <div style="font: 600 30px/1.1 var(--vscode-font-family); color: #e2e2e2; letter-spacing: -0.01em;">
+            <div style="font: 600 30px/1.1 var(--vscode-font-family); color: var(--vscode-editor-foreground); letter-spacing: -0.01em;">
                 {value}
             </div>
-            <div style="font: 600 13px/1.35 var(--vscode-font-family); color: #c7c7c7;">
+            <div style="font: 600 13px/1.35 var(--vscode-font-family); color: var(--vscode-foreground);">
                 {label}
             </div>
-            <div style="font: 400 11.5px/1.45 var(--vscode-font-family); color: #8a8a8a;">
+            <div style="font: 400 11.5px/1.45 var(--vscode-font-family); color: var(--vscode-descriptionForeground);">
                 {sub}
             </div>
         </div>
@@ -249,7 +249,7 @@ export const C2PipelineStats: Story = {
                         sub="both pipelines shipped green on every run; the difference is ceremony, not outcomes"
                     />
                 </div>
-                <div style="font: 400 11px/1.4 var(--vscode-font-family); color: #6a6a6a; margin-top: 14px;">
+                <div style="font: 400 11px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); margin-top: 14px;">
                     Measured by /bench-run-all (2026-06-10): the same feature at three sizes, each
                     workflow in an isolated sandbox, judged independently. Details: docs/configuration.md
                 </div>
@@ -352,14 +352,14 @@ export const C3LivingSpecsPair: Story = {
             >
                 <div style="display: flex; align-items: baseline; justify-content: space-between; flex-shrink: 0;">
                     <div style="display: flex; align-items: baseline; gap: 16px;">
-                        <div style="font: 600 26px/1.2 var(--vscode-font-family); color: #ececec; letter-spacing: -0.01em;">
+                        <div style="font: 600 26px/1.2 var(--vscode-font-family); color: var(--vscode-editor-foreground); letter-spacing: -0.01em;">
                             Living Specs
                         </div>
-                        <div style="font: 400 15.5px/1.4 var(--vscode-font-family); color: #9a9a9a;">
+                        <div style="font: 400 15.5px/1.4 var(--vscode-font-family); color: var(--vscode-descriptionForeground);">
                             One durable spec per capability, kept in one folder or next to the code it covers.
                         </div>
                     </div>
-                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: #6f6f6f; letter-spacing: 0.04em;">
+                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); letter-spacing: 0.04em;">
                         Coverage · Drift · Sync
                     </div>
                 </div>
@@ -368,7 +368,7 @@ export const C3LivingSpecsPair: Story = {
                         storyboard) can mask, highlight, or morph either card
                         by id without counting children. Rows inside the
                         sidebar carry their own `#row-<slug>` ids already. */}
-                    <div id="living-pair-sidebar" data-panel="sidebar" style="width: 340px; flex-shrink: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
+                    <div id="living-pair-sidebar" data-panel="sidebar" style="width: 340px; flex-shrink: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
                         <SidebarShell
                             panes={[
                                 { ...specsPane(false), collapsed: true },
@@ -377,7 +377,7 @@ export const C3LivingSpecsPair: Story = {
                             ]}
                         />
                     </div>
-                    <div id="living-pair-viewer" data-panel="viewer" style="flex: 1; min-width: 0; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; position: relative;">
+                    <div id="living-pair-viewer" data-panel="viewer" style="flex: 1; min-width: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; position: relative;">
                         <LivingViewerPanel />
                         {/* Fade the clipped bottom edge of the document out to
                             the ground, so the crop reads as intentional. */}
@@ -434,17 +434,17 @@ function BenefitPanel({
 }) {
     return (
         <div style="display: flex; flex-direction: column; min-width: 0;">
-            <div style="font: 700 11px/1 var(--vscode-font-family); color: #78dce8; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px;">
+            <div style="font: 700 11px/1 var(--vscode-font-family); color: var(--vscode-charts-blue); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 7px;">
                 {kicker}
             </div>
-            <div style="font: 600 18px/1.25 var(--vscode-font-family); color: #e2e2e2; margin-bottom: 5px;">
+            <div style="font: 600 18px/1.25 var(--vscode-font-family); color: var(--vscode-editor-foreground); margin-bottom: 5px;">
                 {heading}
             </div>
-            <div style="font: 400 12.5px/1.5 var(--vscode-font-family); color: #9a9a9a; margin-bottom: 12px;">
+            <div style="font: 400 12.5px/1.5 var(--vscode-font-family); color: var(--vscode-descriptionForeground); margin-bottom: 12px;">
                 {caption}
             </div>
             <div
-                style={`position: relative; border: 1px solid #2e2e2e; border-radius: 8px; overflow: hidden; background: var(--vscode-editor-background); height: ${height}px; flex-shrink: 0;`}
+                style={`position: relative; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-editor-background); height: ${height}px; flex-shrink: 0;`}
             >
                 {children}
                 {/* Fade the clipped bottom edge out to the ground, so a crop
@@ -459,10 +459,10 @@ function BenefitPanel({
 // without dragging a highlighter into the story. The SHAPE is the real one:
 // it mirrors examples/ship-ticket/companion.inline.yml (type: command / prompt
 // / node are the three hook forms docs/node-model.md defines).
-const YAML_KEY = '#78dce8';
-const YAML_STR = '#a9dc76';
-const YAML_PLAIN = '#c7c7c7';
-const YAML_COMMENT = '#6a6a6a';
+const YAML_KEY = 'var(--vscode-charts-blue)';
+const YAML_STR = 'var(--vscode-charts-green)';
+const YAML_PLAIN = 'var(--vscode-foreground)';
+const YAML_COMMENT = 'var(--vscode-disabledForeground)';
 
 function YamlLine({ indent, children }: { indent: number; children: ComponentChildren }) {
     return (
@@ -472,7 +472,7 @@ function YamlLine({ indent, children }: { indent: number; children: ComponentChi
 
 function CompanionYmlCard() {
     return (
-        <div style="padding: 22px 24px; font: 400 14px/2 var(--vscode-editor-font-family); color: #c7c7c7;">
+        <div style="padding: 22px 24px; font: 400 14px/2 var(--vscode-editor-font-family); color: var(--vscode-foreground);">
             <YamlLine indent={0}>
                 <span style={`color: ${YAML_COMMENT};`}># .specify/companion.yml</span>
             </YamlLine>
@@ -629,8 +629,25 @@ export const C4BenefitsStrip: Story = {
 // same headline, one subline swapped. The ground is the mascot art
 // (speckit-extension/assets/hero-draft-a.png) cropped to a band that keeps
 // the sprout on its log center-right; the type sits in the dark forest on
-// the left, over a left-to-right scrim. Emerald stays scarce per THEME.md:
-// only the "Get it" chip carries it. No em dashes in on-image copy.
+// the left, over a left-to-right scrim. No em dashes in on-image copy.
+//
+// THIS IS THE ONE COMPOSITE THAT DOES NOT FOLLOW THE CAPTURE PALETTE, and it
+// must stay that way. Every other story here paints onto a ground the palette
+// controls, so palette-derived type is exactly right for them. This one paints
+// onto a FIXED dark painting, under a scrim that is 87 to 93 percent black
+// where the words go. When the palette moved to Constellation Light the three
+// var(--vscode-*) colours below resolved to #1a1626 and #3d3654 and the banner
+// went silently unreadable on both published READMEs. Light literals here are
+// not a shortcut around the theme, they are the only correct answer for type
+// on art the theme does not own.
+
+// Type colours for the banner, fixed against the art rather than the palette.
+const BANNER_TITLE = '#f4f1ff';
+const BANNER_SUBLINE = '#cfc6e8';
+const BANNER_CHIP_FG = '#d9cbff';
+// The site's own violet. The chip used to be GitHub's green, which belonged to
+// neither this product nor this art.
+const BANNER_CHIP_RGB = '167,139,250';
 
 const GEIST_FACES = `
 @font-face { font-family: 'Geist'; src: url('${geistRegular}') format('truetype'); font-weight: 400; font-style: normal; }
@@ -647,8 +664,11 @@ function CrossPromoBanner({ subline }: { subline: string }) {
         document.fonts.load('400 23px Geist');
         document.fonts.load('500 15px Geist');
     }, []);
+    // The ground is the art's own near-black, not the palette's editor
+    // background: under a light palette that would be near-white, and any pixel
+    // the art does not cover would flash bright behind dark trees.
     return (
-        <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #010409;">
+        <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #01040a;">
             <style>{GEIST_FACES}</style>
             {/* The art is 1552x656; the banner is a 420-tall band of it.
                 Shifting it up 128px keeps the head sprout, face, seedling,
@@ -662,13 +682,13 @@ function CrossPromoBanner({ subline }: { subline: string }) {
                 the mascot. */}
             <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(1,4,9,0.93) 0%, rgba(1,4,9,0.87) 26%, rgba(1,4,9,0.58) 46%, rgba(1,4,9,0.14) 62%, rgba(1,4,9,0) 74%);" />
             <div style="position: absolute; left: 88px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: flex-start; gap: 15px; max-width: 660px;">
-                <div style="font: 600 58px/1.08 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #e6edf3; letter-spacing: -0.015em; text-shadow: 0 2px 26px rgba(1,4,9,0.85), 0 0 44px rgba(120,189,247,0.22);">
+                <div style={`font: 600 58px/1.08 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: ${BANNER_TITLE}; letter-spacing: -0.015em; text-shadow: 0 2px 26px rgba(1,4,9,0.85), 0 0 44px rgba(${BANNER_CHIP_RGB},0.3);`}>
                     Install the other half
                 </div>
-                <div style="font: 400 23px/1.4 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #b7c4d0; text-shadow: 0 1px 14px rgba(1,4,9,0.9);">
+                <div style={`font: 400 23px/1.4 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: ${BANNER_SUBLINE}; text-shadow: 0 1px 14px rgba(1,4,9,0.9);`}>
                     {subline}
                 </div>
-                <div style="margin-top: 7px; display: inline-flex; align-items: center; padding: 10px 22px; border: 1px solid rgba(63,185,80,0.6); border-radius: 7px; background: rgba(63,185,80,0.13); font: 500 16px/1 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #7ee2a8; letter-spacing: 0.01em; box-shadow: 0 0 22px rgba(63,185,80,0.18);">
+                <div style={`margin-top: 7px; display: inline-flex; align-items: center; padding: 10px 22px; border: 1px solid rgba(${BANNER_CHIP_RGB},0.6); border-radius: 7px; background: rgba(${BANNER_CHIP_RGB},0.13); font: 500 16px/1 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: ${BANNER_CHIP_FG}; letter-spacing: 0.01em; box-shadow: 0 0 22px rgba(${BANNER_CHIP_RGB},0.18);`}>
                     Get it
                 </div>
             </div>

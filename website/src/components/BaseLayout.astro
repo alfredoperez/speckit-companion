@@ -1,0 +1,162 @@
+---
+import '../styles/tokens.css';
+import SiteNav from './SiteNav.astro';
+import SiteFooter from './SiteFooter.astro';
+import SiteIcons from './SiteIcons.astro';
+import Analytics from './Analytics.astro';
+
+/*
+  The page shell for every route outside the docs section. Dark only.
+
+  nav and footer default to on. The landing page turns the nav off and renders
+  SiteNav inside its own hero, because the hero dot grid runs behind the nav.
+*/
+interface Props {
+  title: string;
+  description: string;
+  nav?: boolean;
+  footer?: boolean;
+  installHref?: string;
+  noindex?: boolean;
+  ogImage?: string;
+  class?: string;
+}
+
+const SITE_NAME = 'SpecKit Companion';
+
+const {
+  title,
+  description,
+  nav = true,
+  footer = true,
+  installHref,
+  noindex = false,
+  ogImage,
+  class: className,
+} = Astro.props;
+
+const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const ogImageUrl = ogImage && Astro.site ? new URL(ogImage, Astro.site).href : ogImage;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0913" />
+
+    <SiteIcons />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+
+    <slot name="head" />
+
+    <Analytics />
+  </head>
+
+  <body class:list={className}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {nav && <SiteNav installHref={installHref} />}
+    <main id="main">
+      <slot />
+    </main>
+    {footer && <SiteFooter />}
+  </body>
+</html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--ground);
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  a:hover {
+    color: var(--accent-hover);
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
+  }
+
+  ::selection {
+    background: var(--accent-a28);
+    color: var(--text-primary);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: var(--space-10) var(--space-16);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-button-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+  }
+
+  .skip-link:focus {
+    left: var(--space-16);
+    top: var(--space-16);
+  }
+
+  /* The static page is the reduced-motion contract: no entrances, no glow-on,
+     no scroll-linked stem. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>

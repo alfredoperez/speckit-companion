@@ -1,0 +1,199 @@
+/*
+  Constellation tokens.
+
+  Every value here is transcribed from the "Design Tokens - Constellation" sheet.
+  Nothing is rounded, averaged or invented.
+
+  Dark only. The source artboard has no light palette, so there is no
+  prefers-color-scheme block, no [data-theme] switch and no toggle.
+
+  Declaration order follows the sheet: families and the size scale, then the
+  ground and the neutral ramp, then the accents, then the alpha steps written as
+  rgb() of an accent, then radii, then shadows composed from those alphas, then
+  the gradients, then space and measures.
+
+  Values the sheet flags as one-offs are NOT here on purpose. They stay literal
+  in the one component that uses them:
+    #12101f, #262138        the fake browser bar and its traffic dots
+    #cfc9e8                 command chip text (see CodeLine.astro)
+    #d6cff2                 DEMO GIF badge label
+    letter-spacing: 3px     the ASCII texture
+    line-height: 1.9        the ASCII texture
+    font-size: 1.06em       the serif accent word inside h1
+    padding: 9px 18px 9px 10px   optical compensation on the DEMO GIF badge
+    flex: 1.15              one layout ratio in one section
+    border-radius: 7px      the nav install button (see SiteNav.astro)
+*/
+
+:root {
+  color-scheme: dark;
+
+  /* ---------------------------------------------------------------- type */
+
+  /* Families. Sans is set on body and inherited. Mono is never inherited, it
+     is applied by hand to labels, eyebrows, numbers and controls. Serif is
+     italic 400 only, at most one word per heading. */
+  --font-sans: 'Figtree', 'Avenir Next', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+
+  /* Size scale, large to small, named by role.
+     The artboard's sizes were hand written across five competing options, so the first
+     extraction carried seventeen steps: several separated by half a pixel, several named
+     after whichever component first used the value. That is noise, not hierarchy. Ten
+     steps replace them and none sit closer than a pixel. Add a step only when a role
+     genuinely has no home here, never to preserve a one off. */
+  --fs-display: 60px;
+  --fs-h2: 34px;
+  --fs-h3: 20px;
+  --fs-lead: 18px;
+  --fs-body: 16px;
+  --fs-ui: 14px;
+  --fs-ui-sm: 13px;
+  --fs-mono: 12px;
+  --fs-micro: 10px;
+  --fs-chip: 9px;
+
+  /* Weights. The pill group encodes its active state partly in weight. */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  /* Line height. Everything else runs at the browser default. */
+  --lh-display: 1.1;
+  --lh-prose: 1.65;
+  --lh-ui: 1.6;
+
+  /* Letter spacing. */
+  --ls-display: -0.03em;
+  --ls-h2-footer: -0.025em;
+  --ls-h2-stat: -0.02em;
+  --ls-wordmark: -0.01em;
+  --ls-badge: 0.08em;
+  --ls-chip: 0.1em;
+  --ls-eyebrow-sm: 0.18em;
+  --ls-eyebrow: 0.24em;
+  --ls-eyebrow-lg: 0.28em;
+
+  /* ------------------------------------------------- ground and surfaces */
+
+  --ground: #0a0913;
+  --ground-rgb: 10 9 19;
+  --panel: #0d0b1a;
+
+  /* ------------------------------------------------------- neutral ramp */
+
+  /* Four steps, each with a job: primary for headings, body for paragraphs,
+     muted for supporting copy, dim for captions and glyphs. */
+  --text-primary: #edeaf6;
+  --text-body: #b6b0d2;
+  --text-muted: #9d97bd;
+  --text-dim: #6f6994;
+  --on-accent: #ffffff;
+
+  /* ------------------------------------------------------------ accents */
+
+  --accent: #a78bfa;
+  --accent-rgb: 167 139 250;
+  --accent-hover: #c4b5fd;
+  --accent-solid: #8b5cf6;
+  --accent-solid-rgb: 139 92 246;
+
+  /* Green only ever appears in the mark and the mascot. It is a brand colour,
+     not a UI colour. */
+  --green: #7cc98a;
+  --green-leaf: #a5df6c;
+
+  /* ------------------------------------------- alpha steps of the accents */
+
+  --accent-a07: rgb(var(--accent-rgb) / 0.07);
+  --accent-a25: rgb(var(--accent-rgb) / 0.25);
+  --accent-a28: rgb(var(--accent-rgb) / 0.28);
+  --accent-a50: rgb(var(--accent-rgb) / 0.5);
+
+  --accent-solid-a12: rgb(var(--accent-solid-rgb) / 0.12);
+  --accent-solid-a14: rgb(var(--accent-solid-rgb) / 0.14);
+  --accent-solid-a25: rgb(var(--accent-solid-rgb) / 0.25);
+
+  --ground-a0: rgb(var(--ground-rgb) / 0);
+  --ground-a60: rgb(var(--ground-rgb) / 0.6);
+  --ground-a90: rgb(var(--ground-rgb) / 0.9);
+
+  /* ------------------------------------------------ hairlines and borders */
+
+  /* --rule carries three jobs at one value: section separator, inside-panel
+     divider, and chip outline. */
+  --rule: #1d1930;
+  --border-card: #221e35;
+  --border-panel: #2a2545;
+  --border-strong: #3a3357;
+  --border-accent: var(--accent-a25);
+  --border-accent-strong: var(--accent-a50);
+
+  /* ------------------------------------------------------------- radii */
+
+  --radius-pill: 999px;
+  --radius-frame: 28px;
+  /* The inner corner stays concentric: outer radius minus the frame padding. */
+  --radius-frame-inner: calc(var(--radius-frame) - var(--frame-pad));
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --radius-button: 9px;
+  --radius-button-sm: 8px;
+
+  /* ------------------------------------------------------------ shadows */
+
+  /* Two glows at zero offset, differing only in blur and alpha: hero scale and
+     section scale. A third glow should follow the same pairing. */
+  --glow-frame: 0 0 90px var(--accent-solid-a25);
+  --glow-card: 0 0 50px var(--accent-solid-a12);
+  --shadow-lift: 0 30px 70px rgb(0 0 0 / 0.55);
+
+  /* ---------------------------------------------------------- gradients */
+
+  --hero-grid: radial-gradient(circle, var(--accent-a07) 1px, var(--ground-a0) 1px);
+  --hero-grid-size: 26px 26px;
+  --footer-glow: radial-gradient(
+    ellipse 60% 90% at 50% 100%,
+    var(--accent-solid-a14) 0%,
+    var(--ground-a0) 70%
+  );
+  /* The four gradient stops in each of these appear exactly once in the file
+     and mean nothing outside their gradient, so they stay literal here. */
+  --demo-frame: linear-gradient(160deg, #8b6cf6 0%, #3b2a7a 30%, #241c50 60%, #4c3a96 100%);
+  --demo-fill: linear-gradient(180deg, #1d1642 0%, #120e2c 55%, #0d0b1e 100%);
+
+  /* ------------------------------------------------------------- space */
+
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-9: 9px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-40: 40px;
+
+  /* Every section pads 48px horizontally. The hero is the one exception. */
+  --pad-section-x: 48px;
+  --pad-hero-x: 80px;
+
+  /* ---------------------------------------------------------- measures */
+
+  --page-width: 960px;
+  /* The demo frame is the page minus two section pads. If the page width moves,
+     this moves with it. */
+  --content-width: calc(var(--page-width) - (2 * var(--pad-section-x)));
+  --measure-lead: 660px;
+  --measure-footer: 620px;
+  --step-col: 28px;
+  --frame-pad: 2px;
+}

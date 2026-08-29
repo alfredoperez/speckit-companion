@@ -1,0 +1,704 @@
+---
+/**
+ * /changelog
+ *
+ * Two products ship from this repo, each with its own version and its own
+ * CHANGELOG.md. Both files are read and parsed at build time and merged into one
+ * reverse chronological list, so this page cannot drift from the sources.
+ *
+ *   VS Code extension   -> ../../../CHANGELOG.md              (package.json version)
+ *   Spec Kit extension  -> ../../../speckit-extension/CHANGELOG.md (extension.yml version)
+ *
+ * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
+ * never read here.
+ *
+ * Unreleased blocks are kept, not dropped, and rendered in their own block above
+ * the released timeline so nothing in there can be mistaken for shipped.
+ *
+ * To illustrate a release with an image, see the instructions at the top of
+ * ./components/changelog/releaseMedia.ts. Nothing about that touches this file.
+ */
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+
+// Imported with Vite's ?raw so the two files are inlined at build time and the
+// path is resolved relative to this source file, not to the build's cwd.
+import vscodeChangelog from '../../../CHANGELOG.md?raw';
+import speckitChangelog from '../../../speckit-extension/CHANGELOG.md?raw';
+
+import Analytics from '../components/Analytics.astro';
+import MascotMark from '../components/MascotMark.astro';
+import SiteIcons from '../components/SiteIcons.astro';
+import ReleaseCard from '../components/changelog/ReleaseCard.astro';
+import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
+import type { Release } from '../components/changelog/parseChangelog';
+import { assertMediaKeysResolve, imageFor } from '../components/changelog/releaseMedia';
+
+const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
+const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
+
+const streams = [vscodeStream, speckitStream];
+const released = mergeReleases(streams);
+const unreleased = unreleasedOf(streams);
+
+assertMediaKeysResolve([...released, ...unreleased]);
+
+const processor = await createMarkdownProcessor({});
+const renderRelease = async (release: Release) => ({
+  ...release,
+  sections: await Promise.all(
+    release.sections.map(async (section) => ({
+      title: section.title,
+      html: (await processor.render(section.markdown)).code,
+    }))
+  ),
+});
+
+const renderedUnreleased = await Promise.all(unreleased.map(renderRelease));
+const renderedReleased = await Promise.all(released.map(renderRelease));
+
+const latestIds = new Set(
+  ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
+);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Changelog · SpecKit Companion</title>
+    <meta
+      name="description"
+      content="Release notes for both halves of SpecKit Companion, the VS Code extension and the Spec Kit extension, merged newest first."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+
+    {/* This route builds its own document instead of using BaseLayout, so it
+        has to mount both of those itself: the favicon links, and Analytics, or
+        it would be the one page in the site the funnel cannot see. Analytics
+        renders nothing without a key, same as everywhere. */}
+    <SiteIcons />
+    <Analytics />
+  </head>
+
+  <body data-filter="all">
+    <div class="cl-shell">
+      <nav class="cl-nav">
+        <a class="cl-back" href="/">
+          <MascotMark size={22} />
+          <span>SpecKit Companion</span>
+        </a>
+        <a class="cl-nav-link" href="/docs/">docs</a>
+      </nav>
+
+      <header class="cl-head">
+        <p class="cl-eyebrow">RELEASE HISTORY</p>
+        <h1>Changelog</h1>
+        <p class="cl-lede">
+          Two halves that meet in one file. The Spec Kit extension rides your runs and writes
+          <code>.spec-context.json</code>; the VS Code extension reads it and turns it into a
+          workspace. They install independently and they're versioned independently, so each one
+          keeps its own release notes. Both streams are merged below, newest first, and every entry
+          is badged with the half and the version it belongs to.
+        </p>
+        <p class="cl-note">
+          The entries are read from the two <code>CHANGELOG.md</code> files when this page is built,
+          so what's here is what's in the repo.
+        </p>
+      </header>
+
+      <div class="cl-filter" role="group" aria-label="Filter releases by product">
+        <button type="button" class="cl-pill is-active" data-filter="all" aria-pressed="true">
+          Both
+        </button>
+        <button type="button" class="cl-pill" data-filter="vscode" aria-pressed="false">
+          VS Code extension
+        </button>
+        <button type="button" class="cl-pill" data-filter="speckit" aria-pressed="false">
+          Spec Kit extension
+        </button>
+      </div>
+
+      {renderedUnreleased.length > 0 && (
+        <section class="cl-unreleased" id="unreleased" data-group="unreleased">
+          <div class="cl-group-head">
+            <h2 class="cl-group-title">Shipping <em>next</em></h2>
+            <p class="cl-group-note">
+              Merged and written up, but not in a released version yet. Each block ships with the
+              next version of the half it sits under.
+            </p>
+          </div>
+          <div class="cl-list">
+            {renderedUnreleased.map((release) => (
+              <ReleaseCard {...release} image={imageFor(release)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section class="cl-released" data-group="released">
+        <div class="cl-group-head">
+          <h2 class="cl-group-title">Released</h2>
+        </div>
+        <div class="cl-list">
+          {renderedReleased.map((release) => (
+            <div class:list={['cl-row', latestIds.has(release.id) && 'is-latest']} data-product={release.product}>
+              {latestIds.has(release.id) && <p class="cl-latest">LATEST</p>}
+              <ReleaseCard {...release} image={imageFor(release)} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer class="cl-foot">
+        <p class="cl-foot-links">
+          <a href="https://github.com/alfredoperez/speckit-companion/blob/main/CHANGELOG.md"
+            >VS Code extension changelog</a
+          >
+          <a
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/CHANGELOG.md"
+            >Spec Kit extension changelog</a
+          >
+          <a href="https://github.com/alfredoperez/speckit-companion">github</a>
+        </p>
+      </footer>
+    </div>
+
+    <script is:inline>
+      (function () {
+        var body = document.body;
+        var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
+        if (!buttons.length) return;
+
+        function syncGroups() {
+          Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
+            var visible = group.querySelectorAll('.cl-release:not([hidden])').length;
+            group.hidden = visible === 0;
+          });
+        }
+
+        function apply(value) {
+          body.setAttribute('data-filter', value);
+          Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
+            card.hidden = value !== 'all' && card.getAttribute('data-product') !== value;
+          });
+          buttons.forEach(function (button) {
+            var active = button.getAttribute('data-filter') === value;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+          syncGroups();
+        }
+
+        buttons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            apply(button.getAttribute('data-filter'));
+          });
+        });
+      })();
+    </script>
+
+    <style is:global>
+      /*
+        Tokens transcribed from the Constellation artboard token sheet.
+        Dark only. There is no light palette in the source and none is invented
+        here, so there's no prefers-color-scheme block and no theme toggle.
+        Declared in the sheet's order: families, scale, ground, neutrals,
+        accents, accent alphas, radii, shadows.
+      */
+      :root {
+        color-scheme: dark;
+
+        --font-sans: 'Figtree', 'Avenir Next', system-ui, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --font-serif: 'Instrument Serif', Georgia, serif;
+
+        /* Kept in step with src/styles/tokens.css, which is the scale's home.
+           This page is a standalone route rather than a BaseLayout page, so it
+           carries its own copy. Change one and change the other. */
+        --fs-display: 60px;
+        --fs-h2: 34px;
+        --fs-h3: 20px;
+        --fs-lead: 18px;
+        --fs-body: 16px;
+        --fs-ui: 14px;
+        --fs-ui-sm: 13px;
+        --fs-mono: 12px;
+        --fs-micro: 10px;
+        --fs-chip: 9px;
+
+        --fw-regular: 400;
+        --fw-medium: 500;
+        --fw-semibold: 600;
+        --fw-bold: 700;
+        --fw-black: 800;
+
+        --lh-display: 1.1;
+        --lh-prose: 1.65;
+        --lh-ui: 1.6;
+
+        --ls-display: -0.03em;
+        --ls-h2: -0.025em;
+        --ls-chip: 0.1em;
+        --ls-eyebrow-sm: 0.18em;
+        --ls-eyebrow: 0.24em;
+        --ls-eyebrow-lg: 0.28em;
+
+        --ground: #0a0913;
+        --panel: #0d0b1a;
+
+        --text-primary: #edeaf6;
+        --text-body: #b6b0d2;
+        --text-muted: #9d97bd;
+        --text-dim: #6f6994;
+        --on-accent: #ffffff;
+
+        --accent: #a78bfa;
+        --accent-hover: #c4b5fd;
+        --accent-solid: #8b5cf6;
+
+        /* The two brand greens, here because MascotMark reads them and this
+           page carries its own copy of the token file. */
+        --green: #7cc98a;
+        --green-leaf: #a5df6c;
+
+        --rule: #1d1930;
+        --border-card: #221e35;
+        --border-panel: #2a2545;
+        --border-strong: #3a3357;
+        --border-accent: rgba(167, 139, 250, 0.25);
+
+        --hero-grid: radial-gradient(circle, rgba(167, 139, 250, 0.07) 1px, rgba(10, 9, 19, 0) 1px);
+        --shadow-figure: 0 12px 28px rgb(0 0 0 / 0.45);
+
+        --radius-pill: 999px;
+        --radius-md: 12px;
+        --radius-sm: 10px;
+        --radius-button-sm: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--ground);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--accent-hover);
+      }
+
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.92em;
+        color: #cfc9e8;
+      }
+
+      .cl-shell {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      /* Nav */
+      .cl-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 22px;
+        padding: 20px 48px;
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+      }
+
+      /* The mark and the words are one control, so the anchor is the flex
+         parent and the 10px gap matches the nav on every other page. */
+      .cl-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: var(--fs-body);
+        font-weight: var(--fw-black);
+        letter-spacing: -0.01em;
+      }
+
+      .cl-nav-link {
+        color: var(--text-muted);
+      }
+
+      /* Head */
+      .cl-head {
+        padding: 56px 48px 64px;
+        background-image: var(--hero-grid);
+        background-size: 26px 26px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .cl-eyebrow {
+        margin: 0 0 20px;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        letter-spacing: var(--ls-eyebrow-lg);
+      }
+
+      .cl-head h1 {
+        margin: 0 0 20px;
+        font-size: clamp(38px, 8vw, var(--fs-display));
+        font-weight: var(--fw-black);
+        line-height: var(--lh-display);
+        letter-spacing: var(--ls-display);
+      }
+
+      .cl-lede {
+        max-width: 660px;
+        margin: 0 0 16px;
+        color: var(--text-body);
+        font-size: var(--fs-lead);
+        line-height: var(--lh-prose);
+      }
+
+      .cl-note {
+        max-width: 660px;
+        margin: 0;
+        color: var(--text-dim);
+        font-size: var(--fs-ui-sm);
+        line-height: var(--lh-ui);
+      }
+
+      /* Filter */
+      .cl-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: fit-content;
+        margin: 0 48px;
+        padding: 6px;
+        background: rgba(10, 9, 19, 0.6);
+        border: 1px solid var(--border-accent);
+        border-radius: var(--radius-pill);
+      }
+
+      .cl-pill {
+        padding: 9px 22px;
+        background: none;
+        border: 1.5px solid transparent;
+        border-radius: var(--radius-pill);
+        color: var(--text-muted);
+        font-family: var(--font-sans);
+        font-size: var(--fs-ui-sm);
+        font-weight: var(--fw-semibold);
+        cursor: pointer;
+      }
+
+      .cl-pill:hover {
+        color: var(--text-primary);
+      }
+
+      .cl-pill.is-active {
+        border-color: var(--accent-solid);
+        color: var(--text-primary);
+        font-weight: var(--fw-bold);
+      }
+
+      /* Groups */
+      .cl-unreleased,
+      .cl-released {
+        padding: 56px 48px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .cl-unreleased {
+        margin-top: 56px;
+      }
+
+      .cl-group-head {
+        margin-bottom: 24px;
+      }
+
+      .cl-group-title {
+        margin: 0 0 10px;
+        font-size: var(--fs-h2);
+        font-weight: var(--fw-black);
+        letter-spacing: var(--ls-h2);
+      }
+
+      .cl-group-title em {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-weight: var(--fw-regular);
+        font-size: 1.06em;
+        color: var(--accent);
+      }
+
+      .cl-group-note {
+        max-width: 620px;
+        margin: 0;
+        color: var(--text-muted);
+        font-size: var(--fs-ui-sm);
+        line-height: var(--lh-ui);
+      }
+
+      .cl-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .cl-row {
+        position: relative;
+      }
+
+      .cl-latest {
+        position: absolute;
+        top: -8px;
+        left: 22px;
+        margin: 0;
+        padding: 2px 7px;
+        background: var(--ground);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-pill);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--fs-chip);
+        letter-spacing: var(--ls-chip);
+      }
+
+      /* Release card */
+      .cl-release {
+        padding: 22px;
+        background: var(--panel);
+        border: 1px solid var(--border-card);
+        border-radius: var(--radius-sm);
+      }
+
+      .cl-unreleased .cl-release {
+        border-style: dashed;
+        border-color: var(--border-panel);
+      }
+
+      .cl-release[hidden] {
+        display: none;
+      }
+
+      .cl-release-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .cl-release-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: var(--fs-body);
+      }
+
+      .cl-product {
+        padding: 4px 12px;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        font-weight: var(--fw-medium);
+      }
+
+      .cl-product--vscode {
+        background: var(--accent-solid);
+        color: var(--on-accent);
+      }
+
+      .cl-product--speckit {
+        border: 1px solid var(--border-strong);
+        color: var(--accent);
+      }
+
+      .cl-version {
+        font-size: var(--fs-body);
+        font-weight: var(--fw-bold);
+        color: var(--text-primary);
+      }
+
+      .cl-date {
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        color: var(--text-dim);
+      }
+
+      .cl-date:hover {
+        color: var(--accent);
+      }
+
+      /* Release image seam */
+      .cl-figure {
+        margin: 20px 0 0;
+      }
+
+      .cl-figure-frame {
+        overflow: hidden;
+        background: var(--panel);
+        border: 1px solid var(--border-panel);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-figure);
+      }
+
+      .cl-figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .cl-figure figcaption {
+        margin-top: 8px;
+        color: var(--text-dim);
+        font-size: var(--fs-ui-sm);
+      }
+
+      /* Entries, as written in the source files */
+      .cl-body {
+        padding-top: 18px;
+      }
+
+      .cl-section + .cl-section {
+        margin-top: 20px;
+      }
+
+      .cl-section-title {
+        margin: 0 0 8px;
+        color: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: var(--fs-micro);
+        font-weight: var(--fw-medium);
+        letter-spacing: var(--ls-eyebrow-sm);
+        text-transform: uppercase;
+      }
+
+      .cl-prose {
+        color: var(--text-muted);
+        font-size: var(--fs-ui-sm);
+        line-height: var(--lh-ui);
+      }
+
+      .cl-prose ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .cl-prose li + li {
+        margin-top: 10px;
+      }
+
+      .cl-prose li::marker {
+        color: var(--text-dim);
+      }
+
+      .cl-prose p {
+        margin: 0 0 8px;
+      }
+
+      .cl-prose p:last-child {
+        margin-bottom: 0;
+      }
+
+      .cl-prose strong {
+        color: var(--text-primary);
+        font-weight: var(--fw-bold);
+      }
+
+      .cl-prose blockquote {
+        margin: 8px 0;
+        padding-left: 14px;
+        border-left: 1px solid var(--rule);
+        color: var(--text-dim);
+      }
+
+      .cl-prose pre {
+        margin: 10px 0;
+        padding: 12px 16px;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-button-sm);
+        font-size: var(--fs-mono);
+        line-height: 1.6;
+      }
+
+      .cl-prose pre code {
+        color: inherit;
+      }
+
+      .cl-prose table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+      }
+
+      .cl-prose th,
+      .cl-prose td {
+        padding: 6px 12px;
+        border: 1px solid var(--rule);
+        text-align: left;
+      }
+
+      .cl-prose img {
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* Foot */
+      .cl-foot {
+        padding: 48px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .cl-foot-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+      }
+
+      @media (max-width: 700px) {
+        .cl-nav,
+        .cl-head,
+        .cl-unreleased,
+        .cl-released,
+        .cl-foot {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+
+        .cl-filter {
+          margin-left: 20px;
+          margin-right: 20px;
+        }
+
+        .cl-latest {
+          left: 16px;
+        }
+      }
+    </style>
+  </body>
+</html>

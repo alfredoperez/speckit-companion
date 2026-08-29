@@ -130,18 +130,27 @@ const steps = (
     ({ specify, plan, tasks, implement }) as ViewerState['steps'];
 
 /**
- * Parks the reading column on one heading, so a capture lands on the section
+ * Parks the reading column on one element, so a capture lands on the section
  * a beat is about instead of the top of the document. Sets `scrollTop`
  * directly after two frames — no smooth scrolling, because a capture taken
  * mid-animation is a different frame every time.
+ *
+ * Name the target either by `headingId` (a markdown heading's slug, whose
+ * `offsetTop` is measured inside the reading column) or by `selector` (any
+ * element, used for the Overview's dossier sections, which have no ids and
+ * whose `offsetTop` is measured from the top of the capture box and so already
+ * counts the page header).
  */
 export function ScrollTo({
     headingId,
+    selector,
     offset = 28,
     children,
 }: {
-    headingId: string;
-    /** Pixels of context left visible above the heading (28 default; a small
+    headingId?: string;
+    /** CSS selector for the element to park on, when it has no id. */
+    selector?: string;
+    /** Pixels of context left visible above the target (28 default; a small
      *  value pins the heading flush to the top with no sliver of the previous
      *  section showing). */
     offset?: number;
@@ -152,7 +161,11 @@ export function ScrollTo({
         const outer = requestAnimationFrame(() => {
             inner = requestAnimationFrame(() => {
                 const area = document.getElementById('content-area');
-                const target = document.getElementById(headingId);
+                const target = headingId
+                    ? document.getElementById(headingId)
+                    : selector
+                      ? document.querySelector<HTMLElement>(selector)
+                      : null;
                 if (area && target) area.scrollTop = Math.max(0, target.offsetTop - offset);
             });
         });
@@ -160,15 +173,33 @@ export function ScrollTo({
             cancelAnimationFrame(outer);
             cancelAnimationFrame(inner);
         };
-    }, [headingId, offset]);
+    }, [headingId, selector, offset]);
     return <>{children}</>;
 }
+
+/**
+ * The whole-dossier capture box: the Overview's own scroll container, opened
+ * out so the entire dossier lays out in one image, with the floating action
+ * footer taken off it. Used only by the tall Overview story below, which the
+ * overview-readme and overview-engine clips pan a camera down.
+ */
+const TALL_DOSSIER_CSS = `
+    .capture-stage .content-area { overflow: visible !important; height: auto !important; }
+    .capture-stage footer.actions { display: none !important; }
+`;
 
 const meta: Meta = {
     title: 'Video Capture/Episode 1 · Teamboard',
     // Shared with ReadmeCapture.stories.tsx (the README hero composite), which
     // reuses the mid-plan Teamboard state rather than forking the fixtures.
-    excludeStories: ['teamboardDocs', 'PLANNING_AT', 'ctxPlanning', 'planningStepHistory', 'ScrollTo'],
+    excludeStories: [
+        'teamboardDocs',
+        'PLANNING_AT',
+        'ctxPlanning',
+        'planningStepHistory',
+        'ScrollTo',
+        'OVERVIEW_TALL_HEIGHT',
+    ],
     parameters: {
         layout: 'fullscreen',
         capture: { width: STAGE_WIDTH, height: STAGE_HEIGHT },
@@ -436,6 +467,99 @@ export const A7CompletedSpecDocument: Story = {
                 }}
                 vs={vsFromContext(ctxCompleted, completedFooter)}
             />
+        </CaptureFrame>
+    ),
+};
+
+// ── The Overview, parked on the coverage table ────────────────────────────
+// The `coverage` clip's only shot. The dossier sections carry no ids, so the
+// scroll targets the Coverage section by selector. `offset` is measured from
+// the top of the capture box (the section's `offsetTop` counts the page
+// header), so 183 leaves the tail of the last decision visible above the
+// table and puts the first coverage row on y=317, which is where the clip's
+// beat rects expect it.
+
+export const A6bOverviewCoverage: Story = {
+    name: 'A6b · Completed, Overview at Coverage',
+    render: () => (
+        <CaptureFrame>
+            <ScrollTo selector='section[aria-label="Coverage"]' offset={183}>
+                <InteractiveViewer
+                    ctx={ctxCompleted}
+                    docs={teamboardDocs(allTasksChecked, 'tasks')}
+                    initialDoc="spec"
+                    view="overview"
+                    extraNav={{
+                        taskCompletionPercent: 100,
+                        workflowPhase: 'implement',
+                        badgeText: 'COMPLETED',
+                    }}
+                    vs={vsFromContext(ctxCompleted, completedFooter)}
+                />
+            </ScrollTo>
+        </CaptureFrame>
+    ),
+};
+
+// ── The whole dossier in one tall image ───────────────────────────────────
+// The single shot the overview-readme and overview-engine clips pan down: the
+// same completed Overview as A6, with the scroll container opened out and the
+// floating footer removed so nothing is cut off mid-page and nothing hovers
+// over the content the camera lands on.
+//
+// 1224 x 2430 is the capture box both compositions measure their rects in
+// (`assets/captures/rects-v2.json`, inlined as the `R` table in each
+// index.html). Every one of those rects is a real element box in THIS space,
+// so the height is a contract: change it and every camera move in both clips
+// points at the wrong thing.
+
+export const OVERVIEW_TALL_HEIGHT = 2430;
+
+export const A6cOverviewWholeDossier: Story = {
+    name: 'A6c · Completed, whole Overview dossier',
+    parameters: { capture: { width: STAGE_WIDTH, height: OVERVIEW_TALL_HEIGHT } },
+    render: () => (
+        <CaptureFrame>
+            <style>{TALL_DOSSIER_CSS}</style>
+            <InteractiveViewer
+                ctx={ctxCompleted}
+                docs={teamboardDocs(allTasksChecked, 'tasks')}
+                initialDoc="spec"
+                view="overview"
+                extraNav={{
+                    taskCompletionPercent: 100,
+                    workflowPhase: 'implement',
+                    badgeText: 'COMPLETED',
+                }}
+                vs={vsFromContext(ctxCompleted, completedFooter)}
+            />
+        </CaptureFrame>
+    ),
+};
+
+// ── The finished spec, parked on the requirements ─────────────────────────
+// The `spec-viewer` clip's only shot: A7 with the reading column moved to
+// Functional Requirements, which is the block its first beat names and the
+// reason the TOC entry on the right reads as the active one.
+
+export const A7bCompletedSpecRequirements: Story = {
+    name: 'A7b · Completed, spec at Requirements',
+    render: () => (
+        <CaptureFrame>
+            <ScrollTo headingId="requirements">
+                <InteractiveViewer
+                    ctx={ctxCompleted}
+                    docs={teamboardDocs(allTasksChecked, 'tasks')}
+                    initialDoc="spec"
+                    view="document"
+                    extraNav={{
+                        taskCompletionPercent: 100,
+                        workflowPhase: 'implement',
+                        badgeText: 'COMPLETED',
+                    }}
+                    vs={vsFromContext(ctxCompleted, completedFooter)}
+                />
+            </ScrollTo>
         </CaptureFrame>
     ),
 };

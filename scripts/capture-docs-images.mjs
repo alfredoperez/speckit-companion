@@ -21,7 +21,26 @@
  * so two runs of this script produce byte-identical files.
  *
  * HOW TO RUN
- *   node scripts/capture-docs-images.mjs
+ *   node scripts/capture-docs-images.mjs                        documentation images
+ *   node scripts/capture-docs-images.mjs --clips                every clip state
+ *   node scripts/capture-docs-images.mjs --clips living-specs   one composition
+ *
+ * `--clips` runs the CLIP_CAPTURES list instead, writing each PNG into the
+ * composition that reads it (`media/feature-clips/<clip>/assets/captures/`)
+ * rather than into docs/screenshots/generated/. Those captures are gitignored,
+ * so this list is the only thing that can bring them back: every PNG any
+ * composition under media/feature-clips/ reads is named here, and a retheme in
+ * .storybook/capture-theme.ts reaches the clips by re-running this list.
+ * (`make-it-yours` is the one composition with no entries — it is typographic
+ * and reads no capture at all.) Nothing published points at these files.
+ *
+ * A CLIP CAPTURE'S PIXEL SIZE IS A CONTRACT
+ * Every rect in a composition's BEATS array (and in the `R` tables the two
+ * Overview clips inline) is a real element box measured in the capture's own
+ * CSS pixels. A capture that comes back a different size silently aims every
+ * camera move in that clip at the wrong element, with nothing to fail on. So
+ * the story behind each entry declares the size the composition expects, and
+ * changing one means re-measuring that composition's rects.
  *
  * Uses a Storybook already listening on http://localhost:6017 if there is
  * one; otherwise boots `npx storybook dev -p 6017` itself and shuts it down
@@ -118,10 +137,114 @@ const STORIES = [
     },
 ];
 
+// ── The clip-state list (`--clips`). Not documentation images. ────────────
+// These write into a composition's OWN `assets/captures/`, which media/
+// .gitignore excludes: a clip capture belongs to the composition that reads
+// it, not to docs/screenshots/generated/, whose filenames are load-bearing for
+// the published Marketplace README.
+//
+// clip:  directory name under media/feature-clips/
+// story: the Storybook story id (see http://localhost:6017/index.json)
+// out:   filename under media/feature-clips/<clip>/assets/captures/
+//
+// Every story of one clip declares the same `parameters.capture` size, because
+// the composition measures its beat rects in the capture's own CSS pixels.
+// Sources: webview/src/spec-viewer/__stories__/ClipCapture.stories.tsx (the
+// D–H state pairs), VideoCapture.stories.tsx (the A* Teamboard lifecycle) and
+// SidebarCapture.stories.tsx (the B* sidebar recreation).
+const CLIP_CAPTURES = [
+    // D · review (1224 x 776): the review loop on one document.
+    { clip: 'review', story: 'video-capture-clip-states--d-1-no-comments', out: 'cm-clean.png' },
+    { clip: 'review', story: 'video-capture-clip-states--d-2-pending', out: 'cm-pending.png' },
+    { clip: 'review', story: 'video-capture-clip-states--d-3-opened', out: 'cm-open.png' },
+    { clip: 'review', story: 'video-capture-clip-states--d-4-applied', out: 'cm-applied.png' },
+    // The closing shot: the same document with the Specs view open beside it,
+    // so the clip ends where you would go looking for that spec later.
+    { clip: 'review', story: 'video-capture-clip-states--d-5-sidebar', out: 'cm-sidebar.png' },
+
+    // E · living-specs (1564 x 992): the Living Specs work tree, a click on one
+    // capability row, and that capability's spec open in the viewer.
+    { clip: 'living-specs', story: 'video-capture-clip-states--e-1-work-tree', out: 'ls-tree.png' },
+    { clip: 'living-specs', story: 'video-capture-clip-states--e-2-row-clicked', out: 'ls-click.png' },
+    { clip: 'living-specs', story: 'video-capture-clip-states--e-3-capability-open', out: 'ls-capability.png' },
+
+    // F · workflow-documents (1224 x 776). These stories were written to shoot the
+    // footer's Other actions menu, but the footer falls outside this capture box and
+    // F1 and F2 render identically, so the menu was never captured. See that
+    // composition's STORYBOARD for what it films instead and what would unblock the
+    // custom-command clip.
+    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-1-menu-closed', out: 'cc-closed.png' },
+    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-2-menu-open', out: 'cc-open-plan.png' },
+    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-3-menu-open-tasks', out: 'cc-open-tasks.png' },
+
+    // G · own-workflow (1224 x 776): Create Spec, then the rail it built.
+    { clip: 'own-workflow', story: 'video-capture-clip-states--g-1-workflow-choice', out: 'ow-choice.png' },
+    { clip: 'own-workflow', story: 'video-capture-clip-states--g-2-custom-picked', out: 'ow-picked.png' },
+    { clip: 'own-workflow', story: 'video-capture-clip-states--g-3-step-rail', out: 'ow-rail.png' },
+
+    // H · inline-comments (918 x 594): one comment card, closed and open.
+    { clip: 'inline-comments', story: 'video-capture-clip-states--h-1-comments-collapsed', out: 'ic-collapsed.png' },
+    { clip: 'inline-comments', story: 'video-capture-clip-states--h-2-comment-expanded', out: 'ic-expanded.png' },
+
+    // ── The clips built on the Teamboard lifecycle walk (A*) and the sidebar
+    // recreation (B*). These compositions came first and read their captures
+    // straight from those stories, so they name A/B ids rather than clip-state
+    // ones. Several read the SAME shot: it is written once per composition,
+    // because a composition owns everything under its own assets/.
+
+    // step-rail + run-in-flight (1224 x 776): specified -> planned -> tasks ->
+    // implementing, the four states the step rail moves through.
+    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-1-spec-just-specified', out: 'step-a1.png' },
+    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
+    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-4-tasks-none-checked', out: 'step-a4.png' },
+    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-5-implementing-three-of-six', out: 'step-a5.png' },
+    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-1-spec-just-specified', out: 'step-a1.png' },
+    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
+    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-4-tasks-none-checked', out: 'step-a4.png' },
+    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-5-implementing-three-of-six', out: 'step-a5.png' },
+    // run-in-flight's last beat lands on the finished run's timing row, which
+    // is the top of the same completed Overview.
+    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-6-completed-overview', out: 'overview-top.png' },
+
+    // coverage (1224 x 776): the same Overview, scrolled onto the coverage
+    // table. A6b is A6 with the reading column parked, nothing else.
+    { clip: 'coverage', story: 'video-capture-episode-1-·-teamboard--a-6-b-overview-coverage', out: 'overview-coverage.png' },
+
+    // overview + overview-readme + overview-engine (1224 x 2430): ONE tall shot
+    // of the whole dossier that all three clips pan a camera down. The rect
+    // tables inlined in the three index.html files are measured in this exact
+    // space, so the 2430 height is a contract for all of them.
+    { clip: 'overview', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+    { clip: 'overview-readme', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+    { clip: 'overview-engine', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+
+    // spec-viewer (1224 x 776): the finished spec document, parked on the
+    // requirements block its first beat names.
+    { clip: 'spec-viewer', story: 'video-capture-episode-1-·-teamboard--a-7-b-completed-spec-requirements', out: 'spec-a7.png' },
+
+    // specs-sidebar (340 x 776): the sidebar recreation, all three sections open.
+    { clip: 'specs-sidebar', story: 'video-capture-specs-sidebar-recreation--b-4-full-sidebar', out: 'sb-b4.png' },
+];
+
 const PORT = 6017;
 const BASE = `http://localhost:${PORT}`;
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(REPO_ROOT, 'docs', 'screenshots', 'generated');
+const CLIPS_MODE = process.argv.includes('--clips');
+/**
+ * Optional composition filter for `--clips`, so re-shooting one clip does not
+ * rewrite every other composition's captures. Documentation mode ignores it.
+ */
+const ONLY_CLIP = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? null;
+
+/** Where one entry's PNG goes, and the label the log prints for it. */
+function targetFor(entry) {
+    if (!entry.clip) return { dir: OUT_DIR, label: `generated/${entry.out}` };
+    return {
+        dir: join(REPO_ROOT, 'media', 'feature-clips', entry.clip, 'assets', 'captures'),
+        label: `${entry.clip}/assets/captures/${entry.out}`,
+    };
+}
 
 async function storybookIsUp() {
     try {
@@ -229,7 +352,17 @@ async function removeAnnotation(page) {
 }
 
 async function main() {
-    mkdirSync(OUT_DIR, { recursive: true });
+    let work = CLIPS_MODE ? CLIP_CAPTURES : STORIES;
+    if (CLIPS_MODE && ONLY_CLIP) {
+        work = work.filter((e) => e.clip === ONLY_CLIP);
+        if (work.length === 0) {
+            const known = [...new Set(CLIP_CAPTURES.map((e) => e.clip))].sort().join(', ');
+            throw new Error(`No clip captures for "${ONLY_CLIP}". Known: ${known}`);
+        }
+    }
+    for (const entry of work) {
+        mkdirSync(targetFor(entry).dir, { recursive: true });
+    }
 
     let spawned = null;
     if (!(await storybookIsUp())) {
@@ -256,7 +389,7 @@ async function main() {
         });
         const page = await context.newPage();
 
-        for (const entry of STORIES) {
+        for (const entry of work) {
             if (!known.has(entry.story)) {
                 failures.push(`${entry.story}: not in Storybook index (renamed or deleted?)`);
                 continue;
@@ -280,14 +413,15 @@ async function main() {
                     throw new Error('capture box missing or degenerate; does the story declare parameters.capture?');
                 }
 
-                const outPath = join(OUT_DIR, entry.out);
+                const target = targetFor(entry);
+                const outPath = join(target.dir, entry.out);
                 await shell.screenshot({ path: outPath, animations: 'disabled' });
-                console.log(`  ${entry.story} -> generated/${entry.out} (${box.width}x${box.height} css, @2x)`);
+                console.log(`  ${entry.story} -> ${target.label} (${box.width}x${box.height} css, @2x)`);
 
                 if (entry.annotate) {
                     const ok = await injectAnnotation(page, entry.annotate.selector, entry.annotate.label);
                     if (!ok) throw new Error(`annotation target ${entry.annotate.selector} not found`);
-                    const annPath = join(OUT_DIR, entry.annotate.out);
+                    const annPath = join(target.dir, entry.annotate.out);
                     await shell.screenshot({ path: annPath, animations: 'disabled' });
                     await removeAnnotation(page);
                     console.log(`  ${entry.story} -> generated/${entry.annotate.out} (annotated: ${entry.annotate.selector})`);
@@ -306,7 +440,12 @@ async function main() {
         for (const f of failures) console.error('  ' + f);
         process.exit(1);
     }
-    console.log('\nAll documentation images regenerated.');
+    console.log(
+        CLIPS_MODE
+            ? `\nCaptured ${work.length} clip state${work.length === 1 ? '' : 's'}` +
+                  (ONLY_CLIP ? ` into ${ONLY_CLIP}.` : ' into their compositions.')
+            : '\nAll documentation images regenerated.',
+    );
 }
 
 main().catch((err) => {

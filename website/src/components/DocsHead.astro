@@ -1,0 +1,28 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+import SiteIcons from './SiteIcons.astro';
+import Analytics from './Analytics.astro';
+
+/*
+  Replaces Starlight's Head so the docs section gets the same analytics the rest
+  of the site gets. Starlight pages never touch BaseLayout.astro, which is where
+  Analytics is mounted for every other route, so without this override the whole
+  /docs/ tree is invisible to the funnel.
+
+  This is the Head component override rather than the `head` option in
+  astro.config.mjs on purpose: the config option takes raw tags, so it would mean
+  a second copy of the loader script living as a string in the config, drifting
+  from Analytics.astro the first time either one changes. The override reuses the
+  one component, which also keeps the no-key behaviour identical: with no
+  PUBLIC_POSTHOG_KEY set, Analytics renders nothing and the docs head is exactly
+  what Starlight built.
+
+  SiteIcons rides along for the same reason. Starlight's own favicon option
+  already points at /favicon.svg, so the SVG link is left to it and only the
+  raster fallbacks are added here.
+*/
+---
+
+<Default />
+<SiteIcons svg={false} />
+<Analytics />

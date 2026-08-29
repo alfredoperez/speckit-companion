@@ -17,11 +17,11 @@
      to absolute raw URLs at package time). Only speckit-extension/README.md uses absolute
      raw.githubusercontent URLs, because the Spec Kit community catalog renders it from
      main and cannot resolve relative paths. -->
-<!-- The hero is the Overview GIF (built from media/feature-clips/overview-readme): frame
+<!-- The hero is the Overview GIF (built from media/feature-clips/overview): frame
      zero is a representative still by design, so it reads even paused. The composed C1
      still stays regenerable at docs/screenshots/generated/hero.png (no longer referenced
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
-![A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
+![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
 <!-- Walkthrough video link pulled pending Alfredo's review of the video itself. The plan is per-section GIFs (media/feature-clips) instead of one long walkthrough; the file itself stays at docs/media/walkthrough.mp4. -->
 
@@ -86,7 +86,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 <!-- Rendered from media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
      and value on screen is real: change the contributed configuration in package.json
      and this composition is stale. -->
-![Make it yours: swapping the default workflow, adding your own commands, and picking your AI provider, each shown as the real settings.json entry](docs/screenshots/generated/make-it-yours.gif)
+![Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches](docs/screenshots/generated/make-it-yours.gif)
 
 <!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
      scripts/capture-docs-images.mjs). The whole image is a link to the engine

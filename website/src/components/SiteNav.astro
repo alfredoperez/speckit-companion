@@ -1,0 +1,177 @@
+---
+import MascotMark from './MascotMark.astro';
+import SoonChip from './SoonChip.astro';
+import { INSTALL_HREF, isCurrentPath, navGroups } from './navLinks';
+
+/*
+  The nav sits on whatever ground its section paints, so it carries no
+  background of its own. On the landing page that is the hero dot grid.
+
+  The link order and the grouping come from ./navLinks.ts, which the docs header
+  reads too. The workflow builder and the course are the unshipped pair: they
+  render side by side at a tighter gap, and each keeps its SOON chip.
+*/
+interface Props {
+  installHref?: string;
+  class?: string;
+}
+
+const { installHref = INSTALL_HREF, class: className } = Astro.props;
+
+const here = Astro.url.pathname;
+---
+
+<header class:list={['site-nav', className]}>
+  <div class="inner">
+    <a class="wordmark" href="/">
+      <MascotMark size={22} />
+      <span>SpecKit Companion</span>
+    </a>
+
+    <nav aria-label="Primary">
+      <ul>
+        {
+          navGroups.map((group) => (
+            <li class:list={['group', group.length > 1 && 'is-pair']}>
+              {group.map((link) => (
+                <span class="item">
+                  <a
+                    href={link.href}
+                    aria-current={isCurrentPath(here, link.href) ? 'page' : undefined}
+                  >
+                    {link.label}
+                  </a>
+                  {link.soon && <SoonChip />}
+                </span>
+              ))}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a class="install" href={installHref}>install</a>
+  </div>
+</header>
+
+<style>
+  .site-nav {
+    background: transparent;
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-24);
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 20px var(--pad-section-x);
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-10);
+    margin-right: auto;
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-wordmark);
+    text-decoration: none;
+  }
+
+  /* The two pairs are pushed apart, not evenly spaced: the unshipped pair sits
+     out on its own and docs + changelog close up against the install button,
+     because those two are where anyone actually goes. */
+  nav ul {
+    display: flex;
+    align-items: center;
+    gap: 52px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .group {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* The pair reads as one thing: 14px between its two members against the 22px
+     that separates the groups. */
+  .group.is-pair {
+    gap: var(--space-14);
+  }
+
+  .item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  nav a {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+    transition: color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--text-primary);
+  }
+
+  /* 7px is the nav install button's own radius, and nothing else in the sheet
+     uses it, so it stays a literal here. */
+  .install {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    color: var(--accent-hover);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .install:hover {
+    border-color: var(--border-accent-strong);
+  }
+
+  .wordmark:focus-visible,
+  nav a:focus-visible,
+  .install:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* The artboard is one fixed 960px column. Below that the row wraps rather
+     than compressing the link labels. */
+  @media (max-width: 860px) {
+    .inner {
+      flex-wrap: wrap;
+      gap: var(--space-16);
+      padding: 20px var(--space-20);
+    }
+
+    .wordmark {
+      margin-right: 0;
+      flex: 1 1 auto;
+    }
+
+    nav {
+      order: 3;
+      flex-basis: 100%;
+    }
+
+    nav ul {
+      flex-wrap: wrap;
+      gap: var(--space-16);
+    }
+  }
+</style>

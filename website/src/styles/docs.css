@@ -1,0 +1,472 @@
+/* Fonts first, then the tokens, then the Starlight variables that read from them.
+   Keeping both @import lines at the top is a CSS requirement, not a preference. */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './tokens.css';
+
+/*
+  The docs section reads from the same Constellation tokens as the landing page,
+  so the two halves are one site.
+
+  Dark only. Starlight ships both palettes; the light one is mapped to the same
+  values so a viewer whose OS prefers light still gets the dark surface, and the
+  theme picker is removed in astro.config.
+*/
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: dark;
+
+  /* Families */
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+
+  /* Neutral ramp. Starlight walks gray-1 (lightest) to gray-7 (darkest). */
+  --sl-color-white: var(--text-primary);
+  --sl-color-gray-1: var(--text-primary);
+  --sl-color-gray-2: var(--text-body);
+  --sl-color-gray-3: var(--text-muted);
+  --sl-color-gray-4: var(--text-dim);
+  --sl-color-gray-5: var(--border-strong);
+  --sl-color-gray-6: var(--border-panel);
+  --sl-color-gray-7: var(--rule);
+  --sl-color-black: var(--ground);
+
+  /* Accent */
+  --sl-color-accent-low: var(--accent-solid-a25);
+  --sl-color-accent: var(--accent-solid);
+  --sl-color-accent-high: var(--accent-hover);
+  --sl-color-bg-accent: var(--accent);
+
+  /* Surfaces and text */
+  --sl-color-text: var(--text-body);
+  --sl-color-text-accent: var(--accent);
+  --sl-color-text-invert: var(--ground);
+  --sl-color-bg: var(--ground);
+  --sl-color-bg-nav: var(--ground);
+  --sl-color-bg-sidebar: var(--ground);
+  --sl-color-bg-inline-code: var(--panel);
+  --sl-color-backdrop-overlay: rgb(var(--ground-rgb) / 0.66);
+
+  /* Hairlines. --rule carries every separator on the landing page too. */
+  --sl-color-hairline-light: var(--rule);
+  --sl-color-hairline: var(--rule);
+  --sl-color-hairline-shade: var(--rule);
+
+  /* Prose measure, matched to the landing page's reading column. */
+  --sl-line-height: var(--lh-prose);
+  --sl-line-height-headings: var(--lh-display);
+}
+
+/* Starlight paints its own ground; this keeps the page ground identical to the
+   landing page's when the layout does not cover the full viewport. */
+body {
+  background: var(--ground);
+}
+
+/* The wordmark reads the same in both halves: heavy, tight, primary text. */
+.site-title {
+  color: var(--text-primary);
+  font-weight: var(--fw-black);
+  letter-spacing: var(--ls-wordmark);
+}
+
+/* Headings track the landing page's tighter display tracking. */
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--text-primary);
+  letter-spacing: var(--ls-h2-stat);
+}
+
+.sl-markdown-content :is(h1, h2) {
+  font-weight: var(--fw-black);
+}
+
+/* Panels, cards and asides sit on --panel over --border-card, the same pairing
+   the feature cards use. */
+.sl-markdown-content :is(.starlight-aside, .card) {
+  background: var(--panel);
+  border-color: var(--border-card);
+  border-radius: var(--radius-sm);
+}
+
+.sl-markdown-content a {
+  color: var(--accent);
+}
+
+.sl-markdown-content a:hover {
+  color: var(--accent-hover);
+}
+
+/* Inline code reads as a chip, the same object the command row uses. */
+.sl-markdown-content code:not(:where(pre code)) {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  color: var(--text-body);
+}
+
+:where(a, button, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Density.
+
+   Starlight's defaults are airy: h1 at 36px, h2 at 30px, h3 at 24px, a 300px
+   sidebar and a tall nav. On a docs page that reads as shouting, and the
+   sections stop feeling like one document. The target here is Tailwind's
+   documentation: a compact ramp where hierarchy comes from weight and spacing
+   rather than size, a quiet sidebar, and code set small enough to fit a real
+   command without wrapping.
+
+   Every size below is a step from the ten-step scale in tokens.css. If a value
+   here is not var(--fs-*), that is a bug, not an exception.
+
+   Starlight ships its own rules inside @layer starlight.*. Everything in this
+   file is unlayered, so it outranks them regardless of selector weight. That is
+   why the selectors below stay short.
+   --------------------------------------------------------------------------- */
+
+:root,
+:root[data-theme='light'] {
+  /* Ramp. h1 34 to h2 20 is a deliberate jump: a docs page has one title and
+     many sections, so the sections should read as siblings of the body, not as
+     competing titles. */
+  --sl-text-h1: var(--fs-h2);
+  --sl-text-h2: var(--fs-h3);
+  --sl-text-h3: var(--fs-lead);
+  --sl-text-h4: var(--fs-body);
+  --sl-text-h5: var(--fs-ui);
+  --sl-text-h6: var(--fs-ui);
+
+  --sl-text-body: var(--fs-body);
+  --sl-text-body-sm: var(--fs-ui-sm);
+  --sl-text-code: var(--fs-ui-sm);
+  --sl-text-code-sm: var(--fs-mono);
+
+  --sl-text-xs: var(--fs-ui-sm);
+  --sl-text-sm: var(--fs-ui);
+  --sl-text-base: var(--fs-body);
+  --sl-text-lg: var(--fs-lead);
+  --sl-text-xl: var(--fs-h3);
+
+  /* Chrome. A shorter nav and a narrower sidebar give the content column back
+     the room the defaults spend on furniture. */
+  --sl-nav-height: 3rem;
+  --sl-sidebar-width: 15.5rem;
+  --sl-sidebar-pad-x: 0.75rem;
+
+  /* Two measures, not one.
+
+     The column is the landing page's lead measure, so a screenshot, a table and
+     a code fence all get the same width in both halves of the site. Sentences
+     get less than that: at this body size 660px runs to about 90 characters,
+     which is where a docs page starts reading as a wall. --measure-prose is the
+     line length, applied to text blocks a little further down, and the
+     difference between the two is what lets a picture read as wider than the
+     paragraph next to it without anything breaking out of the column. */
+  --sl-content-width: var(--measure-lead);
+  --measure-prose: 38rem;
+
+  /* Horizontal room around the panel. Starlight spends 1.5rem a side at this
+     breakpoint; the column already has the whole right half of the viewport, so
+     the gutter is furniture. */
+  --sl-content-pad-x: 1.25rem;
+
+  /* One gap between every pair of blocks. Starlight's 1rem default is set on
+     the generic adjacency rule, so tables, code frames and asides all read from
+     it; overriding it here keeps them in step with paragraphs instead of
+     needing a rule each. */
+  --sl-content-gap-y: 0.7rem;
+
+  /* Expressive Code renders every fence, and it pads the <code> inside the
+     <pre> from its own variables. Padding the <pre> as well buys the same space
+     twice, which is where most of a code block's height was going. The box is
+     its own; only these are ours. */
+  --ec-codePadBlk: 0.6rem;
+  --ec-codePadInl: 0.9rem;
+  --ec-codeLineHt: 1.5;
+  --ec-brdRad: calc(var(--radius-sm) - 1px);
+}
+
+/* Prose rhythm. Headings take their space from above, so a section reads as
+   attached to the text under it rather than floating between two equal gaps. */
+.sl-markdown-content {
+  font-size: var(--sl-text-body);
+  line-height: var(--lh-prose);
+}
+
+.sl-markdown-content :is(p, ul, ol) {
+  margin-block: 0.7em;
+}
+
+/* The line length. Only running text is held to it, so a figure, a reference
+   table or a code fence keeps the full column and reads as the wider object it
+   is. Direct children only: a paragraph inside an aside, a list item or a
+   component has already been given a measure by its own box. */
+.sl-markdown-content > :is(p, ul, ol, blockquote, dl) {
+  max-width: var(--measure-prose);
+}
+
+/* Starlight puts the anchor link beside the heading inside a .sl-heading-wrapper
+   and sets the heading itself to display: inline so the two share a line. An
+   inline box ignores vertical margin and padding, and draws its border around
+   the text run rather than the column. So every vertical value, and the section
+   rule, has to sit on the wrapper. The bare-heading rules below use the child
+   combinator on purpose: a wrapped heading is never a direct child of the
+   content, so the two sets can never fight. */
+.sl-markdown-content > h2,
+.sl-markdown-content .sl-heading-wrapper.level-h2 {
+  margin-top: 1.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--rule);
+}
+
+.sl-markdown-content > h3,
+.sl-markdown-content .sl-heading-wrapper.level-h3 {
+  margin-top: 1.2rem;
+}
+
+.sl-markdown-content > :is(h4, h5, h6),
+.sl-markdown-content .sl-heading-wrapper.level-h4,
+.sl-markdown-content .sl-heading-wrapper.level-h5,
+.sl-markdown-content .sl-heading-wrapper.level-h6 {
+  margin-top: 1.05rem;
+}
+
+/* The gap under a heading is set by whatever follows it, so it is set here
+   rather than as a margin-bottom that something else would override. Half the
+   gap between two paragraphs: the text belongs to the heading. */
+.sl-markdown-content > :is(h1, h2, h3, h4, h5, h6) + *,
+.sl-markdown-content .sl-heading-wrapper + * {
+  margin-top: 0.4rem;
+}
+
+.sl-markdown-content > :is(h1, h2, h3, h4, h5, h6),
+.sl-markdown-content .sl-heading-wrapper {
+  line-height: 1.25;
+}
+
+.sl-markdown-content :is(h3, h4, h5, h6) {
+  font-weight: var(--fw-semibold);
+}
+
+/* The first block in the body panel sits under the title block, which already
+   carries the separation. No rule, no space. The second selector matches the
+   heading-wrapper rule's weight so a page that opens on a heading does not get
+   a divider immediately under its own title. */
+.sl-markdown-content > :first-child,
+.sl-markdown-content > .sl-heading-wrapper.level-h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Lists. The browser's 40px indent is furniture; a marker needs about half of
+   that, and the saved space goes back to the measure. */
+.sl-markdown-content :is(ul, ol) {
+  padding-inline-start: 1.15rem;
+}
+
+.sl-markdown-content :is(ul, ol) :is(ul, ol) {
+  margin-block: 0.3rem;
+}
+
+.sl-markdown-content li + li {
+  margin-top: 0.2rem;
+}
+
+/* ---------------------------------------------------------------- pictures */
+
+/* A screenshot is the thing the page is about, so it sits in the flow with the
+   same gap a paragraph gets above it and slightly more below, where its caption
+   has to clear the next block. MediaSlot's own margin is a top-only 20px, which
+   left the caption sitting closer to the next heading than to its own picture. */
+.sl-markdown-content figure.mslot {
+  margin-block: 0.9rem 1.2rem;
+}
+
+/* Height, not width, is what makes a screenshot expensive on a docs page. A
+   landscape shot is nowhere near this and is untouched; a tall portrait one,
+   the sidebar captured top to bottom, lands at roughly the size the real
+   sidebar is on screen instead of running past a full viewport. Width goes to
+   auto so the aspect ratio does the arithmetic, and the shot centres in the
+   column rather than hanging off its left edge. */
+.sl-markdown-content figure.mslot .mslot__img {
+  width: auto;
+  max-width: 100%;
+  max-height: 48rem;
+  margin-inline: auto;
+}
+
+/* A page that reaches past MediaSlot for a still it needs by path gets the same
+   object anyway: same hairline, same radius, same ceiling. A dark screenshot on
+   a dark page needs the edge or the reader cannot tell where the product stops. */
+.sl-markdown-content img:not(.mslot__img) {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 48rem;
+  margin-inline: auto;
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+/* Code. Small, tight, and dense enough that a real install command fits on one
+   line rather than wrapping into a paragraph-shaped block. A fence rendered by
+   Expressive Code is excluded: it owns its own box, and the variables above
+   size it. This is for a plain <pre> written by hand. */
+.sl-markdown-content pre:not(:where(.expressive-code *)) {
+  padding: 0.6rem 0.9rem;
+  font-size: var(--sl-text-code);
+  line-height: 1.5;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+/* Inline code reads one step under the text around it, so it stays a chip
+   rather than a bump in the line. In a table the surrounding text is already a
+   step down, so the chip takes the step after that. */
+.sl-markdown-content code:not(:where(pre code)) {
+  padding: 0.1em 0.36em;
+  font-size: var(--fs-ui);
+}
+
+.sl-markdown-content :is(th, td) code:not(:where(pre code)) {
+  font-size: var(--fs-ui-sm);
+}
+
+/* Tables carry reference rows, not prose, so they set one step down and their
+   cells lose the padding a prose-sized row would need. */
+.sl-markdown-content :is(th, td) {
+  padding: 0.42rem 0.9rem;
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* Asides. The default is a 1rem box around body-sized text, which reads as a
+   second column interrupting the first. */
+.sl-markdown-content .starlight-aside {
+  padding: 0.7rem 0.9rem;
+  border-inline-start-width: 2px;
+}
+
+/* The aside's own label is a <p>, so the paragraph rhythm above catches it and
+   opens a gap where a label should sit tight to what it labels. */
+.sl-markdown-content .starlight-aside__title {
+  margin-block: 0;
+  font-size: var(--fs-ui-sm);
+  letter-spacing: var(--ls-h2-stat);
+}
+
+.sl-markdown-content .starlight-aside__title + .starlight-aside__content {
+  margin-top: 0.3rem;
+}
+
+.sl-markdown-content .starlight-aside__content :is(p, ul, ol) {
+  margin-block: 0.5rem;
+}
+
+.sl-markdown-content .starlight-aside__content > :first-child {
+  margin-top: 0;
+}
+
+.sl-markdown-content .starlight-aside__content > :last-child {
+  margin-bottom: 0;
+}
+
+/* The page title block. Starlight pads the title panel, rules it off, then pads
+   the body panel again, so a one-line title costs about fifty pixels before the
+   first sentence. The title and its opening paragraph are one unit; the rule
+   belongs to the h2s further down, which is where a reader navigates. */
+main > .content-panel:first-child {
+  padding-top: 1rem;
+  padding-bottom: 0.25rem;
+}
+
+main > .content-panel:first-child + .content-panel {
+  padding-top: 0.5rem;
+  border-top: 0;
+}
+
+/* The tail of the page. Starlight's 1.5rem sits under the last sentence and
+   then the footer adds its own, so the bottom of a docs page was paying twice
+   for the same gap. */
+main > .content-panel:last-child {
+  padding-bottom: 1rem;
+}
+
+#_top {
+  margin-top: 0;
+  line-height: 1.15;
+  letter-spacing: var(--ls-h2-stat);
+  font-weight: var(--fw-black);
+}
+
+/* Every page starts its column at the same left edge. Starlight centres the
+   container on a page that has no table of contents, so moving between a page
+   with a right rail and one without slid the whole column sideways. A narrower
+   measure made the slide wider, which is how it got noticed. */
+.content-panel .sl-container {
+  margin-inline: 0;
+}
+
+/* Sidebar. Quiet by default, with group labels as small tracked caps so the
+   eye finds the section without the links themselves getting louder. With the
+   guides split into groups, the row height is what decides whether the whole
+   tree is visible without scrolling. */
+.sidebar-content {
+  padding-top: 0.75rem;
+  gap: 0.75rem;
+}
+
+starlight-menu-button + * a,
+.sidebar-content a {
+  font-size: var(--fs-ui-sm);
+  padding-block: 0.22rem;
+  line-height: 1.4;
+}
+
+.sidebar-content .top-level > li + li {
+  margin-top: 0.6rem;
+}
+
+.sidebar-content summary,
+.sidebar-content .group-label span {
+  font-size: var(--fs-mono);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.sidebar-content summary {
+  padding-block: 0.22rem;
+}
+
+.sidebar-content ul ul {
+  border-inline-start: 1px solid var(--rule);
+}
+
+/* Right rail. Reference furniture, so it stays the quietest text on the page. */
+starlight-toc a {
+  font-size: var(--fs-ui-sm);
+  padding-block: 0.24rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+starlight-toc a[aria-current='true'] {
+  color: var(--accent);
+}

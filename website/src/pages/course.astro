@@ -1,0 +1,382 @@
+---
+/**
+ * /course
+ *
+ * A course is not recorded and has no date. The page says that first, publishes
+ * the outline it would follow so a visitor knows what they are joining a list
+ * for, and sends them to the five guides that are already written.
+ *
+ * No runtime, no price, no platform. None of that is decided, and inventing any
+ * of it is exactly the failure the claim ledger exists to stop. The outline is
+ * held to the same bar as the rest of the site: every lesson names something
+ * that exists today, except the builder one, which is marked as not shipped.
+ */
+import SoonPageLayout from '../components/SoonPageLayout.astro';
+
+/*
+  Three titles here read differently from how the feature is usually described,
+  and the difference is deliberate. Custom commands land in a collapsed "Other
+  actions" menu in the viewer footer, never a toolbar. Hooks are instructions
+  the assistant reads, not an engine that runs them. And there is no templates
+  lesson, because no template setting is contributed anywhere.
+*/
+const modules = [
+  {
+    n: '1',
+    title: 'Set up',
+    lessons: [
+      { title: 'Install both halves', body: 'What the VS Code extension gives you, and what the Spec Kit extension adds on top.' },
+      { title: 'Pick your AI provider', body: 'Eleven of them, and what changes when yours cannot submit the prompt for you.' },
+      { title: 'Read the sidebar', body: 'Your specs, the status of each one, and the steering docs underneath.' },
+    ],
+  },
+  {
+    n: '2',
+    title: 'Your first spec',
+    lessons: [
+      { title: 'Create a spec', body: 'Choosing a workflow, and giving it the images and context it needs.' },
+      { title: 'The spec viewer', body: 'The documents, the step rail, and where you are in the run.' },
+      { title: 'Run a step, then review it', body: 'Comment on the line you disagree with, and send the notes back with Refine.' },
+      { title: 'Read the Overview', body: 'Intent, decisions, coverage, and the run log folded underneath.' },
+    ],
+  },
+  {
+    n: '3',
+    title: 'Make it yours',
+    lessons: [
+      { title: 'Add your own actions', body: 'Custom commands, and where they show up in the viewer footer.' },
+      { title: 'Attach work around a step', body: 'A companion.yml hook: a shell command, an instruction, or a node file of your own.' },
+      { title: 'Write your own workflow', body: 'Your phases, your commands, your output files, offered by Create Spec.' },
+    ],
+  },
+  {
+    n: '4',
+    title: 'Going further',
+    lessons: [
+      { title: 'Living specs', body: 'Turning them on, adopting a capability, and keeping it central or beside the code.' },
+      { title: 'Drift and coverage', body: 'What each report tells you, and why neither one can ever block a build.' },
+      { title: 'The workflow builder', body: 'Not built yet. This lesson arrives with it.', soon: true },
+    ],
+  },
+];
+
+const guides = [
+  {
+    step: '01',
+    title: 'Getting started',
+    body: 'Install both halves, create your first spec, run it, and read the record it leaves behind.',
+    href: '/docs/start/getting-started/',
+  },
+  {
+    step: '02',
+    title: 'Pick a pipeline',
+    body: 'Choose stock SpecKit or SpecKit Companion, then bend either one into a workflow of your own.',
+    href: '/docs/guides/pick-a-pipeline/',
+  },
+  {
+    step: '03',
+    title: 'Review and refine',
+    body: 'Comment on a spec line by line, keep the comments in the repo, and hand the pending ones to your AI.',
+    href: '/docs/guides/review-and-refine/',
+  },
+  {
+    step: '04',
+    title: 'Anatomy of the Overview',
+    body: 'How to read the record a finished run leaves behind, and what it will not tell you.',
+    href: '/docs/anatomy/anatomy-of-the-overview/',
+  },
+  {
+    step: '05',
+    title: 'Living specs',
+    body: 'One durable spec per capability, kept next to the code, updated by the runs that change it.',
+    href: '/docs/guides/living-specs/',
+  },
+];
+---
+
+<SoonPageLayout
+  title="Course"
+  description="A course on spec-driven development with SpecKit Companion is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
+  headline="A course, once there is one worth sitting through"
+  standing="Nothing is recorded and there is no date. What follows is the outline it would run, so you know what you would be joining a list for."
+  waitlistId="course"
+  waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
+  pose="reading"
+  poseAlt="The SpecKit Companion mascot sitting with an open book, reading."
+>
+  <p slot="lead">
+    The plan is a walkthrough of taking real work through the pipeline end to end: writing the spec,
+    reading the plan, reviewing the tasks, and reading the run once it finishes. It has not been
+    made, so the honest answer to when is that we do not know.
+  </p>
+
+  <section class="section">
+    <div class="inner">
+      <p class="eyebrow">THE OUTLINE</p>
+      <h2>Four parts, from an empty workspace to a spec that outlives the ticket</h2>
+      <p class="section-lede">
+        This is the shape, not a schedule. Every lesson below covers something the product does
+        today, apart from the last one, which waits on the builder.
+      </p>
+
+      <ol class="modules">
+        {
+          modules.map((mod) => (
+            <li class="module">
+              <p class="module-head">
+                <span class="module-n" aria-hidden="true">
+                  {mod.n}
+                </span>
+                <span class="module-title">{mod.title}</span>
+              </p>
+              <ul class="lessons">
+                {mod.lessons.map((lesson) => (
+                  <li class="lesson" data-soon={lesson.soon ? '' : undefined}>
+                    <span class="lesson-title">
+                      {lesson.title}
+                      {lesson.soon && <span class="lesson-soon">soon</span>}
+                    </span>
+                    <span class="lesson-body">{lesson.body}</span>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="inner">
+      <p class="eyebrow">THE WRITTEN VERSION</p>
+      <h2>Five guides cover the same ground today</h2>
+      <p class="section-lede">
+        Read in this order they walk from an empty workspace to a finished run you can hand to
+        someone else.
+      </p>
+
+      <ol class="guides">
+        {
+          guides.map((guide) => (
+            <li class="guide">
+              <span class="guide-step" aria-hidden="true">
+                {guide.step}
+              </span>
+              <span class="guide-text">
+                <a class="guide-title" href={guide.href}>
+                  {guide.title}
+                </a>
+                <span class="guide-body">{guide.body}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <Fragment slot="back">
+    <a href="/docs/start/getting-started/">start with getting started</a>
+    <a href="/docs/">all the docs</a>
+    <a href="/">back to the landing page</a>
+  </Fragment>
+</SoonPageLayout>
+
+<style>
+  .inner {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--pad-section-x);
+  }
+
+  .section {
+    padding: 56px 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    margin: 0 0 var(--space-16);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow);
+  }
+
+  h2 {
+    margin: 0 0 var(--space-12);
+    max-width: var(--measure-footer);
+    font-size: var(--fs-h2);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-h2-stat);
+    text-wrap: balance;
+  }
+
+  .section-lede {
+    margin: 0 0 var(--space-26);
+    max-width: var(--measure-lead);
+    color: var(--text-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-prose);
+  }
+
+  .modules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-24);
+    margin: 0 0 var(--space-8);
+    padding: 0;
+    list-style: none;
+  }
+
+  .module {
+    padding: var(--space-24);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .module-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-12);
+    margin: 0 0 var(--space-18);
+    padding-bottom: var(--space-14);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .module-n {
+    flex: none;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+  }
+
+  .module-title {
+    color: var(--text-primary);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+    letter-spacing: -0.01em;
+  }
+
+  .lessons {
+    display: grid;
+    gap: var(--space-16);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lesson {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .lesson-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+  }
+
+  /* The one lesson that does not describe something shipped has to say so
+     on the page, not only in a footnote. */
+  .lesson-soon {
+    flex: none;
+    padding: 2px var(--space-6);
+    border: 1px solid var(--border-panel);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-chip);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+  }
+
+  .lesson[data-soon] .lesson-title {
+    color: var(--text-body);
+  }
+
+  .lesson-body {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  .guides {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .guide {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-20);
+    padding: var(--space-22) var(--space-24);
+  }
+
+  .guide + .guide {
+    border-top: 1px solid var(--rule);
+  }
+
+  .guide-step {
+    flex: none;
+    width: var(--step-col);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+  }
+
+  .guide-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  .guide-title {
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+    text-decoration: none;
+    width: fit-content;
+  }
+
+  .guide-title:hover {
+    color: var(--accent-hover);
+  }
+
+  .guide-title:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .guide-body {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  @media (max-width: 860px) {
+    .inner {
+      padding: 0 var(--space-20);
+    }
+
+    .modules {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guide {
+      gap: var(--space-14);
+    }
+  }
+</style>

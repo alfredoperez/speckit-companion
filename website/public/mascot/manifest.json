@@ -1,0 +1,274 @@
+{
+  "celebrating": {
+    "source": {
+      "left": 334,
+      "top": 225,
+      "width": 1388,
+      "height": 1678
+    },
+    "sizes": {
+      "128": {
+        "width": 106,
+        "height": 128,
+        "webp": "/mascot/celebrating-128.webp",
+        "png": "/mascot/celebrating-128.png",
+        "webpBytes": 6020,
+        "pngBytes": 7931
+      },
+      "256": {
+        "width": 212,
+        "height": 256,
+        "webp": "/mascot/celebrating-256.webp",
+        "png": "/mascot/celebrating-256.png",
+        "webpBytes": 16910,
+        "pngBytes": 23240
+      },
+      "512": {
+        "width": 424,
+        "height": 512,
+        "webp": "/mascot/celebrating-512.webp",
+        "png": "/mascot/celebrating-512.png",
+        "webpBytes": 56452,
+        "pngBytes": 82271
+      }
+    }
+  },
+  "error": {
+    "source": {
+      "left": 391,
+      "top": 200,
+      "width": 1268,
+      "height": 1730
+    },
+    "sizes": {
+      "128": {
+        "width": 94,
+        "height": 128,
+        "webp": "/mascot/error-128.webp",
+        "png": "/mascot/error-128.png",
+        "webpBytes": 6196,
+        "pngBytes": 7581
+      },
+      "256": {
+        "width": 188,
+        "height": 256,
+        "webp": "/mascot/error-256.webp",
+        "png": "/mascot/error-256.png",
+        "webpBytes": 17216,
+        "pngBytes": 21995
+      },
+      "512": {
+        "width": 375,
+        "height": 512,
+        "webp": "/mascot/error-512.webp",
+        "png": "/mascot/error-512.png",
+        "webpBytes": 56906,
+        "pngBytes": 82211
+      }
+    }
+  },
+  "pointing": {
+    "source": {
+      "left": 354,
+      "top": 131,
+      "width": 1520,
+      "height": 1832
+    },
+    "sizes": {
+      "128": {
+        "width": 106,
+        "height": 128,
+        "webp": "/mascot/pointing-128.webp",
+        "png": "/mascot/pointing-128.png",
+        "webpBytes": 6216,
+        "pngBytes": 8274
+      },
+      "256": {
+        "width": 212,
+        "height": 256,
+        "webp": "/mascot/pointing-256.webp",
+        "png": "/mascot/pointing-256.png",
+        "webpBytes": 17088,
+        "pngBytes": 22592
+      },
+      "512": {
+        "width": 425,
+        "height": 512,
+        "webp": "/mascot/pointing-512.webp",
+        "png": "/mascot/pointing-512.png",
+        "webpBytes": 56494,
+        "pngBytes": 78097
+      }
+    }
+  },
+  "reading": {
+    "source": {
+      "left": 433,
+      "top": 242,
+      "width": 1167,
+      "height": 1612
+    },
+    "sizes": {
+      "128": {
+        "width": 93,
+        "height": 128,
+        "webp": "/mascot/reading-128.webp",
+        "png": "/mascot/reading-128.png",
+        "webpBytes": 6030,
+        "pngBytes": 7197
+      },
+      "256": {
+        "width": 185,
+        "height": 256,
+        "webp": "/mascot/reading-256.webp",
+        "png": "/mascot/reading-256.png",
+        "webpBytes": 15496,
+        "pngBytes": 20058
+      },
+      "512": {
+        "width": 371,
+        "height": 512,
+        "webp": "/mascot/reading-512.webp",
+        "png": "/mascot/reading-512.png",
+        "webpBytes": 54526,
+        "pngBytes": 75561
+      }
+    }
+  },
+  "tending": {
+    "source": {
+      "left": 375,
+      "top": 105,
+      "width": 1291,
+      "height": 1827
+    },
+    "sizes": {
+      "128": {
+        "width": 90,
+        "height": 128,
+        "webp": "/mascot/tending-128.webp",
+        "png": "/mascot/tending-128.png",
+        "webpBytes": 5066,
+        "pngBytes": 6661
+      },
+      "256": {
+        "width": 181,
+        "height": 256,
+        "webp": "/mascot/tending-256.webp",
+        "png": "/mascot/tending-256.png",
+        "webpBytes": 14862,
+        "pngBytes": 17719
+      },
+      "512": {
+        "width": 362,
+        "height": 512,
+        "webp": "/mascot/tending-512.webp",
+        "png": "/mascot/tending-512.png",
+        "webpBytes": 44154,
+        "pngBytes": 61286
+      }
+    }
+  },
+  "thinking": {
+    "source": {
+      "left": 434,
+      "top": 195,
+      "width": 1174,
+      "height": 1542
+    },
+    "sizes": {
+      "128": {
+        "width": 97,
+        "height": 128,
+        "webp": "/mascot/thinking-128.webp",
+        "png": "/mascot/thinking-128.png",
+        "webpBytes": 6312,
+        "pngBytes": 8213
+      },
+      "256": {
+        "width": 195,
+        "height": 256,
+        "webp": "/mascot/thinking-256.webp",
+        "png": "/mascot/thinking-256.png",
+        "webpBytes": 17568,
+        "pngBytes": 23240
+      },
+      "512": {
+        "width": 390,
+        "height": 512,
+        "webp": "/mascot/thinking-512.webp",
+        "png": "/mascot/thinking-512.png",
+        "webpBytes": 56188,
+        "pngBytes": 84321
+      }
+    }
+  },
+  "waving": {
+    "source": {
+      "left": 341,
+      "top": 222,
+      "width": 1466,
+      "height": 1632
+    },
+    "sizes": {
+      "128": {
+        "width": 115,
+        "height": 128,
+        "webp": "/mascot/waving-128.webp",
+        "png": "/mascot/waving-128.png",
+        "webpBytes": 6332,
+        "pngBytes": 8046
+      },
+      "256": {
+        "width": 230,
+        "height": 256,
+        "webp": "/mascot/waving-256.webp",
+        "png": "/mascot/waving-256.png",
+        "webpBytes": 16450,
+        "pngBytes": 23235
+      },
+      "512": {
+        "width": 460,
+        "height": 512,
+        "webp": "/mascot/waving-512.webp",
+        "png": "/mascot/waving-512.png",
+        "webpBytes": 52290,
+        "pngBytes": 83462
+      }
+    }
+  },
+  "welcoming": {
+    "source": {
+      "left": 296,
+      "top": 124,
+      "width": 1456,
+      "height": 1774
+    },
+    "sizes": {
+      "128": {
+        "width": 105,
+        "height": 128,
+        "webp": "/mascot/welcoming-128.webp",
+        "png": "/mascot/welcoming-128.png",
+        "webpBytes": 5414,
+        "pngBytes": 7400
+      },
+      "256": {
+        "width": 210,
+        "height": 256,
+        "webp": "/mascot/welcoming-256.webp",
+        "png": "/mascot/welcoming-256.png",
+        "webpBytes": 13406,
+        "pngBytes": 21151
+      },
+      "512": {
+        "width": 420,
+        "height": 512,
+        "webp": "/mascot/welcoming-512.webp",
+        "png": "/mascot/welcoming-512.png",
+        "webpBytes": 50696,
+        "pngBytes": 74833
+      }
+    }
+  }
+}

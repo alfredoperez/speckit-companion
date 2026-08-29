@@ -1,0 +1,2772 @@
+---
+/**
+ * The landing page.
+ *
+ * Structure and visual treatment are ported from the approved Constellation
+ * artboard. Every value comes from the token sheet via src/styles/tokens.css,
+ * or is a one-off the sheet explicitly said not to promote, kept literal here
+ * with a comment saying so.
+ *
+ * Copy: every sentence traces to a row in the claim ledger. The three places
+ * the artboard's own copy brushed a never-say entry are corrected here, marked
+ * "ledger:" where they sit.
+ *
+ * Media: clip and still paths are read out of media/manifest.json and mapped
+ * onto the site's public URL prefix. Nothing is hand-written, and a feature the
+ * manifest has not shipped yet falls back to one that has.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Button from '../components/Button.astro';
+import CodeLine from '../components/CodeLine.astro';
+import manifest from '../../../media/manifest.json';
+
+const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
+const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
+const METHODOLOGY =
+  'https://github.com/alfredoperez/speckit-companion/blob/main/docs/configuration.md';
+
+// The full --from URL form, verbatim. The short catalog form does not work:
+// the extension is not listed in the spec-kit catalog.
+const INSTALL_COMMAND =
+  'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
+
+type Feature = {
+  id: string;
+  status: string;
+  outputs: Record<string, string | null>;
+  alt?: Record<string, string>;
+};
+
+const features = manifest.features as Feature[];
+const sourceDir = manifest.site.sourceDir;
+const urlPrefix = manifest.site.publicUrlPrefix;
+
+/** A repo-relative manifest path becomes the URL the site serves it from. */
+function siteUrl(rel: string | null | undefined): string | null {
+  if (!rel) return null;
+  if (!rel.startsWith(`${sourceDir}/`)) {
+    throw new Error(`${rel} is outside ${sourceDir}/, so the site cannot serve it`);
+  }
+  return urlPrefix + rel.slice(sourceDir.length);
+}
+
+function media(id: string) {
+  const feature = features.find((entry) => entry.id === id);
+  if (!feature) throw new Error(`media/manifest.json has no feature "${id}"`);
+  const poster = siteUrl(feature.outputs.poster);
+  const panel = siteUrl(feature.outputs.panelStill);
+  return {
+    id,
+    webm: siteUrl(feature.outputs.webWebm),
+    mp4: siteUrl(feature.outputs.webMp4),
+    poster,
+    panel,
+    panelAlt: (feature.outputs.panelStill && feature.alt?.[feature.outputs.panelStill]) || '',
+    alt: (feature.outputs.poster && feature.alt?.[feature.outputs.poster]) || '',
+    ready:
+      feature.status === 'shipped' && Boolean(feature.outputs.webWebm && feature.outputs.webMp4 && poster),
+  };
+}
+
+const overview = media('overview');
+const makeItYours = media('make-it-yours');
+
+// review runs the review surface through all four of its states and then closes
+// on the side bar, so the tab shows where you would go looking for that spec
+// later rather than stopping at the comment.
+const review = media('review');
+
+// The Living Specs tab and the accordion figure both play the drawn explainer
+// rather than a screenshot tour. A tour can only show the tree; the argument is
+// what the tree replaces, and that needs a diagram.
+const livingExplained = media('living-specs-explained');
+
+/*
+  The hero stills. Built by scripts/build-hero-stills.mjs, which crops them out
+  of the clip compositions' own DPR-2 source captures, so a palette change is a
+  re-shoot plus a re-run and the hero can never drift from what the clips show.
+
+  Captions carry the benefit, not the feature name: someone who reads only the
+  hero should still learn what the product is for. Each one is a cleared claim —
+  the Overview one avoids a flat timing claim, and the Review one says the note
+  is sent rather than applied, because Refine dispatches a request and never
+  reads the file back.
+*/
+/*
+  The ambient chips drifting around the hero. Every string is one the product
+  actually renders — a coverage count, a drift flag, a comment state, a phase
+  timing — so the field teaches the vocabulary before anyone clicks. Positions
+  are hand-placed to sit clear of the frame in the middle.
+*/
+const motes = [
+  { text: '6/6 traced', x: -6, y: 8, dx: 12, dy: -10, dur: 9200, delay: 0 },
+  { text: 'drift', x: 87, y: -1, dx: -9, dy: 12, dur: 10400, delay: 900 },
+  { text: 'PENDING', x: 93, y: 34, dx: -13, dy: -8, dur: 8600, delay: 1800 },
+  { text: '54m 36s elapsed', x: -9, y: 56, dx: 10, dy: 11, dur: 11200, delay: 600 },
+  { text: '{ } capability', x: 86, y: 86, dx: -11, dy: -12, dur: 9800, delay: 2400 },
+  { text: 'APPLIED', x: -3, y: 92, dx: 13, dy: -9, dur: 10100, delay: 1400 },
+];
+
+/*
+  The focal light a product frame sits in front of. Painted by
+  scripts/build-lightwell.mjs, not drawn in CSS: a large low-alpha gradient over
+  near-black bands, and the stars have to be there when motion is off.
+*/
+const lightwell = (() => {
+  const f = features.find((entry) => entry.id === 'page-lightwell');
+  if (!f) throw new Error('media/manifest.json has no feature "page-lightwell"');
+  return {
+    hero: siteUrl(f.outputs.lightwellHero),
+    section: siteUrl(f.outputs.lightwellSection),
+  };
+})();
+
+const surfaces = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    src: `${urlPrefix}/hero-overview.png`,
+    caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
+    alt: 'The Overview of a finished run: the intent it answers to, the four phases with the time each took, the approach, and the corner of the codebase it changed.',
+  },
+  {
+    id: 'living',
+    label: 'Living Specs',
+    src: `${urlPrefix}/hero-living-specs.png`,
+    caption: 'What you learned, kept next to the code it describes.',
+    alt: 'The Living Specs tree: capabilities kept at a root and beside the code in features, jobs and services, each row carrying its coverage count or a drift flag.',
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    src: `${urlPrefix}/hero-review.png`,
+    caption: 'Comment on the line. Refine sends the note to your agent.',
+    alt: 'Two review comments pinned under a requirement, the second one open with its Refine, Edit and Delete actions.',
+  },
+];
+
+/*
+  Each tab states its point before its clip plays, because a clip cannot argue
+  and a label cannot explain. Every sentence here traces to a cleared row in the
+  claim ledger; three phrasings are deliberate and should not be "improved":
+  timing is only reported where both ends were recorded, hook attachments are
+  instructions the assistant reads rather than an engine that runs them, and
+  Refine dispatches a request rather than applying an edit.
+*/
+const tabs = [
+  {
+    id: 'understand',
+    label: 'Understand',
+    window: 'Overview · the run’s story',
+    heading: 'You stop reading four markdown files',
+    body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
+    clip: overview,
+  },
+  {
+    id: 'customize',
+    label: 'Customize',
+    window: 'Custom workflows · the one you wrote, at every step',
+    heading: 'The workflow is yours, not the tool’s',
+    body: 'Define your own phases, commands and output files in settings, and attach a shell command, an inline instruction, or a node file of your own before or after any named step. Those attachments are instructions your assistant reads at run time.',
+    clip: makeItYours,
+  },
+  {
+    id: 'living',
+    label: 'Living specs',
+    window: 'Living Specs · what outlives the ticket',
+    heading: 'The learning outlives the ticket',
+    body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
+    clip: livingExplained,
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    window: 'Review · a comment under the line it annotates',
+    heading: 'Say it in the margin, not in the chat box',
+    body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
+    clip: review,
+  },
+];
+
+/*
+  Living specs leads, because it is the row nothing else in this category has.
+  Order is the literal array order: it is consumed twice, once for the toggles
+  and once for the stacked stills, so moving an entry moves both.
+*/
+const rows = [
+  {
+    id: 'living',
+    title: 'Specs that outlive the ticket',
+    body: 'Spec Kit writes the spec, ships the feature, and leaves the folder behind. What you learned about how that capability works goes quiet with it. Turn living specs on and each capability keeps one durable spec instead — at capabilities/<name>/spec.md, or next to the code with a path you choose. Drift lists the source files that changed since a capability’s spec was last committed. Drift and coverage are read-only reports that always exit zero, so neither can block a build.',
+    link: { label: 'living specs', href: '/docs/guides/living-specs/' },
+    still: livingExplained,
+    open: true,
+  },
+  {
+    id: 'read',
+    title: 'Runs you can read',
+    body: 'A finished run becomes a page. It leads with the intent, the approach and the area worked in, fences the constraints against the declared non-goals, and lists each decision with what it rejected. The coverage table traces every requirement to the tasks that delivered it and the tests that exercise it, and untraced requirements sort to the top.',
+    link: { label: 'read the Overview guide', href: '/docs/anatomy/anatomy-of-the-overview/' },
+    still: overview,
+  },
+  {
+    id: 'bend',
+    title: 'A pipeline you can bend',
+    body: 'Two workflows ship in the box: stock SpecKit, and SpecKit Companion with a fifth step that marks the spec complete. Define your own phases, commands and output files in settings and Create Spec offers them. A companion.yml attaches a shell command, an inline instruction, or a node file of your own before or after any named node. Those attachments are instructions your assistant reads at run time, not an engine that executes them.',
+    link: { label: 'pick a pipeline', href: '/docs/guides/pick-a-pipeline/' },
+    still: makeItYours,
+  },
+  {
+    id: 'review',
+    title: 'Reviews with a reply button',
+    body: 'Comment on a line of a spec, the way you’d review a pull request. Your notes persist the moment you add them, and Refine sends the pending ones to your agent, so you’re not copy-pasting into a chat box. The sidebar keeps every spec and its status one click away.',
+    link: { label: 'explore the review flow', href: '/docs/guides/review-and-refine/' },
+    still: review,
+  },
+];
+
+const cards = [
+  {
+    eyebrow: 'OVERVIEW',
+    title: 'Runs you can read',
+    // ledger: "the command that proved it" implies re-execution. Nothing re-runs.
+    body: 'A finished run becomes a page: the intent, the fence around the work, and each check with the command it ran and the result it reported.',
+  },
+  {
+    eyebrow: 'LIVING SPECS',
+    title: 'One spec per capability',
+    // ledger: living specs do not update themselves, and they are opt-in.
+    body: 'Register a capability and it gets a durable spec. When a run authors its deltas at completion, a script folds them in, and prints a receipt when a capability ends with neither a delta nor a skip note.',
+  },
+  {
+    eyebrow: 'REVIEW',
+    title: 'Comments that travel',
+    body: 'Line-level review, PR style. Comments persist as you add them and survive a tab close, and Refine hands the pending ones to your agent.',
+  },
+  {
+    eyebrow: 'LIVE · RECORD',
+    title: 'Watch it run, keep the record',
+    body: 'Phases and timing while the agent works, and every step written to one committable file. Grep it, diff it, commit it with the branch.',
+  },
+  {
+    eyebrow: 'PIPELINE',
+    title: 'A pipeline you can bend',
+    body: 'Two workflows ship in the box, and the workflow a spec was created with drives every dispatch. Define your own phases, commands and output files in settings and Create Spec offers them.',
+  },
+  {
+    eyebrow: 'PROVIDERS',
+    // ledger: "any agent can drive it" is a never-say. Three of the eleven
+    // cannot submit for you.
+    title: 'Eleven providers',
+    body: 'Terminal CLIs, IDE chat, the Claude Code panel. The extension hands your assistant the command text, then reads what lands on disk. Not every provider supports every piece.',
+  },
+];
+
+// One leaf per section below the hero, in document order. The script measures
+// where each section boundary falls and places its leaf on the stem; a leaf
+// with no section to mark stays hidden.
+const stemLeaves = ['quick start', 'demo', 'features', 'box', 'claim', 'install'];
+
+// Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
+const REVEAL_STAGGER = 60;
+
+// Bioluminescent spores: slow points of light drifting under the content, in
+// the palette's purple and its leaf green. Each one carries its own place,
+// drift vector, period and a negative delay, so the field is already mid-drift
+// on the first frame and no two points ever fall into phase. The values are
+// hand-placed rather than generated, because the page renders on the server and
+// the same page has to come back twice.
+//
+// `bright` scales the point's peak opacity, so a field reads as depth rather
+// than as one layer of identical dots. It is optional: left off, the point
+// burns at the keyframe's own alpha.
+type Spore = {
+  x: number;
+  y: number;
+  size: number;
+  dx: number;
+  dy: number;
+  dur: number;
+  delay: number;
+  bright?: number;
+  tone?: 'green';
+};
+
+const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
+  // The hero's field is the densest of the three and it is not spread evenly:
+  // most of it gathers in the upper middle, around and above the mascot, and
+  // thins out towards the edges and the floor. That is what makes it read as a
+  // clearing with something glowing in it rather than as weather. Every period
+  // and every delay below is distinct, so nothing ever falls into step.
+  hero: [
+    // the clearing itself: around and above the mascot
+    { x: 46, y: 27, size: 5, dx: 14, dy: -46, dur: 15700, delay: -2300, bright: 1 },
+    { x: 57, y: 19, size: 3, dx: -11, dy: -34, dur: 19300, delay: -8900, bright: 0.75, tone: 'green' },
+    { x: 39, y: 14, size: 4, dx: 17, dy: -40, dur: 17300, delay: -13100, bright: 0.9 },
+    { x: 62, y: 33, size: 6, dx: -19, dy: -52, dur: 23900, delay: -5900, bright: 1.15 },
+    { x: 51, y: 9, size: 2, dx: 9, dy: -26, dur: 12700, delay: -10300, bright: 0.6, tone: 'green' },
+    { x: 34, y: 31, size: 3, dx: 13, dy: -38, dur: 21100, delay: -17700, bright: 0.8 },
+    { x: 68, y: 12, size: 4, dx: -15, dy: -30, dur: 18100, delay: -3700, bright: 0.95, tone: 'green' },
+    { x: 44, y: 38, size: 5, dx: -12, dy: -58, dur: 25300, delay: -20900, bright: 1.05 },
+    // the treeline: fewer, dimmer, further out
+    { x: 12, y: 62, size: 4, dx: 20, dy: -56, dur: 22300, delay: -6700, bright: 0.85 },
+    { x: 22, y: 44, size: 3, dx: -10, dy: -36, dur: 16100, delay: -14900, bright: 0.7, tone: 'green' },
+    { x: 81, y: 57, size: 5, dx: 18, dy: -62, dur: 26900, delay: -9700, bright: 0.9 },
+    { x: 90, y: 36, size: 3, dx: -14, dy: -28, dur: 14300, delay: -4100, bright: 0.65 },
+    { x: 71, y: 79, size: 4, dx: -21, dy: -50, dur: 24100, delay: -18300, bright: 0.8, tone: 'green' },
+    { x: 29, y: 84, size: 5, dx: 16, dy: -60, dur: 27700, delay: -11300, bright: 0.75 },
+  ],
+  accordion: [
+    { x: 6, y: 78, size: 4, dx: 14, dy: -44, dur: 27100, delay: -3700 },
+    { x: 44, y: 92, size: 3, dx: -18, dy: -36, dur: 13900, delay: -16300, tone: 'green' },
+    { x: 88, y: 62, size: 4, dx: -20, dy: -52, dur: 25300, delay: -7100 },
+    { x: 71, y: 18, size: 3, dx: 12, dy: -26, dur: 18700, delay: -12900 },
+  ],
+  cards: [
+    { x: 14, y: 86, size: 4, dx: 20, dy: -50, dur: 22300, delay: -1900, tone: 'green' },
+    { x: 55, y: 22, size: 3, dx: -14, dy: -32, dur: 16100, delay: -21100 },
+    { x: 93, y: 70, size: 4, dx: -22, dy: -46, dur: 24700, delay: -9500 },
+  ],
+};
+---
+
+<BaseLayout
+  title="SpecKit Companion"
+  description="A spec workspace inside VS Code. It turns markdown specs into pages worth reading, shows every run while it happens, and sends your review notes back to the agent without a copy-paste."
+  nav={false}
+  footer={false}
+>
+  {/* Runs during parse, before the hero paints, so a resting state never
+      flashes into view and then hides itself. Motion is opt-in twice over:
+      scripting has to be on, and the visitor must not have asked for less. */}
+  <script is:inline>
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.setAttribute('data-motion', '');
+    }
+  </script>
+
+  {/* The stem. A vine down the left gutter whose height is scroll position,
+      sprouting a leaf at each section boundary as that section passes. */}
+  <div class="stem" data-stem aria-hidden="true">
+    <span class="stem-rail"></span>
+    <span class="stem-vine" data-stem-vine></span>
+    {
+      stemLeaves.map((name) => (
+        <span class="stem-leaf" data-stem-leaf={name}>
+          <svg viewBox="0 0 16 14" width="14" height="13" fill="none">
+            <path class="leaf-stalk" d="M1.8 7.6 5 11.2" />
+            <path class="leaf-blade" d="M5 11.4C4 6.9 7.7 2.7 13.6 1.6 14.3 6.9 10.7 11 5 11.4Z" />
+          </svg>
+        </span>
+      ))
+    }
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <SiteNav installHref="#quick-start" />
+
+    {/* Bigger points get a softer edge, so the field has depth instead of one
+        uniform dot size. The blur follows the size rather than being placed by
+        hand, because the two only ever move together. */}
+    <div class="spores" aria-hidden="true">
+      {
+        spores.hero.map((spore) => (
+          <span
+            class="spore"
+            data-tone={spore.tone}
+            style={`--sx:${spore.x}%;--sy:${spore.y}%;--ss:${spore.size}px;--sdx:${spore.dx}px;--sdy:${spore.dy}px;--sdur:${spore.dur}ms;--sdelay:${spore.delay}ms;--sb:${spore.bright ?? 1};--sblur:${(spore.size * 0.32).toFixed(2)}px`}
+          />
+        ))
+      }
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow eyebrow--hero">OPEN SOURCE · RUNS IN YOUR EDITOR</p>
+
+        <h1>
+          Spec-driven development,<br />
+          one <em>level</em> up.
+        </h1>
+
+        <p class="lead">
+          Read a run instead of a folder. Keep what you learned instead of archiving it. Send your
+          review notes back to your agent by writing in the margin, not by re-prompting from
+          scratch.
+        </p>
+
+        <p class="ownership">Your specs. Your pipeline. Your record. Your repo.</p>
+
+        <div class="hero-actions">
+          <Button
+            href={MARKETPLACE}
+            external
+            size="lg"
+            data-analytics="install_click_vscode"
+            data-analytics-placement="hero"
+          >
+            Install for VS Code
+          </Button>
+          <Button href="/docs/" variant="secondary" size="lg">Read the docs</Button>
+        </div>
+      </div>
+
+      {/* The product, in the first screenful. Three surfaces cycle in one frame
+          with a caption that changes with them, so someone who never scrolls
+          still learns what this is.
+
+          The stills are crops, not whole windows: a full IDE shrunk into this
+          column is unreadable, which is the reason the hero used to be words.
+          Same crossfade the accordion uses. Under reduced motion nothing
+          cycles, surface one shows, and all three buttons still work. */}
+      <div class="hero-show" data-hero-show>
+        <div class="hero-orbit">
+          {/* Ambient chips. They are real strings from the product, not filler:
+              a visitor reading them picks up the vocabulary before they have
+              clicked anything. Decorative to a screen reader. */}
+          <div class="hero-motes" aria-hidden="true">
+            {
+              motes.map((mote) => (
+                <span
+                  class="mote"
+                  style={`--mx:${mote.x}%;--my:${mote.y}%;--mdx:${mote.dx}px;--mdy:${mote.dy}px;--mdur:${mote.dur}ms;--mdelay:${mote.delay}ms`}
+                >
+                  {mote.text}
+                </span>
+              ))
+            }
+          </div>
+
+          <div class="hero-stagebox">
+            <img
+              class="lightwell lightwell--hero"
+              data-hero-bloom
+              src={lightwell.hero}
+              alt=""
+              aria-hidden="true"
+              width="2400"
+              height="1000"
+              fetchpriority="high"
+            />
+            <div class="hero-stage">
+            {
+              surfaces.map((surface, index) => (
+                <img
+                  class="hero-shot"
+                  data-hero-shot={surface.id}
+                  data-active={index === 0 ? '' : undefined}
+                  src={surface.src}
+                  alt={surface.alt}
+                  width="1600"
+                  height="1014"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={index === 0 ? 'high' : undefined}
+                  />
+                ))
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* The chips are the only naming the hero has now: no fake window title,
+            no caption line under the frame. The one you pick stays lit and its
+            sentence surfaces inside the bloom for a beat as the shot arrives. */}
+        <div class="hero-pips" role="tablist" aria-label="Product surfaces">
+          {
+            surfaces.map((surface, index) => (
+              <button
+                type="button"
+                class="hero-pip"
+                role="tab"
+                data-hero-pip={surface.id}
+                data-hero-caption={surface.caption}
+                style={`--pdur:${5200 + index * 900}ms;--pdelay:${index * 700}ms`}
+                aria-selected={index === 0 ? 'true' : 'false'}
+                tabindex={index === 0 ? 0 : -1}
+              >
+                {surface.label}
+              </button>
+            ))
+          }
+        </div>
+
+        <p class="hero-flash" data-hero-flash aria-live="polite">{surfaces[0].caption}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section class="section section--quickstart" id="quick-start">
+    <div class="inner stack-16">
+      <p class="eyebrow">QUICK START</p>
+
+      <div class="steps" data-steps>
+        <span class="spark" data-spark aria-hidden="true"></span>
+
+        <div class="step" data-step>
+          <span class="step-flare" aria-hidden="true"></span>
+          <span class="step-num" aria-hidden="true">01</span>
+          <div class="step-text">
+            <span class="step-title">Install the VS Code extension</span>
+            <span class="step-sub">
+              The workspace: viewer, review, live runs, overview. One click from the Marketplace.
+            </span>
+          </div>
+          <Button
+            class="step-action"
+            href={OPEN_IN_VSCODE}
+            size="md"
+            data-analytics="install_click_vscode"
+            data-analytics-placement="quick-start"
+          >
+            Open in VS Code
+          </Button>
+        </div>
+
+        <div class="step" data-step>
+          <span class="step-flare" aria-hidden="true"></span>
+          <span class="step-num" aria-hidden="true">02</span>
+          <div class="step-text">
+            <span class="step-title">Add the Companion to Spec Kit</span>
+            <span class="step-sub">One command. The same command updates it later.</span>
+          </div>
+          <CodeLine
+            class="step-action"
+            command={INSTALL_COMMAND}
+            data-analytics="install_click_speckit_copy"
+            data-analytics-placement="quick-start"
+          />
+        </div>
+      </div>
+
+      <a class="watch-link" href="/docs/start/getting-started/">
+        <svg width="16" height="16" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+          <circle cx="13" cy="13" r="11" stroke="currentColor" stroke-width="1.6"></circle>
+          <path d="M10.5 8.5L18 13L10.5 17.5V8.5Z" fill="currentColor"></path>
+        </svg>
+        <span>watch: your first spec, from Create Spec to the Overview →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section class="section section--demo">
+    <div class="inner demo-stack" data-tabs>
+      {/* The point arrives before the clip does. All four sit in one grid cell
+          so the frame below never jumps when the copy swaps. */}
+      <div class="demo-say">
+        {
+          tabs.map((tab, index) => (
+            <div
+              class="say"
+              data-say={tab.id}
+              data-active={index === 0 ? '' : undefined}
+              aria-hidden={index === 0 ? 'false' : 'true'}
+            >
+              <h2>{tab.heading}</h2>
+              <p>{tab.body}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="demo-frame" data-demo-frame>
+        <img
+          class="lightwell lightwell--section"
+          src={lightwell.section}
+          alt=""
+          aria-hidden="true"
+          width="2400"
+          height="1000"
+          loading="lazy"
+        />
+        <div class="demo-panel">
+          <div class="window">
+            <div class="window-bar">
+              <span class="dot" aria-hidden="true"></span>
+              <span class="dot" aria-hidden="true"></span>
+              <span class="dot" aria-hidden="true"></span>
+              <span class="window-label" data-window-label>{tabs[0].window}</span>
+            </div>
+
+            <div class="stage">
+              {
+                tabs.map((tab, index) => (
+                  <div
+                    class="stage-layer"
+                    data-panel={tab.id}
+                    data-active={index === 0 ? '' : undefined}
+                    role="tabpanel"
+                    id={`panel-${tab.id}`}
+                    aria-label={tab.label}
+                    aria-hidden={index === 0 ? 'false' : 'true'}
+                  >
+                    <video
+                      muted
+                      loop
+                      playsinline
+                      preload="none"
+                      poster={tab.clip.poster}
+                      aria-label={tab.clip.alt}
+                    >
+                      {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
+                      {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
+                    </video>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="pills" role="tablist" aria-label="Product demos">
+            {
+              tabs.map((tab, index) => (
+                <button
+                  type="button"
+                  class="pill"
+                  role="tab"
+                  data-tab={tab.id}
+                  data-window={tab.window}
+                  aria-controls={`panel-${tab.id}`}
+                  aria-selected={index === 0 ? 'true' : 'false'}
+                  tabindex={index === 0 ? 0 : -1}
+                  data-analytics="demo_tab_click"
+                  data-analytics-tab={tab.id}
+                >
+                  {tab.label}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+
+      <p class="demo-caption">
+        Four tabs, four clips. Each one is recorded from the extension, not a mockup.
+      </p>
+    </div>
+  </section>
+
+  <!-- ACCORDION FEATURE SECTION -->
+  <section class="section section--accordion">
+    <div class="spores" aria-hidden="true">
+      {
+        spores.accordion.map((spore) => (
+          <span
+            class="spore"
+            data-tone={spore.tone}
+            style={`--sx:${spore.x}%;--sy:${spore.y}%;--ss:${spore.size}px;--sdx:${spore.dx}px;--sdy:${spore.dy}px;--sdur:${spore.dur}ms;--sdelay:${spore.delay}ms`}
+          />
+        ))
+      }
+    </div>
+
+    <div class="inner split">
+      <div class="accordion" data-accordion>
+        {
+          rows.map((row, index) => (
+            <div
+              class="acc-row"
+              data-acc-row={row.id}
+              data-open={row.open ? '' : undefined}
+              data-reveal
+              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
+            >
+              <h2 class="acc-heading">
+                <button
+                  type="button"
+                  class="acc-toggle"
+                  data-acc-toggle={row.id}
+                  aria-expanded={row.open ? 'true' : 'false'}
+                  aria-controls={`acc-body-${row.id}`}
+                >
+                  <span class="acc-title">{row.title}</span>
+                  <span class="acc-plus" aria-hidden="true">
+                    +
+                  </span>
+                </button>
+              </h2>
+
+              <div class="acc-body" id={`acc-body-${row.id}`}>
+                <div class="acc-body-inner">
+                  <p>{row.body}</p>
+                  <a class="acc-link" href={row.link.href}>
+                    {row.link.label} →
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- flex: 1.15 is one layout ratio in one section, so it stays literal. -->
+      <div class="acc-figure" data-reveal>
+        {
+          rows.map((row) => (
+            <img
+              class="acc-still"
+              data-acc-still={row.id}
+              data-active={row.open ? '' : undefined}
+              src={row.still.panel}
+              alt={row.still.panelAlt}
+              loading="lazy"
+              decoding="async"
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT'S IN THE BOX -->
+  <section class="section section--cards">
+    <div class="spores" aria-hidden="true">
+      {
+        spores.cards.map((spore) => (
+          <span
+            class="spore"
+            data-tone={spore.tone}
+            style={`--sx:${spore.x}%;--sy:${spore.y}%;--ss:${spore.size}px;--sdx:${spore.dx}px;--sdy:${spore.dy}px;--sdur:${spore.dur}ms;--sdelay:${spore.delay}ms`}
+          />
+        ))
+      }
+    </div>
+
+    <div class="inner stack-20">
+      <p class="eyebrow">WHAT'S IN THE BOX</p>
+
+      <div class="cards">
+        {
+          cards.map((card, index) => (
+            <article
+              class="card"
+              data-reveal
+              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
+            >
+              <p class="card-eyebrow">{card.eyebrow}</p>
+              <h2 class="card-title">{card.title}</h2>
+              <p class="card-body">{card.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CLAIM BAND -->
+  <section class="section section--claim">
+    <div class="inner claim" data-claim data-reveal>
+      {/* The digits ship at their final value, so the number is right with no
+          script and under reduced motion. The count-up only rewrites them. */}
+      <p class="claim-headline">
+        <span
+          ><span class="claim-num" data-count-to="60">60</span>–<span
+            class="claim-num"
+            data-count-to="68">68</span
+          >%</span
+        > leaner specs
+      </p>
+      <p class="claim-sub">
+        Ceremony sized to the change, not to the template. The Companion pipeline skips the sections
+        a typical change never needs.
+      </p>
+      <a class="claim-link" href={METHODOLOGY} target="_blank" rel="noreferrer noopener">
+        read the methodology →
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER CTA -->
+  <section class="section section--cta" data-cta>
+    <span class="cta-glow" aria-hidden="true"></span>
+
+    <div class="inner cta">
+      <h2>A vague requirement dies here, <em>before</em> it becomes wrong code</h2>
+      <Button
+        href="#quick-start"
+        size="cta"
+        data-analytics="install_click_vscode"
+        data-analytics-placement="footer"
+      >
+        Install in two steps
+      </Button>
+      <p class="cta-caption">jumps to quick start · then watch your first spec land</p>
+    </div>
+    <SiteFooter flush />
+  </section>
+</BaseLayout>
+
+<style>
+  /* ------------------------------------------------------------ scaffolding */
+
+  .inner {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--pad-section-x);
+  }
+
+  .section {
+    position: relative;
+    isolation: isolate;
+    border-top: 1px solid var(--rule);
+  }
+
+  .stack-16,
+  .stack-20,
+  .demo-stack {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stack-16 {
+    gap: var(--space-16);
+  }
+
+  .stack-20 {
+    gap: var(--space-20);
+  }
+
+  .eyebrow {
+    margin: 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow);
+  }
+
+  /* ------------------------------------------------------------------ hero */
+
+  .hero {
+    position: relative;
+    isolation: isolate;
+    background-image: var(--hero-grid);
+    background-size: var(--hero-grid-size);
+  }
+
+  /* The field clips its own drift so a point never crosses a section rule. It
+     sits at -1 inside the section's stacking context: over the ground, under
+     every word. */
+  .spores {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .spore {
+    display: none;
+  }
+
+  /* Two columns: the argument on the left, the product on the right. The page
+     width opens up here because a legible screenshot needs the room; every
+     other section keeps --page-width. */
+  .hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 56px;
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 56px var(--pad-hero-x) 84px;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .eyebrow--hero {
+    margin-bottom: var(--space-22);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow-lg);
+  }
+
+  h1 {
+    margin: 0 0 var(--space-22);
+    font-size: clamp(34px, 4.6vw, 52px);
+    line-height: var(--lh-display);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-display);
+    text-wrap: balance;
+  }
+
+  /* 1.06em is a relative nudge for the serif accent word, not a scale step. */
+  h1 em,
+  .cta h2 em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: var(--fw-regular);
+    font-size: 1.06em;
+    color: var(--accent);
+  }
+
+  .lead {
+    margin: 0;
+    max-width: var(--measure-lead);
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-prose);
+  }
+
+  .ownership {
+    margin: var(--space-22) 0 0;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-14);
+    margin-top: 32px;
+  }
+
+  /* ------------------------------------------------------ hero: the product */
+
+  .hero-show {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-20);
+    min-width: 0;
+  }
+
+  /* The frame floats in a field rather than sitting in a chrome box: no title
+     bar, no caption rail. What names it is the chip you picked. */
+  .hero-orbit {
+    position: relative;
+    width: 100%;
+    padding: 34px 30px;
+  }
+
+  .hero-stagebox {
+    position: relative;
+    padding: 22px;
+    border-radius: 26px;
+    border: 1px solid var(--border-panel);
+    background: linear-gradient(
+      180deg,
+      var(--accent-solid-a12) 0%,
+      var(--panel) 42%,
+      var(--ground) 100%
+    );
+  }
+
+  .hero-motes {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .mote {
+    position: absolute;
+    left: var(--mx);
+    top: var(--my);
+    padding: 6px 11px;
+    border: 1px solid var(--border-panel);
+    border-radius: 999px;
+    /* Translucent, and lit from behind rather than shadowed: an opaque pill
+       with a black drop-shadow punched a dark hole in the light it floats in. */
+    background: rgb(var(--ground-rgb) / 0.62);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgb(var(--ground-rgb) / 0.45);
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    white-space: nowrap;
+    opacity: 0.72;
+  }
+
+  :global(html[data-motion]) .mote {
+    animation: mote-drift var(--mdur, 9000ms) var(--mdelay, 0ms) ease-in-out infinite alternate;
+  }
+
+  @keyframes mote-drift {
+    to {
+      transform: translate3d(var(--mdx, 8px), var(--mdy, -8px), 0);
+      opacity: 0.78;
+    }
+  }
+
+  /* The focal light, positioned so its core lands on the frame's TOP EDGE and
+     the haze spills upward. That placement is the whole effect: light coming
+     from behind the product, not a halo floating around it.
+
+     The asset carries its own stars, so unlike the spore field this survives
+     reduced motion. Nothing here animates by default. */
+  .lightwell {
+    position: absolute;
+    left: 50%;
+    /* Its core is painted at the asset's own bottom edge, so bottom:100% of the
+       frame puts the light exactly behind the frame's top edge and the haze
+       spills up from there. Anchored to the frame rather than the section, so
+       it cannot drift when the layout changes. */
+    bottom: 100%;
+    z-index: -1;
+    height: auto;
+    /* BaseLayout sets a global img { max-width: 100% }, which would clamp this
+       to the frame's own width and take the spill away. */
+    max-width: none;
+    transform: translateX(-50%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .lightwell--hero {
+    width: 190%;
+    margin-bottom: -6%;
+    opacity: 0.95;
+    transition: opacity 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* The surface swap used to restart a CSS keyframe. It lifts the painted light
+     and settles back instead, which reads the same and costs one property. */
+  :global(html[data-motion]) .lightwell--hero[data-flare] {
+    opacity: 1;
+  }
+
+  .lightwell--section {
+    width: 155%;
+    margin-bottom: -5%;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 980px) {
+    .lightwell--hero {
+      width: 240%;
+    }
+
+    .lightwell--section {
+      width: 210%;
+    }
+  }
+
+  .hero-stage {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1836 / 1164;
+    overflow: hidden;
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--glow-frame);
+  }
+
+  .hero-shot {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+    opacity: 0;
+    transform: scale(1.015);
+    transition:
+      opacity 520ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 520ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .hero-shot[data-active] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The three real surfaces drift with the ambient chips, so the field reads as
+     one thing and the clickable ones are only distinguished by being lit. */
+  .hero-pips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-10);
+  }
+
+  .hero-pip {
+    padding: var(--space-8) var(--space-14);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    cursor: pointer;
+    transition:
+      color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  :global(html[data-motion]) .hero-pip {
+    animation: mote-drift var(--pdur, 6000ms) var(--pdelay, 0ms) ease-in-out infinite alternate;
+    --mdx: 0px;
+    --mdy: -5px;
+  }
+
+  .hero-pip:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-a50);
+  }
+
+  .hero-pip[aria-selected='true'] {
+    color: var(--text-primary);
+    border-color: var(--accent);
+    box-shadow: 0 0 22px var(--accent-solid-a25);
+  }
+
+  .hero-pip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* The benefit line, surfaced for a beat on a change rather than parked under
+     the frame forever. It holds its space so nothing below it moves. */
+  .hero-flash {
+    margin: 0;
+    min-height: 2.6em;
+    max-width: 46ch;
+    color: var(--text-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-prose);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .hero-flash[data-show] {
+    opacity: 1;
+  }
+
+  @media (max-width: 980px) {
+    .hero-inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 40px;
+    }
+
+    .hero-copy {
+      align-items: center;
+      text-align: center;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    /* The drifting chips need room the narrow layout does not have. */
+    .hero-motes {
+      display: none;
+    }
+
+    .hero-orbit {
+      padding: 0;
+    }
+  }
+
+  /* ----------------------------------------------------------- quick start */
+
+  .section--quickstart .inner {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+
+  .section--quickstart {
+    scroll-margin-top: var(--space-24);
+  }
+
+  .steps {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .step {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-20);
+    padding: var(--space-22) var(--space-24);
+  }
+
+  .step + .step {
+    border-top: 1px solid var(--rule);
+  }
+
+  .step-num {
+    flex: none;
+    width: var(--step-col);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+  }
+
+  .step-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 200px;
+  }
+
+  .step-title {
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+  }
+
+  .step-sub {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+  }
+
+  /* The install command is long. The chip keeps its right-hand place and lets
+     the command scroll inside itself rather than pushing the row wide. */
+  .step-action {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 480px;
+  }
+
+  .watch-link {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: var(--space-8);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+  }
+
+  .watch-link:hover {
+    color: var(--accent-hover);
+  }
+
+  /* ------------------------------------------------------------------ demo */
+
+  .section--demo {
+    overflow: hidden;
+  }
+
+  .section--demo .inner {
+    padding-top: 64px;
+    padding-bottom: 48px;
+  }
+
+  .demo-stack {
+    align-items: center;
+    gap: var(--space-20);
+  }
+
+  .demo-frame {
+    position: relative;
+    width: 100%;
+    max-width: var(--content-width);
+    padding: var(--frame-pad);
+    border-radius: var(--radius-frame);
+    background: var(--demo-frame);
+    box-shadow: var(--glow-frame);
+  }
+
+  .demo-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-26);
+    padding: 34px 34px var(--space-26);
+    border-radius: var(--radius-frame-inner);
+    background: var(--demo-fill);
+  }
+
+  .window {
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* #12101f and #262138 exist only to draw this bar. */
+  .window-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: 11px var(--space-16);
+    background: #12101f;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #262138;
+  }
+
+  .window-label {
+    margin-left: var(--space-10);
+    overflow: hidden;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .stage {
+    position: relative;
+    aspect-ratio: 1836 / 1164;
+  }
+
+  .stage-layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
+    pointer-events: none;
+  }
+
+  .stage-layer[data-active] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .stage-layer video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-self: center;
+    gap: var(--space-6);
+    padding: var(--space-6);
+    background: var(--ground-a60);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-pill);
+  }
+
+  .pill {
+    padding: var(--space-9) var(--space-22);
+    background: none;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+    transition:
+      color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .pill:hover {
+    color: var(--text-primary);
+  }
+
+  .pill[aria-selected='true'] {
+    border-color: var(--accent-solid);
+    color: var(--text-primary);
+    font-weight: var(--fw-bold);
+  }
+
+  .pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* One grid cell, four children: the tallest sets the height once, so
+     switching tabs cross-fades the copy without moving the frame below it. */
+  .demo-say {
+    display: grid;
+    width: 100%;
+    max-width: 62ch;
+    margin: 0 auto var(--space-26);
+    text-align: center;
+  }
+
+  .demo-say .say {
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 240ms cubic-bezier(0.23, 1, 0.32, 1),
+      visibility 0s linear 240ms;
+  }
+
+  .demo-say .say[data-active] {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s, 0s;
+  }
+
+  .demo-say h2 {
+    margin: 0 0 var(--space-12);
+    color: var(--text-primary);
+    font-size: var(--fs-h2);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.16;
+  }
+
+  .demo-say p {
+    margin: 0;
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: 1.6;
+  }
+
+  .demo-caption {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-ui);
+    text-align: center;
+  }
+
+  /* ------------------------------------------------------------- accordion */
+
+  .section--accordion .inner {
+    max-width: 1220px;
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .split {
+    display: flex;
+    align-items: center;
+    gap: 56px;
+  }
+
+  .accordion {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .acc-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .acc-heading {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .acc-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-16);
+    width: 100%;
+    padding: var(--space-18) 0;
+    background: none;
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .acc-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .acc-title {
+    color: var(--text-muted);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-semibold);
+    transition:
+      color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      font-size 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .acc-toggle:hover .acc-title {
+    color: var(--text-primary);
+  }
+
+  .acc-plus {
+    flex: none;
+    color: var(--accent);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-regular);
+    line-height: 1;
+  }
+
+  .acc-row[data-open] .acc-title {
+    color: var(--text-primary);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-black);
+  }
+
+  .acc-row[data-open] .acc-plus {
+    display: none;
+  }
+
+  .acc-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .acc-row[data-open] .acc-body {
+    grid-template-rows: 1fr;
+  }
+
+  .acc-body-inner {
+    overflow: hidden;
+  }
+
+  .acc-body-inner p {
+    margin: 0;
+    color: var(--text-body);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-prose);
+  }
+
+  .acc-link {
+    display: inline-block;
+    margin-top: var(--space-10);
+    padding-bottom: var(--space-22);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+  }
+
+  .acc-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .acc-figure {
+    position: relative;
+    flex: 1.45;
+    aspect-ratio: 1836 / 1164;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-md);
+    box-shadow: var(--glow-card);
+  }
+
+  .acc-still {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .acc-still[data-active] {
+    opacity: 1;
+  }
+
+  /* ----------------------------------------------------------------- cards */
+
+  .section--cards .inner {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-14);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-22);
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+  }
+
+  .card-eyebrow {
+    margin: 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-eyebrow-sm);
+  }
+
+  .card-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+  }
+
+  .card-body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  /* ------------------------------------------------------------ claim band */
+
+  .section--claim .inner {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+
+  .claim {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-10);
+    text-align: center;
+  }
+
+  .claim-headline {
+    margin: 0;
+    font-size: clamp(26px, 5.5vw, var(--fs-h2));
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-h2-stat);
+  }
+
+  .claim-headline span {
+    color: var(--accent);
+  }
+
+  .claim-sub {
+    margin: 0;
+    max-width: var(--measure-footer);
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+  }
+
+  .claim-link {
+    margin-top: var(--space-4);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    text-decoration: none;
+  }
+
+  .claim-link:hover {
+    color: var(--accent-hover);
+  }
+
+  /* ------------------------------------------------------------ footer cta */
+
+  /* isolation gives the section its own stacking context, so the glow layer
+     below can sit at -1: above the page ground, behind every word. */
+  .section--cta {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* The footer glow moves onto its own layer so it can swell on approach
+     instead of sitting at full strength from the section's first pixel. With
+     no script it renders exactly as it did before: fully lit. */
+  .cta-glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--footer-glow);
+    pointer-events: none;
+  }
+
+  .section--cta .inner {
+    padding-top: 72px;
+    padding-bottom: 56px;
+  }
+
+  .cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-18);
+    text-align: center;
+  }
+
+  .cta h2 {
+    margin: 0;
+    max-width: var(--measure-footer);
+    font-size: clamp(26px, 5.5vw, var(--fs-h2));
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-h2-footer);
+    text-wrap: balance;
+  }
+
+  .cta-caption {
+    margin: 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  /* ---------------------------------------------------------------- motion */
+
+  /*
+    The page's motion language is light, not movement: things glow on rather
+    than slide around.
+
+    Every resting state below is gated on html[data-motion], which the inline
+    script at the top of the page sets during parse, and only when scripting is
+    on and no reduced-motion request is in force. With the attribute absent
+    this whole block does nothing and the page is the static page: nothing
+    hidden, nothing animated, no stem. That is the reduced-motion contract, and
+    it is one condition rather than a second copy of the stylesheet.
+
+    Only transform, opacity and filter animate. Nothing runs longer than 300ms
+    except the four ambient or scroll-linked beats, which are not states
+    anything waits on: the stem, the light travelling the demo frame, the light
+    arriving behind a section, and the drifting spores.
+
+    Three of those glow. None of them rests lit for its own sake. The frame's
+    highlight only exists while the panel is on screen and its position is
+    scroll progress through that section, so it is a moving light and never a
+    halo. A section's ambient light is a translucent wash that grows once as the
+    section arrives and then holds as ground, at the same alpha the token sheet
+    already uses for the footer. The spores are always moving and always under
+    the content. Nothing here paints a coloured shadow at rest.
+
+    The easing is written out rather than tokenised because the token sheet
+    deliberately holds no motion values, and the rest of this file already
+    spells the same curve out at every use.
+  */
+
+  /* Both progress values interpolate, so they are registered. Where @property
+     is missing they still substitute as plain numbers and the two moves step
+     instead of easing. */
+  @property --stem-progress {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @property --leaf-fill {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  /* The angle the frame's highlight sits at. Registered so the scroll-driven
+     path can interpolate it, and inherited so the fallback can set it on the
+     frame and have the pseudo element pick it up. */
+  @property --edge {
+    syntax: '<angle>';
+    inherits: true;
+    initial-value: 0deg;
+  }
+
+  /* --- the stem: the one scroll-linked move ------------------------------ */
+
+  .stem {
+    position: fixed;
+    top: 96px;
+    bottom: 96px;
+    left: 16px;
+    z-index: 2;
+    display: none;
+    width: 18px;
+    pointer-events: none;
+  }
+
+  .stem-rail,
+  .stem-vine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 2px;
+    width: 2px;
+    border-radius: var(--radius-pill);
+  }
+
+  .stem-rail {
+    background: var(--rule);
+  }
+
+  /* The vine is the light source, and its height is scroll position. At the
+     top of the page it is scaled to nothing, so there is no halo at rest: the
+     glow only exists while the line is being drawn. */
+  .stem-vine {
+    background: linear-gradient(180deg, var(--accent-a50), var(--accent) 60%, var(--green));
+    filter: drop-shadow(0 0 5px var(--accent-a50));
+    transform: scaleY(var(--stem-progress));
+    transform-origin: top;
+  }
+
+  /* -6px centres the 13px leaf on its mark. It is a static offset, not a
+     value anything animates. */
+  .stem-leaf {
+    position: absolute;
+    top: var(--leaf-at, 0%);
+    left: 1px;
+    display: none;
+    width: 14px;
+    height: 13px;
+    margin-top: -6px;
+    transition: --leaf-fill 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .stem-leaf[data-placed] {
+    display: block;
+  }
+
+  /* Unlit, the leaf is a bud: the same green outline held at a third. Lit, it
+     fills in and reads as the leaf-as-checkmark, a short stalk into a long
+     blade. Both states are the one colour at two strengths, so the fill can be
+     driven by a single number with no colour interpolation. */
+  .leaf-stalk,
+  .leaf-blade {
+    stroke: var(--green);
+    stroke-opacity: calc(0.3 + 0.7 * var(--leaf-fill));
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .leaf-blade {
+    fill: var(--green-leaf);
+    fill-opacity: var(--leaf-fill);
+    transform: scale(calc(0.6 + 0.4 * var(--leaf-fill)));
+    transform-box: fill-box;
+    transform-origin: 10% 95%;
+  }
+
+  @keyframes stem-grow {
+    from {
+      --stem-progress: 0;
+    }
+    to {
+      --stem-progress: 1;
+    }
+  }
+
+  @keyframes leaf-open {
+    from {
+      --leaf-fill: 0;
+    }
+    to {
+      --leaf-fill: 1;
+    }
+  }
+
+  /* Where the browser can drive an animation from the scroller itself, it
+     does, and nothing runs on the scroll event. Elsewhere the script sets the
+     same two properties from a throttled listener.
+
+     animation-timeline is kept in its own rule on purpose: folded into the
+     animation shorthand, the minifier emits a form browsers dropped from that
+     shorthand, and the timeline silently reverts to auto. */
+  @supports (animation-timeline: scroll()) {
+    .stem[data-stem-mode='timeline'] .stem-vine {
+      animation: stem-grow linear both;
+    }
+
+    .stem[data-stem-mode='timeline'] .stem-leaf {
+      animation: leaf-open linear both;
+      animation-range: var(--leaf-from) var(--leaf-to);
+      transition: none;
+    }
+
+    .stem[data-stem-mode='timeline'] .stem-vine,
+    .stem[data-stem-mode='timeline'] .stem-leaf {
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  /* --- hero -------------------------------------------------------------- */
+
+  @keyframes ink-in {
+    from {
+      opacity: 0;
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  /* Last thing in the hero. The page has had time to settle before the word
+     inks in, so it reads as an arrival rather than as part of the paint. */
+  :global(html[data-motion]) h1 em {
+    animation: ink-in 260ms cubic-bezier(0.23, 1, 0.32, 1) 700ms both;
+  }
+
+  @keyframes mascot-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -5px, 0);
+    }
+  }
+
+  :global(html[data-motion]) .mascot {
+    animation: mascot-drift 5200ms ease-in-out infinite;
+  }
+
+  /* --- spores: the one place a loop is the right answer ------------------ */
+
+  /* A point of light rises, brightens, and goes out. Every point carries its
+     own period and a negative delay from the markup, so the field is mid-drift
+     on the first frame and no two are ever in step. The blur is what turns a
+     dot into atmosphere; without it these read as confetti.
+
+     Peak alpha is the keyframe's own value scaled by the point's --sb, so one
+     field can hold near points and far ones. Both --sb and --sblur fall back,
+     which is why a section that places neither is unaffected. */
+  @keyframes spore-drift {
+    0% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0;
+    }
+    18% {
+      opacity: calc(0.4 * var(--sb, 1));
+    }
+    50% {
+      transform: translate3d(var(--sdx), var(--sdy), 0);
+      opacity: calc(0.5 * var(--sb, 1));
+    }
+    82% {
+      opacity: calc(0.26 * var(--sb, 1));
+    }
+    100% {
+      transform: translate3d(calc(var(--sdx) * 0.25), calc(var(--sdy) * 2), 0);
+      opacity: 0;
+    }
+  }
+
+  :global(html[data-motion]) .spore {
+    position: absolute;
+    top: var(--sy);
+    left: var(--sx);
+    display: block;
+    width: var(--ss);
+    height: var(--ss);
+    border-radius: 50%;
+    background: var(--accent-hover);
+    filter: blur(var(--sblur, 1.5px));
+    opacity: 0;
+    animation: spore-drift var(--sdur) linear var(--sdelay) infinite;
+  }
+
+  :global(html[data-motion]) .spore[data-tone='green'] {
+    background: var(--green-leaf);
+  }
+
+  /* --- hero into quick start: the one orchestrated handoff --------------- */
+
+  .spark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--accent-hover);
+    filter: drop-shadow(0 0 6px var(--accent-a50));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The wash passes over the row's text rather than behind it, which is what
+     light landing on a row looks like. At 14% for 300ms it tints, not hides. */
+  .step-flare {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--accent-solid-a14), transparent 55%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes row-light {
+    0% {
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  :global(html[data-motion]) .step[data-lit] .step-flare {
+    animation: row-light 560ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  /* --- demo, cards, accordion, claim, footer ----------------------------- */
+
+  /* Arrival is a focus pull, not a slide: a sixty-fourth off full size plus
+     the fade, so the block reads as coming into focus. It settles once. The
+     observer stops watching at that point, so scrolling back up re-runs
+     nothing. */
+  :global(html[data-motion]) .demo-frame {
+    opacity: 0.4;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+    transition:
+      opacity 300ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  :global(html[data-motion]) .demo-frame[data-in] {
+    opacity: 1;
+    transform: none;
+  }
+
+  :global(html[data-motion]) [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.985);
+    transition:
+      opacity 220ms cubic-bezier(0.23, 1, 0.32, 1) var(--reveal-delay, 0ms),
+      transform 220ms cubic-bezier(0.23, 1, 0.32, 1) var(--reveal-delay, 0ms);
+  }
+
+  :global(html[data-motion]) [data-reveal][data-in] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The ambient per-section wash that used to live here is gone.
+     It was a 12%-alpha violet ellipse on four sections, added back when the page
+     had no light in it at all. Its vertical reach ran past the section's own
+     bottom edge, so it was still lit where the section ended and produced a hard
+     horizontal seam at every boundary — most visibly between quick start and the
+     demo. With the lightwell doing the real work, the wash was competing with it
+     and paying for that competition in seams.
+
+     Black between the two lit sections is the design, not an absence. */
+
+  /* --- the light that walks the demo frame ------------------------------- */
+
+  /* This used to be a readout of scroll position: one lap per pass of the
+     section, so the highlight sat still whenever the reader did. It runs on its
+     own clock now, because the frame is glass with light behind it and light
+     behind glass does not stop when you stop.
+
+     The ring is the frame's own 2px padding, cut out of a full-bleed conic
+     gradient by a two-layer mask. Where that mask cannot be composited the rule
+     never applies and the frame keeps the plain gradient border it ships with. */
+  @keyframes edge-travel {
+    from {
+      --edge: 0deg;
+    }
+    to {
+      --edge: 360deg;
+    }
+  }
+
+  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+    :global(html[data-motion]) .demo-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      padding: var(--frame-pad);
+      border-radius: inherit;
+      /* Two arcs, not one, and each runs through several violets rather than a
+         single hue: the rim reads as light bending round glass instead of a dot
+         chasing the border. The far arc is the dimmer of the two, so there is a
+         front and a back to the light. */
+      background: conic-gradient(
+        from var(--edge),
+        var(--ground-a0) 0%,
+        var(--accent-a50) 4%,
+        var(--accent-hover) 9%,
+        var(--on-accent) 13%,
+        var(--accent) 18%,
+        var(--accent-solid) 25%,
+        var(--ground-a0) 36%,
+        var(--ground-a0) 54%,
+        var(--accent-solid) 62%,
+        var(--accent) 70%,
+        var(--accent-hover) 76%,
+        var(--accent-a50) 82%,
+        var(--ground-a0) 92%
+      );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
+      pointer-events: none;
+      /* Slow enough to read as a shine rather than a spinner. */
+      animation: edge-travel 14s linear infinite;
+    }
+
+    /* The highlight lights with the panel and goes out with it, so an
+       off-screen frame is never carrying a lit edge. */
+    :global(html[data-motion]) .demo-frame[data-in]::after {
+      opacity: 1;
+    }
+
+    /* The hero frame gets the same rim, a little quicker and a little dimmer,
+       so the two read as the same material without competing. */
+    :global(html[data-motion]) .hero-stagebox::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      padding: 1px;
+      border-radius: inherit;
+      background: conic-gradient(
+        from var(--edge),
+        var(--ground-a0) 0%,
+        var(--accent-hover) 8%,
+        var(--on-accent) 12%,
+        var(--accent) 18%,
+        var(--ground-a0) 32%,
+        var(--ground-a0) 58%,
+        var(--accent) 68%,
+        var(--accent-hover) 74%,
+        var(--ground-a0) 88%
+      );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.85;
+      pointer-events: none;
+      animation: edge-travel 11s linear infinite;
+    }
+  }
+
+  /* The digits are rewritten frame by frame during the count, so each box is
+     sized for two of them up front and the line never reflows. */
+  .claim-num {
+    display: inline-block;
+    min-width: 2ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The glow swells with how much of the closing section is on screen. The
+     transition only smooths the gaps between observer steps. */
+  :global(html[data-motion]) .cta-glow {
+    opacity: var(--cta-glow, 0);
+    transition: opacity 120ms linear;
+  }
+
+  /* ------------------------------------------------------------ responsive */
+
+  @media (max-width: 860px) {
+    .inner {
+      padding-left: var(--space-20);
+      padding-right: var(--space-20);
+    }
+
+    .hero-inner {
+      padding: var(--space-40) var(--space-20) 64px;
+    }
+
+    .cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .split {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-26);
+    }
+
+    .acc-figure {
+      order: -1;
+    }
+
+    .demo-frame {
+      border-radius: var(--radius-md);
+    }
+
+    .demo-panel {
+      gap: var(--space-20);
+      padding: var(--space-12);
+      border-radius: calc(var(--radius-md) - var(--frame-pad));
+    }
+
+    .step {
+      flex-wrap: wrap;
+      gap: var(--space-12);
+      padding: var(--space-20);
+    }
+
+    .step-num {
+      width: auto;
+    }
+
+    .step-text {
+      flex: 1 1 60%;
+    }
+
+    .step-action {
+      flex: 1 1 100%;
+      justify-content: flex-start;
+    }
+
+    /* Four pills do not fit on one phone line, and a wrapped 999px capsule
+       reads as a mistake. Two columns in a squared-off group instead. */
+    .pills {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-self: stretch;
+      border-radius: var(--radius-sm);
+    }
+
+    .pill {
+      padding: var(--space-9) var(--space-12);
+    }
+
+    .step {
+      align-items: flex-start;
+    }
+
+    .step-num {
+      padding-top: 3px;
+    }
+  }
+
+  /* The stem needs a left gutter the phone layout does not have, so it is a
+     wide-viewport move. It appears only once the script has measured where
+     every section boundary falls and placed a leaf on each one. */
+  @media (min-width: 861px) {
+    :global(html[data-motion]) .stem[data-stem-ready] {
+      display: block;
+    }
+  }
+</style>
+
+<script>
+  // Two small controllers, both crossfading with CSS transitions so a rapid
+  // click retargets the fade instead of restarting it.
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // --- hero: three surfaces, one glowing centre ----------------------------
+  // Chips drift in a field; the one you pick lights up, the centre flares, and
+  // the shot resolves out of the glow. There is no window title and no standing
+  // caption: the chip names it and its sentence surfaces for a beat.
+  document.querySelectorAll('[data-hero-show]').forEach((root) => {
+    const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
+    const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
+    const bloom = root.querySelector('[data-hero-bloom]');
+    const flash = root.querySelector('[data-hero-flash]');
+    if (pips.length < 2) return;
+
+    const DWELL = 4600;
+    const FLASH_HOLD = 2600;
+    let index = 0;
+    let timer = null;
+    let flashTimer = null;
+    let stopped = false;
+
+    let flareTimer = null;
+    const flare = () => {
+      if (!bloom || reduced.matches) return;
+      // The light lifts as the new surface arrives and settles back. Holding it
+      // at full would brighten permanently after the first swap rather than
+      // marking the swap at all.
+      bloom.setAttribute('data-flare', '');
+      if (flareTimer) window.clearTimeout(flareTimer);
+      flareTimer = window.setTimeout(() => bloom.removeAttribute('data-flare'), 620);
+    };
+
+    const show = (next) => {
+      index = (next + pips.length) % pips.length;
+      const pip = pips[index];
+      const id = pip.dataset.heroPip;
+
+      pips.forEach((p, i) => {
+        p.setAttribute('aria-selected', i === index ? 'true' : 'false');
+        p.tabIndex = i === index ? 0 : -1;
+      });
+      shots.forEach((shot) => shot.toggleAttribute('data-active', shot.dataset.heroShot === id));
+
+      flare();
+
+      if (flash) {
+        flash.textContent = pip.dataset.heroCaption || '';
+        flash.setAttribute('data-show', '');
+        if (flashTimer) window.clearTimeout(flashTimer);
+        // Under reduced motion the sentence is the only thing carrying the
+        // benefit, so it stays put instead of fading out.
+        if (!reduced.matches) {
+          flashTimer = window.setTimeout(() => flash.removeAttribute('data-show'), FLASH_HOLD);
+        }
+      }
+    };
+
+    const stop = () => {
+      stopped = true;
+      if (timer) window.clearInterval(timer);
+      timer = null;
+    };
+
+    const start = () => {
+      if (stopped || timer || reduced.matches) return;
+      timer = window.setInterval(() => show(index + 1), DWELL);
+    };
+
+    const pause = () => {
+      if (timer) window.clearInterval(timer);
+      timer = null;
+    };
+
+    pips.forEach((pip, i) => {
+      // A click is a choice. Honour it and get out of the way for good.
+      pip.addEventListener('click', () => {
+        stop();
+        show(i);
+      });
+      pip.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        event.preventDefault();
+        stop();
+        show(i + step);
+        pips[index].focus();
+      });
+    });
+
+    // Hover and focus only hold it, so moving away picks the cycle back up.
+    root.addEventListener('mouseenter', pause);
+    root.addEventListener('mouseleave', start);
+    root.addEventListener('focusin', pause);
+    root.addEventListener('focusout', start);
+
+    show(0);
+    start();
+  });
+
+  // --- demo tabs -----------------------------------------------------------
+  document.querySelectorAll('[data-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll('[data-tab]'));
+    const panels = Array.from(root.querySelectorAll('[data-panel]'));
+    const says = Array.from(root.querySelectorAll('[data-say]'));
+    const label = root.querySelector('[data-window-label]');
+    if (!tabs.length) return;
+
+    // A clip is only worth playing once the viewer can see the whole frame.
+    // Until then the poster stands in, so the opening hold every composition
+    // now carries is actually the first thing anyone sees. `armed` flips once
+    // and stays flipped: after the first arrival, a tab click plays at once.
+    let armed = false;
+    let current = tabs[0].dataset.tab;
+
+    const activeVideo = () => {
+      const panel = panels.find((p) => p.dataset.panel === current);
+      return panel ? panel.querySelector('video') : null;
+    };
+
+    // Always from frame one. Resuming mid-tour is the same bug as starting
+    // before arrival: the viewer sees a highlight with no idea what preceded it.
+    // preload="none" means the element may never have fetched anything, and
+    // raising preload alone does not start one: it needs an explicit load().
+    const warmOne = (video) => {
+      if (!video) return;
+      if (video.preload !== 'auto') video.preload = 'auto';
+      if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load();
+    };
+
+    const start = (video) => {
+      if (!video || reduced.matches) return;
+      warmOne(video);
+      try {
+        video.currentTime = 0;
+      } catch {}
+      video.play().catch(() => {});
+    };
+
+    const select = (id) => {
+      current = id;
+
+      tabs.forEach((tab) => {
+        const on = tab.dataset.tab === id;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.tabIndex = on ? 0 : -1;
+        if (on && label && tab.dataset.window) label.textContent = tab.dataset.window;
+      });
+
+      says.forEach((say) => {
+        const on = say.dataset.say === id;
+        say.toggleAttribute('data-active', on);
+        say.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+
+      panels.forEach((panel) => {
+        const on = panel.dataset.panel === id;
+        panel.toggleAttribute('data-active', on);
+        panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+
+        const video = panel.querySelector('video');
+        if (!video) return;
+        // Reduced motion never plays. The poster is the whole experience.
+        if (on && armed) start(video);
+        else video.pause();
+      });
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(tab.dataset.tab));
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        event.preventDefault();
+        const next = tabs[(index + step + tabs.length) % tabs.length];
+        select(next.dataset.tab);
+        next.focus();
+      });
+    });
+
+    select(tabs[0].dataset.tab);
+
+    // data-tabs and data-demo-frame sit on the same element, so the frame is
+    // the root; the query is only here if they ever come apart.
+    const frame = root.matches('[data-demo-frame]')
+      ? root
+      : root.querySelector('[data-demo-frame]') || root;
+
+    // preload="none" keeps the clips off the critical path, but it also means
+    // nothing is buffered when the frame arrives and the opening hold would
+    // stall exactly where it needs to be still. Fetch on approach instead.
+    if ('IntersectionObserver' in window && !reduced.matches) {
+      const warm = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          warm.disconnect();
+          // Only the clip that is about to play. The other three stay unfetched
+          // until someone actually picks their tab, which is the whole point of
+          // preload="none".
+          warmOne(activeVideo());
+        },
+        { rootMargin: '600px 0px' }
+      );
+      warm.observe(frame);
+
+      // Fully in view, not merely intersecting. A frame taller than the
+      // viewport can never reach ratio 0.9, so covering most of the screen
+      // counts too.
+      const seen = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const whole = entry.intersectionRatio >= 0.9;
+            const fills = entry.intersectionRect.height >= window.innerHeight * 0.85;
+            const video = activeVideo();
+            if (entry.isIntersecting && (whole || fills)) {
+              armed = true;
+              // Paused means either never started or scrolled away from. Both
+              // want the same thing: run it again from the opening hold.
+              if (video && video.paused) start(video);
+            } else if (!entry.isIntersecting && video) {
+              video.pause();
+            }
+          }
+        },
+        { threshold: [0, 0.5, 0.9, 1] }
+      );
+      seen.observe(frame);
+    } else {
+      armed = true;
+      start(activeVideo());
+    }
+  });
+
+  // --- accordion -----------------------------------------------------------
+  document.querySelectorAll('[data-accordion]').forEach((root) => {
+    const section = root.closest('section');
+    const rows = Array.from(root.querySelectorAll('[data-acc-row]'));
+    const stills = section ? Array.from(section.querySelectorAll('[data-acc-still]')) : [];
+
+    const open = (id) => {
+      rows.forEach((row) => {
+        const on = row.dataset.accRow === id;
+        row.toggleAttribute('data-open', on);
+        const toggle = row.querySelector('[data-acc-toggle]');
+        if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+      });
+      stills.forEach((still) => {
+        still.toggleAttribute('data-active', still.dataset.accStill === id);
+      });
+    };
+
+    rows.forEach((row) => {
+      const toggle = row.querySelector('[data-acc-toggle]');
+      if (!toggle) return;
+      toggle.addEventListener('click', () => open(row.dataset.accRow));
+    });
+  });
+
+  // --- motion --------------------------------------------------------------
+  // The stylesheet gates every resting state on html[data-motion], so pulling
+  // the attribute is all it takes to restore the static page. A visitor who
+  // turns reduced motion on mid-visit gets that, live.
+  const root = document.documentElement;
+  const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
+
+  reduced.addEventListener('change', () => {
+    if (reduced.matches) root.removeAttribute('data-motion');
+  });
+
+  if (root.hasAttribute('data-motion')) {
+    // The page reads the scroller in exactly one place. Anything that needs
+    // scroll position subscribes here and is called inside a single
+    // requestAnimationFrame, so a fast flick coalesces into one frame of work
+    // no matter how many things are listening. Same for resize: one debounced
+    // listener, one list of things to re-measure.
+    const scrollReaders = [];
+    let scrollQueued = false;
+
+    const onScroll = (read) => {
+      scrollReaders.push(read);
+      if (scrollReaders.length > 1) return;
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (scrollQueued) return;
+          scrollQueued = true;
+          requestAnimationFrame(() => {
+            scrollQueued = false;
+            for (const fn of scrollReaders) fn();
+          });
+        },
+        { passive: true }
+      );
+    };
+
+    const resizeReaders = [];
+    let resizeTimer = 0;
+
+    const onResize = (measure) => {
+      resizeReaders.push(measure);
+      if (resizeReaders.length > 1) return;
+      window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+          for (const fn of resizeReaders) fn();
+        }, 150);
+      });
+    };
+
+    // Entrances. Cards and accordion rows carry their own stagger delay, the
+    // demo frame settles up out of its own glow, and a section's ambient light
+    // grows in behind it. Each target is unobserved the moment it lands, so
+    // nothing re-runs on the way back up.
+    const entering = document.querySelectorAll('[data-reveal], [data-demo-frame]');
+    if (entering.length) {
+      const enter = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.setAttribute('data-in', '');
+            enter.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+      );
+      entering.forEach((el) => enter.observe(el));
+    }
+
+    // The handoff. One particle leaves the mascot's line of flight, lands on
+    // row 01, and row 02 lights 80ms behind it.
+    const steps = document.querySelector('[data-steps]');
+    const spark = steps ? steps.querySelector('[data-spark]') : null;
+    const stepRows = steps ? Array.from(steps.querySelectorAll('[data-step]')) : [];
+
+    if (steps && spark && stepRows.length && typeof spark.animate === 'function') {
+      const handoff = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          handoff.disconnect();
+
+          const box = steps.getBoundingClientRect();
+          const num = stepRows[0].querySelector('.step-num');
+          const target = num ? num.getBoundingClientRect() : box;
+          const mascot = document.querySelector('[data-mascot]');
+          const from = mascot ? mascot.getBoundingClientRect() : null;
+          const endX = target.left - box.left + target.width / 2;
+          const endY = target.top - box.top + target.height / 2;
+          // The mascot can be most of a screen away by the time the row
+          // lights. The particle keeps its horizontal line but starts at most
+          // 220px up, so the drift still reads inside a 300ms move.
+          const startX = from ? from.left + from.width / 2 - box.left : endX;
+          const rise = from
+            ? Math.min(220, Math.max(80, endY - (from.bottom - box.top)))
+            : 160;
+
+          spark.animate(
+            [
+              {
+                transform: `translate3d(${startX}px, ${endY - rise}px, 0) scale(0.5)`,
+                opacity: 0,
+              },
+              {
+                transform: `translate3d(${(startX + endX) / 2}px, ${endY - rise * 0.4}px, 0) scale(1)`,
+                opacity: 1,
+                offset: 0.5,
+              },
+              { transform: `translate3d(${endX}px, ${endY}px, 0) scale(0.4)`, opacity: 0 },
+            ],
+            { duration: 900, easing: EASE, fill: 'forwards' }
+          );
+
+          window.setTimeout(() => stepRows[0].setAttribute('data-lit', ''), 760);
+          window.setTimeout(() => {
+            if (stepRows[1]) stepRows[1].setAttribute('data-lit', '');
+          }, 1250);
+        },
+        { threshold: 0.35 }
+      );
+
+      handoff.observe(steps);
+    }
+
+    // The rim light used to be driven from here: its angle was scroll position,
+    // so it stood still whenever the reader did. It runs off its own clock in
+    // CSS now, which is both what light behind glass does and about sixty lines
+    // less than measuring the frame and reading scrollY every frame.
+
+    // The one number on the page counts up once, on first entry. The markup
+    // already carries the final digits, so this only rewrites them.
+    const claim = document.querySelector('[data-claim]');
+    const figures = claim ? Array.from(claim.querySelectorAll('[data-count-to]')) : [];
+
+    if (claim && figures.length) {
+      const targets = figures.map((el) => Number(el.dataset.countTo));
+      const counter = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          counter.disconnect();
+          const started = performance.now();
+          const tick = (now) => {
+            const progress = Math.min(1, (now - started) / 300);
+            figures.forEach((el, index) => {
+              el.textContent = String(Math.round(targets[index] * progress));
+            });
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        },
+        { threshold: 0.5 }
+      );
+      counter.observe(claim);
+    }
+
+    // The closing glow swells with how much of the section is on screen,
+    // normalised by the most that can ever be visible, so a section taller
+    // than the viewport still reaches full strength.
+    const cta = document.querySelector('[data-cta]');
+    const ctaGlow = cta ? cta.querySelector('.cta-glow') : null;
+
+    if (ctaGlow) {
+      const swell = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const viewport = entry.rootBounds ? entry.rootBounds.height : window.innerHeight;
+            const reach = Math.min(viewport, entry.boundingClientRect.height);
+            const shown = reach > 0 ? entry.intersectionRect.height / reach : 0;
+            ctaGlow.style.setProperty('--cta-glow', Math.min(1, shown).toFixed(3));
+          });
+        },
+        { threshold: Array.from({ length: 21 }, (_, i) => i / 20) }
+      );
+      swell.observe(cta);
+    }
+
+    // The stem. The vine's height is scroll position and each leaf fills as
+    // its section passes, so the page acts out a run completing phase by
+    // phase. It is the only scroll-linked move here and the only one allowed
+    // past 300ms.
+    const stem = document.querySelector('[data-stem]');
+    const vine = stem ? stem.querySelector('[data-stem-vine]') : null;
+    const leaves = stem ? Array.from(stem.querySelectorAll('[data-stem-leaf]')) : [];
+    // Where the browser can drive the animation off the scroller itself, it
+    // does, and nothing at all runs on the scroll event.
+    const scrollTimeline =
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      CSS.supports('animation-timeline: scroll(root block)') &&
+      CSS.supports('animation-range: 10% 20%');
+    const wide = window.matchMedia('(min-width: 861px)');
+
+    if (stem && vine && leaves.length) {
+      let marks = [];
+
+      const scrollSpan = () => document.documentElement.scrollHeight - window.innerHeight;
+
+      const paint = () => {
+        if (!wide.matches) return;
+        const span = scrollSpan();
+        const progress = span > 0 ? Math.min(1, Math.max(0, window.scrollY / span)) : 0;
+        stem.style.setProperty('--stem-progress', progress.toFixed(4));
+        marks.forEach((mark) => {
+          mark.leaf.style.setProperty('--leaf-fill', progress >= mark.at ? '1' : '0');
+        });
+      };
+
+      const measure = () => {
+        const sections = Array.from(document.querySelectorAll('main .section'));
+        const span = scrollSpan();
+        if (span <= 0) {
+          stem.removeAttribute('data-stem-ready');
+          return;
+        }
+
+        marks = [];
+        leaves.forEach((leaf, index) => {
+          const section = sections[index];
+          if (!section) {
+            leaf.removeAttribute('data-placed');
+            return;
+          }
+          // A boundary counts as passed when it reaches the middle of the
+          // viewport, which is where the vine's tip sits at that moment.
+          const top = section.getBoundingClientRect().top + window.scrollY;
+          const at = Math.min(0.98, Math.max(0.02, (top - window.innerHeight / 2) / span));
+          const percent = (at * 100).toFixed(2);
+          marks.push({ leaf, at });
+          leaf.style.setProperty('--leaf-at', `${percent}%`);
+          leaf.style.setProperty('--leaf-from', `${percent}%`);
+          leaf.style.setProperty('--leaf-to', `${Math.min(100, at * 100 + 5).toFixed(2)}%`);
+          leaf.setAttribute('data-placed', '');
+        });
+
+        stem.setAttribute('data-stem-ready', '');
+        if (!scrollTimeline) paint();
+      };
+
+      if (scrollTimeline) {
+        stem.setAttribute('data-stem-mode', 'timeline');
+      } else {
+        onScroll(paint);
+      }
+
+      onResize(measure);
+
+      measure();
+      // Media that lands late changes the document height, so the marks are
+      // taken once more after the page settles.
+      window.addEventListener('load', () => measure(), { once: true });
+    }
+  }
+</script>

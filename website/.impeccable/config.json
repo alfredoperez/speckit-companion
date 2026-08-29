@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "instrument serif",
+        "createdAt": "2026-08-28T12:27:37.059Z",
+        "reason": "Approved design system: one of three families in the signed-off Constellation token sheet, loaded italic-only for a single accent word per heading. Alfredo kept it across four rounds of the design canvas."
+      }
+    ]
+  }
+}

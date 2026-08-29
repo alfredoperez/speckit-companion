@@ -24,16 +24,18 @@ All four rail captures are copied from `step-rail/assets/captures/` and the over
 
 | t | Region | Label |
 |---|---|---|
-| 0.9 | pipeline rail | The whole run on one rail |
-| 5.6 | footer action | One button, always the next step |
-| 10.4 | pipeline rail (planned) | Each phase closes in order |
-| 15.4 | task list | Tasks laid out, ready to run |
-| 20.2 | pipeline rail (running, 50%) | Live progress while it runs |
-| 25.2 | footer, locked | Actions unlock when the step settles |
-| 29.8 | run overview timing row | Per phase timing, recorded as it ran |
-| 34.2 | rest | — |
+| 3 | pipeline rail | What's ahead, not just what's done |
+| 7.7 | footer action | The forward action is named for the next step |
+| 12.5 | pipeline rail (planned) | New documents appear as the step writes them |
+| 17.5 | task list | Each line is one unit the run checks off |
+| 22.3 | pipeline rail (running, 50%) | Counted from the boxes ticked in tasks.md |
+| 27.3 | footer, locked | No way to push a step that's already running |
+| 31.9 | run overview timing row | The run you just watched, measured |
+| 36.3 | rest | — |
 
 State cuts land just before each beat's camera move; the last two transitions dissolve (0.8 s into the overview, 1.2 s back to frame zero) so the loop closes without a flash.
+
+**Two beats ring empty ground, and the labels on them describe a surface that is not in the capture.** The footer is missing from all four `step-*` captures: the band it occupies in this capture space, roughly y 700 to 770, is bare background in every file. Checked by cropping each capture's bottom band. So beats 2 and 6 here, and the footer beat in `step-rail`, aim at nothing. Their labels were rewritten to phrasings the claim ledger clears, but no label can add what the pixels do not show when the pixels show nothing. Re-shooting the A1 to A5 stories with the footer inside the capture box, and re-measuring those rects, is what fixes it.
 
 ## Render
 

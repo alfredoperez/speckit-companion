@@ -61,11 +61,24 @@
  *   document missing   NO ICON AT ALL, plus a dim "not created" description
  *   related doc        no icon (the tree relies on indentation alone)
  *
- * Living Specs rows come from `livingSpecsExplorerProvider.ts` (`folder` for a
- * directory group, `symbol-namespace` for a capability, list.warningForeground
- * plus a "drift" suffix when the sources moved on). Steering rows come from
- * `steeringExplorerProvider.ts` (`library`, `law`, `terminal`, `files`; scripts
- * and templates are icon-less leaves).
+ * Living Specs rows come from `livingSpecsExplorerProvider.ts`: `folder` for a
+ * directory group (the tree mirrors where each spec lives, built by
+ * `buildCapabilityTree`), `symbol-namespace` for a capability that has a spec on
+ * disk, `circle-outline` plus a "not created" suffix for one that does not,
+ * list.warningForeground plus a "drift" suffix when the sources moved on, and a
+ * trailing `question` group holding the orphan `*.spec.md` files no capability
+ * claims. Steering rows come from `steeringExplorerProvider.ts` (`library`,
+ * `law`, `terminal`, `files`; scripts and templates are icon-less leaves).
+ *
+ * ROW STATE
+ * A third thing the real list draws, and the reason a clip can film a click:
+ * `monaco-list-row:hover` takes list.hoverBackground, and a row the user picked
+ * keeps `monaco-list-row.selected` afterwards. Once the document opens the
+ * editor holds focus, so the tree is UNfocused and the selected row washes with
+ * list.inactiveSelectionBackground, not the active blue. Both rules are read off
+ * the DevTools snapshots, and both variables are published by the capture theme;
+ * the active-selection and focus-outline variables are not, so nothing here
+ * draws a focused row.
  */
 
 import type { ComponentChildren } from 'preact';
@@ -96,6 +109,13 @@ export type IconTone = 'default' | 'foreground' | 'passed' | 'blue' | 'warning';
 
 export type Twistie = 'expanded' | 'collapsed' | 'leaf';
 
+/**
+ * What the list is doing to this row. `hover` is the pointer resting on it,
+ * `selected` is the row that was clicked while focus has moved to the editor.
+ * Absent is the resting row, which is what every row in a capture used to be.
+ */
+export type RowState = 'hover' | 'selected';
+
 export interface SidebarRow {
     /**
      * Stable, hand-written id. It lands on the row as both `id="row-<id>"` and
@@ -114,6 +134,8 @@ export interface SidebarRow {
     icon?: string;
     tone?: IconTone;
     twistie?: Twistie;
+    /** Pointer-over or picked. Omit for a resting row. */
+    state?: RowState;
 }
 
 export interface SidebarPane {
@@ -235,6 +257,15 @@ const SIDEBAR_CSS = `
     margin-right: 4px;
     padding-right: 12px;
 }
+/* The two washes the real list paints. Hover is the pointer; selected is the
+   row that was clicked, drawn INACTIVE because opening the document moves focus
+   to the editor. Both variables come from the capture theme. */
+.sk-sidebar .monaco-list-row.hovered {
+    background-color: var(--vscode-list-hoverBackground);
+}
+.sk-sidebar .monaco-list-row.selected {
+    background-color: var(--vscode-list-inactiveSelectionBackground);
+}
 .sk-sidebar .monaco-tl-row {
     display: flex;
     align-items: center;
@@ -353,7 +384,7 @@ function Row({ row }: { row: SidebarRow }) {
     }
     return (
         <div
-            class="monaco-list-row"
+            class={`monaco-list-row${row.state === 'hover' ? ' hovered' : ''}${row.state === 'selected' ? ' selected' : ''}`}
             id={`row-${row.id}`}
             data-row={row.id}
             data-depth={row.depth}

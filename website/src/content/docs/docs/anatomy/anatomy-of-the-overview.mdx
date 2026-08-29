@@ -1,0 +1,82 @@
+---
+title: Anatomy of the Overview
+description: "The Overview page region by region, in the order it renders them: what each one shows, what it means, and what to do with it."
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+The Overview is one of two views inside the spec viewer, and it exists only for a spec that recorded something.
+
+It's a reading surface, not a control panel. Nothing on it runs, re-runs, or re-checks the work. It's what your run wrote down, laid out in the order a future session needs it.
+
+<MediaSlot feature="overview" shows="The Overview read top to bottom: intent, the per-phase run timeline with a total, the approach, working area and size, the living specs it loaded, the expectations fence, each verified check with the command it ran, the decisions with what they rejected, and the coverage table." />
+
+## The regions, in order
+
+| Region | What it carries |
+| --- | --- |
+| Intent | The run's stated intent, its approach, the area it worked in, how the change was sized |
+| Run timing | One entry per phase, each with an elapsed time or nothing |
+| Expectations | Constraints on one side, declared non-goals on the other |
+| Verified | Each check, the command the assistant reported running, the outcome it reported |
+| Decisions | The choice, why, and what was rejected |
+| Coverage | Requirement, the tasks that delivered it, the tests that exercise it |
+| Run log | Collapsed: the per-phase timeline, per-task records, concerns, files touched, review comments |
+
+A region with nothing recorded in it doesn't render. Coverage is the deliberate exception, and the reason is below.
+
+## Intent
+
+This is the only region that answers "why does this spec exist". Everything under it is evidence for the sentence at the top.
+
+Read it first, then read down. If the intent doesn't match what you expected to find, stop there rather than auditing the coverage table of a run that was aiming somewhere else.
+
+## Run timing
+
+A phase shows an elapsed time only when both ends of its span came from writers of sufficient authority and the close really follows the start. Otherwise the phase is listed with no number, and the header reads "Timing coverage: N of M phases". The run only reports "X elapsed" when specify, plan, tasks, and implement all measured cleanly and in order.
+
+A blank duration isn't a bug or a zero. It's the page declining to guess at a span it can't stand behind.
+
+Step boundaries and per-task finishes are written by a script the command runs. The clarify and analyze self-closes, and the plan and tasks substep boundaries, are authored by the model at second precision, so treat those as reported rather than measured. While a step is still running, the open viewer re-reads the record on every write and the running step carries a timer that ticks each second.
+
+## Expectations
+
+The fence around the work: the constraints the run had to honor on one side, the non-goals it declared on the other.
+
+This region answers the question that sends most people digging through a diff. Something you expected isn't there, and you want to know whether it was missed or ruled out. Check the non-goals before you file that as a gap.
+
+## Verified
+
+Each verification shows the check, the command the assistant says it ran, and the outcome it reported. Warnings it judged benign are kept alongside rather than dropped.
+
+This is a recorded report. Nothing on the page re-executes anything, so a green row means the assistant said the command passed, not that it passes right now. Treat it as a lead: the value of the region is that it tells you which commands are the right ones to run.
+
+## Decisions
+
+Each decision carries the choice, why it was made, and what was rejected. The first three show, and the rest sit behind a disclosure.
+
+The rejected line is the part worth your time. It's the option the run considered and turned down, which is the thing a future session would otherwise rediscover the slow way. If you disagree with one, that's the sentence to argue with, and the spec's own review comments are where to do it.
+
+## Coverage
+
+<MediaSlot feature="coverage" shows="The coverage table: each requirement beside the tasks that delivered it and its test evidence, an N of M traced count in the header, and the collapsed run log under it." />
+
+Coverage is built up across three steps of the run. Untraced requirements sort to the top, because the gaps are the signal.
+
+When nothing is traced, the table says so rather than disappearing. That's the exception to regions hiding themselves, and it's deliberate: zero traced requirements is the most useful thing the page can tell you.
+
+One thing here does get re-checked. A test reference that looks like a file path is checked for existence, and a row whose file isn't there reads "N tests not found". That's existence only. Nothing checks that the test runs, or that it passes.
+
+## Run log
+
+Everything granular lives under a collapsed "Run log": the per-phase timeline, the per-task records, concerns, files touched, and review comments.
+
+It's collapsed because it's the wrong altitude for a first read and the right one for a specific question. Open it when you need to know which files a run touched, or what a particular task actually did.
+
+## Where the page comes from
+
+The Overview is read out of the `.spec-context.json` file next to the spec. The Spec Kit extension rides your runs and writes that file, the VS Code extension reads it and renders this page, and the two halves install independently.
+
+History in that file is append-only and enforced, not just documented: a write that would publish a shorter log gets spliced back to the on-disk entries plus whatever is genuinely new. Commit the file and the run record travels with the branch, which is what makes the Overview readable by someone who wasn't there.
+
+A run that wrote nothing leaves no Overview. A run that wrote half of it gets a page that tells you which half.

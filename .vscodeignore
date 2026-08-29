@@ -47,6 +47,10 @@ src/**/*.js
 examples/**
 specs/**
 bench/**
+# The marketing/docs site. Separate package.json, separate lockfile, separate
+# deploy. Its node_modules and dist would otherwise land in the .vsix, since
+# vsce ignores .gitignore whenever this file exists.
+website/**
 speckit-extension/**
 # Ship the context writer inside the .vsix: the stock-mode prompt preamble
 # references it by the extension's install path (see promptBuilder).

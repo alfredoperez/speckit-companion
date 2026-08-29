@@ -57,7 +57,13 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { CaptureFrame, STAGE_HEIGHT } from './captureFrame';
-import { SidebarShell, SIDEBAR_WIDTH, type SidebarPane, type SidebarRow } from './sidebarTree';
+import {
+    SidebarShell,
+    SIDEBAR_WIDTH,
+    type RowState,
+    type SidebarPane,
+    type SidebarRow,
+} from './sidebarTree';
 
 // ── Teamboard fixture rows ────────────────────────────────────────────────
 // Boring on purpose. A demo sidebar that shows off clever feature names reads
@@ -229,6 +235,141 @@ const livingSpecsRows: SidebarRow[] = [
     },
 ];
 
+/**
+ * The DEEPER Living Specs fixture, for the `living-specs` clip.
+ *
+ * Same provider, more of it. `livingSpecsRows` above is the short version the
+ * small README frames use; this one is a whole repository's worth, because the
+ * clip has to read as a work tree rather than as two rows, and because the
+ * thing it films only shows up once there is depth to see.
+ *
+ * SHAPE, AND WHY IT IS THE SHAPE
+ * `buildCapabilityTree` (livingSpecsModel.ts) groups a capability under the
+ * PARENT of the folder its spec sits in, then sorts groups and leaves together
+ * by name at every level. So the layout below is not a taste decision, it is
+ * what these eight registered capabilities produce:
+ *
+ *   capabilities/member-profiles/spec.md            -> capabilities > member-profiles
+ *   capabilities/photo-storage/spec.md              -> capabilities > photo-storage
+ *   capabilities/team-invites/spec.md               -> capabilities > team-invites
+ *   src/features/directory-search/directory-search.spec.md  -> src > features > ...
+ *   src/features/saved-views/saved-views.spec.md            -> src > features > ...
+ *   src/jobs/thumbnail-queue/thumbnail-queue.spec.md        -> src > jobs > ...
+ *   src/services/avatar-rendering/avatar-rendering.spec.md  -> src > services > ...
+ *   src/services/email-delivery/email-delivery.spec.md      -> src > services > ...
+ *
+ * The first three are `_location()` CENTRALIZED (resolve-spec-paths.py): their
+ * spec is exactly `capabilities/<name>/spec.md`, the default when a capability
+ * names no `spec:` path. The other five are COLOCATED: they named a path, so the
+ * spec sits in the code and the tree puts it there. That contrast is the whole
+ * reason this fixture is deep.
+ *
+ * Every row type here is one the provider really renders:
+ *   folder group        `folder`, expanded (LivingSpecItem.dirGroup)
+ *   capability          `symbol-namespace`, coverage and drift joined with " · "
+ *   drifted capability  the same in list.warningForeground
+ *   registered, unwritten  `circle-outline` and "not created" (cap.exists false)
+ *   Orphans             a `question` group of `*.spec.md` files no capability
+ *                       claims, appended after the tree
+ *
+ * A capability row is a LEAF: `capabilityItem` gives it a twistie only when it
+ * has a tier sibling, and nothing in the product generates `.arch.md` or
+ * `.coverage.md`, so none is drawn here.
+ */
+const livingWorkTreeRows: SidebarRow[] = [
+    { id: 'lw-capabilities', depth: 0, label: 'capabilities', icon: 'folder', twistie: 'expanded' },
+    {
+        id: 'lw-member-profiles',
+        depth: 1,
+        label: 'member-profiles',
+        description: '9/9 covered',
+        icon: 'symbol-namespace',
+        tone: 'foreground',
+    },
+    {
+        id: 'lw-photo-storage',
+        depth: 1,
+        label: 'photo-storage',
+        description: '7/9 covered · drift',
+        icon: 'symbol-namespace',
+        tone: 'warning',
+    },
+    {
+        id: 'lw-team-invites',
+        depth: 1,
+        label: 'team-invites',
+        description: '4/4 covered',
+        icon: 'symbol-namespace',
+        tone: 'foreground',
+    },
+    { id: 'lw-src', depth: 0, label: 'src', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-features', depth: 1, label: 'features', icon: 'folder', twistie: 'expanded' },
+    {
+        id: 'lw-directory-search',
+        depth: 2,
+        label: 'directory-search',
+        description: '6/6 covered',
+        icon: 'symbol-namespace',
+        tone: 'foreground',
+    },
+    {
+        // Registered in the capability list, spec not written yet: no icon tint,
+        // `circle-outline`, and the "not created" suffix.
+        id: 'lw-saved-views',
+        depth: 2,
+        label: 'saved-views',
+        description: 'not created',
+        icon: 'circle-outline',
+    },
+    { id: 'lw-jobs', depth: 1, label: 'jobs', icon: 'folder', twistie: 'expanded' },
+    {
+        id: 'lw-thumbnail-queue',
+        depth: 2,
+        label: 'thumbnail-queue',
+        description: '5/5 covered',
+        icon: 'symbol-namespace',
+        tone: 'foreground',
+    },
+    { id: 'lw-services', depth: 1, label: 'services', icon: 'folder', twistie: 'expanded' },
+    {
+        id: 'lw-avatar-rendering',
+        depth: 2,
+        label: 'avatar-rendering',
+        description: 'drift',
+        icon: 'symbol-namespace',
+        tone: 'warning',
+    },
+    {
+        id: 'lw-email-delivery',
+        depth: 2,
+        label: 'email-delivery',
+        description: '3/3 covered',
+        icon: 'symbol-namespace',
+        tone: 'foreground',
+    },
+    { id: 'lw-orphans', depth: 0, label: 'Orphans', icon: 'question', twistie: 'expanded' },
+    { id: 'lw-orphan-legacy-import', depth: 1, label: 'legacy-import.spec.md', icon: 'file' },
+];
+
+/**
+ * The deep tree as a pane, optionally with one row under the pointer or picked.
+ * `emphasis` is how the clip films a click without inventing chrome: the two
+ * washes are the list's own (see sidebarTree.tsx ROW STATE).
+ */
+export function livingSpecsWorkTreePane(
+    emphasis?: { row: string; state: RowState },
+    fill = false,
+): SidebarPane {
+    return {
+        id: 'living-specs',
+        title: 'Living Specs',
+        rows: emphasis
+            ? livingWorkTreeRows.map(r => (r.id === emphasis.row ? { ...r, state: emphasis.state } : r))
+            : livingWorkTreeRows,
+        fill,
+    };
+}
+
 /** Steering. Categories carry an icon; the files under them never do. */
 const steeringRows: SidebarRow[] = [
     {
@@ -268,7 +409,7 @@ export const steeringPane = (fill = false): SidebarPane => ({
 
 const meta: Meta = {
     title: 'Video Capture/Specs Sidebar (Recreation)',
-    excludeStories: ['specsPane', 'livingSpecsPane', 'steeringPane'],
+    excludeStories: ['specsPane', 'livingSpecsPane', 'livingSpecsWorkTreePane', 'steeringPane'],
     parameters: {
         layout: 'fullscreen',
         capture: { width: SIDEBAR_WIDTH, height: STAGE_HEIGHT },

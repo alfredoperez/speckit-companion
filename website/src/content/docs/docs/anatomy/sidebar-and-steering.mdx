@@ -1,0 +1,161 @@
+---
+title: The sidebar and steering
+description: What each of the four SpecKit views holds, what every icon and count on a row means, and what a steering document actually does.
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+The SpecKit icon in the activity bar opens a container with four views: Specs, Living Specs, Steering, and Settings & Feedback.
+
+<MediaSlot feature="specs-sidebar" shows="The container top to bottom: Specs grouped by lifecycle with per-document state in an expanded spec, Living Specs with its coverage and drift notes, and Steering underneath." />
+
+Only two of them show on a fresh install with just the VS Code extension. Living Specs appears when the Spec Kit extension is installed, and Settings & Feedback is hidden until you turn it on. So a first run usually looks like Specs and Steering, and that's correct, not a broken install.
+
+The whole sidebar is a native VS Code tree, so the editor owns row height, indentation, keyboard navigation, and theming. You can reorder the views yourself: the order here is the default, not a lock.
+
+A note about the picture above. The Specs view is a native TreeView, so it can't be driven by Storybook the way the spec viewer can. The sidebar art in these docs is a presentational recreation, drawn from fixture rows and measured against DevTools snapshots of the real tree. Treat it as an accurate drawing, not as a capture.
+
+## Specs
+
+### Three groups, each carrying its own count
+
+Specs group into **Active**, **Completed**, and **Archived**, and each group header carries a live count. A group with nothing in it doesn't appear at all.
+
+Active is expanded by default and the other two start collapsed. Individual spec rows start collapsed too, so a workspace with hundreds of finished specs opens to a short list.
+
+Which group a spec lands in is read straight from the `.spec-context.json` next to it. There's no separate index. A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names" in the tree, with the slug staying the identifier underneath.
+
+### The description line and the tooltip
+
+An in-flight spec's row shows the active task and how long ago it last moved, in the form `T004 · 22h ago`. The relative time is measured from the most recent history entry, not from when the step started, so it answers "when did anything last happen here".
+
+Hover the row and the tooltip is a three-line card: the slug, the status in Title Case, and the last activity with its relative time.
+
+### What each icon means
+
+| Row | Icon | What it says |
+| --- | --- | --- |
+| Active group | Pulse | Specs in progress |
+| Completed group | Filled check, in the theme's passed color | Specs you marked complete |
+| Archived group | Archive box | Archived specs |
+| Spec, no recorded step | Plain beaker | Created, nothing captured yet |
+| Spec, step in progress | Blue beaker | A workflow step is the current one |
+| Spec, implemented | Yellow beaker | Implement finished, your confirmation hasn't |
+| Spec, completed | Green beaker | You marked it complete |
+| Spec, running now | Spinner | A step is running at this moment |
+
+The yellow one is worth learning. An implemented spec sits in **Active** on purpose: the pipeline got through implement, but nobody has confirmed it done, and burying it under Completed would hide that.
+
+No status here rides on color alone. The icon shape, the group, the description line, and the tooltip each carry it independently, and the tooltip says in words when a step is running.
+
+### Document rows carry their own state
+
+Expand a spec and you get its documents, plus any related files in the folder. Those rows hold their own state rather than inheriting the parent's.
+
+| Icon | Label | Meaning |
+| --- | --- | --- |
+| Green check | Complete | The step is done and the file holds real content |
+| Blue filled dot | In Progress | The current step, or a step counted done whose file is still a stub |
+| Hollow circle | Not Started | The file exists, the workflow hasn't reached this step |
+| No icon, with a `not created` note | Not Created | The file isn't on disk, and the row offers no open or reveal action |
+
+Read "complete" narrowly. It's a presence heuristic, not a judgement about the writing: a file counts as complete when it has more than three non-blank lines.
+
+### The toolbar, and what hides behind it
+
+The Specs title bar shows four actions in a fixed order: Filter, Sort, More Actions, and New Spec as the trailing primary. The filter fuzzy-matches on both the slug and the recorded spec name, and submitting an empty value clears it. Everything else, including collapse and expand and the spec-kit upgrade entries, lives behind More Actions.
+
+Select several specs with shift-click or cmd-click and you can mark, archive, or reactivate them in one action. Group headers carry the same three as bulk actions over everything visible, which means an active filter narrows what a bulk action touches.
+
+### Resume, on hover
+
+An active or tasks-done row shows a Resume action on hover, but only when the Spec Kit extension is installed. There's no stock equivalent.
+
+Resume reads the run record, works out where the spec stopped, and dispatches one command to your assistant. If the run stopped inside implement, it names the next unchecked task and continues from there instead of restarting the step. It sends text. It doesn't run the pipeline, and it gets nothing back.
+
+### The one badge the sidebar sets
+
+When the Spec Kit extension isn't installed, the Specs view carries a single-dot badge tooltipped "Install SpecKit Companion", and VS Code aggregates that dot onto the activity bar icon, so it's visible even with the view collapsed. A pinned first row offers the same install in words. Both go away the moment the extension is present, with no reload.
+
+That dot is the only badge the sidebar itself sets. The `SPECIFYING` and `COMPLETED` status badges live in the spec viewer's header, not in the tree.
+
+## Living Specs
+
+<MediaSlot feature="living-specs" shows="The Living Specs tree with per-capability coverage counts and a drift flag, beside the viewer open on that capability's spec: its LIVING badge, the globs it covers, and its WHEN and THEN requirement rows." />
+
+This view appears only when the Spec Kit extension is installed, and it starts collapsed.
+
+It's a directory tree rather than a flat list, so its shape mirrors where the capability specs actually live: a spec at `src/features/specs/specs.spec.md` shows up as a leaf under `src`, then `features`. Below the capabilities sits an **Orphans** group holding spec files no capability claims, omitted entirely when there are none.
+
+Each capability row carries a light health readout the extension computes itself, without dispatching anything to your AI: a coverage count when the capability has a `.coverage.md` sibling on disk, and a drift note with the icon turned to the warning color when files matching that capability changed since its living spec was last committed.
+
+Both are best-effort. The drift lookup is bounded by a timeout, so a slow repository renders the row as it would otherwise rather than stalling the tree. And no coverage file means no number, which on screen looks exactly like zero coverage. The two are not the same thing.
+
+The title bar carries Refresh, Adopt Code Area, and Sync. The whole view is gated on a `living-specs.yml` at the repo root with `enabled: true`. The [living specs guide](/docs/guides/living-specs/) covers the registry and the four commands.
+
+## Steering
+
+### What a steering document is
+
+A steering document is a standing instruction, not a per-run one. A spec says what to build this time. A steering document says how this project builds anything: its conventions, its architecture, its testing habits.
+
+Your AI provider already has a place for those. Claude Code reads `CLAUDE.md`, Gemini reads `GEMINI.md`, Codex and OpenCode read `AGENTS.md`, Copilot reads `.github/copilot-instructions.md`. The Steering view doesn't invent a new format. It gathers what your provider already reads into one place next to your specs.
+
+### What the view gathers
+
+```text
+Steering
+  Companion
+  <your configured provider>
+    Project
+      <the provider's project rule file, or the action that creates it>
+      Agents
+      Skills
+      Settings
+    User
+      <the same four, at user scope>
+  Steering Docs
+  SpecKit Project Files
+    Constitution
+    Scripts
+    Templates
+  References
+```
+
+Almost none of that is unconditional:
+
+| Section | When it shows |
+| --- | --- |
+| Companion | Only when the Spec Kit extension is installed in the project |
+| Your provider | Always, as a stable entry point |
+| Steering Docs | Only when your provider declares a steering directory and at least one document is in it |
+| SpecKit Project Files | Only when a constitution, a script, or a template is present |
+| References | Only when a custom workflow declares reference folders and they exist on disk |
+
+The vocabulary inside the provider node is **User**, never "Global". When a rule file doesn't exist yet, the create action sits inside that scope's group and names your provider's real filename, so you get "Create project-level GEMINI.md" rather than a hard-coded `CLAUDE.md`.
+
+Steering support isn't universal. With IDE Chat selected there's no steering, no agents, no hooks, and no MCP, because there's no provider-owned config to point at. The [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) has the per-provider paths.
+
+### How the extension actually uses them
+
+Nothing under Steering is read by the extension when it dispatches a step. The command text it hands your assistant carries the spec, not your rules. Your rules reach the AI the way they always did, because your provider reads its own file on its own. The Steering view is a browser and an editor's entry point over files somebody else owns.
+
+What the view does own is a small set of authoring actions, and every one of them builds a prompt and hands it to your configured provider. **New Steering Document** asks your AI to write a markdown file into the steering directory. **Refine** asks it to improve that file in place. **Delete Steering** removes the file, then asks your AI to clean up the references to it. **Create Project Rule** and **Create User Rule** create or open the provider's own rule file.
+
+The destructive actions stay narrow on purpose. Refine and Delete are offered only on the steering documents the extension generated. Provider-owned and SpecKit-owned files can be opened and revealed from the tree, never deleted from it.
+
+### The Companion node
+
+When the Spec Kit extension is installed, a Companion node sits first in the tree and answers two questions: where its configuration lives, and which commands it provides. Configuration opens `.specify/companion.yml` directly. Commands lists the whole `/speckit.companion.*` set, read live from the installed extension's manifest, so a command added later shows up without a new release of the VS Code half.
+
+## Settings & Feedback
+
+Four rows and nothing else: Open Settings, Report a Bug, Request a Feature, and Rate on Marketplace. It's hidden by default; turn on `speckit.views.settings.visible` to get it. `speckit.views.steering.visible` is the matching switch for Steering, which is on out of the box.
+
+## What the sidebar won't tell you
+
+It doesn't know whether a document is finished. It knows whether the file has more than three non-blank lines.
+
+It doesn't run anything. Resume, drift, coverage, and every steering action dispatch one command to the assistant you configured, and the extension gets no completion callback. It reads what lands on disk.
+
+Drift and coverage never block. Both are read-only reports that always exit zero. A CI job wrapped around them can treat their findings as a gate. The commands themselves never are.

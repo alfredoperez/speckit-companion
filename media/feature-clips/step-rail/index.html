@@ -35,23 +35,24 @@
         --marker-shadow:  0 18px 46px rgba(0,0,0,0.55);
 
         /* --- scrim: how hard everything outside the marked region is pushed back */
-        --scrim-color:    rgba(4,7,8,0.62);
+        --scrim-color:    rgba(4,7,8,0.82);
 
-        /* --- label: the small pill naming the region */
+        /* --- label: the caption band naming the region */
         --label-font:     "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
-        --label-size:     32px;
-        --label-weight:   500;
+        --label-size:     64px;
+        --label-weight:   600;
         --label-tracking: 0.004em;
         --label-fg:       #eef4f1;
-        --label-bg:       rgba(12,17,19,0.94);
+        --label-bg:       rgba(8,11,13,0.97);
         --label-border:   rgba(127,240,196,0.28);
-        --label-radius:   10px;
-        --label-pad-y:    11px;
-        --label-pad-x:    18px;
-        --label-gap:      14px;   /* distance from the marker edge */
+        --label-pad-y:    34px;
+        --label-pad-x:    72px;
+        --label-dot-gap:  22px;
+        --label-pad-end:  320px;  /* text stops here, so it never runs the full width */
+        --label-shadow-top: 0 18px 54px rgba(0,0,0,0.6);
         --label-dot:      var(--marker-color);
-        --label-dot-size: 9px;
-        --label-shadow:   0 14px 34px rgba(0,0,0,0.5);
+        --label-dot-size: 14px;
+        --label-shadow:   0 -18px 54px rgba(0,0,0,0.6);
       }
 
       html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
@@ -73,30 +74,36 @@
         border-radius:var(--marker-radius);
         box-shadow: 0 0 0 4000px var(--scrim-color), var(--marker-halo), var(--marker-shadow);
       }
+      /* ---- the caption band ----
+         The caption is not attached to the marker. It spans the frame and pins
+         to whichever edge the marked region is furthest from, so it never
+         crowds the thing it names and it lands in one of two places rather
+         than following the camera around. #anno is a sibling of #stage, so
+         this lives in frame coordinates and never scales with the zoom. */
       .lbl {
-        position:absolute; left:calc(-1 * var(--marker-width)); bottom:100%;
-        margin-bottom:var(--label-gap);
-        display:inline-flex; align-items:center; gap:12px; white-space:nowrap;
-        padding:var(--label-pad-y) var(--label-pad-x);
+        position:absolute; left:0; right:0; bottom:0;
+        display:flex; align-items:flex-start; gap:var(--label-dot-gap);
+        padding:var(--label-pad-y) var(--label-pad-end) var(--label-pad-y) var(--label-pad-x);
         background:var(--label-bg);
-        border:1px solid var(--label-border);
-        border-radius:var(--label-radius);
+        border-top:1px solid var(--label-border);
         box-shadow:var(--label-shadow);
         font-family:var(--label-font); font-size:var(--label-size);
         font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
-        color:var(--label-fg); line-height:1.05;
+        color:var(--label-fg); line-height:1.16;
       }
-      .lbl::before { content:""; flex:none; width:var(--label-dot-size); height:var(--label-dot-size);
+      .lbl::before { content:""; flex:none; margin-top:0.42em;
+                     width:var(--label-dot-size); height:var(--label-dot-size);
                      border-radius:50%; background:var(--label-dot); }
-      .lbl.below { bottom:auto; top:100%; margin-bottom:0; margin-top:var(--label-gap); }
-      .lbl.flip  { left:auto; right:calc(-1 * var(--marker-width)); }
+      .lbl.top { bottom:auto; top:0; border-top:0;
+                 border-bottom:1px solid var(--label-border);
+                 box-shadow:var(--label-shadow-top); }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="10.8" data-fps="30"
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14.3" data-fps="30"
          data-width="1836" data-height="1164">
 
-      <div id="stage" class="clip" data-start="0" data-duration="10.8" data-track-index="0">
+      <div id="stage" class="clip" data-start="0" data-duration="14.3" data-track-index="0">
         <!-- the camera is deliberately larger than the frame while punched in -->
         <div id="cam" data-layout-allow-overflow>
         <img class="shot" id="sh0" src="assets/captures/step-a1.png" alt="" />
@@ -106,13 +113,12 @@
         </div>
       </div>
 
-      <div id="anno" class="clip" data-start="0" data-duration="10.8" data-track-index="1">
+      <div id="anno" class="clip" data-start="0" data-duration="14.3" data-track-index="1">
         <!-- one label per beat, stacked on the same anchor; only one is ever visible -->
-        <div id="hi" data-layout-allow-overlap>
-        <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion>Steps unlock in order</div>
-        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>One button, always the next step</div>
-        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>Live percent while it runs</div>
-        </div>
+        <div id="hi" data-layout-allow-overlap></div>
+        <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion>Grey means its document doesn't exist yet</div>
+        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>The forward action is named for the next step</div>
+        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>Counted from the boxes ticked in tasks.md</div>
       </div>
     </div>
 
@@ -120,8 +126,8 @@
       /* ==================================================================
          MOTION CONSTANTS  ·  timing only; every colour/size is a CSS token
          ================================================================== */
-      var MOVE_DUR  = 0.85;        // seconds for one camera move
-      var MOVE_EASE = "power3.inOut";
+      var MOVE_DUR  = 0.62;        // seconds for one camera move
+      var MOVE_EASE = "power4.inOut";
       var IN_EASE   = "power3.out";
       var LBL_IN    = 0.34, LBL_OUT = 0.24;
 
@@ -162,16 +168,16 @@
       /* every r is a real element box measured off the captured DOM,
          in the capture's own CSS pixels: [x, y, width, height] */
       var BEATS = [
-        {"t":0.6,"r":[4,152,199,251],"pad":160,"maxS":2.4,"label":"Steps unlock in order"},
-        {"t":2.9,"r":[854,708,354,56],"pad":150,"maxS":2,"label":"One button, always the next step"},
-        {"t":6.6,"r":[4,152,199,251],"pad":160,"maxS":2.4,"label":"Live percent while it runs"},
-        {"t":9.2,"rest":true,"move":0.9}
+        {"t":3,"r":[4,152,199,251],"pad":160,"maxS":2.2,"label":"Grey means its document doesn't exist yet"},
+        {"t":6,"r":[854,708,354,56],"pad":150,"maxS":2,"label":"The forward action is named for the next step"},
+        {"t":9.7,"r":[4,152,199,251],"pad":160,"maxS":2.2,"label":"Counted from the boxes ticked in tasks.md"},
+        {"t":12.7,"rest":true,"move":0.9}
       ];
-      var CUTS  = [
-        {"t":4.4,"from":0,"to":1},
-        {"t":5.5,"from":1,"to":2},
-        {"t":7.15,"from":2,"to":3},
-        {"t":9.2,"from":3,"to":0,"fade":0.9}
+      var CUTS = [
+        {"t":7.5,"from":0,"to":1},
+        {"t":8.6,"from":1,"to":2},
+        {"t":10.25,"from":2,"to":3},
+        {"t":12.7,"from":3,"to":0,"fade":0.9}
       ];
 
       /* resolve every camera + projected rect up front, so all tweens can be
@@ -197,14 +203,15 @@
         if (first) gsap.set("#hi", { left:first.rect.x, top:first.rect.y, width:first.rect.w, height:first.rect.h });
       })();
 
-      /* a label that would be clipped off the top hangs under its marker instead */
+      /* each caption picks the frame edge its region sits furthest from */
       var li = -1;
       solved.forEach(function (s) {
         if (!s.b.label) return;
         li++;
         var el = document.getElementById("lbl" + li);
-        if (s.b.below || (s.rect && s.rect.y < 90)) el.classList.add("below");
-        if (s.b.flip) el.classList.add("flip");
+        /* the band pins to the edge the region sits furthest from */
+        var mid = s.rect ? s.rect.y + s.rect.h / 2 : FH / 2;
+        if (mid > FH * 0.5) el.classList.add("top");
         s.lbl = "#lbl" + li;
       });
 

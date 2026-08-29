@@ -1,0 +1,104 @@
+---
+/*
+  Site analytics, ticket T18.
+
+  PostHog, in a NEW project inside the org that already carries the extension's
+  telemetry, so site traffic and product telemetry stay separate streams while
+  staying one tool. Config comes from the environment and never from the repo:
+
+    PUBLIC_POSTHOG_KEY    the project key
+    PUBLIC_POSTHOG_HOST   defaults to https://us.i.posthog.com
+
+  With no key set, this component renders nothing at all. That is the local and
+  preview default, and it means a missing key is a quiet no-op rather than a
+  console error on every page.
+
+  Two things about PostHog that are easy to get wrong and are worth writing down
+  here, because both have already cost this project time:
+
+  1. Ingestion answers 200 "Ok" for ANY key, valid or not. So a bad key fails
+     silently and looks exactly like success. The only way to confirm events are
+     landing is to watch the Activity feed in the PostHog UI. Never conclude from
+     a 200 that the wiring works.
+  2. `persistence: 'memory'` keeps this cookieless, which is why the site owes no
+     consent banner. Changing it changes that, so do not change it casually.
+*/
+const key = import.meta.env.PUBLIC_POSTHOG_KEY;
+const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+---
+
+{
+  key && (
+    <script is:inline define:vars={{ key, host }}>
+      {`
+      (function () {
+        // Minimal loader. Queues calls made before the library lands, so an
+        // early click is captured rather than dropped.
+        var q = [];
+        window.posthog = window.posthog || {
+          capture: function () { q.push(['capture', arguments]); },
+          __queue: q,
+        };
+
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = host + '/static/array.js';
+        s.onload = function () {
+          if (!window.posthog || !window.posthog.init) return;
+          window.posthog.init(key, {
+            api_host: host,
+            // Cookieless: no consent banner owed. See the note above.
+            persistence: 'memory',
+            capture_pageview: true,
+            capture_pageleave: true,
+            autocapture: true,
+            // The site is public marketing. Nothing here is sensitive, but
+            // masking inputs by default keeps the waitlist address out of
+            // session data if replay is ever turned on.
+            mask_all_text: false,
+            mask_all_element_attributes: false,
+          });
+          for (var i = 0; i < q.length; i++) {
+            var m = q[i];
+            if (window.posthog[m[0]]) window.posthog[m[0]].apply(window.posthog, m[1]);
+          }
+          q.length = 0;
+        };
+        document.head.appendChild(s);
+
+        // The named events the funnel reads. Delegated from the document so a
+        // section rendered later still reports, and so there is exactly one
+        // listener rather than one per button.
+        function send(name, props) {
+          if (window.posthog && window.posthog.capture) window.posthog.capture(name, props || {});
+        }
+
+        document.addEventListener('click', function (e) {
+          var el = e.target && e.target.closest ? e.target.closest('[data-analytics]') : null;
+          if (!el) return;
+          var name = el.getAttribute('data-analytics');
+          if (!name) return;
+          var props = {};
+          for (var i = 0; i < el.attributes.length; i++) {
+            var a = el.attributes[i];
+            if (a.name.indexOf('data-analytics-') === 0) {
+              props[a.name.slice('data-analytics-'.length)] = a.value;
+            }
+          }
+          send(name, props);
+        });
+
+        // The escape hatch for the events that are not clicks: a form submit,
+        // for one. A page fires document.dispatchEvent(new CustomEvent(
+        // 'site-analytics', { detail: { name, props } })) and stays ignorant of
+        // PostHog, which is what keeps the no-key build free of any reference to
+        // it rather than merely free of the loader.
+        document.addEventListener('site-analytics', function (e) {
+          if (!e.detail || !e.detail.name) return;
+          send(e.detail.name, e.detail.props);
+        });
+      })();
+      `}
+    </script>
+  )
+}
