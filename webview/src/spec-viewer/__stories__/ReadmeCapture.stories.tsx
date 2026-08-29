@@ -715,3 +715,49 @@ export const C6BannerInstallVscode: Story = {
         </CaptureFrame>
     ),
 };
+
+// ── C7 · the social card ──────────────────────────────────────────────────
+// The 1200x630 og:image every share of the site renders. Until this existed,
+// BaseLayout accepted an ogImage prop that no page passed, so a link to the
+// site produced a bare text card.
+//
+// It is a capture story rather than a hand-composited PNG for the same reason
+// every other composite here is: it re-themes with the palette and re-shoots
+// with one command, so it can never end up showing a version of the product
+// that no longer exists.
+//
+// Text only, no screenshot. At the size a card renders in a timeline, a
+// screenshot is an unreadable grey rectangle; the words are the only part that
+// survives. The claim ledger governs the subtitle the same as any other
+// published sentence.
+
+export const C7SocialCard: Story = {
+    name: 'C7 · Social card',
+    parameters: { capture: { width: 1200, height: 630 } },
+    render: () => (
+        <CaptureFrame>
+            <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a0913; display: flex; flex-direction: column; justify-content: center; padding: 0 96px; box-sizing: border-box;">
+                <style>{GEIST_FACES}</style>
+                {/* The same focal light the landing page carries, so the card
+                    and the page it links to read as one thing. */}
+                <div style="position: absolute; left: 50%; top: -46%; width: 150%; height: 116%; transform: translateX(-50%); background: radial-gradient(ellipse 46% 52% at 50% 78%, rgba(196,181,253,0.5), rgba(139,92,246,0.22) 38%, rgba(10,9,19,0) 72%);" />
+                <div style="position: relative; display: flex; flex-direction: column; gap: 26px; max-width: 940px;">
+                    <div style="font: 500 21px/1 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #a78bfa; letter-spacing: 0.22em; text-transform: uppercase;">
+                        SpecKit Companion
+                    </div>
+                    <div style="font: 600 74px/1.06 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #f4f1ff; letter-spacing: -0.022em;">
+                        Spec-driven development,
+                        <br />
+                        one level up.
+                    </div>
+                    <div style="font: 400 27px/1.45 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #b6b0d2; max-width: 820px;">
+                        Read a run instead of a folder. Keep what you learned instead of archiving it.
+                    </div>
+                </div>
+                <div style="position: absolute; left: 96px; bottom: 54px; font: 500 20px/1 'Geist', ui-monospace, SFMono-Regular, Menlo, monospace; color: #6f6994; letter-spacing: 0.06em;">
+                    speckit-companion.dev
+                </div>
+            </div>
+        </CaptureFrame>
+    ),
+};

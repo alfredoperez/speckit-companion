@@ -4,6 +4,11 @@ import starlight from '@astrojs/starlight';
 
 // Static output. Vercel serves ./dist as a plain static site.
 export default defineConfig({
+  // The canonical origin. Three things are derived from it and none of them
+  // work without it: the sitemap the integration builds, the rel=canonical on
+  // every page, and the absolute og:image and og:url a share card needs. It was
+  // unset while the domain was undecided, which is why every build warned.
+  site: 'https://speckit-companion.dev',
   output: 'static',
   trailingSlash: 'ignore',
   // Reading the Overview was a narrative retelling of the anatomy page: same

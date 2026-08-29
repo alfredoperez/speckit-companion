@@ -767,6 +767,31 @@
       },
       "referencedBy": {},
       "notes": "Page chrome, not product imagery: the focal light a product frame sits in front of. Painted by scripts/build-lightwell.mjs rather than drawn in CSS, because a large low-alpha gradient over near-black bands, and because the stars have to survive reduced motion. Both files are decorative, so alt is empty by design."
+    },
+    {
+      "id": "og-card",
+      "name": "Social card",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/og-card.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/og-card.png": "SpecKit Companion: spec-driven development, one level up"
+      },
+      "referencedBy": {},
+      "notes": "The og:image. Its consumer is a link preview, not a page, so no README references it; it is imported by BaseLayout, DocsHead and changelog.astro, which are the three page kinds that build their own document."
     }
   ]
 }

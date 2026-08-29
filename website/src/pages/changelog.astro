@@ -28,6 +28,7 @@ import speckitChangelog from '../../../speckit-extension/CHANGELOG.md?raw';
 import Analytics from '../components/Analytics.astro';
 import MascotMark from '../components/MascotMark.astro';
 import SiteIcons from '../components/SiteIcons.astro';
+import ogCard from '../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
 import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
@@ -59,6 +60,8 @@ const renderedReleased = await Promise.all(released.map(renderRelease));
 const latestIds = new Set(
   ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
 );
+
+const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.src;
 ---
 
 <!doctype html>
@@ -79,10 +82,14 @@ const latestIds = new Set(
     />
 
     {/* This route builds its own document instead of using BaseLayout, so it
-        has to mount both of those itself: the favicon links, and Analytics, or
-        it would be the one page in the site the funnel cannot see. Analytics
-        renders nothing without a key, same as everywhere. */}
+        has to mount all of these itself: the favicon links, the share card, and
+        Analytics, or it would be the one page the funnel cannot see and the one
+        link that shares as a bare text card. Analytics renders nothing without
+        a key, same as everywhere. */}
     <SiteIcons />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
     <Analytics />
   </head>
 

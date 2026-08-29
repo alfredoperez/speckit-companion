@@ -6,6 +6,19 @@ import SiteIcons from './SiteIcons.astro';
 import Analytics from './Analytics.astro';
 
 /*
+  The share card. Imported rather than read from public/ because
+  docs/screenshots/generated/ is deliberately not copied into the site — those
+  filenames are load-bearing for the published Marketplace listings, so the site
+  reads them where they are instead of owning a second copy that could drift.
+  Astro hashes it at build; new URL() below makes it absolute, which og:image
+  requires.
+
+  It is the default rather than something each page opts into: a page that
+  forgets to pass one is exactly the page whose share looks broken.
+*/
+import ogCard from '../../../docs/screenshots/generated/og-card.png';
+
+/*
   The page shell for every route outside the docs section. Dark only.
 
   nav and footer default to on. The landing page turns the nav off and renders
@@ -31,7 +44,7 @@ const {
   footer = true,
   installHref,
   noindex = false,
-  ogImage,
+  ogImage = ogCard.src,
   class: className,
 } = Astro.props;
 

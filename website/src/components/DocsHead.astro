@@ -3,6 +3,13 @@ import Default from '@astrojs/starlight/components/Head.astro';
 import SiteIcons from './SiteIcons.astro';
 import Analytics from './Analytics.astro';
 
+// The share card, same file BaseLayout uses. Starlight emits og:title and
+// og:description on its own but no image, so a shared docs link renders as a
+// bare text card while the landing page renders a proper one.
+import ogCard from '../../../docs/screenshots/generated/og-card.png';
+
+const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.src;
+
 /*
   Replaces Starlight's Head so the docs section gets the same analytics the rest
   of the site gets. Starlight pages never touch BaseLayout.astro, which is where
@@ -17,12 +24,18 @@ import Analytics from './Analytics.astro';
   PUBLIC_POSTHOG_KEY set, Analytics renders nothing and the docs head is exactly
   what Starlight built.
 
-  SiteIcons rides along for the same reason. Starlight's own favicon option
-  already points at /favicon.svg, so the SVG link is left to it and only the
-  raster fallbacks are added here.
+  SiteIcons rides along for the same reason, and so does the og:image: three
+  kinds of page on this site build their own document, and a tag added to only
+  one of them is a tag that is missing from two thirds of the site.
+
+  Starlight's own favicon option already points at /favicon.svg, so the SVG link
+  is left to it and only the raster fallbacks are added here.
 */
 ---
 
 <Default />
 <SiteIcons svg={false} />
+<meta property="og:image" content={ogImageUrl} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content={ogImageUrl} />
 <Analytics />

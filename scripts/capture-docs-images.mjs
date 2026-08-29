@@ -123,6 +123,13 @@ const STORIES = [
         out: 'benefits-strip.png',
     },
     {
+        // The og:image. Not referenced by either README: it is read from the
+        // site's <head>, so it is the one generated still whose consumer is a
+        // link preview rather than a page (ReadmeCapture.stories.tsx C7).
+        story: 'video-capture-readme-composites--c-7-social-card',
+        out: 'og-card.png',
+    },
+    {
         // Cross-promo banner in the ROOT README: "Install the other half",
         // inviting the Spec Kit engine extension (ReadmeCapture.stories.tsx
         // C5). Type over the mascot art from speckit-extension/assets.
