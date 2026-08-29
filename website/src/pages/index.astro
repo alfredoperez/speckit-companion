@@ -1248,9 +1248,12 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
 
   /* ------------------------------------------------------------------ demo */
 
-  .section--demo {
-    overflow: hidden;
-  }
+  /* No overflow:hidden here on purpose. The light starts a couple of hundred
+     pixels above the frame, which is above this section's own top edge, and
+     clipping it there cuts the haze while it is still at full strength — a hard
+     horizontal line across the page. The asset fades out at its own edges, so
+     letting it spill is a soft gradient into the section above rather than a
+     seam. */
 
   .section--demo .inner {
     padding-top: 64px;
