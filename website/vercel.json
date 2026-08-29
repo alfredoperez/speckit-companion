@@ -4,5 +4,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ."
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
+  "rewrites": [
+    {
+      "source": "/ingest/static/:path*",
+      "destination": "https://us-assets.i.posthog.com/static/:path*"
+    },
+    { "source": "/ingest/:path*", "destination": "https://us.i.posthog.com/:path*" }
+  ]
 }

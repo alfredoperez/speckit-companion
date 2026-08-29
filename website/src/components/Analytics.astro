@@ -38,7 +38,26 @@
      `define:vars` is unaffected and is what injects key and host above.
 */
 const key = import.meta.env.PUBLIC_POSTHOG_KEY;
-const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+
+/*
+  SAME-ORIGIN BY DEFAULT, and this is the whole reason anything is recorded.
+
+  Pointed straight at us.i.posthog.com, the library never loaded for anyone
+  running a content blocker: the request for array.js came back 204 with an
+  empty body, so `window.posthog.init` stayed undefined and not one event —
+  not even a pageview — was ever sent. Measured in a real browser, not guessed.
+  The audience here is developers, so that is not an edge case.
+
+  Blockers match on the hostname. `/ingest` is first-party, so it passes.
+  website/vercel.json rewrites it to PostHog: /ingest/static/* to the assets
+  host, everything else to the ingestion host.
+
+  The rewrite is a VERCEL feature. `astro dev` does not have it, so /ingest
+  404s locally — which costs nothing, because a local build has no key and this
+  component renders nothing at all. Set PUBLIC_POSTHOG_HOST to an absolute URL
+  to bypass the proxy.
+*/
+const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
 ---
 
 {
@@ -60,6 +79,10 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
           if (!window.posthog || !window.posthog.init) return;
           window.posthog.init(key, {
             api_host: host,
+            // Where the PostHog UI lives. api_host is our own /ingest path now,
+            // and without this the SDK builds "view in PostHog" links against
+            // it and they go nowhere.
+            ui_host: 'https://us.posthog.com',
             // Cookieless: no consent banner owed. See the note above.
             persistence: 'memory',
             capture_pageview: true,
