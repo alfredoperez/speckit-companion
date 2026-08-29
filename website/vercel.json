@@ -11,6 +11,12 @@
       "source": "/ingest/static/(.*)",
       "destination": "https://us-assets.i.posthog.com/static/$1"
     },
+    { "source": "/ingest/e/", "destination": "https://us.i.posthog.com/e/" },
+    { "source": "/ingest/i/v0/e/", "destination": "https://us.i.posthog.com/i/v0/e/" },
+    { "source": "/ingest/flags/", "destination": "https://us.i.posthog.com/flags/" },
+    { "source": "/ingest/decide/", "destination": "https://us.i.posthog.com/decide/" },
+    { "source": "/ingest/batch/", "destination": "https://us.i.posthog.com/batch/" },
+    { "source": "/ingest/s/", "destination": "https://us.i.posthog.com/s/" },
     { "source": "/ingest/(.*)", "destination": "https://us.i.posthog.com/$1" }
   ]
 }
