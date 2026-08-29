@@ -51,19 +51,32 @@ try {
 
 /*
   The canvas is wide and short: the light lives in the band above a frame, so
-  height beyond that band is wasted bytes. 2400x1000 covers a 1200px-wide frame
+  height beyond that band is wasted bytes. 2400 wide covers a 1200px-wide frame
   at 2x with room for the haze to fall off before the edge.
+
+  ABOVE_CORE is the band that actually shows. TAIL is dead space below the core
+  that exists only so the light has somewhere to fall off to — see CORE_Y.
 */
 const W = 2400;
-const H = 1000;
+const ABOVE_CORE = 1000;
+const TAIL = 360;
+const H = ABOVE_CORE + TAIL;
 
 /*
-  The core sits at the BOTTOM of the canvas, centred. In use the asset is
-  positioned so this point lands on the frame's top edge, which is what makes
-  the light read as coming from behind the frame rather than floating above it.
+  The core is centred horizontally and sits ABOVE_CORE down from the top, with
+  the tail below it. In use the asset is positioned so this point lands on the
+  frame's top edge, which is what makes the light read as coming from behind the
+  frame rather than floating above it.
+
+  The core used to sit flush against the canvas bottom, on the theory that the
+  frame covered that edge. It does not: the asset is 155-190% of the frame's
+  width, so the core's own row extends well past the frame on both sides, and
+  out there the image ended at 28% opacity against a black page. That hard step
+  is a horizontal line across the section, which is exactly what a rendered
+  asset was supposed to avoid. The tail gives the light room to reach zero.
 */
 const CORE_X = W / 2;
-const CORE_Y = H;
+const CORE_Y = ABOVE_CORE;
 
 /*
   How much wider than tall the light is. A round glow behind a wide frame reads
@@ -161,7 +174,9 @@ function stops(colour, peak, ease, count = 14) {
 */
 function edgeFade(x, y) {
   const mx = Math.min(x, W - x) / (W * 0.16);
-  const my = Math.min(y, H - y) / (H * 0.2);
+  // Measured against the band stars actually occupy, not the whole canvas, so
+  // adding the tail below the core did not silently move the top fade.
+  const my = Math.min(y, H - y) / (ABOVE_CORE * 0.2);
   return Math.max(0, Math.min(1, mx)) * Math.max(0, Math.min(1, my));
 }
 
@@ -173,8 +188,10 @@ function stars(count, seed, reach) {
     guard++;
     const x = rand() * W;
     // Bias upward: sqrt pulls the distribution toward the core's own row, so
-    // the field thickens where the haze is brightest.
-    const y = H - Math.sqrt(rand()) * H;
+    // the field thickens where the haze is brightest. Nothing is placed in the
+    // tail below the core — that band sits behind the frame and only exists so
+    // the light has somewhere to fall off to.
+    const y = CORE_Y - Math.sqrt(rand()) * CORE_Y;
 
     // Measured in the same squashed space the haze uses, so the star field and
     // the light share one shape instead of a circle inside an ellipse.
@@ -214,9 +231,13 @@ function squash() {
   before the boundary instead. Two masks rather than one because SVG has no
   two-axis gradient; nesting them multiplies.
 
-  The bottom edge is not faded: that is where the core is, and the frame covers
-  it.
+  All four edges fade, the bottom included. The bottom fade starts BELOW the
+  core, so it eats the tail and never touches the bright centre: the core's own
+  row stays at full strength and the frame still gets its light from behind.
 */
+const TOP_FADE = 220 / H;
+const BOTTOM_FADE_START = (CORE_Y + 120) / H;
+
 function edgeMasks() {
   return `<linearGradient id="fx" x1="0" y1="0" x2="${W}" y2="0" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000"/>
@@ -226,8 +247,9 @@ function edgeMasks() {
     </linearGradient>
     <linearGradient id="fy" x1="0" y1="0" x2="0" y2="${H}" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#000"/>
-      <stop offset="0.22" stop-color="#fff"/>
-      <stop offset="1" stop-color="#fff"/>
+      <stop offset="${n(TOP_FADE * 1000) / 1000}" stop-color="#fff"/>
+      <stop offset="${n(BOTTOM_FADE_START * 1000) / 1000}" stop-color="#fff"/>
+      <stop offset="1" stop-color="#000"/>
     </linearGradient>
     <mask id="mx"><rect width="${W}" height="${H}" fill="url(#fx)"/></mask>
     <mask id="my"><rect width="${W}" height="${H}" fill="url(#fy)"/></mask>`;

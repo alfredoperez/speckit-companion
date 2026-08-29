@@ -448,7 +448,7 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
               alt=""
               aria-hidden="true"
               width="2400"
-              height="1000"
+              height="1360"
               fetchpriority="high"
             />
             <div class="hero-stage">
@@ -580,7 +580,7 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
           alt=""
           aria-hidden="true"
           width="2400"
-          height="1000"
+          height="1360"
           loading="lazy"
         />
         <div class="demo-panel">
@@ -1006,17 +1006,21 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   .lightwell {
     position: absolute;
     left: 50%;
-    /* Its core is painted at the asset's own bottom edge, so bottom:100% of the
-       frame puts the light exactly behind the frame's top edge and the haze
-       spills up from there. Anchored to the frame rather than the section, so
-       it cannot drift when the layout changes. */
+    /* bottom:100% of the frame puts the asset's bottom edge on the frame's top
+       edge. Anchored to the frame rather than the section, so it cannot drift
+       when the layout changes. */
     bottom: 100%;
     z-index: -1;
     height: auto;
     /* BaseLayout sets a global img { max-width: 100% }, which would clamp this
        to the frame's own width and take the spill away. */
     max-width: none;
-    transform: translateX(-50%);
+    /* The asset carries a tail below its core so the light can fall off to zero
+       instead of ending mid-gradient. That tail is 360 of the asset's 1360
+       rows, so push the image down by that share of its own height to put the
+       CORE back on the frame's top edge. Keep this in step with TAIL / H in
+       scripts/build-lightwell.mjs. */
+    transform: translate(-50%, 26.47%);
     pointer-events: none;
     user-select: none;
   }
