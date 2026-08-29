@@ -406,7 +406,15 @@ const fieldId = `${waitlistId}-email`;
         new CustomEvent('site-analytics', {
           detail: {
             name: 'survey sent',
-            props: { $survey_id: survey, $survey_response: email },
+            props: {
+              $survey_id: survey,
+              $survey_response: email,
+              // Which list this address asked for. Two pages can share one
+              // survey — PostHog stores one response field, so without this
+              // the rows are a column of addresses with no way to tell who
+              // wanted the course and who wanted the builder.
+              list,
+            },
           },
         }),
       );
