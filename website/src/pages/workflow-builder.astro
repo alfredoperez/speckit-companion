@@ -39,6 +39,10 @@ const today = [
     body: 'A Run SpecKit Custom Command quick pick lists everything in speckit.customCommands. The spec directory is substituted into the command, or appended to it, when the entry asks for one.',
   },
 ];
+
+/* The PostHog survey this list posts to. Unset, the form still renders and
+   still counts the interest, but tells the visitor nothing was stored. */
+const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_WORKFLOW_BUILDER;
 ---
 
 <SoonPageLayout
@@ -46,6 +50,7 @@ const today = [
   description="A workflow builder for SpecKit Companion is not built. Here is what you can shape today, and where to leave an address for when it changes."
   headline="A workflow builder, one day"
   standing="Nothing like this ships in SpecKit Companion today, in any form, and there is no date on it. What follows is the part that is real."
+  surveyId={surveyId}
   waitlistId="workflow-builder"
   waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
   pose="thinking"

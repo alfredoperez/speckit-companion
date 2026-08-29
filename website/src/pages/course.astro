@@ -92,6 +92,10 @@ const guides = [
     href: '/docs/guides/living-specs/',
   },
 ];
+
+/* The PostHog survey this list posts to. Unset, the form still renders and
+   still counts the interest, but tells the visitor nothing was stored. */
+const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_COURSE;
 ---
 
 <SoonPageLayout
@@ -99,6 +103,7 @@ const guides = [
   description="A course on spec-driven development with SpecKit Companion is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
   headline="A course, once there is one worth sitting through"
   standing="Nothing is recorded and there is no date. What follows is the outline it would run, so you know what you would be joining a list for."
+  surveyId={surveyId}
   waitlistId="course"
   waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
   pose="reading"

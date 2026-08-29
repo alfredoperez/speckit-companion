@@ -6,9 +6,10 @@
   "description": "Marketing site and documentation for SpecKit Companion. Built and deployed independently of the VS Code extension.",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run sync:media && astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "sync:media": "node scripts/sync-media.mjs --quiet"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.9",

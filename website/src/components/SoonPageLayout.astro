@@ -17,7 +17,9 @@ import SoonChip from './SoonChip.astro';
     default  whatever is true and useful today
     back     the links out
 
-  The waitlist form posts nowhere. See the script at the bottom.
+  The waitlist posts to a PostHog survey when one is configured for the list,
+  and says plainly that it stored nothing when one is not. Both halves matter:
+  see the script at the bottom.
 
   Each page brings its own mascot pose into the masthead. It sits beside the
   heading rather than above it, so the copy still opens the page and the art
@@ -31,6 +33,10 @@ interface Props {
   standing: string;
   waitlistId: string;
   waitlistNote: string;
+  /* The PostHog survey this list posts to. Absent, the form still renders and
+     still counts the interest, but tells the visitor their address went
+     nowhere rather than implying it landed somewhere. */
+  surveyId?: string;
   pose?: 'reading' | 'thinking';
   poseAlt?: string;
 }
@@ -42,6 +48,7 @@ const {
   standing,
   waitlistId,
   waitlistNote,
+  surveyId,
   pose,
   poseAlt = '',
 } = Astro.props;
@@ -81,7 +88,12 @@ const fieldId = `${waitlistId}-email`;
           <p class="waitlist-body">{waitlistNote}</p>
         </div>
 
-        <form class="waitlist-form" data-waitlist={waitlistId} novalidate>
+        <form
+          class="waitlist-form"
+          data-waitlist={waitlistId}
+          data-survey={surveyId || undefined}
+          novalidate
+        >
           <div class="field">
             <label for={fieldId}>Email address</label>
             <input
@@ -98,7 +110,11 @@ const fieldId = `${waitlistId}-email`;
           <Button type="submit" size="md">Join the list</Button>
 
           <p class="form-note" id={`${waitlistId}-status`} role="status" aria-live="polite" data-waitlist-status>
-            This form has no backend yet, so nothing you type here is stored or sent.
+            {
+              surveyId
+                ? 'One message, on the day it ships. No newsletter, and you can reply to be taken off.'
+                : 'This form has no backend yet, so nothing you type here is stored or sent.'
+            }
           </p>
         </form>
       </div>
@@ -330,37 +346,73 @@ const fieldId = `${waitlistId}-email`;
 
 <script>
   /*
-    TODO(waitlist): post the address to PostHog surveys, which is the chosen
-    backend for both of these lists. Analytics is wired now, but only the
-    interest signal is: waitlist_submit records that someone asked, and the
-    address itself still has nowhere to go.
+    Two paths, and which one runs is decided by whether the page was given a
+    survey id.
 
-    So the handler deliberately stores nothing and says so. Do not swap this for
-    a success message before the post exists: telling someone they are on a list
-    that does not exist is the one failure mode this page cannot have. And do not
-    put the address in the event either. The counter is the whole point of it.
+    WITH one, the address goes to PostHog as a survey response. That is a
+    `survey sent` event carrying $survey_id and $survey_response, which is
+    PostHog's own shape for this — there is no separate endpoint to call, so it
+    rides the same bridge every other event on this site uses. This file still
+    never names the vendor: it dispatches a DOM event and Analytics.astro is the
+    only thing that knows where events go, so a build with no key still ships no
+    trace of one.
 
-    The event is fired by hand rather than through a data-analytics attribute,
-    because the thing worth counting is the submit, not a click on the button.
-    It goes out as a DOM event that Analytics.astro listens for, so this file
-    never names the analytics vendor and a build with no key ships no trace of
-    one.
+    WITHOUT one, it stores nothing and says so. Do not replace that message with
+    a success line to make the page feel finished: telling someone they are on a
+    list that does not exist is the one failure this page cannot have.
+
+    waitlist_submit fires either way, because the interest is worth counting
+    even when the address has nowhere to go. It carries the list name and never
+    the address — the count is the whole point of it.
   */
   document.querySelectorAll('[data-waitlist]').forEach((form) => {
     const status = form.querySelector('[data-waitlist-status]');
+    const input = form.querySelector('input[type="email"]');
+    const list = form.dataset.waitlist || '';
+    const survey = form.dataset.survey;
+
+    const say = (message) => {
+      if (status) status.textContent = message;
+    };
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
 
+      const email = input ? input.value.trim() : '';
+
+      // Deliberately loose. A stricter pattern rejects addresses that are
+      // perfectly valid, and the cost of a bad one here is one dead row.
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        say('That does not look like an email address. Check it and try again.');
+        if (input) input.focus();
+        return;
+      }
+
       document.dispatchEvent(
         new CustomEvent('site-analytics', {
-          detail: { name: 'waitlist_submit', props: { list: form.dataset.waitlist || '' } },
+          detail: { name: 'waitlist_submit', props: { list } },
         }),
       );
 
-      if (!status) return;
-      status.textContent =
-        'Nothing was sent. The list has no backend yet, so your address was not stored. Watch the GitHub repo and you will see the release the day it happens.';
+      if (!survey) {
+        say(
+          'Nothing was sent. The list has no backend yet, so your address was not stored. ' +
+            'Watch the GitHub repo and you will see the release the day it happens.',
+        );
+        return;
+      }
+
+      document.dispatchEvent(
+        new CustomEvent('site-analytics', {
+          detail: {
+            name: 'survey sent',
+            props: { $survey_id: survey, $survey_response: email },
+          },
+        }),
+      );
+
+      form.reset();
+      say('You are on the list. One message, on the day it ships.');
     });
   });
 </script>
