@@ -5,11 +5,12 @@
   "outputDirectory": "dist",
   "installCommand": "npm ci",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
+  "_comment_rewrites": "PostHog, proxied through our own origin so content blockers do not answer 204 for it. (.*) and not :path* on purpose: :path* does not match a trailing slash, and every PostHog capture endpoint has one (/e/, /flags/, /decide/). With :path* the library loaded and then silently failed to send anything, because /ingest/e/ 404d while /ingest/e answered 400. Static rule first: it is the only one that goes to the assets host.",
   "rewrites": [
     {
-      "source": "/ingest/static/:path*",
-      "destination": "https://us-assets.i.posthog.com/static/:path*"
+      "source": "/ingest/static/(.*)",
+      "destination": "https://us-assets.i.posthog.com/static/$1"
     },
-    { "source": "/ingest/:path*", "destination": "https://us.i.posthog.com/:path*" }
+    { "source": "/ingest/(.*)", "destination": "https://us.i.posthog.com/$1" }
   ]
 }
