@@ -64,13 +64,20 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
   key && (
     <script is:inline define:vars={{ key, host }}>
       (function () {
-        // Minimal loader. Queues calls made before the library lands, so an
-        // early click is captured rather than dropped.
-        var q = [];
-        window.posthog = window.posthog || {
-          capture: function () { q.push(['capture', arguments]); },
-          __queue: q,
-        };
+        /*
+          NOTHING MAY ASSIGN window.posthog BEFORE array.js RUNS.
+
+          This used to install a small stub there so early clicks could queue.
+          array.js then loaded, saw the name already taken, and left it alone —
+          so `window.posthog.init` never existed, the onload handler returned at
+          its own guard, and the library never initialized. Measured live: the
+          script fetched 200 and window.posthog was still {capture, __queue}.
+
+          The queue lives here instead, in a local array the library cannot
+          collide with, and drains once init has run. Same guarantee, no stub.
+        */
+        var pending = [];
+        var ready = false;
 
         var s = document.createElement('script');
         s.async = true;
@@ -114,11 +121,12 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
           // autocapture too, not just the named events below. Filter on it and
           // the two products come apart again.
           window.posthog.register({ source: 'site' });
-          for (var i = 0; i < q.length; i++) {
-            var m = q[i];
-            if (window.posthog[m[0]]) window.posthog[m[0]].apply(window.posthog, m[1]);
+
+          ready = true;
+          for (var i = 0; i < pending.length; i++) {
+            window.posthog.capture(pending[i][0], pending[i][1] || {});
           }
-          q.length = 0;
+          pending.length = 0;
         };
         document.head.appendChild(s);
 
@@ -126,7 +134,14 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
         // section rendered later still reports, and so there is exactly one
         // listener rather than one per button.
         function send(name, props) {
-          if (window.posthog && window.posthog.capture) window.posthog.capture(name, props || {});
+          if (ready && window.posthog && window.posthog.capture) {
+            window.posthog.capture(name, props || {});
+          } else {
+            // Before init, or if array.js never arrives. Held, not dropped:
+            // the waitlist submit is the one event most likely to happen while
+            // the library is still in flight.
+            pending.push([name, props]);
+          }
         }
 
         document.addEventListener('click', function (e) {
