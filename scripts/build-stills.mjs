@@ -96,6 +96,19 @@ const STILLS = [
     width: 1500,
   },
   {
+    // The step rail with every earlier step ticked. Cut from the CAPTURE, not
+    // the render: step-rail and run-in-flight open on the same shot, so their
+    // frame-zero posters are byte-identical and one picture was serving two
+    // docs pages. A later frame of the render is no good either — it carries
+    // the clip's scrim and caption band, which are clip chrome, not docs
+    // imagery.
+    id: 'panel-step-rail',
+    from: 'step-rail/assets/captures/step-a4.png',
+    crop: { x: 0, y: 0, w: 2448 },
+    aspect: ASPECT,
+    width: 1500,
+  },
+  {
     // The workflow card sequence, held on the step list rather than frame zero.
     id: 'panel-bend',
     fromRender: 'make-it-yours',

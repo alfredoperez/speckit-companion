@@ -386,12 +386,14 @@
         "xCrop": "media/web/step-rail-x16x9.png",
         "readmeGif": null,
         "docsStill": null,
-        "extraStills": []
+        "extraStills": [],
+        "panelStill": "media/web/panel-step-rail.png"
       },
       "unnormalized": [],
       "alt": {
         "media/web/step-rail-poster.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
-        "media/web/step-rail-x16x9.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement"
+        "media/web/step-rail-x16x9.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
+        "media/web/panel-step-rail.png": "The pipeline rail with Specification, Plan and Tasks each carrying a green check, Tasks highlighted as the step being read, and the generated task list beside it in two phases"
       },
       "referencedBy": {},
       "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
