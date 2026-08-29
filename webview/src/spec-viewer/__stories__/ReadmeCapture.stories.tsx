@@ -726,10 +726,25 @@ export const C6BannerInstallVscode: Story = {
 // with one command, so it can never end up showing a version of the product
 // that no longer exists.
 //
-// Text only, no screenshot. At the size a card renders in a timeline, a
-// screenshot is an unreadable grey rectangle; the words are the only part that
-// survives. The claim ledger governs the subtitle the same as any other
-// published sentence.
+// THE TYPE STAYS BIG AND THE PRODUCT STAYS BEHIND IT. An earlier pass was text
+// on a gradient, on the theory that a screenshot shrinks to an unreadable grey
+// rectangle in a timeline. The first half of that is right and the conclusion
+// was not: a screenshot used as CONTENT does shrink to mush, but one used as
+// GROUND does not have to be read to work. It only has to say "this is a tool,
+// and here is what its surface looks like."
+//
+// So the Overview panel is angled in from the right, dimmed, and dissolved into
+// the type with a mask. Nothing in it needs to be legible. The headline is the
+// same size it was, and it is still the only thing you read at 320px wide.
+//
+// Two dependencies worth knowing: `/stills/panel-read.png` comes from
+// `npm run clips:stills`, and `/stills/lightwell-hero.webp` from
+// `npm run lightwell`. Both are staticDirs in .storybook/main.ts. The lightwell
+// is the SAME asset the landing page uses, so the card and the page it links to
+// are lit by one light rather than two that nearly match.
+//
+// The claim ledger governs the subtitle the same as any other published
+// sentence.
 
 export const C7SocialCard: Story = {
     name: 'C7 · Social card',
@@ -738,24 +753,64 @@ export const C7SocialCard: Story = {
         <CaptureFrame>
             <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a0913; display: flex; flex-direction: column; justify-content: center; padding: 0 96px; box-sizing: border-box;">
                 <style>{GEIST_FACES}</style>
+
+                {/* The product, as ground. Rotated so it reads as an object in
+                    space rather than a pasted rectangle, pushed off the right
+                    and bottom edges so it has no visible corner to anchor on,
+                    and masked to nothing before it reaches the headline. */}
+                {/* No border and every edge masked. A border or a hard corner
+                    is what makes a screenshot read as a pasted rectangle, and
+                    at this angle the top edge was a bright diagonal rule across
+                    the card. The capture palette is light, so on a near-black
+                    card this has to sit very low or it competes with the
+                    headline rather than sitting behind it. */}
+                <img
+                    src="/stills/panel-read.png"
+                    alt=""
+                    style="position: absolute; right: -150px; top: 78px; width: 720px; transform: rotate(-5deg); border-radius: 16px; opacity: 0.26; -webkit-mask-image: linear-gradient(102deg, transparent 4%, #000 52%), linear-gradient(180deg, transparent 0%, #000 20%, #000 66%, transparent 97%); -webkit-mask-composite: source-in; mask-image: linear-gradient(102deg, transparent 4%, #000 52%), linear-gradient(180deg, transparent 0%, #000 20%, #000 66%, transparent 97%); mask-composite: intersect;"
+                />
+
                 {/* The same focal light the landing page carries, so the card
-                    and the page it links to read as one thing. */}
-                <div style="position: absolute; left: 50%; top: -46%; width: 150%; height: 116%; transform: translateX(-50%); background: radial-gradient(ellipse 46% 52% at 50% 78%, rgba(196,181,253,0.5), rgba(139,92,246,0.22) 38%, rgba(10,9,19,0) 72%);" />
-                <div style="position: relative; display: flex; flex-direction: column; gap: 26px; max-width: 940px;">
+                    and the page it links to read as one thing. Painted asset,
+                    not a CSS gradient: a low-alpha radial over near-black bands
+                    on most displays, and this file is shown at 1200px wide on
+                    somebody else's timeline where we control nothing. */}
+                {/* Anchored under the panel, not under the type. Centred it
+                    read as a smudge lying on the subtitle; behind the product
+                    it reads as the panel being lit, which is the same thing the
+                    landing page does. */}
+                <img
+                    src="/stills/lightwell-hero.webp"
+                    alt=""
+                    style="position: absolute; left: 36%; bottom: -34%; width: 1150px; max-width: none; opacity: 0.5; mix-blend-mode: screen; pointer-events: none;"
+                />
+
+                {/* 64px, not 74px: at 74 the first line no longer fits beside
+                    the panel and the headline breaks into three, which reads
+                    weaker at the size a card is actually seen. */}
+                <div style="position: relative; display: flex; flex-direction: column; gap: 24px; max-width: 800px;">
                     <div style="font: 500 21px/1 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #a78bfa; letter-spacing: 0.22em; text-transform: uppercase;">
                         SpecKit Companion
                     </div>
-                    <div style="font: 600 74px/1.06 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #f4f1ff; letter-spacing: -0.022em;">
+                    <div style="font: 600 64px/1.08 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #f4f1ff; letter-spacing: -0.022em; text-shadow: 0 2px 34px rgba(10,9,19,0.85);">
                         Spec-driven development,
                         <br />
                         one level up.
                     </div>
-                    <div style="font: 400 27px/1.45 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #b6b0d2; max-width: 820px;">
+                    <div style="font: 400 27px/1.45 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #c5bfdd; max-width: 660px; text-shadow: 0 2px 22px rgba(10,9,19,0.9);">
                         Read a run instead of a folder. Keep what you learned instead of archiving it.
                     </div>
                 </div>
-                <div style="position: absolute; left: 96px; bottom: 54px; font: 500 20px/1 'Geist', ui-monospace, SFMono-Regular, Menlo, monospace; color: #6f6994; letter-spacing: 0.06em;">
-                    speckit-companion.dev
+
+                <div style="position: absolute; left: 96px; bottom: 54px; display: flex; align-items: center; gap: 14px;">
+                    <img
+                        src="/mascot/poses/mascot-pointing-1782272318893.png"
+                        alt=""
+                        style="width: 54px; height: 54px; object-fit: contain;"
+                    />
+                    <span style="font: 500 20px/1 'Geist', ui-monospace, SFMono-Regular, Menlo, monospace; color: #8b84ad; letter-spacing: 0.06em;">
+                        speckit-companion.dev
+                    </span>
                 </div>
             </div>
         </CaptureFrame>
