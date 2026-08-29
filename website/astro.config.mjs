@@ -1,9 +1,26 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import vercel from '@astrojs/vercel';
 
-// Static output. Vercel serves ./dist as a plain static site.
+/*
+  Still a static site: every page prerenders, exactly as before. The adapter is
+  here for ONE route, src/pages/ingest/[...path].ts, which opts out with
+  `prerender = false` and ships as a single serverless function.
+
+  It exists because analytics could not be made to work any other way. PostHog
+  has to be proxied through our own origin or content blockers answer 204 for
+  it and nothing is ever recorded. A vercel.json rewrite was the obvious way to
+  proxy, and it cannot work here: PostHog's capture endpoints all end in a
+  slash (/e/, /flags/, /decide/), and Vercel resolves a trailing-slash path
+  against the filesystem and serves Starlight's 404.html before any rewrite is
+  consulted. Measured: /ingest/e answered 400 from PostHog, /ingest/e/ answered
+  404 from our own 404 page. Three rewrite shapes failed the same way.
+
+  A function receives the path whatever its shape, so the slash stops mattering.
+*/
 export default defineConfig({
+  adapter: vercel(),
   // The canonical origin. Three things are derived from it and none of them
   // work without it: the sitemap the integration builds, the rel=canonical on
   // every page, and the absolute og:image and og:url a share card needs. It was
