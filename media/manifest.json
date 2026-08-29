@@ -8,7 +8,7 @@
     "renderDirTracked": false,
     "renderDirNote": "media/.gitignore excludes **/renders/, so canonical MP4s and clip GIFs exist only on a machine that has rendered them. A fresh clone reports them missing; that is correct, not a regression.",
     "webSourceDir": "media/web",
-    "webSourceDirTracked": false,
+    "webSourceDirTracked": true,
     "webNaming": {
       "webm": "media/web/<id>.webm",
       "mp4": "media/web/<id>.mp4",
@@ -66,7 +66,7 @@
         "lightwellHero",
         "lightwellSection"
       ],
-      "why": "Muted autoplay video with a poster is an order of magnitude lighter than a GIF, and a landing page carries several clips at once. The hero stills are crops of three of those clips, cut by scripts/build-hero-stills.mjs, because a whole IDE window shrunk into the hero column is unreadable."
+      "why": "Muted autoplay video with a poster is an order of magnitude lighter than a GIF, and a landing page carries several clips at once. The hero stills are crops of three of those clips, cut by scripts/build-stills.mjs, because a whole IDE window shrunk into the hero column is unreadable."
     },
     "site-docs": {
       "reads": [
