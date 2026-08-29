@@ -14,6 +14,14 @@
  * walks through it.
  */
 import SoonPageLayout from '../components/SoonPageLayout.astro';
+import { Image } from 'astro:assets';
+
+/* A screenshot of the builder as it stands mid-build. It is on a page headed
+   NOT BUILT YET and captioned as unfinished on purpose: the claim ledger's
+   first never-say is that this feature exists, and it names these soon pages
+   directly. A preview of work in progress is honest; the same picture with a
+   confident caption is the claim the ledger blocks. */
+import builderPreview from '../assets/workflow-builder-preview.png';
 
 const PICK_A_PIPELINE = '/docs/guides/pick-a-pipeline/';
 
@@ -58,9 +66,36 @@ const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_WORKFLOW_BUILDER;
 >
   <p slot="lead">
     Some day a pipeline should be something you assemble and look at: drag a step in, name its
-    command and its output file, see the shape of the run before you start one. Today none of that
-    exists, so a workflow is a block of JSON you write by hand in your settings file.
+    command and its output file, see the shape of the run before you start one. It is being built,
+    and none of it is in the extension you can install today, so a workflow is still a block of JSON
+    you write by hand in your settings file.
   </p>
+
+  <section class="section">
+    <div class="inner">
+      <p class="eyebrow">WHERE IT IS NOW</p>
+      <h2>A pipeline you can see</h2>
+      <p class="section-lede">
+        This is the builder running on one machine, mid-build. It is not in the extension, you
+        cannot install it, and parts of it will change or be cut before it ships. It is here so you
+        can see what is being aimed at rather than take a promise on trust.
+      </p>
+
+      <figure class="preview">
+        <Image
+          src={builderPreview}
+          alt="The workflow builder mid-build: four pipeline steps side by side, each listing its nodes, the files it writes, and the hooks attached before and after them, with a warning that companion.yml changed since the last build."
+          widths={[720, 1080, 2000]}
+          sizes="(max-width: 900px) 100vw, 1080px"
+          loading="lazy"
+        />
+        <figcaption>
+          Unfinished, and shown as such. The shape is the point: steps left to right, the nodes
+          inside each one, and the hooks a project attaches around them.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
 
   <section class="section">
     <div class="inner">
@@ -129,6 +164,29 @@ const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_WORKFLOW_BUILDER;
     color: var(--text-body);
     font-size: var(--fs-body);
     line-height: var(--lh-prose);
+  }
+
+  /* The frame reads as a screenshot of something real, not a mockup: the same
+     panel ground and hairline the rest of the site uses, and no glow. A glowing
+     frame around unfinished work would oversell it. */
+  .preview {
+    margin: 0 0 var(--space-26);
+  }
+
+  .preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .preview figcaption {
+    margin-top: var(--space-12);
+    max-width: var(--measure-lead);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
   }
 
   .cards {

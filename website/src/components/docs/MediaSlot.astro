@@ -9,9 +9,11 @@
   capture palette has already changed once, and it will again.
 
   Resolution order, best first:
-    1. `docsStill`, a still shot for documentation, under docs/screenshots/generated/
-    2. `poster`, frame zero of the feature's clip, under media/web/
-    3. a dashed reserved frame, when the feature has produced neither yet
+    1. `still`, when the page names one of the feature's extraStills by hand
+    2. `docsStill`, a still shot for documentation, under docs/screenshots/generated/
+    3. `panelStill`, the cropped panel the landing page uses, under media/web/
+    4. `poster`, frame zero of the feature's clip, under media/web/
+    5. a dashed reserved frame, when the feature has produced none of them yet
 
   Both source directories are globbed eagerly so Astro processes the images at
   build time and emits hashed, correctly sized files. `docs/screenshots/generated/`
@@ -19,25 +21,39 @@
   the published Marketplace listings, so the site reads them where they are
   rather than owning a second copy that could drift.
 
-  The feature id is checked against the manifest at build time, so a typo fails
-  the build instead of shipping a slot nobody can fill.
+  Alt text and caption do different jobs, and neither can stand in for the
+  other. `alt` describes the picture for somebody who cannot see it, and it is
+  read out of the manifest per resolved path, so the description always matches
+  the file that actually rendered. `caption` is editorial: it says what the
+  picture proves, for a reader who is looking straight at it. A caption that
+  only inventories the labels on screen is a caption doing the alt text's job.
+
+  Three things fail the build rather than shipping quietly: an unknown feature
+  id, a `still` the feature never produced, and a resolved image the manifest
+  has no description for.
 */
 import manifest from '../../../../media/manifest.json';
 
 interface Props {
   feature: string;
-  shows: string;
+  /** Editorial: what this picture proves. Not an inventory of its labels. */
+  caption: string;
+  /** Override the manifest's description. Only for a page-specific crop. */
+  alt?: string;
+  /** Name one of the feature's `extraStills` by filename, e.g. `overview-annotated.png`. */
+  still?: string;
   /** Set when the shot only makes sense at full width, e.g. a whole page. */
   wide?: boolean;
 }
 
-const { feature, shows, wide = false } = Astro.props;
+const { feature, caption, alt: altOverride, still, wide = false } = Astro.props;
 
 const known = (
   manifest.features as Array<{
     id: string;
     kind?: string;
-    outputs?: Record<string, string | null>;
+    alt?: Record<string, string>;
+    outputs?: Record<string, string | string[] | null>;
   }>
 ).find((entry) => entry.id === feature);
 
@@ -49,6 +65,10 @@ if (!known) {
 
 const docsStills = import.meta.glob<{ default: ImageMetadata }>(
   '../../../../docs/screenshots/generated/*.png',
+  { eager: true },
+);
+const panelStills = import.meta.glob<{ default: ImageMetadata }>(
+  '../../../../media/web/panel-*.png',
   { eager: true },
 );
 const posters = import.meta.glob<{ default: ImageMetadata }>(
@@ -71,7 +91,54 @@ function resolve(
 }
 
 const outputs = known.outputs ?? {};
-const image = resolve(outputs.docsStill, docsStills) ?? resolve(outputs.poster, posters);
+const asPath = (value: string | string[] | null | undefined) =>
+  typeof value === 'string' ? value : null;
+
+/* A named still has to exist in the manifest, or the page is pointing at a
+   crop nobody produced and the slot would silently fall back to the poster. */
+let namedStill: string | null = null;
+if (still) {
+  const extras = Array.isArray(outputs.extraStills) ? outputs.extraStills : [];
+  namedStill =
+    extras.find((entry) => entry === still || entry.split('/').pop() === still) ?? null;
+  if (!namedStill) {
+    throw new Error(
+      `MediaSlot: "${feature}" has no extra still named "${still}". Produced: ${
+        extras.join(', ') || 'none'
+      }.`,
+    );
+  }
+}
+
+const candidates: Array<[string | null, Record<string, { default: ImageMetadata }>]> =
+  namedStill
+    ? [[namedStill, docsStills]]
+    : [
+        [asPath(outputs.docsStill), docsStills],
+        [asPath(outputs.panelStill), panelStills],
+        [asPath(outputs.poster), posters],
+      ];
+
+let image: ImageMetadata | null = null;
+let imagePath: string | null = null;
+for (const [candidatePath, bucket] of candidates) {
+  const found = resolve(candidatePath, bucket);
+  if (found) {
+    image = found;
+    imagePath = candidatePath;
+    break;
+  }
+}
+
+const describedBy = known.alt ?? {};
+const alt = altOverride ?? (imagePath ? describedBy[imagePath] : undefined);
+
+if (image && !alt) {
+  throw new Error(
+    `MediaSlot: media/manifest.json has no alt text for "${imagePath}" on feature "${feature}". Add one, or pass alt= on the page.`,
+  );
+}
+
 const kind = known.kind === 'clip' ? 'Clip' : 'Screenshot';
 ---
 
@@ -82,7 +149,7 @@ const kind = known.kind === 'clip' ? 'Clip' : 'Screenshot';
         src={image.src}
         width={image.width}
         height={image.height}
-        alt={shows}
+        alt={alt}
         loading="lazy"
         decoding="async"
         class="mslot__img"
@@ -96,7 +163,7 @@ const kind = known.kind === 'clip' ? 'Clip' : 'Screenshot';
       </div>
     )
   }
-  <figcaption class="mslot__caption">{shows}</figcaption>
+  <figcaption class="mslot__caption">{caption}</figcaption>
 </figure>
 
 <style>

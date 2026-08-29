@@ -1,22 +1,48 @@
 ---
-title: Placeholder overview
-description: Scaffold page. No documentation has been written yet.
+title: Introduction
+description: What SpecKit Companion is, which half does what, and where to start reading.
+sidebar:
+  label: Introduction
+  order: 1
 ---
 
-import DocsEmptyState from '../../../components/docs/DocsEmptyState.astro';
+import MediaSlot from '../../../components/docs/MediaSlot.astro';
 
-<DocsEmptyState heading="Nothing is written here yet">
-  This page is a placeholder created by the scaffolding ticket. Nothing here describes the product yet.
-</DocsEmptyState>
+Your specs already live in files. Spec Kit writes a `spec.md`, a `plan.md` and a `tasks.md` into a folder per feature, and from that point on they are markdown you scroll. SpecKit Companion turns that folder into a workspace you can read, and keeps a record of the run beside it.
 
-The real overview gets written in a later ticket, from a claim ledger where every sentence is traced to a file and symbol in the extension source. Until that ledger exists, this page stays empty on purpose rather than guessing.
+<MediaSlot
+  feature="readme-hero"
+  caption="Both halves at once. Nothing on either side is a new file format: it is the same folder your assistant already wrote, read at the altitude you actually work at."
+/>
 
-## What this page will hold
+## The names, once
 
-- What the extension is, in one paragraph
-- The pipeline steps, in the order they run
-- Links into the deeper pages
+Four words do most of the work on this site, and two of them are easy to swap by accident.
 
-## Route check
+| Term | What it means here |
+| --- | --- |
+| **Spec Kit** | The upstream spec-driven development tool and its `specify` CLI. Not ours. |
+| **SpecKit Companion** | This product: the VS Code extension that renders specs, comments, run state and steering files. |
+| **Companion Spec Kit extension** | A second, separately installed piece that adds the `/speckit.companion.*` commands and records what each run did. |
+| **Workflow** | The ordered set of steps a spec follows. "Pipeline" is the same thing, said conversationally. |
+| **Run record** | The `.spec-context.json` file written next to a feature spec. Everything the Overview shows comes out of it. |
 
-This page lives at `/docs/`. The landing page at `/` is a plain Astro route and does not use the Starlight layout.
+## What the VS Code extension gives you
+
+The spec viewer opens your markdown as a page rather than a file, with a rail down the side for the workflow's documents. Inline review lets you comment on any line, and the comments are stored in the spec's own folder rather than in a database somewhere. The Specs sidebar groups every spec by where it stands. The Steering view gathers the standing instructions your AI provider already reads.
+
+## What the Companion Spec Kit extension adds
+
+It rides your Spec Kit runs and writes the run record: what each step did, when it started and finished, what it decided, what it verified. That record is what the Overview reads. It also brings the `/speckit.companion.*` command family, the Resume action, Living Specs, and a terminal `mark-complete` step that stock Spec Kit doesn't have.
+
+## Either half works on its own
+
+Install only the VS Code extension and the viewer, the inline comments and the Specs sidebar all work. Living Specs, Resume and the Companion workflow are what the second half adds. Nothing breaks in between: a spec created without the Companion Spec Kit extension simply has less recorded on it.
+
+## What it isn't doing
+
+The extension hands your assistant the text of a command and then reads whatever lands on disk. It never reads the conversation back, and it gets no callback when your assistant finishes. Everything it shows you was either written to a file by a script your command ran, or observed as a file changing. That boundary explains most of the honest gaps described elsewhere on this site, so it is worth carrying forward.
+
+## Where to start
+
+[Install](/docs/install) covers both halves and what to check when one of them didn't take. If you already have them, [Getting started](/docs/start/getting-started) walks one spec from creation to a finished record.

@@ -1,0 +1,102 @@
+---
+title: Custom commands and hooks
+description: Add your own slash commands to the viewer, and attach your own work to a Companion command without forking it.
+sidebar:
+  label: Custom commands and hooks
+  order: 5
+---
+
+Two different customizations get confused with each other, so they're worth separating before either one makes sense.
+
+A **custom command** is a slash command of your own that the extension can dispatch. It's yours, it's listed in a quick pick, and you run it when you want to. It lives in VS Code settings.
+
+A **node hook** is work you attach to a point inside an existing Companion command, so it happens as part of that command rather than as a separate action. It lives in a file in your repo. A **node** is one section inside a Companion command, and it's what a hook anchors to.
+
+[Pick a pipeline](/docs/guides/pick-a-pipeline) covers the third option, replacing the whole workflow, which is a bigger hammer than either of these.
+
+## Custom commands
+
+Everything in `speckit.customCommands` appears in the **SpecKit: Run Custom Command** quick pick.
+
+```json
+{
+  "speckit.customCommands": [
+    "review",
+    {
+      "name": "pr",
+      "title": "Create PR",
+      "command": "/speckit.pr",
+      "step": "tasks",
+      "requiresSpecDir": false
+    }
+  ]
+}
+```
+
+A bare string is the short form: `"review"` becomes `/speckit.review`. The object form gives you the rest.
+
+| Property | What it does |
+| --- | --- |
+| `name` | The command's identifier. Used as the command itself when `command` is omitted. |
+| `title` | What the picker shows. |
+| `command` | The full slash command to dispatch. |
+| `step` | Which phase this command is offered in: `spec`, `plan`, `tasks`, or `all`. Defaults to `all`. |
+| `tooltip` | Hover text. |
+| `requiresSpecDir` | Whether the command needs the spec directory. Defaults to true. |
+| `autoExecute` | Whether to run it in the terminal automatically. Defaults to true. |
+
+Write `${specDir}` anywhere in the command and it's substituted with the spec's directory. With `requiresSpecDir` set and no placeholder anywhere in the string, the directory is appended to the end instead.
+
+**Where they show up in the viewer.** In a collapsed **Other actions** menu in the footer, scoped to the tab or step you assigned them to. It's a menu, not a toolbar, and it renders only when the spec is still active, isn't at its closure gate, and the list isn't empty. If you defined a command and can't find it, one of those three is the reason.
+
+## Node hooks
+
+`.specify/companion.yml` attaches your own work before or after any named node inside a Companion command, without forking the command.
+
+```yaml
+commands:
+  implement:
+    hooks:
+      before:
+        handoff:
+          - { type: command, run: "npm test" }
+          - { type: prompt, text: "Confirm the CHANGELOG is updated." }
+      after:
+        implement-exec:
+          - { type: node, ref: review }
+```
+
+Anchors are `before` or `after` a named node. Several hooks at one anchor run top to bottom, in the order you declared them.
+
+| Type | What it is |
+| --- | --- |
+| `command` | A shell command. Needs a provider that has a terminal tool; a chat-only provider degrades rather than failing. |
+| `prompt` | An inline instruction, dropped into the command at that point. |
+| `node` | One of your own node files, read from `.specify/companion/nodes/<id>.md`. |
+
+Add `background: true` to any hook and it starts without the run waiting for it, so a slow side effect doesn't hold the spec. Use it for independent work like a test run or a notification. Don't use it for anything that writes to the run record: those calls are fast already, and two of them racing can lose an update to a shared file.
+
+The file changes only the commands you name. Everything else keeps its shipped definition, and with no file at all every command runs exactly as it ships.
+
+## What executing this actually means
+
+Nothing runs `companion.yml` for you. There is no engine.
+
+Your assistant reads the file at run time and acts on it, because the instructions for doing so are appended to each command's body. So a hook is a line of prose in a prompt that your assistant is asked to honor, in the same way it's asked to honor the rest of the command. That's why a `command` hook needs a provider with a terminal tool, and it's why the guarantee here is weaker than a build step's.
+
+Treat a hook as a strong, reliable convention rather than as an enforced one. If something must never be skipped, it belongs in CI, not here.
+
+## When something is wrong with the file
+
+| Situation | What happens |
+| --- | --- |
+| No `companion.yml` | Shipped defaults, no warning |
+| The file can't be parsed | Shipped defaults, plus one warning |
+| A hook anchored to a node that isn't in the command | Warns and skips that anchor |
+| A `type: node` hook whose file is missing | An error, because that's a real misconfiguration |
+
+A file that can't be parsed contributes nothing at all, rather than contributing the part that happened to parse. A half-applied configuration reads as configured while silently not being, which is the worse failure of the two.
+
+## Next
+
+Custom commands show up in the footer's **Other actions** menu, so [anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) is where to see the surface you just added to. If you're customizing because the built-in workflows don't fit, [Pick a pipeline](/docs/guides/pick-a-pipeline) has the option of defining your own outright.
