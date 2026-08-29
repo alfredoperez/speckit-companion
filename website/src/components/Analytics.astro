@@ -27,6 +27,15 @@
      a 200 that the wiring works.
   2. `persistence: 'memory'` keeps this cookieless, which is why the site owes no
      consent banner. Changing it changes that, so do not change it casually.
+
+  3. The loader body below is PLAIN TEXT, and has to stay that way. `is:inline`
+     tells Astro to emit the script verbatim, so it does not evaluate template
+     expressions inside it. This body used to be wrapped in {`...`}, which
+     therefore shipped the braces and backticks to the browser as source: the
+     whole loader parsed as a block containing one discarded string and never
+     ran. It failed silently for as long as it existed, because a string
+     expression statement is perfectly legal JavaScript and throws nothing.
+     `define:vars` is unaffected and is what injects key and host above.
 */
 const key = import.meta.env.PUBLIC_POSTHOG_KEY;
 const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
@@ -35,7 +44,6 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
 {
   key && (
     <script is:inline define:vars={{ key, host }}>
-      {`
       (function () {
         // Minimal loader. Queues calls made before the library lands, so an
         // early click is captured rather than dropped.
@@ -123,7 +131,6 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
           send(e.detail.name, e.detail.props);
         });
       })();
-      `}
     </script>
   )
 }
