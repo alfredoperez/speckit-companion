@@ -62,6 +62,14 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
             // session data if replay is ever turned on.
             mask_all_text: false,
             mask_all_element_attributes: false,
+            // The waitlist stores addresses as survey responses, but the site
+            // renders its own form and PostHog must never draw one over it.
+            // Without this the SDK will pop the survey widget on top of the
+            // page as soon as its targeting matches, and keeping it away by
+            // writing targeting rules that never match is a rule you have to
+            // remember forever. Responses still record: this disables the UI,
+            // not the capture.
+            disable_surveys: true,
           });
           // Every event this site sends carries source: 'site'.
           //
