@@ -9,6 +9,11 @@
     PUBLIC_POSTHOG_KEY    the project key
     PUBLIC_POSTHOG_HOST   defaults to https://us.i.posthog.com
 
+  The key is the EXTENSION's project, shared on purpose: PostHog's free plan
+  allows one project per organisation. Everything from here is stamped
+  source: 'site' so the two streams stay separable. If the plan ever allows a
+  second project, split them and drop the marker.
+
   With no key set, this component renders nothing at all. That is the local and
   preview default, and it means a missing key is a quiet no-op rather than a
   console error on every page.
@@ -58,6 +63,18 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
             mask_all_text: false,
             mask_all_element_attributes: false,
           });
+          // Every event this site sends carries source: 'site'.
+          //
+          // PostHog's free plan allows one project, and that one already holds
+          // the extension's telemetry, so the site shares it. Without a marker
+          // the two streams are one pile: a funnel over "did they install"
+          // would silently mix people who clicked the button on this page with
+          // people who were already running the extension.
+          //
+          // register() makes it a super property, so it rides on $pageview and
+          // autocapture too, not just the named events below. Filter on it and
+          // the two products come apart again.
+          window.posthog.register({ source: 'site' });
           for (var i = 0; i < q.length; i++) {
             var m = q[i];
             if (window.posthog[m[0]]) window.posthog[m[0]].apply(window.posthog, m[1]);
