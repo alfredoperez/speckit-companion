@@ -161,6 +161,23 @@ export const workspace = {
     }),
 };
 
+export class Position {
+    constructor(public readonly line: number, public readonly character: number) {}
+}
+
+export class Range {
+    constructor(public readonly start: Position, public readonly end: Position) {}
+}
+
+export class Selection extends Range {}
+
+export const TextEditorRevealType = {
+    Default: 0,
+    InCenter: 1,
+    InCenterIfOutsideViewport: 2,
+    AtTop: 3,
+};
+
 export const ViewColumn = {
     Active: -1,
     Beside: -2,
@@ -169,21 +186,55 @@ export const ViewColumn = {
     Three: 3,
 };
 
+/**
+ * A drivable WebviewPanel stub.
+ *
+ * The listener a panel registers with `onDidReceiveMessage` is kept rather than
+ * dropped, so a test can send the panel the message a click would have sent and
+ * assert on what came back — `__posted` collects every `postMessage`, and
+ * `__lastPosted(type)` picks out the newest of one kind.
+ */
 export function createMockWebviewPanel() {
-    return {
+    const received: any[] = [];
+    const posted: any[] = [];
+    const disposeListeners: any[] = [];
+    const panel = {
         title: '',
         webview: {
             html: '',
-            postMessage: jest.fn().mockResolvedValue(true),
-            onDidReceiveMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            postMessage: jest.fn((message: any) => {
+                posted.push(message);
+                return Promise.resolve(true);
+            }),
+            onDidReceiveMessage: jest.fn((cb: any) => {
+                received.push(cb);
+                return { dispose: jest.fn() };
+            }),
             asWebviewUri: jest.fn((uri: any) => uri),
             cspSource: 'vscode-webview:',
         },
         reveal: jest.fn(),
         dispose: jest.fn(),
-        onDidDispose: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        onDidDispose: jest.fn((cb: any) => {
+            disposeListeners.push(cb);
+            return { dispose: jest.fn() };
+        }),
         onDidChangeViewState: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        __posted: posted,
+        /** Send the panel a message, as the webview would. Awaits the handler. */
+        async __receive(message: any): Promise<void> {
+            for (const cb of received) { await cb(message); }
+        },
+        /** Close the panel, as the editor would. */
+        __fireDispose(): void {
+            for (const cb of disposeListeners) { cb(); }
+        },
+        /** The newest message of one kind, or undefined. */
+        __lastPosted(type: string): any {
+            return [...posted].reverse().find(m => m?.type === type);
+        },
     };
+    return panel;
 }
 
 /**
