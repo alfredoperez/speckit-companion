@@ -3,6 +3,5 @@
   "framework": "astro",
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
-  "_comment_ignoreCommand": "Exit 0 skips the build. Watching `.` alone was wrong: public/media/ is gitignored, and the site copies its videos out of ../media/web during the build. Re-rendering every clip therefore changed nothing under website/, Vercel skipped the build, and the site kept serving the previous encodes while the repo held the new ones. Anything the build READS has to be listed here, not just what lives here.",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../media/web ../media/manifest.json"
 }
