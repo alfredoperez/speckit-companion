@@ -26,7 +26,15 @@ const BEATS_RE = /(var\s+BEATS\s*=\s*\[)([\s\S]*?)(\n[ \t]*\];)/;
 const CUTS_RE = /(var\s+CUTS\s*=\s*\[)([\s\S]*?)(\n[ \t]*\];)/;
 const OBJECT_RE = /\{[^{}]*\}/g;
 const LABEL_FIELD_RE = /"label"\s*:\s*"(?:[^"\\]|\\.)*"/;
-const LBL_EL_RE = /(<div\s+class="lbl[^"]*"\s+id="lbl(\d+)"[^>]*>)([^<]*)(<\/div>)/g;
+/*
+  The optional <span class="eb"> is the eyebrow naming the region, and it is
+  deliberately swallowed by group 1 rather than captured as text. Group 3 has to
+  stay the caption alone: it is compared against BEATS.label, and its offsets
+  are what --apply rewrites. Let the eyebrow into group 3 and --apply would
+  overwrite it with a caption.
+*/
+const LBL_EL_RE =
+  /(<div\s+class="lbl[^"]*"\s+id="lbl(\d+)"[^>]*>(?:<span class="eb">[^<]*<\/span>)?)([^<]*)(<\/div>)/g;
 
 /** Pull one `var NAME = [ ... ];` array out of the source, with absolute offsets. */
 function findArray(html, re) {

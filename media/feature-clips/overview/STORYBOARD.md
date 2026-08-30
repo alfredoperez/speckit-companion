@@ -26,17 +26,17 @@ At scale 1 the page is 1836 x 3645 frame px, so the frame shows 776 CSS px of it
 
 | t | Region | Label |
 |---|---|---|
-| 3 | intent kicker and statement | The one sentence the whole run answers to |
-| 6 | run overview strip, heading through the four phase chips | A time only where both ends were recorded |
-| 9 | approach label and paragraph, left of the meta card | The shape it took, without reading the diff |
-| 12 | working area label and paragraph, right column | Which corner of the codebase it changed |
-| 15 | size label and paragraph, right column | How big the run judged it, before starting |
-| 18 | living specs block and its chip row, left of the meta card | The standing knowledge it loaded before drafting |
-| 21 | the whole expectations section, head and both fence columns | What it held to, and what it left alone |
-| 24 | the whole verified section, head and all five checks with their commands | Each claim carries the command that produced it |
-| 27 | decisions head through decision 02, both REJECTED lines in frame | The losing option, kept so nobody argues it twice |
-| 30 | the whole coverage section, head through the FR-004 row | Gaps sort to the top, when there are any |
-| 33 | rest | — |
+| 1.6 | intent kicker and statement | What the work was actually for |
+| 4.6 | run overview strip, heading through the four phase chips | A time only where both ends were recorded |
+| 7.6 | approach label and paragraph, left of the meta card | The shape it took, without reading the diff |
+| 10.6 | working area label and paragraph, right column | Which corner of the codebase it changed |
+| 13.6 | size label and paragraph, right column | How big the run judged it, before starting |
+| 16.6 | living specs block and its chip row, left of the meta card | The standing knowledge it loaded before drafting |
+| 19.6 | the whole expectations section, head and both fence columns | What it held to, and what it left alone |
+| 22.6 | the whole verified section, head and all five checks with their commands | Each claim carries the command that produced it |
+| 25.6 | decisions head through decision 02, both REJECTED lines in frame | The losing option, kept so nobody argues it twice |
+| 28.6 | the whole coverage section, head through the FR-004 row | Gaps sort to the top, when there are any |
+| 31.6 | rest | — |
 
 Every region is a real element box measured with `getBoundingClientRect` against the capture box, in the capture's own CSS pixels, taken off the live A6c story rather than read off the image. The selectors, in beat order: `.dossier-intent > .dossier-kicker` united with `.dossier-intent__statement`; `.dossier-timing`; the label and paragraph inside `.dossier-intent__approach`; the first and then the second label-and-paragraph pair inside `.dossier-intent__context`; `.dossier-intent__living-specs`; and the four sections `section[aria-label="Expectations"]`, `[aria-label="Verified"]`, `[aria-label="Decisions"]` (united with its first two decisions) and `[aria-label="Coverage"]`.
 
