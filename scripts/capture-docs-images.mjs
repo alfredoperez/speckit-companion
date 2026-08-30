@@ -28,17 +28,20 @@
  * when it is done. Exits nonzero if any story fails to render or any
  * annotation target is missing.
  *
+ * The browser and Storybook plumbing is shared with the Pipeline Builder's
+ * visual tests — see scripts/lib/storybook-browser.mjs.
+ *
  * DO NOT HAND-EDIT THE OUTPUT
  * Everything in `docs/screenshots/generated/` is regenerable by this script.
  * A manual touch-up is lost on the next run; change the story (or this list)
  * instead.
  */
 
-import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright-core';
+import { join } from 'node:path';
+import {
+    REPO_ROOT, ensureStorybook, launchChrome, openStory, storyIndex,
+} from './lib/storybook-browser.mjs';
 
 // ── The image list. Adding a documentation image is one line here. ────────
 // story: the Storybook story id (see http://localhost:6017/index.json)
@@ -118,51 +121,7 @@ const STORIES = [
     },
 ];
 
-const PORT = 6017;
-const BASE = `http://localhost:${PORT}`;
-const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(REPO_ROOT, 'docs', 'screenshots', 'generated');
-
-async function storybookIsUp() {
-    try {
-        const res = await fetch(`${BASE}/index.json`, { signal: AbortSignal.timeout(2000) });
-        return res.ok;
-    } catch {
-        return false;
-    }
-}
-
-/** Boot `storybook dev` and resolve once index.json answers. */
-async function bootStorybook() {
-    console.log(`No Storybook on :${PORT}, booting one (first boot takes a minute)...`);
-    const child = spawn('npx', ['storybook', 'dev', '-p', String(PORT), '--no-open'], {
-        cwd: REPO_ROOT,
-        stdio: 'ignore',
-        detached: false,
-    });
-    const deadline = Date.now() + 180_000;
-    while (Date.now() < deadline) {
-        if (child.exitCode !== null) {
-            throw new Error(`storybook dev exited early with code ${child.exitCode}`);
-        }
-        if (await storybookIsUp()) return child;
-        await new Promise((r) => setTimeout(r, 2000));
-    }
-    child.kill();
-    throw new Error('Storybook did not come up on :' + PORT + ' within 180s');
-}
-
-/** Wait until the story is painted: fonts loaded, two frames settled. */
-async function settle(page) {
-    await page.evaluate(() => document.fonts.ready);
-    await page.evaluate(
-        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
-    );
-    // Small fixed grace for story play() functions and layout of async content
-    // (e.g. mermaid). Deterministic content means waiting longer never changes
-    // the pixels, only guarantees they are all there.
-    await page.waitForTimeout(500);
-}
 
 /**
  * Draw the one-callout annotation: a box on the measured rect of `selector`
@@ -231,22 +190,11 @@ async function removeAnnotation(page) {
 async function main() {
     mkdirSync(OUT_DIR, { recursive: true });
 
-    let spawned = null;
-    if (!(await storybookIsUp())) {
-        spawned = await bootStorybook();
-    }
-
-    const index = await (await fetch(`${BASE}/index.json`)).json();
-    const known = new Set(Object.keys(index.entries));
+    const spawned = await ensureStorybook();
+    const known = new Set(Object.keys(await storyIndex()));
 
     const failures = [];
-    const browser = await chromium.launch({ channel: 'chrome' }).catch((err) => {
-        throw new Error(
-            'Could not launch Chrome via playwright-core (channel "chrome"). ' +
-                'Install Google Chrome, or point the script at another channel. ' +
-                `Original error: ${err.message}`,
-        );
-    });
+    const browser = await launchChrome();
 
     try {
         const context = await browser.newContext({
@@ -261,15 +209,8 @@ async function main() {
                 failures.push(`${entry.story}: not in Storybook index (renamed or deleted?)`);
                 continue;
             }
-            const url = `${BASE}/iframe.html?id=${encodeURIComponent(entry.story)}&viewMode=story`;
             try {
-                await page.goto(url, { waitUntil: 'networkidle' });
-                await page.waitForSelector('#storybook-root > *', { timeout: 30_000 });
-                const errored = await page.evaluate(() =>
-                    document.body.classList.contains('sb-show-errordisplay'),
-                );
-                if (errored) throw new Error('story rendered the Storybook error screen');
-                await settle(page);
+                await openStory(page, entry.story);
 
                 // The preview decorator gives capture stories an exact-pixel
                 // box as the root child; screenshotting that element IS the

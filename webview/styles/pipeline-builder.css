@@ -20,10 +20,23 @@ body {
     background: var(--bg-primary);
 }
 
+/* Bounded, not just tall enough. With `min-height` the shell grew past the
+   viewport whenever a node's instructions were long, so the whole page scrolled
+   and every inner scroll region — the board, the inspector's document — became
+   decorative. The inspector's actions were the visible cost: pinned to the foot
+   of a panel that was itself off-screen, so reading a long node meant scrolling
+   past all of it to reach the buttons. The canvas and the inspector body carry
+   their own `overflow`, so they take the scrolling from here. */
 .builder {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    /* Names the container the `@container builder` query below asks about.
+       Without it that query matches nothing, so the side column kept its full
+       width however narrow the panel got and pushed the board out of view. */
+    container-type: inline-size;
+    container-name: builder;
 }
 
 .builder-empty,
@@ -48,6 +61,60 @@ body {
     white-space: pre-wrap;
 }
 
+/* The ways out of a configuration the builder cannot read. Each repair is an
+   action over the sentence that says what it costs, so the cost is read on the
+   way to the click rather than after it. */
+
+.builder-repairs {
+    margin-top: var(--space-5);
+    max-width: 42rem;
+}
+
+.builder-repairs-title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+
+.builder-repair-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.builder-repair-detail {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+}
+
+.builder-repair-manual {
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+}
+
+/* The manual escape stays available, but reads as the smaller option now that
+   the panel can do the repair itself. */
+.builder-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.builder-link:hover {
+    color: var(--accent-hover);
+}
+
 /* ============================================
    Header
    ============================================ */
@@ -69,6 +136,10 @@ body {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    /* The header wraps; this row has to as well, or the name, the workflow and
+       the no-wrap summary chip push past a docked panel's width together. */
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .builder-title {
@@ -79,6 +150,7 @@ body {
 .builder-chip {
     display: inline-flex;
     align-items: center;
+    white-space: nowrap;
     gap: var(--space-2);
     padding: 2px var(--space-2);
     font-family: var(--font-mono);
@@ -103,21 +175,28 @@ body {
 
 .builder-facts {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
     margin-left: auto;
 }
 
+/* One line, or none of it. Broken mid-list it read "17 / nodes", which is
+   harder to scan than the count is worth. */
 .builder-count {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 .builder-action {
     padding: var(--space-1) var(--space-3);
     font-family: inherit;
     font-size: var(--text-sm);
+    /* A label that wraps turns the forward action into the tallest thing on
+       screen — "Build with Claude" was two lines and a slab. */
+    white-space: nowrap;
     color: var(--text-body);
     background: transparent;
     border: 1px solid var(--border);
@@ -145,6 +224,17 @@ body {
 
 .builder-action--primary:hover:not(:disabled) {
     background: var(--accent-hover);
+}
+
+/* The way out that discards the most should not look like the one that keeps
+   everything. Same size, different weight of consequence. */
+.builder-action--destructive {
+    color: var(--error);
+    border-color: color-mix(in srgb, var(--error) 40%, transparent);
+}
+
+.builder-action--destructive:hover:not(:disabled) {
+    background: var(--error-subtle);
 }
 
 .builder-notice {
@@ -203,6 +293,7 @@ body {
 .builder-workflow-current {
     display: inline-flex;
     align-items: center;
+    white-space: nowrap;
     gap: var(--space-2);
     padding: var(--space-1) var(--space-3);
     font-family: inherit;
@@ -782,6 +873,19 @@ body {
     border-top: 1px solid var(--border);
 }
 
+/* One button, everywhere the panel asks for something.
+ *
+ * The inspector and the forms had their own near-identical rules that differed
+ * only in horizontal padding, so the same action looked like two different
+ * controls depending on which panel it sat in.
+ *
+ * The order is fixed too, and it is the order these are written in the markup:
+ *   1. the forward action        — filled, or `--yours` when it makes something yours
+ *   2. other actions             — outlined
+ *   3. the destructive one       — `--remove`
+ *   4. dismissing or leaving     — `--quiet`, pushed to the far end
+ * One accent means "go", one purple means "yours", one red means "gone". */
+.pb-action,
 .pb-inspector-action {
     padding: var(--space-1) var(--space-3);
     font-family: inherit;
@@ -793,14 +897,20 @@ body {
     cursor: pointer;
 }
 
-.pb-inspector-action:hover { background: var(--bg-hover); }
+.pb-action:hover:not(:disabled),
+.pb-inspector-action:hover:not(:disabled) { background: var(--bg-hover); }
 
+.pb-action:disabled,
+.pb-inspector-action:disabled { opacity: 0.5; cursor: default; }
+
+.pb-action--yours,
 .pb-inspector-action--yours {
     color: var(--review);
     border-color: var(--review);
     background: var(--review-subtle);
 }
 
+.pb-action--quiet,
 .pb-inspector-action--quiet {
     margin-left: auto;
     color: var(--text-secondary);
@@ -818,20 +928,6 @@ body {
    to the width of a word. */
 /* The board scrolls rather than reflowing, so there is no column breakpoint —
    only the side column, which stops fitting beside it first. */
-
-@container builder (max-width: 860px) {
-    .builder-body { flex-direction: column; }
-
-    .pb-side,
-    .pb-inspector {
-        width: auto;
-        border-left: none;
-        border-top: 1px solid var(--border);
-        max-height: 50vh;
-    }
-
-    .builder-facts { margin-left: 0; flex-basis: 100%; }
-}
 
 /* ============================================
    Side column — inspector, attach, new workflow
@@ -1001,19 +1097,29 @@ body {
     gap: var(--space-2);
 }
 
-.pb-action {
-    padding: var(--space-1) var(--space-4);
-    font-family: inherit;
-    font-size: var(--text-sm);
+/* Editing a node happens here, not in the editor — the file it would open
+   starts with frontmatter and empty fences, which is the authoring format
+   rather than the thing being changed. */
+.pb-doc-edit {
+    display: block;
+    width: 100%;
+    min-height: 22rem;
+    box-sizing: border-box;
+    padding: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.6;
     color: var(--text-body);
-    background: transparent;
-    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    border: 1px solid var(--review);
     border-radius: var(--radius-sm);
-    cursor: pointer;
+    resize: vertical;
 }
 
-.pb-action:hover:not(:disabled) { background: var(--bg-hover); }
-.pb-action:disabled { opacity: 0.5; cursor: default; }
+.pb-doc-edit:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+}
 
 .pb-action--primary {
     color: var(--accent-ink);
@@ -1040,31 +1146,138 @@ body {
    Hooks from the project's spec-kit extensions
    ============================================ */
 
-.pb-stock {
-    margin: var(--space-2) var(--space-1) 0;
-    padding-top: var(--space-2);
-    border-top: 1px dashed var(--border);
-}
-
-.pb-stock-list {
-    margin: var(--space-1) 0 0;
-    padding: 0;
-    list-style: none;
+/* An anchor with nothing on it — a seam, not a row.
+ *
+ * Every place a hook can attach is drawn, which is 26 anchors in specify against
+ * 9 nodes. Typeset with its name, each of those became an 11px line — the same
+ * size as a phase heading — so the lane filled with labels for things that were
+ * not there, six of them for every one that was. The absence of something must
+ * never be set like the something.
+ *
+ * So it is a graphic element: a dashed seam the width of the lane, no taller
+ * than a rule. The name is still in the markup, for screen readers and for the
+ * hover that expands it — read on demand rather than shouted 25 times. */
+.pb-slot {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.pb-stock-hook {
-    display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-2);
+    width: 100%;
+    /* Fixed, and tall enough to hold the name it reveals. Growing on hover
+       animated a layout property, which thrashes and — worse — shoved every
+       node below the seam down while the pointer was on its way to one. A seam
+       reserves its own space once and never moves the board. */
+    height: 15px;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
     font-size: var(--text-xs);
-    /* One hook, one line: wrapped, the chips read as loose words. */
-    white-space: nowrap;
+    line-height: 1;
+    color: var(--text-muted);
+    background: none;
+    border: 0;
+    border-top: 1px dashed var(--border);
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.pb-stock-when { color: var(--text-muted); }
+/* No background behind the glyph. It was meant to notch the dashed line, but
+   the line is the parent's top border and this sits below it — so all the fill
+   did was paint a grey block in the lane, with the glyph too dark to read
+   against it. */
+.pb-slot::before {
+    content: '+';
+    flex-shrink: 0;
+    padding: 0 var(--space-1);
+    font-size: var(--text-xs);
+    line-height: 1;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+/* The name is laid out at rest and merely invisible, so revealing it paints
+   rather than reflows. */
+.pb-slot-label {
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.pb-slot:hover:not(:disabled),
+.pb-slot:focus-visible:not(:disabled) {
+    color: var(--review);
+    border-top-color: var(--review);
+}
+
+/* A seam is thin, so the ring is what makes the focused one findable. */
+.pb-slot:focus-visible:not(:disabled) {
+    outline: 1px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.pb-slot:hover:not(:disabled)::before,
+.pb-slot:focus-visible:not(:disabled)::before { color: var(--review); }
+
+.pb-slot:hover:not(:disabled) .pb-slot-label,
+.pb-slot:focus-visible:not(:disabled) .pb-slot-label { opacity: 1; }
+
+.pb-slot:disabled { cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-slot, .pb-slot-label { transition: none; }
+}
+
+/* A group holding only another extension's hooks.
+ *
+ * The panel has one strong semantic — the review hue means "this project did
+ * this" — and drawing an installed extension's hook in it said the opposite of
+ * the truth. It keeps the same shape, so it still reads as work that runs at
+ * this point, in the muted voice of something you did not write. */
+.pb-hooks--theirs .pb-hooks-arm { border-left-color: var(--border-hover); }
+.pb-hooks--theirs .pb-hooks-head,
+.pb-hooks--theirs .pb-hooks-icon { color: var(--text-muted); }
+
+/* The arrowhead is the arm's, and it points at the block the hook attaches to.
+   Muted it read as a stray diamond, so this group ends the line plainly. */
+.pb-hooks--theirs .pb-hooks-arm::after { display: none; }
+
+/* The chip too — the fill and the identifier were still the review hue, which
+   is the one thing on this board that means the project wrote it. */
+.pb-hooks--theirs .pb-hook {
+    background: var(--bg-elevated);
+    cursor: default;
+}
+
+.pb-hooks--theirs .pb-hook::before {
+    border-left-color: var(--border-hover);
+    border-bottom-color: var(--border-hover);
+}
+
+.pb-hooks--theirs .pb-hook-ref,
+.pb-hooks--theirs .pb-hook-verb { color: var(--text-secondary); }
+
+/* A hook another extension registered. Same shape as your own so it reads as
+   part of the run, dimmed and unclickable so it does not read as yours. */
+.pb-hook--stock {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.pb-hook-from,
+.pb-hook-note {
+    margin-left: var(--space-1);
+    padding: 0 4px;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* The inert "+ node" — present so the question has an answer, and plainly not
+   a button, since there is nothing for it to offer here. */
+.pb-phase-tool--inert {
+    color: var(--text-muted);
+    cursor: help;
+}
 
 .pb-stock-command {
     font-family: var(--font-mono);
@@ -1238,13 +1451,16 @@ body {
     color: var(--text-muted);
 }
 
-.pb-action--remove {
-    margin-left: auto;
+/* No `margin-left: auto` here: `--quiet` is the one that pushes to the far end,
+   and two of them would strand the destructive action out there beside it. */
+.pb-action--remove,
+.pb-inspector-action--remove {
     color: var(--error);
     border-color: transparent;
 }
 
-.pb-action--remove:hover {
+.pb-action--remove:hover,
+.pb-inspector-action--remove:hover {
     background: var(--error-subtle);
 }
 
@@ -1337,4 +1553,21 @@ body {
     color: var(--review);
     border-color: var(--review);
     background: var(--review-subtle);
+}
+
+/* ── Narrow panel ────────────────────────────────────────────
+   Last on purpose: `@container` adds no specificity, so these have to
+   come after the rules they override or source order silently wins. */
+@container builder (max-width: 860px) {
+    .builder-body { flex-direction: column; }
+
+    .pb-side,
+    .pb-inspector {
+        width: auto;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 50vh;
+    }
+
+    .builder-facts { margin-left: 0; flex-basis: 100%; }
 }
