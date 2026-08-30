@@ -26,7 +26,7 @@ import vscodeChangelog from '../../../CHANGELOG.md?raw';
 import speckitChangelog from '../../../speckit-extension/CHANGELOG.md?raw';
 
 import Analytics from '../components/Analytics.astro';
-import MascotMark from '../components/MascotMark.astro';
+import LogoMark from '../components/LogoMark.astro';
 import SiteIcons from '../components/SiteIcons.astro';
 import ogCard from '../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
@@ -97,7 +97,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
     <div class="cl-shell">
       <nav class="cl-nav">
         <a class="cl-back" href="/">
-          <MascotMark size={22} />
+          <LogoMark size={22} />
           <span>SpecKit Companion</span>
         </a>
         <a class="cl-nav-link" href="/docs/">docs</a>
@@ -268,11 +268,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         --accent: #a78bfa;
         --accent-hover: #c4b5fd;
         --accent-solid: #8b5cf6;
-
-        /* The two brand greens, here because MascotMark reads them and this
-           page carries its own copy of the token file. */
-        --green: #7cc98a;
-        --green-leaf: #a5df6c;
 
         --rule: #1d1930;
         --border-card: #221e35;
