@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1836, height=1164" />
+    <title>Living specs, explained</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
+      @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* ==========================================================================
+         A DIAGRAM, not a screenshot tour. There is no capture under it and no
+         camera: every pixel is drawn here, which is why it stays sharp at any
+         encode width and re-themes by editing this block alone.
+
+         The payoff is a two-up, because the whole point of living specs is that
+         there are TWO places a capability's spec can live and you pick per
+         capability. Shown one after the other it reads as a change of mind;
+         side by side it reads as a choice.
+
+         Hand-authored, so no BEATS array and clip-storyboard lists it as
+         skipped. STORYBOARD.md is still the editable script.
+         ========================================================================== */
+      :root {
+        /* Light, to match the captures. Every screenshot in the set is now a
+           light surface on the site's near-black ground, and a dark diagram
+           beside them would read as a different product. The caption band
+           stays dark: content light, band dark is the contrast that makes a
+           still of this frame pop off the page. */
+        --ground:      #fbfaff;
+        --panel:       #ffffff;
+        --panel-solid: #ffffff;
+        --rule:        #e8e4f4;
+        --border:      #ddd6ef;
+
+        --text:        #1a1626;
+        --text-body:   #3d3654;
+        --text-dim:    #6f6890;
+
+        --accent:      #7c3aed;
+        --pass:        #1f7a3d;
+        --drift:       #9a6b00;
+
+        --mono: "Geist", ui-monospace, SFMono-Regular, Menlo, monospace;
+        --sans: "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+        --label-size:   56px;
+        --label-fg:     #eef4f1;
+        --label-bg:     rgba(8,11,13,0.97);
+        --label-border: rgba(167,139,250,0.34);
+      }
+
+      html, body { width:1836px; height:1164px; overflow:hidden; background:var(--ground); }
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--ground);
+              font-family:var(--sans); color:var(--text); }
+
+      #root::before {
+        content:""; position:absolute; inset:0;
+        background-image:radial-gradient(circle, #7c3aed12 1px, transparent 1px);
+        background-size:34px 34px;
+      }
+
+      #stage { position:absolute; left:0; top:0; width:1836px; height:1164px; }
+
+      .head {
+        display:flex; align-items:center; gap:14px;
+        margin-bottom:20px; padding-bottom:14px;
+        border-bottom:1px solid var(--rule);
+        font-family:var(--mono); font-size:25px; color:var(--text-dim);
+        letter-spacing:0.14em; text-transform:uppercase;
+      }
+
+      /* --- act one: the folder Spec Kit leaves behind --------------------- */
+      #act1 { position:absolute; left:522px; top:322px; width:792px; }
+
+      .card {
+        padding:30px 34px;
+        background:var(--panel);
+        border:1px solid var(--border);
+        border-radius:16px;
+      }
+      .path { font-family:var(--mono); font-size:30px; color:var(--accent); margin-bottom:20px; }
+      .file {
+        display:flex; align-items:center; gap:16px; padding:16px 0;
+        font-family:var(--mono); font-size:28px; color:var(--text-body);
+      }
+      .file + .file { border-top:1px solid var(--rule); }
+      .file .glyph { color:var(--text-dim); }
+
+      .stamp {
+        position:absolute; left:522px; top:358px;
+        padding:10px 20px; border-radius:999px;
+        background:#ffffff; border:1px solid var(--border);
+        font-family:var(--mono); font-size:23px; color:var(--text-body);
+        letter-spacing:0.14em; text-transform:uppercase;
+      }
+
+      /* --- act two: the capabilities in transit --------------------------- */
+      .cap {
+        position:absolute;
+        display:flex; align-items:center; gap:18px;
+        width:600px; padding:19px 26px;
+        background:var(--panel-solid);
+        border:1px solid var(--border);
+        border-left:4px solid var(--accent);
+        border-radius:12px;
+        font-family:var(--mono); font-size:27px; color:var(--text);
+        box-shadow:0 22px 60px #1a162626;
+      }
+      .cap .brace { color:var(--accent); }
+
+      /* --- act three: the two places a spec can live ---------------------- */
+      .panel { position:absolute; top:140px; width:680px; }
+      #panel-code { left:190px; }
+      #panel-root { left:966px; }
+
+      .tree {
+        padding:26px 30px 30px;
+        background:var(--panel);
+        border:1px solid var(--border);
+        border-radius:16px;
+      }
+      .node {
+        display:flex; align-items:center; gap:14px; padding:22px 0;
+        font-family:var(--mono); font-size:30px; color:var(--text-body);
+      }
+      .node.root { color:var(--accent); font-size:32px; padding-bottom:32px; }
+      .node.i1 { padding-left:36px; }
+      .node.spec { color:var(--text); }
+      .node .brace { color:var(--accent); }
+      .node .glyph { color:var(--text-dim); }
+      .node .tag { margin-left:auto; font-size:25px; color:var(--pass); }
+      .node .tag.warn { color:var(--drift); }
+
+      /* The spec row sitting among the source files is the whole left-hand
+         argument, so it carries the only lit background in either panel. */
+      .node.spec.here {
+        margin:6px -12px; padding-left:24px; padding-right:12px;
+        background:#7c3aed14; border-radius:8px;
+      }
+
+      /* --- the caption band ---------------------------------------------- */
+      .lbl {
+        position:absolute; left:0; right:0; bottom:0;
+        display:flex; align-items:flex-start; gap:22px;
+        padding:34px 320px 34px 72px;
+        background:var(--label-bg);
+        border-top:1px solid var(--label-border);
+        box-shadow:0 -8px 20px rgba(26,22,38,0.13);
+        font-size:var(--label-size); font-weight:600; line-height:1.16;
+        color:var(--label-fg);
+      }
+      .lbl::before {
+        content:""; flex:none; margin-top:0.42em;
+        width:14px; height:14px; border-radius:50%; background:#a78bfa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="21.5" data-fps="30"
+         data-width="1836" data-height="1164">
+
+      <div id="stage" class="clip" data-start="0" data-duration="21.5" data-track-index="0">
+
+        <div id="act1">
+          <p class="head">What Spec Kit writes</p>
+          <div class="card" id="folder">
+            <p class="path">specs/041-photo-upload/</p>
+            <div class="file" id="f1" data-layout-allow-occlusion><span class="glyph">▸</span>spec.md</div>
+            <div class="file" id="f2" data-layout-allow-occlusion><span class="glyph">▸</span>plan.md</div>
+            <div class="file" id="f3" data-layout-allow-occlusion><span class="glyph">▸</span>tasks.md</div>
+          </div>
+        </div>
+        <span class="stamp" id="stamp">feature shipped</span>
+
+        <!-- LEFT: the spec sitting among the files it describes -->
+        <div class="panel" id="panel-code">
+          <p class="head">Next to the code</p>
+          <div class="tree">
+            <div class="node root"><span class="glyph">▾</span>src/features/directory-search/</div>
+            <div class="node i1"><span class="glyph">▸</span>search.ts</div>
+            <div class="node i1"><span class="glyph">▸</span>filters.ts</div>
+            <div class="node i1"><span class="glyph">▸</span>ranking.ts</div>
+            <div class="node i1"><span class="glyph">▸</span>index.ts</div>
+            <div class="node i1"><span class="glyph">▸</span>types.ts</div>
+            <div class="node i1 spec here" id="s0"><span class="brace">{ }</span>directory-search.spec.md<span class="tag" id="g0">6/6 covered</span></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: all of them under one root -->
+        <div class="panel" id="panel-root">
+          <p class="head">Or all at one root</p>
+          <div class="tree">
+            <div class="node root"><span class="glyph">▾</span>capabilities/</div>
+            <div class="node i1 spec" id="s1"><span class="brace">{ }</span>member-profiles/spec.md<span class="tag" id="g1">9/9 covered</span></div>
+            <div class="node i1 spec" id="s2"><span class="brace">{ }</span>photo-storage/spec.md<span class="tag warn" id="g2">drift</span></div>
+            <div class="node i1 spec" id="s3"><span class="brace">{ }</span>team-invites/spec.md<span class="tag" id="g3">4/4 covered</span></div>
+            <div class="node i1 spec" id="s4"><span class="brace">{ }</span>avatar-rendering/spec.md<span class="tag" id="g4">7/7 covered</span></div>
+          </div>
+        </div>
+
+        <!-- the capabilities on their way out of the folder -->
+        <div class="cap" id="c1" data-layout-allow-overlap data-layout-allow-occlusion><span class="brace">{ }</span>directory-search</div>
+        <div class="cap" id="c2" data-layout-allow-overlap data-layout-allow-occlusion><span class="brace">{ }</span>member-profiles</div>
+        <div class="cap" id="c3" data-layout-allow-overlap data-layout-allow-occlusion><span class="brace">{ }</span>photo-storage</div>
+
+        <div class="lbl" id="l0" data-layout-allow-overlap data-layout-allow-occlusion>Spec Kit writes the spec, and the folder holds everything you worked out</div>
+        <div class="lbl" id="l1" data-layout-allow-overlap data-layout-allow-occlusion>The feature ships, and the folder goes quiet</div>
+        <div class="lbl" id="l2" data-layout-allow-overlap data-layout-allow-occlusion>Turn living specs on and each capability keeps one durable spec</div>
+        <div class="lbl" id="l3" data-layout-allow-overlap data-layout-allow-occlusion>Next to the code it describes, or all at one root. You pick, per capability</div>
+        <div class="lbl" id="l4" data-layout-allow-overlap data-layout-allow-occlusion>Drift names the files that changed since that spec was last committed</div>
+      </div>
+    </div>
+
+    <script>
+      /* Hand-authored, so the timing lives here rather than in a BEATS array.
+         Every tween is fromTo with immediateRender:false, because the renderer
+         seeks by frame in arbitrary order and a tween without an explicit start
+         pose would let the last one win at frame zero.
+
+         Chips travel on transforms, never on left/top: layout properties snap to
+         whole device pixels and stutter under the seek-by-frame renderer. */
+      var EASE = "power3.out", MOVE = "power3.inOut";
+      var IN = 0.42, OUT = 0.3;
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      var CAPS = ["#c1", "#c2", "#c3"];
+      var SPECS = ["#s0", "#s1", "#s2"];
+      var TAGS = ["#g0", "#g1", "#g2", "#g3", "#g4"];
+
+      /* placed once by left/top, then moved by transform */
+      var FROM = [{ x: 618, y: 482 }, { x: 618, y: 554 }, { x: 618, y: 626 }];
+      var TO   = [{ x: 214, y: 734 }, { x: 986, y: 330 }, { x: 986, y: 410 }];
+      var TRIP = FROM.map(function (f, i) { return { dx: TO[i].x - f.x, dy: TO[i].y - f.y }; });
+
+      gsap.set(["#f1", "#f2", "#f3"], { autoAlpha: 0, x: -18 });
+      gsap.set("#act1", { autoAlpha: 1 });
+      gsap.set("#folder", { filter: "grayscale(0)", opacity: 1 });
+      gsap.set("#stamp", { autoAlpha: 0, scale: 0.94 });
+      gsap.set(["#panel-code", "#panel-root"], { autoAlpha: 0, y: 18 });
+      gsap.set(["#s0", "#s1", "#s2", "#s3", "#s4"], { autoAlpha: 0 });
+      gsap.set(TAGS, { autoAlpha: 0 });
+      gsap.set(".lbl", { autoAlpha: 0 });
+      CAPS.forEach(function (c, i) {
+        gsap.set(c, { autoAlpha: 0, left: FROM[i].x, top: FROM[i].y, x: 0, y: 0, scale: 0.92 });
+      });
+
+      function caption(sel, at, until) {
+        tl.fromTo(sel, { autoAlpha: 0, y: 14 },
+          { autoAlpha: 1, y: 0, duration: IN, ease: EASE, immediateRender: false }, at);
+        tl.fromTo(sel, { autoAlpha: 1 },
+          { autoAlpha: 0, duration: OUT, ease: "power2.in", immediateRender: false }, until);
+      }
+
+      /* 1 · the folder fills in ------------------------------------------- */
+      caption("#l0", 0.3, 4.3);
+      ["#f1", "#f2", "#f3"].forEach(function (f, i) {
+        tl.fromTo(f, { autoAlpha: 0, x: -18 },
+          { autoAlpha: 1, x: 0, duration: 0.5, ease: EASE, immediateRender: false }, 0.8 + i * 0.36);
+      });
+
+      /* 2 · it ships, and the folder goes quiet --------------------------- */
+      caption("#l1", 4.7, 7.2);
+      tl.fromTo("#stamp", { autoAlpha: 0, scale: 0.94 },
+        { autoAlpha: 1, scale: 1, duration: 0.42, ease: EASE, immediateRender: false }, 4.8);
+      tl.fromTo("#folder", { filter: "grayscale(0)", opacity: 1 },
+        { filter: "grayscale(1)", opacity: 0.4, duration: 0.9, ease: MOVE, immediateRender: false }, 5.0);
+
+      /* 3 · the capabilities lift out ------------------------------------- */
+      caption("#l2", 7.6, 10.4);
+      CAPS.forEach(function (c, i) {
+        tl.fromTo(c, { autoAlpha: 0, scale: 0.92 },
+          { autoAlpha: 1, scale: 1, duration: 0.44, ease: EASE, immediateRender: false }, 7.8 + i * 0.26);
+      });
+
+      /* 4 · and land in one of the two places they can live ---------------- */
+      caption("#l3", 10.8, 14.0);
+      tl.fromTo("#act1", { autoAlpha: 1 },
+        { autoAlpha: 0, duration: 0.6, ease: MOVE, immediateRender: false }, 10.5);
+      tl.fromTo("#stamp", { autoAlpha: 1 },
+        { autoAlpha: 0, duration: 0.4, ease: MOVE, immediateRender: false }, 10.5);
+      ["#panel-code", "#panel-root"].forEach(function (p, i) {
+        tl.fromTo(p, { autoAlpha: 0, y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.6, ease: EASE, immediateRender: false }, 10.7 + i * 0.16);
+      });
+      CAPS.forEach(function (c, i) {
+        tl.fromTo(c, { x: 0, y: 0 },
+          { x: TRIP[i].dx, y: TRIP[i].dy, duration: 1.0, ease: MOVE, immediateRender: false }, 10.9 + i * 0.18);
+        tl.fromTo(SPECS[i], { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.3, immediateRender: false }, 11.9 + i * 0.18);
+        tl.fromTo(c, { autoAlpha: 1 },
+          { autoAlpha: 0, duration: 0.3, immediateRender: false }, 11.9 + i * 0.18);
+      });
+      /* The third root row was never in this folder: it is simply already there,
+         which is the point. A root fills up over many features, not one. */
+      tl.fromTo(["#s3", "#s4"], { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 0.34, ease: EASE, stagger: 0.12, immediateRender: false }, 12.7);
+
+      /* 5 · coverage, then the one that has drifted ------------------------ */
+      TAGS.forEach(function (t, i) {
+        tl.fromTo(t, { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.32, ease: EASE, immediateRender: false }, 13.3 + i * 0.2);
+      });
+      caption("#l4", 14.4, 19.4);
+      tl.fromTo("#s2", { x: 0 },
+        { x: 10, duration: 0.16, yoyo: true, repeat: 3, ease: "none", immediateRender: false }, 14.7);
+
+      /* 6 · close the loop ------------------------------------------------- */
+      tl.fromTo(["#panel-code", "#panel-root"], { autoAlpha: 1 },
+        { autoAlpha: 0, duration: 0.55, ease: MOVE, immediateRender: false }, 20.1);
+      tl.fromTo("#act1", { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 0.55, ease: MOVE, immediateRender: false }, 20.4);
+      tl.fromTo("#folder", { filter: "grayscale(1)", opacity: 0.4 },
+        { filter: "grayscale(0)", opacity: 1, duration: 0.6, ease: MOVE, immediateRender: false }, 20.5);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

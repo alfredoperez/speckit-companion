@@ -99,8 +99,10 @@ export function installCaptureStyles(): void {
         * { scrollbar-width: none !important; }
         html, body { overflow: hidden !important; margin: 0 !important; }
         /* .viewer-container is 100vh in the extension, where it owns the whole
-           webview. Inside a fixed capture box it has to be the box instead. */
-        .capture-stage, .capture-stage .viewer-container { height: 100% !important; }
+           webview. Inside a fixed capture box it has to be the box instead.
+           .spec-editor (the Create New Spec webview) is 100vh for the same
+           reason and needs the same correction. */
+        .capture-stage, .capture-stage .viewer-container, .capture-stage .spec-editor { height: 100% !important; }
     `;
     document.head.appendChild(style);
 }

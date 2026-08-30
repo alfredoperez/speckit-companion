@@ -1,0 +1,180 @@
+---
+/*
+  One step of a guided flow: a numbered action, then the result that proves it
+  worked. Every guide that walks a reader through something reuses this, so the
+  shape of "do this, see that" stays identical across the docs.
+
+  Slots:
+    default   the instruction prose
+    action    the thing the reader clicks or copies (Button, CodeLine, both)
+    result    what they should see when it took
+    media     a MediaSlot, kept in its own region so the prose styling above
+              cannot reach into it
+
+  Type carries the hierarchy: mono number, bold h2 title, prose body, a mono
+  eyebrow over the result. Nothing here uses a shadow.
+*/
+interface Props {
+  n: number;
+  title: string;
+  resultLabel?: string;
+  class?: string;
+}
+
+const { n, title, resultLabel = 'You should see', class: className } = Astro.props;
+const num = String(n).padStart(2, '0');
+const hasAction = Astro.slots.has('action');
+const hasResult = Astro.slots.has('result');
+const hasMedia = Astro.slots.has('media');
+---
+
+<section class:list={['gstep', className]}>
+  <div class="gstep__head">
+    <span class="gstep__num" aria-hidden="true">{num}</span>
+    <h2 class="gstep__title">{title}</h2>
+  </div>
+
+  <div class="gstep__body">
+    <div class="gstep__prose"><slot /></div>
+
+    {hasAction && (
+      <div class="gstep__action">
+        <slot name="action" />
+      </div>
+    )}
+
+    {hasResult && (
+      <div class="gstep__result">
+        <p class="gstep__result-label">{resultLabel}</p>
+        <div class="gstep__result-text"><slot name="result" /></div>
+      </div>
+    )}
+
+    {hasMedia && <slot name="media" />}
+  </div>
+</section>
+
+<style>
+  .gstep {
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+    padding: var(--space-24);
+  }
+
+  .gstep + :global(.gstep) {
+    margin-top: var(--space-16);
+  }
+
+  .gstep__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-16);
+  }
+
+  .gstep__num {
+    flex: none;
+    width: var(--step-col);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+  }
+
+  /* Starlight styles every heading inside .sl-markdown-content at the same
+     specificity as a lone class, so the step title is qualified to outrank it
+     rather than depend on stylesheet order. */
+  .gstep .gstep__title {
+    margin: 0;
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-ui);
+    letter-spacing: var(--ls-h2-stat);
+    color: var(--text-primary);
+  }
+
+  /* The body hangs off the number column so the numbers read as one spine. */
+  .gstep__body {
+    padding-left: calc(var(--step-col) + var(--space-16));
+  }
+
+  .gstep__prose :global(> :first-child) {
+    margin-top: var(--space-8);
+  }
+
+  .gstep__prose :global(p) {
+    font-size: var(--fs-body);
+    line-height: var(--lh-prose);
+    color: var(--text-body);
+  }
+
+  .gstep__prose :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* MDX wraps a named slot in an element of its own, so this stays a block and
+     the two rows inside it do their own layout. */
+  .gstep__action {
+    margin-top: var(--space-18);
+  }
+
+  .gstep__action :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui-sm);
+    color: var(--text-muted);
+  }
+
+  /* The fallback command sits under the button, not beside it. */
+  .gstep__action :global(.gstep-fallback) {
+    margin-top: var(--space-14);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-12);
+    min-width: 0;
+  }
+
+  .gstep__result {
+    margin-top: var(--space-20);
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--rule);
+  }
+
+  .gstep__result-label {
+    margin: 0 0 var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-eyebrow-sm);
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .gstep__result-text :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-muted);
+  }
+
+  .gstep__result-text :global(p + p) {
+    margin-top: var(--space-8);
+  }
+
+  .gstep__result-text :global(strong) {
+    color: var(--text-body);
+    font-weight: var(--fw-semibold);
+  }
+
+  @media (max-width: 640px) {
+    .gstep {
+      padding: var(--space-20);
+    }
+
+    .gstep__num {
+      width: auto;
+    }
+
+    .gstep__body {
+      padding-left: 0;
+    }
+  }
+</style>

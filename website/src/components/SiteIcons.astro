@@ -1,0 +1,32 @@
+---
+/*
+  The favicon links, in one place, mounted by both head owners: BaseLayout for
+  every route outside /docs/, and DocsHead for the Starlight tree, which never
+  passes through BaseLayout. Same reason Analytics is a component rather than a
+  string of tags in astro.config.mjs: one copy, so the two halves of the site
+  cannot drift apart.
+
+  The art is public/favicon.svg, derived from MascotMark.astro. Both PNGs are
+  built from that same file.
+
+  Three links, each earning its place. The SVG is what a current browser picks,
+  and it is the only one that stays sharp at any tab density. The 32px PNG is
+  the fallback for a browser that ignores image/svg+xml. The 180px PNG is what
+  iOS uses when the site is saved to a home screen, and it is a separate rel
+  because Safari does not read the icon list for that.
+
+  svg is a prop only because Starlight emits its own link to /favicon.svg from
+  the favicon config option, which defaults to exactly that path. The docs head
+  passes svg={false} so the same tag is not written twice; every other route
+  takes the default and gets all three.
+*/
+interface Props {
+  svg?: boolean;
+}
+
+const { svg = true } = Astro.props;
+---
+
+{svg && <link rel="icon" href="/favicon.svg" type="image/svg+xml" />}
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/favicon-180.png" sizes="180x180" />

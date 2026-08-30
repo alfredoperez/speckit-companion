@@ -121,3 +121,37 @@ WHERE event IN ('spec.opened', 'livingSpec.opened', 'livingSpec.drift', 'livingS
 GROUP BY event
 ORDER BY fires DESC
 ```
+
+## The website
+
+The marketing site at [speckit-companion.dev](https://speckit-companion.dev) reports into the **same PostHog project** as the extension, because the free plan allows one project per organisation. Every event the site sends carries the super property `source: 'site'`, and **every site insight must filter on it** — without that filter a funnel over "did they install" silently mixes visitors who clicked a button on the page with people already running the extension.
+
+| Event | When | Properties |
+| --- | --- | --- |
+| `$pageview`, `$pageleave` | Automatic | `$current_url` |
+| `install_click_vscode` | The VS Code install button | `placement` |
+| `install_click_speckit_copy` | The Spec Kit install command is copied | `placement` |
+| `demo_tab_click` | A tab in the demo section | `tab` |
+| `waitlist_submit` | The waitlist form is submitted | `list` |
+| `survey sent` | The same submission, recorded as a survey response | `$survey_id`, `$survey_response`, `list` |
+
+`placement` distinguishes the same button in different sections (`hero`, `quick-start`, `install`, `getting-started`, `footer`), so a low-converting placement is visible rather than averaged away.
+
+### The waitlist
+
+Addresses are stored as PostHog survey responses, in `$survey_response` on the `survey sent` event. Both lists post to one survey, so `list` (`course` or `workflow-builder`) is what tells them apart. The survey's own Results tab may read empty: the site renders its own form and the PostHog widget is disabled, so responses arrive without PostHog ever having "shown" the survey. Read them with SQL instead:
+
+```sql
+SELECT properties.$survey_response AS email, properties.list AS list, timestamp
+FROM events
+WHERE event = 'survey sent'
+ORDER BY timestamp DESC
+```
+
+### Why the site proxies PostHog
+
+Site requests go to `/ingest/*` on our own origin, forwarded by `website/src/pages/ingest/[...path].ts`. This is not a preference. Pointed at `us.i.posthog.com` directly, content blockers answer **204 with an empty body** for the library itself, so `posthog.init` never runs and nothing at all is recorded — not one pageview. The audience is developers, so that is most of them.
+
+The proxy is a serverless endpoint rather than a `vercel.json` rewrite because it cannot be a rewrite: PostHog's capture endpoints all end in a slash (`/e/`, `/flags/`, `/decide/`), and Vercel resolves a trailing-slash path against the filesystem and serves the static 404 before any rewrite is consulted. Measured against production, `/ingest/e` answered 400 from PostHog while `/ingest/e/` answered 404 from our own 404 page.
+
+Two things follow. Nothing may assign `window.posthog` before `array.js` loads — a stub there makes the library decline to initialise, which is a silent total failure. And the site's `package-lock.json` must carry sharp's Linux-only optional dependencies, or `npm ci` fails on the builder while passing on macOS.

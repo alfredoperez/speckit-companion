@@ -5,6 +5,10 @@ import type { Refinement } from "../types";
 const meta: Meta<typeof InlineComment> = {
   title: "Viewer/InlineComment",
   component: InlineComment,
+  // `DocumentContext` and `severalOnOneDocument` are shared building blocks,
+  // not stories: the inline-comments clip's two frames are captured from them
+  // (see the H group in __stories__/ClipCapture.stories.tsx).
+  excludeStories: ["DocumentContext", "severalOnOneDocument"],
 };
 export default meta;
 
@@ -27,8 +31,11 @@ function refinement(over: Partial<Refinement> = {}): Refinement {
 /**
  * Injects the VS Code CSS variables the viewer's tokens resolve against, so the
  * annotation renders in Storybook the way it renders in the panel.
+ *
+ * Exported because the inline-comments clip captures this exact card at a
+ * larger frame size, and a second copy of the palette would drift from this one.
  */
-const DocumentContextDecorator = (Story: () => JSX.Element) => (
+export const DocumentContext = ({ children }: { children: JSX.Element }) => (
   <div
     id="markdown-content"
     style={
@@ -60,8 +67,14 @@ const DocumentContextDecorator = (Story: () => JSX.Element) => (
       } as React.CSSProperties
     }
   >
-    <Story />
+    {children}
   </div>
+);
+
+const DocumentContextDecorator = (Story: () => JSX.Element) => (
+  <DocumentContext>
+    <Story />
+  </DocumentContext>
 );
 
 /** A document line with its comment slot — what the annotation actually sits in. */
@@ -168,45 +181,47 @@ export const LongTextTruncates: Story = {
  * five lines and their three comments, so the frame crops to the card with
  * no dead margin.
  */
+export const severalOnOneDocument = () => (
+  <div>
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment
+        refinement={refinement({ id: "r1", comment: "Name the providers in scope for v1" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+    <Line text="Sessions expire after 30 minutes of inactivity." />
+    <Line text="Password reset flows must complete within five minutes.">
+      <InlineComment
+        refinement={refinement({ id: "r2", status: "applied", comment: "Say what happens when the link expires" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+    <Line text="Failed logins are rate-limited per account.">
+      <InlineComment
+        refinement={refinement({ id: "r3", comment: "How many attempts before lockout?" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+    <Line text="Audit events are written for every sign-in attempt." />
+  </div>
+);
+
 export const SeveralOnOneDocument: Story = {
   decorators: [DocumentContextDecorator],
   parameters: {
     layout: "fullscreen",
     capture: { width: 590, height: 240 },
   },
-  render: () => (
-    <div>
-      <Line text="The authentication system must support multiple identity providers.">
-        <InlineComment
-          refinement={refinement({ id: "r1", comment: "Name the providers in scope for v1" })}
-          mode="line"
-          onDelete={noop}
-          onEdit={noop}
-          onRefine={noop}
-        />
-      </Line>
-      <Line text="Sessions expire after 30 minutes of inactivity." />
-      <Line text="Password reset flows must complete within five minutes.">
-        <InlineComment
-          refinement={refinement({ id: "r2", status: "applied", comment: "Say what happens when the link expires" })}
-          mode="line"
-          onDelete={noop}
-          onEdit={noop}
-          onRefine={noop}
-        />
-      </Line>
-      <Line text="Failed logins are rate-limited per account.">
-        <InlineComment
-          refinement={refinement({ id: "r3", comment: "How many attempts before lockout?" })}
-          mode="line"
-          onDelete={noop}
-          onEdit={noop}
-          onRefine={noop}
-        />
-      </Line>
-      <Line text="Audit events are written for every sign-in attempt." />
-    </div>
-  ),
+  render: severalOnOneDocument,
 };
 
 /** Comment text is user data: markup in it stays literal characters. */

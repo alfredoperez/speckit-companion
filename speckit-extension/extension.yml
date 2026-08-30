@@ -17,6 +17,11 @@ requires:
   # long as spec-kit's released line has moved past 0.9.5 — `.dev0` is only
   # needed when the floor equals the exact line spec-kit's git HEAD is
   # currently building (see spec-kit's own pyproject.toml version).
+  # That condition has not held since 0.9.5 shipped stable, so the bare floor
+  # blocks nobody. Do not "fix" this back to `>=0.9.5.dev0`: that pin was live
+  # only while spec-kit HEAD built the 0.9.5 line, and was deliberately removed
+  # in 0.20.2. The stale `0.9.5.dev0` strings under `examples/` are frozen
+  # snapshots from that era, not versions anyone runs today.
   speckit_version: ">=0.9.5"
   tools:
     - name: python3

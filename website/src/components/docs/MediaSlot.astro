@@ -1,0 +1,235 @@
+---
+/*
+  A screenshot in a docs page, addressed by manifest feature id rather than by
+  path.
+
+  Pages name what they want to show, never where it lives. The manifest is the
+  single index of what every feature produced, so a re-shoot or a retheme moves
+  the pixels without touching a word of prose. That is the whole point: the
+  capture palette has already changed once, and it will again.
+
+  Resolution order, best first:
+    1. `still`, when the page names one of the feature's extraStills by hand
+    2. `docsStill`, a still shot for documentation, under docs/screenshots/generated/
+    3. `panelStill`, the cropped panel the landing page uses, under media/web/
+    4. `poster`, frame zero of the feature's clip, under media/web/
+    5. a dashed reserved frame, when the feature has produced none of them yet
+
+  Both source directories are globbed eagerly so Astro processes the images at
+  build time and emits hashed, correctly sized files. `docs/screenshots/generated/`
+  is deliberately NOT copied into public/: those filenames are load-bearing for
+  the published Marketplace listings, so the site reads them where they are
+  rather than owning a second copy that could drift.
+
+  Alt text and caption do different jobs, and neither can stand in for the
+  other. `alt` describes the picture for somebody who cannot see it, and it is
+  read out of the manifest per resolved path, so the description always matches
+  the file that actually rendered. `caption` is editorial: it says what the
+  picture proves, for a reader who is looking straight at it. A caption that
+  only inventories the labels on screen is a caption doing the alt text's job.
+
+  Three things fail the build rather than shipping quietly: an unknown feature
+  id, a `still` the feature never produced, and a resolved image the manifest
+  has no description for.
+*/
+import manifest from '../../../../media/manifest.json';
+
+interface Props {
+  feature: string;
+  /** Editorial: what this picture proves. Not an inventory of its labels. */
+  caption: string;
+  /** Override the manifest's description. Only for a page-specific crop. */
+  alt?: string;
+  /** Name one of the feature's `extraStills` by filename, e.g. `overview-annotated.png`. */
+  still?: string;
+  /** Set when the shot only makes sense at full width, e.g. a whole page. */
+  wide?: boolean;
+}
+
+const { feature, caption, alt: altOverride, still, wide = false } = Astro.props;
+
+const known = (
+  manifest.features as Array<{
+    id: string;
+    kind?: string;
+    alt?: Record<string, string>;
+    outputs?: Record<string, string | string[] | null>;
+  }>
+).find((entry) => entry.id === feature);
+
+if (!known) {
+  throw new Error(
+    `MediaSlot: "${feature}" is not a feature id in media/manifest.json. Use one that is.`,
+  );
+}
+
+const docsStills = import.meta.glob<{ default: ImageMetadata }>(
+  '../../../../docs/screenshots/generated/*.png',
+  { eager: true },
+);
+const panelStills = import.meta.glob<{ default: ImageMetadata }>(
+  '../../../../media/web/panel-*.png',
+  { eager: true },
+);
+const posters = import.meta.glob<{ default: ImageMetadata }>(
+  '../../../../media/web/*-poster.png',
+  { eager: true },
+);
+
+/** Match a manifest path, which is repo-relative, against a glob key. */
+function resolve(
+  repoPath: string | null | undefined,
+  bucket: Record<string, { default: ImageMetadata }>,
+): ImageMetadata | null {
+  if (!repoPath) return null;
+  const wanted = repoPath.split('/').pop();
+  if (!wanted) return null;
+  for (const [key, mod] of Object.entries(bucket)) {
+    if (key.endsWith(`/${wanted}`)) return mod.default;
+  }
+  return null;
+}
+
+const outputs = known.outputs ?? {};
+const asPath = (value: string | string[] | null | undefined) =>
+  typeof value === 'string' ? value : null;
+
+/* A named still has to exist in the manifest, or the page is pointing at a
+   crop nobody produced and the slot would silently fall back to the poster. */
+let namedStill: string | null = null;
+if (still) {
+  const extras = Array.isArray(outputs.extraStills) ? outputs.extraStills : [];
+  namedStill =
+    extras.find((entry) => entry === still || entry.split('/').pop() === still) ?? null;
+  if (!namedStill) {
+    throw new Error(
+      `MediaSlot: "${feature}" has no extra still named "${still}". Produced: ${
+        extras.join(', ') || 'none'
+      }.`,
+    );
+  }
+}
+
+const candidates: Array<[string | null, Record<string, { default: ImageMetadata }>]> =
+  namedStill
+    ? [[namedStill, docsStills]]
+    : [
+        [asPath(outputs.docsStill), docsStills],
+        [asPath(outputs.panelStill), panelStills],
+        [asPath(outputs.poster), posters],
+      ];
+
+let image: ImageMetadata | null = null;
+let imagePath: string | null = null;
+for (const [candidatePath, bucket] of candidates) {
+  const found = resolve(candidatePath, bucket);
+  if (found) {
+    image = found;
+    imagePath = candidatePath;
+    break;
+  }
+}
+
+const describedBy = known.alt ?? {};
+const alt = altOverride ?? (imagePath ? describedBy[imagePath] : undefined);
+
+if (image && !alt) {
+  throw new Error(
+    `MediaSlot: media/manifest.json has no alt text for "${imagePath}" on feature "${feature}". Add one, or pass alt= on the page.`,
+  );
+}
+
+const kind = known.kind === 'clip' ? 'Clip' : 'Screenshot';
+---
+
+<figure class:list={['mslot', wide && 'mslot--wide']}>
+  {
+    image ? (
+      <img
+        src={image.src}
+        width={image.width}
+        height={image.height}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        class="mslot__img"
+      />
+    ) : (
+      <div class="mslot__frame">
+        <p class="mslot__eyebrow">{kind} slot</p>
+        <p class="mslot__id">
+          <code>{feature}</code>
+        </p>
+      </div>
+    )
+  }
+  <figcaption class="mslot__caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .mslot {
+    margin: var(--space-20) 0 0;
+  }
+
+  /* A screenshot of a dark editor on a dark page needs an edge, or it bleeds
+     into the ground and the reader cannot tell where the product stops. A
+     hairline and a radius do that without a glow, which the design rules
+     reserve for motion rather than decoration. */
+  .mslot__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+  }
+
+  /* Reserved space, for a feature that has produced no still yet. Dashed and
+     flat on purpose: it must never read as a finished panel. */
+  .mslot__frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    /* 132px is a decorative one-off: the placeholder needs a stable height so
+       the page does not reflow around empty boxes. It is not a type or space
+       step and nothing else should reuse it. */
+    min-height: 132px;
+    padding: var(--space-24);
+    background: var(--ground);
+    border: 1px dashed var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .mslot__eyebrow {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-eyebrow-sm);
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .mslot__id {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    color: var(--accent);
+  }
+
+  .mslot__id code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .mslot__caption {
+    margin-top: var(--space-8);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-dim);
+  }
+</style>

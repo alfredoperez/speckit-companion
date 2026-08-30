@@ -1,0 +1,57 @@
+---
+import MascotMark from './MascotMark.astro';
+
+/*
+  Replaces Starlight's SiteTitle so the docs header carries the same mark the
+  landing-page nav carries. Without it the docs half of the site is the one
+  place the product has a name and no face.
+
+  This is the component override rather than Starlight's `logo` config option on
+  purpose: that option takes a path to a raster or SVG *file*, which would mean a
+  second copy of the mark on disk, drifting from MascotMark.astro the first time
+  either one changes. The override renders the one component, inline, so the mark
+  in the docs header is the same four paths as the mark in the nav and inherits
+  the same brand greens from the token file.
+
+  The title text and its href come from Starlight's route data, so the site
+  title stays configured in astro.config.mjs and is not restated here.
+
+  Geometry matches SiteNav.astro: a 22px mark, a 10px gap, and the same weight
+  and letter spacing on the words. Colour is the one deliberate difference:
+  Starlight paints its own title in the accent, and matching --text-primary here
+  keeps the two headers reading as one bar.
+*/
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a class="docs-site-title" href={siteTitleHref}>
+  <MascotMark size={22} />
+  <span translate="no">{siteTitle}</span>
+</a>
+
+<style>
+  .docs-site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-10);
+    min-width: 0;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-wordmark);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .docs-site-title span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .docs-site-title:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+</style>

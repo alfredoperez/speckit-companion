@@ -1,0 +1,135 @@
+---
+/*
+ * /404
+ *
+ * The one page on the site that has nothing to sell, so it says what happened,
+ * offers the three routes people actually want, and gets out of the way.
+ *
+ * The mascot is the page's only illustration and it is the thing carrying the
+ * tone, so its alt describes the pose rather than sitting empty.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import MascotPose from '../components/MascotPose.astro';
+
+const routes = [
+  { href: '/', label: 'the landing page' },
+  { href: '/docs/', label: 'the docs' },
+  { href: '/changelog/', label: 'the changelog' },
+];
+---
+
+<BaseLayout
+  title="Page not found"
+  description="That URL does not match anything on this site."
+  noindex
+>
+  <section class="not-found">
+    <div class="inner">
+      <MascotPose
+        class="art"
+        pose="error"
+        width={168}
+        alt="The SpecKit Companion mascot looking crestfallen, with a sweat drop on its cheek."
+        loading="eager"
+      />
+
+      <p class="eyebrow">404</p>
+
+      <h1>That page is not here</h1>
+
+      <p class="lead">
+        The URL does not match anything on this site. It may have moved, or it may never have
+        existed.
+      </p>
+
+      <div class="routes">
+        {routes.map((route) => <a href={route.href}>{route.label}</a>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found {
+    background-image: var(--hero-grid);
+    background-size: var(--hero-grid-size);
+  }
+
+  .inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 72px var(--pad-section-x) 96px;
+    text-align: center;
+  }
+
+  .art {
+    margin-bottom: var(--space-24);
+  }
+
+  .eyebrow {
+    margin: 0 0 var(--space-16);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow-lg);
+  }
+
+  h1 {
+    margin: 0 0 var(--space-20);
+    font-size: var(--fs-h2);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-h2-footer);
+    text-wrap: balance;
+  }
+
+  .lead {
+    margin: 0;
+    max-width: var(--measure-lead);
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-prose);
+  }
+
+  .routes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-14);
+    margin-top: 36px;
+  }
+
+  .routes a {
+    display: inline-flex;
+    align-items: center;
+    padding: 11px 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-button-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+    transition:
+      border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .routes a:hover {
+    border-color: var(--border-accent-strong);
+    color: var(--accent-hover);
+  }
+
+  .routes a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 860px) {
+    .inner {
+      padding: 56px var(--space-20) 72px;
+    }
+  }
+</style>

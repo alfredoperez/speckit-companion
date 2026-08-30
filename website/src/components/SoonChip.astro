@@ -1,0 +1,30 @@
+---
+/*
+  The page's only mechanism for saying a thing is not built yet. Anything
+  unshipped carries it, and it is never dropped from the nav items that have it.
+*/
+interface Props {
+  label?: string;
+  class?: string;
+}
+
+const { label = 'soon', class: className } = Astro.props;
+---
+
+<span class:list={['soon-chip', className]}>{label}</span>
+
+<style>
+  .soon-chip {
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-chip);
+    letter-spacing: var(--ls-chip);
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+</style>

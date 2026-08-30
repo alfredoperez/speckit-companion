@@ -1,0 +1,174 @@
+---
+/*
+  Site analytics, ticket T18.
+
+  PostHog, in a NEW project inside the org that already carries the extension's
+  telemetry, so site traffic and product telemetry stay separate streams while
+  staying one tool. Config comes from the environment and never from the repo:
+
+    PUBLIC_POSTHOG_KEY    the project key
+    PUBLIC_POSTHOG_HOST   defaults to https://us.i.posthog.com
+
+  The key is the EXTENSION's project, shared on purpose: PostHog's free plan
+  allows one project per organisation. Everything from here is stamped
+  source: 'site' so the two streams stay separable. If the plan ever allows a
+  second project, split them and drop the marker.
+
+  With no key set, this component renders nothing at all. That is the local and
+  preview default, and it means a missing key is a quiet no-op rather than a
+  console error on every page.
+
+  Two things about PostHog that are easy to get wrong and are worth writing down
+  here, because both have already cost this project time:
+
+  1. Ingestion answers 200 "Ok" for ANY key, valid or not. So a bad key fails
+     silently and looks exactly like success. The only way to confirm events are
+     landing is to watch the Activity feed in the PostHog UI. Never conclude from
+     a 200 that the wiring works.
+  2. `persistence: 'memory'` keeps this cookieless, which is why the site owes no
+     consent banner. Changing it changes that, so do not change it casually.
+
+  3. The loader body below is PLAIN TEXT, and has to stay that way. `is:inline`
+     tells Astro to emit the script verbatim, so it does not evaluate template
+     expressions inside it. This body used to be wrapped in {`...`}, which
+     therefore shipped the braces and backticks to the browser as source: the
+     whole loader parsed as a block containing one discarded string and never
+     ran. It failed silently for as long as it existed, because a string
+     expression statement is perfectly legal JavaScript and throws nothing.
+     `define:vars` is unaffected and is what injects key and host above.
+*/
+const key = import.meta.env.PUBLIC_POSTHOG_KEY;
+
+/*
+  SAME-ORIGIN BY DEFAULT, and this is the whole reason anything is recorded.
+
+  Pointed straight at us.i.posthog.com, the library never loaded for anyone
+  running a content blocker: the request for array.js came back 204 with an
+  empty body, so `window.posthog.init` stayed undefined and not one event —
+  not even a pageview — was ever sent. Measured in a real browser, not guessed.
+  The audience here is developers, so that is not an edge case.
+
+  Blockers match on the hostname. `/ingest` is first-party, so it passes.
+  website/vercel.json rewrites it to PostHog: /ingest/static/* to the assets
+  host, everything else to the ingestion host.
+
+  The rewrite is a VERCEL feature. `astro dev` does not have it, so /ingest
+  404s locally — which costs nothing, because a local build has no key and this
+  component renders nothing at all. Set PUBLIC_POSTHOG_HOST to an absolute URL
+  to bypass the proxy.
+*/
+const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
+---
+
+{
+  key && (
+    <script is:inline define:vars={{ key, host }}>
+      (function () {
+        /*
+          NOTHING MAY ASSIGN window.posthog BEFORE array.js RUNS.
+
+          This used to install a small stub there so early clicks could queue.
+          array.js then loaded, saw the name already taken, and left it alone —
+          so `window.posthog.init` never existed, the onload handler returned at
+          its own guard, and the library never initialized. Measured live: the
+          script fetched 200 and window.posthog was still {capture, __queue}.
+
+          The queue lives here instead, in a local array the library cannot
+          collide with, and drains once init has run. Same guarantee, no stub.
+        */
+        var pending = [];
+        var ready = false;
+
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = host + '/static/array.js';
+        s.onload = function () {
+          if (!window.posthog || !window.posthog.init) return;
+          window.posthog.init(key, {
+            api_host: host,
+            // Where the PostHog UI lives. api_host is our own /ingest path now,
+            // and without this the SDK builds "view in PostHog" links against
+            // it and they go nowhere.
+            ui_host: 'https://us.posthog.com',
+            // Cookieless: no consent banner owed. See the note above.
+            persistence: 'memory',
+            capture_pageview: true,
+            capture_pageleave: true,
+            autocapture: true,
+            // The site is public marketing. Nothing here is sensitive, but
+            // masking inputs by default keeps the waitlist address out of
+            // session data if replay is ever turned on.
+            mask_all_text: false,
+            mask_all_element_attributes: false,
+            // The waitlist stores addresses as survey responses, but the site
+            // renders its own form and PostHog must never draw one over it.
+            // Without this the SDK will pop the survey widget on top of the
+            // page as soon as its targeting matches, and keeping it away by
+            // writing targeting rules that never match is a rule you have to
+            // remember forever. Responses still record: this disables the UI,
+            // not the capture.
+            disable_surveys: true,
+          });
+          // Every event this site sends carries source: 'site'.
+          //
+          // PostHog's free plan allows one project, and that one already holds
+          // the extension's telemetry, so the site shares it. Without a marker
+          // the two streams are one pile: a funnel over "did they install"
+          // would silently mix people who clicked the button on this page with
+          // people who were already running the extension.
+          //
+          // register() makes it a super property, so it rides on $pageview and
+          // autocapture too, not just the named events below. Filter on it and
+          // the two products come apart again.
+          window.posthog.register({ source: 'site' });
+
+          ready = true;
+          for (var i = 0; i < pending.length; i++) {
+            window.posthog.capture(pending[i][0], pending[i][1] || {});
+          }
+          pending.length = 0;
+        };
+        document.head.appendChild(s);
+
+        // The named events the funnel reads. Delegated from the document so a
+        // section rendered later still reports, and so there is exactly one
+        // listener rather than one per button.
+        function send(name, props) {
+          if (ready && window.posthog && window.posthog.capture) {
+            window.posthog.capture(name, props || {});
+          } else {
+            // Before init, or if array.js never arrives. Held, not dropped:
+            // the waitlist submit is the one event most likely to happen while
+            // the library is still in flight.
+            pending.push([name, props]);
+          }
+        }
+
+        document.addEventListener('click', function (e) {
+          var el = e.target && e.target.closest ? e.target.closest('[data-analytics]') : null;
+          if (!el) return;
+          var name = el.getAttribute('data-analytics');
+          if (!name) return;
+          var props = {};
+          for (var i = 0; i < el.attributes.length; i++) {
+            var a = el.attributes[i];
+            if (a.name.indexOf('data-analytics-') === 0) {
+              props[a.name.slice('data-analytics-'.length)] = a.value;
+            }
+          }
+          send(name, props);
+        });
+
+        // The escape hatch for the events that are not clicks: a form submit,
+        // for one. A page fires document.dispatchEvent(new CustomEvent(
+        // 'site-analytics', { detail: { name, props } })) and stays ignorant of
+        // PostHog, which is what keeps the no-key build free of any reference to
+        // it rather than merely free of the loader.
+        document.addEventListener('site-analytics', function (e) {
+          if (!e.detail || !e.detail.name) return;
+          send(e.detail.name, e.detail.props);
+        });
+      })();
+    </script>
+  )
+}

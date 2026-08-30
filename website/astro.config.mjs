@@ -1,0 +1,125 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+import vercel from '@astrojs/vercel';
+
+/*
+  Still a static site: every page prerenders, exactly as before. The adapter is
+  here for ONE route, src/pages/ingest/[...path].ts, which opts out with
+  `prerender = false` and ships as a single serverless function.
+
+  It exists because analytics could not be made to work any other way. PostHog
+  has to be proxied through our own origin or content blockers answer 204 for
+  it and nothing is ever recorded. A vercel.json rewrite was the obvious way to
+  proxy, and it cannot work here: PostHog's capture endpoints all end in a
+  slash (/e/, /flags/, /decide/), and Vercel resolves a trailing-slash path
+  against the filesystem and serves Starlight's 404.html before any rewrite is
+  consulted. Measured: /ingest/e answered 400 from PostHog, /ingest/e/ answered
+  404 from our own 404 page. Three rewrite shapes failed the same way.
+
+  A function receives the path whatever its shape, so the slash stops mattering.
+*/
+export default defineConfig({
+  adapter: vercel(),
+  // The canonical origin. Three things are derived from it and none of them
+  // work without it: the sitemap the integration builds, the rel=canonical on
+  // every page, and the absolute og:image and og:url a share card needs. It was
+  // unset while the domain was undecided, which is why every build warned.
+  site: 'https://speckit-companion.dev',
+  output: 'static',
+  trailingSlash: 'ignore',
+  // Retired URLs. Both pages were folded or split rather than deleted, so the
+  // old address keeps working instead of 404ing for anyone who bookmarked it.
+  //
+  // reading-the-overview  was a narrative retelling of the anatomy page: same
+  //                       regions, same order, same sentences.
+  // sidebar-and-steering  taught two unrelated things on one page. The sidebar
+  //                       half kept the anatomy slot; steering became a guide,
+  //                       which is where a reader arriving at the old URL is
+  //                       least likely to want to land, so it points at the
+  //                       sidebar and that page links on to Steering.
+  redirects: {
+    '/docs/guides/reading-the-overview': '/docs/anatomy/anatomy-of-the-overview',
+    '/docs/anatomy/sidebar-and-steering': '/docs/anatomy/the-sidebar',
+  },
+  integrations: [
+    starlight({
+      title: 'SpecKit Companion',
+      description:
+        'Documentation for SpecKit Companion: install both halves, read the spec viewer and the Overview, and run a spec end to end.',
+      // The site owns /404. Starlight ships its own and wins the route on
+      // priority, so its version is turned off rather than shadowed.
+      disable404Route: true,
+      // Dark only. The first two overrides remove the theme picker and pin the
+      // document to the dark palette before first paint.
+      //
+      // SocialIcons is the one header slot that renders in both the desktop bar
+      // and the mobile menu, so the site nav rides in on it. DocsHeaderNav reads
+      // the same src/components/navLinks.ts the landing page does and renders
+      // Starlight's own social links after it, so both halves of the site show
+      // the same bar in the same order.
+      //
+      // Head renders Starlight's own head and then the site's Analytics
+      // component and favicon links, because docs pages do not go through
+      // BaseLayout.astro and would otherwise carry no analytics at all.
+      //
+      // SiteTitle puts the MascotMark in the docs header, so the mark appears
+      // on both halves of the site. It renders the component rather than the
+      // `logo` config option, which would need a second copy of the mark as a
+      // file on disk.
+      components: {
+        ThemeProvider: './src/components/DarkThemeProvider.astro',
+        ThemeSelect: './src/components/NoThemeSelect.astro',
+        SocialIcons: './src/components/DocsHeaderNav.astro',
+        SiteTitle: './src/components/DocsSiteTitle.astro',
+        Head: './src/components/DocsHead.astro',
+      },
+      customCss: ['./src/styles/docs.css'],
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/alfredoperez/speckit-companion',
+        },
+      ],
+      // Three groups, in the order a reader moves through them: get it running,
+      // learn what each surface is showing you, then do a specific job. The
+      // directory is the group, so a new page lands in the right section by
+      // where it's saved and nothing here has to be edited.
+      //
+      // docs/start   onboarding. Introduction and Install are named by slug
+      //              because /docs/ is the section root and cannot sit in a
+      //              subdirectory; everything after them autogenerates.
+      // docs/anatomy the surface references. One page per surface, read region
+      //              by region: what it shows and what it means.
+      // docs/guides  how-to. One page per job, read start to finish.
+      //
+      // Every page carries its own `sidebar.label` and `sidebar.order` in
+      // frontmatter, so the nav reads Overview, Spec viewer, Sidebar under the
+      // group that already says Anatomy, while each page keeps its longer title
+      // on the page itself. Without the order key an autogenerated group falls
+      // back to alphabetical, which put Living specs first even though it is
+      // the most advanced guide. The order below is the reading order, which is
+      // also the order the footer's previous and next buttons walk: install it,
+      // learn the surfaces, then do a job.
+      sidebar: [
+        {
+          label: 'Start here',
+          items: [
+            { label: 'Introduction', slug: 'docs' },
+            { label: 'Install', slug: 'docs/install' },
+            { autogenerate: { directory: 'docs/start' } },
+          ],
+        },
+        {
+          label: 'Anatomy',
+          items: [{ autogenerate: { directory: 'docs/anatomy' } }],
+        },
+        {
+          label: 'Guides',
+          items: [{ autogenerate: { directory: 'docs/guides' } }],
+        },
+      ],
+    }),
+  ],
+});

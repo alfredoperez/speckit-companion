@@ -1,0 +1,799 @@
+{
+  "version": 1,
+  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: docs/media-manifest.md.",
+  "conventions": {
+    "captureSize": "1836x1164",
+    "captureAspect": "1.577:1",
+    "renderDir": "media/feature-clips/<id>/renders",
+    "renderDirTracked": false,
+    "renderDirNote": "media/.gitignore excludes **/renders/, so canonical MP4s and clip GIFs exist only on a machine that has rendered them. A fresh clone reports them missing; that is correct, not a regression.",
+    "webSourceDir": "media/web",
+    "webSourceDirTracked": true,
+    "webNaming": {
+      "webm": "media/web/<id>.webm",
+      "mp4": "media/web/<id>.mp4",
+      "poster": "media/web/<id>-poster.png",
+      "xCrop": "media/web/<id>-x16x9.png",
+      "heroStill": "media/web/hero-<surface>.png",
+      "panelStill": "media/web/panel-<row>.png",
+      "lightwell": "media/web/lightwell-<variant>.webp"
+    },
+    "publishedStillDir": "docs/screenshots/generated",
+    "publishedStillDirNote": "Load-bearing filenames. The Marketplace serves the last published README but resolves images against current main, so a rename or delete retroactively 404s the live listing. Overwrite in place only.",
+    "producedBy": {
+      "docs/screenshots/generated/*.png": "node scripts/capture-docs-images.mjs",
+      "docs/screenshots/generated/*.gif": "hyperframes render in the composition dir, then the ffmpeg palettegen/paletteuse plus gifsicle encode recorded in that composition's STORYBOARD",
+      "media/web/*": "node scripts/render-web-clips.mjs, then node website/scripts/sync-media.mjs to copy into website/public/media",
+      "media/web/hero-*.png": "node scripts/build-stills.mjs",
+      "media/web/panel-*.png": "node scripts/build-stills.mjs",
+      "media/web/lightwell-*.webp": "node scripts/build-lightwell.mjs"
+    }
+  },
+  "site": {
+    "sourceDir": "media/web",
+    "publicDir": "website/public/media",
+    "publicUrlPrefix": "/media",
+    "delivery": "A build step copies the web outputs named here into website/public/media. Never a symlink, never a second source of truth."
+  },
+  "surfaces": {
+    "readme-root": {
+      "file": "README.md",
+      "reads": [
+        "readmeGif",
+        "docsStill",
+        "extraStills"
+      ],
+      "referenceStyle": "relative",
+      "why": "GitHub and vsce both resolve relative paths, and vsce rewrites them to absolute raw URLs at package time. GitHub cannot play video, so the animated surface here is a GIF."
+    },
+    "readme-engine": {
+      "file": "speckit-extension/README.md",
+      "reads": [
+        "readmeGif",
+        "docsStill",
+        "extraStills"
+      ],
+      "referenceStyle": "absolute-raw-main",
+      "why": "The Spec Kit community catalog renders this file from main and cannot resolve relative paths, so every reference is an absolute raw.githubusercontent URL."
+    },
+    "site-landing": {
+      "reads": [
+        "webWebm",
+        "webMp4",
+        "poster",
+        "heroStill",
+        "panelStill",
+        "lightwellHero",
+        "lightwellSection"
+      ],
+      "why": "Muted autoplay video with a poster is an order of magnitude lighter than a GIF, and a landing page carries several clips at once. The hero stills are crops of three of those clips, cut by scripts/build-stills.mjs, because a whole IDE window shrunk into the hero column is unreadable."
+    },
+    "site-docs": {
+      "reads": [
+        "docsStill",
+        "webWebm",
+        "webMp4",
+        "poster"
+      ],
+      "why": "A guide page mostly wants one still it can point at in prose; it embeds the clip only when the point is a state change."
+    },
+    "article": {
+      "reads": [
+        "readmeGif",
+        "docsStill"
+      ],
+      "why": "The blog renders from MDX on a different host. GIF and PNG travel without a build step; video would need its own copy path."
+    },
+    "social-x": {
+      "reads": [
+        "xCrop",
+        "docsStill"
+      ],
+      "why": "X crops a 1.58:1 frame badly in timeline preview. The 16:9 crop is cut once, here, instead of by the platform."
+    }
+  },
+  "features": [
+    {
+      "id": "overview",
+      "name": "Overview page",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/overview",
+      "films": "Reading the whole Overview top to bottom in ten beats: intent, the per-phase run timeline, approach, working area, size, living specs, the expectations fence, the verified checks with their commands, the decisions with what they rejected, and the coverage table.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/overview/renders/overview.mp4",
+        "webWebm": "media/web/overview.webm",
+        "webMp4": "media/web/overview.mp4",
+        "poster": "media/web/overview-poster.png",
+        "xCrop": "media/web/overview-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/overview.gif",
+        "docsStill": "docs/screenshots/generated/overview.png",
+        "extraStills": [
+          "docs/screenshots/generated/overview-annotated.png"
+        ],
+        "heroStill": "media/web/hero-overview.png",
+        "panelStill": "media/web/panel-read.png"
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/overview.gif": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "media/web/overview-poster.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "docs/screenshots/generated/overview.png": "The completed Overview page for the Teamboard fixture run",
+        "docs/screenshots/generated/overview-annotated.png": "The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table",
+        "media/web/hero-overview.png": "The Overview of a finished run: the intent it answers to, the four phases with the time each took, the approach, and the corner of the codebase it changed.",
+        "media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the expectations fence."
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/overview.gif": [
+          "README.md"
+        ],
+        "docs/screenshots/generated/overview-annotated.png": [
+          "README.md"
+        ]
+      },
+      "notes": "The root README's hero overview.gif is rendered from THIS composition. The filename is overview.gif, not a per-composition name, and it is referenced by the root README, so it can only be overwritten in place. The sibling overview-readme covers the same page more slowly and no longer publishes anywhere."
+    },
+    {
+      "id": "overview-readme",
+      "name": "Overview page, README loop",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/overview-readme",
+      "films": "The guided tour of the Overview that opens the root README.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/overview-readme/renders/overview-readme.mp4",
+        "webWebm": "media/web/overview-readme.webm",
+        "webMp4": "media/web/overview-readme.mp4",
+        "poster": "media/web/overview-readme-poster.png",
+        "xCrop": "media/web/overview-readme-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_15-38-35.mp4",
+        "media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_16-30-19.mp4",
+        "media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_16-50-18.mp4",
+        "media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_16-55-52.mp4"
+      ],
+      "alt": {
+        "media/web/overview-readme-poster.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table",
+        "media/web/overview-readme-x16x9.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table"
+      },
+      "referencedBy": {},
+      "notes": "This composition no longer publishes. docs/screenshots/generated/overview.gif is now rendered from the faster ten-beat `overview` composition; see that entry. Kept as the long-form cut of the same page, with its establishing pull-back and closing end card."
+    },
+    {
+      "id": "overview-engine",
+      "name": "Overview page, engine README loop",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/overview-engine",
+      "films": "The record a run leaves behind, cut for the Spec Kit extension README.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/overview-engine/renders/overview-engine.mp4",
+        "webWebm": "media/web/overview-engine.webm",
+        "webMp4": "media/web/overview-engine.mp4",
+        "poster": "media/web/overview-engine-poster.png",
+        "xCrop": "media/web/overview-engine-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/overview-engine.gif",
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/overview-engine/renders/overview-engine_2026-08-24_18-18-33.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/overview-engine.gif": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage",
+        "media/web/overview-engine-poster.png": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage",
+        "media/web/overview-engine-x16x9.png": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/overview-engine.gif": [
+          "speckit-extension/README.md"
+        ]
+      },
+      "notes": "renders/overview-engine-raw.gif is the pre-gifsicle intermediate, not an output."
+    },
+    {
+      "id": "spec-viewer",
+      "name": "Spec viewer",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/spec-viewer",
+      "films": "A spec read as a structured document rather than raw markdown.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/spec-viewer/renders/spec-viewer.mp4",
+        "webWebm": "media/web/spec-viewer.webm",
+        "webMp4": "media/web/spec-viewer.mp4",
+        "poster": "media/web/spec-viewer-poster.png",
+        "xCrop": "media/web/spec-viewer-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/spec-viewer.gif",
+        "docsStill": "docs/screenshots/generated/spec-viewer.png",
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/spec-viewer/renders/spec-viewer_2026-08-25_18-27-47.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/spec-viewer.gif": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
+        "docs/screenshots/generated/spec-viewer.png": "A spec rendered as a structured page in the VS Code extension: requirements as labeled rows, the pipeline rail, and on-page navigation",
+        "media/web/spec-viewer-poster.png": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
+        "media/web/spec-viewer-x16x9.png": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/spec-viewer.gif": [
+          "README.md"
+        ],
+        "docs/screenshots/generated/spec-viewer.png": [
+          "speckit-extension/README.md"
+        ]
+      }
+    },
+    {
+      "id": "inline-comments",
+      "name": "Inline comments",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/inline-comments",
+      "films": "Review comments pinned under the spec lines they annotate.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/inline-comments/renders/inline-comments.mp4",
+        "webWebm": "media/web/inline-comments.webm",
+        "webMp4": "media/web/inline-comments.mp4",
+        "poster": "media/web/inline-comments-poster.png",
+        "xCrop": "media/web/inline-comments-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/inline-comments.gif",
+        "docsStill": "docs/screenshots/generated/inline-comments.png",
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/inline-comments/renders/inline-comments_2026-08-25_18-27-59.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/inline-comments.gif": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates",
+        "docs/screenshots/generated/inline-comments.png": "Several inline comments on one spec document",
+        "media/web/inline-comments-poster.png": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates",
+        "media/web/inline-comments-x16x9.png": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/inline-comments.gif": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "specs-sidebar",
+      "name": "Specs sidebar",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/specs-sidebar",
+      "films": "The Specs sidebar grouped by lifecycle, with the living-specs and steering views beneath.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/specs-sidebar/renders/specs-sidebar.mp4",
+        "webWebm": "media/web/specs-sidebar.webm",
+        "webMp4": "media/web/specs-sidebar.mp4",
+        "poster": "media/web/specs-sidebar-poster.png",
+        "xCrop": "media/web/specs-sidebar-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/specs-sidebar.gif",
+        "docsStill": "docs/screenshots/generated/specs-sidebar.png",
+        "extraStills": [
+          "docs/screenshots/generated/sidebar-triptych.png"
+        ]
+      },
+      "unnormalized": [
+        "media/feature-clips/specs-sidebar/renders/specs-sidebar_2026-08-25_18-28-10.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/specs-sidebar.gif": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath",
+        "docs/screenshots/generated/specs-sidebar.png": "The full Specs sidebar",
+        "docs/screenshots/generated/sidebar-triptych.png": "The three-panel sidebar explainer: Specs, Steering and Living Specs as captioned cards",
+        "media/web/specs-sidebar-poster.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath",
+        "media/web/specs-sidebar-x16x9.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/specs-sidebar.gif": [
+          "README.md"
+        ]
+      },
+      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See docs/visual-assets.md."
+    },
+    {
+      "id": "run-in-flight",
+      "name": "A run in flight",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/run-in-flight",
+      "films": "A run moving through the pipeline while it is still running.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/run-in-flight/renders/run-in-flight.mp4",
+        "webWebm": "media/web/run-in-flight.webm",
+        "webMp4": "media/web/run-in-flight.mp4",
+        "poster": "media/web/run-in-flight-poster.png",
+        "xCrop": "media/web/run-in-flight-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/run-in-flight.gif",
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/run-in-flight/renders/run-in-flight_2026-08-25_18-27-11.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/run-in-flight.gif": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing",
+        "media/web/run-in-flight-poster.png": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing",
+        "media/web/run-in-flight-x16x9.png": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/run-in-flight.gif": [
+          "README.md"
+        ]
+      },
+      "notes": "The published GIF is the one deliberate encode exception: 880 px at 12 fps, lossy 45, because the clip runs 36 s. Recorded in this composition's STORYBOARD."
+    },
+    {
+      "id": "make-it-yours",
+      "name": "Make it yours",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/make-it-yours",
+      "films": "Writing your own workflow into settings.json, seeing it offered at Create Spec and recorded on the spec, then each step resolving to the command you wrote.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/make-it-yours/renders/make-it-yours.mp4",
+        "webWebm": "media/web/make-it-yours.webm",
+        "webMp4": "media/web/make-it-yours.mp4",
+        "poster": "media/web/make-it-yours-poster.png",
+        "xCrop": "media/web/make-it-yours-x16x9.png",
+        "readmeGif": "docs/screenshots/generated/make-it-yours.gif",
+        "docsStill": null,
+        "extraStills": [],
+        "panelStill": "media/web/panel-bend.png"
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/make-it-yours.gif": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
+        "media/web/make-it-yours-poster.png": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
+        "media/web/make-it-yours-x16x9.png": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
+        "media/web/panel-bend.png": "A workflow written by hand: its own phases listed as the steps a run will take."
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/make-it-yours.gif": [
+          "README.md"
+        ]
+      }
+    },
+    {
+      "id": "step-rail",
+      "name": "Step rail and next action",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/step-rail",
+      "films": "Steps unlocking in order, one button always pointing at the next step, and a live percent during implement.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/step-rail/renders/step-rail.mp4",
+        "webWebm": "media/web/step-rail.webm",
+        "webMp4": "media/web/step-rail.mp4",
+        "poster": "media/web/step-rail-poster.png",
+        "xCrop": "media/web/step-rail-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": [],
+        "panelStill": "media/web/panel-step-rail.png"
+      },
+      "unnormalized": [],
+      "alt": {
+        "media/web/step-rail-poster.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
+        "media/web/step-rail-x16x9.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
+        "media/web/panel-step-rail.png": "The pipeline rail with Specification, Plan and Tasks each carrying a green check, Tasks highlighted as the step being read, and the generated task list beside it in two phases"
+      },
+      "referencedBy": {},
+      "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
+    },
+    {
+      "id": "coverage",
+      "name": "Requirement coverage",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/coverage",
+      "films": "Every requirement traced down to the task and the test.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/coverage/renders/coverage.mp4",
+        "webWebm": "media/web/coverage.webm",
+        "webMp4": "media/web/coverage.mp4",
+        "poster": "media/web/coverage-poster.png",
+        "xCrop": "media/web/coverage-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "media/web/coverage-poster.png": "Requirement coverage in the Overview: every requirement traced, down to the task and the test",
+        "media/web/coverage-x16x9.png": "Requirement coverage in the Overview: every requirement traced, down to the task and the test"
+      },
+      "referencedBy": {},
+      "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
+    },
+    {
+      "id": "living-specs",
+      "name": "Living Specs",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/living-specs",
+      "films": "Living Specs as a work tree: eight capabilities grouped where their specs actually live, some gathered under a capabilities root and some sitting beside the code they describe, then a click on one row and that capability's spec open in the viewer.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/living-specs/renders/living-specs.mp4",
+        "webWebm": "media/web/living-specs.webm",
+        "webMp4": "media/web/living-specs.mp4",
+        "poster": "media/web/living-specs-poster.png",
+        "xCrop": "media/web/living-specs-x16x9.png",
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/living-specs-pair.png",
+        "extraStills": [],
+        "heroStill": "media/web/hero-living-specs.png"
+      },
+      "unnormalized": [
+        "media/feature-clips/living-specs/renders/living-specs_2026-08-28_10-29-43.mp4"
+      ],
+      "alt": {
+        "docs/screenshots/generated/living-specs-pair.png": "The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows",
+        "media/web/living-specs-poster.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
+        "media/web/living-specs-x16x9.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
+        "media/web/hero-living-specs.png": "The Living Specs tree: capabilities kept at a root and beside the code in features, jobs and services, each row carrying its coverage count or a drift flag."
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/living-specs-pair.png": [
+          "README.md",
+          "speckit-extension/README.md"
+        ]
+      },
+      "notes": "The still ships in both READMEs. The clip is cut and feeds the site's Living specs tab; it is not promoted to a published GIF, so no README points at it. The cut ends on the spec open in the viewer, which is what the click is for; the run's fold-back Overview was dropped from it deliberately and that is recorded in the composition's STORYBOARD. Beat wording is checked against the claim ledger there: the Update action is described as handing the changed files to your assistant, never as a rewrite."
+    },
+    {
+      "id": "review",
+      "name": "Review and refine",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/review",
+      "films": "Correcting a spec before it turns into code: a comment lands under a line you disagree with, the card opens to what has to change, Refine dispatches the pending comments, the note stays behind as history, and the side bar opens on where you find that spec again.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/review/renders/review.mp4",
+        "webWebm": "media/web/review.webm",
+        "webMp4": "media/web/review.mp4",
+        "poster": "media/web/review-poster.png",
+        "xCrop": "media/web/review-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": [],
+        "heroStill": "media/web/hero-review.png",
+        "panelStill": "media/web/panel-review.png"
+      },
+      "unnormalized": [
+        "media/feature-clips/review/renders/review_2026-08-28_10-53-25.mp4"
+      ],
+      "alt": {
+        "media/web/review-poster.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
+        "media/web/review-x16x9.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
+        "media/web/hero-review.png": "Two review comments pinned under a requirement, the second one open with its Refine, Edit and Delete actions.",
+        "media/web/panel-review.png": "A review comment open under the requirement it annotates, its whole note visible with Refine, Edit and Delete, among the other requirements on the page."
+      },
+      "referencedBy": {},
+      "notes": "Where inline-comments shows the comment card as an object, this runs the same surface through all four of its real states and then closes on the sidebar. The labels carry three ideas in order: catch a bad requirement while it is still a sentence, keep the note so a later session still knows what that bit was about, and show where that spec is found again. No label says the spec was rewritten, because the extension does not read the file back. The closing shot deliberately shows only Specs and Steering, the two views a fresh install with just the VS Code extension puts in the activity bar."
+    },
+    {
+      "id": "own-workflow",
+      "name": "Pick a pipeline",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/own-workflow",
+      "films": "Choosing a workflow in Create New Spec, and the step rail the created spec builds from the workflow it recorded.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/own-workflow/renders/own-workflow.mp4",
+        "webWebm": "media/web/own-workflow.webm",
+        "webMp4": "media/web/own-workflow.mp4",
+        "poster": "media/web/own-workflow-poster.png",
+        "xCrop": "media/web/own-workflow-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/own-workflow/renders/own-workflow_2026-08-28_09-35-34.mp4"
+      ],
+      "alt": {
+        "media/web/own-workflow-poster.png": "Picking a pipeline in Create New Spec: every workflow listed with its description, the two that ship in the box, picking the one you defined, and the step rail built from the workflow the spec recorded",
+        "media/web/own-workflow-x16x9.png": "Picking a pipeline in Create New Spec: every workflow listed with its description, the two that ship in the box, picking the one you defined, and the step rail built from the workflow the spec recorded"
+      },
+      "referencedBy": {},
+      "notes": "All three shots are captured UI, nothing is drawn. Discuss First is the workflow defined in settings; the two built-ins beside it are stock SpecKit and SpecKit Companion."
+    },
+    {
+      "id": "workflow-documents",
+      "name": "Workflow documents",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/workflow-documents",
+      "films": "Switching between two of a workflow's documents in the viewer: the nav highlight, the document body, and the On this page outline.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": "media/feature-clips/workflow-documents/renders/workflow-documents.mp4",
+        "webWebm": "media/web/workflow-documents.webm",
+        "webMp4": "media/web/workflow-documents.mp4",
+        "poster": "media/web/workflow-documents-poster.png",
+        "xCrop": "media/web/workflow-documents-x16x9.png",
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [
+        "media/feature-clips/workflow-documents/renders/custom-command-toolbar_2026-08-28_09-34-09.mp4"
+      ],
+      "alt": {
+        "media/web/workflow-documents-poster.png": "Switching documents in the spec viewer: the Plan document opens with its own sub-documents, the highlight moves from Plan to Tasks, the body swaps to the phased task list, and the On this page outline rebuilds for the new document",
+        "media/web/workflow-documents-x16x9.png": "Switching documents in the spec viewer: the Plan document opens with its own sub-documents, the highlight moves from Plan to Tasks, the body swaps to the phased task list, and the On this page outline rebuilds for the new document"
+      },
+      "referencedBy": {},
+      "notes": "This composition was commissioned for a different subject and is deliberately not that clip: the state it needed was never captured, so it films only what its two real captures honestly show. Read media/feature-clips/workflow-documents/STORYBOARD.md before wiring it into any page, and keep every caption to the document switch on screen. No published GIF: nothing in either README points at it. The timestamped render still carries the old working name."
+    },
+    {
+      "id": "pipeline-stats",
+      "name": "Pipeline benchmark strip",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/pipeline-stats.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/pipeline-stats.png": "The benchmark in four tiles: 60 to 68% smaller specs, zero throwaway side files, ceremony right-sized to the change, and a 5.0 out of 5 correctness tie"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/pipeline-stats.png": [
+          "README.md"
+        ]
+      },
+      "notes": "The numbers on this image are quoted from docs/configuration.md#workflow-choice. Change them there first, then regenerate."
+    },
+    {
+      "id": "benefits-strip",
+      "name": "Benefits strip",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/benefits-strip.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/benefits-strip.png": "Four benefit panels: the Overview's run timing with two verified checks and their commands, the companion.yml hooks block that attaches custom steps, a change sized simple at 6 files and 6 tasks projected, and the photo-storage living spec header with coverage counts and a drift flag"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/benefits-strip.png": [
+          "speckit-extension/README.md"
+        ]
+      }
+    },
+    {
+      "id": "readme-hero",
+      "name": "Root README hero composite",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/hero.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/hero.png": "The root README hero composite: sidebar and viewer on one dark ground, mid-plan, with the tagline set above"
+      },
+      "referencedBy": {},
+      "notes": "Generated and kept regenerable, but no README references it today: the root README's hero slot holds overview.gif instead. Listed so the file is indexed rather than orphaned."
+    },
+    {
+      "id": "banner-install-engine",
+      "name": "Cross-promo banner, install the engine",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/banner-install-engine.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/banner-install-engine.png": "Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/banner-install-engine.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Linked image: the root README wraps it in a link to ./docs/getting-started.md#install-the-spec-kit-extension."
+    },
+    {
+      "id": "banner-install-vscode",
+      "name": "Cross-promo banner, install the VS Code extension",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/banner-install-vscode.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/banner-install-vscode.png": "Install the other half: the sprout mascot invites you to add the free VS Code extension that shows everything this engine records"
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/banner-install-vscode.png": [
+          "speckit-extension/README.md"
+        ]
+      },
+      "notes": "Linked image: the extension README wraps it in a link to the VS Code Marketplace listing."
+    },
+    {
+      "id": "mascot-hero",
+      "name": "Mascot hero art",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "speckit-extension/assets/hero.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "speckit-extension/assets/hero.png": "The SpecKit Companion sprout mascot tending rows of glowing seedlings in a forest clearing at dawn"
+      },
+      "referencedBy": {
+        "speckit-extension/assets/hero.png": [
+          "speckit-extension/README.md"
+        ]
+      },
+      "notes": "Not a capture-script output. It is illustrated art committed under speckit-extension/assets/, and it is also the ground the two cross-promo banners composite over. Its art direction lives in speckit-extension/assets/HERO-PROMPT.md."
+    },
+    {
+      "id": "living-specs-explained",
+      "name": "Living specs, explained",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": "media/feature-clips/living-specs-explained",
+      "films": "The argument for living specs as a drawn diagram: the spec folder fills in, the feature ships and the folder goes quiet, three capabilities lift out and dock beside the code they describe, coverage counts arrive, one row flips to drift, and the same three are shown again at a central root.",
+      "claim": "",
+      "outputs": {
+        "webWebm": "media/web/living-specs-explained.webm",
+        "webMp4": "media/web/living-specs-explained.mp4",
+        "poster": "media/web/living-specs-explained-poster.png",
+        "xCrop": "media/web/living-specs-explained-x16x9.png",
+        "canonicalMp4": "media/feature-clips/living-specs-explained/renders/living-specs-explained.mp4",
+        "panelStill": "media/web/panel-living.png"
+      },
+      "unnormalized": [],
+      "alt": {
+        "media/web/living-specs-explained-poster.png": "A drawn diagram: the specs folder for a shipped feature greys out, and three capability specs lift out of it and settle next to the source files they describe, each carrying a coverage count or a drift flag, then the same three shown at a central capabilities root.",
+        "media/web/living-specs-explained-x16x9.png": "A drawn diagram: the specs folder for a shipped feature greys out, and three capability specs lift out of it and settle next to the source files they describe, each carrying a coverage count or a drift flag, then the same three shown at a central capabilities root.",
+        "media/web/panel-living.png": "Two placements side by side: a capability's spec sitting among the source files it describes, and the same kind of spec kept with the others under one capabilities root, each carrying a coverage count or a drift flag."
+      },
+      "referencedBy": {},
+      "notes": "Hand-authored: no capture, no camera, every pixel drawn in index.html. Skipped by clip-storyboard by design. Re-themes from its own :root block."
+    },
+    {
+      "id": "page-lightwell",
+      "name": "Page lightwell",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": [],
+        "lightwellHero": "media/web/lightwell-hero.webp",
+        "lightwellSection": "media/web/lightwell-section.webp"
+      },
+      "unnormalized": [],
+      "alt": {
+        "media/web/lightwell-hero.webp": "",
+        "media/web/lightwell-section.webp": ""
+      },
+      "referencedBy": {},
+      "notes": "Page chrome, not product imagery: the focal light a product frame sits in front of. Painted by scripts/build-lightwell.mjs rather than drawn in CSS, because a large low-alpha gradient over near-black bands, and because the stars have to survive reduced motion. Both files are decorative, so alt is empty by design."
+    },
+    {
+      "id": "og-card",
+      "name": "Social card",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/og-card.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/og-card.png": "SpecKit Companion: spec-driven development, one level up"
+      },
+      "referencedBy": {},
+      "notes": "The og:image. Its consumer is a link preview, not a page, so no README references it; it is imported by BaseLayout, DocsHead and changelog.astro, which are the three page kinds that build their own document."
+    }
+  ]
+}

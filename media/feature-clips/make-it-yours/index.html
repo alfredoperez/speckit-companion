@@ -14,175 +14,233 @@
 
       /* ==========================================================================
          THEME TOKENS  ·  brand art direction from HERO-PROMPT.md:
-         dark #0F0F13 ground, blueprint grid, blue glow, ONE yellow accent.
-         This clip is typographic: the "UI" on screen is the real settings.json
-         surface (actual keys, actual enum values), never an invented panel.
+         near-black ground, blue chrome, ONE yellow accent. Yellow means one
+         thing here and only one thing: this value is yours, not shipped.
+         The ground is plain. There is no grid layer and no coloured glow, both
+         of which were decoration standing in for hierarchy.
+         This clip is typographic: every key and value on screen is real, read
+         off the contributed configuration and the run record, never invented.
          ========================================================================== */
       :root {
-        --clip-ground:   #0F0F13;
-        --grid-line:     rgba(84,140,255,0.07);
-        --glow-blue:     rgba(64,120,255,0.16);
+        /* Constellation Light, to match the captures. This clip was also the
+           last blue thing in the set: every other surface moved to violet when
+           the capture palette did, and a blue card beside them read as a
+           different product rather than a different screen. */
+        --clip-ground:   #fbfaff;
+        --clip-lift:     #f1eefa;
 
-        --card-bg:       rgba(16,18,26,0.92);
-        --card-border:   rgba(84,140,255,0.22);
+        --card-bg:       #ffffff;
+        --card-border:   rgba(124,58,237,0.20);
         --card-radius:   18px;
-        --card-shadow:   0 30px 80px rgba(0,0,0,0.6);
+        --card-shadow:   0 30px 80px rgba(26,22,38,0.13);
 
-        --kicker-fg:     #7fa8ff;
-        --title-fg:      #eef2f7;
-        --code-fg:       #c8d3e8;
-        --code-key:      #7fa8ff;
-        --code-string:   #8fd8b0;
-        --code-punct:    #5a6478;
-        --accent-yellow: #ffd84d;   /* the one yellow accent: the value you changed */
+        --kicker-fg:     #7c3aed;
+        --title-fg:      #1a1626;
+        --note-fg:       #5a5275;
+        --code-fg:       #3d3654;
+        --code-key:      #7c3aed;
+        --code-string:   #1f7a3d;
+        --code-punct:    #8a83a5;
+        --rule:          rgba(26,22,38,0.11);
+        --accent-yellow: #9a6b00;
 
         --font:          "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
         --mono:          "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
       }
 
       html, body { width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground); }
-      #root { position:relative; width:1836px; height:1164px; overflow:hidden; background:var(--clip-ground);
+      #root { position:relative; width:1836px; height:1164px; overflow:hidden;
+              background:linear-gradient(180deg, var(--clip-lift) 0%, var(--clip-ground) 62%);
               font-family:var(--font); }
 
-      /* blueprint grid + one soft blue glow behind the card */
-      #bg { position:absolute; inset:0;
-            background-image:
-              linear-gradient(var(--grid-line) 1px, transparent 1px),
-              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size:72px 72px; }
-      #glow { position:absolute; left:50%; top:50%; width:1400px; height:900px;
-              transform:translate(-50%,-50%);
-              background:radial-gradient(closest-side, var(--glow-blue), transparent 70%); }
-
-      /* ---- the three settings cards, stacked on one anchor ---- */
-      .card { position:absolute; left:50%; top:50%; width:1180px;
-              transform:translate(-50%,-50%);
+      /* ---- the three cards, stacked on one anchor, swapped by a lateral push ---- */
+      .card { position:absolute; left:50%; top:45%; width:1320px;
               background:var(--card-bg); border:1px solid var(--card-border);
               border-radius:var(--card-radius); box-shadow:var(--card-shadow);
-              padding:56px 64px 60px; }
-      .kicker { font-size:26px; font-weight:500; letter-spacing:0.14em; text-transform:uppercase;
-                color:var(--kicker-fg); margin-bottom:14px; }
-      .card h2 { font-size:58px; font-weight:600; color:var(--title-fg); margin-bottom:36px; letter-spacing:-0.01em; }
+              padding:54px 64px 52px; }
+
+      /* Type steps, widely spaced on purpose: eyebrow, title, body code, caption. */
+      .kicker { font-size:22px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase;
+                color:var(--kicker-fg); margin-bottom:16px; }
+      .card h2 { font-size:62px; font-weight:600; line-height:1.05; color:var(--title-fg);
+                 margin-bottom:30px; letter-spacing:-0.018em; }
       .file { display:inline-block; font-family:var(--mono); font-size:24px; color:var(--code-punct);
-              margin-bottom:20px; }
-      pre { font-family:var(--mono); font-size:33px; line-height:1.62; color:var(--code-fg); }
+              margin-bottom:22px; }
+      .note { margin-top:32px; padding-top:26px; border-top:1px solid var(--rule);
+              font-size:27px; font-weight:400; color:var(--note-fg); letter-spacing:-0.004em; }
+
+      pre { font-family:var(--mono); font-size:30px; line-height:1.6; color:var(--code-fg); }
       .k { color:var(--code-key); }
       .s { color:var(--code-string); }
       .p { color:var(--code-punct); }
       .hot { color:var(--accent-yellow); font-weight:600; }
 
-      /* stacked swap values occupy the same slot; only one is ever visible */
-      .swap { position:relative; display:inline-block; vertical-align:baseline; }
-      .swap > span { position:absolute; left:0; top:0; white-space:nowrap; }
-      .swap > span:first-child { position:relative; }
+      /* ---- card 2 · the workflow list, then the line the spec keeps ---- */
+      .pick { list-style:none; }
+      .pick li { font-size:38px; font-weight:500; color:var(--code-fg); line-height:1.62;
+                 display:flex; align-items:baseline; gap:22px; }
+      .pick li .dot { width:11px; height:11px; border-radius:50%; background:var(--code-punct); flex:0 0 auto; }
+      .pick li.mine { color:var(--accent-yellow); font-weight:600; }
+      .pick li.mine .dot { background:var(--accent-yellow); }
+      #kept { margin-top:34px; padding-top:28px; border-top:1px solid var(--rule);
+              font-family:var(--mono); font-size:28px; color:var(--code-punct); }
+      #kept .k { margin-left:26px; }
 
-      .row { display:block; }
+      /* ---- card 3 · each step and the command it resolves to ---- */
+      .rail { display:flex; align-items:flex-start; gap:0; }
+      .rail .step { flex:1 1 0; }
+      .rail .step .name { font-size:34px; font-weight:600; letter-spacing:0.02em; color:var(--title-fg); }
+      .rail .step .cmd { margin-top:14px; font-family:var(--mono); font-size:26px; color:var(--code-string); }
+      .rail .step.mine .cmd { color:var(--accent-yellow); font-weight:600; }
+      .rail .arrow { flex:0 0 auto; align-self:center; padding:0 30px; font-size:30px; color:var(--code-punct); }
+
+      /* ---- state strip: which of the three you are looking at ---- */
+      #strip { position:absolute; left:50%; top:1015px; transform:translateX(-50%);
+               display:flex; gap:14px; }
+      #strip .seg { width:90px; height:4px; border-radius:2px; background:rgba(255,255,255,0.12); }
+      #pip { position:absolute; left:0; top:0; width:90px; height:4px; border-radius:2px;
+             background:var(--kicker-fg); }
 
       /* ---- closing lockup ---- */
       #outro { position:absolute; inset:0; display:flex; flex-direction:column;
                align-items:center; justify-content:center; text-align:center; }
-      #outro .mark { font-size:88px; font-weight:600; color:var(--title-fg); letter-spacing:-0.015em; }
-      #outro .line { margin-top:26px; font-size:40px; font-weight:400; color:var(--code-fg); }
+      #outro .mark { font-size:86px; font-weight:600; color:var(--title-fg); letter-spacing:-0.02em; }
+      #outro .line { margin-top:28px; font-size:40px; font-weight:400; color:var(--code-fg); }
       #outro .line b { color:var(--accent-yellow); font-weight:600; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="24" data-fps="30"
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14" data-fps="30"
          data-width="1836" data-height="1164">
 
-      <div id="stage" class="clip" data-start="0" data-duration="24" data-track-index="0">
-        <div id="bg"></div>
-        <div id="glow"></div>
+      <div id="stage" class="clip" data-start="0" data-duration="14" data-track-index="0">
 
-        <!-- beat 1 · swap the workflow (real setting, real enum) -->
-        <div class="card" id="card1" data-layout-allow-overlap>
+        <!-- state 1 · you write the pipeline -->
+        <div class="card" id="card1" data-layout-allow-overlap data-layout-allow-occlusion>
           <div class="kicker">Make it yours</div>
-          <h2>Swap the workflow</h2>
+          <h2>Write your own pipeline</h2>
           <div class="file">settings.json</div>
-          <pre><span class="p">{</span>
-  <span class="k">"speckit.defaultWorkflow"</span><span class="p">:</span> <span class="swap"><span class="s" id="wf0">"speckit"</span><span class="hot" id="wf1">"companion"</span></span>
-<span class="p">}</span></pre>
-        </div>
-
-        <!-- beat 2 · shape the commands (real customCommands entries) -->
-        <div class="card" id="card2" data-layout-allow-overlap>
-          <div class="kicker">Make it yours</div>
-          <h2>Shape your commands</h2>
-          <div class="file">settings.json</div>
-          <pre><span class="p">{</span>
-  <span class="k">"speckit.customCommands"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="row" id="cmd1"><span class="hot">"review"</span><span class="p">,</span></span>
-    <span class="row" id="cmd2"><span class="p">{</span> <span class="k">"name"</span><span class="p">:</span> <span class="hot">"security"</span><span class="p">,</span> <span class="k">"title"</span><span class="p">:</span> <span class="s">"Security Pass"</span> <span class="p">}</span></span>
+          <pre><span class="k">"speckit.customWorkflows"</span><span class="p">: [{</span>
+  <span class="k">"name"</span><span class="p">:</span> <span class="hot">"research-first"</span><span class="p">,</span>
+  <span class="k">"displayName"</span><span class="p">:</span> <span class="hot">"Research First"</span><span class="p">,</span>
+  <span class="k">"steps"</span><span class="p">: [</span>
+    <span class="p">{</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"research"</span><span class="p">,</span>  <span class="k">"command"</span><span class="p">:</span> <span class="hot">"deep-dive"</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"specify"</span><span class="p">,</span>   <span class="k">"command"</span><span class="p">:</span> <span class="s">"speckit.specify"</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="k">"name"</span><span class="p">:</span> <span class="s">"implement"</span><span class="p">,</span> <span class="k">"command"</span><span class="p">:</span> <span class="s">"speckit.implement"</span> <span class="p">}</span>
   <span class="p">]</span>
-<span class="p">}</span></pre>
+<span class="p">}]</span></pre>
+          <div class="note">Two ship in the box. This one's yours.</div>
         </div>
 
-        <!-- beat 3 · pick the provider (real enum values) -->
-        <div class="card" id="card3" data-layout-allow-overlap>
+        <!-- state 2 · it is offered, and the spec keeps the choice -->
+        <div class="card" id="card2" data-layout-allow-overlap data-layout-allow-occlusion>
           <div class="kicker">Make it yours</div>
-          <h2>Pick your provider</h2>
-          <div class="file">settings.json</div>
-          <pre><span class="p">{</span>
-  <span class="k">"speckit.aiProvider"</span><span class="p">:</span> <span class="swap"><span class="s" id="pr0">"claude"</span><span class="s" id="pr1">"gemini"</span><span class="s" id="pr2">"codex"</span><span class="hot" id="pr3">"copilot"</span></span>
-<span class="p">}</span></pre>
+          <h2>Create Spec offers it</h2>
+          <ul class="pick">
+            <li id="pick1"><span class="dot"></span>SpecKit</li>
+            <li id="pick2"><span class="dot"></span>SpecKit Companion</li>
+            <li id="pick3" class="mine"><span class="dot"></span>Research First</li>
+          </ul>
+          <div id="kept"><span class="p">.spec-context.json</span><span class="k">"workflow"</span><span class="p">:</span> <span class="hot">"research-first"</span></div>
+          <div class="note">Validated, deduplicated, then written onto the spec you create.</div>
+        </div>
+
+        <!-- state 3 · every step resolves to the command you wrote -->
+        <div class="card" id="card3" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="kicker">Make it yours</div>
+          <h2>Every step dispatches yours</h2>
+          <div class="rail">
+            <div class="step mine" id="step1"><div class="name">Research</div><div class="cmd">/deep-dive</div></div>
+            <div class="arrow">&rsaquo;</div>
+            <div class="step" id="step2"><div class="name">Specify</div><div class="cmd">/speckit.specify</div></div>
+            <div class="arrow">&rsaquo;</div>
+            <div class="step" id="step3"><div class="name">Implement</div><div class="cmd">/speckit.implement</div></div>
+          </div>
+          <div class="note">Same surfaces as the built-ins, resolved to your commands.</div>
+        </div>
+
+        <div id="strip">
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div id="pip"></div>
         </div>
 
         <!-- closing lockup -->
         <div id="outro" data-layout-allow-overlap>
           <div class="mark">Spec Kit Companion</div>
-          <div class="line">Your workflow. Your commands. Your provider. <b>Your specs.</b></div>
+          <div class="line">Define your own pipeline. <b>Then run it.</b></div>
         </div>
       </div>
     </div>
 
     <script>
       /* ==================================================================
-         Single paused timeline; every tween is fromTo + immediateRender:false
-         so the renderer can seek frames in any order. Frame zero = card 1
-         with the stock value, which is also what the loop returns to.
+         Single paused timeline. Every tween is fromTo + immediateRender:false
+         so the renderer can seek frames in any order. Frame zero is state 1
+         at rest, which is also the poster and the frame the loop returns to.
+
+         States swap with a lateral push, not a cross-dissolve: the outgoing
+         card leaves to the left while the incoming one arrives from the
+         right, and the strip pip moves at the same moment. A viewer sees the
+         change happen instead of watching one card melt into another.
          ================================================================== */
       window.__timelines = window.__timelines || {};
       var tl = gsap.timeline({ paused: true });
 
-      gsap.set(["#card2", "#card3", "#outro"], { autoAlpha:0 });
-      gsap.set("#card1", { autoAlpha:1 });
-      gsap.set(["#wf1", "#pr1", "#pr2", "#pr3"], { autoAlpha:0 });
-      gsap.set(["#wf0", "#pr0"], { autoAlpha:1 });
-      gsap.set(["#cmd1", "#cmd2"], { autoAlpha:0, y:14 });
+      /* GSAP owns the full transform on every card so `x` composes cleanly
+         with the centring offset. */
+      gsap.set(".card", { xPercent: -50, yPercent: -50, x: 0 });
+      gsap.set(["#card2", "#card3", "#outro"], { autoAlpha: 0 });
+      gsap.set("#card1", { autoAlpha: 1 });
+      gsap.set(["#pick1", "#pick2", "#pick3", "#kept"], { autoAlpha: 0 });
+      gsap.set(["#step1", "#step2", "#step3"], { autoAlpha: 0 });
+      gsap.set("#pip", { x: 0 });
+      gsap.set("#strip", { autoAlpha: 1 });
 
-      /* beat 1 · the default swaps to companion (the one yellow accent) */
-      tl.fromTo("#wf0", { autoAlpha:1 }, { autoAlpha:0, duration:0.3, ease:"power2.in", immediateRender:false }, 2.6);
-      tl.fromTo("#wf1", { autoAlpha:0, y:12 }, { autoAlpha:1, y:0, duration:0.42, ease:"power3.out", immediateRender:false }, 2.75);
+      /* A state change is a push, not a dissolve. The outgoing card keeps
+         travelling after its alpha is already gone, and the incoming one is
+         still moving when it lands, so the eye sees direction rather than two
+         cards melting through each other. */
+      var TRAVEL = 420;
+      function pushOut(sel, at) {
+        tl.fromTo(sel, { x: 0 }, { x: -TRAVEL, duration: 0.34, ease: "power2.in", immediateRender: false }, at);
+        tl.fromTo(sel, { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.20, ease: "power2.in", immediateRender: false }, at);
+      }
+      function pushIn(sel, at) {
+        tl.fromTo(sel, { x: TRAVEL }, { x: 0, duration: 0.44, ease: "power3.out", immediateRender: false }, at);
+        tl.fromTo(sel, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.24, ease: "power2.out", immediateRender: false }, at);
+      }
 
-      /* card 1 -> card 2 */
-      tl.fromTo("#card1", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 6.6);
-      tl.fromTo("#card2", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.55, ease:"power3.out", immediateRender:false }, 6.9);
+      /* state 1 -> state 2 */
+      pushOut("#card1", 3.20);
+      pushIn("#card2", 3.32);
+      tl.fromTo("#pip", { x: 0 }, { x: 104, duration: 0.44, ease: "power3.inOut", immediateRender: false }, 3.26);
 
-      /* beat 2 · commands appear, one per beat */
-      tl.fromTo("#cmd1", { autoAlpha:0, y:14 }, { autoAlpha:1, y:0, duration:0.45, ease:"power3.out", immediateRender:false }, 8.2);
-      tl.fromTo("#cmd2", { autoAlpha:0, y:14 }, { autoAlpha:1, y:0, duration:0.45, ease:"power3.out", immediateRender:false }, 9.1);
+      /* the list fills in, your workflow last */
+      tl.fromTo("#pick1", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.26, ease: "power3.out", immediateRender: false }, 3.86);
+      tl.fromTo("#pick2", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.26, ease: "power3.out", immediateRender: false }, 3.98);
+      tl.fromTo("#pick3", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.30, ease: "power3.out", immediateRender: false }, 4.12);
+      tl.fromTo("#kept",  { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.34, ease: "power3.out", immediateRender: false }, 4.60);
 
-      /* card 2 -> card 3 */
-      tl.fromTo("#card2", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 13.2);
-      tl.fromTo("#card3", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.55, ease:"power3.out", immediateRender:false }, 13.5);
+      /* state 2 -> state 3 */
+      pushOut("#card2", 6.70);
+      pushIn("#card3", 6.82);
+      tl.fromTo("#pip", { x: 104 }, { x: 208, duration: 0.44, ease: "power3.inOut", immediateRender: false }, 6.76);
 
-      /* beat 3 · the provider enum cycles, settling on copilot */
-      tl.fromTo("#pr0", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 15.1);
-      tl.fromTo("#pr1", { autoAlpha:0 }, { autoAlpha:1, duration:0.22, ease:"power2.out", immediateRender:false }, 15.2);
-      tl.fromTo("#pr1", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 16.1);
-      tl.fromTo("#pr2", { autoAlpha:0 }, { autoAlpha:1, duration:0.22, ease:"power2.out", immediateRender:false }, 16.2);
-      tl.fromTo("#pr2", { autoAlpha:1 }, { autoAlpha:0, duration:0.22, ease:"power2.in", immediateRender:false }, 17.1);
-      tl.fromTo("#pr3", { autoAlpha:0, y:12 }, { autoAlpha:1, y:0, duration:0.42, ease:"power3.out", immediateRender:false }, 17.2);
+      /* the rail resolves left to right */
+      tl.fromTo("#step1", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.30);
+      tl.fromTo("#step2", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.44);
+      tl.fromTo("#step3", { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.28, ease: "power3.out", immediateRender: false }, 7.58);
 
-      /* card 3 -> closing lockup */
-      tl.fromTo("#card3", { autoAlpha:1 }, { autoAlpha:0, duration:0.5, ease:"power2.inOut", immediateRender:false }, 19.6);
-      tl.fromTo("#outro", { autoAlpha:0, scale:0.985 }, { autoAlpha:1, scale:1, duration:0.6, ease:"power3.out", immediateRender:false }, 19.9);
+      /* state 3 -> closing lockup */
+      pushOut("#card3", 10.10);
+      tl.fromTo("#strip", { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.30, ease: "power2.inOut", immediateRender: false }, 10.10);
+      tl.fromTo("#outro", { autoAlpha: 0, scale: 0.985 }, { autoAlpha: 1, scale: 1, duration: 0.48, ease: "power3.out", immediateRender: false }, 10.26);
 
-      /* loop back to frame zero: the lockup hands off to card 1 at rest */
-      tl.fromTo("#outro", { autoAlpha:1 }, { autoAlpha:0, duration:0.8, ease:"power1.inOut", immediateRender:false }, 22.9);
-      tl.fromTo("#card1", { autoAlpha:0 }, { autoAlpha:1, duration:0.8, ease:"power1.inOut", immediateRender:false }, 23.1);
-      tl.fromTo("#wf1", { autoAlpha:1 }, { autoAlpha:0, duration:0.3, ease:"power1.inOut", immediateRender:false }, 23.1);
-      tl.fromTo("#wf0", { autoAlpha:0 }, { autoAlpha:1, duration:0.3, ease:"power1.inOut", immediateRender:false }, 23.2);
+      /* back to frame zero: the lockup hands off to state 1 at rest */
+      tl.fromTo("#outro", { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.55, ease: "power1.inOut", immediateRender: false }, 12.60);
+      tl.fromTo("#card1", { x: 0, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.58, ease: "power1.inOut", immediateRender: false }, 12.76);
+      tl.fromTo("#strip", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.58, ease: "power1.inOut", immediateRender: false }, 12.76);
+      tl.fromTo("#pip", { x: 208 }, { x: 0, duration: 0.58, ease: "power2.inOut", immediateRender: false }, 12.76);
 
       window.__timelines["main"] = tl;
     </script>

@@ -1,0 +1,107 @@
+---
+title: Living specs
+description: One durable spec per capability, kept next to the code, updated by the runs that change it.
+sidebar:
+  label: Living specs
+  order: 3
+---
+
+import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+
+A feature spec describes one change. It's written, it's implemented, and after that it's a record of something that happened rather than a description of what the code does now. Read a folder of them a year later and you have an archaeology problem: the current behavior is the sum of thirty specs, minus the parts later specs undid.
+
+A **living spec** describes a capability instead: a piece of behavior your codebase keeps having. It's registered once, it lives next to the code it describes, and it's updated by the runs that change that code rather than replaced by them.
+
+<MediaSlot
+  feature="living-specs-explained"
+  caption="The same requirements, filed by what they describe rather than by when they were written. That's the whole move, and it's why a shipped feature spec can be archived without losing anything."
+/>
+
+The trade is that a feature spec is finished when the feature ships, and a living spec never is. Everything below is about who keeps it current, because the answer is not "it happens automatically".
+
+## Turning it on
+
+Living specs are off until you add a registry. Create `living-specs.yml` at the repo root:
+
+```yaml
+enabled: true
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: workflows
+    match: ["src/features/workflows/**", "speckit-extension/workflows/**"]
+```
+
+| Key | What it does |
+| --- | --- |
+| `enabled` | The opt-in switch. With no registry, or with this unset, every living-specs command behaves as if the feature weren't there. |
+| `exempt` | Globs that never count as drift, repo-wide. Config files, tests, and generated directories are the usual entries. |
+| `name` | The capability's identifier. It's also the folder name when the spec location is derived rather than given. |
+| `match` | The globs whose files belong to this capability. A file belongs if it matches one of these and none of the capability's own `exclude` globs. |
+| `spec` | Where this capability's spec lives. Optional, and the next section is about what happens when you leave it out. |
+
+## Where the spec lives
+
+Two layouts, and the registry picks between them by whether you wrote a `spec:` path.
+
+**Colocated.** Give the capability a `spec:` path and the spec sits next to the code it describes, as `<something>.spec.md`. This is the layout that makes a living spec discoverable from the code, because it's in the directory you were already reading.
+
+**Central.** Leave `spec:` out and the location is derived: `capabilities/<name>/spec.md`. This suits a capability whose code is spread across several directories with no obvious home.
+
+You can mix both in one registry, and the sidebar's Living Specs tree mirrors whichever you chose, so a colocated spec appears nested under its source directories.
+
+Two more rules decide which capability a given file belongs to.
+
+**Most specific wins.** When a file matches more than one capability, the one whose glob has the longest literal path prefix takes it, with the capability name as the tiebreak. So `src/checkout/**` beats `src/**` for a file under checkout, without you ordering the list by hand.
+
+**A nested registry is a different project.** A subdirectory with its own `living-specs.yml` is treated as a separate project. The scan stops at that boundary and never reports on anything inside it, which is what keeps a monorepo's packages from claiming each other's files.
+
+Any spec file in the tree that no capability claims shows up under **Orphans** in the sidebar. That group is omitted entirely when there are none.
+
+## The commands
+
+All four are named `/speckit.companion.living-<verb>`, and all four come from the Companion Spec Kit extension. Install only the VS Code extension and neither they nor the Living Specs view exist.
+
+| Command | What it does |
+| --- | --- |
+| `/speckit.companion.living-adopt` | Drafts a spec for one code area you name, then a script registers the capability. The drafting is assistant work, read from the code's surface, and every draft is marked as a starting point. |
+| `/speckit.companion.living-sync` | Rewrites the affected specs from your current changes. Also assistant work. "Update, don't regenerate" is an instruction in the command, not something a script enforces. |
+| `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. |
+| `/speckit.companion.living-coverage` | Reads each capability's coverage file and reports what it finds. |
+
+The split down the middle of that table matters. Drift and coverage are backed by scripts that compute the answer, so they're deterministic and repeatable. Adopt and sync are prompts your assistant follows, so their quality is your assistant's quality.
+
+## How a run folds back
+
+A **delta** is a block a run appends to its own `spec.md` to say what it changed about a capability. There are four of them, one per verb, and each names the capability it belongs to.
+
+```markdown
+## ADDED Requirements
+<!-- capability: spec-viewer -->
+
+- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
+```
+
+The other three headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block with no capability comment routes to whichever capability the run's changed files matched.
+
+At mark-complete the assistant authors those blocks, and a script folds each one into the capability spec it belongs to. The fold is deterministic, and folding the same deltas again is a no-op, so a re-run can't duplicate a requirement.
+
+Because the blocks land in the feature's own spec first, they show up in that feature's diff, which is where they get reviewed.
+
+The standard specify, plan, tasks pipeline emits no deltas, so a run folds only if the completion step did its part. Every capability the run loaded has to end with either a delta or a recorded skip note. When one has neither, the fold prints a named receipt saying the loop didn't close. It never blocks the run.
+
+## What stays manual
+
+Nothing here updates a spec on its own. A spec stays current because a delta block was authored at mark-complete, or because someone ran living-sync. Skip both and the spec ages quietly.
+
+Drift and coverage never gate anything. Both are read-only reports that always exit zero. A CI job wrapped around them can treat their findings as a gate; the commands themselves never are.
+
+A capability whose spec isn't committed yet, or a CI checkout without enough history, is skipped with the reason named and counted. The all-clear line is reserved for a run where every capability was actually examined.
+
+Two more files are recognized but never generated. The resolver derives an architecture sibling and a coverage sibling for every capability's spec, and living-coverage reads the coverage one. Nothing writes either of them. They're paths you author yourself, which is why a capability with no coverage file shows no coverage number, and why that looks exactly like zero coverage on screen.
+
+## Next
+
+Start with one capability rather than a registry of them. Pick the area of the codebase you explain most often to other people, and run `/speckit.companion.living-adopt` on it. The draft it produces is marked as a starting point, and reading it is usually the fastest way to find out whether the capability boundary you had in mind is the one the code actually has.

@@ -28,3 +28,16 @@
 # The .raw.html inputs are tracked: those come from a hand-driven VS Code
 # devtools session and no script in this repo can reproduce them.
 **/assets/sidebar/*.frag.html
+
+# Web-encoded clip outputs (WebM, MP4 fallback, poster, 16:9 crop, stills).
+# Named by media/manifest.json and copied into the site at build time.
+#
+# TRACKED, and it has to be. These are regenerable, but only on a machine with
+# the Storybook captures and the hyperframes renders — neither of which is in
+# the repo, and neither of which a deploy could reasonably produce. Ignoring
+# this directory meant a fresh clone had no imagery at all, so the deployed
+# site rendered every screenshot and clip as a broken image.
+#
+# The cost is that a re-theme rewrites all of them and the history grows by
+# roughly the size of the set each time. If that becomes a problem, Git LFS is
+# the fix, not un-tracking them again.

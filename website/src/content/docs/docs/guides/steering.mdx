@@ -1,0 +1,87 @@
+---
+title: Steering
+description: What a steering document is, what the Steering view gathers, and why the extension never reads any of it when it dispatches a step.
+sidebar:
+  label: Steering
+  order: 4
+---
+
+A spec says what to build this time. A **steering document** says how this project builds anything: its conventions, its architecture, its testing habits. It's a standing instruction rather than a per-run one, and it applies to work that hasn't been specified yet.
+
+Your AI provider already has a place for those. Claude Code reads `CLAUDE.md`, Codex and OpenCode read `AGENTS.md`, and the others each have their own filename. The [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) lists every path.
+
+The Steering view doesn't invent a new format and doesn't add a layer. It gathers what your provider already reads into one place next to your specs.
+
+## What the view gathers
+
+```text
+Steering
+  Companion
+  <your configured provider>
+    Project
+      <the provider's project rule file, or the action that creates it>
+      Agents
+      Skills
+      Settings
+    User
+      <the same four, at user scope>
+  Steering Docs
+  SpecKit Project Files
+    Constitution
+    Scripts
+    Templates
+  References
+```
+
+Two scopes run through the middle of that tree. **Project** is this repository: rules that ship with the code and apply to everyone who checks it out. **User** is you, on this machine, across every project. The vocabulary is always User, never "Global".
+
+Almost none of the sections are unconditional:
+
+| Section | When it shows |
+| --- | --- |
+| Companion | Only when the Companion Spec Kit extension is installed in the project |
+| Your provider | Always, as a stable entry point |
+| Steering Docs | Only when your provider declares a steering directory and at least one document is in it |
+| SpecKit Project Files | Only when a constitution, a script, or a template is present |
+| References | Only when a custom workflow declares reference folders and they exist on disk |
+
+A missing section is not a missing feature. It means the thing that section lists doesn't exist in this project yet.
+
+## How the extension actually uses them
+
+Nothing under Steering is read by the extension when it dispatches a step. The command text it hands your assistant carries the spec, not your rules.
+
+Your rules still reach the AI, because your provider reads its own file on its own. That's the whole design: the Steering view is a browser and an editor's entry point over files somebody else owns. Point it at a different provider and it points at that provider's files instead, with nothing to migrate.
+
+This also means a rule that isn't working is a provider question, not a Companion one. If `CLAUDE.md` isn't being honored, the view can show you the file, but it can't make the assistant read it.
+
+## Authoring actions
+
+What the view does own is a small set of authoring actions, and every one of them builds a prompt and hands it to your configured provider rather than writing the file itself.
+
+| Action | What it dispatches |
+| --- | --- |
+| **New Steering Document** | Asks your AI to write a markdown file into the steering directory |
+| **Refine** | Asks your AI to improve an existing steering document in place |
+| **Delete Steering** | Removes the file, then asks your AI to clean up references to it |
+| **Create Project Rule** / **Create User Rule** | Creates or opens the provider's own rule file at that scope |
+
+When a rule file doesn't exist yet, the create action sits inside that scope's group and names your provider's real filename, so you get "Create project-level GEMINI.md" rather than a hard-coded `CLAUDE.md`.
+
+The destructive actions stay narrow on purpose. Refine and Delete are offered only on the steering documents the extension generated. Provider-owned and Spec Kit-owned files can be opened and revealed from the tree, never deleted from it. The view is deliberately not a file manager for other people's configuration.
+
+## The Companion node
+
+When the Companion Spec Kit extension is installed, a Companion node sits first in the tree and answers two questions: where its configuration lives, and which commands it provides.
+
+Configuration opens `.specify/companion.yml` directly, which is the file [Pick a pipeline](/docs/guides/pick-a-pipeline) describes attaching your own work through. Commands lists the whole `/speckit.companion.*` set, read live from the installed extension's manifest, so a command added in a later release shows up without a new release of the VS Code half.
+
+## Steering support isn't universal
+
+Not every provider has a place to point at. With IDE Chat selected there's no steering, no agents, no hooks, and no MCP, because there's no provider-owned configuration to browse. MCP is the Model Context Protocol, the standard some assistants use to connect to external tools; a provider without it has no MCP section here.
+
+Hooks are the other uneven one: they exist on some providers and not others.
+
+## Next
+
+Which sections you get depends entirely on which provider you picked, so the [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) is the page to read next. It lists every provider's rule file, steering directory, and which of agents, skills, hooks and MCP it supports.

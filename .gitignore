@@ -62,6 +62,13 @@ storybook-static/
 .github/prompts/speckit.companion.*
 .windsurf/workflows/speckit.companion.*
 
+# Website build artifacts (website/ has its own package.json and lockfile; the
+# lockfile itself stays tracked so Vercel can `npm ci`)
+website/node_modules/
+website/dist/
+website/.astro/
+website/.vercel/
+
 # Local-only demo spec dirs (underscore-prefixed under specs/)
 specs/_*/
 

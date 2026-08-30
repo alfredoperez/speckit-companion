@@ -1,0 +1,252 @@
+---
+/**
+ * /workflow-builder
+ *
+ * There is no workflow builder. Not a preview, not a beta, not a hidden panel:
+ * the extension contributes no custom editor, the workflow-editor code in the
+ * repo is imported by nothing, and six of the eight commands it registers are
+ * stubs that write one line to an output channel. The claim ledger's never-say
+ * list covers this page by name, so every sentence here is future tense or is
+ * about something that ships today.
+ *
+ * The page earns its place by saying what you can actually bend right now, all
+ * of it traced to the ledger's pipeline section, and pointing at the guide that
+ * walks through it.
+ */
+import SoonPageLayout from '../components/SoonPageLayout.astro';
+import { Image } from 'astro:assets';
+
+/* A screenshot of the builder as it stands mid-build. It is on a page headed
+   NOT BUILT YET and captioned as unfinished on purpose: the claim ledger's
+   first never-say is that this feature exists, and it names these soon pages
+   directly. A preview of work in progress is honest; the same picture with a
+   confident caption is the claim the ledger blocks. */
+import builderPreview from '../assets/workflow-builder-preview.png';
+
+const PICK_A_PIPELINE = '/docs/guides/pick-a-pipeline/';
+
+const today = [
+  {
+    eyebrow: 'TWO WORKFLOWS',
+    title: 'Pick one when you create a spec',
+    body: 'Stock SpecKit runs specify, plan, tasks, implement. SpecKit Companion adds a fifth, terminal step that marks the spec complete. One setting, speckit.defaultWorkflow, picks which pipeline Create Spec pre-selects, and the workflow you pick is recorded on the spec so every later dispatch resolves that workflow’s command for the step.',
+  },
+  {
+    eyebrow: 'YOUR OWN STEPS',
+    title: 'Declare a workflow in settings',
+    body: 'Custom workflows defined in speckit.customWorkflows are validated, deduplicated, and offered in Create Spec next to the two built-ins. The sidebar and the viewer build their document lists and step rails from the workflow a spec recorded, so a workflow of your own gets the same chrome the shipped ones do. This is settings-file work. There is no editor for it.',
+  },
+  {
+    eyebrow: 'ATTACH YOUR WORK',
+    title: 'companion.yml, before or after a node',
+    body: 'A .specify/companion.yml attaches your own work before or after any named node, in three forms: a shell command, an inline instruction, or one of your own node files. It is deltas only, so with no file every command runs exactly as shipped. Those attachments are prose your assistant reads at run time, not an engine that executes them.',
+  },
+  {
+    eyebrow: 'ONE-OFF COMMANDS',
+    title: 'Run a custom command from the quick pick',
+    body: 'A Run SpecKit Custom Command quick pick lists everything in speckit.customCommands. The spec directory is substituted into the command, or appended to it, when the entry asks for one.',
+  },
+];
+
+/* The PostHog survey this list posts to. Unset, the form still renders and
+   still counts the interest, but tells the visitor nothing was stored. */
+const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_WORKFLOW_BUILDER;
+---
+
+<SoonPageLayout
+  title="Workflow builder"
+  description="A workflow builder for SpecKit Companion is not built. Here is what you can shape today, and where to leave an address for when it changes."
+  headline="A workflow builder, one day"
+  standing="Nothing like this ships in SpecKit Companion today, in any form, and there is no date on it. What follows is the part that is real."
+  surveyId={surveyId}
+  waitlistId="workflow-builder"
+  waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
+  pose="thinking"
+  poseAlt="The SpecKit Companion mascot with a hand at its chin, thinking something over."
+>
+  <p slot="lead">
+    Some day a pipeline should be something you assemble and look at: drag a step in, name its
+    command and its output file, see the shape of the run before you start one. It is being built,
+    and none of it is in the extension you can install today, so a workflow is still a block of JSON
+    you write by hand in your settings file.
+  </p>
+
+  <section class="section">
+    <div class="inner">
+      <p class="eyebrow">WHERE IT IS NOW</p>
+      <h2>A pipeline you can see</h2>
+      <p class="section-lede">
+        This is the builder running on one machine, mid-build. It is not in the extension, you
+        cannot install it, and parts of it will change or be cut before it ships. It is here so you
+        can see what is being aimed at rather than take a promise on trust.
+      </p>
+
+      <figure class="preview">
+        <Image
+          src={builderPreview}
+          alt="The workflow builder mid-build: four pipeline steps side by side, each listing its nodes, the files it writes, and the hooks attached before and after them, with a warning that companion.yml changed since the last build."
+          widths={[720, 1080, 2000]}
+          sizes="(max-width: 900px) 100vw, 1080px"
+          loading="lazy"
+        />
+        <figcaption>
+          Unfinished, and shown as such. The shape is the point: steps left to right, the nodes
+          inside each one, and the hooks a project attaches around them.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="inner">
+      <p class="eyebrow">WHAT YOU CAN BEND TODAY</p>
+      <h2>The pipeline is already yours, it just has no canvas</h2>
+      <p class="section-lede">
+        Every one of these works right now, with the extension you can install this minute.
+      </p>
+
+      <div class="cards">
+        {
+          today.map((card) => (
+            <article class="card">
+              <p class="card-eyebrow">{card.eyebrow}</p>
+              <h3 class="card-title">{card.title}</h3>
+              <p class="card-body">{card.body}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <a class="guide-link" href={PICK_A_PIPELINE}>read the pick-a-pipeline guide &rarr;</a>
+    </div>
+  </section>
+
+  <Fragment slot="back">
+    <a href={PICK_A_PIPELINE}>pick a pipeline</a>
+    <a href="/docs/">all the docs</a>
+    <a href="/">back to the landing page</a>
+  </Fragment>
+</SoonPageLayout>
+
+<style>
+  .inner {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--pad-section-x);
+  }
+
+  .section {
+    padding: 56px 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    margin: 0 0 var(--space-16);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    letter-spacing: var(--ls-eyebrow);
+  }
+
+  h2 {
+    margin: 0 0 var(--space-12);
+    max-width: var(--measure-footer);
+    font-size: var(--fs-h2);
+    font-weight: var(--fw-black);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-h2-stat);
+    text-wrap: balance;
+  }
+
+  .section-lede {
+    margin: 0 0 var(--space-26);
+    max-width: var(--measure-lead);
+    color: var(--text-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-prose);
+  }
+
+  /* The frame reads as a screenshot of something real, not a mockup: the same
+     panel ground and hairline the rest of the site uses, and no glow. A glowing
+     frame around unfinished work would oversell it. */
+  .preview {
+    margin: 0 0 var(--space-26);
+  }
+
+  .preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .preview figcaption {
+    margin-top: var(--space-12);
+    max-width: var(--measure-lead);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-14);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-22);
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+  }
+
+  .card-eyebrow {
+    margin: 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-eyebrow-sm);
+  }
+
+  .card-title {
+    margin: 0;
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+  }
+
+  .card-body {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  .guide-link {
+    display: inline-block;
+    margin-top: var(--space-24);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+  }
+
+  .guide-link:hover {
+    color: var(--accent-hover);
+  }
+
+  @media (max-width: 860px) {
+    .inner {
+      padding: 0 var(--space-20);
+    }
+
+    .cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

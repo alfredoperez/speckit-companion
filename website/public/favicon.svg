@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="SpecKit Companion">
+  <title>SpecKit Companion</title>
+  <!--
+    Derived from src/components/MascotMark.astro, not drawn a second time.
+    Same shapes, same 24-unit geometry, scalloped body and all, scaled 1.0833 and offset by 3 into a
+    32 box so the leaves and the feet keep a margin off the corner radius.
+
+    Two things differ from the component, and both are forced by the context.
+    Colours are literal: a favicon is fetched on its own, so a CSS custom
+    property has nothing to resolve against. And the mark sits on the site
+    ground rather than on nothing, because the eyes are holes in the body path:
+    on a transparent favicon they would take the colour of whichever tab bar
+    the browser happened to paint, which is white as often as it is dark.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0a0913" />
+  <g transform="translate(3 3) scale(1.0833)">
+    <path
+      fill="#7cc98a"
+      fill-rule="evenodd"
+      d="M12 21.95Q9.67 23.23 8.4 20.89Q5.75 20.71 5.95 18.06Q3.82 16.48 5.42 14.35Q4.48 11.87 6.97 10.95Q7.53 8.35 10.13 8.92Q12 7.04 13.87 8.92Q16.47 8.35 17.03 10.95Q19.52 11.87 18.58 14.35Q20.18 16.48 18.05 18.06Q18.25 20.71 15.6 20.89Q14.33 23.23 12 21.95ZM7.5 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0ZM13.1 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z"
+    />
+    <path d="M12 7.7V4.9" stroke="#a5df6c" stroke-width="1.9" stroke-linecap="round" />
+    <path fill="#a5df6c" d="M12 5.2C11.2 2.3 8.8 0.8 5.7 1.4C5.3 4.5 8.2 6.1 12 5.2Z" />
+    <path fill="#a5df6c" d="M12 5.2C12.8 2.3 15.2 0.8 18.3 1.4C18.7 4.5 15.8 6.1 12 5.2Z" />
+  </g>
+</svg>

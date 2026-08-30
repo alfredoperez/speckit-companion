@@ -1,0 +1,48 @@
+---
+title: Introduction
+description: What SpecKit Companion is, which half does what, and where to start reading.
+sidebar:
+  label: Introduction
+  order: 1
+---
+
+import MediaSlot from '../../../components/docs/MediaSlot.astro';
+
+Your specs already live in files. Spec Kit writes a `spec.md`, a `plan.md` and a `tasks.md` into a folder per feature, and from that point on they are markdown you scroll. SpecKit Companion turns that folder into a workspace you can read, and keeps a record of the run beside it.
+
+<MediaSlot
+  feature="readme-hero"
+  caption="The sidebar and the viewer, mid-plan. Neither is a new file format: this is the same folder your assistant already wrote, read at the altitude you actually work at."
+/>
+
+## The names, once
+
+Five terms do most of the work on this site, and two of them are easy to swap by accident.
+
+| Term | What it means here |
+| --- | --- |
+| **Spec Kit** | The upstream spec-driven development tool and its `specify` CLI. Not ours. |
+| **SpecKit Companion** | This product: the VS Code extension that renders specs, comments, run state and steering files. |
+| **Companion Spec Kit extension** | A second, separately installed piece that adds the `/speckit.companion.*` commands and records what each run did. |
+| **Workflow** | The ordered set of steps a spec follows. "Pipeline" is the same thing, said conversationally. |
+| **Run record** | The `.spec-context.json` file written next to a feature spec. Everything the Overview shows comes out of it. |
+
+## What the VS Code extension gives you
+
+The spec viewer opens your markdown as a page rather than a file, with a rail down the side for the workflow's documents. Inline review lets you comment on any line, and the comments are stored in the spec's own folder rather than in a database somewhere. The Specs sidebar groups every spec by where it stands. The Steering view gathers the standing instructions your AI provider already reads.
+
+## What the Companion Spec Kit extension adds
+
+It rides your Spec Kit runs and writes the run record: what each step did, when it started and finished, what it decided, what it verified. That record is what the Overview reads. It also brings the `/speckit.companion.*` command family, the Resume action, Living Specs, and a terminal `mark-complete` step that stock Spec Kit doesn't have.
+
+## Either half works on its own
+
+Install only the VS Code extension and the viewer, the inline comments and the Specs sidebar all work. Living Specs, Resume and the Companion workflow are what the second half adds. Nothing breaks in between: a spec created without the Companion Spec Kit extension simply has less recorded on it.
+
+## What it isn't doing
+
+The extension hands your assistant the text of a command and then reads whatever lands on disk. It never reads the conversation back, and it gets no callback when your assistant finishes. Everything it shows you was either written to a file by a script your command ran, or observed as a file changing. That boundary explains most of the honest gaps described elsewhere on this site, so it is worth carrying forward.
+
+## Where to start
+
+[Install](/docs/install) covers both halves and what to check when one of them didn't take. If you already have them, [Getting started](/docs/start/getting-started) walks one spec from creation to a finished record.
