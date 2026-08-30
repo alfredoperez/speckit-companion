@@ -123,8 +123,15 @@ def phases_for(command: str, order: list) -> list:
     return grouped
 
 
-def _reads_satisfied(reads_map: dict, ordering: list) -> bool:
-    """Every node's inputs come before it, considering only nodes in `ordering`."""
+def _reads_satisfied(reads_map: dict, ordering: list, last: set = frozenset()) -> bool:
+    """Whether `ordering` is a valid run: inputs first, and `last:` nodes last.
+
+    `last` is checked here rather than only at the write, so a node is not
+    reported movable into the one position that would displace a handoff — the
+    panel would offer a drag the write then refuses.
+    """
+    if last and ordering and ordering[-1] not in last and last & set(ordering):
+        return False
     seen = set()
     present = set(ordering)
     for node_id in ordering:
@@ -143,16 +150,25 @@ def movability(command: str, order: list) -> dict:
     called nine of this pipeline's nodes immovable for being alone in a phase —
     a lock that was true of the drawing and not of the pipeline.
 
-    A node is held only by `reads:`: something it needs, or something that needs
-    it, on both sides with no room left between them.
+    A node is held by `reads:` — something it needs, or something that needs it,
+    on both sides with no room left between them — or by `last:`, which is the
+    stronger claim that it has to come after everything.
     """
     reads_map = {n: read_node(command, n)[0].get("reads") or [] for n in order}
+    last = {n for n in order if read_node(command, n)[0].get("last")}
     reasons = {}
 
     for node_id in order:
+        # Held by `last:`, and already there. Reported as a lock so the panel
+        # never offers the drag — the write would be refused, and a drag that
+        # springs back teaches nothing about why.
+        if node_id in last and order[-1] == node_id:
+            reasons[node_id] = "it hands off to the next step, so nothing can run after it"
+            continue
+
         rest = [n for n in order if n != node_id]
         movable = any(
-            _reads_satisfied(reads_map, candidate)
+            _reads_satisfied(reads_map, candidate, last)
             for candidate in (
                 rest[:i] + [node_id] + rest[i:] for i in range(len(rest) + 1)
             )

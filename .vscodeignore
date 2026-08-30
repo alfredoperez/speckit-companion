@@ -70,6 +70,7 @@ speckit-extension/**
 !speckit-extension/scripts/build-pipeline.py
 !speckit-extension/scripts/pipeline-graph.py
 !speckit-extension/scripts/config_write.py
+!speckit-extension/scripts/config_repair.py
 !speckit-extension/scripts/hook_render.py
 !speckit-extension/scripts/template_render.py
 !speckit-extension/scripts/decision_routes.py

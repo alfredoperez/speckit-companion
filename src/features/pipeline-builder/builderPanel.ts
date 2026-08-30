@@ -20,13 +20,15 @@ import {
     PipelineGraphResult,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
-import { readableNode } from './readableNode';
+import { nodeFile, readableNode } from './readableNode';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
     HookDraft,
     createWorkflow,
     resolveConfigWriteScript,
+    resolveConfigRepairScript,
+    applyRepair,
     resolveGraphScript,
     writeHook,
     removeHook,
@@ -65,8 +67,13 @@ export class PipelineBuilderPanel {
     ) {
         this.panel.webview.html = this.html();
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+        // A handler that throws — a command that failed, a file that would not
+        // open — must not become an unhandled rejection. It is one action that
+        // did not work, and the panel stays usable for the next one.
         this.panel.webview.onDidReceiveMessage(
-            message => void this.route(message as BuilderToExtensionMessage),
+            message => this.route(message as BuilderToExtensionMessage).catch(
+                (err: unknown) => this.outputChannel.appendLine(
+                    `[PipelineBuilder] ${(message as { type: string }).type} failed: ${err}`)),
             null,
             this.disposables,
         );
@@ -134,21 +141,35 @@ export class PipelineBuilderPanel {
         },
 
         readNode: async message => {
-            const file = this.nodeSource(message.command, message.nodeId);
-            if (!file) { return; }
-            const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
-            await this.post({
-                type: 'nodeBody', command: message.command, nodeId: message.nodeId, body, parts,
-            });
+            await this.sendBody(message.command, message.nodeId);
         },
 
         readFrame: async message => {
-            const file = this.nodeSource(message.command, '_frame');
-            if (!file) { return; }
-            const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
-            await this.post({
-                type: 'nodeBody', command: message.command, nodeId: '_frame', body, parts,
-            });
+            await this.sendBody(message.command, '_frame');
+        },
+
+        /**
+         * Save edited instructions, which is what makes the node yours.
+         *
+         * There is no separate "make it mine" step any more. Editing a shipped
+         * node writes the project's own copy of it; the act and the consequence
+         * are the same thing, rather than a button you had to press first and a
+         * file you then had to find. The shipped sources are never touched.
+         */
+        saveNode: async message => {
+            const source = this.nodeSource(message.command, message.nodeId);
+            if (!source) {
+                this.say(`Cannot find ${message.nodeId} to save over.`);
+                return;
+            }
+            // The metadata is the build's — id, kind, reads, writes — so it is
+            // carried across rather than left to the edit to reproduce.
+            const { meta } = readableNode(fs.readFileSync(source, 'utf8'));
+            const own = this.projectNodePath(message.command, message.nodeId);
+            fs.mkdirSync(path.dirname(own), { recursive: true });
+            fs.writeFileSync(own, nodeFile(meta, message.body), 'utf8');
+            await this.send();
+            await this.sendBody(message.command, message.nodeId);
         },
 
         addNode: async message => {
@@ -177,30 +198,18 @@ export class PipelineBuilderPanel {
                 fs.mkdirSync(path.dirname(own), { recursive: true });
                 fs.writeFileSync(own, seed, 'utf8');
             }
+            // The order goes first here, unlike everywhere else: it is what
+            // drops the shipped nodes, and until they are dropped a grouping
+            // that does not mention them is refused for leaving them homeless.
             const written = await this.write(
-                script => writePhases(script, this.workspaceRoot, message.command,
-                    [{ name: `our ${message.command}`, nodes: [step] }]),
+                script => writeNodeOrder(script, this.workspaceRoot, message.command, [step]),
                 'Replacing the step');
             if (!written) { return; }
             await this.write(
-                script => writeNodeOrder(script, this.workspaceRoot, message.command, [step]),
+                script => writePhases(script, this.workspaceRoot, message.command,
+                    [{ name: `our ${message.command}`, nodes: [step] }]),
                 'Replacing the step');
             await vscode.window.showTextDocument(vscode.Uri.file(own));
-        },
-
-        replaceNode: async message => {
-            const own = this.projectNodePath(message.command, message.nodeId);
-            if (!fs.existsSync(own)) {
-                const shipped = this.nodeSource(message.command, message.nodeId);
-                if (!shipped) {
-                    this.say(`Cannot find the shipped ${message.nodeId} node to copy from.`);
-                    return;
-                }
-                fs.mkdirSync(path.dirname(own), { recursive: true });
-                fs.copyFileSync(shipped, own);
-            }
-            await vscode.window.showTextDocument(vscode.Uri.file(own));
-            await this.send();
         },
 
         restoreNode: async message => {
@@ -256,6 +265,20 @@ export class PipelineBuilderPanel {
                 'Switching workflows');
         },
 
+        repair: async message => {
+            // Not routed through `write`: that resolves the writer, and a repair
+            // runs its own script. The shape it reports back is the same.
+            const script = resolveConfigRepairScript(
+                this.workspaceRoot, this.context.extensionPath);
+            if (!script) {
+                this.say('Repairing needs the companion spec-kit extension.');
+                return;
+            }
+            const refused = await applyRepair(script, this.workspaceRoot, message.repairId);
+            await this.send();
+            if (refused) { this.say(refused); }
+        },
+
         newWorkflow: async message => {
             const made = await this.write(
                 script => createWorkflow(script, this.workspaceRoot, message.name, message.from),
@@ -288,6 +311,14 @@ export class PipelineBuilderPanel {
         await this.send();
         if (refused) { this.say(refused); return false; }
         return true;
+    }
+
+    /** Send one node's instructions — what it says, and what an edit starts from. */
+    private async sendBody(command: string, nodeId: string): Promise<void> {
+        const file = this.nodeSource(command, nodeId);
+        if (!file) { return; }
+        const { body, parts, editable } = readableNode(fs.readFileSync(file, 'utf8'));
+        await this.post({ type: 'nodeBody', command, nodeId, body, parts, editable });
     }
 
     /** Tell the panel, not the editor. */

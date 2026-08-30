@@ -172,6 +172,21 @@ export interface PipelineGraph {
 }
 
 /**
+ * One way out of a broken configuration, offered as an action rather than advice.
+ *
+ * Each is a named retreat toward what ships, and `detail` says what it costs —
+ * a recovery that quietly discarded an afternoon's work would be worse than the
+ * breakage it fixes.
+ */
+export interface PipelineRepair {
+    id: string;
+    label: string;
+    detail: string;
+    /** The broadest retreat — discards work across every step, so it reads as one. */
+    destructive?: boolean;
+}
+
+/**
  * A configuration the builder could not resolve.
  *
  * It arrives as data rather than a thrown error because a broken configuration
@@ -180,6 +195,8 @@ export interface PipelineGraph {
  */
 export interface PipelineGraphError {
     error: string;
+    /** Absent when the configuration is too broken to even diagnose. */
+    repairs?: PipelineRepair[];
 }
 
 export type PipelineGraphResult = PipelineGraph | PipelineGraphError;
@@ -201,9 +218,10 @@ export type BuilderToExtensionMessage =
     | { type: 'build' }
     | { type: 'preview' }
     | { type: 'openConfig' }
+    | { type: 'repair'; repairId: string }
+    | { type: 'saveNode'; command: string; nodeId: string; body: string }
     | { type: 'openNode'; command: string; nodeId: string }
     /** Take ownership of a node: copy the shipped instructions in to edit. */
-    | { type: 'replaceNode'; command: string; nodeId: string }
     /** Give it back: drop the project's copy and return to the shipped node. */
     | { type: 'restoreNode'; command: string; nodeId: string }
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
@@ -275,7 +293,11 @@ export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
     | { type: 'busy'; busy: boolean }
     /** A node's instructions, with the frontmatter and shared-part fences taken out. */
-    | { type: 'nodeBody'; command: string; nodeId: string; body: string; parts: string[] }
+    | {
+        type: 'nodeBody'; command: string; nodeId: string; body: string; parts: string[];
+        /** The stored text, fences intact — what an edit starts from. */
+        editable: string;
+    }
     /**
      * Something to tell the person, shown in the panel.
      *

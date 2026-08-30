@@ -207,6 +207,21 @@ def build_graph(project_root: str) -> dict:
     }
 
 
+def _repairs(project: str) -> list:
+    """The ways out of a broken configuration — never at the cost of the error.
+
+    Diagnosis reads the same file that just failed, so it can fail too. If it
+    does, the panel still gets the error and its manual escape; it simply offers
+    no shortcut.
+    """
+    try:
+        import config_repair
+
+        return config_repair.diagnose(os.path.abspath(project))
+    except Exception:  # noqa: BLE001 — a diagnosis is a bonus, never a blocker
+        return []
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default=os.getcwd())
@@ -217,7 +232,9 @@ def main() -> int:
         # The builder has to be able to draw a project whose configuration is
         # broken — that is exactly when someone opens it — so the error travels
         # as data rather than as a non-zero exit with nothing to render.
-        print(json.dumps({"error": str(err)}))
+        # The ways out travel with it: an error the panel can only print leaves
+        # someone editing YAML by hand, which is the thing this panel replaces.
+        print(json.dumps({"error": str(err), "repairs": _repairs(args.project)}))
         return 0
     print(json.dumps(graph, indent=2))
     return 0

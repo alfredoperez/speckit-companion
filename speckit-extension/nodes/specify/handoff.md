@@ -4,6 +4,7 @@ name: Hand off to the next step
 kind: control
 command: specify
 reads: []
+last: true
 ---
 <!-- speckit-companion:part timing -->
 

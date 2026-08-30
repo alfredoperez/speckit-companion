@@ -97,6 +97,9 @@ BUILD_ONLY = frozenset({
     # Writes one key back into a project's companion.yml after a drag in the
     # builder. Same story: the editor runs it, no shipped command body does.
     "config_write.py",
+    # Diagnoses a configuration the builder could not read and offers the ways
+    # back. Runs from the panel, beside the writer it undoes.
+    "config_repair.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

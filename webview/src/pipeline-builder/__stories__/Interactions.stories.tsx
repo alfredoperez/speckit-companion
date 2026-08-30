@@ -9,6 +9,7 @@
  * They run in Storybook's UI and in CI through the test runner.
  */
 import type { Meta, StoryObj } from '@storybook/preact';
+import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { AttachForm } from '../AttachForm';
@@ -33,7 +34,6 @@ function board(g = graph([SPECIFY])) {
         <div class="builder">
             <Canvas graph={g}
                 onOpenNode={(c, n) => sent.push({ what: 'openNode', with: [c, n] })}
-                onReplaceNode={(c, n) => sent.push({ what: 'replaceNode', with: [c, n] })}
                 onRestoreNode={on('restoreNode')}
                 onReorder={(c, order) => sent.push({ what: 'reorder', with: [c, order] })}
                 onAddHook={(c, a, w) => sent.push({ what: 'addHook', with: [c, a, w] })}
@@ -154,34 +154,39 @@ export const RenameAPhase: Story = {
     },
 };
 
-export const MoveAPhase: Story = {
-    name: 'Move a phase',
+export const APhaseOffersOnlyWhatWorks: Story = {
+    name: 'A phase offers only what can actually happen',
+    render: () => board().view,
+    play: async ({ canvasElement }) => {
+        const tools = Array.from(canvasElement.querySelectorAll('.pb-phase')[1]
+            .querySelectorAll('button.pb-phase-tool')) as HTMLButtonElement[];
+        assert(tools.length === 2, 'split and merge — reordering is not on offer');
+        // Moving a phase moves its nodes, and no such move in any shipped step
+        // survives the `reads:` dependencies. The arrows could only ever fire,
+        // be refused, and redraw unchanged.
+        assert(!tools.some(t => /move/i.test(t.title)), 'nothing claims to move a phase');
+        assert(tools.some(t => /split/i.test(t.title)), 'a phase can be split');
+        assert(tools.some(t => /merge/i.test(t.title)), 'and merged into the one above');
+    },
+};
+
+export const MergeAPhase: Story = {
+    name: 'Merge a phase into the one above',
     render: () => board().view,
     play: async ({ canvasElement }) => {
         const tools = canvasElement.querySelectorAll('.pb-phase')[1]
             .querySelectorAll('button.pb-phase-tool');
-        (tools[0] as HTMLButtonElement).click();
-        assert(tools.length === 4, 'up, down, add and remove');
+        (tools[1] as HTMLButtonElement).click();
     },
 };
 
-export const RemoveAPhase: Story = {
-    name: 'Remove a phase',
-    render: () => board().view,
-    play: async ({ canvasElement }) => {
-        const tools = canvasElement.querySelectorAll('.pb-phase')[1]
-            .querySelectorAll('button.pb-phase-tool');
-        (tools[3] as HTMLButtonElement).click();
-    },
-};
-
-export const AddAPhase: Story = {
-    name: 'Add a phase',
+export const SplitAPhase: Story = {
+    name: 'Split a phase in two',
     render: () => board().view,
     play: async ({ canvasElement }) => {
         const tools = canvasElement.querySelectorAll('.pb-phase')[0]
             .querySelectorAll('button.pb-phase-tool');
-        (tools[2] as HTMLButtonElement).click();
+        (tools[0] as HTMLButtonElement).click();
     },
 };
 
@@ -203,13 +208,16 @@ export const PutADroppedNodeBack: Story = {
     },
 };
 
-export const MakeANodeYours: Story = {
-    name: 'Make a node yours',
+export const AShippedNodeCarriesNoExtraAction: Story = {
+    name: 'A shipped node card offers nothing but itself',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const action = canvasElement.querySelector('.pb-node-action') as HTMLButtonElement;
-        assert(action.textContent === 'Make mine', 'a shipped node offers to become yours');
-        action.click();
+        // Clicking the node opens the panel where its instructions are edited,
+        // and saving that edit is what makes it yours — so the card no longer
+        // carries a "make mine" step in front of the thing people came to do.
+        assert(canvasElement.querySelector('.pb-node-action') === null,
+            'a shipped node card has no action of its own');
+        (canvasElement.querySelector('.pb-node-main') as HTMLButtonElement | null)?.click();
     },
 };
 
@@ -337,6 +345,135 @@ export const ExpandWhatChanged: Story = {
 
 // ── Inspector ───────────────────────────────────────────
 
+// ── Recovering a broken pipeline ────────────────────────
+
+export const RepairABrokenPipeline: Story = {
+    name: 'Repair a pipeline that could not be read',
+    render: () => {
+        const { sent, on } = recorder();
+        (RepairABrokenPipeline as { sent?: Sent }).sent = sent;
+        return (
+            <div class="builder">
+                <BrokenPipeline
+                    error="tasks: phase 'gather' has no nodes — remove the phase, or give it one"
+                    repairs={[{
+                        id: 'drop-empty-phases:tasks',
+                        label: 'Remove the empty phase from tasks',
+                        detail: "Takes out 'gather'. Every other change you made is kept.",
+                    }]}
+                    onRepair={on('repair')} onOpenConfig={on('openConfig')} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const sent = (RepairABrokenPipeline as { sent?: Sent }).sent!;
+        (canvasElement.querySelector('.builder-repair .builder-action') as HTMLButtonElement)
+            .click();
+        assert(sent.length === 1, 'clicking a way out asks for exactly one repair');
+        assert(sent[0].what === 'repair', 'and it is a repair, not an edit');
+        assert(sent[0].with === 'drop-empty-phases:tasks', 'named by its own id');
+    },
+};
+
+export const ABrokenPipelineSaysWhatItCosts: Story = {
+    name: 'Every way out says what it costs',
+    render: () => (
+        <div class="builder">
+            <BrokenPipeline
+                error="tasks: phase 'gather' has no nodes — remove the phase, or give it one"
+                repairs={[
+                    {
+                        id: 'drop-empty-phases:tasks',
+                        label: 'Remove the empty phase from tasks',
+                        detail: "Takes out 'gather'. Every other change you made is kept.",
+                    },
+                    {
+                        id: 'reset-all',
+                        label: 'Reset every step to the shipped pipeline',
+                        detail: 'Drops every node order and phase grouping in this '
+                            + 'workflow. Your hooks are kept.',
+                    },
+                ]}
+                onRepair={noop} onOpenConfig={noop} />
+        </div>
+    ),
+    play: async ({ canvasElement }) => {
+        const offered = Array.from(canvasElement.querySelectorAll('.builder-repair'));
+        assert(offered.length === 2, 'both ways out are offered');
+        for (const repair of offered) {
+            const detail = repair.querySelector('.builder-repair-detail')?.textContent ?? '';
+            assert(detail.trim().length > 0,
+                'a repair with no stated cost is one nobody can judge before clicking');
+        }
+        // The narrow repair first: someone scanning top-down should meet the one
+        // that keeps their work before the one that discards it.
+        assert((offered[0].textContent ?? '').includes('empty phase'),
+            'the narrowest way out is offered first');
+    },
+};
+
+export const ABrokenPipelineKeepsTheManualEscape: Story = {
+    name: 'The manual escape survives, smaller',
+    render: () => {
+        const { sent, on } = recorder();
+        (ABrokenPipelineKeepsTheManualEscape as { sent?: Sent }).sent = sent;
+        return (
+            <div class="builder">
+                <BrokenPipeline error="something the panel cannot diagnose" repairs={[]}
+                    onRepair={noop} onOpenConfig={on('openConfig')} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const sent = (ABrokenPipelineKeepsTheManualEscape as { sent?: Sent }).sent!;
+        assert(canvasElement.querySelector('.builder-repairs') === null,
+            'nothing diagnosable means nothing is offered');
+        (canvasElement.querySelector('.builder-link') as HTMLButtonElement).click();
+        assert(sent[0]?.what === 'openConfig',
+            'the file is still one click away when the panel cannot help');
+    },
+};
+
+export const EditANodeInPlace: Story = {
+    name: 'Edit a node without leaving the panel',
+    render: () => {
+        const { sent, on } = recorder();
+        (EditANodeInPlace as { sent?: Sent }).sent = sent;
+        return (
+            <div class="builder">
+                <Inspector
+                    node={node('draft-spec', 'Draft the spec', { kind: 'author' })}
+                    step="specify"
+                    body={'Load `spec-template.md` and write the specification.'}
+                    editable={'Load `spec-template.md`.\n<!-- speckit-companion:part timing -->'}
+                    parts={['timing']}
+                    onClose={noop} onOpenFile={noop} onSave={on('saveNode')}
+                    onRestore={noop} onAttach={noop} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const sent = (EditANodeInPlace as { sent?: Sent }).sent!;
+        const action = (label: string) =>
+            Array.from(canvasElement.querySelectorAll('.pb-inspector-action'))
+                .find(el => el.textContent === label) as HTMLButtonElement;
+
+        action('Edit').click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const box = canvasElement.querySelector('.pb-doc-edit') as HTMLTextAreaElement;
+        assert(Boolean(box), 'editing happens here, not in the editor');
+        // The fence travels with the text: it is where the shared block lands,
+        // and saving the rendered prose back would quietly delete it.
+        assert(box.value.includes('speckit-companion:part'),
+            'the shared-block markers come with the text being edited');
+
+        action('Save').click();
+        assert(sent.length === 1 && sent[0].what === 'saveNode',
+            'saving is one message — and it is what writes your copy');
+    },
+};
+
 export const ReadAndAct: Story = {
     name: 'Read a node, then act on it',
     render: () => (
@@ -348,15 +485,18 @@ export const ReadAndAct: Story = {
                 step="specify"
                 body={'Load `spec-template.md` and write the specification.'}
                 parts={['timing']}
-                onClose={noop} onOpenFile={noop} onReplace={noop}
+                editable={'Load `spec-template.md` and write the specification.'}
+                onClose={noop} onOpenFile={noop} onSave={noop}
                 onRestore={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
         const actions = Array.from(canvasElement.querySelectorAll('.pb-inspector-action'))
             .map(el => el.textContent);
-        assert(actions.includes('Make it mine'), 'a shipped node offers to become yours');
-        assert(actions.includes('Add hook'), 'and to have work attached');
+        assert(actions.includes('Edit'), 'a node is edited here, not somewhere else');
+        assert(!actions.includes('Make it mine'),
+            'making it yours is what saving does, not a step before editing');
+        assert(actions.includes('Add hook'), 'and work can be attached');
         assert(actions.includes('Open the file'), 'with the editor still one click away');
     },
 };

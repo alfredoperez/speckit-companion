@@ -19,6 +19,7 @@ import {
     PipelineNode,
     isGraphError,
 } from '../../../src/protocol/pipeline';
+import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas } from './Canvas';
 import { Header } from './Header';
 import { Inspector } from './Inspector';
@@ -68,7 +69,8 @@ function App() {
     const [busy, setBusy] = useState(false);
     const [side, setSide] = useState<Side>(null);
     const [notice, setNotice] = useState<string | null>(null);
-    const [body, setBody] = useState<{ key: string; body: string; parts: string[] } | null>(null);
+    const [body, setBody] = useState<
+        { key: string; body: string; parts: string[]; editable: string } | null>(null);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -85,6 +87,7 @@ function App() {
                     key: `${message.command}/${message.nodeId}`,
                     body: message.body,
                     parts: message.parts,
+                    editable: message.editable,
                 });
             }
         };
@@ -99,17 +102,14 @@ function App() {
 
     if (isGraphError(graph)) {
         return (
-            <div class="builder-error">
-                <h2>The pipeline could not be read</h2>
-                <p class="builder-error-detail">{graph.error}</p>
-                <p>
-                    Nothing has been changed. Fix the configuration and this will refresh
-                    on save.
-                </p>
-                <button class="builder-action" onClick={() => vscode.postMessage({ type: 'openConfig' })}>
-                    Open companion.yml
-                </button>
-            </div>
+            <BrokenPipeline
+                error={graph.error}
+                repairs={graph.repairs ?? []}
+                notice={notice}
+                busy={busy}
+                onRepair={repairId => vscode.postMessage({ type: 'repair', repairId })}
+                onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
+            />
         );
     }
 
@@ -158,8 +158,6 @@ function App() {
                     graph={graph}
                     selected={selected}
                     onOpenNode={openNode}
-                    onReplaceNode={(command, nodeId) =>
-                        vscode.postMessage({ type: 'replaceNode', command, nodeId })}
                     onRestoreNode={(command, nodeId) =>
                         vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                     onReorder={(command, order) =>
@@ -187,6 +185,16 @@ function App() {
 
                 {attachStep && attaching && (
                     <AttachForm
+                        // Keyed by the hook it is editing so picking a second one
+                        // remounts the form. The fields seed from `editing` at
+                        // mount, so without this a click on another hook left the
+                        // first one's values on screen — while the index it would
+                        // save to had already moved to the second. Saving then
+                        // wrote one hook's content over another.
+                        key={attaching.hook
+                            ? `${attaching.command}/${attaching.hook.when}/`
+                              + `${attaching.hook.anchor}/${attaching.hook.index}`
+                            : `${attaching.command}/new/${attaching.anchor}`}
                         step={attachStep}
                         anchor={attaching.anchor}
                         choices={graph.choices}
@@ -224,16 +232,22 @@ function App() {
                 )}
                 {node && selected && (
                     <Inspector
+                        // Keyed by the node so picking a second one starts a
+                        // fresh pane rather than carrying the first one's
+                        // half-written edit across to it.
+                        key={key}
                         node={node}
                         step={selected.command}
                         body={body?.key === key ? body.body : null}
+                        editable={body?.key === key ? body.editable : ''}
                         parts={body?.key === key ? body.parts : []}
                         onClose={() => { setSide(null); setBody(null); }}
                         onOpenFile={() => vscode.postMessage({
                             type: 'openNode', command: selected.command, nodeId: selected.nodeId,
                         })}
-                        onReplace={() => vscode.postMessage({
-                            type: 'replaceNode', command: selected.command, nodeId: selected.nodeId,
+                        onSave={(text: string) => vscode.postMessage({
+                            type: 'saveNode', command: selected.command,
+                            nodeId: selected.nodeId, body: text,
                         })}
                         onRestore={() => vscode.postMessage({
                             type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,

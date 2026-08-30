@@ -61,6 +61,9 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     };
 }
 
+/** Preact batches state updates, so a click's re-render lands on the next tick. */
+const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
 function mount(child: preact.ComponentChild): HTMLElement {
     const host = document.createElement('div');
     document.body.appendChild(host);
@@ -86,7 +89,6 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
             onOpenFrame={c => frames.push(c)}
             onReplaceStep={c => replacedSteps.push(c)}
             onOpenNode={(c, n) => opened.push([c, n])}
-            onReplaceNode={(c, n) => replaced.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
@@ -167,6 +169,107 @@ describe('the run reads left to right', () => {
         const cards = host.querySelectorAll('.pb-node');
         expect(cards[0].querySelector('.pb-node-meta')).toBeNull();
         expect(cards[1].querySelector('.pb-writes')?.textContent).toBe('spec.md');
+    });
+});
+
+describe('every place a hook can attach is drawn', () => {
+    // The board used to show only what a project had already done, so the only
+    // way to learn work could be attached somewhere was to hover it.
+    //
+    // One seam per gap, though: `after <a node>` and `before <the next>` are two
+    // anchors for a single insertion point, and drawing both put a pair of
+    // dashed lines at every join. A phase owns its two edges; each node after
+    // the first owns the gap above it.
+    it('marks an empty anchor with a slot naming it', () => {
+        const { host } = canvas();
+        const slots = Array.from(host.querySelectorAll('.pb-slot'))
+            .map(el => el.textContent);
+        expect(slots).toEqual([
+            'before gather', 'after gather', 'before author', 'after author',
+        ]);
+    });
+
+    it('draws one seam per gap rather than one per anchor', () => {
+        // Three nodes in a phase: the phase's two edges plus the two joins
+        // between its nodes — four, not eight.
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'gather', hooks: [],
+                    nodes: [node({ id: 'a' }), node({ id: 'b' }), node({ id: 'c' })],
+                }],
+            })],
+        }));
+        const slots = Array.from(host.querySelectorAll('.pb-slot'))
+            .map(el => el.textContent);
+        expect(slots).toEqual(['before gather', 'before b', 'before c', 'after gather']);
+    });
+
+    it('adds a hook at the anchor whose slot was clicked', () => {
+        const { host, added } = canvas();
+        const slot = Array.from(host.querySelectorAll('.pb-slot'))
+            .find(el => el.textContent === 'before author') as HTMLButtonElement;
+        slot.click();
+        expect(added).toEqual([['specify', 'author', 'before']]);
+    });
+
+    it('shows the hooks instead of a slot once an anchor has any', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'gather',
+                    hooks: [{
+                        when: 'before', type: 'prompt', summary: 'check the branch',
+                        anchor: 'gather', index: 0, note: '',
+                    }],
+                    nodes: [node()],
+                }],
+            })],
+        }));
+        const slots = Array.from(host.querySelectorAll('.pb-slot')).map(el => el.textContent);
+        expect(slots).not.toContain('before gather');
+        expect(slots).toContain('after gather');
+        expect(host.querySelector('.pb-hooks')).not.toBeNull();
+    });
+});
+
+describe("hooks another extension registered run in the lane, not beneath it", () => {
+    const stock = (when: 'before' | 'after') => ({
+        when, extension: 'git', command: 'speckit.git.commit',
+        description: 'Commit the work', optional: true, conditional: false,
+    });
+
+    it('draws them at the step edges, in the same shape as your own hooks', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('before'), stock('after')] })],
+        }));
+        // Not a separate labelled block at the foot of the lane any more.
+        expect(host.querySelector('.pb-stock')).toBeNull();
+
+        const chips = Array.from(host.querySelectorAll('.pb-hook--stock'));
+        expect(chips).toHaveLength(2);
+        expect(chips[0].textContent).toContain('speckit.git.commit');
+        expect(chips[0].textContent).toContain('git');
+    });
+
+    it('says whose they are and that they are not edited here', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('after')] })],
+        }));
+        const chip = host.querySelector('.pb-hook--stock')!;
+        expect(chip.getAttribute('title')).toContain('git');
+        expect(chip.getAttribute('title')).toContain('not edited in this panel');
+        // A click that cannot edit would be a worse lie than no click.
+        expect(chip.tagName).toBe('SPAN');
+    });
+
+    it('lands the before ones on the first node and the after ones on the last', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('before'), stock('after')] })],
+        }));
+        const groups = Array.from(host.querySelectorAll('.pb-node-group'));
+        expect(groups[0].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
+        expect(groups[groups.length - 1].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
     });
 });
 
@@ -453,29 +556,21 @@ describe('a phase is a block a project owns', () => {
         Array.from(host.querySelectorAll('.pb-phase')[phase]
             .querySelectorAll('button.pb-phase-tool')) as HTMLButtonElement[];
 
-    it('moves a phase later, and the order follows it', () => {
-        const { host, grouped } = canvas(three());
-        // The tools read [up, down, add, remove].
-        tools(host, 0)[1].click();
-        expect(grouped[0][1].map(p => p.name)).toEqual(['author', 'gather', 'wrap-up']);
-    });
-
-    it('moves a phase earlier', () => {
-        const { host, grouped } = canvas(three());
-        tools(host, 2)[0].click();
-        expect(grouped[0][1].map(p => p.name)).toEqual(['gather', 'wrap-up', 'author']);
-    });
-
-    it('cannot move the first phase up or the last one down', () => {
+    it('does not offer to reorder phases', () => {
+        // A phase is a contiguous run of the step, so moving one moves its
+        // nodes — and across every step this pipeline ships, not one such move
+        // survives the `reads:` dependencies: 0 of 18. The arrows that used to
+        // sit here fired, were refused by the writer, and left the panel
+        // redrawn unchanged, which reads as a button that does nothing.
         const { host } = canvas(three());
-        expect(tools(host, 0)[0].disabled).toBe(true);
-        expect(tools(host, 2)[1].disabled).toBe(true);
+        const titles = tools(host, 1).map(button => button.title);
+        expect(titles.some(title => /move/i.test(title))).toBe(false);
     });
 
     // A phase's nodes have to land somewhere; dropping them would drop work.
     it('folds a removed phase into the one above it', () => {
         const { host, grouped } = canvas(three());
-        tools(host, 1)[3].click();
+        tools(host, 1)[1].click();
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
@@ -484,7 +579,7 @@ describe('a phase is a block a project owns', () => {
 
     it('folds the first phase into the one below it', () => {
         const { host, grouped } = canvas(three());
-        tools(host, 0)[3].click();
+        tools(host, 0)[1].click();
         expect(grouped[0][1]).toEqual([
             { name: 'author', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
@@ -495,14 +590,14 @@ describe('a phase is a block a project owns', () => {
         const { host } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        expect(tools(host, 0)[3].disabled).toBe(true);
+        expect(tools(host, 0)[1].disabled).toBe(true);
     });
 
     // A new phase is born empty, and an empty phase cannot be written — so it
     // takes a node from the phase it follows.
     it('adds a phase by splitting the one before it', () => {
         const { host, grouped } = canvas(three());
-        tools(host, 0)[2].click();
+        tools(host, 0)[0].click();
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a'] },
             { name: 'new phase', nodes: ['b'] },
@@ -511,9 +606,12 @@ describe('a phase is a block a project owns', () => {
         ]);
     });
 
-    it('will not split a phase that has only one node', () => {
+    it('will not offer to split a phase that has only one node', () => {
+        // Disabled rather than silently doing nothing: the split has to take a
+        // node off the end, and a one-node phase has none to give.
         const { host, grouped } = canvas(three());
-        tools(host, 1)[2].click();
+        expect(tools(host, 1)[0].disabled).toBe(true);
+        tools(host, 1)[0].click();
         expect(grouped).toEqual([]);
     });
 });
@@ -533,9 +631,15 @@ describe('a dropped node can be put back', () => {
         expect(options).toEqual(['', 'branch', 'finalize']);
     });
 
-    it('offers nothing when the step is running everything it ships with', () => {
+    it('still says where nodes come from when there are none to put back', () => {
+        // Hiding the control left "how do I add a node here?" with no answer
+        // anywhere on screen — the thing that would have explained itself was
+        // the thing that was absent.
         const { host } = canvas();
-        expect(host.querySelector('.pb-phase-add-node')).toBeNull();
+        const control = host.querySelector('.pb-phase-add-node');
+        expect(control).not.toBeNull();
+        expect(control!.tagName).toBe('SPAN');
+        expect(control!.getAttribute('title')).toMatch(/drag it in from another phase/);
     });
 
     // The order says when it runs and the phase says where it sits; one without
@@ -738,7 +842,8 @@ describe('one action keeps one name through the flow', () => {
 describe('the inspector reads a node here', () => {
     const noop = () => undefined;
     const actions = {
-        onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
+        onClose: noop, onOpenFile: noop, onSave: noop, onRestore: noop, onAttach: noop,
+        editable: 'the stored text',
     };
 
     it('renders the instructions instead of the raw file', () => {
@@ -769,16 +874,54 @@ describe('the inspector reads a node here', () => {
         expect(host.textContent).toContain('quality-checklist has to run after it');
     });
 
-    it('offers to take a shipped node over, and to hand a replaced one back', () => {
+    // Editing a node is what makes it yours, so there is no separate step to
+    // press first. Only a node already yours offers the way back.
+    it('offers to edit either node, and to hand a replaced one back', () => {
         const shipped = mount(
             <Inspector node={node()} step="specify" body="x" parts={[]} {...actions} />);
-        expect(shipped.textContent).toContain('Make it mine');
+        expect(shipped.textContent).toContain('Edit');
+        expect(shipped.textContent).not.toContain('Make it mine');
+        expect(shipped.textContent).not.toContain('Use the shipped node');
 
         document.body.innerHTML = '';
         const ours = mount(
             <Inspector node={node({ replaced: true })} step="specify" body="x" parts={[]}
                 {...actions} />);
+        expect(ours.textContent).toContain('Edit');
         expect(ours.textContent).toContain('Use the shipped node');
+    });
+
+    it('edits in place, and saves the stored text rather than the rendered text', async () => {
+        const saved: string[] = [];
+        const host = mount(
+            <Inspector node={node()} step="specify"
+                body={'Load `spec-template.md`'} parts={['timing']} {...actions}
+                editable={'Load `spec-template.md`\n<!-- speckit-companion:part timing -->'}
+                onSave={(text: string) => saved.push(text)} />);
+
+        (Array.from(host.querySelectorAll('.pb-inspector-action'))
+            .find(el => el.textContent === 'Edit') as HTMLButtonElement).click();
+        await flush();
+
+        const box = host.querySelector('.pb-doc-edit') as HTMLTextAreaElement;
+        // The fences come with it: they are where the shared blocks land, and
+        // saving the rendered text back would delete every one of them.
+        expect(box.value).toContain('speckit-companion:part timing');
+
+        (Array.from(host.querySelectorAll('.pb-inspector-action'))
+            .find(el => el.textContent === 'Save') as HTMLButtonElement).click();
+        expect(saved).toHaveLength(1);
+        expect(saved[0]).toContain('speckit-companion:part timing');
+    });
+
+    it('says that saving a shipped node writes your own copy', async () => {
+        const host = mount(
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...actions} />);
+        (Array.from(host.querySelectorAll('.pb-inspector-action'))
+            .find(el => el.textContent === 'Edit') as HTMLButtonElement).click();
+        await flush();
+        expect(host.textContent).toContain('writes your own copy');
+        expect(host.textContent).toContain('shipped one is left alone');
     });
 
     it('waits visibly rather than showing an empty body', () => {

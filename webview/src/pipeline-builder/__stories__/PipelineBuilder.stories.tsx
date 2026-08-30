@@ -10,6 +10,7 @@
  * badly here reads badly in the panel.
  */
 import type { Meta, StoryObj } from '@storybook/preact';
+import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import type {
@@ -17,6 +18,7 @@ import type {
     PipelineHook,
     PipelineNode,
     PipelinePhase,
+    PipelineRepair,
     PipelineStep,
 } from '../../../../src/protocol/pipeline';
 
@@ -108,8 +110,9 @@ const PLAN = step('plan', [
 
 const noop = () => undefined;
 const CANVAS_ACTIONS = {
-    onOpenNode: noop, onReplaceNode: noop, onRestoreNode: noop,
-    onReorder: noop, onAddHook: noop,
+    onOpenNode: noop, onRestoreNode: noop,
+    onReorder: noop, onAddHook: noop, onEditHook: noop,
+    onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onSetPhases: noop,
 };
 const HEADER_ACTIONS = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,
@@ -318,8 +321,9 @@ export const EverythingChangedAtOnce: Story = {
             changes: {
                 added: [], removed: ['quality-checklist'], reordered: true,
                 hooks: 1, decisions: ['classify-size'], replaced: ['draft-spec'],
+                phases: ['author'],
             },
-        })], { configured: true, customised: true, counts: { steps: 1, phases: 1, nodes: 1, hooks: 1 } });
+        })], { configured: true, customised: true, counts: { steps: 1, phases: 1, nodes: 1, hooks: 1, stockHooks: 0 } });
         return (
             <div class="builder">
                 <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
@@ -460,5 +464,124 @@ export const NarrowPanel: Story = {
                 buildState="stale" busy={false} {...HEADER_ACTIONS} />
             <Canvas graph={graph([SPECIFY])} {...CANVAS_ACTIONS} />
         </div>
+    ),
+};
+
+// ── Every anchor, filled and empty ──────────────────────
+// The board used to draw only the hooks a project had written, so the places
+// work *could* attach were invisible until you hovered them.
+
+export const EveryAnchorIsDrawn = {
+    name: '26 \u00b7 Every place a hook can attach',
+    render: () => (
+        <Canvas graph={graph([step('specify', [
+            phase('gather', [
+                node('resolve-dir', 'Resolve the spec folder'),
+                node('load-living-specs', 'Load living specs', { kind: 'investigate' }),
+            ]),
+            phase('author', [
+                node('draft-spec', 'Draft the spec', { kind: 'author', writes: ['spec.md'] }),
+            ], [{
+                when: 'before', type: 'node', summary: 'debug-timing',
+                anchor: 'author', index: 0, note: '',
+            }]),
+        ])])} {...CANVAS_ACTIONS} />
+    ),
+};
+
+export const StockHooksInTheLane = {
+    name: "27 \u00b7 Another extension's hooks, where they run",
+    render: () => (
+        <Canvas graph={graph([step('specify', [
+            phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
+            phase('wrap-up', [node('handoff', 'Hand off to the next step')]),
+        ], {
+            stockHooks: [
+                {
+                    when: 'before', extension: 'git', command: 'speckit.git.branch',
+                    description: 'Create the feature branch',
+                    optional: false, conditional: false,
+                },
+                {
+                    when: 'after', extension: 'git', command: 'speckit.git.commit',
+                    description: 'Commit the work', optional: true, conditional: false,
+                },
+                {
+                    when: 'after', extension: 'companion',
+                    command: 'speckit.companion.after-specify',
+                    description: 'Record the step', optional: false, conditional: true,
+                },
+            ],
+        })])} {...CANVAS_ACTIONS} />
+    ),
+};
+
+// ── The pipeline could not be read ──────────────────────
+// The state this file's own header promises and had no story for. It is
+// reachable without ever opening `companion.yml` — an older build, a hand edit,
+// a version whose guard did not exist yet — and what it offers is the whole
+// difference between a panel someone can recover and a dead end.
+
+const EMPTY_PHASE_ERROR =
+    "tasks: phase 'gather' has no nodes — remove the phase, or give it one";
+
+const DROP_EMPTY: PipelineRepair = {
+    id: 'drop-empty-phases:tasks',
+    label: 'Remove the empty phase from tasks',
+    detail: "Takes out 'gather'. Every other change you made is kept.",
+};
+
+const REPAIR_ACTIONS = { onRepair: () => undefined, onOpenConfig: () => undefined };
+
+export const BrokenWithAWayOut: Story = {
+    name: '22 · Broken, with a way out',
+    render: () => (
+        <BrokenPipeline
+            error={EMPTY_PHASE_ERROR}
+            repairs={[
+                DROP_EMPTY,
+                {
+                    id: 'reset-phases:tasks',
+                    label: 'Use the shipped phases for tasks',
+                    detail: 'Drops the grouping you set for tasks. Its hooks stay.',
+                },
+                {
+                    id: 'reset-all',
+                    label: 'Reset every step to the shipped pipeline',
+                    detail: 'Drops every node order and phase grouping in this workflow. '
+                        + 'Your hooks are kept.',
+                    destructive: true,
+                },
+            ]}
+            {...REPAIR_ACTIONS} />
+    ),
+};
+
+export const BrokenBeyondDiagnosis: Story = {
+    name: '23 · Broken with nothing to offer',
+    render: () => (
+        <BrokenPipeline
+            error="companion.yml could not be read to the end — indented with tabs at line 4"
+            repairs={[]}
+            {...REPAIR_ACTIONS} />
+    ),
+};
+
+export const ARepairRefused: Story = {
+    name: '24 · A repair that was refused',
+    render: () => (
+        <BrokenPipeline
+            error={EMPTY_PHASE_ERROR}
+            repairs={[DROP_EMPTY]}
+            notice="nothing to repair for drop-empty-phases:tasks"
+            {...REPAIR_ACTIONS} />
+    ),
+};
+
+export const RepairInFlight: Story = {
+    name: '25 · A repair in flight',
+    render: () => (
+        <BrokenPipeline error={EMPTY_PHASE_ERROR} repairs={[DROP_EMPTY]} busy
+            {...REPAIR_ACTIONS} />
     ),
 };

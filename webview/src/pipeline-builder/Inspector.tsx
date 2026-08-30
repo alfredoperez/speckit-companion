@@ -8,6 +8,7 @@
  * you actually wanted.
  */
 
+import { useState } from 'preact/hooks';
 import { PipelineNode } from '../../../src/protocol/pipeline';
 
 interface Props {
@@ -15,11 +16,13 @@ interface Props {
     step: string;
     /** The instruction text, or null while it is still being read. */
     body: string | null;
+    /** The same text as stored, fences intact — what an edit starts from. */
+    editable: string;
     /** Shared blocks the build stitches in here. */
     parts: string[];
     onClose: () => void;
     onOpenFile: () => void;
-    onReplace: () => void;
+    onSave: (body: string) => void;
     onRestore: () => void;
     onAttach: () => void;
 }
@@ -122,7 +125,13 @@ function inline(text: string): (string | preact.VNode)[] {
 }
 
 export function Inspector(props: Props) {
-    const { node, step, body, parts } = props;
+    const { node, step, body, parts, editable } = props;
+    // Editing is how a node becomes yours. There is no separate "make it mine":
+    // the copy is written when you save, so the thing you wanted to do and the
+    // thing you had to do first are the same action.
+    const [draft, setDraft] = useState<string | null>(null);
+    const editing = draft !== null;
+
     return (
         <aside class="pb-inspector" aria-label={`${node.name} instructions`}>
             <header class="pb-inspector-head">
@@ -167,37 +176,79 @@ export function Inspector(props: Props) {
             </dl>
 
             <div class="pb-doc">
-                <h3 class="pb-doc-label">What it tells the assistant</h3>
-                {body === null
-                    ? <p class="pb-doc-p pb-doc-waiting">Reading…</p>
-                    : body
-                        ? render(body)
-                        : (
-                            <p class="pb-doc-p pb-doc-waiting">
-                                This node has no instructions of its own — it exists to carry
-                                the shared blocks below.
+                <h3 class="pb-doc-label">
+                    {editing ? 'Edit what it tells the assistant' : 'What it tells the assistant'}
+                </h3>
+                {editing ? (
+                    <>
+                        <textarea class="pb-doc-edit" spellcheck={false} value={draft}
+                            aria-label={`${node.name} instructions`}
+                            onInput={event =>
+                                setDraft((event.currentTarget as HTMLTextAreaElement).value)} />
+                        <p class="pb-doc-parts">
+                            {node.replaced
+                                ? 'Saving overwrites your copy of this node.'
+                                : 'Saving writes your own copy of this node. '
+                                  + 'The shipped one is left alone, and you can go back to it.'}
+                            {parts.length > 0 && (
+                                <>
+                                    {' '}Leave the <span class="pb-facts-mono">
+                                        speckit-companion:part
+                                    </span> lines where you want the shared blocks
+                                    ({parts.join(', ')}) stitched in.
+                                </>
+                            )}
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        {body === null
+                            ? <p class="pb-doc-p pb-doc-waiting">Reading…</p>
+                            : body
+                                ? render(body)
+                                : (
+                                    <p class="pb-doc-p pb-doc-waiting">
+                                        This node has no instructions of its own — it exists to
+                                        carry the shared blocks below.
+                                    </p>
+                                )}
+                        {parts.length > 0 && (
+                            <p class="pb-doc-parts">
+                                Stitched in here at build time:{' '}
+                                <span class="pb-facts-mono">{parts.join(', ')}</span>
                             </p>
                         )}
-                {parts.length > 0 && (
-                    <p class="pb-doc-parts">
-                        Stitched in here at build time:{' '}
-                        <span class="pb-facts-mono">{parts.join(', ')}</span>
-                    </p>
+                    </>
                 )}
             </div>
 
             <footer class="pb-inspector-actions">
-                {node.replaced
-                    ? <button class="pb-inspector-action" onClick={props.onRestore}>
-                        Use the shipped node
-                    </button>
-                    : <button class="pb-inspector-action pb-inspector-action--yours"
-                        onClick={props.onReplace}>
-                        Make it mine
-                    </button>}
-                <button class="pb-inspector-action" onClick={props.onAttach}>Add hook</button>
-                <button class="pb-inspector-action pb-inspector-action--quiet"
-                    onClick={props.onOpenFile}>Open the file</button>
+                {editing ? (
+                    <>
+                        <button class="pb-inspector-action pb-inspector-action--yours"
+                            onClick={() => { props.onSave(draft!); setDraft(null); }}>
+                            Save
+                        </button>
+                        <button class="pb-inspector-action pb-inspector-action--quiet"
+                            onClick={() => setDraft(null)}>Cancel</button>
+                    </>
+                ) : (
+                    <>
+                        <button class="pb-inspector-action pb-inspector-action--yours"
+                            disabled={body === null}
+                            onClick={() => setDraft(editable)}>
+                            Edit
+                        </button>
+                        <button class="pb-inspector-action"
+                            onClick={props.onAttach}>Add hook</button>
+                        {node.replaced && (
+                            <button class="pb-inspector-action pb-inspector-action--remove"
+                                onClick={props.onRestore}>Use the shipped node</button>
+                        )}
+                        <button class="pb-inspector-action pb-inspector-action--quiet"
+                            onClick={props.onOpenFile}>Open the file</button>
+                    </>
+                )}
             </footer>
         </aside>
     );

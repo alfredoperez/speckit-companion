@@ -29,6 +29,7 @@ const REQUIRED_SCRIPTS = [
     'build-pipeline.py',      // applies a project's configuration
     'pipeline-graph.py',      // the structure the panel draws
     'config_write.py',        // saves a reorder, a hook or a workflow switch
+    'config_repair.py',       // the ways out of a configuration it cannot read
     'assemble-nodes.py',      // both of the above assemble through it
     '_command_parts.py',      // …which reads the node files through this
     'hook_render.py',         // hooks into the body
@@ -53,6 +54,31 @@ describe('the pipeline builder ships with what it reads', () => {
         for (const script of REQUIRED_SCRIPTS) {
             const file = path.join(repoRoot, 'speckit-extension', 'scripts', script);
             expect(fs.existsSync(file)).toBe(true);
+        }
+    });
+
+    /**
+     * The list above is written by hand, so it goes stale the ordinary way: a new
+     * script is added, the panel resolves it, and nothing says it was left out of
+     * the packing list. That is how the repair script shipped as an unreachable
+     * file — every test green, and the button missing from a real install.
+     *
+     * So the requirement is read from the code instead. Every script the panel
+     * reaches by swapping a filename onto the build script's path has to be
+     * packed, whether or not anyone remembered to list it.
+     */
+    it('packs every script the panel resolves, including ones added since', () => {
+        const source = fs.readFileSync(
+            path.join(repoRoot, 'src', 'features', 'specs', 'pipelineGraph.ts'), 'utf8');
+        const resolved = Array.from(
+            source.matchAll(/build-pipeline\\?\.py\$\/,\s*'([\w.-]+\.py)'/g),
+            match => match[1]);
+
+        expect(resolved.length).toBeGreaterThan(0);
+        for (const script of resolved) {
+            expect(shipped.has(`speckit-extension/scripts/${script}`)).toBe(true);
+            expect(fs.existsSync(
+                path.join(repoRoot, 'speckit-extension', 'scripts', script))).toBe(true);
         }
     });
 

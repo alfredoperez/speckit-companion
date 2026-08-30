@@ -37,6 +37,11 @@ function WarningIcon() {
 }
 
 /** How a workflow reads in the switcher. The stored name is a filename. */
+/** `1 step`, `3 phases`. A pipeline with one of something said "1 steps". */
+function tally(count: number, noun: string): string {
+    return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
 function workflowLabel(name: string): string {
     if (name === '') { return 'This project'; }
     if (name === 'shipped') { return 'As it ships'; }
@@ -158,17 +163,26 @@ export function Header(props: Props) {
 
             <div class="builder-facts">
                 <span class="builder-count">
-                    {graph.counts.steps} steps · {graph.counts.phases} phases ·{' '}
-                    {graph.counts.nodes} nodes · {graph.counts.hooks} hooks
+                    {tally(graph.counts.steps, 'step')} · {tally(graph.counts.phases, 'phase')}
+                    {' · '}{tally(graph.counts.nodes, 'node')}
+                    {' · '}{tally(graph.counts.hooks, 'hook')}
                 </span>
+                {/* Every one of these says what it does. The filename alone was a
+                    noun among verbs, and it is the same action the error screen
+                    already calls "Open companion.yml". */}
                 <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
-                    companion.yml
+                    Open companion.yml
                 </button>
-                <button class="builder-action builder-action--quiet" disabled={busy} onClick={onPreview}>
+                <button class="builder-action builder-action--quiet" disabled={busy}
+                    onClick={onPreview}>
                     Preview
                 </button>
-                <button class="builder-action builder-action--primary" disabled={busy} onClick={onBuild}>
-                    {busy ? 'Building…' : 'Build with Claude'}
+                {/* "Build" — this runs the project's own build and writes the
+                    command files. Claude is who reads them afterwards, not who
+                    does this, and naming it here promised a step that never ran. */}
+                <button class="builder-action builder-action--primary" disabled={busy}
+                    onClick={onBuild}>
+                    {busy ? 'Building…' : 'Build'}
                 </button>
             </div>
 

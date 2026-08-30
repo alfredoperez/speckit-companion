@@ -194,15 +194,17 @@ export function AttachForm(props: Props) {
                 </p>
                 </div>
 
+                {/* Forward, destructive, then leaving — the panel's order. */}
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit" disabled={!ready}>
                         {editing ? 'Save hook' : 'Add hook'}
                     </button>
-                    <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
                     {editing && props.onRemove && (
                         <button class="pb-action pb-action--remove" type="button"
                             onClick={props.onRemove}>Remove</button>
                     )}
+                    <button class="pb-action pb-action--quiet" type="button"
+                        onClick={onCancel}>Cancel</button>
                 </div>
             </form>
         </aside>

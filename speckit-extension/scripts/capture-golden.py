@@ -9,7 +9,9 @@ golden — never call this from inside the build. Stdlib only.
 import os
 import sys
 
-from _command_parts import EXT, GOLDEN_BODIES, GOLDEN_DIR, golden_path, read
+from _command_parts import (
+    EXT, GOLDEN_BODIES, GOLDEN_DIR, golden_path, read, strip_node_markers,
+)
 
 
 def main() -> int:
@@ -19,8 +21,13 @@ def main() -> int:
         if not os.path.isfile(os.path.join(EXT, rel)):
             print(f"[capture-golden] missing body: {rel}")
             return 1
+        # The goldens are marker-free — that is what makes the boundary markers
+        # provably additive. A body assembled from nodes carries them, so freezing
+        # it raw blesses the markers into the baseline and every parity test that
+        # compares through `strip_node_markers` then fails. No-op on a body that
+        # has none.
         with open(golden_path(rel), "w", encoding="utf-8") as fh:
-            fh.write(read(rel))
+            fh.write(strip_node_markers(read(rel)))
         captured += 1
     print(f"[capture-golden] froze {captured} command bodies into {GOLDEN_DIR}/")
     return 0

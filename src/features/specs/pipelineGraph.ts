@@ -26,6 +26,29 @@ export function resolveConfigWriteScript(
     return build ? build.replace(/build-pipeline\.py$/, 'config_write.py') : null;
 }
 
+export function resolveConfigRepairScript(
+    workspaceRoot: string,
+    extensionPath: string,
+): string | null {
+    const build = resolveBuildScript(workspaceRoot, extensionPath);
+    return build ? build.replace(/build-pipeline\.py$/, 'config_repair.py') : null;
+}
+
+/**
+ * Carry out one repair on a configuration the builder could not read.
+ *
+ * Shaped like every other write here — the reason on refusal, null on success —
+ * so the panel reports a repair that did not work the same way it reports an
+ * edit that was rejected.
+ */
+export function applyRepair(
+    script: string,
+    workspaceRoot: string,
+    repairId: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, ['--apply', repairId]);
+}
+
 /**
  * Save a step's node order into the project's `companion.yml`.
  *

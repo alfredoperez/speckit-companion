@@ -76,7 +76,29 @@ class ALockMeansHeldByADependency(unittest.TestCase):
 
     def test_a_node_nothing_depends_on_can_move(self):
         order = assemble.default_order("specify")
-        self.assertEqual(assemble.movability("specify", order)["handoff"], "")
+        # `quality-checklist` reads nothing and nothing reads it.
+        self.assertEqual(assemble.movability("specify", order)["quality-checklist"], "")
+
+    def test_the_handoff_is_held_last_even_though_nothing_reads_it(self):
+        # This node used to stand for "nothing depends on it, so it can move" —
+        # and it is the one node that must not. It dispatches the next step, so
+        # anything after it runs once this step has already moved on. A project
+        # dragged it above `finalize` and got a specify that handed off before
+        # recording that it had finished.
+        for command in ("specify", "plan", "tasks", "implement", "auto"):
+            with self.subTest(command=command):
+                order = assemble.default_order(command)
+                why = assemble.movability(command, order)["handoff"]
+                self.assertIn("hands off", why)
+
+    def test_nothing_may_be_moved_below_the_handoff(self):
+        # The lock has to hold from both directions: it is no use pinning the
+        # handoff if another node can be dragged underneath it.
+        order = assemble.default_order("specify")
+        below = [n for n in order if n != "finalize"] + ["finalize"]
+        self.assertFalse(
+            assemble._reads_satisfied(
+                assemble.node_reads_map("specify", below), below, {"handoff"}))
 
     def test_a_node_boxed_in_on_both_sides_cannot(self):
         order = assemble.default_order("plan")
@@ -97,8 +119,14 @@ class ALockMeansHeldByADependency(unittest.TestCase):
             for n, why in assemble.movability(cmd, assemble.default_order(cmd)).items()
             if why
         ]
-        # Two, both genuinely boxed in by `reads:`.
-        self.assertEqual(sorted(locked), ["plan-doc", "resolve-dir"])
+        # Two boxed in by `reads:`, plus every step's handoff, which is held
+        # last because it dispatches the next step. `finalize` joins them for
+        # the same reason: with the handoff pinned, the one slot it could
+        # otherwise have taken was after it — recording the spec complete once
+        # the next step had already been told to start.
+        self.assertEqual(
+            sorted(locked),
+            ["finalize"] + ["handoff"] * 5 + ["plan-doc", "resolve-dir"])
 
 
 class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
@@ -143,6 +171,28 @@ class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
     def test_an_unknown_node_is_refused(self):
         with self.assertRaises(config_write.ConfigWriteError):
             config_write.check_order("plan", PLAN_DEFAULT + ["invented"])
+
+    def test_moving_the_handoff_off_the_end_is_refused(self):
+        # The order a real project ended up in: specify handing off to plan
+        # before it recorded that specify had finished.
+        with self.assertRaises(config_write.ConfigWriteError) as caught:
+            config_write.check_order(
+                "specify",
+                ["resolve-dir", "load-living-specs", "draft-spec", "quality-checklist",
+                 "classify-size", "persist-size", "branch", "handoff", "finalize"],
+            )
+        said = str(caught.exception)
+        self.assertIn("handoff", said)
+        self.assertIn("last", said)
+        # Naming what would have run too late is what makes the refusal usable.
+        self.assertIn("finalize", said)
+
+    def test_the_shipped_order_of_every_step_still_passes(self):
+        import _command_parts as cp
+
+        for command in cp.decomposed_commands():
+            with self.subTest(command=command):
+                config_write.check_order(command, assemble.default_order(command))
 
     def test_an_empty_order_is_refused(self):
         with self.assertRaises(config_write.ConfigWriteError):

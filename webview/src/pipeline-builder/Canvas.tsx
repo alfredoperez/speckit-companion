@@ -33,7 +33,6 @@ interface Props {
     graph: PipelineGraph;
     onOpenNode: NodeAction;
     /** Take a shipped node over: copy it into the project and open the copy. */
-    onReplaceNode: NodeAction;
     /** Drop the project's copy and go back to the shipped node. */
     onRestoreNode: NodeAction;
     /** Save a step's whole node order after a drag. */
@@ -140,22 +139,6 @@ function PlusIcon() {
     );
 }
 
-function UpIcon() {
-    return (
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true" focusable="false"><path d="M4 10l4-4 4 4" /></svg>
-    );
-}
-
-function DownIcon() {
-    return (
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" /></svg>
-    );
-}
-
 /** What a hook does, in a word. The type is jargon; this is the verb. */
 const HOOK_VERB: Record<string, string> = {
     skill: 'run the skill',
@@ -166,7 +149,7 @@ const HOOK_VERB: Record<string, string> = {
 
 // ── Nodes ───────────────────────────────────────────────
 
-type NodeActions = Pick<Props, 'onOpenNode' | 'onReplaceNode' | 'onRestoreNode'> & {
+type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string) => void;
     onEditHook: (hook: PipelineHook) => void;
@@ -191,16 +174,46 @@ function HookIcon() {
  * "before draft-spec" said once, then the actions beneath it — rather than
  * repeating the side and the anchor on every chip.
  */
-function Hooks({ hooks, side, anchor, onAdd, onEdit }: {
+/**
+ * Every place a hook can attach, whether or not one does.
+ *
+ * An empty anchor used to render nothing, so the only way to learn that work
+ * could be attached somewhere was to hover it. The board showed what a project
+ * had done and hid what it could do — and the hooks other spec-kit extensions
+ * contribute sat apart from all of it, in a labelled block at the foot of the
+ * lane, which read as an unexplained list rather than as part of the run.
+ *
+ * So every anchor is drawn. A filled one carries its hooks; an empty one is a
+ * dotted slot that adds one. Hooks from an installed extension appear as chips
+ * in the same place and the same shape as your own, marked as somebody else's
+ * and not editable here.
+ */
+function Hooks({ hooks, stock = [], side, anchor, seam = true, onAdd, onEdit }: {
     hooks: PipelineHook[];
+    /** Hooks an installed spec-kit extension fires at this same boundary. */
+    stock?: StockHook[];
     side: 'before' | 'after';
     anchor: string;
+    /** Whether an empty anchor draws its seam, or yields it to a neighbour. */
+    seam?: boolean;
     onAdd?: () => void;
     onEdit?: (hook: PipelineHook) => void;
 }) {
-    if (hooks.length === 0) { return null; }
+    if (hooks.length === 0 && stock.length === 0) {
+        if (!seam) { return null; }
+        return (
+            <button class={`pb-slot pb-slot--${side}`} onClick={onAdd} disabled={!onAdd}
+                title={`Nothing runs ${side} ${anchor} — click to attach a skill, `
+                    + 'an instruction or a command'}>
+                <span class="pb-slot-label">{side} {anchor}</span>
+            </button>
+        );
+    }
+    // A group holding only somebody else's hooks is not the project's work, so
+    // it does not take the colour that means "yours".
+    const theirs = hooks.length === 0 && stock.length > 0;
     return (
-        <div class={`pb-hooks pb-hooks--${side}`}>
+        <div class={`pb-hooks pb-hooks--${side} ${theirs ? 'pb-hooks--theirs' : ''}`}>
             <div class="pb-hooks-arm" aria-hidden="true" />
             <div class="pb-hooks-body">
                 <p class="pb-hooks-head">
@@ -226,13 +239,47 @@ function Hooks({ hooks, side, anchor, onAdd, onEdit }: {
                             </button>
                         </li>
                     ))}
+                    {stock.map((hook, i) => (
+                        <li key={`stock-${i}`}>
+                            {/* Not a button: it belongs to another extension, and
+                                offering a click that cannot edit it would be a
+                                worse lie than showing it plainly. */}
+                            {/* No "run the command" verb here: the command's own
+                                name already says what it is, and the chip has to
+                                fit a lane beside four other fragments. */}
+                            <span class="pb-hook pb-hook--stock"
+                                title={`${hook.description || hook.command}\n\n`
+                                    + `Registered by the ${hook.extension} extension. `
+                                    + 'It runs here, but it is not edited in this panel.'
+                                    + (hook.conditional ? '\nIt does not run every time.' : '')}>
+                                <span class="pb-hook-ref">{clip(hook.command)}</span>
+                                <span class="pb-hook-from">{hook.extension}</span>
+                                {hook.optional && <span class="pb-hook-note">asks first</span>}
+                            </span>
+                        </li>
+                    ))}
                 </ul>
             </div>
         </div>
     );
 }
 
-function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
+function Node({ node, actions, stock, seams }: {
+    node: PipelineNode;
+    actions: NodeActions;
+    /** Extension hooks that fire at this node's boundary, by side. */
+    stock?: { before: StockHook[]; after: StockHook[] };
+    /**
+     * Which empty seams this node draws.
+     *
+     * `after <this node>` and `before <the next one>` are two anchors for one
+     * gap, and a hook at either lands in the same place — so drawing both put a
+     * pair of dashed lines at every join and made the lane look broken. One gap,
+     * one seam: a node draws only the seam above it, and only when something
+     * precedes it. The phase's own seams cover its two edges.
+     */
+    seams?: { before: boolean; after: boolean };
+}) {
     const before = node.hooks.filter(hook => hook.when === 'before');
     const after = node.hooks.filter(hook => hook.when === 'after');
     const movable = !node.pinned;
@@ -241,7 +288,8 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
 
     return (
         <div class="pb-node-group">
-            <Hooks hooks={before} side="before" anchor={node.id}
+            <Hooks hooks={before} stock={stock?.before} side="before" anchor={node.id}
+                seam={seams?.before ?? true}
                 onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
             <div
                 class={[
@@ -298,17 +346,18 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
                     )}
                 </button>
 
-                {node.replaced ? (
+                {/* Nothing here for a shipped node any more. Clicking it opens
+                    the panel where its instructions can be edited, and saving
+                    that edit is what makes it yours — so a separate "make mine"
+                    was a step between someone and the thing they came to do. */}
+                {node.replaced && (
                     <button class="pb-node-action"
                         title="Delete your copy and go back to the shipped node"
                         onClick={() => actions.onRestoreNode(actions.step, node.id)}>Undo</button>
-                ) : (
-                    <button class="pb-node-action"
-                        title="Copy this node into your project so you can rewrite it"
-                        onClick={() => actions.onReplaceNode(actions.step, node.id)}>Make mine</button>
                 )}
             </div>
-            <Hooks hooks={after} side="after" anchor={node.id}
+            <Hooks hooks={after} stock={stock?.after} side="after" anchor={node.id}
+                seam={seams?.after ?? true}
                 onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
         </div>
     );
@@ -316,16 +365,35 @@ function Node({ node, actions }: { node: PipelineNode; actions: NodeActions }) {
 
 // ── Phases ──────────────────────────────────────────────
 
+/**
+ * What can actually be done to a phase.
+ *
+ * Reordering is deliberately absent. A phase is a contiguous run of the step, so
+ * moving one moves its nodes — and across every step this pipeline ships, not one
+ * such move survives the `reads:` dependencies: 0 of 18. The up and down arrows
+ * that used to sit here could never succeed. They fired, the write was refused,
+ * and the panel redrew unchanged, which reads as a dead button.
+ *
+ * What does work is changing where the boundaries fall — rename, split, merge —
+ * and dragging a node from one phase into another.
+ */
 interface PhaseControls {
     onRename: (from: string, to: string) => void;
-    onMove: (name: string, by: -1 | 1) => void;
     onRemove: (name: string) => void;
     onAddPhaseAfter: (name: string) => void;
     onAddNode: (phase: string, nodeId: string) => void;
     /** Nodes the recipe dropped, which are the only ones that can be added. */
     dropped: string[];
-    first: boolean;
-    last: boolean;
+    /** The step this phase belongs to, named when explaining where nodes come from. */
+    step: string;
+    /**
+     * Extension hooks that fire at the step's edges, given to the phase that
+     * holds those edges — empty for every phase in between.
+     */
+    stockBefore?: StockHook[];
+    stockAfter?: StockHook[];
+    /** A phase needs two nodes to split, since neither half may be empty. */
+    canSplit: boolean;
     /** A step needs at least one phase, so the last one cannot be removed. */
     only: boolean;
 }
@@ -365,7 +433,16 @@ function Phase({ phase, actions, controls }: {
                         }
                     }}>{phase.name}</h3>
                 <span class="pb-phase-tools">
-                    {controls.dropped.length > 0 && (
+                    {/* Shown even with nothing to offer. Hiding it left "how do I
+                        add a node here?" with no answer anywhere on screen — the
+                        control simply was not there to explain itself. */}
+                    {controls.dropped.length === 0 ? (
+                        <span class="pb-phase-tool pb-phase-add-node pb-phase-tool--inert"
+                            title={`Every node ${controls.step} has is already in a phase. `
+                                + 'To put another one here: drag it in from another phase, or '
+                                + `write your own at .specify/companion/nodes/${controls.step}/`}
+                        >+ node</span>
+                    ) : (
                         <select class="pb-phase-tool pb-phase-add-node"
                             title="Put a node this project dropped back, here"
                             onChange={event => {
@@ -385,18 +462,16 @@ function Phase({ phase, actions, controls }: {
                         <HookIcon />
                         Add hook
                     </button>
-                    <button class="pb-phase-tool" title="Move this phase earlier"
-                        disabled={controls.first}
-                        onClick={() => controls.onMove(phase.name, -1)}><UpIcon /></button>
-                    <button class="pb-phase-tool" title="Move this phase later"
-                        disabled={controls.last}
-                        onClick={() => controls.onMove(phase.name, 1)}><DownIcon /></button>
-                    <button class="pb-phase-tool" title="Add a phase after this one"
+                    <button class="pb-phase-tool"
+                        title={controls.canSplit
+                            ? `Split ${phase.name} — its last node starts a new phase after it`
+                            : `${phase.name} has one node, so there is nothing to split off`}
+                        disabled={!controls.canSplit}
                         onClick={() => controls.onAddPhaseAfter(phase.name)}><PlusIcon /></button>
                     <button class="pb-phase-tool pb-phase-tool--remove"
                         title={controls.only
                             ? 'A step needs at least one phase'
-                            : `Remove ${phase.name} — its nodes join the phase above`}
+                            : `Merge ${phase.name} into the phase above — its nodes go with it`}
                         disabled={controls.only}
                         onClick={() => controls.onRemove(phase.name)}>&minus;</button>
                 </span>
@@ -404,43 +479,26 @@ function Phase({ phase, actions, controls }: {
             <Hooks hooks={before} side="before" anchor={phase.name}
                 onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
-                {phase.nodes.map(node => (
-                    <Node key={node.id} node={node} actions={actions} />
+                {phase.nodes.map((node, at) => (
+                    // An installed extension registers against the step, not a
+                    // node — so its hooks land on the step's real edges: the
+                    // first node's `before` and the last node's `after`.
+                    <Node key={node.id} node={node} actions={actions} stock={{
+                        before: controls.stockBefore && at === 0 ? controls.stockBefore : [],
+                        after: controls.stockAfter && at === phase.nodes.length - 1
+                            ? controls.stockAfter : [],
+                    }} seams={{
+                        // One seam per gap. The phase's own seams own its edges,
+                        // and each node owns the gap above it, so the first
+                        // node draws nothing and no node draws below itself.
+                        before: at > 0,
+                        after: false,
+                    }} />
                 ))}
             </div>
             <Hooks hooks={after} side="after" anchor={phase.name}
                 onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
         </section>
-    );
-}
-
-/**
- * Hooks the project's spec-kit extensions attach to this step.
- *
- * A second, independent hook system — `.specify/extensions.yml` is spec-kit's
- * own, keyed by lifecycle step. A Companion run fires both, so a panel that
- * drew only ours said nine when the answer was twenty-one. These are not ours
- * to edit, and read as a quieter list because of it.
- */
-function StockHooks({ hooks }: { hooks: StockHook[] }) {
-    if (hooks.length === 0) { return null; }
-    return (
-        <div class="pb-stock">
-            {/* No label: every row already names the extension that registered
-                it, which is the only thing the sentence added. */}
-            <ul class="pb-stock-list">
-                {hooks.map((hook, i) => (
-                    <li key={i} class="pb-stock-hook"
-                        title={hook.description || `${hook.extension} extension`}>
-                        <span class="pb-stock-when">{hook.when}</span>
-                        <span class="pb-stock-command">{hook.command}</span>
-                        <span class="pb-stock-from">{hook.extension}</span>
-                        {hook.optional && <span class="pb-stock-note">asks first</span>}
-                        {hook.conditional && <span class="pb-stock-note">only sometimes</span>}
-                    </li>
-                ))}
-            </ul>
-        </div>
     );
 }
 
@@ -613,22 +671,17 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     <Phase key={phase.name} phase={phase} actions={bound}
                         controls={{
                             dropped: step.dropped,
-                            first: at === 0,
-                            last: at === step.phases.length - 1,
+                            step: step.name,
+                            stockBefore: at === 0
+                                ? step.stockHooks.filter(h => h.when === 'before') : [],
+                            stockAfter: at === step.phases.length - 1
+                                ? step.stockHooks.filter(h => h.when === 'after') : [],
+                            canSplit: phase.nodes.length > 1,
                             only: step.phases.length === 1,
                             // The name is a hook anchor, so the hooks come with it.
                             onRename: (from, to) => onSetPhases(step.name, settled(
                                 grouping().map(p => p.name === from ? { ...p, name: to } : p)),
                                 { from, to }),
-                            onMove: (name, by) => {
-                                const phases = grouping();
-                                const i = phases.findIndex(p => p.name === name);
-                                const j = i + by;
-                                if (i < 0 || j < 0 || j >= phases.length) { return; }
-                                const next = [...phases];
-                                [next[i], next[j]] = [next[j], next[i]];
-                                onSetPhases(step.name, next);
-                            },
                             // A phase's nodes have to land somewhere: they join
                             // the phase above, or the one below when it is first.
                             onRemove: name => {
@@ -672,7 +725,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         }} />
                 ))}
                 <Decisions decisions={step.decisions} />
-                <StockHooks hooks={step.stockHooks} />
             </div>
         </section>
     );
@@ -681,10 +733,10 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 // ── The canvas ──────────────────────────────────────────
 
 export function Canvas(
-    { graph, onOpenNode, onReplaceNode, onRestoreNode, onReorder, onAddHook,
+    { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep, selected }: Props,
 ) {
-    const actions = { onOpenNode, onReplaceNode, onRestoreNode, selected };
+    const actions = { onOpenNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 

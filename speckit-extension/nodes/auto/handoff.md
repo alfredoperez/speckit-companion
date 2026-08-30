@@ -4,6 +4,7 @@ name: Hand off at the end
 kind: control
 command: auto
 reads: []
+last: true
 ---
 <!-- speckit-companion:part timing -->
 

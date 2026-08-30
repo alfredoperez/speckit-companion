@@ -18,7 +18,7 @@ import {
 const noop = () => undefined;
 
 const CANVAS = {
-    onOpenNode: noop, onReplaceNode: noop, onRestoreNode: noop, onReorder: noop,
+    onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
     onOpenFrame: noop, onReplaceStep: noop,
 };
@@ -30,6 +30,7 @@ const HEAD = {
 
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
+    onSave: noop,
 };
 
 /** One step, drawn alone, in the panel's own shell. */
@@ -318,6 +319,7 @@ export const InspectorReading: Story = {
                 + '- Mark assumptions with `[NEEDS CLARIFICATION]`\n\n'
                 + '```bash\npython3 write-context.py --set step=specify\n```'}
             parts={['timing', 'self-advance']}
+            editable="## Write it\n\n<!-- speckit-companion:part timing -->\n<!-- /speckit-companion:part timing -->"
             {...INSPECT} /></One>
     ),
 };
@@ -326,7 +328,7 @@ export const InspectorWaiting: Story = {
     name: 'Inspector · still reading',
     render: () => (
         <One><Inspector node={node('draft-spec', 'Draft the spec')} step="specify"
-            body={null} parts={[]} {...INSPECT} /></One>
+            body={null} parts={[]} editable="" {...INSPECT} /></One>
     ),
 };
 
@@ -334,7 +336,9 @@ export const InspectorNothingOfItsOwn: Story = {
     name: 'Inspector · a node that is only shared blocks',
     render: () => (
         <One><Inspector node={node('handoff', 'Hand off to the next step')} step="specify"
-            body="" parts={['timing', 'self-advance']} {...INSPECT} /></One>
+            body="" parts={['timing', 'self-advance']}
+            editable="<!-- speckit-companion:part timing -->\n<!-- /speckit-companion:part timing -->"
+            {...INSPECT} /></One>
     ),
 };
 
@@ -347,7 +351,8 @@ export const InspectorYours: Story = {
                 source: '/Users/you/project/.specify/companion/nodes/specify/draft-spec.md',
             })}
             step="specify" body="Write the spec the way THIS TEAM writes specs."
-            parts={[]} {...INSPECT} /></One>
+            parts={[]} editable="Write the spec the way THIS TEAM writes specs."
+            {...INSPECT} /></One>
     ),
 };
 
@@ -358,7 +363,8 @@ export const InspectorPinned: Story = {
             node={node('resolve-dir', 'Resolve the spec folder', {
                 pinned: 'load-living-specs, draft-spec has to run after it',
             })}
-            step="specify" body="Resolve the feature directory." parts={[]} {...INSPECT} /></One>
+            step="specify" body="Resolve the feature directory." parts={[]}
+            editable="Resolve the feature directory." {...INSPECT} /></One>
     ),
 };
 
