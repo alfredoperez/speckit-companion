@@ -280,6 +280,19 @@ def slot_variants(command: str) -> dict:
     return parse_variants(os.path.join(nodes_command_dir(command), "_order.yml"))
 
 
+def stands_in_for(command: str) -> dict:
+    """`{variant_id: slot_id}` — the same map read the other way.
+
+    What a dependency check needs: a node reading `draft-spec` is satisfied by
+    whichever variant is running in that slot.
+    """
+    return {
+        variant: slot
+        for slot, variants in slot_variants(command).items()
+        for variant in variants
+    }
+
+
 def node_reads_map(command: str, order: list) -> dict:
     """{node_id: reads_list} for every node in an order — input to validate_reads."""
     return {nid: (read_node(command, nid)[0].get("reads") or []) for nid in order}

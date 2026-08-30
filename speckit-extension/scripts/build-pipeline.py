@@ -276,7 +276,8 @@ def plan_build(config: dict) -> tuple[dict, list]:
             )
 
         try:
-            cc.validate_reads(assemble.node_reads_map(command, order))
+            cc.validate_reads(assemble.node_reads_map(command, order),
+                              assemble.stands_in_for(command))
         except cc.ConfigError as err:
             raise BuildError(f"{command}: {err}") from err
 

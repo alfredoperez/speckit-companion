@@ -472,9 +472,20 @@ def merge_hooks(config: dict, command: str, active_nodes: list, nodes_dir=None):
     return ordered, warnings
 
 
-def validate_reads(active_meta: dict):
-    """active_meta: {node_id: reads_list}. A kept node reading a dropped node is an error."""
+def validate_reads(active_meta: dict, stands_in: dict = None):
+    """active_meta: {node_id: reads_list}. A kept node reading a dropped node is an error.
+
+    `stands_in` maps a variant to the node it replaces. A variant occupies the
+    same slot — it writes the same thing, in the same place — so a node that
+    reads `draft-spec` is satisfied by `draft-spec-delta` running there. Without
+    this, every variant of a node anything reads would be unusable: the swap is
+    exactly the case where the name changes and the dependency does not.
+    """
     active = set(active_meta)
+    for variant in list(active):
+        slot = (stands_in or {}).get(variant)
+        if slot:
+            active.add(slot)
     for node_id, reads in active_meta.items():
         for dep in reads or []:
             if dep not in active:

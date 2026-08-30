@@ -15,3 +15,7 @@ phases:
     nodes: [implement-exec]
   - name: wrap-up
     nodes: [complete, handoff]
+
+# Shipped nodes this step does NOT run by default — what the panel can offer.
+optional:
+  - verify-manually

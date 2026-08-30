@@ -233,6 +233,70 @@ class AddingAShippedOptionalNode(unittest.TestCase):
         self.assertIn("invented", str(refusal.exception))
 
 
+class RunningADifferentBlockInANodesPlace(unittest.TestCase):
+    """A variant: same slot in the run, different instructions.
+
+    A swap is neither an add nor a drop but both at once — the old node leaves
+    the order as the new one joins it — so whichever half is written first is
+    refused by the check that reads the other half as it still was. The two are
+    written and validated together for that reason.
+    """
+
+    #: specify with `draft-spec` swapped for its brownfield variant.
+    PHASES = json.dumps([
+        {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+        {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
+        {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+        {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
+    ])
+    ORDER = ("resolve-dir,load-living-specs,draft-spec-delta,quality-checklist,"
+             "classify-size,persist-size,branch,finalize,handoff")
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def swap(self):
+        return self.project.write("--command", "specify",
+                                  "--phases", self.PHASES, "--nodes", self.ORDER)
+
+    def test_the_panel_offers_it_as_an_alternative(self):
+        specify = next(s for s in self.project.graph()["steps"] if s["name"] == "specify")
+        draft = next(n for p in specify["phases"] for n in p["nodes"]
+                     if n["id"] == "draft-spec")
+        self.assertIn("draft-spec-delta", [v["id"] for v in draft["variants"]])
+
+    def test_the_swap_is_one_write(self):
+        said = self.swap()
+        self.assertIn("phases and order", said)
+        config = self.project.config_text()
+        self.assertIn("draft-spec-delta", config)
+        self.assertIn("phases:", config)
+        self.assertIn("nodes:", config)
+
+    def test_the_variant_runs_and_the_node_it_replaced_does_not(self):
+        self.swap()
+        self.project.build_ok()
+        order = self.project.nodes_in("specify")
+        self.assertIn("draft-spec-delta", order)
+        self.assertNotIn("draft-spec", order)
+
+    def test_a_node_that_reads_the_slot_is_satisfied_by_the_variant(self):
+        # `quality-checklist` reads `draft-spec`. A variant occupies the same
+        # slot, so the dependency holds — without that, every variant of a node
+        # anything reads would be unusable.
+        self.swap()
+        self.project.build_ok()
+        self.assertIn("quality-checklist", self.project.nodes_in("specify"))
+
+    def test_a_swap_that_would_break_a_dependency_is_still_refused(self):
+        with self.assertRaises(Refused) as refusal:
+            self.project.write("--command", "specify", "--phases", json.dumps([
+                {"name": "author", "nodes": ["resolve-dir", "quality-checklist", "handoff"]},
+            ]), "--nodes", "resolve-dir,quality-checklist,handoff")
+        self.assertIn("draft-spec", str(refusal.exception))
+
+
 class AttachingWorkToAStepEdge(unittest.TestCase):
     """A hook on the step itself, outside every phase.
 

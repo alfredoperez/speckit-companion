@@ -45,3 +45,17 @@ decisions:
       - name: oversized
         warns: Oversized change — running the full pipeline, no phase skipped
 
+
+# Shipped nodes this step does NOT run by default — what the panel can offer.
+# `variants:` says which of them stand in for which default node, so replacing
+# one is a pick rather than a rewrite.
+optional:
+  - draft-spec-delta
+  - draft-spec-bugfix
+  - quality-checklist-blocking
+  - resolve-dir-git
+
+variants:
+  draft-spec: [draft-spec-delta, draft-spec-bugfix]
+  quality-checklist: [quality-checklist-blocking]
+  resolve-dir: [resolve-dir-git]

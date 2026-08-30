@@ -793,7 +793,8 @@ def check_order(command: str, nodes: list) -> None:
             f"contiguous run of the command, so a node can only be reordered within its own."
         )
     try:
-        cc.validate_reads(assemble.node_reads_map(command, nodes))
+        cc.validate_reads(assemble.node_reads_map(command, nodes),
+                          assemble.stands_in_for(command))
     except cc.ConfigError as err:
         raise ConfigWriteError(f"{command}: {err}") from err
 
@@ -972,24 +973,37 @@ def main() -> int:
             import json
 
             phases = json.loads(args.phases)
-            # A phase is only owed to a node the step actually runs. Reading the
-            # recipe in force is what makes that true: without it every dropped
-            # node still demands a phase, which no grouping can give it, and a
-            # step that dropped anything could never be regrouped again.
-            use_order(args.command, resolved_order(project, args.command))
-            # Validate this grouping against itself: a phase check that reads
-            # the shipped grouping refuses a node that has no shipped phase.
+            nodes = ([n.strip() for n in args.nodes.split(",") if n.strip()]
+                     if args.nodes else None)
+
+            # Together when both are given, because a swap is neither an add nor
+            # a drop but both at once: the old node leaves the order and the new
+            # one joins it, and whichever half is written first is refused by a
+            # check reading the other half as it was. Validating the pair against
+            # each other is the only order that exists for that.
+            #
+            # A phase is owed only to a node the step RUNS, and an order is only
+            # expressible if its phases can hold it — so each check reads what
+            # this write is about to make true, not what the file says now.
+            use_order(args.command, nodes or resolved_order(project, args.command))
             use_phases_in_force(project, args.command, phases)
             check_phases(args.command, phases)
+            if nodes is not None:
+                check_order(args.command, nodes)
+
             renamed = tuple(args.renamed) if args.renamed else None
             existing = ""
             if os.path.isfile(path):
                 with open(path, encoding="utf-8") as fh:
                     existing = fh.read()
+            updated = set_phases(existing, args.command, phases, renamed)
+            if nodes is not None:
+                updated = set_nodes(updated, args.command, nodes)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8") as fh:
-                fh.write(set_phases(existing, args.command, phases, renamed))
-            print(f"[config] {args.command}: phases saved to {os.path.relpath(path, project)}")
+                fh.write(updated)
+            what = "phases and order" if nodes is not None else "phases"
+            print(f"[config] {args.command}: {what} saved to {os.path.relpath(path, project)}")
             return 0
 
         if not args.nodes:
