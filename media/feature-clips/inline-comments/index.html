@@ -9,6 +9,7 @@
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+      @font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-style:normal; font-display:block; }
 
       * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -38,8 +39,10 @@
         --scrim-color:    rgba(4,7,8,0.82);
 
         /* --- label: the caption band naming the region */
-        --label-font:     "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
+        --label-font:     "Figtree", -apple-system, "Helvetica Neue", Arial, sans-serif;
         --label-size:     64px;
+        --label-eyebrow-size: 30px;
+        --label-eyebrow-gap:  12px;
         --label-weight:   600;
         --label-tracking: 0.004em;
         --label-fg:       #eef4f1;
@@ -82,21 +85,23 @@
          this lives in frame coordinates and never scales with the zoom. */
       .lbl {
         position:absolute; left:0; right:0; bottom:0;
-        display:flex; align-items:flex-start; gap:var(--label-dot-gap);
-        padding:var(--label-pad-y) var(--label-pad-end) var(--label-pad-y) var(--label-pad-x);
-        background:var(--label-bg);
-        border-top:1px solid var(--label-border);
-        box-shadow:var(--label-shadow);
-        font-family:var(--label-font); font-size:var(--label-size);
+        display:block;
+        padding:calc(var(--label-pad-y) * 4.4) var(--label-pad-end) var(--label-pad-y) var(--label-pad-x);
+        background:linear-gradient(to top, var(--label-bg) 58%, rgba(8,11,13,0));
+        border-top:0;
+                font-family:var(--label-font); font-size:var(--label-size);
         font-weight:var(--label-weight); letter-spacing:var(--label-tracking);
         color:var(--label-fg); line-height:1.16;
       }
-      .lbl::before { content:""; flex:none; margin-top:0.42em;
-                     width:var(--label-dot-size); height:var(--label-dot-size);
-                     border-radius:50%; background:var(--label-dot); }
-      .lbl.top { bottom:auto; top:0; border-top:0;
-                 border-bottom:1px solid var(--label-border);
-                 box-shadow:var(--label-shadow-top); }
+      .lbl::before { display:none; }
+      /* the region's own name, so the caption says what it points at */
+      .lbl .eb { display:block; font-size:var(--label-eyebrow-size);
+                 font-weight:600; letter-spacing:0.16em; text-transform:uppercase;
+                 color:var(--marker-color); margin-bottom:var(--label-eyebrow-gap); }
+      .lbl.top { bottom:auto; top:0; border-top:0; border-bottom:0;
+                 background:linear-gradient(to bottom, var(--label-bg) 58%, rgba(8,11,13,0));
+                 padding:var(--label-pad-y) var(--label-pad-end) calc(var(--label-pad-y) * 4.4) var(--label-pad-x);
+                 box-shadow:none; }
     </style>
   </head>
   <body>
@@ -114,9 +119,9 @@
       <div id="anno" class="clip" data-start="0" data-duration="13.7" data-track-index="1">
         <!-- one label per beat, stacked on the same anchor; only one is ever visible -->
         <div id="hi" data-layout-allow-overlap></div>
-        <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion>Stays with this block when the spec changes</div>
-        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion>It hasn't gone to your AI yet</div>
-        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion>One prompt built from the notes on this document</div>
+        <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">COMMENT</span>Stays with this block when the spec changes</div>
+        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">PENDING</span>It hasn't gone to your AI yet</div>
+        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">REFINE</span>One prompt built from the notes on this document</div>
       </div>
     </div>
 
@@ -142,6 +147,15 @@
          Identity for full-surface captures; a fixed fit for the component
          captures, whose story renders smaller than the frame. */
       var REST = null;   /* assigned once camFit exists, below */
+
+      /* The outline is drawn this far outside the region it names. The rect
+         itself stays the region's true box — only the drawn box grows — so a
+         beat still marks exactly the content it always did. Drawn flush, the
+         ring crowded the text it was pointing at. */
+      var MARKER_PAD = 18;
+      function padRect(r, p) {
+        return r && { x: r.x - p, y: r.y - p, w: r.w + p * 2, h: r.h + p * 2 };
+      }
 
       function camFit(r, pad, maxS, cx, cy) {
         var w = r[2] * K, h = r[3] * K;
@@ -181,7 +195,7 @@
          whatever order the renderer asks for frames in */
       var solved = BEATS.map(function (b) {
         var cam = (b.rest || b.noZoom) ? REST : camFit(b.r, b.pad, b.maxS, b.cx, b.cy);
-        return { b:b, cam:cam, rect: b.rest ? null : proj(b.r, cam) };
+        return { b:b, cam:cam, rect: b.rest ? null : padRect(proj(b.r, cam), MARKER_PAD) };
       });
 
       window.__timelines = window.__timelines || {};

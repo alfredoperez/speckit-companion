@@ -9,6 +9,7 @@
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:block; }
       @font-face { font-family:"Geist"; src:url("assets/fonts/Geist-SemiBold.ttf") format("truetype"); font-weight:600; font-style:normal; font-display:block; }
+      @font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-style:normal; font-display:block; }
 
       * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -49,6 +50,8 @@
         --sans: "Geist", -apple-system, "Helvetica Neue", Arial, sans-serif;
 
         --label-size:   56px;
+        --label-eyebrow-size: 30px;
+        --label-eyebrow-gap:  12px;
         --label-fg:     #eef4f1;
         --label-bg:     rgba(8,11,13,0.97);
         --label-border: rgba(167,139,250,0.34);
@@ -148,8 +151,8 @@
         position:absolute; left:0; right:0; bottom:0;
         display:flex; align-items:flex-start; gap:22px;
         padding:34px 320px 34px 72px;
-        background:var(--label-bg);
-        border-top:1px solid var(--label-border);
+        background:linear-gradient(to top, var(--label-bg) 58%, rgba(8,11,13,0));
+        border-top:0;
         box-shadow:0 -8px 20px rgba(26,22,38,0.13);
         font-size:var(--label-size); font-weight:600; line-height:1.16;
         color:var(--label-fg);
