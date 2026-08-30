@@ -36,6 +36,11 @@ import {
     REPO_ROOT, ensureStorybook, launchChrome, openStory, storyIndex,
 } from './lib/storybook-browser.mjs';
 
+// Its own Storybook, so a capture run and a visual run never fight over one.
+// Set after the imports deliberately: the lib reads the port when it is asked,
+// not when it is loaded, because an import is hoisted above every statement here.
+process.env.SB_PORT ??= '6018';
+
 const BASELINE_DIR = join(
     REPO_ROOT, 'webview', 'src', 'pipeline-builder', '__screenshots__');
 const DIFF_DIR = join(REPO_ROOT, 'webview', 'src', 'pipeline-builder', '__screenshots__', 'diff');
@@ -56,11 +61,15 @@ const VIEWPORTS = [
 ];
 
 /**
- * Dark is the default everything is built against. Light is included because
- * nobody looks at it, and the panel's muted tokens have never been checked there.
+ * Both named, neither defaulted. Storybook's default global is the capture
+ * palette, which exists to be retimed and rethemed for screenshots — leaning on
+ * it once already turned "dark" into a second light run without saying so, and
+ * every baseline moved the day that palette changed. Naming both pins this
+ * suite to what the panel has to survive rather than to what the docs images
+ * happen to be shot in.
  */
 const THEMES = [
-    { name: 'dark', globals: {} },
+    { name: 'dark', globals: { vscodeTheme: 'monokai-black' } },
     { name: 'light', globals: { vscodeTheme: 'vivid-light' } },
 ];
 

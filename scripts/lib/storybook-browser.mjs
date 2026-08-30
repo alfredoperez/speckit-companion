@@ -22,9 +22,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
-/** One port for every consumer, so a booted Storybook is reused rather than doubled. */
-export const PORT = 6017;
-export const BASE = `http://localhost:${PORT}`;
+/**
+ * A port per consumer, set by `SB_PORT`.
+ *
+ * One shared port looked tidier and was wrong: whichever run spawns the server
+ * kills it on exit, so a second run that reused it lost Storybook mid-flight
+ * and reported connection failures as if they were story failures. Separate
+ * ports mean the capture script and the visual suite can run at the same time.
+ */
+const port = () => Number(process.env.SB_PORT) || 6017;
+const base = () => `http://localhost:${port()}`;
 export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 /** How long a cold `storybook dev` is given to answer. */
@@ -32,7 +39,7 @@ const BOOT_TIMEOUT_MS = 180_000;
 
 export async function storybookIsUp() {
     try {
-        const res = await fetch(`${BASE}/index.json`, { signal: AbortSignal.timeout(2000) });
+        const res = await fetch(`${base()}/index.json`, { signal: AbortSignal.timeout(2000) });
         return res.ok;
     } catch {
         return false;
@@ -41,8 +48,8 @@ export async function storybookIsUp() {
 
 /** Boot `storybook dev` and resolve once index.json answers. */
 export async function bootStorybook() {
-    console.log(`No Storybook on :${PORT}, booting one (first boot takes a minute)...`);
-    const child = spawn('npx', ['storybook', 'dev', '-p', String(PORT), '--no-open'], {
+    console.log(`No Storybook on :${port()}, booting one (first boot takes a minute)...`);
+    const child = spawn('npx', ['storybook', 'dev', '-p', String(port()), '--no-open'], {
         cwd: REPO_ROOT,
         stdio: 'ignore',
         detached: false,
@@ -56,7 +63,7 @@ export async function bootStorybook() {
         await new Promise((r) => setTimeout(r, 2000));
     }
     child.kill();
-    throw new Error('Storybook did not come up on :' + PORT + ' within 180s');
+    throw new Error(`Storybook did not come up on :${port()} within 180s`);
 }
 
 /**
@@ -71,7 +78,7 @@ export async function ensureStorybook() {
 
 /** Every story id Storybook knows about. Checking against this makes a rename fail loudly. */
 export async function storyIndex() {
-    const index = await (await fetch(`${BASE}/index.json`)).json();
+    const index = await (await fetch(`${base()}/index.json`)).json();
     return index.entries;
 }
 
@@ -111,7 +118,7 @@ export async function openStory(page, id, globals = {}) {
     if (pairs.length) {
         params.set('globals', pairs.map(([k, v]) => `${k}:${v}`).join(';'));
     }
-    await page.goto(`${BASE}/iframe.html?${params}`, { waitUntil: 'networkidle' });
+    await page.goto(`${base()}/iframe.html?${params}`, { waitUntil: 'networkidle' });
     await page.waitForSelector('#storybook-root > *', { timeout: 30_000 });
     const errored = await page.evaluate(() =>
         document.body.classList.contains('sb-show-errordisplay'),
