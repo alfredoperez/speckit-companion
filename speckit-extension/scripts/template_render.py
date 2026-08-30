@@ -32,6 +32,15 @@ import re
 #: (`*(mandatory)*`), which is part of the heading line but not of its name.
 SECTION_RE = re.compile(r"^(#{2,3})\s+(.+?)\s*$", re.MULTILINE)
 
+#: A fragment's leading `---` header, which describes it to the panel.
+_FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
+
+#: The fragments Companion ships. A project's own `.specify/companion/fragments/`
+#: is searched first, so writing one of these names replaces it rather than
+#: colliding with it.
+SHIPPED_FRAGMENTS = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fragments")
+
 DEFAULT_TEMPLATE_BY_COMMAND = {
     "specify": "spec-template.md",
     "plan": "plan-template.md",
@@ -122,15 +131,70 @@ def resolve(command: str, config: dict, templates_dir: str, fragments_dir: str) 
 
     changed = []
     for section, fragment_name in (settings.get("sections") or {}).items():
-        fragment = os.path.join(fragments_dir, f"{fragment_name}.md")
-        if not os.path.isfile(fragment):
+        fragment = find_fragment(fragment_name, fragments_dir)
+        if not fragment:
             raise TemplateError(
                 f"{command}: section '{section}' names fragment '{fragment_name}', "
-                f"which is not in {os.path.basename(fragments_dir)}/"
+                f"which is neither in {os.path.basename(fragments_dir)}/ nor shipped"
             )
         with open(fragment, encoding="utf-8") as fh:
-            replacement = fh.read()
+            replacement = _strip_frontmatter(fh.read())
         text = replace_section(text, section, replacement)
         changed.append(section)
 
     return name, text, changed
+
+
+def find_fragment(name: str, fragments_dir: str):
+    """The file for a fragment name — the project's copy first, then the shipped one.
+
+    Same precedence as a node: a project that writes `outcomes.md` of its own
+    replaces the shipped fragment of that name rather than colliding with it.
+    """
+    own = os.path.join(fragments_dir, f"{name}.md")
+    if os.path.isfile(own):
+        return own
+    shipped = os.path.join(SHIPPED_FRAGMENTS, f"{name}.md")
+    return shipped if os.path.isfile(shipped) else None
+
+
+def shipped_fragments() -> list:
+    """Every fragment Companion ships, as `{name, section, for, summary}`.
+
+    What the panel offers for a template section. The frontmatter says which
+    section a fragment is written for, so a picker can show only the ones that
+    belong to the row someone is editing.
+    """
+    if not os.path.isdir(SHIPPED_FRAGMENTS):
+        return []
+    out = []
+    for filename in sorted(os.listdir(SHIPPED_FRAGMENTS)):
+        if not filename.endswith(".md") or filename.startswith("_"):
+            continue
+        with open(os.path.join(SHIPPED_FRAGMENTS, filename), encoding="utf-8") as fh:
+            meta = _frontmatter(fh.read())
+        out.append({
+            "name": filename[:-3],
+            "section": meta.get("section", ""),
+            "for": meta.get("for", ""),
+            "summary": meta.get("summary", ""),
+        })
+    return out
+
+
+def _frontmatter(text: str) -> dict:
+    """A fragment's `key: value` header, or `{}` when it has none."""
+    match = _FRONTMATTER.match(text)
+    if not match:
+        return {}
+    out = {}
+    for line in match.group(1).splitlines():
+        if ":" in line and not line.strip().startswith("#"):
+            key, value = line.split(":", 1)
+            out[key.strip()] = value.strip().strip("\"'")
+    return out
+
+
+def _strip_frontmatter(text: str) -> str:
+    """The fragment's body. Its header describes it to the panel, not to the reader."""
+    return _FRONTMATTER.sub("", text, count=1).lstrip("\n")

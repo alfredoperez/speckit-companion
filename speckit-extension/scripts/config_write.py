@@ -439,6 +439,117 @@ def rename_anchor(text: str, command: str, old: str, new: str) -> str:
     return "\n".join(lines) + ("\n" if trailing_newline else "")
 
 
+def _find_section(lines: list, heading: str, start: int, end: int, indent: int):
+    """The index of a `"## heading": fragment` entry, or None.
+
+    Section keys are not identifiers — they are markdown headings, with spaces,
+    ampersands and parentheses in them. `_find_key`'s pattern is deliberately
+    narrow and will not match one, so the entry has to be found by splitting on
+    the last colon and unquoting what is to its left.
+    """
+    for i in range(start, end):
+        if _is_blank(lines[i]) or _indent_of(lines[i]) != indent:
+            continue
+        key, sep, _value = lines[i].strip().rpartition(":")
+        if sep and key.strip().strip("\"'") == heading:
+            return i
+    return None
+
+
+def _command_block(lines: list, command: str):
+    """`(command_at, command_end, key_indent)` for one command, or None if absent.
+
+    The three numbers every nested writer here needs, worked out the same way:
+    indents come from the file rather than being assumed, so a configuration
+    written with four spaces stays written with four.
+    """
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        return None
+    _open_block(lines, commands_at)
+    commands_end = _block_end(lines, commands_at, 0, len(lines))
+    cmd_indent = next(
+        (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+         if not _is_blank(lines[i])),
+        len(INDENT),
+    )
+    command_at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
+    if command_at is None:
+        return None
+    _open_block(lines, command_at)
+    command_end = _block_end(lines, command_at, cmd_indent, commands_end)
+    key_indent = next(
+        (_indent_of(lines[i]) for i in range(command_at + 1, command_end)
+         if not _is_blank(lines[i])),
+        cmd_indent * 2,
+    )
+    return command_at, command_end, key_indent
+
+
+def set_template_section(text: str, command: str, heading: str, fragment) -> str:
+    """Point one template section at a fragment, or back at what ships.
+
+    `fragment=None` removes the entry, which is how a section is restored — an
+    absent key means the stock template's own words, so there is nothing to
+    write for "as shipped".
+
+    The heading is the address: `spec-template.md` is a sequence of `##` blocks
+    and every reader already navigates it that way, so no new marker syntax has
+    to be learned and a hand-edited template keeps working.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    entry = f"{{ {_quote(heading)}: {fragment} }}" if fragment else None
+
+    found = _command_block(lines, command)
+    if found is None:
+        if not fragment:
+            return text
+        block = ["commands:", f"{INDENT}{command}:", f"{INDENT * 2}template:",
+                 f"{INDENT * 3}sections:",
+                 f"{INDENT * 4}{_quote(heading)}: {fragment}"]
+        body = lines + ([""] if lines and lines[-1].strip() else []) + block
+        return "\n".join(body) + ("\n" if trailing_newline else "")
+
+    command_at, command_end, key_indent = found
+    pad = " " * key_indent
+    template_at = _find_key(lines, "template", command_at + 1, command_end, key_indent)
+    if template_at is None:
+        if not fragment:
+            return text
+        block = [f"{pad}template:", f"{pad}{INDENT}sections:",
+                 f"{pad}{INDENT * 2}{_quote(heading)}: {fragment}"]
+        out = lines[:command_at + 1] + block + lines[command_at + 1:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    _open_block(lines, template_at)
+    template_end = _block_end(lines, template_at, key_indent, command_end)
+    inner = key_indent + len(INDENT)
+    sections_at = _find_key(lines, "sections", template_at + 1, template_end, inner)
+    if sections_at is None:
+        if not fragment:
+            return text
+        block = [f"{pad}{INDENT}sections:",
+                 f"{pad}{INDENT * 2}{_quote(heading)}: {fragment}"]
+        out = lines[:template_at + 1] + block + lines[template_at + 1:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    _open_block(lines, sections_at)
+    sections_end = _block_end(lines, sections_at, inner, template_end)
+    entry_indent = inner + len(INDENT)
+    at = _find_section(lines, heading, sections_at + 1, sections_end, entry_indent)
+    written = f"{' ' * entry_indent}{_quote(heading)}: {fragment}"
+    if at is None:
+        if not fragment:
+            return text
+        out = lines[:sections_at + 1] + [written] + lines[sections_at + 1:]
+    elif fragment:
+        out = lines[:at] + [written] + lines[at + 1:]
+    else:
+        out = lines[:at] + lines[at + 1:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
 def set_phases(text: str, command: str, phases: list, renamed: tuple = None) -> str:
     """Return `text` with `commands.<command>.phases` set.
 
@@ -536,6 +647,40 @@ def resolved_order(project_root: str, command: str) -> list:
         return cc.resolve_order(config, command, default) or default
     except Exception:  # noqa: BLE001 — see the docstring
         return default
+
+
+def check_template_section(project_root: str, command: str, heading: str,
+                           fragment: str) -> None:
+    """Refuse a section or a fragment that does not exist, before writing it.
+
+    Both failures are otherwise silent until the next build: a misspelled
+    heading replaces nothing and reports success, and a missing fragment stops
+    the build long after the click that caused it.
+    """
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    tr = importlib.import_module("template_render")
+
+    name = tr.DEFAULT_TEMPLATE_BY_COMMAND.get(command)
+    if not name:
+        raise ConfigWriteError(f"{command} has no template to reshape")
+    source = os.path.join(project_root, ".specify", "templates", name)
+    if os.path.isfile(source):
+        with open(source, encoding="utf-8") as fh:
+            headings = [m.group(2).strip() for m in tr.SECTION_RE.finditer(fh.read())]
+        cleaned = {tr._clean(h) for h in headings}
+        if tr._clean(heading) not in cleaned:
+            raise ConfigWriteError(
+                f"{name} has no section '{heading}' — it has: {', '.join(headings[:8])}")
+    if fragment:
+        fragments_dir = os.path.join(
+            project_root, ".specify", "companion", "fragments")
+        if not tr.find_fragment(fragment, fragments_dir):
+            known = ", ".join(f["name"] for f in tr.shipped_fragments()) or "none"
+            raise ConfigWriteError(
+                f"no fragment called '{fragment}' — shipped ones are: {known}")
 
 
 def use_phases_in_force(project_root: str, command: str, pending: list = None) -> None:
@@ -715,6 +860,10 @@ def main() -> int:
     ap.add_argument("--run", default="")
     ap.add_argument("--text", default="")
     ap.add_argument("--phases", help="JSON list of {name, nodes} to set for --command")
+    ap.add_argument("--template-section",
+                    help="a `## heading` in the step's template to point at a fragment")
+    ap.add_argument("--fragment", default=None,
+                    help="the fragment to put there; empty restores the shipped section")
     ap.add_argument("--renamed", nargs=2, metavar=("FROM", "TO"),
                     help="a phase this write renames, so its hooks follow it")
     ap.add_argument("--edit-index", type=int,
@@ -800,6 +949,24 @@ def main() -> int:
 
         if not args.command:
             raise ConfigWriteError("nothing to write — pass --command, --workflow or --new-workflow")
+
+        if args.template_section is not None:
+            if not args.command:
+                raise ConfigWriteError("a template section needs --command")
+            check_template_section(project, args.command, args.template_section,
+                                   args.fragment)
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as fh:
+                    existing = fh.read()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(set_template_section(
+                    existing, args.command, args.template_section,
+                    args.fragment or None))
+            where = f"uses {args.fragment}" if args.fragment else "back to the shipped one"
+            print(f"[config] {args.command}: '{args.template_section}' {where}")
+            return 0
 
         if args.phases:
             import json

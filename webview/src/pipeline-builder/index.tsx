@@ -50,7 +50,7 @@ function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
             id: '_frame',
             name: `${step.name} — the step's own instructions`,
             kind: 'control',
-            reads: [], writes: [], hooks: [],
+            reads: [], writes: [], hooks: [], variants: [],
             pinned: 'the frame always comes first — it is what every node sits under',
             source: step.frame.source,
             replaced: step.frame.replaced,

@@ -11,7 +11,7 @@ import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/
 function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
     return {
         id: 'resolve-dir', name: 'Resolve the spec folder', kind: 'control',
-        reads: [], writes: [], hooks: [], pinned: '',
+        reads: [], writes: [], hooks: [], variants: [], pinned: '',
         source: '/ext/nodes/specify/resolve-dir.md', replaced: false,
         ...overrides,
     };
@@ -52,7 +52,7 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps: [step()],
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [] },
+        choices: { skills: [], nodes: [], fragments: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -389,7 +389,7 @@ describe('one hue marks everything the project owns', () => {
 
     it('marks a template whose sections the project replaced', () => {
         const swapped = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'] } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [] } })],
         });
         const { host } = canvas(swapped);
         expect(host.querySelector('.pb-template--yours')).not.toBeNull();
@@ -402,7 +402,7 @@ describe('one hue marks everything the project owns', () => {
 
     it('leaves a shipped node and a stock template unmarked', () => {
         const plain = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: [] } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] } })],
         });
         const { host } = canvas(plain);
         expect(host.querySelector('.pb-node--yours')).toBeNull();
@@ -749,7 +749,8 @@ describe('a hook can be changed once it is there', () => {
         const noop = () => undefined;
         const sheet = mount(
             <AttachForm step={step()} anchor="gather"
-                choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'] }}
+                choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'],
+                    fragments: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         const options = Array.from(sheet.querySelectorAll('datalist option'))
@@ -762,7 +763,7 @@ describe('a hook can be changed once it is there', () => {
         const noop = () => undefined;
         const sheet = mount(
             <AttachForm step={step()} anchor="complete"
-                choices={{ skills: [], nodes: [] }}
+                choices={{ skills: [], nodes: [], fragments: [] }}
                 editing={{
                     when: 'after', type: 'skill', summary: 'create-pr',
                     anchor: 'complete', index: 1, note: 'only on green',
@@ -779,7 +780,7 @@ describe('a hook can be changed once it is there', () => {
     it('says nothing about removing when it is a new hook', () => {
         const noop = () => undefined;
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
                 onCancel={noop} onAttach={noop} />);
         expect(sheet.querySelector('.pb-action--remove')).toBeNull();
     });
@@ -821,7 +822,7 @@ describe('one action keeps one name through the flow', () => {
 
         document.body.innerHTML = '';
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
@@ -830,7 +831,7 @@ describe('one action keeps one name through the flow', () => {
 
     it('names the anchor field for where it goes, not what it is', () => {
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
                 onCancel={noop} onAttach={noop} />);
         const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
             .map(el => el.textContent);

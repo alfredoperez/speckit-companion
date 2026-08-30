@@ -25,7 +25,7 @@ export function node(
 ): PipelineNode {
     return {
         id, name, kind: 'control', reads: [], writes: [], hooks: [], pinned: '',
-        source: `/ext/nodes/${id}.md`, replaced: false, ...over,
+        variants: [], source: `/ext/nodes/${id}.md`, replaced: false, ...over,
     };
 }
 
@@ -63,6 +63,14 @@ export function step(
 export const CHOICES: PipelineChoices = {
     skills: ['create-pr', 'code-review', 'verify-code-review', 'speckit-companion-doctor'],
     nodes: ['debug-timing', 'house-review', 'timing'],
+    fragments: [
+        { name: 'outcomes', section: 'User Scenarios & Testing', for: 'specify',
+          summary: 'Observable outcomes instead of prioritized user stories.' },
+        { name: 'ears-requirements', section: 'User Scenarios & Testing', for: 'specify',
+          summary: 'Numbered requirements with WHEN/THEN/SHALL criteria.' },
+        { name: 'stories-classic', section: 'User Scenarios & Testing', for: 'specify',
+          summary: "Stock spec-kit's three P1/P2/P3 stories." },
+    ],
 };
 
 export function graph(
@@ -119,7 +127,7 @@ export const SPECIFY = step('specify', [
     ]),
 ], {
     artifacts: ['spec.md', 'checklists/requirements.md'],
-    template: { file: 'spec-template.md', sections: [] },
+    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] },
     changes: { ...NO_CHANGES, hooks: 1 },
     decisions: [{
         node: 'classify-size',
@@ -155,7 +163,7 @@ export const PLAN = step('plan', [
     ]),
 ], {
     artifacts: ['plan.md', 'research.md', 'data-model.md', 'contracts/'],
-    template: { file: 'plan-template.md', sections: [] },
+    template: { file: 'plan-template.md', sections: [], sectionsAvailable: [] },
 });
 
 export const TASKS = step('tasks', [
@@ -165,7 +173,7 @@ export const TASKS = step('tasks', [
     ]),
     phase('check', [node('review-gaps', 'Review for gaps', { kind: 'gate' })]),
     phase('wrap-up', [node('handoff', 'Hand off to the next step')]),
-], { artifacts: ['tasks.md'], template: { file: 'tasks-template.md', sections: [] } });
+], { artifacts: ['tasks.md'], template: { file: 'tasks-template.md', sections: [], sectionsAvailable: [] } });
 
 export const IMPLEMENT = step('implement', [
     phase('execute', [

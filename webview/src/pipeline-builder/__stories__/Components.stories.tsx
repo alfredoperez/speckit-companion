@@ -205,7 +205,7 @@ export const StepChanged: Story = {
     render: () => (
         <One><Canvas graph={graph([step('specify', SPECIFY.phases, {
             artifacts: ['spec.md'],
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [] },
             dropped: ['branch'],
             frame: { source: '/proj/.specify/companion/nodes/specify/_frame.md', replaced: true },
             changes: {
@@ -393,7 +393,7 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [] }}
+        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [] }}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };

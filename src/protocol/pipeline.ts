@@ -50,9 +50,18 @@ export interface PipelineHook {
     note: string;
 }
 
+/** An alternative for one node's slot: same place in the run, different words. */
+export interface PipelineVariant {
+    id: string;
+    name: string;
+    summary: string;
+}
+
 export interface PipelineNode {
     /** The handle the configuration uses. */
     id: string;
+    /** Alternatives that stand in for this node. Empty when nothing does. */
+    variants: PipelineVariant[];
     /** What a person reads. Falls back to the id when a node has no name. */
     name: string;
     kind: NodeKind;
@@ -107,6 +116,25 @@ export interface PipelineTemplate {
     file: string;
     /** Sections this project replaced. */
     sections: string[];
+    /**
+     * Every `##` section the template has — what a project *could* replace.
+     *
+     * Reported for a step whose template exists even when nothing was changed,
+     * so the panel can offer a row per section rather than only showing the
+     * ones already swapped. Its presence therefore says nothing about whether
+     * the project customised anything; `sections` is what says that.
+     */
+    sectionsAvailable: string[];
+}
+
+/** A shipped alternative for one template section. */
+export interface PipelineFragment {
+    name: string;
+    /** The `## heading` it is written to replace. */
+    section: string;
+    /** The step it belongs to. */
+    for: string;
+    summary: string;
 }
 
 /** A step's own preamble — the text every node in it sits under. */
@@ -151,6 +179,8 @@ export interface PipelineWorkflows {
 export interface PipelineChoices {
     skills: string[];
     nodes: string[];
+    /** Shipped alternatives a template section can be pointed at. */
+    fragments: PipelineFragment[];
 }
 
 export interface PipelineGraph {

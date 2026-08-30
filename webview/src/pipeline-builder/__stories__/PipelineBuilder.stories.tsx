@@ -34,7 +34,7 @@ const NO_CHANGES = {
 
 function node(id: string, name: string, over: Partial<PipelineNode> = {}): PipelineNode {
     return {
-        id, name, kind: 'control', reads: [], writes: [], hooks: [],
+        id, name, kind: 'control', reads: [], writes: [], hooks: [], variants: [],
         source: `/ext/nodes/${id}.md`, replaced: false, pinned: '', ...over,
     };
 }
@@ -56,7 +56,7 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
     return {
         steps,
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [] },
+        choices: { skills: [], nodes: [], fragments: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -89,7 +89,7 @@ const SPECIFY = step('specify', [
     ]),
 ], {
     artifacts: ['spec.md', 'checklists/requirements.md'],
-    template: { file: 'spec-template.md', sections: [] },
+    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] },
     decisions: [{
         node: 'classify-size',
         verdicts: [
@@ -106,7 +106,7 @@ const PLAN = step('plan', [
     ]),
     phase('author', [node('plan-doc', 'Write the plan', { kind: 'author', writes: ['plan.md'] })]),
     phase('check', [node('constitution-check', 'Constitution check', { kind: 'gate' })]),
-], { artifacts: ['plan.md'], template: { file: 'plan-template.md', sections: [] } });
+], { artifacts: ['plan.md'], template: { file: 'plan-template.md', sections: [], sectionsAvailable: [] } });
 
 const noop = () => undefined;
 const CANVAS_ACTIONS = {
@@ -165,7 +165,7 @@ export const TemplateSectionReplaced: Story = {
         const g = graph([step('specify', [
             phase('author', [node('draft-spec', 'Draft the spec', { kind: 'author', writes: ['spec.md'] })]),
         ], {
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [] },
             artifacts: ['spec.md'],
         })], { configured: true, customised: true });
         return (
@@ -316,7 +316,7 @@ export const EverythingChangedAtOnce: Story = {
                 }),
             ]),
         ], {
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing', 'Requirements'] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing', 'Requirements'], sectionsAvailable: [] },
             artifacts: ['spec.md'],
             changes: {
                 added: [], removed: ['quality-checklist'], reordered: true,

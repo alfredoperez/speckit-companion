@@ -233,6 +233,92 @@ class AddingAShippedOptionalNode(unittest.TestCase):
         self.assertIn("invented", str(refusal.exception))
 
 
+class PointingATemplateSectionAtAFragment(unittest.TestCase):
+    """Swapping the shape of a document without rewriting the node that writes it.
+
+    The section-replacement mechanism has shipped since the template engine
+    landed, with its own docstring naming "outcomes instead of user stories" as
+    the case it was built for — and no fragment to point at, no writer to point
+    with, and nothing in the panel offering either.
+    """
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        templates = self.project.root / ".specify" / "templates"
+        templates.mkdir(parents=True, exist_ok=True)
+        (templates / "spec-template.md").write_text(
+            "# Spec\n\n"
+            "## User Scenarios & Testing *(mandatory)*\n\nShipped words here.\n\n"
+            "## Requirements\n\nUntouched.\n", encoding="utf-8")
+
+    def point_at(self, fragment: str) -> str:
+        return self.project.write(
+            "--command", "specify",
+            "--template-section", "User Scenarios & Testing", "--fragment", fragment)
+
+    def resolved(self) -> str:
+        path = (self.project.root / ".specify" / "extensions" / "companion"
+                / "templates" / "spec-template.md")
+        return path.read_text(encoding="utf-8")
+
+    def test_a_shipped_fragment_replaces_the_section(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        self.assertIn("### Outcomes", self.resolved())
+        self.assertNotIn("Shipped words here.", self.resolved())
+
+    def test_the_heading_and_the_other_sections_survive(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        body = self.resolved()
+        self.assertIn("## User Scenarios & Testing *(mandatory)*", body)
+        self.assertIn("Untouched.", body)
+
+    def test_the_fragments_own_frontmatter_does_not_reach_the_document(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        self.assertNotIn("summary:", self.resolved())
+
+    def test_choosing_again_replaces_rather_than_stacks(self):
+        self.point_at("outcomes")
+        self.point_at("ears-requirements")
+        self.project.build_ok()
+        body = self.resolved()
+        self.assertIn("EARS", body)
+        self.assertNotIn("### Outcomes", body)
+
+    def test_an_empty_fragment_restores_the_shipped_section(self):
+        self.point_at("outcomes")
+        self.point_at("")
+        self.project.build_ok()
+        self.assertIn("Shipped words here.", self.resolved())
+
+    def test_a_section_the_template_does_not_have_is_refused(self):
+        with self.assertRaises(Refused) as refusal:
+            self.project.write("--command", "specify",
+                               "--template-section", "Invented", "--fragment", "outcomes")
+        self.assertIn("Invented", str(refusal.exception))
+
+    def test_a_fragment_that_does_not_exist_is_refused_by_name(self):
+        with self.assertRaises(Refused) as refusal:
+            self.point_at("no-such-fragment")
+        self.assertIn("no-such-fragment", str(refusal.exception))
+
+    def test_the_panel_offers_the_sections_and_the_fragments(self):
+        graph = self.project.graph()
+        names = [f["name"] for f in graph["choices"]["fragments"]]
+        self.assertIn("outcomes", names)
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        self.assertIn("User Scenarios & Testing",
+                      specify["template"]["sectionsAvailable"])
+
+    def test_a_project_that_changed_nothing_still_reads_as_shipped(self):
+        # The template is reported for every step that has one now, so its
+        # presence must not be mistaken for a customisation.
+        self.assertFalse(self.project.graph()["customised"])
+
+
 class HandingAStepToOneDocumentOfYourOwn(unittest.TestCase):
     """Replacing a whole step, rather than rewriting each of its nodes."""
 

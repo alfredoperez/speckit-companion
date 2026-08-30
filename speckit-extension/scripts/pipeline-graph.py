@@ -36,6 +36,34 @@ from _command_parts import (  # noqa: E402
 assemble = importlib.import_module("assemble-nodes")
 build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
+template_render = importlib.import_module("template_render")
+
+
+def _template(command: str, resolved, project_root: str):
+    """What the panel needs to offer this step's template: its name, what the
+    project replaced, and every section it could replace.
+
+    A step with no template at all gets `None` — the shape the panel already
+    draws nothing for.
+    """
+    name = (resolved[0] if resolved
+            else template_render.DEFAULT_TEMPLATE_BY_COMMAND.get(command))
+    if not name:
+        return None
+    source = os.path.join(project_root, ".specify", "templates", name)
+    available = []
+    if os.path.isfile(source):
+        with open(source, encoding="utf-8") as fh:
+            available = [
+                template_render._clean(m.group(2))
+                for m in template_render.SECTION_RE.finditer(fh.read())
+                if m.group(1) == "##"
+            ]
+    return {
+        "file": name,
+        "sections": resolved[2] if resolved else [],
+        "sectionsAvailable": available,
+    }
 
 
 def _summary(command: str, node_id: str) -> str:
@@ -196,7 +224,10 @@ def build_graph(project_root: str) -> dict:
             "phases": drawn_phases,
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),
-            "template": ({"file": template[0], "sections": template[2]} if template else None),
+            # `sections` is what this project replaced; `sectionsAvailable` is
+            # every `##` the step's template has, so the panel can offer a row
+            # per section instead of only showing the ones already changed.
+            "template": _template(command, template, project_root),
             # Everything this step could run but is not running: nodes the
             # recipe dropped, plus the shipped optional ones — add-ons and the
             # variants of a slot. These are the only nodes that can be added,
@@ -223,13 +254,19 @@ def build_graph(project_root: str) -> dict:
         s["changes"]["added"] or s["changes"]["removed"] or s["changes"]["reordered"]
         or s["changes"]["hooks"] or s["changes"]["decisions"] or s["changes"]["replaced"]
         or s["changes"]["phases"]
-        or s["template"]
+        # A template is now reported for every step that has one, so its
+        # presence says nothing. What the project replaced is the change.
+        or (s["template"] and s["template"]["sections"])
         for s in steps
     )
     workflows = build.available_workflows(project_root)
     choices = {
         "skills": build.available_skills(project_root),
         "nodes": build.available_hook_nodes(project_root),
+        # What a template section can be pointed at. Each says which section it
+        # is written for, so a picker offers only the ones that belong to the
+        # row someone is editing rather than every fragment that exists.
+        "fragments": template_render.shipped_fragments(),
     }
     active = build.active_workflow(project_root)
     return {

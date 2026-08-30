@@ -85,6 +85,7 @@ speckit-extension/**
 # …and the sources they assemble from.
 !speckit-extension/nodes/**
 !speckit-extension/presets/_parts/**
+!speckit-extension/fragments/**
 .specify/**
 .opencode/**
 .serena/**
