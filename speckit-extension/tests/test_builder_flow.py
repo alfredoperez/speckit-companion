@@ -169,12 +169,16 @@ class PuttingADroppedNodeBack(unittest.TestCase):
         self.assertIn("quality-checklist", specify["dropped"])
 
     def test_a_node_put_back_runs_and_sits_where_it_was_put(self):
-        self.project.write("--command", "specify", "--nodes",
-                           "resolve-dir,draft-spec,quality-checklist,handoff")
+        # Phases first when ADDING: a node needs a home before it can run, and
+        # the order check reads the grouping in force to decide whether the
+        # sequence is contiguous. (Replacing a step is the mirror image — the
+        # order goes first there, because it is what drops the other nodes.)
         self.project.write("--command", "specify", "--phases", json.dumps([
             {"name": "author", "nodes": ["resolve-dir", "draft-spec",
                                          "quality-checklist", "handoff"]},
         ]))
+        self.project.write("--command", "specify", "--nodes",
+                           "resolve-dir,draft-spec,quality-checklist,handoff")
         self.project.build_ok()
 
         order = self.project.nodes_in("specify")
@@ -189,6 +193,44 @@ class PuttingADroppedNodeBack(unittest.TestCase):
         self.assertIn("handoff", str(refusal.exception))
         self.assertEqual(self.project.config_text(), before,
                          "a refused write must leave the file untouched")
+
+
+class AddingAShippedOptionalNode(unittest.TestCase):
+    """A node Companion ships but does not run by default.
+
+    `review-gaps` sat in-tree, written and tested, held out of the baseline
+    order with a comment saying it was there to re-add as a layer — and there
+    was no way to re-add it. Every existence check on the way through used the
+    "is this the project's own copy?" flag as a stand-in for "does this file
+    exist?", so a shipped node outside the default order was refused by the
+    write, refused again by the build, and never offered by the panel.
+    """
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def test_the_panel_offers_it(self):
+        tasks = next(s for s in self.project.graph()["steps"] if s["name"] == "tasks")
+        self.assertIn("review-gaps", tasks["dropped"])
+
+    def test_it_can_be_added_and_reaches_the_built_command(self):
+        self.project.write("--command", "tasks", "--phases", json.dumps([
+            {"name": "gather", "nodes": ["size-budget"]},
+            {"name": "author", "nodes": ["tasks-doc", "review-gaps"]},
+            {"name": "wrap-up", "nodes": ["handoff"]},
+        ]))
+        self.project.write("--command", "tasks", "--nodes",
+                           "size-budget,tasks-doc,review-gaps,handoff")
+        self.project.build_ok()
+
+        self.assertIn("review-gaps", self.project.nodes_in("tasks"))
+
+    def test_a_node_that_does_not_exist_is_still_refused(self):
+        with self.assertRaises(Refused) as refusal:
+            self.project.write("--command", "tasks", "--nodes",
+                               "size-budget,tasks-doc,invented,handoff")
+        self.assertIn("invented", str(refusal.exception))
 
 
 class HandingAStepToOneDocumentOfYourOwn(unittest.TestCase):

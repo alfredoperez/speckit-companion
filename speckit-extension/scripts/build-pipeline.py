@@ -261,9 +261,13 @@ def plan_build(config: dict) -> tuple[dict, list]:
         # Without this, replacing what a whole step DOES meant rewriting each
         # shipped node in place — you could not hand the step to one document of
         # your own and adapt it.
+        # An exists check rather than the replaced flag: a shipped optional
+        # node — an add-on, or a variant of a default one — is neither in the
+        # default order nor a project copy, and naming it is exactly what a
+        # recipe that adds a block does.
         missing = [
             n for n in order
-            if n not in default and not node_source(command, n)[1]
+            if n not in default and not os.path.isfile(node_source(command, n)[0])
         ]
         if missing:
             raise BuildError(
@@ -282,7 +286,7 @@ def plan_build(config: dict) -> tuple[dict, list]:
         phases = assemble.phases_for(command, order)
         unknown = [
             n for phase in assemble.declared_phases(command) for n in phase["nodes"]
-            if n not in default and not node_source(command, n)[1]
+            if n not in default and not os.path.isfile(node_source(command, n)[0])
         ]
         if unknown:
             raise BuildError(

@@ -374,6 +374,11 @@ def parse_phases(path: str) -> list:
         if s.startswith("phases:"):
             in_phases = True
             continue
+        # A new top-level key ends the block. Without this, the `- name:` lines
+        # inside `decisions:` read as phases — invisible only because empty
+        # phases happen to be dropped downstream.
+        if in_phases and not raw[0].isspace() and not s.startswith("- "):
+            break
         if not in_phases:
             continue
         if s.startswith("- name:"):
@@ -401,6 +406,71 @@ def parse_phases(path: str) -> list:
     if current:
         phases.append(current)
     return phases
+
+
+def parse_optional(path: str) -> list:
+    """Read `optional:` — shipped nodes a recipe may add, outside the default order.
+
+    These are real node files in the command's directory that the pipeline does
+    not run by default: add-ons (clarify, analyze) and variants of a default
+    node. They assemble like any other node once a recipe names them; this list
+    is what lets the panel offer them without a free-text box that build-errors.
+    """
+    ids = []
+    in_block = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("optional:"):
+            rest = s[len("optional:"):].strip()
+            if rest.startswith("[") and rest.endswith("]"):
+                inner = rest[1:-1].strip()
+                return [x.strip() for x in inner.split(",")] if inner else []
+            in_block = True
+            continue
+        if in_block and s.startswith("- "):
+            ids.append(s[2:].strip())
+        elif in_block:
+            break
+    return ids
+
+
+def parse_variants(path: str) -> dict:
+    """Read `variants:` — `{slot_id: [variant_ids]}`, the alternatives for one slot.
+
+    A variant is an optional node that stands in for a default one: same place
+    in the run, different instructions. The map is what makes "replace this
+    node" a pick instead of a rewrite.
+    """
+    variants = {}
+    in_block = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("variants:"):
+            in_block = True
+            continue
+        if not in_block:
+            continue
+        # Entries are `slot: [a, b]`, indented under the key. Any top-level
+        # line — a new key, a list item of something else — ends the block.
+        if not raw[0].isspace():
+            break
+        if ":" not in s:
+            continue
+        slot, rest = s.split(":", 1)
+        rest = rest.strip()
+        if rest.startswith("[") and rest.endswith("]"):
+            inner = rest[1:-1].strip()
+            variants[slot.strip()] = (
+                [x.strip() for x in inner.split(",")] if inner else [])
+    return variants
 
 
 #: A project's own node files, which replace the shipped ones of the same id.

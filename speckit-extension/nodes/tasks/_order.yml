@@ -19,3 +19,9 @@ phases:
     nodes: [tasks-doc]
   - name: wrap-up
     nodes: [handoff]
+
+# Shipped nodes this step does NOT run by default — the ones a project can add
+# from the panel. They assemble like any other node once a recipe names them;
+# listing them here is what makes them offerable instead of a free-text box.
+optional:
+  - review-gaps

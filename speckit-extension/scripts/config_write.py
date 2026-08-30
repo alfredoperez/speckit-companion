@@ -538,6 +538,37 @@ def resolved_order(project_root: str, command: str) -> list:
         return default
 
 
+def use_phases_in_force(project_root: str, command: str, pending: list = None) -> None:
+    """Point the phase checks at the grouping that will be in force, not the shipped one.
+
+    `unexpressible_order` asks whether an order can be expressed as contiguous
+    phases — a question only the grouping in force can answer. Left pointing at
+    the shipped phases, adding an optional node is refused for "moving across a
+    phase boundary" when it simply has no shipped phase to belong to.
+
+    `pending` is the grouping this same write is about to save, so the pair of
+    writes the panel makes (phases, then order) validates against each other
+    rather than against what was there before.
+    """
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    assemble = importlib.import_module("assemble-nodes")
+    if pending:
+        assemble.use_project_phases({command: pending})
+        return
+    try:
+        import companion_config as cc
+
+        config, _warnings = cc.load_config(config_path(project_root))
+        declared = cc.resolve_phases(config, command)
+        if declared:
+            assemble.use_project_phases({command: declared})
+    except Exception:  # noqa: BLE001 — a validation that cannot read the file
+        pass                                  # lets the write through; the build refuses.
+
+
 def check_phases(command: str, phases: list) -> None:
     """Refuse a grouping the pipeline could not build, before it reaches the file."""
     import importlib
@@ -552,7 +583,10 @@ def check_phases(command: str, phases: list) -> None:
     placed = [n for p in phases for n in p["nodes"]]
     unknown = [
         n for n in placed
-        if n not in default and not cp.node_source(command, n)[1]
+        # An exists check, not the replaced flag: a shipped optional node —
+        # an add-on or a variant — is neither in the default order nor a
+        # project copy, and it is exactly what this write is naming.
+        if n not in default and not os.path.isfile(cp.node_source(command, n)[0])
     ]
     if unknown:
         raise ConfigWriteError(f"{command}: no such node: {', '.join(unknown)}")
@@ -597,7 +631,10 @@ def check_order(command: str, nodes: list) -> None:
     default = assemble.default_order(command)
     unknown = [
         n for n in nodes
-        if n not in default and not cp.node_source(command, n)[1]
+        # An exists check, not the replaced flag: a shipped optional node —
+        # an add-on or a variant — is neither in the default order nor a
+        # project copy, and it is exactly what this write is naming.
+        if n not in default and not os.path.isfile(cp.node_source(command, n)[0])
     ]
     if unknown:
         raise ConfigWriteError(f"{command}: no such node: {', '.join(unknown)}")
@@ -773,6 +810,9 @@ def main() -> int:
             # node still demands a phase, which no grouping can give it, and a
             # step that dropped anything could never be regrouped again.
             use_order(args.command, resolved_order(project, args.command))
+            # Validate this grouping against itself: a phase check that reads
+            # the shipped grouping refuses a node that has no shipped phase.
+            use_phases_in_force(project, args.command, phases)
             check_phases(args.command, phases)
             renamed = tuple(args.renamed) if args.renamed else None
             existing = ""
@@ -788,6 +828,7 @@ def main() -> int:
         if not args.nodes:
             raise ConfigWriteError("nothing to write — pass --nodes or --hook")
         nodes = [n.strip() for n in args.nodes.split(",") if n.strip()]
+        use_phases_in_force(project, args.command)
         check_order(args.command, nodes)
         write_nodes(path, args.command, nodes)
     except ConfigWriteError as err:

@@ -38,11 +38,48 @@ build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
 
 
-def _node(command: str, node_id: str, hooks: list, pinned: str = "") -> dict:
+def _summary(command: str, node_id: str) -> str:
+    """A node's first line of instruction — what it does, for a picker."""
+    try:
+        _meta, body = read_node(command, node_id)
+    except SystemExit:
+        return ""
+    for line in body.splitlines():
+        line = line.strip()
+        if line and not line.startswith(("<!--", "#")):
+            return line[:120]
+    return ""
+
+
+def _variants(command: str, node_id: str, offered: dict) -> list:
+    """The alternatives that stand in for this node — what "replace it" can pick.
+
+    Only nodes whose file is actually present are offered: a variant named in
+    `_order.yml` but never written would otherwise be a choice that build-errors.
+    """
+    out = []
+    for variant_id in offered.get(node_id, []):
+        path, _replaced = node_source(command, variant_id)
+        if not os.path.isfile(path):
+            continue
+        meta, _body = read_node(command, variant_id)
+        out.append({
+            "id": variant_id,
+            "name": meta.get("name") or variant_id,
+            "summary": _summary(command, variant_id),
+        })
+    return out
+
+
+def _node(command: str, node_id: str, hooks: list, pinned: str = "",
+          variants: list = ()) -> dict:
     meta, _body = read_node(command, node_id)
     writes = meta.get("writes")
     source, replaced = node_source(command, node_id)
     return {
+        # Alternatives for this slot: same place in the run, different
+        # instructions. Empty for a node nothing stands in for.
+        "variants": list(variants),
         "id": node_id,
         # Why this node cannot be dragged, or "" when it can. A node that looks
         # draggable and refuses is worse than one that never offered.
@@ -125,11 +162,16 @@ def build_graph(project_root: str) -> dict:
         phases = entry.get("phases") or []
 
         pinned = assemble.movability(command, entry["order"])
+        offered = assemble.slot_variants(command)
         drawn_phases = []
         for phase in phases:
             drawn_phases.append({
                 "name": phase["name"],
-                "nodes": [_node(command, n, hooks, pinned.get(n, "")) for n in phase["nodes"]],
+                "nodes": [
+                    _node(command, n, hooks, pinned.get(n, ""),
+                          _variants(command, n, offered))
+                    for n in phase["nodes"]
+                ],
                 "hooks": [_hook(h) for h in hooks if h["anchor"] == phase["name"]],
             })
 
@@ -155,10 +197,17 @@ def build_graph(project_root: str) -> dict:
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),
             "template": ({"file": template[0], "sections": template[2]} if template else None),
-            # Nodes this step ships with that the recipe is not running. They
-            # are the only nodes that can be added back, so the panel offers
-            # exactly these rather than a free-text box that build-errors.
-            "dropped": [n for n in default if n not in order],
+            # Everything this step could run but is not running: nodes the
+            # recipe dropped, plus the shipped optional ones — add-ons and the
+            # variants of a slot. These are the only nodes that can be added,
+            # so the panel offers exactly these rather than a free-text box
+            # that build-errors.
+            "dropped": (
+                [n for n in default if n not in order]
+                + [n for n in assemble.optional_nodes(command)
+                   if n not in order and n not in default
+                   and os.path.isfile(node_source(command, n)[0])]
+            ),
             "changes": {
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],

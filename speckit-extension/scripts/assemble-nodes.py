@@ -32,8 +32,10 @@ from _command_parts import (
     fill_parts,
     golden_path,
     nodes_command_dir,
+    parse_optional,
     parse_order,
     parse_phases,
+    parse_variants,
     part_path,
     read_node,
     strip_node_markers,
@@ -266,6 +268,16 @@ def assemble_command(command: str, order: list = None, debug: bool = False,
 
 def default_order(command: str) -> list:
     return parse_order(os.path.join(nodes_command_dir(command), "_order.yml"))
+
+
+def optional_nodes(command: str) -> list:
+    """Shipped nodes outside the default order — add-ons and variants a recipe may name."""
+    return parse_optional(os.path.join(nodes_command_dir(command), "_order.yml"))
+
+
+def slot_variants(command: str) -> dict:
+    """`{slot_id: [variant_ids]}` — which optional nodes stand in for which default one."""
+    return parse_variants(os.path.join(nodes_command_dir(command), "_order.yml"))
 
 
 def node_reads_map(command: str, order: list) -> dict:
