@@ -221,11 +221,14 @@ class CallClassificationTests(unittest.TestCase):
         self.assertEqual(len(sets), 1)
         self.assertTrue(sets[0]["ok"])
 
-    def test_a_non_canonical_step_is_recorded_as_not_ok(self):
+    def test_a_step_this_project_does_not_have_is_recorded_as_not_ok(self):
+        # The guard is against a typo, which would otherwise default to
+        # `specify` and journal a junk complete against the wrong step. A step
+        # the project actually declares — a node directory — is accepted.
         self.write("--step", "nonsense", "--kind", "complete")
         entries = [e for e in self.lines() if not e["ok"]]
         self.assertEqual(len(entries), 1)
-        self.assertIn("not a canonical currentStep", entries[0]["reason"])
+        self.assertIn("is not a step this project has", entries[0]["reason"])
 
     def test_each_operation_is_classified_by_the_flag_that_drives_it(self):
         self.write("--set", "last_action=x")

@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from spec_context import (  # noqa: E402,F401
     CANONICAL_STEPS,
+    known_steps,
     CROSS_STEP_TERMINAL,
     PREFIX_RE,
     STEP_COMPLETED_STATUS,
@@ -198,10 +199,11 @@ def journal_finish(feature_dir: Path, step: str, by: str, substep: str | None = 
     best-effort; a genuinely shipped spec (completed/archived) is left untouched."""
     # A finish is only meaningful for a canonical step; reject a typo'd or omitted
     # step (which would otherwise default to "specify" and journal a junk complete).
-    if step not in CANONICAL_STEPS:
+    allowed = known_steps(feature_dir)
+    if step not in allowed:
         print(
-            f"[companion] Skipping --finish: '{step}' is not a canonical step "
-            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            f"[companion] Skipping --finish: '{step}' is not a step this project "
+            f"has ({', '.join(sorted(allowed))}).",
             file=sys.stderr,
         )
         return None
@@ -227,10 +229,11 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
     but never drags status/currentStep backward. A step with no canonical completed-status
     (clarify/analyze) records only the finish, leaving status untouched — mirroring
     `--finish`. Idempotent; a shipped spec is left untouched."""
-    if step not in CANONICAL_STEPS:
+    allowed = known_steps(feature_dir)
+    if step not in allowed:
         print(
-            f"[companion] Skipping --advance: '{step}' is not a canonical step "
-            f"({', '.join(sorted(CANONICAL_STEPS))}).",
+            f"[companion] Skipping --advance: '{step}' is not a step this project "
+            f"has ({', '.join(sorted(allowed))}).",
             file=sys.stderr,
         )
         return None
@@ -482,9 +485,12 @@ def _main() -> int:
         or args.coverage_req or args.step_summary or args.classification or args.context_entries
         or args.batch
     )
-    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in CANONICAL_STEPS):
-        msg = (f"Skipping: '{args.step}' is not a canonical currentStep "
-               f"({', '.join(sorted(CANONICAL_STEPS))}).")
+    # `--feature-dir` if it was given; the resolved one is not bound until later,
+    # and a project's own steps are discoverable from either.
+    steps_here = known_steps(args.feature_dir)
+    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in steps_here):
+        msg = (f"Skipping: '{args.step}' is not a step this project has "
+               f"({', '.join(sorted(steps_here))}).")
         print(f"[companion] {msg}", file=sys.stderr)
         _record_outcome(False, msg)
         return 0
