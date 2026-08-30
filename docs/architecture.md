@@ -4,6 +4,16 @@ SpecKit Companion is a VS Code extension that gives spec-driven development a vi
 
 > This document describes **responsibilities** and **boundaries**, not file-by-file inventories. File names rot the moment someone adds or renames a module — `ls src/` and the test `tests/integration/docs-consistency.test.ts` are the live source of truth. The test fails on every `npm test` if a path mentioned here disappears or a new `*Provider.ts` is added without a doc mention.
 
+## The diagram
+
+[`docs/architecture/diagram.html`](./architecture/diagram.html) — open it in a browser. One page, no build, no network. It carries three guided walkthroughs: **the whole loop** (a command leaves VS Code, reaches an AI CLI, runs spec-kit, and comes back as state the UI can read), **eleven CLIs behind one seam**, and **what is written down**. It has a present mode and exports to SVG and PNG.
+
+Read it before the module map below. The prose says what each part is responsible for; the diagram says how a command actually travels, which is the part that is hard to hold in your head from a list.
+
+**It is generated, not drawn.** [`docs/architecture/speckit-companion.architecture.json`](./architecture/speckit-companion.architecture.json) is the source, and [archify](https://www.npmjs.com/package/archify) renders the HTML from it. Edit the JSON and regenerate; do not hand-edit the HTML, and expect anything you do edit there to be lost.
+
+**Its numbers are claims like any other.** They were last checked against the code on 2026-08-30: eleven providers (the `speckit.aiProvider` enum, matching the column count in [providers.md](./providers.md)), ten feature modules under `src/features/`, 167 source and doc files under `webview/src/`. The generator does not count anything for you, so a provider added without touching this file leaves the diagram quietly wrong — which it already was, claiming nine.
+
 ## High-level layout
 
 The extension splits into three runtime layers and one configuration surface:
