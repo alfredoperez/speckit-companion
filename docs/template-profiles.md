@@ -65,6 +65,48 @@ On the **command path**, the `simple` verdict folds plan/tasks inside the `speci
 
 The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-complete`) that writes `status: completed` — the command writes it, never the AI. That same step also **folds the feature's changes back into the living specs it touched**: before the fold, the assistant authors a `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` block per loaded-and-changed capability (each marked `<!-- capability: <name> -->`) into the feature `spec.md`, then `write-context.py --fold-living-spec` routes each block to its capability's `capabilities/<name>/spec.md` — a feature that changed several capabilities updates each, and each spec receives only its own requirements. The extension/scripts never invent spec content; the assistant authors the deltas from the real change and the Python only applies them, so the fold shows up in the feature's PR diff. Both the decomposed `implement` command (the `complete` node) and the standalone `mark-complete` command carry the authoring instruction. Runs pause at the review gates and resume from the exact node with `specify workflow resume <run_id>`; each step still captures into `.spec-context.json`.
 
+## Picking a different block or shape
+
+The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first.
+
+**A variant is a shipped node with its own id.** `speckit-extension/nodes/<step>/_order.yml` names them under `optional:`, and `variants:` says which default node each stands in for:
+
+```yaml
+optional:
+  - draft-spec-delta
+  - quality-checklist-blocking
+
+variants:
+  draft-spec: [draft-spec-delta]
+  quality-checklist: [quality-checklist-blocking]
+```
+
+A node with alternatives shows **Replace** in the inspector. Picking one rewrites the step's order and grouping with that id in place of the old one — the same recipe write a drag makes — so the block stays editable, restorable, and yours the moment you save over it. A node listed under `optional:` but not under `variants:` is an add-on: it appears in the phase's **+ node** picker instead.
+
+Two rules make swaps work, and both are worth knowing if you write a variant:
+
+- **The order and the grouping are written together.** A swap removes and adds at once, so writing either half alone is refused by the check that reads the other half as it still was.
+- **A variant satisfies what the slot promised.** `quality-checklist` declares `reads: [draft-spec]`; a variant of `draft-spec` occupies that slot, so the dependency holds. Without it, no node worth reading could ever be replaced.
+
+**A fragment is an alternative for one template section**, addressed by its `## heading`. They live in `speckit-extension/fragments/` and a project's own `.specify/companion/fragments/` wins over a shipped one of the same name. Each declares what it is for:
+
+```yaml
+---
+name: Outcomes
+section: User Scenarios & Testing
+for: specify
+summary: Observable outcomes instead of prioritized user stories.
+---
+```
+
+The `§` button on a step opens its document's shape: one row per section the template has, each offering the fragments written for it and **As it ships**. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
+
+Shipped today: `outcomes` and `ears-requirements` as alternatives to prioritized user stories, `stories-classic` and `technical-context-classic` for the stock shapes, and `tasks-self-verify` / `tasks-coding-only` / `tasks-demo-line` as constraint blocks for the task list.
+
+**A step is a directory of nodes**, so a project can add one: `.specify/companion/nodes/<step>/` with an `_order.yml` assembles a command like any shipped step, and the capture layer records it — the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
+
+**Work can attach to a step's edges.** A hook anchored on the step name rather than a node or phase renders outside every phase — the one anchor a regroup cannot orphan.
+
 ## Selecting a workflow — recorded per spec
 
 The workflow choice is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The choice only picks which family a spec dispatches; nothing is ever removed.

@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Pick a different block for a node.** A node that has alternatives shows **Replace** in the panel: draft the spec as a delta against what exists, or as a fix contract; run the quality checklist as a gate that stops and asks instead of one that records and moves on; put each feature on a branch of its own. Picking one is the same write a drag makes, so the block stays editable and one click from the shipped one.
+- **Change what a step writes, section by section.** The `§` button on a step opens its document's shape — one row per section, each offering the alternatives written for it and "As it ships". Swap prioritized user stories for observable outcomes or numbered WHEN/THEN/SHALL requirements, put the stock spec-kit shapes back, or add a constraint block to the task list.
+- **Add a block a step ships but does not run** — an adversarial gap review after tasks, a click-through checklist a person actually runs before a spec counts as done. They appear in the same picker that puts a dropped node back.
 - **A whole step can be handed to one document of your own.** "Make it ours" on any step writes a node holding everything that step currently tells the assistant — the frame and every node's instructions, frontmatter and fences stripped — and points the step at it. Replacing what a step *does* used to mean rewriting each of the nodes it happens to be made of.
 - **Phases can be added, removed and reordered** from the panel, not only renamed. A removed phase folds its nodes into its neighbour rather than dropping work, and a new one splits the phase it follows, because a phase with nothing in it cannot be saved.
 - **A node the recipe dropped can be put back**, into a phase you pick. The order and the grouping are written together.
