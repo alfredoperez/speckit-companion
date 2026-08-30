@@ -128,7 +128,7 @@ export const SPECIFY = step('specify', [
     ]),
 ], {
     artifacts: ['spec.md', 'checklists/requirements.md'],
-    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] },
+    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [], chosenBy: {} },
     changes: { ...NO_CHANGES, hooks: 1 },
     decisions: [{
         node: 'classify-size',
@@ -164,7 +164,7 @@ export const PLAN = step('plan', [
     ]),
 ], {
     artifacts: ['plan.md', 'research.md', 'data-model.md', 'contracts/'],
-    template: { file: 'plan-template.md', sections: [], sectionsAvailable: [] },
+    template: { file: 'plan-template.md', sections: [], sectionsAvailable: [], chosenBy: {} },
 });
 
 export const TASKS = step('tasks', [
@@ -174,7 +174,7 @@ export const TASKS = step('tasks', [
     ]),
     phase('check', [node('review-gaps', 'Review for gaps', { kind: 'gate' })]),
     phase('wrap-up', [node('handoff', 'Hand off to the next step')]),
-], { artifacts: ['tasks.md'], template: { file: 'tasks-template.md', sections: [], sectionsAvailable: [] } });
+], { artifacts: ['tasks.md'], template: { file: 'tasks-template.md', sections: [], sectionsAvailable: [], chosenBy: {} } });
 
 export const IMPLEMENT = step('implement', [
     phase('execute', [

@@ -90,7 +90,7 @@ const SPECIFY = step('specify', [
     ]),
 ], {
     artifacts: ['spec.md', 'checklists/requirements.md'],
-    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] },
+    template: { file: 'spec-template.md', sections: [], sectionsAvailable: [], chosenBy: {} },
     decisions: [{
         node: 'classify-size',
         verdicts: [
@@ -107,13 +107,13 @@ const PLAN = step('plan', [
     ]),
     phase('author', [node('plan-doc', 'Write the plan', { kind: 'author', writes: ['plan.md'] })]),
     phase('check', [node('constitution-check', 'Constitution check', { kind: 'gate' })]),
-], { artifacts: ['plan.md'], template: { file: 'plan-template.md', sections: [], sectionsAvailable: [] } });
+], { artifacts: ['plan.md'], template: { file: 'plan-template.md', sections: [], sectionsAvailable: [], chosenBy: {} } });
 
 const noop = () => undefined;
 const CANVAS_ACTIONS = {
     onOpenNode: noop, onRestoreNode: noop,
     onReorder: noop, onAddHook: noop, onEditHook: noop,
-    onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onSetPhases: noop,
+    onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onSetPhases: noop,
 };
 const HEADER_ACTIONS = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,
@@ -166,7 +166,7 @@ export const TemplateSectionReplaced: Story = {
         const g = graph([step('specify', [
             phase('author', [node('draft-spec', 'Draft the spec', { kind: 'author', writes: ['spec.md'] })]),
         ], {
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [], chosenBy: {} },
             artifacts: ['spec.md'],
         })], { configured: true, customised: true });
         return (
@@ -317,7 +317,7 @@ export const EverythingChangedAtOnce: Story = {
                 }),
             ]),
         ], {
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing', 'Requirements'], sectionsAvailable: [] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing', 'Requirements'], sectionsAvailable: [], chosenBy: {} },
             artifacts: ['spec.md'],
             changes: {
                 added: [], removed: ['quality-checklist'], reordered: true,

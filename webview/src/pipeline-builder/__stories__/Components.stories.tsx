@@ -20,7 +20,7 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onReplaceStep: noop,
+    onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop,
 };
 
 const HEAD = {
@@ -30,7 +30,7 @@ const HEAD = {
 
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
-    onSave: noop,
+    onSave: noop, onUseVariant: noop,
 };
 
 /** One step, drawn alone, in the panel's own shell. */
@@ -205,7 +205,7 @@ export const StepChanged: Story = {
     render: () => (
         <One><Canvas graph={graph([step('specify', SPECIFY.phases, {
             artifacts: ['spec.md'],
-            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [] },
+            template: { file: 'spec-template.md', sections: ['User Scenarios & Testing'], sectionsAvailable: [], chosenBy: {} },
             dropped: ['branch'],
             frame: { source: '/proj/.specify/companion/nodes/specify/_frame.md', replaced: true },
             changes: {

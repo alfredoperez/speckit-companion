@@ -50,6 +50,8 @@ interface Props {
     onOpenFrame: (command: string) => void;
     /** Hand the whole step to one document of your own, seeded from this one. */
     onReplaceStep: (command: string) => void;
+    /** Open the panel for this step's document shape. */
+    onOpenTemplate: (command: string) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,
@@ -566,7 +568,7 @@ function FilesIcon() {
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onReplaceStep }: {
+    onAddNode, onOpenFrame, onReplaceStep, onOpenTemplate }: {
     step: PipelineStep;
     index: number;
     actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook'>;
@@ -577,6 +579,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
     onReplaceStep: Props['onReplaceStep'];
+    onOpenTemplate: Props['onOpenTemplate'];
 }) {
     const grouping = () => step.phases.map(p => ({
         name: p.name, nodes: p.nodes.map(n => n.id),
@@ -650,14 +653,22 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             {step.artifacts.length}
                         </span>
                     )}
-                    {/* The template is only news when the project reshaped it.
-                        A second file glyph beside the produced-files count read
-                        as two of the same thing. */}
-                    {step.template && step.template.sections.length > 0 && (
-                        <span class="pb-template pb-template--yours"
-                            title={`${step.template.file} — you replaced: ${step.template.sections.join(', ')}`}>
-                            <span class="pb-yours">{step.template.sections.length} §</span>
-                        </span>
+                    {/* The document's shape, opened from the step that writes
+                        it. Carries the "yours" hue only once a section has been
+                        replaced — otherwise it is an offer, not a change. */}
+                    {step.template && (step.template.sectionsAvailable.length > 0
+                        || step.template.sections.length > 0) && (
+                        <button
+                            class={`pb-template${
+                                step.template.sections.length ? ' pb-template--yours' : ''}`}
+                            title={step.template.sections.length
+                                ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
+                                : `Change the shape of ${step.template.file}`}
+                            onClick={() => onOpenTemplate(step.name)}>
+                            {step.template.sections.length ? (
+                                <span class="pb-yours">{step.template.sections.length} §</span>
+                            ) : <span>§</span>}
+                        </button>
                     )}
                 </div>
                 <span class="pb-step-counts">{nodes} nodes</span>
@@ -734,7 +745,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 
 export function Canvas(
     { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
-        onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep, selected }: Props,
+        onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep,
+        onOpenTemplate, selected }: Props,
 ) {
     const actions = { onOpenNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -760,7 +772,8 @@ export function Canvas(
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
-                        onReplaceStep={onReplaceStep} />
+                        onReplaceStep={onReplaceStep}
+                        onOpenTemplate={onOpenTemplate} />
                 ))}
             </div>
         </main>

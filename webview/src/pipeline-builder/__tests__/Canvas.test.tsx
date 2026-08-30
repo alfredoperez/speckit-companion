@@ -82,6 +82,7 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
     const addedNodes: Array<Record<string, unknown>> = [];
     const frames: string[] = [];
     const replacedSteps: string[] = [];
+    const templates: string[] = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
@@ -89,6 +90,7 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
             onReplaceStep={c => replacedSteps.push(c)}
+            onOpenTemplate={c => templates.push(c)}
             onOpenNode={(c, n) => opened.push([c, n])}
             onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
@@ -390,7 +392,7 @@ describe('one hue marks everything the project owns', () => {
 
     it('marks a template whose sections the project replaced', () => {
         const swapped = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [] } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [], chosenBy: {} } })],
         });
         const { host } = canvas(swapped);
         expect(host.querySelector('.pb-template--yours')).not.toBeNull();
@@ -403,7 +405,7 @@ describe('one hue marks everything the project owns', () => {
 
     it('leaves a shipped node and a stock template unmarked', () => {
         const plain = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: [] } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: [], chosenBy: {} } })],
         });
         const { host } = canvas(plain);
         expect(host.querySelector('.pb-node--yours')).toBeNull();
@@ -845,6 +847,7 @@ describe('the inspector reads a node here', () => {
     const noop = () => undefined;
     const actions = {
         onClose: noop, onOpenFile: noop, onSave: noop, onRestore: noop, onAttach: noop,
+        onUseVariant: noop,
         editable: 'the stored text',
     };
 

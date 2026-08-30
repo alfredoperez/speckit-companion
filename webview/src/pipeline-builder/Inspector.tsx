@@ -25,6 +25,8 @@ interface Props {
     onSave: (body: string) => void;
     onRestore: () => void;
     onAttach: () => void;
+    /** Swap this node for one of its alternatives. */
+    onUseVariant: (variantId: string) => void;
 }
 
 /** What each kind of node is for, said once, here, instead of as an abbreviation. */
@@ -241,6 +243,24 @@ export function Inspector(props: Props) {
                         </button>
                         <button class="pb-inspector-action"
                             onClick={props.onAttach}>Add hook</button>
+                        {node.variants.length > 0 && (
+                            /* A pick, not a rewrite. Resets to blank so choosing
+                               the same one twice still reads as an action. */
+                            <select class="pb-inspector-action pb-inspector-variants"
+                                title="Run a different block in this node's place"
+                                onChange={event => {
+                                    const select = event.currentTarget as HTMLSelectElement;
+                                    const id = select.value;
+                                    select.value = '';
+                                    if (id) { props.onUseVariant(id); }
+                                }}>
+                                <option value="">Replace…</option>
+                                {node.variants.map(variant => (
+                                    <option key={variant.id} value={variant.id}
+                                        title={variant.summary}>{variant.name}</option>
+                                ))}
+                            </select>
+                        )}
                         {node.replaced && (
                             <button class="pb-inspector-action pb-inspector-action--remove"
                                 onClick={props.onRestore}>Use the shipped node</button>

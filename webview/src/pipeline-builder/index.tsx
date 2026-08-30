@@ -24,6 +24,7 @@ import { Canvas } from './Canvas';
 import { Header } from './Header';
 import { Inspector } from './Inspector';
 import { AttachForm, NewWorkflowForm, Attachment } from './AttachForm';
+import { TemplateForm } from './TemplateForm';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
@@ -36,7 +37,28 @@ type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
+    | { kind: 'template'; command: string }
     | null;
+
+/**
+ * The step's order and grouping with one node's id swapped for another's.
+ *
+ * A variant takes the place of the node it replaces — same phase, same position
+ * — so the whole swap is these two lists with one entry changed. Computed here
+ * because the panel does not hold the graph; the same shape `addNode` sends.
+ */
+function swapNode(graph: PipelineGraph, at: Selection, variantId: string) {
+    const step = graph.steps.find(s => s.name === at.command);
+    if (!step) { return null; }
+    const swap = (id: string) => (id === at.nodeId ? variantId : id);
+    return {
+        order: step.phases.flatMap(p => p.nodes.map(n => swap(n.id))),
+        phases: step.phases.map(p => ({
+            name: p.name,
+            nodes: p.nodes.map(n => swap(n.id)),
+        })),
+    };
+}
 
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
 function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
@@ -167,6 +189,10 @@ function App() {
                     onAddNode={(command, nodeId, phase, order, phases) =>
                         send({ type: 'addNode', command, nodeId, phase, order, phases })}
                     onReplaceStep={command => send({ type: 'replaceStep', command })}
+                    onOpenTemplate={command => {
+                        setNotice(null);
+                        setSide({ kind: 'template', command });
+                    }}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);
@@ -219,6 +245,21 @@ function App() {
                     />
                 )}
 
+                {side?.kind === 'template' && (() => {
+                    const step = graph.steps.find(s => s.name === side.command);
+                    return step ? (
+                        <TemplateForm
+                            step={step}
+                            fragments={graph.choices.fragments}
+                            onCancel={() => setSide(null)}
+                            onPick={(heading, fragment) => send({
+                                type: 'setTemplateSection',
+                                command: side.command, heading, fragment,
+                            })}
+                        />
+                    ) : null;
+                })()}
+
                 {side?.kind === 'new-workflow' && (
                     <NewWorkflowForm
                         from={graph.workflows.active}
@@ -256,6 +297,13 @@ function App() {
                             type: 'addHook', command: selected.command,
                             anchor: selected.nodeId, when: 'before',
                         })}
+                        onUseVariant={(variantId: string) => {
+                            const swapped = swapNode(graph, selected, variantId);
+                            if (!swapped) { return; }
+                            setSide({ kind: 'node', at: { command: selected.command, nodeId: variantId } });
+                            setBody(null);
+                            send({ type: 'useVariant', command: selected.command, ...swapped });
+                        }}
                     />
                 )}
             </div>

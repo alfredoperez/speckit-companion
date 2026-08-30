@@ -34,6 +34,7 @@ import {
     removeHook,
     writeNodeOrder,
     writePhases,
+    writeTemplateSection,
     writeWorkflow,
 } from '../specs/pipelineGraph';
 
@@ -186,6 +187,29 @@ export class PipelineBuilderPanel {
                 script => writeNodeOrder(
                     script, this.workspaceRoot, message.command, message.order),
                 'Adding a node');
+        },
+
+        useVariant: async message => {
+            // A variant is a node of its own, so swapping to one is the recipe
+            // write the panel already makes — the grouping first, because a
+            // node needs a phase before the order check will accept it running.
+            const written = await this.write(
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases),
+                'Replacing the block');
+            if (!written) { return; }
+            await this.write(
+                script => writeNodeOrder(
+                    script, this.workspaceRoot, message.command, message.order),
+                'Replacing the block');
+        },
+
+        setTemplateSection: async message => {
+            await this.write(
+                script => writeTemplateSection(
+                    script, this.workspaceRoot, message.command,
+                    message.heading, message.fragment),
+                'Changing the template');
         },
 
         replaceStep: async message => {

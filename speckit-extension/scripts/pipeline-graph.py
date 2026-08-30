@@ -39,7 +39,7 @@ manifest_mod = importlib.import_module("manifest")
 template_render = importlib.import_module("template_render")
 
 
-def _template(command: str, resolved, project_root: str):
+def _template(command: str, resolved, project_root: str, config: dict):
     """What the panel needs to offer this step's template: its name, what the
     project replaced, and every section it could replace.
 
@@ -63,6 +63,10 @@ def _template(command: str, resolved, project_root: str):
         "file": name,
         "sections": resolved[2] if resolved else [],
         "sectionsAvailable": available,
+        # Which fragment each replaced section is using, so a picker can show
+        # the choice in force rather than only that one was made.
+        "chosenBy": dict(
+            (template_render.template_config(config, command).get("sections") or {})),
     }
 
 
@@ -231,7 +235,7 @@ def build_graph(project_root: str) -> dict:
             # `sections` is what this project replaced; `sectionsAvailable` is
             # every `##` the step's template has, so the panel can offer a row
             # per section instead of only showing the ones already changed.
-            "template": _template(command, template, project_root),
+            "template": _template(command, template, project_root, config),
             # Everything this step could run but is not running: nodes the
             # recipe dropped, plus the shipped optional ones — add-ons and the
             # variants of a slot. These are the only nodes that can be added,

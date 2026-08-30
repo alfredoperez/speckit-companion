@@ -136,6 +136,24 @@ export function writeWorkflow(
     return runConfigWrite(script, workspaceRoot, ['--workflow', name]);
 }
 
+/**
+ * Point one template section at a fragment. An empty `fragment` restores the
+ * shipped section. Returns the reason on refusal — a heading the template does
+ * not have, or a fragment that does not exist, are both refused here rather
+ * than at the next build.
+ */
+export function writeTemplateSection(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    heading: string,
+    fragment: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command, '--template-section', heading, '--fragment', fragment,
+    ]);
+}
+
 /** Create a workflow, seeded from `from`, and switch to it. */
 export function createWorkflow(
     script: string,

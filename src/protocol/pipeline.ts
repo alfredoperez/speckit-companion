@@ -125,6 +125,8 @@ export interface PipelineTemplate {
      * the project customised anything; `sections` is what says that.
      */
     sectionsAvailable: string[];
+    /** Which fragment each replaced section is using, by heading. */
+    chosenBy: Record<string, string>;
 }
 
 /** A shipped alternative for one template section. */
@@ -256,6 +258,27 @@ export type BuilderToExtensionMessage =
     /** Take ownership of a node: copy the shipped instructions in to edit. */
     /** Give it back: drop the project's copy and return to the shipped node. */
     | { type: 'restoreNode'; command: string; nodeId: string }
+    /**
+     * Run a different block in one node's place.
+     *
+     * A variant is a shipped node of its own, so this is the recipe write the
+     * panel already makes — the order and the grouping with one id swapped —
+     * rather than a new kind of edit. It stays editable afterwards like any node.
+     */
+    | {
+        type: 'useVariant';
+        command: string;
+        /** The whole step, with the variant's id in the old node's place. */
+        order: string[];
+        phases: Array<{ name: string; nodes: string[] }>;
+    }
+    /**
+     * Point one template section at a fragment, or back at what ships.
+     *
+     * `fragment` empty restores the shipped section: an absent entry means the
+     * template's own words, so there is nothing to write for "as shipped".
+     */
+    | { type: 'setTemplateSection'; command: string; heading: string; fragment: string }
     /** Save a step's node order after a drag. `order` is the whole step, in order. */
     | { type: 'reorderNodes'; command: string; order: string[] }
     /**

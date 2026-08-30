@@ -81,6 +81,7 @@ beforeEach(() => {
     for (const write of [
         graph.writeNodeOrder, graph.writePhases, graph.writeHook, graph.removeHook,
         graph.writeWorkflow, graph.createWorkflow, graph.applyRepair,
+        graph.writeTemplateSection,
     ]) {
         (write as jest.Mock).mockResolvedValue(null);
     }
@@ -399,6 +400,62 @@ describe('putting a dropped node back', () => {
         await panel.__receive(message);
         expect(graph.writeNodeOrder).not.toHaveBeenCalled();
         expect(panel.__lastPosted('notice').text).toBe('that phase does not exist.');
+    });
+});
+
+describe('running a different block in a node\'s place', () => {
+    const message = {
+        type: 'useVariant', command: 'specify',
+        order: ['resolve-dir', 'draft-spec-ears', 'handoff'],
+        phases: [{ name: 'author', nodes: ['resolve-dir', 'draft-spec-ears', 'handoff'] }],
+    };
+
+    it('writes where it sits and when it runs, both', async () => {
+        await panel.__receive(message);
+        expect(graph.writePhases).toHaveBeenCalled();
+        expect(graph.writeNodeOrder).toHaveBeenCalled();
+    });
+
+    it('writes the grouping first, so the block has a phase before it runs', async () => {
+        await panel.__receive(message);
+        expect(graph.writePhases.mock.invocationCallOrder[0])
+            .toBeLessThan(graph.writeNodeOrder.mock.invocationCallOrder[0]);
+    });
+
+    it('leaves neither written when the first is refused', async () => {
+        graph.writePhases.mockResolvedValue('that node has no phase.');
+        await panel.__receive(message);
+        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
+        expect(panel.__lastPosted('notice').text).toBe('that node has no phase.');
+    });
+});
+
+describe('changing the shape of a step\'s document', () => {
+    it('points one section at a fragment', async () => {
+        await panel.__receive({
+            type: 'setTemplateSection', command: 'specify',
+            heading: 'User Scenarios & Testing', fragment: 'outcomes',
+        });
+        expect(graph.writeTemplateSection).toHaveBeenCalledWith(
+            WRITE_SCRIPT, workspace, 'specify', 'User Scenarios & Testing', 'outcomes');
+    });
+
+    it('an empty fragment is how a section goes back to the shipped one', async () => {
+        await panel.__receive({
+            type: 'setTemplateSection', command: 'specify',
+            heading: 'User Scenarios & Testing', fragment: '',
+        });
+        expect(graph.writeTemplateSection).toHaveBeenCalledWith(
+            WRITE_SCRIPT, workspace, 'specify', 'User Scenarios & Testing', '');
+    });
+
+    it('reports a refusal in the panel rather than swallowing it', async () => {
+        graph.writeTemplateSection.mockResolvedValue('no fragment called nope.');
+        await panel.__receive({
+            type: 'setTemplateSection', command: 'specify',
+            heading: 'User Scenarios & Testing', fragment: 'nope',
+        });
+        expect(panel.__lastPosted('notice').text).toBe('no fragment called nope.');
     });
 });
 
