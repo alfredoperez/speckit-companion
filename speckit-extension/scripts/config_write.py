@@ -515,6 +515,29 @@ def order_in_force(command: str) -> list:
     return assemble.default_order(command)
 
 
+def resolved_order(project_root: str, command: str) -> list:
+    """The nodes this step runs today, read the way a build reads them.
+
+    Falls back to the shipped order for a project that has declared none, and on
+    any read failure — a validation that cannot tell what is running should let
+    the write through and leave the build to refuse it, rather than block an
+    edit because the file it was about to fix could not be parsed.
+    """
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    assemble = importlib.import_module("assemble-nodes")
+    default = assemble.default_order(command)
+    try:
+        import companion_config as cc
+
+        config, _warnings = cc.load_config(config_path(project_root))
+        return cc.resolve_order(config, command, default) or default
+    except Exception:  # noqa: BLE001 — see the docstring
+        return default
+
+
 def check_phases(command: str, phases: list) -> None:
     """Refuse a grouping the pipeline could not build, before it reaches the file."""
     import importlib
@@ -600,6 +623,18 @@ def check_order(command: str, nodes: list) -> None:
                 raise ConfigWriteError(
                     f"{command}: '{node_id}' reads '{dep}', so it cannot run before it."
                 )
+        # `reads` expresses "after that one". Some nodes mean "after all of
+        # them" — a handoff dispatches the next step, so anything it runs
+        # ahead of happens after this step has already moved on. Spelling that
+        # as a read of whichever node happens to precede it today would be a
+        # weaker claim that stops being true the moment the middle is
+        # reordered.
+        if meta.get("last") and rank[node_id] != len(nodes) - 1:
+            after = nodes[rank[node_id] + 1]
+            raise ConfigWriteError(
+                f"{command}: '{node_id}' has to run last — it hands off to the next "
+                f"step, so '{after}' would run after this step had already moved on."
+            )
 
 
 def config_path(project_root: str) -> str:
@@ -655,6 +690,14 @@ def main() -> int:
     args = ap.parse_args()
 
     project = os.path.abspath(args.project)
+
+    # The build and the graph both read a project's own nodes; the write path
+    # has to see the same ones, or it refuses a grouping that names a node this
+    # project wrote — which is every step handed to a document of its own.
+    import _command_parts as cp
+
+    cp.use_project_nodes(project)
+
     selection_path = os.path.join(project, ".specify", "companion.yml")
     try:
         # The selection lives in companion.yml; everything else lives in
@@ -725,6 +768,11 @@ def main() -> int:
             import json
 
             phases = json.loads(args.phases)
+            # A phase is only owed to a node the step actually runs. Reading the
+            # recipe in force is what makes that true: without it every dropped
+            # node still demands a phase, which no grouping can give it, and a
+            # step that dropped anything could never be regrouped again.
+            use_order(args.command, resolved_order(project, args.command))
             check_phases(args.command, phases)
             renamed = tuple(args.renamed) if args.renamed else None
             existing = ""
@@ -734,7 +782,7 @@ def main() -> int:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(set_phases(existing, args.command, phases, renamed))
-            print(f"[config] {args.command}: phases saved to .specify/companion.yml")
+            print(f"[config] {args.command}: phases saved to {os.path.relpath(path, project)}")
             return 0
 
         if not args.nodes:
@@ -745,7 +793,7 @@ def main() -> int:
     except ConfigWriteError as err:
         print(f"[config] {err}")
         return 1
-    print(f"[config] {args.command}: order saved to .specify/companion.yml")
+    print(f"[config] {args.command}: order saved to {os.path.relpath(path, project)}")
     return 0
 
 

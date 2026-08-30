@@ -1,0 +1,352 @@
+#!/usr/bin/env python3
+"""Everything the builder can change, all the way through to the built command.
+
+Each write path has its own unit test, and the panel has tests for the messages
+it sends. Neither answers the question a person actually has: if I add a hook,
+regroup the phases, reorder a step and rewrite a node, does all of that come out
+the other side of a build?
+
+Nothing checked that before. This drives every action the panel offers through
+the same `config_write.py` the panel drives, builds, and then reads the built
+command bodies back — because a customisation written to `companion.yml` and
+silently dropped by the build is indistinguishable, from the panel, from one
+that worked.
+
+Four bugs found by writing it: writes landing in `companion.yml` while the build
+read a workflow file; a phase rename orphaning its hooks; the write path not
+seeing a project's own nodes, which made handing a step to your own document
+refuse itself; and the phase check counting dropped nodes as needing a phase,
+which made a step that dropped anything impossible to regroup.
+
+Stdlib `unittest` only.
+"""
+from __future__ import annotations
+
+import json
+import unittest
+
+from builder_harness import Project, Refused
+
+#: A node of the project's own, replacing a shipped one. Deliberately distinctive.
+OURS = (
+    "---\nid: draft-spec\nname: Draft the spec (ours)\nkind: author\nwrites: spec.md\n---\n\n"
+    "Write the spec the way THIS TEAM writes specs.\n"
+)
+
+FOUR_PHASES = json.dumps([
+    {"name": "set up", "nodes": ["resolve-dir", "load-living-specs"]},
+    {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
+    {"name": "size it", "nodes": ["classify-size", "persist-size"]},
+    {"name": "finish", "nodes": ["branch", "finalize", "handoff"]},
+])
+
+
+class EverythingChangedAtOnceReachesTheBuild(unittest.TestCase):
+    """The six things the panel can do, done together, then built and read back.
+
+    Together rather than one per project on purpose: each one alone is a unit
+    test elsewhere, and what is not covered anywhere else is whether they
+    interfere — a rename moving a hook's anchor out from under it, a reorder
+    fighting a regrouping.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.project = p = Project()
+
+        # Everything the panel writes goes into a workflow, not companion.yml,
+        # once one is selected. Doing this first is what made an earlier version
+        # of this catch writes landing in a file the build was not reading.
+        p.write("--new-workflow", "demo", "--seed-from", "")
+
+        # a. a skill hook after a phase
+        p.write("--command", "specify", "--hook", "skill", "--when", "after",
+                "--anchor", "author", "--ref", "verify-code-review",
+                "--text", "Block the spec if it flags a regression.")
+
+        # b. a shell hook before a node
+        p.write("--command", "plan", "--hook", "command", "--when", "before",
+                "--anchor", "plan-doc", "--run", "npm run lint-spec")
+
+        # c. rename and regroup the phases, carrying the hook with the rename
+        p.write("--command", "specify", "--renamed", "author", "our review",
+                "--phases", FOUR_PHASES)
+
+        # d. reorder within a phase
+        p.write("--command", "plan", "--nodes",
+                "gather-context,size-budget,plan-doc,constitution-check,side-files,handoff")
+
+        # e. rewrite a node
+        p.node("specify", "draft-spec", OURS)
+
+        # f. a node of our own, attached as a hook
+        p.shared_node("house-review",
+                      "---\nid: house-review\n---\n\nRe-read it against the house style guide.\n")
+        p.write("--command", "tasks", "--hook", "node", "--when", "after",
+                "--anchor", "tasks-doc", "--ref", "house-review")
+
+        cls.build_output = p.build_ok()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.project.close()
+
+    def test_the_skill_hook_runs_where_it_was_attached(self):
+        body = self.project.body("specify")
+        self.assertIn("verify-code-review", body)
+        self.assertIn("Block the spec if it flags a regression.", body)
+
+    def test_a_renamed_phase_carries_its_hooks_with_it(self):
+        # The bug this exists for: renaming a phase used to leave its hooks
+        # anchored to a name nothing had any more, so they silently stopped
+        # running while the panel still drew them.
+        self.assertIn("after-our review-0", self.project.hooks_in("specify"))
+        self.assertNotIn("after-author-0", self.project.hooks_in("specify"))
+
+    def test_the_shell_hook_lands_above_the_node_it_runs_before(self):
+        body = self.project.body("plan")
+        self.assertIn("npm run lint-spec", body)
+        self.assertLess(body.index("npm run lint-spec"),
+                        body.index("<!-- speckit-companion:node plan-doc -->"))
+
+    def test_the_phases_are_the_ones_this_project_named(self):
+        self.assertEqual(self.project.phases_in("specify"),
+                         ["set up", "our review", "size it", "finish"])
+
+    def test_the_nodes_run_in_the_order_this_project_asked_for(self):
+        order = self.project.nodes_in("plan")
+        self.assertLess(order.index("gather-context"), order.index("size-budget"))
+
+    def test_the_projects_own_node_replaced_the_shipped_one(self):
+        body = self.project.body("specify")
+        self.assertIn("Write the spec the way THIS TEAM writes specs.", body)
+        self.assertNotIn("Load `spec-template.md`", body)
+
+    def test_a_node_of_our_own_is_inlined_where_it_was_hooked(self):
+        self.assertIn("Re-read it against the house style guide.",
+                      self.project.body("tasks"))
+
+    def test_the_panel_reports_the_project_as_customised(self):
+        graph = self.project.graph()
+        self.assertTrue(graph["customised"])
+        self.assertEqual(graph["workflows"]["active"], "demo")
+
+    def test_a_step_nobody_touched_is_reported_as_untouched(self):
+        implement = next(s for s in self.project.graph()["steps"]
+                         if s["name"] == "implement")
+        changes = implement["changes"]
+        self.assertEqual(changes["hooks"], 0)
+        self.assertFalse(changes["reordered"])
+        self.assertEqual(changes["replaced"], [])
+
+    def test_the_build_says_which_steps_it_changed(self):
+        self.assertIn("specify", self.build_output)
+        self.assertIn("plan", self.build_output)
+
+
+class PuttingADroppedNodeBack(unittest.TestCase):
+    """A node the recipe dropped, returned to a phase and to the order.
+
+    The order says when it runs and the phase says where it sits; a project with
+    one and not the other is a pipeline that contradicts itself.
+    """
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        # A recipe that runs three of specify's nodes and drops the rest. The
+        # order goes first: a phase grouping is checked against the nodes the
+        # step is running, so declaring the phases first would be refused for
+        # leaving every dropped node without one.
+        self.project.write("--command", "specify", "--nodes",
+                           "resolve-dir,draft-spec,handoff")
+        self.project.write("--command", "specify", "--phases", json.dumps([
+            {"name": "author", "nodes": ["resolve-dir", "draft-spec", "handoff"]},
+        ]))
+
+    def test_the_dropped_nodes_are_offered_by_name(self):
+        specify = next(s for s in self.project.graph()["steps"] if s["name"] == "specify")
+        self.assertIn("quality-checklist", specify["dropped"])
+
+    def test_a_node_put_back_runs_and_sits_where_it_was_put(self):
+        self.project.write("--command", "specify", "--nodes",
+                           "resolve-dir,draft-spec,quality-checklist,handoff")
+        self.project.write("--command", "specify", "--phases", json.dumps([
+            {"name": "author", "nodes": ["resolve-dir", "draft-spec",
+                                         "quality-checklist", "handoff"]},
+        ]))
+        self.project.build_ok()
+
+        order = self.project.nodes_in("specify")
+        self.assertEqual(order, ["resolve-dir", "draft-spec", "quality-checklist", "handoff"])
+
+    def test_a_grouping_that_leaves_a_running_node_homeless_is_refused(self):
+        before = self.project.config_text()
+        with self.assertRaises(Refused) as refusal:
+            self.project.write("--command", "specify", "--phases", json.dumps([
+                {"name": "author", "nodes": ["resolve-dir", "draft-spec"]},
+            ]))
+        self.assertIn("handoff", str(refusal.exception))
+        self.assertEqual(self.project.config_text(), before,
+                         "a refused write must leave the file untouched")
+
+
+class HandingAStepToOneDocumentOfYourOwn(unittest.TestCase):
+    """Replacing a whole step, rather than rewriting each of its nodes."""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        self.project.node("plan", "plan-ours",
+                          "---\nid: plan-ours\nname: plan — ours\nkind: author\n---\n\n"
+                          "Plan it the way we plan things, in one page.\n")
+        # Order first, as the panel does it: the recipe is what drops the
+        # shipped nodes, and a grouping that omits nodes still in the order is
+        # refused for leaving them without a phase.
+        self.project.write("--command", "plan", "--nodes", "plan-ours")
+        self.project.write("--command", "plan", "--phases",
+                           json.dumps([{"name": "our plan", "nodes": ["plan-ours"]}]))
+        self.project.build_ok()
+
+    def test_the_step_is_that_document_and_nothing_else(self):
+        self.assertEqual(self.project.nodes_in("plan"), ["plan-ours"])
+
+    def test_the_shipped_nodes_are_gone_from_the_body(self):
+        body = self.project.body("plan")
+        self.assertIn("Plan it the way we plan things", body)
+        self.assertNotIn("<!-- speckit-companion:node constitution-check -->", body)
+
+    def test_the_other_steps_are_untouched(self):
+        self.assertIn("<!-- speckit-companion:node draft-spec -->",
+                      self.project.body("specify"))
+
+
+class RemovingAHook(unittest.TestCase):
+    """Taking a hook out, and leaving its neighbours where they were."""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        for text in ("first", "second", "third"):
+            self.project.write("--command", "specify", "--hook", "prompt",
+                               "--when", "after", "--anchor", "draft-spec",
+                               "--text", f"Check the {text} thing.")
+
+    def test_the_hook_at_that_index_is_the_one_that_goes(self):
+        self.project.write("--command", "specify", "--when", "after",
+                           "--anchor", "draft-spec", "--remove-index", "1")
+        self.project.build_ok()
+
+        body = self.project.body("specify")
+        self.assertIn("Check the first thing.", body)
+        self.assertNotIn("Check the second thing.", body)
+        self.assertIn("Check the third thing.", body)
+
+    def test_the_survivors_close_up_rather_than_leaving_a_gap(self):
+        self.project.write("--command", "specify", "--when", "after",
+                           "--anchor", "draft-spec", "--remove-index", "1")
+        self.project.build_ok()
+        self.assertEqual(self.project.hooks_in("specify"),
+                         ["after-draft-spec-0", "after-draft-spec-1"])
+
+    def test_removing_the_last_one_leaves_no_trace_in_the_body(self):
+        for _ in range(3):
+            self.project.write("--command", "specify", "--when", "after",
+                               "--anchor", "draft-spec", "--remove-index", "0")
+        self.project.build_ok()
+        self.assertEqual(self.project.hooks_in("specify"), [])
+
+
+class SwitchingWorkflows(unittest.TestCase):
+    """The build has to read the configuration the panel is writing into."""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def test_a_build_reads_the_workflow_in_force_not_companion_yml(self):
+        # The bug: with a workflow selected, the panel's writes went into the
+        # workflow file while the build still read companion.yml, so every edit
+        # appeared to save and none of them ran.
+        self.project.write("--new-workflow", "ours", "--seed-from", "")
+        self.project.write("--command", "specify", "--hook", "prompt",
+                           "--when", "after", "--anchor", "draft-spec",
+                           "--text", "Only in the ours workflow.")
+        self.project.build_ok()
+        self.assertIn("Only in the ours workflow.", self.project.body("specify"))
+
+    def test_switching_back_to_shipped_drops_what_the_workflow_added(self):
+        self.project.write("--new-workflow", "ours", "--seed-from", "")
+        self.project.write("--command", "specify", "--hook", "prompt",
+                           "--when", "after", "--anchor", "draft-spec",
+                           "--text", "Only in the ours workflow.")
+        self.project.write("--workflow", "shipped")
+        self.project.build_ok()
+
+        self.assertNotIn("Only in the ours workflow.", self.project.body("specify"))
+        self.assertFalse(self.project.graph()["customised"])
+
+    def test_switching_back_keeps_the_workflow_for_later(self):
+        self.project.write("--new-workflow", "ours", "--seed-from", "")
+        self.project.write("--workflow", "shipped")
+        self.assertIn("ours", self.project.graph()["workflows"]["available"])
+
+
+class RecoveringAConfigurationThatCannotBeRead(unittest.TestCase):
+    """The way out of a broken pipeline, from the panel rather than the YAML."""
+
+    #: A phase whose last node was dragged out, alongside work worth keeping.
+    #: Written by hand because the write path refuses to produce this — a real
+    #: project reaches it from an older build, or from editing the file.
+    BROKEN = """\
+commands:
+  specify:
+    hooks:
+      after:
+        draft-spec:
+          - { type: prompt, text: "Worth keeping through a repair." }
+  tasks:
+    phases:
+      - name: "gather"
+        nodes:
+      - name: "author"
+        nodes:
+          - size-budget
+          - tasks-doc
+      - name: "wrap-up"
+        nodes:
+          - handoff
+"""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        self.project.set_config(self.BROKEN)
+
+    def test_the_panel_is_told_what_is_wrong_and_what_it_can_do(self):
+        graph = self.project.graph()
+        self.assertIn("error", graph)
+        self.assertTrue(graph.get("repairs"), "a broken graph must carry its ways out")
+
+    def test_the_narrow_repair_is_offered_before_the_broad_one(self):
+        ids = [r["id"] for r in self.project.graph()["repairs"]]
+        self.assertLess(ids.index("drop-empty-phases:tasks"), ids.index("reset-all"))
+
+    def test_applying_it_makes_the_pipeline_readable_again(self):
+        self.project.repair("drop-empty-phases:tasks")
+        self.assertNotIn("error", self.project.graph())
+
+    def test_a_repair_keeps_the_work_it_did_not_have_to_undo(self):
+        self.project.repair("drop-empty-phases:tasks")
+        self.project.build_ok()
+        self.assertIn("Worth keeping through a repair.", self.project.body("specify"))
+
+    def test_a_repaired_pipeline_builds(self):
+        broken = self.project.build()
+        self.assertNotEqual(broken.returncode, 0, "a broken configuration must not build")
+        self.project.repair("drop-empty-phases:tasks")
+        self.project.build_ok()
+
+
+if __name__ == "__main__":
+    unittest.main()
