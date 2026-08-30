@@ -233,6 +233,55 @@ class AddingAShippedOptionalNode(unittest.TestCase):
         self.assertIn("invented", str(refusal.exception))
 
 
+class AttachingWorkToAStepEdge(unittest.TestCase):
+    """A hook on the step itself, outside every phase.
+
+    The outermost anchor was a phase, so "before this step starts" had nowhere
+    to attach: you named whichever phase happened to be first, and re-pointed
+    the hook the day it was renamed or split. A step edge is the one anchor a
+    regroup cannot invalidate.
+    """
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def test_a_before_hook_runs_ahead_of_the_first_phase(self):
+        self.project.write("--command", "specify", "--hook", "prompt",
+                           "--when", "before", "--anchor", "specify",
+                           "--text", "Read the steering docs first.")
+        self.project.build_ok()
+        body = self.project.body("specify")
+        self.assertLess(body.index("Read the steering docs first."),
+                        body.index("<!-- speckit-companion:phase "))
+
+    def test_an_after_hook_runs_past_the_last_phase(self):
+        self.project.write("--command", "specify", "--hook", "command",
+                           "--when", "after", "--anchor", "specify",
+                           "--run", "echo done >> LOG")
+        self.project.build_ok()
+        body = self.project.body("specify")
+        self.assertGreater(body.index("echo done >> LOG"),
+                           body.rindex("<!-- /speckit-companion:phase "))
+
+    def test_it_survives_a_regroup_that_would_orphan_a_phase_anchor(self):
+        self.project.write("--command", "specify", "--hook", "prompt",
+                           "--when", "before", "--anchor", "specify",
+                           "--text", "Still here after the regroup.")
+        self.project.write("--command", "specify", "--phases", FOUR_PHASES)
+        self.project.build_ok()
+        self.assertIn("Still here after the regroup.", self.project.body("specify"))
+
+    def test_a_node_anchor_still_attaches_to_its_node(self):
+        self.project.write("--command", "specify", "--hook", "prompt",
+                           "--when", "before", "--anchor", "draft-spec",
+                           "--text", "Node-level, not step-level.")
+        self.project.build_ok()
+        body = self.project.body("specify")
+        self.assertLess(body.index("Node-level, not step-level."),
+                        body.index("<!-- speckit-companion:node draft-spec -->"))
+
+
 class PointingATemplateSectionAtAFragment(unittest.TestCase):
     """Swapping the shape of a document without rewriting the node that writes it.
 

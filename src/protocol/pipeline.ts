@@ -160,6 +160,8 @@ export interface PipelineStep {
      */
     inSequence: boolean;
     phases: PipelinePhase[];
+    /** Hooks on the step itself — outside every phase, at its two edges. */
+    hooks: PipelineHook[];
     decisions: PipelineDecision[];
     /** What a run of this step is expected to produce. */
     artifacts: string[];

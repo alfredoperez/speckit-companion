@@ -49,6 +49,7 @@ export function step(
         name,
         inSequence: name !== 'auto',
         stockHooks: [],
+        hooks: [],
         dropped: [],
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         phases,

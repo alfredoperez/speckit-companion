@@ -222,6 +222,10 @@ def build_graph(project_root: str) -> dict:
             # as a peer it reads like a fifth step, which it is not.
             "inSequence": command in RUN_ORDER,
             "phases": drawn_phases,
+            # Hooks on the step itself — outside every phase. The one anchor a
+            # regroup cannot orphan, so the panel draws it at the step's edges
+            # rather than beside whichever phase happens to be first.
+            "hooks": [_hook(h) for h in hooks if h["anchor"] == command],
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),
             # `sections` is what this project replaced; `sectionsAvailable` is

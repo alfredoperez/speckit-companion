@@ -107,17 +107,44 @@ def group_by_anchor(entries: list) -> dict:
     return grouped
 
 
-def insert_hooks(body: str, entries: list, nodes_dir: str | None = None) -> str:
-    """Splice every resolved hook into `body` at its node's boundary.
+#: Any node or phase boundary, whichever comes first or last in a body.
+_ANY_MARKER = re.compile(r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w -]+ -->[ \t]*\n",
+                         re.MULTILINE)
 
-    `before` lands immediately above the node's opening marker and `after`
-    immediately below its closing one, so a hook is always outside the node it
-    attaches to — it never edits the node's own text.
+
+def _at_step_edge(body: str, when: str, rendered: str) -> str:
+    """Put a hook outside every phase — before the step's work, or after all of it.
+
+    The outermost anchor was a phase, so "run this before the step starts" had
+    nowhere to attach: a project had to name whichever phase happened to be
+    first and re-point the hook the day that changed. A step edge is the one
+    anchor that stays true through a regroup.
+    """
+    found = list(_ANY_MARKER.finditer(body))
+    if not found:
+        return rendered + body if when == "before" else body + rendered
+    edge = found[0].start() if when == "before" else found[-1].end()
+    return body[:edge] + rendered + body[edge:]
+
+
+def insert_hooks(body: str, entries: list, nodes_dir: str | None = None,
+                 command: str | None = None) -> str:
+    """Splice every resolved hook into `body` at its anchor's boundary.
+
+    `before` lands immediately above the anchor's opening marker and `after`
+    immediately below its closing one, so a hook is always outside the thing it
+    attaches to — it never edits that thing's own text.
+
+    `command` names the step, which is itself an anchor: hooks on it sit outside
+    every phase rather than beside a node.
     """
     grouped = group_by_anchor(entries)
     for (when, anchor), group in grouped.items():
         rendered = "".join(render_hook(entry, nodes_dir) for entry in group)
         if not rendered:
+            continue
+        if command and anchor == command:
+            body = _at_step_edge(body, when, rendered)
             continue
         # An anchor names a node or a phase. The design calls a phase the hook
         # boundary — the coarser place to attach, so a project can wrap a whole

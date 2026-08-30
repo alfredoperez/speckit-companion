@@ -299,7 +299,10 @@ def plan_build(config: dict) -> tuple[dict, list]:
                 f"contiguous in the body, so this order cannot be built — move it "
                 f"within its phase, or change the phase it belongs to."
             )
-        anchors = list(order) + [phase["name"] for phase in phases]
+        # A hook anchors on a node, a phase, or the step itself. The step is the
+        # only anchor that survives a regroup: naming the first phase means
+        # re-pointing the hook the day that phase is renamed or split.
+        anchors = list(order) + [phase["name"] for phase in phases] + [command]
 
         try:
             hooks, hook_warnings = cc.merge_hooks(
@@ -353,7 +356,8 @@ def plan_templates(config: dict, project_root: str) -> dict:
 def render(command: str, entry: dict) -> str:
     """The finished body: nodes in the resolved order, hooks and any routing change spliced in."""
     body = assemble.assemble_command(command, order=entry["order"])
-    body = hook_render.insert_hooks(body, entry["hooks"], nodes_dir=hook_node_dirs())
+    body = hook_render.insert_hooks(
+        body, entry["hooks"], nodes_dir=hook_node_dirs(), command=command)
 
     # A project that changed where a verdict routes has to tell the assistant,
     # which is the thing that acts on the verdict. The note goes after the node

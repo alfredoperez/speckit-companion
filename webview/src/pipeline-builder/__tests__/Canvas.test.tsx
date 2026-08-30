@@ -27,6 +27,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
         name: 'specify',
         inSequence: true,
         stockHooks: [],
+        hooks: [],
         dropped: [],
         frame: { source: '/ext/nodes/specify/_frame.md', replaced: false },
         phases: [
