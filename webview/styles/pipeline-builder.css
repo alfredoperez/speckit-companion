@@ -429,6 +429,41 @@ body {
 
 .pb-step:first-child { border-left: none; }
 
+/* A lane you can still add. Quiet by default — it is an invitation at the end of
+   the board, not a fifth step competing with the four that run. */
+.pb-add-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin: var(--space-3) var(--space-3) 0;
+    padding: var(--space-4) var(--space-3);
+    min-height: 96px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+.pb-add-step:hover {
+    border-color: var(--border-accent);
+    color: var(--text-body);
+}
+
+.pb-add-step:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.pb-add-step-mark {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    line-height: 1;
+}
+
 /* The lane header stays put while its nodes scroll past. */
 .pb-step-head {
     position: sticky;
@@ -1029,6 +1064,12 @@ body {
 .pb-field-problem {
     font-size: var(--text-xs);
     color: var(--error);
+}
+
+.pb-field-note {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    color: var(--text-body);
 }
 
 .pb-input {

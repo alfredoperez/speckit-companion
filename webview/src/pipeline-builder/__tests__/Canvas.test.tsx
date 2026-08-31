@@ -5,7 +5,7 @@ import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { Inspector } from '../Inspector';
-import { AttachForm } from '../AttachForm';
+import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/protocol/pipeline';
 
 function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
@@ -26,6 +26,8 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name: 'specify',
         inSequence: true,
+        own: false,
+        after: '',
         stockHooks: [],
         hooks: [],
         dropped: [],
@@ -53,7 +55,7 @@ function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps: [step()],
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [], fragments: [] },
+        choices: { skills: [], nodes: [], fragments: [], presets: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -83,8 +85,10 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
     const frames: string[] = [];
     const replacedSteps: string[] = [];
     const templates: string[] = [];
+    let newSteps = 0;
     const host = mount(
         <Canvas graph={g} selected={selected}
+            onNewStep={() => { newSteps += 1; }}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
@@ -96,7 +100,8 @@ function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, frames, replacedSteps };
+    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes,
+        frames, replacedSteps, templates, newSteps: () => newSteps };
 }
 
 /** Drag the node at `from` onto the node at `to`, as the browser would. */
@@ -753,7 +758,7 @@ describe('a hook can be changed once it is there', () => {
         const sheet = mount(
             <AttachForm step={step()} anchor="gather"
                 choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'],
-                    fragments: [] }}
+                    fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         const options = Array.from(sheet.querySelectorAll('datalist option'))
@@ -766,7 +771,7 @@ describe('a hook can be changed once it is there', () => {
         const noop = () => undefined;
         const sheet = mount(
             <AttachForm step={step()} anchor="complete"
-                choices={{ skills: [], nodes: [], fragments: [] }}
+                choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
                 editing={{
                     when: 'after', type: 'skill', summary: 'create-pr',
                     anchor: 'complete', index: 1, note: 'only on green',
@@ -783,7 +788,7 @@ describe('a hook can be changed once it is there', () => {
     it('says nothing about removing when it is a new hook', () => {
         const noop = () => undefined;
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />);
         expect(sheet.querySelector('.pb-action--remove')).toBeNull();
     });
@@ -825,7 +830,7 @@ describe('one action keeps one name through the flow', () => {
 
         document.body.innerHTML = '';
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
@@ -834,7 +839,7 @@ describe('one action keeps one name through the flow', () => {
 
     it('names the anchor field for where it goes, not what it is', () => {
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />);
         const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
             .map(el => el.textContent);
@@ -1053,5 +1058,179 @@ describe('switching workflows', () => {
         (options[options.length - 1] as HTMLButtonElement).click();
 
         expect(count()).toBe(1);
+    });
+});
+
+describe('a step of the project\'s own', () => {
+    const noop = () => undefined;
+
+    it('offers to add one at the end of the run', () => {
+        const { host } = canvas();
+        const add = host.querySelector('.pb-add-step');
+        expect(add).not.toBeNull();
+        expect(add?.textContent).toContain('step');
+    });
+
+    it('reports the click rather than acting on it', () => {
+        const { host, newSteps } = canvas();
+        (host.querySelector('.pb-add-step') as HTMLButtonElement).click();
+        expect(newSteps()).toBe(1);
+    });
+
+    // The invitation belongs after the last lane, not before the first.
+    it('draws the invitation after every step in the run', () => {
+        const { host } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }));
+        const run = host.querySelector('.pb-run') as HTMLElement;
+        expect(run.lastElementChild?.classList.contains('pb-add-step')).toBe(true);
+    });
+
+    // `auto` is not a step; a project's own step outside the run is. They sit in
+    // the same place and had the same sentence, which was true of only one.
+    it('does not tell a project\'s own step it orchestrates the others', () => {
+        const { host } = canvas(graph({
+            steps: [
+                step({ name: 'specify' }),
+                step({ name: 'audit', inSequence: false, own: true }),
+            ],
+        }));
+        const aside = host.querySelector('.pb-aside');
+        expect(aside?.textContent).toContain('launched when you want it');
+        expect(aside?.textContent).not.toContain('hands-off');
+    });
+});
+
+describe('starting a workflow from something', () => {
+    const noop = () => undefined;
+
+    function form(presets = PRESETS, from = '') {
+        const made: Array<[string, string]> = [];
+        const host = mount(
+            <NewWorkflowForm from={from} taken={['shipped']} presets={presets}
+                onCancel={noop} onCreate={(name, seed) => made.push([name, seed])} />,
+        );
+        return { host, made };
+    }
+
+    const PRESETS = [
+        { name: 'classic', label: 'Classic spec-kit', summary: 'Stock shapes.' },
+        { name: 'brownfield', label: 'Brownfield', summary: 'For an existing system.' },
+    ];
+
+    const type = (host: HTMLElement, value: string) => {
+        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    it('offers every shipped preset by its label', () => {
+        const { host } = form();
+        const options = Array.from(host.querySelectorAll('optgroup option'));
+        expect(options.map(el => el.textContent)).toEqual(['Classic spec-kit', 'Brownfield']);
+    });
+
+    // The default is what you are on. A picker that started at a preset would
+    // quietly discard the configuration someone is already running.
+    it('starts from the workflow in force', async () => {
+        const { host, made } = form(PRESETS, 'bugfix');
+        type(host, 'mine');
+        await flush();
+        (host.querySelector('form') as HTMLFormElement)
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        expect(made).toEqual([['mine', 'bugfix']]);
+    });
+
+    it('sends the preset someone picked, prefixed so it is not read as a workflow', async () => {
+        const { host, made } = form();
+        type(host, 'mine');
+        const select = host.querySelector('select') as HTMLSelectElement;
+        select.value = 'preset:brownfield';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await flush();
+        (host.querySelector('form') as HTMLFormElement)
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        expect(made).toEqual([['mine', 'preset:brownfield']]);
+    });
+
+    it('says what a picked preset does before it is committed to', async () => {
+        const { host } = form();
+        const select = host.querySelector('select') as HTMLSelectElement;
+        select.value = 'preset:classic';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-field-note')?.textContent).toBe('Stock shapes.');
+    });
+
+    it('shows no preset group when none ship', () => {
+        const { host } = form([]);
+        expect(host.querySelector('optgroup')).toBeNull();
+    });
+});
+
+describe('naming a new step', () => {
+    const noop = () => undefined;
+    const SEQUENCE = ['specify', 'plan', 'tasks', 'implement'];
+
+    function form() {
+        const made: Array<Record<string, string>> = [];
+        const host = mount(
+            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']}
+                onCancel={noop} onCreate={step => made.push(step)} />,
+        );
+        return { host, made };
+    }
+
+    const type = (host: HTMLElement, value: string) => {
+        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const submit = (host: HTMLElement) =>
+        (host.querySelector('form') as HTMLFormElement)
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    it('places it after the last step in the run by default', async () => {
+        const { host, made } = form();
+        type(host, 'review');
+        await flush();
+        submit(host);
+        expect(made[0].after).toBe('implement');
+    });
+
+    it('offers to leave it out of the run', () => {
+        const { host } = form();
+        const options = Array.from(host.querySelectorAll('select option'));
+        expect(options[options.length - 1].textContent).toContain('I launch it myself');
+    });
+
+    // The name becomes a command, so a space or a capital produces something
+    // nobody can type.
+    it('refuses a name that cannot be a command', async () => {
+        const { host } = form();
+        type(host, 'Review This');
+        await flush();
+        expect(host.querySelector('.pb-field-problem')?.textContent)
+            .toContain('it becomes a command');
+        expect((host.querySelector('.pb-action--primary') as HTMLButtonElement).disabled)
+            .toBe(true);
+    });
+
+    it('refuses a name a step already has', async () => {
+        const { host } = form();
+        type(host, 'plan');
+        await flush();
+        expect(host.querySelector('.pb-field-problem')?.textContent)
+            .toContain('already a step called plan');
+    });
+
+    it('says what it will write and what the assistant will be able to run', async () => {
+        const { host } = form();
+        type(host, 'review');
+        await flush();
+        const preview = host.querySelector('.pb-form-preview')?.textContent ?? '';
+        expect(preview).toContain('.specify/companion/nodes/review/');
+        expect(preview).toContain('/speckit.companion.review');
     });
 });

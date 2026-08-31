@@ -340,11 +340,97 @@ def set_workflow(text: str, name: str) -> str:
     return "\n".join(body) + ("\n" if trailing_newline else "")
 
 
+#: Where the shipped starting configurations live, next to this script's package.
+PRESETS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "workflows", "presets")
+
+#: What `--seed-from` uses to mean "a shipped preset" rather than a project file.
+PRESET_PREFIX = "preset:"
+
+#: A preset's own description keys. They document the preset in its own file and
+#: are not configuration, so a seeded copy does not carry them.
+_PRESET_META = ("preset:", "summary:")
+
+
+def _preset_source(name: str) -> str:
+    """A shipped preset's configuration, without the keys that only describe it."""
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
+        raise ConfigWriteError(f"'{name}' cannot be a preset name")
+    path = os.path.join(PRESETS_DIR, f"{name}.yml")
+    if not os.path.isfile(path):
+        raise ConfigWriteError(f"there is no preset called '{name}'")
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    kept = [l for l in lines if not l.startswith(_PRESET_META)]
+    return "\n".join(kept).strip() + "\n"
+
+
+#: A step's directory of nodes, under the project's own nodes root.
+PROJECT_NODES_REL = os.path.join(".specify", "companion", "nodes")
+
+#: The four steps a Companion run goes through. A new one can be placed after
+#: any of them, or after none — which means "launch it when you want it".
+RUN_ORDER = ("specify", "plan", "tasks", "implement")
+
+
+def new_step(project_root: str, name: str, label: str = "", after: str = "",
+             writes: str = "") -> str:
+    """Create `.specify/companion/nodes/<name>/` as a runnable step, and return it.
+
+    A step IS a directory of nodes — that is how the shipped four are found — so
+    adding one is writing that directory rather than teaching the build about a
+    new kind of thing. It is seeded runnable: a frame, an `_order.yml`, and one
+    authoring node to edit. An empty directory would build into a command that
+    tells the assistant nothing.
+    """
+    if not re.fullmatch(r"[a-z][a-z0-9-]*", name or ""):
+        raise ConfigWriteError(
+            f"'{name}' cannot be a step name — it becomes a command "
+            f"(/speckit.companion.{name}), so use lowercase letters, digits and dashes")
+    if name in RUN_ORDER or name in ("auto", "_frame"):
+        raise ConfigWriteError(f"'{name}' is already a step — pick another name")
+    if after and after not in RUN_ORDER:
+        raise ConfigWriteError(
+            f"a step can run after {', '.join(RUN_ORDER)} — not '{after}'")
+
+    directory = os.path.join(project_root, PROJECT_NODES_REL, name)
+    if os.path.isdir(directory):
+        raise ConfigWriteError(f"a step called '{name}' already exists")
+
+    title = label.strip() or name.replace("-", " ").capitalize()
+    node_id = f"{name}-work"
+    os.makedirs(directory)
+
+    with open(os.path.join(directory, "_frame.md"), "w", encoding="utf-8") as fh:
+        fh.write(f'---\ndescription: "{title}"\n---\n\n'
+                 f"## User Input\n\n```text\n$ARGUMENTS\n```\n\n"
+                 f"## Outline\n\n{title} — say here, in one or two sentences, what a "
+                 f"run of this step is for.\n")
+
+    with open(os.path.join(directory, f"{node_id}.md"), "w", encoding="utf-8") as fh:
+        fh.write(f"---\nid: {node_id}\nname: {title}\nkind: author\n"
+                 f"command: {name}\n"
+                 + (f"writes: {writes}\n" if writes.strip() else "")
+                 + "---\n1. Replace this with what the assistant should actually do.\n")
+
+    with open(os.path.join(directory, "_order.yml"), "w", encoding="utf-8") as fh:
+        fh.write(f"# {name} — a step this project added. Edit it from the pipeline\n"
+                 f"# panel like any other, or by hand here.\n")
+        if after:
+            fh.write(f"\n# Where it runs. Remove this line to launch it by hand instead.\n"
+                     f"after: {after}\n")
+        fh.write(f"\norder:\n  - {node_id}\n"
+                 f"\nphases:\n  - name: {name}\n    nodes: [{node_id}]\n")
+    return directory
+
+
 def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
     """Create `.specify/companion/workflows/<name>.yml` and return its path.
 
     Seeded from the configuration currently in force when one is named, so
-    "like what we run now, but…" does not start from a blank file.
+    "like what we run now, but…" does not start from a blank file. A
+    `preset:<name>` seed starts from one of the configurations Companion ships
+    instead — the same file, copied in, and editable from there like any other.
     """
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
         raise ConfigWriteError(
@@ -357,7 +443,12 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
         raise ConfigWriteError(f"a workflow called '{name}' already exists")
 
     source = ""
-    if seed_from:
+    origin_note = ""
+    if seed_from.startswith(PRESET_PREFIX):
+        preset = seed_from[len(PRESET_PREFIX):]
+        source = _preset_source(preset)
+        origin_note = f"# Started from the {preset} preset — change anything in it.\n"
+    elif seed_from:
         origin = (os.path.join(directory, f"{seed_from}.yml") if seed_from != "shipped"
                   else None)
         if origin is None:
@@ -379,7 +470,9 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(f"# {name} — a way of working for this project.\n"
                  f"# Switch to it from the pipeline panel, or set `workflow: {name}`\n"
-                 f"# in .specify/companion.yml.\n\n")
+                 f"# in .specify/companion.yml.\n")
+        fh.write(origin_note)
+        fh.write("\n")
         fh.write(source or "")
     return path
 
@@ -873,7 +966,14 @@ def main() -> int:
                     help="remove the hook at this index under --when/--anchor")
     ap.add_argument("--workflow", help="switch to this workflow")
     ap.add_argument("--new-workflow", help="create this workflow and switch to it")
-    ap.add_argument("--seed-from", default="", help="workflow to copy when creating one")
+    ap.add_argument("--seed-from", default="",
+                    help="workflow to copy when creating one, or preset:<name>")
+    ap.add_argument("--new-step", help="create this step, seeded runnable")
+    ap.add_argument("--label", default="", help="how a new step reads")
+    ap.add_argument("--after", default="",
+                    help="the step a new step runs behind; omit to launch it by hand")
+    ap.add_argument("--writes", default="",
+                    help="the file a new step produces; omit for a step that writes none")
     args = ap.parse_args()
 
     project = os.path.abspath(args.project)
@@ -887,6 +987,13 @@ def main() -> int:
 
     selection_path = os.path.join(project, ".specify", "companion.yml")
     try:
+        # A step is files, not a key in the configuration — nothing in
+        # companion.yml has to change for the build to find it.
+        if args.new_step:
+            made = new_step(project, args.new_step, args.label, args.after, args.writes)
+            print(f"[config] created {os.path.relpath(made, project)}")
+            return 0
+
         # The selection lives in companion.yml; everything else lives in
         # whichever file that selection points at.
         path = (selection_path if (args.workflow or args.new_workflow)
@@ -949,7 +1056,8 @@ def main() -> int:
             return 0
 
         if not args.command:
-            raise ConfigWriteError("nothing to write — pass --command, --workflow or --new-workflow")
+            raise ConfigWriteError(
+                "nothing to write — pass --command, --workflow, --new-workflow or --new-step")
 
         if args.template_section is not None:
             if not args.command:

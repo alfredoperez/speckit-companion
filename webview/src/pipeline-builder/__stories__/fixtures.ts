@@ -48,6 +48,8 @@ export function step(
     return {
         name,
         inSequence: name !== 'auto',
+        own: false,
+        after: '',
         stockHooks: [],
         hooks: [],
         dropped: [],
@@ -72,7 +74,18 @@ export const CHOICES: PipelineChoices = {
         { name: 'stories-classic', section: 'User Scenarios & Testing', for: 'specify',
           summary: "Stock spec-kit's three P1/P2/P3 stories." },
     ],
+    presets: [
+        { name: 'classic', label: 'Classic spec-kit',
+          summary: "Stock spec-kit's document shapes — prioritized P1/P2/P3 user stories." },
+        { name: 'brownfield', label: 'Brownfield',
+          summary: 'For changing a system that already exists.' },
+    ],
 };
+
+/** A step this project added: its own directory, placed after implement. */
+export const OWN_STEP = step('review', [
+    phase('review', [node('review-work', 'Review the change')]),
+], { own: true, after: 'implement', artifacts: ['review.md'] });
 
 export function graph(
     steps: PipelineStep[], over: Partial<PipelineGraph> = {},

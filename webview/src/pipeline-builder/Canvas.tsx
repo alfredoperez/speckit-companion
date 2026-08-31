@@ -52,6 +52,8 @@ interface Props {
     onReplaceStep: (command: string) => void;
     /** Open the panel for this step's document shape. */
     onOpenTemplate: (command: string) => void;
+    /** Add a step of the project's own to the run. */
+    onNewStep: () => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,
@@ -746,7 +748,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 export function Canvas(
     { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep,
-        onOpenTemplate, selected }: Props,
+        onOpenTemplate, onNewStep, selected }: Props,
 ) {
     const actions = { onOpenNode, onRestoreNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -758,7 +760,10 @@ export function Canvas(
                 <div key={step.name} class="pb-aside">
                     <span class="pb-aside-name">{step.name}</span>
                     <span class="pb-aside-note">
-                        runs the {sequence.length} steps below, hands-off — not a step of its own
+                        {step.own
+                            ? 'yours — launched when you want it, not part of the run'
+                            : `runs the ${sequence.length} steps below, hands-off `
+                              + '— not a step of its own'}
                     </span>
                     <span class="pb-aside-counts">
                         {step.phases.reduce((n, p) => n + p.nodes.length, 0)} nodes of its own
@@ -775,6 +780,14 @@ export function Canvas(
                         onReplaceStep={onReplaceStep}
                         onOpenTemplate={onOpenTemplate} />
                 ))}
+                {/* The set of steps was the one thing the board could show and
+                    not change. A review or a verification pass had to hide
+                    inside implement, or not exist. */}
+                <button class="pb-add-step" onClick={onNewStep}
+                    title="Add a step of your own to the run">
+                    <span class="pb-add-step-mark" aria-hidden="true">+</span>
+                    <span class="pb-add-step-label">step</span>
+                </button>
             </div>
         </main>
     );

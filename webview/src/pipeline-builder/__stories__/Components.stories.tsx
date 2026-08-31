@@ -9,9 +9,9 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { Inspector } from '../Inspector';
-import { AttachForm, NewWorkflowForm } from '../AttachForm';
+import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import {
-    AUTO, CHOICES, IMPLEMENT, NO_CHANGES, PLAN, SPECIFY, STOCK, TASKS,
+    AUTO, CHOICES, IMPLEMENT, NO_CHANGES, OWN_STEP, PLAN, SPECIFY, STOCK, TASKS,
     graph, hook, node, phase, step,
 } from './fixtures';
 
@@ -20,7 +20,7 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop,
+    onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onNewStep: noop,
 };
 
 const HEAD = {
@@ -198,6 +198,24 @@ export const PhaseOnlyOne: Story = {
 export const StepShipped: Story = {
     name: 'Step · as it ships',
     render: () => <One><Canvas graph={graph([TASKS])} {...CANVAS} /></One>,
+};
+
+export const StepYourOwn: Story = {
+    name: 'Step · one this project added',
+    render: () => (
+        <One><Canvas graph={graph([IMPLEMENT, OWN_STEP])} {...CANVAS} /></One>
+    ),
+};
+
+export const StepYourOwnByHand: Story = {
+    name: 'Step · yours, launched by hand',
+    render: () => (
+        <One><Canvas graph={graph([
+            TASKS,
+            step('audit', [phase('audit', [node('audit-work', 'Audit the change')])],
+                { own: true, after: '', inSequence: false }),
+        ])} {...CANVAS} /></One>
+    ),
 };
 
 export const StepChanged: Story = {
@@ -393,7 +411,7 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [] }}
+        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };
@@ -401,7 +419,7 @@ export const AttachNothingToPick: Story = {
 export const NewWorkflow: Story = {
     name: 'New workflow',
     render: () => (
-        <One><NewWorkflowForm from="" taken={['shipped', 'bugfix']}
+        <One><NewWorkflowForm from="" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
             onCancel={noop} onCreate={noop} /></One>
     ),
 };
@@ -409,7 +427,24 @@ export const NewWorkflow: Story = {
 export const NewWorkflowFromAnother: Story = {
     name: 'New workflow · seeded from one you are on',
     render: () => (
-        <One><NewWorkflowForm from="bugfix" taken={['shipped', 'bugfix']}
+        <One><NewWorkflowForm from="bugfix" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
+            onCancel={noop} onCreate={noop} /></One>
+    ),
+};
+
+export const NewWorkflowNoPresets: Story = {
+    name: 'New workflow · nothing shipped to start from',
+    render: () => (
+        <One><NewWorkflowForm from="" taken={['shipped']} presets={[]}
+            onCancel={noop} onCreate={noop} /></One>
+    ),
+};
+
+export const NewStep: Story = {
+    name: 'New step',
+    render: () => (
+        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
+            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
             onCancel={noop} onCreate={noop} /></One>
     ),
 };

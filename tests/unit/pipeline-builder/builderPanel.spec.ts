@@ -80,7 +80,7 @@ beforeEach(() => {
     graph.readPipelineGraph.mockResolvedValue({ error: 'stub' });
     for (const write of [
         graph.writeNodeOrder, graph.writePhases, graph.writeHook, graph.removeHook,
-        graph.writeWorkflow, graph.createWorkflow, graph.applyRepair,
+        graph.writeWorkflow, graph.createWorkflow, graph.createStep, graph.applyRepair,
         graph.writeTemplateSection,
     ]) {
         (write as jest.Mock).mockResolvedValue(null);
@@ -598,6 +598,47 @@ describe('starting a new workflow', () => {
         graph.createWorkflow.mockResolvedValue('a workflow called ours already exists.');
         await panel.__receive({ type: 'newWorkflow', from: 'shipped', name: 'ours' });
         expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+});
+
+describe('adding a step of the project\'s own', () => {
+    const ADD = {
+        type: 'newStep' as const, name: 'review', label: 'Review the change',
+        after: 'implement', writes: 'review.md',
+    };
+
+    it('hands every field to the writer', async () => {
+        await panel.__receive(ADD);
+        expect(graph.createStep).toHaveBeenCalledWith(
+            WRITE_SCRIPT, workspace, 'review', 'Review the change', 'implement', 'review.md');
+    });
+
+    // A seeded step says "replace this" and nothing else, so a panel that
+    // created it and stopped leaves a lane that does nothing.
+    it('opens the node there is to edit', async () => {
+        await panel.__receive(ADD);
+        const opened = (vscode.window.showTextDocument as jest.Mock).mock.calls[0][0];
+        expect(String(opened.fsPath ?? opened.path)).toContain(
+            path.join('.specify', 'companion', 'nodes', 'review', 'review-work.md'));
+    });
+
+    it('opens nothing when the writer refused', async () => {
+        graph.createStep.mockResolvedValue("a step called 'review' already exists");
+        await panel.__receive(ADD);
+        expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('tells the panel why it was refused, not the editor', async () => {
+        graph.createStep.mockResolvedValue("a step called 'review' already exists");
+        await panel.__receive(ADD);
+        expect(panel.__posted.some((m: { type: string; text?: string }) =>
+            m.type === 'notice' && String(m.text).includes('already exists'))).toBe(true);
+    });
+
+    it('redraws afterwards, so the new lane appears without reopening', async () => {
+        graph.readPipelineGraph.mockClear();
+        await panel.__receive(ADD);
+        expect(graph.readPipelineGraph).toHaveBeenCalled();
     });
 });
 

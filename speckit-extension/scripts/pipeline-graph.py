@@ -29,6 +29,7 @@ from _command_parts import (  # noqa: E402
     decomposed_commands,
     frame_source,
     node_source,
+    project_commands,
     read_node,
     use_project_nodes,
 )
@@ -174,9 +175,23 @@ RUN_ORDER = ["specify", "plan", "tasks", "implement"]
 
 
 def _sequence(commands: list) -> list:
-    """Commands in run order, with anything outside the sequence after it."""
+    """Commands in run order, with anything outside the sequence after it.
+
+    A step the project added says where it goes with `after:` in its `_order.yml`
+    and is slotted in there — that is the whole point of adding one, and a review
+    step drawn at the far right of the board after `auto` would read as an
+    afterthought rather than as the thing that runs between implement and done.
+    """
     ranked = [c for c in RUN_ORDER if c in commands]
-    return ranked + sorted(c for c in commands if c not in RUN_ORDER)
+    loose = sorted(c for c in commands if c not in RUN_ORDER)
+
+    placed = []
+    for command in loose:
+        behind = assemble.runs_after(command)
+        if behind and behind in ranked:
+            ranked.insert(ranked.index(behind) + 1, command)
+            placed.append(command)
+    return ranked + [c for c in loose if c not in placed]
 
 
 def build_graph(project_root: str) -> dict:
@@ -187,6 +202,7 @@ def build_graph(project_root: str) -> dict:
     templates = build.plan_templates(config, project_root)
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
 
+    own_steps = set(project_commands())
     steps = []
     for command in _sequence(decomposed_commands()):
         entry = plan[command]
@@ -223,8 +239,13 @@ def build_graph(project_root: str) -> dict:
                 "replaced": frame_source(command)[1],
             },
             # `auto` runs the others rather than taking a turn among them. Drawn
-            # as a peer it reads like a fifth step, which it is not.
-            "inSequence": command in RUN_ORDER,
+            # as a peer it reads like a fifth step, which it is not. A step the
+            # project added takes a turn exactly when it says it does.
+            "inSequence": command in RUN_ORDER or bool(assemble.runs_after(command)),
+            # Whether this step is the project's own rather than one that ships.
+            "own": command in own_steps,
+            # The step it runs behind, for a project's own step.
+            "after": assemble.runs_after(command),
             "phases": drawn_phases,
             # Hooks on the step itself — outside every phase. The one anchor a
             # regroup cannot orphan, so the panel draws it at the step's edges
@@ -275,6 +296,9 @@ def build_graph(project_root: str) -> dict:
         # is written for, so a picker offers only the ones that belong to the
         # row someone is editing rather than every fragment that exists.
         "fragments": template_render.shipped_fragments(),
+        # Whole configurations to start a new workflow from, so the first
+        # question is "which of these is closest?" rather than a blank file.
+        "presets": build.available_presets(),
     }
     active = build.active_workflow(project_root)
     return {

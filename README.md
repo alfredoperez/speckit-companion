@@ -106,6 +106,10 @@ Open it from the **circuit** icon at the top of the Specs sidebar, or from the p
 
 **Several ways of working.** A workflow is a whole named configuration in `.specify/companion/workflows/`. Switch between them from the header and everything swaps at once — node order, hooks, templates, routing — so a one-line fix and a client deliverable can run different pipelines out of the same repository. Nodes and fragments are shared across all of them, and "as it ships" is always there to compare against.
 
+**Start from something.** A new workflow asks what to begin with: what you run today, the pipeline as it ships, or one of two Companion ships. **Classic spec-kit** puts the stock document shapes back — prioritized P1/P2/P3 user stories, the full Technical Context block. **Brownfield** is for changing a system that already exists: the spec says only what changes, the task list is attacked before it runs, and a person opens the thing before it counts as done. Whichever you pick is copied in and yours to change from there.
+
+**Add a step of your own.** **+ step** at the end of the board gives the run a turn it did not have — a review pass after implement, an audit you launch when you want it. Say where it goes and what it writes; the panel writes a step that already runs and opens the one node there is to edit. It gets its own `/speckit.companion.<name>` command and everything a shipped step has.
+
 **Rearrange it.** Drag a node to move it within its phase. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
 
 **Attach your own work.** **Attach** on any phase asks what should happen there — invoke a **skill** you already have, follow an **instruction**, or run a **command**. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.

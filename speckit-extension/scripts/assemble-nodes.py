@@ -32,6 +32,7 @@ from _command_parts import (
     fill_parts,
     golden_path,
     nodes_command_dir,
+    parse_after,
     parse_optional,
     parse_order,
     parse_phases,
@@ -268,6 +269,11 @@ def assemble_command(command: str, order: list = None, debug: bool = False,
 
 def default_order(command: str) -> list:
     return parse_order(os.path.join(nodes_command_dir(command), "_order.yml"))
+
+
+def runs_after(command: str) -> str:
+    """The step this one runs behind, or `""` when it is launched by hand."""
+    return parse_after(os.path.join(nodes_command_dir(command), "_order.yml"))
 
 
 def optional_nodes(command: str) -> list:

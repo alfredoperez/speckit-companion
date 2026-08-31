@@ -45,7 +45,8 @@ function phase(name: string, nodes: PipelineNode[], hooks: PipelineHook[] = []):
 
 function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep> = {}): PipelineStep {
     return {
-        name, inSequence: name !== 'auto', stockHooks: [], dropped: [], phases,
+        name, inSequence: name !== 'auto', own: false, after: '',
+        stockHooks: [], dropped: [], phases,
         hooks: [],
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         decisions: [], artifacts: [], template: null,
@@ -57,7 +58,7 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
     return {
         steps,
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [], fragments: [] },
+        choices: { skills: [], nodes: [], fragments: [], presets: [] },
         configured: false,
         customised: false,
         warnings: [],
@@ -114,6 +115,7 @@ const CANVAS_ACTIONS = {
     onOpenNode: noop, onRestoreNode: noop,
     onReorder: noop, onAddHook: noop, onEditHook: noop,
     onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onSetPhases: noop,
+    onNewStep: noop,
 };
 const HEADER_ACTIONS = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,

@@ -283,11 +283,22 @@ def fill_parts(text: str, rel: str) -> str:
 
 
 def nodes_command_dir(command: str) -> str:
-    return os.path.join(EXT, NODES_DIR, command)
+    """Where a step's `_order.yml` and node files live.
+
+    A step the extension ships is read from `nodes/<command>/`. A step the
+    project added exists only under its own directory, so that is where its order
+    and its nodes come from — the same fallback `node_source` already applies to
+    one file, applied to the directory that holds them.
+    """
+    shipped = os.path.join(EXT, NODES_DIR, command)
+    if os.path.isdir(shipped):
+        return shipped
+    own = project_command_dir(command)
+    return own if own and os.path.isdir(own) else shipped
 
 
-def decomposed_commands() -> list:
-    """Namespaced commands assembled from node files (a nodes/<command>/ dir exists)."""
+def shipped_commands() -> list:
+    """Steps the extension ships, whatever project is being built."""
     base = os.path.join(EXT, NODES_DIR)
     if not os.path.isdir(base):
         return []
@@ -295,6 +306,37 @@ def decomposed_commands() -> list:
         d for d in os.listdir(base)
         if os.path.isdir(os.path.join(base, d)) and not d.startswith("_")
     )
+
+
+def project_commands() -> list:
+    """Steps this project added — a node directory the extension does not ship.
+
+    A step IS a directory of nodes, so adding one needs no new concept: the
+    project writes `.specify/companion/nodes/<step>/` with an `_order.yml` and it
+    assembles like any other. A directory whose name the extension already ships
+    is that step's replacements, not a new step.
+    """
+    if not _project_root:
+        return []
+    base = os.path.join(_project_root, PROJECT_NODES_REL)
+    if not os.path.isdir(base):
+        return []
+    shipped = set(shipped_commands())
+    return sorted(
+        d for d in os.listdir(base)
+        if d not in shipped and not d.startswith("_")
+        and os.path.isdir(os.path.join(base, d))
+        and os.path.isfile(os.path.join(base, d, "_order.yml"))
+    )
+
+
+def decomposed_commands() -> list:
+    """Every step that assembles from node files — the shipped ones, then the project's.
+
+    Golden parity never points this at a project, so a project's own steps can
+    never move the shipped goldens.
+    """
+    return shipped_commands() + project_commands()
 
 
 def split_frontmatter(text: str) -> tuple:
@@ -408,6 +450,26 @@ def parse_phases(path: str) -> list:
     return phases
 
 
+def parse_after(path: str) -> str:
+    """Read `after:` — which step this one runs behind, or `""` for none.
+
+    Only a step a project added needs this: the shipped four have a fixed order
+    everything already knows. A step with no `after:` is one you launch when you
+    want it, and is drawn outside the run rather than between two steps that do
+    not actually lead to it.
+    """
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as fh:
+        for raw in fh:
+            s = raw.strip()
+            if not s or s.startswith("#"):
+                continue
+            if s.startswith("after:"):
+                return s[len("after:"):].strip().strip("\"'")
+    return ""
+
+
 def parse_optional(path: str) -> list:
     """Read `optional:` — shipped nodes a recipe may add, outside the default order.
 
@@ -485,6 +547,13 @@ def use_project_nodes(root):
     """Point node reads at one project's replacements. `None` restores shipped-only."""
     global _project_root
     _project_root = root
+
+
+def project_command_dir(command: str):
+    """Where this project keeps its own files for a step, or None if unset."""
+    if not _project_root:
+        return None
+    return os.path.join(_project_root, PROJECT_NODES_REL, command)
 
 
 def project_node_path(command: str, node_id: str):

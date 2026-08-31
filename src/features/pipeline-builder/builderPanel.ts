@@ -25,6 +25,7 @@ import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineB
 import {
     readPipelineGraph,
     HookDraft,
+    createStep,
     createWorkflow,
     resolveConfigWriteScript,
     resolveConfigRepairScript,
@@ -301,6 +302,20 @@ export class PipelineBuilderPanel {
             const refused = await applyRepair(script, this.workspaceRoot, message.repairId);
             await this.send();
             if (refused) { this.say(refused); }
+        },
+
+        newStep: async message => {
+            const made = await this.write(
+                script => createStep(script, this.workspaceRoot, message.name,
+                    message.label, message.after, message.writes),
+                'Adding a step');
+            if (!made) { return; }
+            // Its one authoring node is the thing to edit, and it is seeded with
+            // a placeholder — opening it is what makes the new step real rather
+            // than a column saying nothing.
+            await vscode.window.showTextDocument(vscode.Uri.file(path.join(
+                this.workspaceRoot, PROJECT_NODES_REL, message.name,
+                `${message.name}-work.md`)));
         },
 
         newWorkflow: async message => {

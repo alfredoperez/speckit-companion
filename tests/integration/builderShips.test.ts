@@ -50,6 +50,24 @@ describe('the pipeline builder ships with what it reads', () => {
         expect(shipped.has('speckit-extension/presets/_parts/**')).toBe(true);
     });
 
+    /**
+     * The blanket `speckit-extension/**` exclusion is silent: a new content
+     * directory is simply absent from the .vsix, and only a real install shows
+     * it — the panel offers a fragment or a preset that resolves to nothing.
+     */
+    it('packs the content the panel offers to pick from', () => {
+        expect(shipped.has('speckit-extension/fragments/**')).toBe(true);
+        expect(shipped.has('speckit-extension/workflows/presets/**')).toBe(true);
+    });
+
+    it('the picked-from directories are not empty', () => {
+        for (const rel of [['fragments'], ['workflows', 'presets']]) {
+            const dir = path.join(repoRoot, 'speckit-extension', ...rel);
+            expect(fs.existsSync(dir)).toBe(true);
+            expect(fs.readdirSync(dir).length).toBeGreaterThan(0);
+        }
+    });
+
     it('every packed script exists on disk', () => {
         for (const script of REQUIRED_SCRIPTS) {
             const file = path.join(repoRoot, 'speckit-extension', 'scripts', script);

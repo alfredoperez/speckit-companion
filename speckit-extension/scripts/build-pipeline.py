@@ -45,6 +45,7 @@ from _command_parts import (  # noqa: E402
     decomposed_commands,
     node_source,
     nodes_command_dir,
+    project_commands,
     use_project_nodes,
 )
 
@@ -173,6 +174,37 @@ def available_hook_nodes(project_root: str) -> list:
     return sorted(found)
 
 
+#: Whole configurations Companion ships as starting points for a new workflow.
+PRESETS_DIR = os.path.join(EXT, "workflows", "presets")
+
+
+def available_presets() -> list:
+    """The starting configurations Companion ships, as `{name, label, summary}`.
+
+    A preset is an ordinary workflow file: picking one seeds a project workflow
+    with its contents and nothing more, so everything it sets stays editable
+    afterwards. `name` is the filename, which is what seeding names.
+    """
+    if not os.path.isdir(PRESETS_DIR):
+        return []
+    out = []
+    for filename in sorted(os.listdir(PRESETS_DIR)):
+        if not filename.endswith(".yml") or filename.startswith("_"):
+            continue
+        try:
+            meta = _read_yaml(os.path.join(PRESETS_DIR, filename), filename)
+        except BuildError:
+            # One preset nobody can read is a preset missing from the list, not
+            # a panel that will not draw.
+            continue
+        out.append({
+            "name": filename[:-4],
+            "label": str(meta.get("preset") or filename[:-4]),
+            "summary": str(meta.get("summary") or ""),
+        })
+    return out
+
+
 def available_workflows(project_root: str) -> list:
     """Named workflows this project has written, by name, sorted."""
     directory = os.path.join(project_root, WORKFLOWS_REL)
@@ -243,6 +275,7 @@ def plan_build(config: dict) -> tuple[dict, list]:
     """
     plan = {}
     warnings = []
+    own_steps = set(project_commands())
     # A project may name and regroup the phases, so that is resolved before
     # anything reads one.
     try:
@@ -327,7 +360,12 @@ def plan_build(config: dict) -> tuple[dict, list]:
                              p["name"] for p in phases
                              if p["name"] not in {s["name"] for s in shipped_phases}
                          ],
-                         "replaced": [n for n in order if node_source(command, n)[1]]}
+                         # A step this project added is its own, not a change to
+                         # one that ships — nothing in it replaces anything.
+                         "own": command in own_steps,
+                         "replaced": ([] if command in own_steps
+                                      else [n for n in order
+                                            if node_source(command, n)[1]])}
     return plan, warnings
 
 
@@ -377,6 +415,11 @@ def render(command: str, entry: dict) -> str:
 def describe(command: str, entry: dict) -> str:
     """One line saying how this command differs from the shipped default."""
     order, default = entry["order"], entry["default"]
+    # A step the extension does not ship has no default to differ from, so every
+    # node in it would read as "replaced" — replacing nothing.
+    if entry.get("own"):
+        return (f"  {command}: this project's own step, "
+                f"{len(order)} node" + ("" if len(order) == 1 else "s"))
     bits = []
     dropped = [n for n in default if n not in order]
     added = [n for n in order if n not in default]

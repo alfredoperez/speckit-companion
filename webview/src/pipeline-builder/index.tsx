@@ -23,7 +23,7 @@ import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas } from './Canvas';
 import { Header } from './Header';
 import { Inspector } from './Inspector';
-import { AttachForm, NewWorkflowForm, Attachment } from './AttachForm';
+import { AttachForm, NewStepForm, NewWorkflowForm, Attachment } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
@@ -37,6 +37,7 @@ type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
+    | { kind: 'new-step' }
     | { kind: 'template'; command: string }
     | null;
 
@@ -193,6 +194,7 @@ function App() {
                         setNotice(null);
                         setSide({ kind: 'template', command });
                     }}
+                    onNewStep={() => { setNotice(null); setSide({ kind: 'new-step' }); }}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);
@@ -260,14 +262,28 @@ function App() {
                     ) : null;
                 })()}
 
+                {side?.kind === 'new-step' && (
+                    <NewStepForm
+                        sequence={graph.steps.filter(s => s.inSequence && !s.own)
+                            .map(s => s.name)}
+                        taken={graph.steps.map(s => s.name)}
+                        onCancel={() => setSide(null)}
+                        onCreate={step => {
+                            setSide(null);
+                            send({ type: 'newStep', ...step });
+                        }}
+                    />
+                )}
+
                 {side?.kind === 'new-workflow' && (
                     <NewWorkflowForm
                         from={graph.workflows.active}
                         taken={graph.workflows.available}
+                        presets={graph.choices.presets}
                         onCancel={() => setSide(null)}
-                        onCreate={name => {
+                        onCreate={(name, from) => {
                             setSide(null);
-                            send({ type: 'newWorkflow', from: graph.workflows.active, name });
+                            send({ type: 'newWorkflow', from, name });
                         }}
                     />
                 )}

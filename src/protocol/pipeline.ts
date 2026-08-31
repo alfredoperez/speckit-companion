@@ -161,6 +161,10 @@ export interface PipelineStep {
      * peer reads like a fifth step. Steps arrive in run order, not alphabetical.
      */
     inSequence: boolean;
+    /** Whether this step is the project's own rather than one Companion ships. */
+    own: boolean;
+    /** For a step the project added, the step it runs behind. Empty means by hand. */
+    after: string;
     phases: PipelinePhase[];
     /** Hooks on the step itself — outside every phase, at its two edges. */
     hooks: PipelineHook[];
@@ -179,12 +183,23 @@ export interface PipelineWorkflows {
     active: string;
 }
 
+/** A whole configuration Companion ships as a starting point for a new workflow. */
+export interface PipelinePreset {
+    /** The filename, which is what seeding names. */
+    name: string;
+    /** How it reads in the picker. */
+    label: string;
+    summary: string;
+}
+
 /** What a hook in this project can be pointed at, so a name is picked not typed. */
 export interface PipelineChoices {
     skills: string[];
     nodes: string[];
     /** Shipped alternatives a template section can be pointed at. */
     fragments: PipelineFragment[];
+    /** Shipped configurations a new workflow can start from. */
+    presets: PipelinePreset[];
 }
 
 export interface PipelineGraph {
@@ -338,6 +353,22 @@ export type BuilderToExtensionMessage =
         phase: string;
         order: string[];
         phases: Array<{ name: string; nodes: string[] }>;
+    }
+    /**
+     * Add a step of the project's own, seeded runnable.
+     *
+     * The pipeline's steps were a fixed set: "review the change before it counts
+     * as done" had to hide inside implement or not exist. A step is a directory
+     * of nodes, so adding one writes that directory and the build finds it.
+     */
+    | {
+        type: 'newStep';
+        name: string;
+        label: string;
+        /** The step it runs behind. Empty means it is launched by hand. */
+        after: string;
+        /** The file it produces. Empty means it writes none. */
+        writes: string;
     }
     /** Switch the whole configuration. `shipped` is Companion with nothing changed. */
     | { type: 'selectWorkflow'; name: string }

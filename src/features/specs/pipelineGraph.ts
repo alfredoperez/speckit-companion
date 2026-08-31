@@ -154,6 +154,22 @@ export function writeTemplateSection(
     ]);
 }
 
+/** Create a step of the project's own, seeded runnable. */
+export function createStep(
+    script: string,
+    workspaceRoot: string,
+    name: string,
+    label: string,
+    after: string,
+    writes: string,
+): Promise<string | null> {
+    const args = ['--new-step', name];
+    if (label) { args.push('--label', label); }
+    if (after) { args.push('--after', after); }
+    if (writes) { args.push('--writes', writes); }
+    return runConfigWrite(script, workspaceRoot, args);
+}
+
 /** Create a workflow, seeded from `from`, and switch to it. */
 export function createWorkflow(
     script: string,

@@ -103,9 +103,31 @@ The `§` button on a step opens its document's shape: one row per section the te
 
 Shipped today: `outcomes` and `ears-requirements` as alternatives to prioritized user stories, `stories-classic` and `technical-context-classic` for the stock shapes, and `tasks-self-verify` / `tasks-coding-only` / `tasks-demo-line` as constraint blocks for the task list.
 
-**A step is a directory of nodes**, so a project can add one: `.specify/companion/nodes/<step>/` with an `_order.yml` assembles a command like any shipped step, and the capture layer records it — the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
+**A step is a directory of nodes**, so a project can add one. **+ step** at the end of the board writes `.specify/companion/nodes/<step>/` seeded runnable — a frame, an `_order.yml`, and one authoring node — and opens that node to edit. The build finds it the same way it finds the shipped four (`decomposed_commands()` is a directory listing), so it assembles into `/speckit.companion.<step>` and the capture layer records runs of it: the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
+
+Where it runs is one key in its own `_order.yml`:
+
+```yaml
+# Omit this line for a step you launch when you want it.
+after: implement
+```
+
+A step with `after:` takes its turn in the run and is drawn between the two steps it sits between. A step without one is drawn beside the board, like `auto` — available, not part of the sequence. Everything else about it works like a shipped step: nodes can be added, reordered, replaced and hooked, and its `_frame.md` is its own preamble.
+
+The name becomes a command, so it has to be one you can type: lowercase letters, digits and dashes, and not a name a step already has.
 
 **Work can attach to a step's edges.** A hook anchored on the step name rather than a node or phase renders outside every phase — the one anchor a regroup cannot orphan.
+
+## Starting from something rather than nothing
+
+A **preset** is a whole configuration Companion ships as a starting point. **New workflow…** offers them under **Start from**, next to "what this project runs now" and "the pipeline as it ships". Picking one copies that file into `.specify/companion/workflows/<name>.yml` and switches to it; from there it is an ordinary workflow, and everything in it can be changed one node or one section at a time.
+
+Shipped today:
+
+- **Classic spec-kit** — stock spec-kit's document shapes: prioritized P1/P2/P3 user stories, and the full Technical Context block in the plan. It changes what the documents look like, not what the run does.
+- **Brownfield** — for changing a system that already exists: the spec is written as a delta (`draft-spec-delta`), the folder is numbered against every branch (`resolve-dir-git`), the task list is attacked before it runs (`review-gaps`), and a person opens the thing before it is called done (`verify-manually`).
+
+A preset lives at `speckit-extension/workflows/presets/<name>.yml`. It is an ordinary workflow file plus two keys that only describe it — `preset:` (how it reads in the picker) and `summary:` (what it does) — and those two are dropped from the copy, because they are documentation rather than configuration.
 
 ## Selecting a workflow — recorded per spec
 
@@ -124,6 +146,7 @@ The feature carries **no "sdd"** tokens. Canonical names: preset `companion-stan
 ## Files
 
 - `speckit-extension/presets/companion-standard/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7) + `README.md`. The carrier for the timing-augmented stock command family.
+- `speckit-extension/workflows/presets/` — the whole configurations **New workflow…** can start from (`classic.yml`, `brownfield.yml`). Distinct from `presets/` above, which carries stock command bodies rather than a pipeline configuration.
 - `speckit-extension/presets/_parts/` — the single-source shared blocks each command body is composed from: `timing.md` (the canonical timing block, relocated here from the old `_shared/timing-partial.md`), `sizing.md` (the small/normal/oversized definition + the 5-files / 10-tasks bar), `routing.md` (which step runs next given the size), and `self-advance.md` (the agentic-CLI handoff). A rule lives in exactly one part; commands embed it via a `<!-- speckit-companion:part NAME -->…<!-- /…part NAME -->` fence.
 - `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the Companion pipeline commands; `speckit.companion.{classify,mark-complete}.md` — the routing/terminal commands.
 - `speckit-extension/scripts/build-commands.py` — assembles the parts into whole, self-contained command bodies (`--check` mode diffs instead of writing). `capture-golden.py` froze the pre-reshape command set under `tests/golden/commands/`.

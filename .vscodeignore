@@ -86,6 +86,7 @@ speckit-extension/**
 !speckit-extension/nodes/**
 !speckit-extension/presets/_parts/**
 !speckit-extension/fragments/**
+!speckit-extension/workflows/presets/**
 .specify/**
 .opencode/**
 .serena/**

@@ -73,6 +73,19 @@ class Project:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(body, encoding="utf-8")
 
+    def template(self, name: str, *headings: str) -> None:
+        """A template file with these `##` sections, as `specify init` leaves one.
+
+        A section can only be pointed at a fragment if the template that holds it
+        exists — a bare scratch project has no `.specify/templates/`, so anything
+        touching a template has to stand one up first.
+        """
+        path = self.root / ".specify" / "templates" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        body = "# Template\n\n" + "\n\n".join(
+            f"## {heading}\n\nShipped words here." for heading in headings)
+        path.write_text(body + "\n", encoding="utf-8")
+
     def config_text(self) -> str:
         path = self.root / ".specify" / "companion.yml"
         return path.read_text(encoding="utf-8") if path.exists() else ""

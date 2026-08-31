@@ -41,7 +41,8 @@ function board(g = graph([SPECIFY])) {
                 onSetPhases={(c, p, r) => sent.push({ what: 'setPhases', with: [c, p, r] })}
                 onAddNode={(c, id, p) => sent.push({ what: 'addNode', with: [c, id, p] })}
                 onOpenFrame={on('openFrame')}
-                onReplaceStep={on('replaceStep')} onOpenTemplate={on('openTemplate')} />
+                onReplaceStep={on('replaceStep')} onOpenTemplate={on('openTemplate')}
+                onNewStep={on('newStep')} />
             <pre class="sb-sent" style="display:none">{JSON.stringify(sent)}</pre>
         </div>
     );

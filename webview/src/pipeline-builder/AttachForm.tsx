@@ -9,7 +9,7 @@
 
 import { useState } from 'preact/hooks';
 import {
-    HookType, HookWhen, PipelineChoices, PipelineHook, PipelineStep,
+    HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
 } from '../../../src/protocol/pipeline';
 
 export interface Attachment {
@@ -211,17 +211,129 @@ export function AttachForm(props: Props) {
     );
 }
 
-interface NewWorkflowProps {
-    /** The workflow it would be seeded from. */
-    from: string;
+interface NewStepProps {
+    /** Steps a new one can be placed behind, in run order. */
+    sequence: string[];
+    /** Every step name already in use. */
     taken: string[];
     onCancel: () => void;
-    onCreate: (name: string) => void;
+    onCreate: (step: { name: string; label: string; after: string; writes: string }) => void;
 }
 
-export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflowProps) {
+/**
+ * Add a step of the project's own.
+ *
+ * The board could show the steps and not change them, so a review pass had to
+ * hide inside implement. A step is a directory of nodes; this writes one.
+ */
+export function NewStepForm({ sequence, taken, onCancel, onCreate }: NewStepProps) {
     const [name, setName] = useState('');
+    const [label, setLabel] = useState('');
+    const [after, setAfter] = useState(sequence[sequence.length - 1] ?? '');
+    const [writes, setWrites] = useState('');
     const clean = name.trim();
+
+    const problem = !clean ? ''
+        : !/^[a-z][a-z0-9-]*$/.test(clean)
+            ? 'Lowercase letters, digits and dashes — it becomes a command.'
+            : taken.includes(clean) ? `There is already a step called ${clean}.` : '';
+
+    const submit = (event: Event) => {
+        event.preventDefault();
+        if (clean && !problem) {
+            onCreate({ name: clean, label: label.trim(), after, writes: writes.trim() });
+        }
+    };
+
+    return (
+        <aside class="pb-side" aria-label="New step">
+            <header class="pb-side-head">
+                <h2 class="pb-side-title">New step</h2>
+                <button class="pb-side-close" onClick={onCancel} title="Cancel">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
+                </button>
+                <p class="pb-side-where">
+                    A turn of its own in the run, with its own command.
+                </p>
+            </header>
+
+            <form class="pb-form" onSubmit={submit}>
+                <div class="pb-form-fields">
+                <label class="pb-field">
+                    <span class="pb-field-label">Name</span>
+                    <input class="pb-input pb-input--mono" type="text" value={name} autofocus
+                        placeholder="review"
+                        onInput={e => setName((e.target as HTMLInputElement).value)} />
+                    {problem && <span class="pb-field-problem">{problem}</span>}
+                </label>
+
+                <label class="pb-field">
+                    <span class="pb-field-label">Reads as</span>
+                    <input class="pb-input" type="text" value={label}
+                        placeholder={clean ? `${clean[0].toUpperCase()}${clean.slice(1)}` : 'Review'}
+                        onInput={e => setLabel((e.target as HTMLInputElement).value)} />
+                </label>
+
+                <label class="pb-field">
+                    <span class="pb-field-label">Runs after</span>
+                    <select class="pb-input" value={after}
+                        onChange={e => setAfter((e.target as HTMLSelectElement).value)}>
+                        {sequence.map(step => (
+                            <option key={step} value={step}>{step}</option>
+                        ))}
+                        <option value="">Nothing — I launch it myself</option>
+                    </select>
+                </label>
+
+                <label class="pb-field">
+                    <span class="pb-field-label">Writes</span>
+                    <input class="pb-input pb-input--mono" type="text" value={writes}
+                        placeholder="review.md — leave empty if it writes nothing"
+                        onInput={e => setWrites((e.target as HTMLInputElement).value)} />
+                </label>
+
+                <p class="pb-form-preview">
+                    Writes <span class="pb-mono">
+                        .specify/companion/nodes/{clean || 'name'}/
+                    </span> with one node to edit. After the next build the assistant can
+                    run <span class="pb-mono">
+                        /speckit.companion.{clean || 'name'}
+                    </span>.
+                </p>
+                </div>
+
+                <div class="pb-form-actions">
+                    <button class="pb-action pb-action--primary" type="submit"
+                        disabled={!clean || Boolean(problem)}>Add step</button>
+                    <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
+                </div>
+            </form>
+        </aside>
+    );
+}
+
+interface NewWorkflowProps {
+    /** The workflow in force — the default thing to start from. */
+    from: string;
+    taken: string[];
+    /** Shipped configurations that can be started from instead. */
+    presets: PipelinePreset[];
+    onCancel: () => void;
+    /** `seedFrom` is a workflow name, or `preset:<name>`. */
+    onCreate: (name: string, seedFrom: string) => void;
+}
+
+export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: NewWorkflowProps) {
+    const [name, setName] = useState('');
+    // Empty means the workflow in force, which is what "like what we run now,
+    // but…" needs and what this form did before there was anything else.
+    const [seed, setSeed] = useState('');
+    const clean = name.trim();
+    const preset = seed.startsWith('preset:')
+        ? presets.find(p => p.name === seed.slice('preset:'.length))
+        : undefined;
 
     const problem = !clean ? ''
         : !/^[a-z0-9][a-z0-9-]*$/.test(clean)
@@ -230,7 +342,7 @@ export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflow
 
     const submit = (event: Event) => {
         event.preventDefault();
-        if (clean && !problem) { onCreate(clean); }
+        if (clean && !problem) { onCreate(clean, seed || from); }
     };
 
     return (
@@ -243,9 +355,7 @@ export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflow
                         <path d="M4 4l8 8M12 4l-8 8" /></svg>
                 </button>
                 <p class="pb-side-where">
-                    {from === 'shipped' || !from
-                        ? 'Starting from the pipeline as it ships'
-                        : <>Starting from <span class="pb-side-step">{from}</span></>}
+                    Pick something close, then change it.
                 </p>
             </header>
 
@@ -257,6 +367,30 @@ export function NewWorkflowForm({ from, taken, onCancel, onCreate }: NewWorkflow
                         placeholder="bugfix"
                         onInput={e => setName((e.target as HTMLInputElement).value)} />
                     {problem && <span class="pb-field-problem">{problem}</span>}
+                </label>
+
+                {/* A blank file is the worst place to start and was the only
+                    place to start. The presets are whole configurations, so the
+                    first question becomes "which of these is closest?" */}
+                <label class="pb-field">
+                    <span class="pb-field-label">Start from</span>
+                    <select class="pb-input" value={seed}
+                        onChange={e => setSeed((e.target as HTMLSelectElement).value)}>
+                        <option value="">
+                            {from === 'shipped' || !from
+                                ? 'The pipeline as it ships'
+                                : `What ${from} runs now`}
+                        </option>
+                        {presets.length > 0 && (
+                            <optgroup label="A preset">
+                                {presets.map(p => (
+                                    <option key={p.name} value={`preset:${p.name}`}
+                                        title={p.summary}>{p.label}</option>
+                                ))}
+                            </optgroup>
+                        )}
+                    </select>
+                    {preset && <span class="pb-field-note">{preset.summary}</span>}
                 </label>
 
                 <p class="pb-form-preview">
