@@ -148,8 +148,16 @@ export interface PipelineFrame {
 
 export interface PipelineStep {
     name: string;
-    /** Nodes this step ships with that the recipe is not running — what can be added back. */
+    /** Nodes this step could run and is not — the only ones that can be added. */
     dropped: string[];
+    /**
+     * Which of `dropped` are shipped add-ons rather than nodes the recipe took out.
+     *
+     * Both can be put in a phase and the picker offers both, but one is "put it
+     * back" and the other is "this step can also do this" — as bare ids they read
+     * identically, so the list gave no clue which was which.
+     */
+    addOns: string[];
     /** The step's own instructions, which nothing could reach before. */
     frame: PipelineFrame;
     /** Hooks stock spec-kit extensions attach to this step. Not ours, and not editable here. */

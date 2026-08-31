@@ -214,6 +214,34 @@ class AddingAShippedOptionalNode(unittest.TestCase):
         tasks = next(s for s in self.project.graph()["steps"] if s["name"] == "tasks")
         self.assertIn("review-gaps", tasks["dropped"])
 
+    def test_the_panel_can_say_it_is_an_add_on_rather_than_one_we_took_out(self):
+        """As bare ids the two read identically, which is no help at all."""
+        tasks = next(s for s in self.project.graph()["steps"] if s["name"] == "tasks")
+        self.assertEqual(tasks["addOns"], ["review-gaps"])
+
+    def test_a_node_the_recipe_took_out_is_not_called_an_add_on(self):
+        self.project.write(
+            "--command", "tasks", "--nodes", "size-budget,handoff",
+            "--phases", json.dumps([
+                {"name": "gather", "nodes": ["size-budget"]},
+                {"name": "wrap-up", "nodes": ["handoff"]},
+            ]))
+        tasks = next(s for s in self.project.graph()["steps"] if s["name"] == "tasks")
+        self.assertIn("tasks-doc", tasks["dropped"])
+        self.assertNotIn("tasks-doc", tasks["addOns"])
+
+    def test_an_add_on_already_running_is_offered_by_neither(self):
+        self.project.write("--command", "tasks", "--phases", json.dumps([
+            {"name": "gather", "nodes": ["size-budget"]},
+            {"name": "author", "nodes": ["tasks-doc", "review-gaps"]},
+            {"name": "wrap-up", "nodes": ["handoff"]},
+        ]))
+        self.project.write("--command", "tasks", "--nodes",
+                           "size-budget,tasks-doc,review-gaps,handoff")
+        tasks = next(s for s in self.project.graph()["steps"] if s["name"] == "tasks")
+        self.assertNotIn("review-gaps", tasks["dropped"])
+        self.assertNotIn("review-gaps", tasks["addOns"])
+
     def test_it_can_be_added_and_reaches_the_built_command(self):
         self.project.write("--command", "tasks", "--phases", json.dumps([
             {"name": "gather", "nodes": ["size-budget"]},

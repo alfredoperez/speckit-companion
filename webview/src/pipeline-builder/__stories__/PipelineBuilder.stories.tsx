@@ -46,7 +46,7 @@ function phase(name: string, nodes: PipelineNode[], hooks: PipelineHook[] = []):
 function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name, inSequence: name !== 'auto', own: false, after: '',
-        stockHooks: [], dropped: [], phases,
+        stockHooks: [], dropped: [], addOns: [], phases,
         hooks: [],
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         decisions: [], artifacts: [], template: null,

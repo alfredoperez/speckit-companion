@@ -210,6 +210,11 @@ def build_graph(project_root: str) -> dict:
         phases = entry.get("phases") or []
 
         pinned = assemble.movability(command, entry["order"])
+        default = entry["default"]
+        # Shipped nodes this step does not run by default and could — the ones a
+        # project adds rather than puts back.
+        add_ons = [n for n in assemble.optional_nodes(command)
+                   if n not in default and os.path.isfile(node_source(command, n)[0])]
         offered = assemble.slot_variants(command)
         drawn_phases = []
         for phase in phases:
@@ -223,7 +228,6 @@ def build_graph(project_root: str) -> dict:
                 "hooks": [_hook(h) for h in hooks if h["anchor"] == phase["name"]],
             })
 
-        default = entry["default"]
         order = entry["order"]
         template = templates.get(command)
         steps.append({
@@ -264,10 +268,13 @@ def build_graph(project_root: str) -> dict:
             # that build-errors.
             "dropped": (
                 [n for n in default if n not in order]
-                + [n for n in assemble.optional_nodes(command)
-                   if n not in order and n not in default
-                   and os.path.isfile(node_source(command, n)[0])]
+                + [n for n in add_ons if n not in order]
             ),
+            # Which of those are shipped add-ons rather than nodes this project
+            # took out. Both can be put back and the picker offers both, but one
+            # is "put it back" and the other is "this step can also do this" —
+            # a list that says neither reads as a pile of ids.
+            "addOns": [n for n in add_ons if n not in order],
             "changes": {
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],

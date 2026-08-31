@@ -386,8 +386,10 @@ interface PhaseControls {
     onRemove: (name: string) => void;
     onAddPhaseAfter: (name: string) => void;
     onAddNode: (phase: string, nodeId: string) => void;
-    /** Nodes the recipe dropped, which are the only ones that can be added. */
+    /** Nodes this step could run and is not — the only ones that can be added. */
     dropped: string[];
+    /** Which of those are shipped add-ons rather than nodes the recipe took out. */
+    addOns: string[];
     /** The step this phase belongs to, named when explaining where nodes come from. */
     step: string;
     /**
@@ -456,8 +458,13 @@ function Phase({ phase, actions, controls }: {
                                 if (id) { controls.onAddNode(phase.name, id); }
                             }}>
                             <option value="">+ node</option>
+                            {/* A node the recipe took out and one this step ships
+                                but does not run read identically as bare ids, so
+                                the list gave no clue which was which. */}
                             {controls.dropped.map(id => (
-                                <option key={id} value={id}>{id}</option>
+                                <option key={id} value={id}>
+                                    {controls.addOns.includes(id) ? `${id} — add-on` : id}
+                                </option>
                             ))}
                         </select>
                     )}
@@ -684,6 +691,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     <Phase key={phase.name} phase={phase} actions={bound}
                         controls={{
                             dropped: step.dropped,
+                            addOns: step.addOns,
                             step: step.name,
                             stockBefore: at === 0
                                 ? step.stockHooks.filter(h => h.when === 'before') : [],

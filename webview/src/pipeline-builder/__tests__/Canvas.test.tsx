@@ -31,6 +31,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
         stockHooks: [],
         hooks: [],
         dropped: [],
+        addOns: [],
         frame: { source: '/ext/nodes/specify/_frame.md', replaced: false },
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
@@ -1058,6 +1059,20 @@ describe('switching workflows', () => {
         (options[options.length - 1] as HTMLButtonElement).click();
 
         expect(count()).toBe(1);
+    });
+});
+
+describe('what the + node picker offers', () => {
+    // A node the recipe took out and one the step ships but does not run read
+    // identically as bare ids, so the list gave no clue which was which.
+    it('marks a shipped add-on as one, and leaves a dropped node bare', () => {
+        const { host } = canvas(graph({
+            steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
+        }));
+        const options = Array.from(host.querySelectorAll('.pb-phase-add-node option'))
+            .map(el => el.textContent?.trim());
+        expect(options).toContain('branch');
+        expect(options).toContain('clarify — add-on');
     });
 });
 

@@ -53,6 +53,7 @@ export function step(
         stockHooks: [],
         hooks: [],
         dropped: [],
+        addOns: [],
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         phases,
         decisions: [],
