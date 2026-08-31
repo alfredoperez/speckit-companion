@@ -128,6 +128,21 @@ The contract, the field meanings, and which surface reads which key are in `docs
 
 `assets/social/carousel-copilot/` holds the Copilot-audience carousel: `deck.html` composes real captures from `docs/screenshots/generated/` and `node assets/social/carousel-copilot/render.mjs` writes the slide PNGs. It follows the same rules as everything else generated: never hand-edit a slide, change the deck and re-run. `.vscodeignore` keeps it out of the `.vsix` alongside `assets/mascot/**` and `website/**`. Its `PROMPT.md` records the art direction it inherits from `speckit-extension/assets/HERO-PROMPT.md`.
 
+## Walkthrough media is packaged, and two panels are still placeholders
+
+`assets/walkthrough/` holds the media for `contributes.walkthroughs`. VS Code resolves those paths against the installed extension root, so `.vscodeignore` whitelists the whole directory: drop a file there and it ships.
+
+Four of the six steps use markdown panels (`open-folder.md`, `install-cli.md`, `initialize-workspace.md`, `first-spec.md`). Those are real copy, not illustrations, and they need no capture pass.
+
+Two steps want a product screenshot that has never been shot, so they ship a deliberately blank placeholder in the site palette (`#0a0913` ground, `#a78bfa` accent) that reads "Illustration under construction". They are honest stand-ins, not stock art, and they must never be replaced with a screenshot of something else:
+
+| Placeholder | What the real asset must show |
+|---|---|
+| `illustration-under-construction-spec-viewer.svg` | The Visual Spec Viewer with the bundled sample (`assets/sample-spec/`) open: title and status badge, the pipeline rail with its phase tabs, and the rendered `spec.md` with a user story in frame |
+| `illustration-under-construction-overview.svg` | The Overview tab of a finished run, the same dossier `overview-annotated.png` captures: run status header, per-phase timing, one decision card with its rejected alternative, and the top of the coverage table |
+
+Each SVG carries the same brief as an XML comment, so filling one in is mechanical: shoot it through a capture story plus `scripts/capture-docs-images.mjs` on the capture palette, from the Teamboard fixtures, then swap the file and point that step's `media` at the new path. A raster replacement moves the step from `media.svg` to `media.image`, which needs an `altText` (the walkthrough host ignores `altText` on `svg` media and falls back to the file path, which is why these filenames say what they are).
+
 ## Fixtures are published copy
 
 The Teamboard fixture prose (`webview/src/spec-viewer/__fixtures__/teamboard/`) appears verbatim in public images and videos. Keep it legible and deliberately dull; it must never be anyone's real spec. Preserve its engineered properties: FR-004 stays vacuous by design (it is the clarify-demo plant). No em dashes in fixture text or any on-screen copy. The product name in on-image copy is "Spec Kit Companion", two words.

@@ -8,6 +8,23 @@ The full install and setup story: what's required, what's optional, and how the 
 2. **Open the sidebar**: the SpecKit icon is always visible in the activity bar; with no folder open, clicking it shows an empty-state panel with an **Open Folder** action
 3. **Create a spec**: once a folder is open, click the `+` button in the Specs view to start your first feature
 
+### The Get Started walkthrough
+
+VS Code opens a **Get Started with SpecKit Companion** walkthrough on the welcome page right after install, and **Help → Get Started** reopens it whenever you want. Unlike the sidebar's empty states, it shows up even in a workspace that has no specs and no `.specify/` directory, which is exactly where a first install usually lands.
+
+Six steps, each with its own button:
+
+| Step | What it does | Shown when |
+|------|--------------|------------|
+| Open a project | `vscode.openFolder` | Only with no folder open |
+| See what a spec looks like | Seeds and opens the bundled sample spec (`speckit.openSampleSpec`) | Always |
+| Install the Spec Kit CLI | `speckit.installCli`; ticks itself off once `speckit.cliInstalled` is true | Always |
+| Set up this project | `speckit.initWorkspace`; ticks itself off once `speckit.detected` is true | Always |
+| Write your first spec | `speckit.create` | Always |
+| Read the Overview it leaves behind | Links to the Overview reference | Always |
+
+The order is deliberate: reading a real spec comes *before* installing anything, because the viewer needs no CLI. The two CLI steps are marked optional in their own copy, matching the required-vs-optional table below.
+
 ## Setup & Components
 
 SpecKit Companion is one extension that sits *on top of* a spec-driven workflow. It does not replace the command-line [spec-kit](https://github.com/github/spec-kit) process, and most of its pieces are optional. Here's what's actually required:

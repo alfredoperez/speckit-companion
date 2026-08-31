@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **A Get Started walkthrough, so a fresh install tells you what to do.** VS Code opens a **Get Started with SpecKit Companion** page after install, and **Help → Get Started** reopens it any time. Six steps with their own buttons: open a project, read the bundled sample spec, install the Spec Kit CLI, set up the project, write your first spec, and read the Overview the run leaves behind. It appears even in a workspace with no specs and no setup, which the sidebar's empty states never reach, and the CLI steps tick themselves off once the CLI and the project are actually detected. Two of the steps ship a clearly marked "illustration under construction" panel until the real screenshots are shot.
+
 ## [0.32.0] - 2026-08-26
 
 ### Added

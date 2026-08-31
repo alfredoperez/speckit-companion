@@ -20,7 +20,7 @@ The extension splits into three runtime layers and one configuration surface:
 
 - **Extension host** (`src/`) — Node.js code that owns tree views, custom editors, file watchers, terminal dispatch, and the `.spec-context.json` lifecycle.
 - **Webview** (`webview/src/`) — sandboxed-browser Preact code that renders the spec viewer and the spec/workflow editors. It receives state from the extension via `postMessage` and never touches the filesystem itself.
-- **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials.
+- **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials, plus `assets/sample-spec/` (the bundled sample the welcome seeds) and `assets/walkthrough/` (the media behind `contributes.walkthroughs`).
 - **Manifest** (`package.json`) — declarative contributions (views, commands, menus, configuration enums).
 
 The repo also carries a **marketing and documentation site** at `website/`: an Astro project with the Starlight docs integration, static output, deployed by Vercel from its own `package.json` and lockfile. It ships to nobody through the extension, because `.vscodeignore` excludes `website/**` from the `.vsix`, and no code under `src/` or `webview/src/` imports from it. The one coupling that runs the other way is visual: the Storybook capture palette is anchored to `website/src/styles/tokens.css`, and parts of `website/public/` are build outputs of scripts in this repo — `public/media/` from `website/scripts/sync-media.mjs`, `public/mascot/` from `scripts/build-mascot-assets.mjs`, `public/favicon-*.png` from `scripts/build-favicons.mjs`. The site's `build` script runs `sync:media` before `astro build`, so a deploy pulls in `media/web/` on its own. See [`visual-assets.md`](./visual-assets.md).

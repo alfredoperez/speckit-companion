@@ -112,6 +112,8 @@ Everything lives in plain files in your repo: the spec markdown plus a `.spec-co
 
 That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing.
 
+Prefer to be walked through it? VS Code opens a **Get Started with SpecKit Companion** walkthrough after install, and **Help → Get Started** reopens it any time. It runs the same three steps above, plus a one-click sample spec you can read before writing one of your own.
+
 ## Works with your AI
 
 Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](./docs/providers.md).

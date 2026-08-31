@@ -1,0 +1,29 @@
+<svg viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration under construction: an Overview dossier screenshot goes here">
+	<!--
+		PLACEHOLDER. Deliberately not a screenshot of anything.
+
+		What the real asset must show: the Overview tab of a finished run,
+		the same dossier docs/screenshots/generated/overview-annotated.png
+		captures for the README. Wanted in frame: the run status header, the
+		per-phase timing strip, at least one decision card with its rejected
+		alternative, and the top of the requirement to test coverage table.
+		Shoot it through a capture story plus scripts/capture-docs-images.mjs
+		on the capture palette in .storybook/capture-theme.ts, from the
+		Teamboard fixtures, never from a real spec. Rules: docs/visual-assets.md.
+
+		When the real image lands, swap this file for it and point the
+		"overview" walkthrough step's media at the new path.
+	-->
+	<rect width="560" height="360" rx="14" fill="#0a0913" />
+	<rect x="0.75" y="0.75" width="558.5" height="358.5" rx="13.25" fill="none" stroke="#a78bfa" stroke-opacity="0.3" stroke-width="1.5" />
+	<rect x="30" y="30" width="500" height="300" rx="10" fill="none" stroke="#a78bfa" stroke-opacity="0.22" stroke-width="1.5" stroke-dasharray="7 8" />
+
+	<circle cx="280" cy="126" r="21" fill="none" stroke="#a78bfa" stroke-opacity="0.55" stroke-width="1.5" />
+	<path d="M270 126 h20 M280 116 v20" stroke="#a78bfa" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round" />
+
+	<text x="280" y="186" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" letter-spacing="3.4" fill="#a78bfa">ILLUSTRATION UNDER CONSTRUCTION</text>
+	<text x="280" y="220" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="16" fill="#b6b0d2">A screenshot of the Overview belongs here.</text>
+	<text x="280" y="246" text-anchor="middle" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" fill="#6f6994">It has not been shot yet, so nothing stands in for it.</text>
+
+	<rect x="243" y="278" width="74" height="2" rx="1" fill="#a78bfa" fill-opacity="0.35" />
+</svg>

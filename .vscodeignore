@@ -25,6 +25,9 @@ README*.md
 !assets/media/**
 !assets/icons/**
 !assets/sample-spec/**
+# Media for contributes.walkthroughs. VS Code resolves these paths against the
+# installed extension root, so the Get Started page breaks if they miss the .vsix.
+!assets/walkthrough/**
 .claude/**
 CLAUDE.md
 scripts/**
