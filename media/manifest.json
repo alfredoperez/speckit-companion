@@ -801,7 +801,7 @@
       "kind": "clip",
       "status": "shipped",
       "composition": "media/feature-clips/write-only-specs",
-      "films": "The article's numbers stamped in one per beat, the confession that nothing read them, the tangled every-session re-read, the write-only-specs verdict, then the short emerald living-spec path and the blog lockup with the mascot.",
+      "films": "The hook already stamped at frame 0, the numbers stamped in fast, the confession, the tangled every-session re-read, the write-only-specs verdict, then the short emerald living-spec path and the blog lockup with the mascot.",
       "claim": "",
       "outputs": {
         "canonicalMp4": "media/feature-clips/write-only-specs/renders/write-only-specs.mp4",
@@ -816,7 +816,7 @@
         "media/web/write-only-specs-x16x9.png": "Typographic promo for the article 'I Wrote 238 Specs and Never Read One Again': 94 spec folders, 238 files, 15,225 lines stamped in marker lettering on ivory, a tangled ink line through closed boxes, then one short emerald path through an open box with the Spec Kit Companion mascot pointing along it"
       },
       "referencedBy": {},
-      "notes": "Typographic, reads no capture (like make-it-yours). 1920x1080 30fps 40.0s clean loop, silent. Colors sampled from IMG-hero-write-only-specs.png; Permanent Marker vendored in assets/fonts. Promotes the blog article, not a product surface."
+      "notes": "Typographic, reads no capture (like make-it-yours). 1920x1080 30fps 26.0s, silent; frame 0 is the fully-stamped hook and the loop closes on it (frame 0 is also the poster). Colors sampled from IMG-hero-write-only-specs.png; Permanent Marker vendored in assets/fonts. Promotes the blog article, not a product surface."
     }
   ]
 }
