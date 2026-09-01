@@ -31,8 +31,8 @@
  * so this list is the only thing that can bring them back: every PNG any
  * composition under media/feature-clips/ reads is named here, and a retheme in
  * .storybook/capture-theme.ts reaches the clips by re-running this list.
- * (`make-it-yours` is the one composition with no entries — it is typographic
- * and reads no capture at all.) Nothing published points at these files.
+ * (`make-it-yours` and `write-only-specs` are the compositions with no
+ * entries — they are typographic and read no capture at all.) Nothing published points at these files.
  *
  * A CLIP CAPTURE'S PIXEL SIZE IS A CONTRACT
  * Every rect in a composition's BEATS array (and in the `R` tables the two
