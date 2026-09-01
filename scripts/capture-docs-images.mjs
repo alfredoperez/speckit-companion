@@ -173,6 +173,28 @@ const STORIES = [
     { story: 'pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
     { story: 'pipeline-builder-guide--what-the-build-did', out: 'builder-built.png' },
     { story: 'pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
+
+    // ── 16:9 article variants (ReadmeCapture.stories.tsx C8/C9/C10) ───────
+    // 1600x900 CSS, so 3200x1800 at DPR 2. ADDITIONS, not replacements: the
+    // names above are load-bearing for the published Marketplace README, so
+    // the wide cuts take new `-16x9` names and nothing already here moves.
+    {
+        story: 'video-capture-readme-composites--c-8-living-specs-pair-wide',
+        out: 'living-specs-pair-16x9.png',
+    },
+    {
+        story: 'video-capture-readme-composites--c-9-overview-dossier-wide',
+        out: 'overview-16x9.png',
+        annotate: {
+            selector: '.dossier-timing',
+            label: 'Honest per-phase timing',
+            out: 'overview-annotated-16x9.png',
+        },
+    },
+    {
+        story: 'video-capture-readme-composites--c-10-inline-comments-wide',
+        out: 'inline-comments-16x9.png',
+    },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/preact";
 import { InlineComment } from "./InlineComment";
+import { InlineEditor } from './InlineEditor';
 import type { Refinement } from "../types";
 
 const meta: Meta<typeof InlineComment> = {
@@ -209,6 +210,46 @@ export const severalOnOneDocument = () => (
         onDelete={noop}
         onEdit={noop}
         onRefine={noop}
+      />
+    </Line>
+    <Line text="Audit events are written for every sign-in attempt." />
+  </div>
+);
+
+/**
+ * The same document with the composer open on an uncommented line, so a reader
+ * sees how a comment gets added, not just what one looks like once it exists.
+ * Used by the article capture (C10) — the resting-state `severalOnOneDocument`
+ * above stays untouched because the README still and the clip both read it.
+ */
+export const severalOnOneDocumentWithComposer = () => (
+  <div>
+    <Line text="The authentication system must support multiple identity providers.">
+      <InlineComment
+        refinement={refinement({ id: "r1", comment: "Name the providers in scope for v1" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+    <Line text="Password reset flows must complete within five minutes.">
+      <InlineComment
+        refinement={refinement({ id: "r2", status: "applied", comment: "Say what happens when the link expires" })}
+        mode="line"
+        onDelete={noop}
+        onEdit={noop}
+        onRefine={noop}
+      />
+    </Line>
+    <Line text="Failed logins are rate-limited per account.">
+      <InlineEditor
+        mode="line"
+        lineNum={4}
+        lineType="paragraph"
+        onSubmit={noop}
+        onCancel={noop}
+        onContextAction={noop}
       />
     </Line>
     <Line text="Audit events are written for every sign-in attempt." />

@@ -86,7 +86,14 @@ import {
 } from '../markdown';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
-import { IntentSection, OverviewTiming, VerifiedSection } from '../components/OverviewDossier';
+import {
+    CoverageSection,
+    DecisionsSection,
+    IntentSection,
+    OverviewTiming,
+    VerifiedSection,
+} from '../components/OverviewDossier';
+import { severalOnOneDocument, severalOnOneDocumentWithComposer } from '../components/InlineComment.stories';
 import { SpecHeader } from '../components/SpecHeader';
 
 // The cross-promo banner ground (C5/C6): the mossy sprout mascot cradling its
@@ -804,13 +811,231 @@ export const C7SocialCard: Story = {
 
                 <div style="position: absolute; left: 96px; bottom: 54px; display: flex; align-items: center; gap: 14px;">
                     <img
-                        src="/mascot/poses/mascot-pointing-1782272318893.png"
+                        src="/mascot/poses/mascot-pointing-1788108771000.png"
                         alt=""
                         style="width: 54px; height: 54px; object-fit: contain;"
                     />
                     <span style="font: 500 20px/1 'Geist', ui-monospace, SFMono-Regular, Menlo, monospace; color: #8b84ad; letter-spacing: 0.06em;">
                         speckit-companion.dev
                     </span>
+                </div>
+            </div>
+        </CaptureFrame>
+    ),
+};
+
+// ═════════════════════════════════════════════════════════════════════════
+// 16:9 ARTICLE VARIANTS — C8 · C9 · C10
+// ═════════════════════════════════════════════════════════════════════════
+// The same three subjects the READMEs already carry, re-composed at
+// 1600 x 900 (3200 x 1800 at the capture script's DPR 2) so an article can
+// drop them into a 16:9 slot without letterboxing or cropping the file.
+//
+// THEY ARE ADDITIONS, NOT REPLACEMENTS. Every filename already in
+// docs/screenshots/generated/ is load-bearing: the Marketplace serves the
+// last PUBLISHED README but resolves its images against current `main`, so
+// renaming, deleting, or resizing an existing output retroactively 404s the
+// live listing. These write to new `-16x9` names and leave C1–C7 alone.
+//
+// Ground, type scale, panel chrome, and the bottom fade are C1/C3's, so the
+// wide variants read as the same family as the README images they echo.
+
+const WIDE_CAPTURE = { width: 1600, height: 900 };
+
+/** The type band C1 and C3 set above their panels, at the wide frame's scale. */
+function WideHeader({ title, subline, meta }: { title: string; subline: string; meta: string }) {
+    return (
+        <div style="display: flex; align-items: baseline; justify-content: space-between; flex-shrink: 0;">
+            <div style="display: flex; align-items: baseline; gap: 16px;">
+                <div style="font: 600 28px/1.2 var(--vscode-font-family); color: var(--vscode-editor-foreground); letter-spacing: -0.01em;">
+                    {title}
+                </div>
+                <div style="font: 400 16px/1.4 var(--vscode-font-family); color: var(--vscode-descriptionForeground);">
+                    {subline}
+                </div>
+            </div>
+            <div style="font: 500 13px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); letter-spacing: 0.04em;">
+                {meta}
+            </div>
+        </div>
+    );
+}
+
+/** The clipped-bottom-edge fade C1, C3 and C4 all end their panels with. */
+function BottomFade() {
+    return (
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
+    );
+}
+
+const WIDE_PANEL =
+    'position: relative; min-width: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-editor-background);';
+
+// ── C8 · Living Specs pair, 16:9 (`generated/living-specs-pair-16x9.png`) ──
+// C3's composition at the wide frame: the sidebar's Living Specs view
+// (per-capability coverage counts, drift flags) beside the viewer in its real
+// livingMode on the SAME capability — photo-storage, 7 of 9 covered, drifted.
+// Both panels are product rendering fed by the photo-storage.spec.md fixture;
+// nothing here is drawn for the picture.
+
+export const C8LivingSpecsPairWide: Story = {
+    name: 'C8 · Living Specs pair (16:9)',
+    parameters: { capture: WIDE_CAPTURE },
+    render: () => (
+        <CaptureFrame>
+            <div style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 34px 44px 38px; background: var(--vscode-editor-background); gap: 20px;">
+                <WideHeader
+                    title="Living Specs"
+                    subline="One durable spec per capability, kept in one folder or next to the code it covers."
+                    meta="Coverage · Drift · Sync"
+                />
+                <div style="display: flex; gap: 22px; flex: 1; min-height: 0;">
+                    <div
+                        id="living-pair-wide-sidebar"
+                        data-panel="sidebar"
+                        style="width: 360px; flex-shrink: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);"
+                    >
+                        <SidebarShell
+                            panes={[
+                                { ...specsPane(false), collapsed: true },
+                                livingSpecsPane(true),
+                                { ...steeringPane(), collapsed: true },
+                            ]}
+                        />
+                    </div>
+                    <div id="living-pair-wide-viewer" data-panel="viewer" style={`flex: 1; ${WIDE_PANEL}`}>
+                        {/* 140px shorter than C3, so the reading column is
+                            parked on Requirements: the LIVING header is fixed
+                            chrome and stays, and the frame spends its height
+                            on requirement and WHEN/THEN rows rather than on
+                            the Purpose paragraph. */}
+                        <ScrollTo headingId="requirements" offset={186}>
+                            <LivingViewerPanel />
+                        </ScrollTo>
+                        <BottomFade />
+                    </div>
+                </div>
+            </div>
+        </CaptureFrame>
+    ),
+};
+
+// ── C9 · Overview dossier, 16:9 (`generated/overview-16x9.png`) ────────────
+// The completed Teamboard run's Overview, laid into two columns so the whole
+// dossier reads inside a 16:9 frame instead of scrolling past it: run
+// overview and per-phase timing plus the verified checks and the commands
+// that prove them on the left, the requirement-to-test coverage table and
+// the decisions with their rejected alternatives on the right.
+//
+// Both columns are the REAL `.activity-panel.dossier` markup rendering the
+// real sections — the same components ActivityPanel composes — off the
+// completed spec-context fixture. The layout is split and re-ordered; no
+// section's content is restaged.
+//
+// The capture script's `annotate` block measures `.dossier-timing` with
+// getBoundingClientRect and draws one box plus label from the measurement,
+// writing `overview-annotated-16x9.png`. THEME.md permits exactly this kind
+// of callout and no other.
+
+// The dossier's own vertical rhythm is set for a full-height panel; in a
+// 900-tall frame split in two it spends 40px per section on air it does not
+// need. Tightening the composite's own padding and gap is the whole override:
+// nothing inside a section moves. The run-overview block keeps its full
+// bottom margin on purpose — that gap is where the measured callout's label
+// chip lands, and closing it puts the chip on top of the Approach label.
+const WIDE_DOSSIER_CSS = `
+    .capture-stage .activity-panel { padding: 16px 26px; gap: 10px; }
+`;
+
+/** Verified sliced to what the column can show whole. The section's count chip
+ *  reads `items.length`, so it goes on honestly counting what is on screen
+ *  (the same device C4's Traceability panel uses). */
+const vsVerifiedShown: ViewerState = {
+    ...vsCompletedStrip,
+    verified: vsCompletedStrip.verified!.slice(0, 3),
+};
+
+export const C9OverviewDossierWide: Story = {
+    name: 'C9 · Overview dossier (16:9)',
+    parameters: { capture: WIDE_CAPTURE },
+    render: () => (
+        <CaptureFrame>
+            <style>{WIDE_DOSSIER_CSS}</style>
+            <div style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 32px 44px 34px; background: var(--vscode-editor-background); gap: 18px;">
+                <WideHeader
+                    title="Overview"
+                    subline="What the run intended, what it checked, what it chose, and what is actually covered."
+                    meta="041 · Profile photo upload · COMPLETED"
+                />
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; min-height: 0;">
+                    <div id="dossier-wide-left" data-panel="run" style={WIDE_PANEL}>
+                        <div class="activity-panel dossier">
+                            <IntentSection state={vsCompletedStrip} />
+                            <VerifiedSection state={vsVerifiedShown} />
+                        </div>
+                        <BottomFade />
+                    </div>
+                    {/* Coverage above Decisions, which inverts the page's own
+                        order. A cut table reads as broken; a cut list of
+                        decisions reads as a list that continues, so the table
+                        is the one that gets to finish. */}
+                    <div id="dossier-wide-right" data-panel="record" style={WIDE_PANEL}>
+                        <div class="activity-panel dossier">
+                            <CoverageSection state={vsCompletedStrip} />
+                            <DecisionsSection state={vsCompletedStrip} />
+                        </div>
+                        <BottomFade />
+                    </div>
+                </div>
+            </div>
+        </CaptureFrame>
+    ),
+};
+
+// ── C10 · Inline comments, 16:9 (`generated/inline-comments-16x9.png`) ────
+// `Viewer/InlineComment`'s own `Several on one document` — two pending
+// comments and one already applied, each pinned under the line it annotates —
+// imported rather than copied, so this frame, the README still, and the
+// inline-comments clip all show the same document.
+//
+// It is mounted in a bare `#markdown-content`, NOT in the story's
+// `DocumentContext`. That helper hard-codes a dark VS Code palette because
+// the component catalog has no viewer around it; here the capture palette is
+// already on :root, so the annotations take the same ground as C8 and C9
+// instead of dropping a dark rectangle into a light composite.
+//
+// The card is the viewer's 590px reading column. In a 1600-wide frame that
+// would sit as a stamp in a field of ground, so the document block is zoomed
+// rather than re-typeset: `zoom` re-lays-out at the larger size (real glyphs
+// at the larger size, not a scaled bitmap) and leaves the shared story
+// untouched.
+
+// The viewer's own reading-column width, the same 590 the README still and
+// the inline-comments clip frame the card at.
+const IC_CARD_WIDTH_WIDE = 590;
+const IC_WIDE_ZOOM = 1.8;
+
+export const C10InlineCommentsWide: Story = {
+    name: 'C10 · Inline comments (16:9)',
+    parameters: { capture: WIDE_CAPTURE },
+    render: () => (
+        <CaptureFrame>
+            <div style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 32px 44px 36px; background: var(--vscode-editor-background); gap: 18px;">
+                <WideHeader
+                    title="Inline review comments"
+                    subline="Comment on the line it belongs to. The composer is open on line 4."
+                    meta="Pending · Applied"
+                />
+                <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;">
+                    <div
+                        id="inline-comments-wide-card"
+                        data-panel="document"
+                        style={`${WIDE_PANEL} padding: 30px 34px; zoom: ${IC_WIDE_ZOOM};`}
+                    >
+                        <div id="markdown-content" style={`width: ${IC_CARD_WIDTH_WIDE}px;`}>
+                            {severalOnOneDocumentWithComposer()}
+                        </div>
+                    </div>
                 </div>
             </div>
         </CaptureFrame>
