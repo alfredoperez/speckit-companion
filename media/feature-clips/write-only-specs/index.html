@@ -38,13 +38,16 @@
 
       .scene { position:absolute; inset:0; }
       .center { text-align:center; }
-
-      /* ---- scene 1 · the numbers, stamped ---- */
-      #s1 .nums { position:absolute; left:0; right:0; top:200px; }
       .stamp { font-family:var(--marker); color:var(--ink); }
-      #s1 .stamp { font-size:112px; line-height:1.28; }
-      #conf { position:absolute; left:0; right:0; top:790px;
-              font-family:var(--marker); font-size:52px; color:var(--ink-soft); }
+
+      /* ---- scene 0 · the hook, fully stamped at frame 0 (it is the poster) ---- */
+      #h1 { position:absolute; left:0; right:0; top:360px; font-size:124px; }
+      #h2 { position:absolute; left:0; right:0; top:590px; font-size:84px; }
+
+      /* ---- scene 1 · the numbers, stamped fast ---- */
+      #mnums .rows { position:absolute; left:0; right:0; top:240px; }
+      #mnums .row { font-size:100px; line-height:1.3; }
+      #r0 { position:absolute; left:0; right:0; top:700px; font-size:76px; }
 
       /* ---- scene 2 · one centered line ---- */
       #s2 .line { position:absolute; left:0; right:0; top:490px; white-space:nowrap;
@@ -61,9 +64,8 @@
 
       /* ---- scene 4 · the verdict, stamped ---- */
       #st1 { position:absolute; left:50%; top:300px; width:1240px; margin-left:-620px;
-             font-family:var(--marker); font-size:72px; line-height:1.3; color:var(--ink); }
-      #st2 { position:absolute; left:0; right:0; top:640px;
-             font-family:var(--marker); font-size:118px; color:var(--ink); }
+             font-size:72px; line-height:1.3; }
+      #st2 { position:absolute; left:0; right:0; top:640px; font-size:118px; }
 
       /* ---- scenes 5 + 6 · the emerald path, then the lockup over it ---- */
       #pathScene { position:absolute; inset:0; }
@@ -74,10 +76,8 @@
       #ringdot   { fill:var(--emerald); }
       #mascot    { position:absolute; left:118px; top:606px; height:262px; }
 
-      #s5t1 { position:absolute; left:0; right:0; top:460px;
-              font-family:var(--marker); font-size:64px; color:var(--ink); }
-      #s5t2 { position:absolute; left:0; right:0; top:590px;
-              font-family:var(--marker); font-size:44px; color:var(--ink-soft); }
+      #s5t1 { position:absolute; left:0; right:0; top:470px;
+              font-family:var(--marker); font-size:66px; color:var(--ink); }
 
       #s6 .eyebrow { position:absolute; left:0; right:0; top:210px;
                      font-family:var(--sans); font-weight:600; font-size:27px;
@@ -91,95 +91,101 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="40" data-fps="30"
+    <div id="root" data-composition-id="main" data-start="0" data-duration="26" data-fps="30"
          data-width="1920" data-height="1080">
 
-      <div id="stage" class="clip" data-start="0" data-duration="40" data-track-index="0">
+      <div id="stage" class="clip" data-start="0" data-duration="26" data-track-index="0">
         <div id="ground"></div>
 
-        <!-- everything that fades to bare ivory at the close lives in #all -->
-        <div id="all">
-
-          <!-- scene 1 · the numbers stamp in, then the confession -->
-          <div class="scene center" id="s1" data-layout-allow-overlap data-layout-allow-occlusion>
-            <div class="nums">
-              <div class="stamp" id="n1">94 spec folders</div>
-              <div class="stamp" id="n2">238 files</div>
-              <div class="stamp" id="n3">15,225 lines</div>
-            </div>
-            <div id="conf">I never reopened one.</div>
-          </div>
-
-          <!-- scene 2 · the assumption -->
-          <div class="scene center" id="s2" data-layout-allow-overlap data-layout-allow-occlusion>
-            <div class="line">I thought that was MY filing problem.</div>
-          </div>
-
-          <!-- scene 3 · the long tangled ink line through closed boxes -->
-          <div class="scene center" id="s3" data-layout-allow-overlap data-layout-allow-occlusion>
-            <svg id="tangle" viewBox="0 0 1500 430">
-              <g id="tboxes">
-                <rect x="206" y="54" width="30" height="30"/>
-                <rect x="668" y="7" width="34" height="34"/>
-                <rect x="1140" y="50" width="26" height="26"/>
-                <rect x="1156" y="168" width="34" height="34"/>
-                <rect x="638" y="148" width="34" height="34"/>
-                <rect x="220" y="171" width="26" height="26"/>
-                <rect x="241" y="223" width="30" height="30"/>
-                <rect x="664" y="287" width="30" height="30"/>
-                <rect x="1175" y="282" width="30" height="30"/>
-                <rect x="1163" y="346" width="26" height="26"/>
-                <rect x="645" y="343" width="34" height="34"/>
-                <rect x="207" y="382" width="30" height="30"/>
-              </g>
-              <path id="tink" d="M 87 19 C 109 27 175 61 221 69 C 266 76 305 60 363 62 C 420 64 512 87 565 81 C 619 74 638 32 685 24 C 732 17 791 33 846 36 C 901 40 963 41 1014 46 C 1065 51 1099 59 1153 63 C 1207 68 1313 52 1338 74 C 1362 96 1329 178 1302 196 C 1274 215 1218 187 1173 185 C 1128 182 1089 185 1030 183 C 972 182 884 180 822 177 C 759 174 702 168 655 165 C 609 163 591 158 544 162 C 498 167 427 188 375 191 C 323 195 282 193 233 184 C 183 175 111 120 76 140 C 41 159 -5 286 25 302 C 55 318 198 238 256 238 C 315 238 336 299 376 302 C 416 306 446 262 497 262 C 547 262 611 304 679 302 C 747 300 841 251 903 250 C 965 248 1003 286 1051 294 C 1098 302 1146 299 1190 297 C 1234 294 1294 264 1315 279 C 1337 294 1344 373 1321 386 C 1298 399 1219 362 1176 359 C 1133 357 1120 363 1064 370 C 1007 378 905 406 838 404 C 771 402 710 362 662 360 C 615 357 595 384 553 388 C 510 393 463 387 408 388 C 353 390 283 397 222 397 C 161 397 74 388 44 387"/>
-            </svg>
-            <div id="s3t1">My AI never read them either.</div>
-            <div id="s3t2">It re-read the whole codebase. Every session.</div>
-          </div>
-
-          <!-- scene 4 · the verdict -->
-          <div class="scene center" id="s4" data-layout-allow-overlap data-layout-allow-occlusion>
-            <div class="stamp" id="st1">A spec that nothing reads isn&rsquo;t documentation.</div>
-            <div class="stamp" id="st2">It&rsquo;s exhaust.</div>
-          </div>
-
-          <!-- scenes 5 + 6 share the emerald path -->
-          <div id="pathScene" data-layout-allow-overlap data-layout-allow-occlusion>
-            <svg id="shortPath" viewBox="0 0 1400 120">
-              <path class="openbox" d="M 668 45 L 668 29 L 732 29 L 732 45"/>
-              <path class="openbox" d="M 668 77 L 668 93 L 732 93 L 732 77"/>
-              <path id="living" d="M 40 62 C 240 54 430 66 640 62 C 664 61 676 61 700 61 C 724 61 736 61 760 61 C 980 63 1160 55 1318 60"/>
-              <g id="target">
-                <circle id="ring" cx="1352" cy="60" r="17"/>
-                <circle id="ringdot" cx="1352" cy="60" r="4.5"/>
-              </g>
-            </svg>
-            <img id="mascot" src="assets/mascot-pointing.png" alt="" />
-          </div>
-
-          <div class="scene center" id="s5" data-layout-allow-overlap data-layout-allow-occlusion>
-            <div id="s5t1">14 living specs load first.</div>
-            <div id="s5t2">Code is read only to locate.</div>
-          </div>
-
-          <!-- scene 6 · the lockup -->
-          <div class="scene center" id="s6" data-layout-allow-overlap data-layout-allow-occlusion>
-            <div class="eyebrow">NEW ON THE BLOG</div>
-            <div class="title">I Wrote 238 Specs and Never Read One Again</div>
-            <div class="meta">Spec Kit &middot; Companion</div>
-            <div class="url">speckit-companion.dev</div>
-          </div>
-
+        <!-- scene 0 · the hook. Fully stamped at frame 0: it is also the poster,
+             and the loop snaps back to exactly this state at the close. -->
+        <div class="scene center" id="h" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="stamp" id="h1">I wrote 238 specs.</div>
+          <div class="stamp" id="h2">I never read one again.</div>
         </div>
+
+        <!-- scene 1 · the numbers stamp in fast, then the count that matters -->
+        <div class="scene center" id="mnums" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="rows">
+            <div class="stamp row" id="n1">94 folders.</div>
+            <div class="stamp row" id="n2">238 files.</div>
+            <div class="stamp row" id="n3">15,225 lines.</div>
+          </div>
+          <div class="stamp" id="r0">Reopened: zero.</div>
+        </div>
+
+        <!-- scene 2 · the assumption -->
+        <div class="scene center" id="s2" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="line">I thought that was MY filing problem.</div>
+        </div>
+
+        <!-- scene 3 · the long tangled ink line through closed boxes -->
+        <div class="scene center" id="s3" data-layout-allow-overlap data-layout-allow-occlusion>
+          <svg id="tangle" viewBox="0 0 1500 430">
+            <g id="tboxes">
+              <rect x="206" y="54" width="30" height="30"/>
+              <rect x="668" y="7" width="34" height="34"/>
+              <rect x="1140" y="50" width="26" height="26"/>
+              <rect x="1156" y="168" width="34" height="34"/>
+              <rect x="638" y="148" width="34" height="34"/>
+              <rect x="220" y="171" width="26" height="26"/>
+              <rect x="241" y="223" width="30" height="30"/>
+              <rect x="664" y="287" width="30" height="30"/>
+              <rect x="1175" y="282" width="30" height="30"/>
+              <rect x="1163" y="346" width="26" height="26"/>
+              <rect x="645" y="343" width="34" height="34"/>
+              <rect x="207" y="382" width="30" height="30"/>
+            </g>
+            <path id="tink" d="M 87 19 C 109 27 175 61 221 69 C 266 76 305 60 363 62 C 420 64 512 87 565 81 C 619 74 638 32 685 24 C 732 17 791 33 846 36 C 901 40 963 41 1014 46 C 1065 51 1099 59 1153 63 C 1207 68 1313 52 1338 74 C 1362 96 1329 178 1302 196 C 1274 215 1218 187 1173 185 C 1128 182 1089 185 1030 183 C 972 182 884 180 822 177 C 759 174 702 168 655 165 C 609 163 591 158 544 162 C 498 167 427 188 375 191 C 323 195 282 193 233 184 C 183 175 111 120 76 140 C 41 159 -5 286 25 302 C 55 318 198 238 256 238 C 315 238 336 299 376 302 C 416 306 446 262 497 262 C 547 262 611 304 679 302 C 747 300 841 251 903 250 C 965 248 1003 286 1051 294 C 1098 302 1146 299 1190 297 C 1234 294 1294 264 1315 279 C 1337 294 1344 373 1321 386 C 1298 399 1219 362 1176 359 C 1133 357 1120 363 1064 370 C 1007 378 905 406 838 404 C 771 402 710 362 662 360 C 615 357 595 384 553 388 C 510 393 463 387 408 388 C 353 390 283 397 222 397 C 161 397 74 388 44 387"/>
+          </svg>
+          <div id="s3t1">My AI never read them either.</div>
+          <div id="s3t2">It re-read the codebase. Every session.</div>
+        </div>
+
+        <!-- scene 4 · the verdict -->
+        <div class="scene center" id="s4" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="stamp" id="st1">A spec that nothing reads isn&rsquo;t documentation.</div>
+          <div class="stamp" id="st2">It&rsquo;s exhaust.</div>
+        </div>
+
+        <!-- scenes 5 + 6 share the emerald path -->
+        <div id="pathScene" data-layout-allow-overlap data-layout-allow-occlusion>
+          <svg id="shortPath" viewBox="0 0 1400 120">
+            <path class="openbox" d="M 668 45 L 668 29 L 732 29 L 732 45"/>
+            <path class="openbox" d="M 668 77 L 668 93 L 732 93 L 732 77"/>
+            <path id="living" d="M 40 62 C 240 54 430 66 640 62 C 664 61 676 61 700 61 C 724 61 736 61 760 61 C 980 63 1160 55 1318 60"/>
+            <g id="target">
+              <circle id="ring" cx="1352" cy="60" r="17"/>
+              <circle id="ringdot" cx="1352" cy="60" r="4.5"/>
+            </g>
+          </svg>
+          <img id="mascot" src="assets/mascot-pointing.png" alt="" />
+        </div>
+
+        <div class="scene center" id="s5" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div id="s5t1">14 living specs load first.</div>
+        </div>
+
+        <!-- scene 6 · the lockup -->
+        <div class="scene center" id="s6" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="eyebrow">NEW ON THE BLOG</div>
+          <div class="title">I Wrote 238 Specs and Never Read One Again</div>
+          <div class="meta">Spec Kit &middot; Companion</div>
+          <div class="url">speckit-companion.dev</div>
+        </div>
+
       </div>
     </div>
 
     <script>
       /* ==================================================================
          Single paused timeline, every tween fromTo + immediateRender:false
-         so the renderer can seek frames in any order. Frame zero is bare
-         ivory, and so is the final frame: the loop closes on stillness.
+         so the renderer can seek frames in any order.
+
+         Frame zero is the fully-stamped hook, not bare ivory: it is the
+         poster, and people scrolling must read it before deciding to stay.
+         The close SNAPS back to exactly that state, so the loop closes on
+         the hook.
 
          The two ink draws are stroke-dashoffset tweens over lengths taken
          from the paths themselves at load, which is synchronous and
@@ -191,12 +197,17 @@
       var TANGLE_LEN = document.getElementById("tink").getTotalLength();
       var LIVING_LEN = document.getElementById("living").getTotalLength();
 
-      gsap.set("#all", { autoAlpha: 1 });
-      gsap.set(["#n1", "#n2", "#n3", "#conf"], { autoAlpha: 0 });
+      /* frame-0 state: the hook at rest. #h1 never tweens; the rotation set
+         here is its rotation forever, which is what keeps the loop's first
+         and last frames pixel-identical. */
+      gsap.set("#h", { autoAlpha: 1 });
+      gsap.set("#h1", { rotation: -1.2 });
+      gsap.set("#h2", { autoAlpha: 0 });
+      gsap.set(["#n1", "#n2", "#n3", "#r0"], { autoAlpha: 0 });
       gsap.set(["#s2 .line", "#s3", "#s3t1", "#s3t2", "#st1", "#st2"], { autoAlpha: 0 });
       gsap.set("#tboxes rect", { autoAlpha: 0 });
       gsap.set("#tink", { strokeDasharray: TANGLE_LEN, strokeDashoffset: TANGLE_LEN });
-      gsap.set(["#pathScene", "#s5t1", "#s5t2", "#s6 .eyebrow", "#s6 .title", "#s6 .meta", "#s6 .url"], { autoAlpha: 0 });
+      gsap.set(["#pathScene", "#s5t1", "#s6 .eyebrow", "#s6 .title", "#s6 .meta", "#s6 .url"], { autoAlpha: 0 });
       gsap.set(".openbox", { autoAlpha: 0 });
       gsap.set("#living", { strokeDasharray: LIVING_LEN, strokeDashoffset: LIVING_LEN });
       gsap.set("#target", { autoAlpha: 0, transformOrigin: "50% 50%" });
@@ -205,71 +216,74 @@
       /* a rubber stamp lands fast and stops hard: accelerate the whole way in */
       function stampIn(sel, at, rot) {
         tl.fromTo(sel, { scale: 1.55, rotation: rot, autoAlpha: 0 },
-          { scale: 1, rotation: rot, autoAlpha: 1, duration: 0.2, ease: "power3.in", immediateRender: false }, at);
+          { scale: 1, rotation: rot, autoAlpha: 1, duration: 0.18, ease: "power3.in", immediateRender: false }, at);
       }
       function riseIn(sel, at, dur) {
         tl.fromTo(sel, { autoAlpha: 0, y: 18 },
-          { autoAlpha: 1, y: 0, duration: dur || 0.55, ease: "power3.out", immediateRender: false }, at);
+          { autoAlpha: 1, y: 0, duration: dur || 0.5, ease: "power3.out", immediateRender: false }, at);
       }
       function fadeOut(sel, at, dur) {
         tl.fromTo(sel, { autoAlpha: 1 },
-          { autoAlpha: 0, duration: dur || 0.4, ease: "power2.in", immediateRender: false }, at);
+          { autoAlpha: 0, duration: dur || 0.3, ease: "power2.in", immediateRender: false }, at);
       }
 
-      /* beat 1 · the numbers stamp in, one per beat */
-      stampIn("#n1", 0.40, -1.4);
-      stampIn("#n2", 1.55, 0.9);
-      stampIn("#n3", 2.70, -0.7);
+      /* beat 1 · the hook: line one is already there, line two stamps under it */
+      stampIn("#h2", 0.85, 0.8);
 
-      /* beat 2 · stillness, then the confession, small */
-      riseIn("#conf", 5.60, 0.7);
+      /* beat 2 · the numbers, fast, then the count that matters */
+      fadeOut("#h", 3.0);
+      stampIn("#n1", 3.25, -1.1);
+      stampIn("#n2", 3.62, 0.9);
+      stampIn("#n3", 3.99, -0.7);
+      stampIn("#r0", 5.15, 0.6);
 
       /* beat 3 · wipe to the assumption */
-      tl.fromTo("#s1", { clipPath: "inset(0% 0% 0% 0%)" },
-        { clipPath: "inset(0% 0% 0% 100%)", duration: 0.65, ease: "power2.inOut", immediateRender: false }, 9.0);
-      tl.set("#s1", { autoAlpha: 0 }, 9.7);
-      riseIn("#s2 .line", 9.55);
+      tl.fromTo("#mnums", { clipPath: "inset(0% 0% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 100%)", duration: 0.5, ease: "power2.inOut", immediateRender: false }, 7.5);
+      tl.set("#mnums", { autoAlpha: 0 }, 8.05);
+      riseIn("#s2 .line", 7.9);
 
-      /* beat 4 · the tangle draws itself through the closed boxes */
-      fadeOut("#s2 .line", 15.5);
-      tl.set("#s3", { autoAlpha: 1 }, 15.75);
+      /* beat 4 · the tangle draws itself fast through the closed boxes */
+      fadeOut("#s2 .line", 10.5);
+      tl.set("#s3", { autoAlpha: 1 }, 10.7);
       tl.fromTo("#tboxes rect", { autoAlpha: 0 },
-        { autoAlpha: 1, duration: 0.3, stagger: 0.05, ease: "power2.out", immediateRender: false }, 15.9);
+        { autoAlpha: 1, duration: 0.25, stagger: 0.03, ease: "power2.out", immediateRender: false }, 10.75);
       tl.fromTo("#tink", { strokeDashoffset: TANGLE_LEN },
-        { strokeDashoffset: 0, duration: 3.9, ease: "power1.inOut", immediateRender: false }, 16.25);
-      riseIn("#s3t1", 16.9);
-      riseIn("#s3t2", 19.7);
+        { strokeDashoffset: 0, duration: 2.2, ease: "power1.inOut", immediateRender: false }, 10.95);
+      riseIn("#s3t1", 11.15);
+      riseIn("#s3t2", 12.9);
 
       /* beat 5 · the ink clears, the verdict stamps in */
-      fadeOut("#s3", 23.0, 0.5);
-      stampIn("#st1", 23.65, -0.6);
-      stampIn("#st2", 25.75, 1.1);
+      fadeOut("#s3", 15.5, 0.4);
+      stampIn("#st1", 15.95, -0.6);
+      stampIn("#st2", 17.45, 1.1);
 
-      /* beat 6 · the one emerald line, short, left to right, through an open box */
-      fadeOut("#st1", 29.0);
-      fadeOut("#st2", 29.0);
-      tl.set("#pathScene", { autoAlpha: 1 }, 29.25);
-      tl.fromTo(".openbox", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power2.out", immediateRender: false }, 29.35);
+      /* beat 6 · the one emerald line cuts through the open box */
+      fadeOut("#st1", 19.5);
+      fadeOut("#st2", 19.5);
+      tl.set("#pathScene", { autoAlpha: 1 }, 19.65);
+      tl.fromTo(".openbox", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, ease: "power2.out", immediateRender: false }, 19.7);
       tl.fromTo("#living", { strokeDashoffset: LIVING_LEN },
-        { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut", immediateRender: false }, 29.55);
+        { strokeDashoffset: 0, duration: 1.1, ease: "power2.inOut", immediateRender: false }, 19.85);
       tl.fromTo("#target", { autoAlpha: 0, scale: 0.4 },
-        { autoAlpha: 1, scale: 1, duration: 0.35, ease: "back.out(2.2)", immediateRender: false }, 31.05);
-      riseIn("#s5t1", 31.35);
-      riseIn("#s5t2", 32.55);
+        { autoAlpha: 1, scale: 1, duration: 0.3, ease: "back.out(2.2)", immediateRender: false }, 20.85);
+      riseIn("#s5t1", 21.05);
 
       /* beat 7 · the lockup lands over the path, the mascot joins it */
-      fadeOut("#s5t1", 35.5, 0.35);
-      fadeOut("#s5t2", 35.5, 0.35);
-      riseIn("#s6 .eyebrow", 35.95, 0.45);
+      fadeOut("#s5t1", 22.5, 0.3);
+      riseIn("#s6 .eyebrow", 22.75, 0.4);
       tl.fromTo("#s6 .title", { autoAlpha: 0, scale: 1.06 },
-        { autoAlpha: 1, scale: 1, duration: 0.45, ease: "power3.out", immediateRender: false }, 36.15);
-      tl.fromTo("#mascot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, ease: "power2.out", immediateRender: false }, 36.35);
-      riseIn("#s6 .meta", 36.5, 0.45);
-      riseIn("#s6 .url", 36.65, 0.45);
+        { autoAlpha: 1, scale: 1, duration: 0.4, ease: "power3.out", immediateRender: false }, 22.9);
+      tl.fromTo("#mascot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: "power2.out", immediateRender: false }, 23.05);
+      riseIn("#s6 .meta", 23.2, 0.4);
+      riseIn("#s6 .url", 23.3, 0.4);
 
-      /* beat 8 · fade to bare ivory; frame zero and the final frame match */
-      tl.fromTo("#all", { autoAlpha: 1 },
-        { autoAlpha: 0, duration: 0.5, ease: "power1.inOut", immediateRender: false }, 39.35);
+      /* beat 8 · snap back to the frame-0 hook, so the loop closes on the hook.
+         A hard cut, not a fade: every set below restores exactly the state the
+         gsap.set block above declared at load. */
+      tl.set(["#pathScene", "#s6 .eyebrow", "#s6 .title", "#s6 .meta", "#s6 .url", "#mascot"], { autoAlpha: 0 }, 25.2);
+      tl.set("#h", { autoAlpha: 1 }, 25.2);
+      tl.set("#h2", { autoAlpha: 0 }, 25.2);
 
       window.__timelines["main"] = tl;
     </script>
