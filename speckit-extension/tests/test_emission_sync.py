@@ -161,22 +161,117 @@ class WhatTheBuildSays(unittest.TestCase):
         self.addCleanup(self.project.close)
         self.root = self.project.root
 
-    def test_a_command_with_no_emission_is_named(self):
-        """A step this project added has one; the installer has never seen it."""
-        _written, unreached = emission_sync.sync(str(self.root), {"review": BODY})
+    def test_a_command_with_nowhere_to_go_is_named(self):
+        """No agent directory at all — nothing to model an emission on."""
+        _w, _c, unreached = emission_sync.sync(str(self.root), {"review": BODY})
         self.assertEqual(unreached, ["review"])
-        said = " ".join(emission_sync.describe([], unreached, str(self.root)))
+        said = " ".join(emission_sync.describe([], [], unreached, str(self.root)))
         self.assertIn("review", said)
-        self.assertIn("not reachable", said)
+        self.assertIn("nothing can dispatch", said)
 
     def test_what_was_refreshed_is_counted_by_area(self):
         emission(self.root, ".claude/skills", "specify", BODY)
-        written, unreached = emission_sync.sync(
+        written, created, unreached = emission_sync.sync(
             str(self.root), {"specify": BODY.replace("Write the spec.", "New.")})
-        self.assertEqual(unreached, [])
-        said = " ".join(emission_sync.describe(written, unreached, str(self.root)))
+        self.assertEqual((created, unreached), ([], []))
+        said = " ".join(emission_sync.describe(written, created, unreached, str(self.root)))
         self.assertIn(".claude/skills", said)
         self.assertIn("1 agent command file", said)
+
+
+class GivingAProjectsOwnStepACommand(unittest.TestCase):
+    """A step a project added will never be in `extension.yml`.
+
+    That file is the extension's own and is what the installer reads, so
+    reinstalling could never register a project's step — the built command sat
+    in a file nothing could dispatch, and the build told you to run an installer
+    that cannot help. So the build writes the emission itself, modelled on a
+    sibling the installer really produced rather than on a guess at seven agent
+    formats, one of which is TOML.
+    """
+
+    SIBLING = (
+        "---\n"
+        "name: speckit-companion-auto\n"
+        "description: Companion auto — run the whole pipeline hands-off (specify\n"
+        "  → implement → mark-complete), no pauses\n"
+        "compatibility: Requires spec-kit project structure\n"
+        "metadata:\n"
+        "  author: github-spec-kit\n"
+        "  source: companion:commands/speckit.companion.auto.md\n"
+        "---\n"
+    )
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+        self.root = self.project.root
+        emission(self.root, ".claude/skills", "auto",
+                 self.SIBLING + BODY.split("---\n", 2)[2])
+
+    def made(self) -> Path:
+        return (self.root / ".claude/skills"
+                / emission_sync.entry_for("review", ".claude/skills"))
+
+    def test_it_is_created(self):
+        created = emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        self.assertEqual(created, [str(self.made())])
+        self.assertTrue(self.made().is_file())
+
+    def test_it_carries_the_built_body(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        self.assertIn("Write the spec.", self.made().read_text(encoding="utf-8"))
+
+    def test_it_is_named_for_itself(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        text = self.made().read_text(encoding="utf-8")
+        self.assertIn("name: speckit-companion-review", text)
+        self.assertNotIn("speckit-companion-auto", text)
+
+    def test_it_says_what_it_is(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review the change")
+        self.assertIn("description: Review the change",
+                      self.made().read_text(encoding="utf-8"))
+
+    # A wrapped description used to leave its tail dangling under the new one:
+    # "description: Review the change" followed by "→ implement…, no pauses".
+    def test_a_description_that_wrapped_does_not_leave_its_tail_behind(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review the change")
+        text = self.made().read_text(encoding="utf-8")
+        self.assertNotIn("no pauses", text)
+        self.assertNotIn("mark-complete", text.split("---", 2)[1])
+
+    def test_the_rest_of_the_siblings_shape_is_kept(self):
+        """It is the format that agent reads; only the identity differs."""
+        emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        text = self.made().read_text(encoding="utf-8")
+        self.assertIn("compatibility: Requires spec-kit project structure", text)
+        self.assertIn("author: github-spec-kit", text)
+
+    def test_the_source_points_at_its_own_command(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        self.assertIn("source: companion:commands/speckit.companion.review.md",
+                      self.made().read_text(encoding="utf-8"))
+
+    def test_an_existing_emission_is_never_overwritten_by_creation(self):
+        self.made().parent.mkdir(parents=True, exist_ok=True)
+        self.made().write_text("mine", encoding="utf-8")
+        self.assertEqual(
+            emission_sync.create_command(str(self.root), "review", BODY, "x"), [])
+        self.assertEqual(self.made().read_text(encoding="utf-8"), "mine")
+
+    def test_an_area_with_no_sibling_is_skipped(self):
+        (self.root / ".github/agents").mkdir(parents=True, exist_ok=True)
+        emission_sync.create_command(str(self.root), "review", BODY, "x")
+        self.assertFalse(
+            (self.root / ".github/agents"
+             / emission_sync.entry_for("review", ".github/agents")).exists())
+
+    def test_a_later_build_refreshes_what_it_created(self):
+        emission_sync.create_command(str(self.root), "review", BODY, "Review it")
+        emission_sync.sync(str(self.root),
+                           {"review": BODY.replace("Write the spec.", "Second pass.")})
+        self.assertIn("Second pass.", self.made().read_text(encoding="utf-8"))
 
 
 class ABuildReachesTheAssistant(unittest.TestCase):

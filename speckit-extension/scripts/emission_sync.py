@@ -36,6 +36,7 @@ Stdlib only.
 from __future__ import annotations
 
 import os
+import re
 
 #: How a command name becomes an entry in each agent's install directory.
 #: `dir` areas hold one directory per command; `file` areas hold one file.
@@ -166,36 +167,177 @@ def sync_command(project_root: str, command: str, built_body: str) -> list:
     return written
 
 
-def sync(project_root: str, bodies: dict) -> tuple:
-    """Sync every built body out to its emissions.
+def _sibling(project_root: str, area: str, exclude: str):
+    """Another command's emission in this area — a real example of its format.
 
-    Returns `(written, unreached)` — the emission paths updated, and the commands
-    that were built but have no emission anywhere. A command with no emission is
-    one the assistant cannot dispatch: a step this project added, which the
-    installer has never seen. The build says so rather than reporting a number
-    that suggests the whole pipeline moved.
+    Used to give a project's own step an emission. The alternative is rendering
+    seven agent formats from a spec nobody wrote down, and one of them is TOML;
+    copying a file the installer actually produced is not a guess.
     """
-    written, unreached = [], []
+    directory = os.path.join(project_root, area)
+    if not os.path.isdir(directory):
+        return None
+    style, _suffix = KNOWN_AREAS[area]
+    for name in sorted(os.listdir(directory)):
+        if name in (f"{DASHED_PREFIX}{exclude}", f"{PREFIX}{exclude}"):
+            continue
+        if style == "dir":
+            if not name.startswith(DASHED_PREFIX):
+                continue
+            path = os.path.join(directory, name, "SKILL.md")
+        else:
+            if not name.startswith(PREFIX):
+                continue
+            path = os.path.join(directory, name)
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        header, body = _split_frontmatter(text)
+        if header and _is_command_body(body):
+            return header, name
+    return None
+
+
+#: A frontmatter entry: its indent, key, separator and value. Both `:` and `=`,
+#: because one of the agent formats is TOML.
+_ENTRY = re.compile(r"^(\s*)([\w.-]+)(\s*[:=]\s*)(.*)$")
+
+#: The keys that carry the command's identity rather than its content.
+_IDENTITY = ("name", "agent")
+
+
+def _renamed_header(header: str, sibling: str, command: str, description: str) -> str:
+    """A sibling's frontmatter with its identity swapped for this command's.
+
+    Line by line rather than by pattern, because a `description:` can WRAP: the
+    installer writes a long one across two lines, and replacing only the line the
+    key is on leaves the tail of the old description dangling under the new one,
+    which is what a naive substitution produced.
+
+    A continuation is a line more indented than its key that is not itself an
+    entry — that distinction is what keeps a nested `metadata:` block intact.
+    """
+    dashed_from, dashed_to = f"{DASHED_PREFIX}{sibling}", f"{DASHED_PREFIX}{command}"
+    dotted_from, dotted_to = f"{PREFIX}{sibling}", f"{PREFIX}{command}"
+
+    out, lines, i = [], header.splitlines(), 0
+    while i < len(lines):
+        match = _ENTRY.match(lines[i])
+        if not match:
+            out.append(lines[i])
+            i += 1
+            continue
+
+        pad, key, sep, value = match.groups()
+        if key == "description":
+            quote = value[:1] if value[:1] in "\"'" else ""
+            out.append(f"{pad}{key}{sep}{quote}{description}{quote}")
+        elif key in _IDENTITY:
+            out.append(f"{pad}{key}{sep}"
+                       + value.replace(dashed_from, dashed_to).replace(dotted_from, dotted_to))
+        else:
+            out.append(lines[i])
+        i += 1
+        # Drop what wrapped off the end of the value we just replaced.
+        while i < len(lines):
+            tail = lines[i]
+            if not tail.strip() or len(tail) - len(tail.lstrip()) <= len(pad):
+                break
+            if _ENTRY.match(tail):
+                break
+            if key in ("description",) + _IDENTITY:
+                i += 1
+                continue
+            out.append(tail)
+            i += 1
+
+    text = "\n".join(out) + ("\n" if header.endswith("\n") else "")
+    # Anything else carrying the old identity — a `source:` pointing at the
+    # command file, say — follows the same swap.
+    return text.replace(dashed_from, dashed_to).replace(dotted_from, dotted_to)
+
+
+def create_command(project_root: str, command: str, built_body: str,
+                   description: str = "") -> list:
+    """Give a command with no emission one, modelled on a sibling in each area.
+
+    A step a project added will never be in `extension.yml`, which is the
+    extension's own file and what the installer reads — so reinstalling can never
+    register it, and the command was built into a file nothing could dispatch.
+    The build writes the emission itself, in the format that area already uses.
+    """
+    _, new_body = _split_frontmatter(built_body)
+    written = []
+    for area in sorted(KNOWN_AREAS):
+        if not os.path.isdir(os.path.join(project_root, area)):
+            continue
+        found = _sibling(project_root, area, command)
+        if not found:
+            continue
+        header, sibling_entry = found
+        sibling = (sibling_entry[len(DASHED_PREFIX):] if sibling_entry.startswith(DASHED_PREFIX)
+                   else sibling_entry[len(PREFIX):].split(".")[0])
+        path = os.path.join(project_root, area, entry_for(command, area))
+        if os.path.exists(path):
+            continue
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(_renamed_header(header, sibling, command,
+                                         description or f"This project's {command} step")
+                         + new_body)
+        except OSError as err:
+            raise EmissionError(f"{path}: {err}") from err
+        written.append(path)
+    return written
+
+
+def sync(project_root: str, bodies: dict, descriptions: dict = None) -> tuple:
+    """Sync every built body out to its emissions, creating the ones that are missing.
+
+    Returns `(written, created, unreached)` — emissions updated, emissions made
+    for a command that had none, and commands still reachable by nothing.
+
+    A step this project added is the case that needs creating: it will never be
+    in `extension.yml`, which is the extension's own file and what the installer
+    reads, so reinstalling could never register it and the built command sat in a
+    file nothing could dispatch. `unreached` is what is left after trying — a
+    project with no agent command directory to put one in.
+    """
+    descriptions = descriptions or {}
+    written, created, unreached = [], [], []
     for command, body in sorted(bodies.items()):
-        paths = sync_command(project_root, command, body)
-        written.extend(paths)
-        if not emission_paths(project_root, command):
+        if emission_paths(project_root, command):
+            written.extend(sync_command(project_root, command, body))
+            continue
+        made = create_command(project_root, command, body, descriptions.get(command, ""))
+        created.extend(made)
+        if not made:
             unreached.append(command)
-    return written, unreached
+    return written, created, unreached
 
 
-def describe(written: list, unreached: list, project_root: str) -> list:
+def describe(written: list, created: list, unreached: list, project_root: str) -> list:
     """The lines a build prints about what it carried out to the agents."""
     out = []
     if written:
         areas = sorted({_area_of(path, project_root) for path in written})
         out.append(f"[build] refreshed {len(written)} agent command "
                    f"{'file' if len(written) == 1 else 'files'} in {', '.join(areas)}")
+    if created:
+        areas = sorted({_area_of(path, project_root) for path in created})
+        out.append(f"[build] gave {len(created)} new agent command "
+                   f"{'file' if len(created) == 1 else 'files'} to {', '.join(areas)}")
     if unreached:
+        # Nothing to model an emission on, which means no agent is installed
+        # here. Naming it beats a count that suggests the pipeline all moved.
         out.append(
-            "[build] not reachable by the assistant yet — no agent has a command "
-            f"for {', '.join(unreached)}. Run `specify extension add <ext> --force` "
-            "to register it.")
+            f"[build] nothing can dispatch {', '.join(unreached)} — this project "
+            "has no agent command directory to put it in")
     return out
 
 

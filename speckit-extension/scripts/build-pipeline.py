@@ -44,6 +44,7 @@ import template_render  # noqa: E402
 from _command_parts import (  # noqa: E402
     PROJECT_NODES_REL,
     decomposed_commands,
+    frame_source,
     node_source,
     read_node,
     nodes_command_dir,
@@ -394,6 +395,23 @@ def plan_templates(config: dict, project_root: str) -> dict:
     return resolved
 
 
+def _description(command: str) -> str:
+    """What a step says it is, for an emission that has to be created for it.
+
+    The frame's `description:` is the step's own one-liner, which is what the
+    installer would have used had it ever seen this step.
+    """
+    frame, _replaced = frame_source(command)
+    if not os.path.isfile(frame):
+        return ""
+    with open(frame, encoding="utf-8") as fh:
+        head = fh.read(600)
+    for line in head.splitlines():
+        if line.startswith("description:"):
+            return line[len("description:"):].strip().strip("\"'")
+    return ""
+
+
 def render(command: str, entry: dict, template=None) -> str:
     """The finished body: nodes in the resolved order, hooks and any routing change spliced in."""
     body = assemble.assemble_command(command, order=entry["order"])
@@ -579,7 +597,7 @@ def main() -> int:
                   f"{'file' if count == 1 else 'files'} from them")
         missing = [c for c, paths in sorted(reachable.items()) if not paths]
         if missing:
-            print(f"  no agent command exists for: {', '.join(missing)}")
+            print(f"  and give an agent command to: {', '.join(missing)}")
         return 0
 
     os.makedirs(out_dir, exist_ok=True)
@@ -606,13 +624,15 @@ def main() -> int:
     # own directory, once, when the extension was added. Without this a build
     # reported five commands and changed nothing the assistant would ever read.
     try:
-        written, unreached = emission_sync.sync(project, bodies)
+        written, created, unreached = emission_sync.sync(
+            project, bodies,
+            {c: _description(c) for c in bodies})
     except emission_sync.EmissionError as err:
         # The commands are written and correct; only the hand-off failed. Saying
         # so beats failing a build that did its own job.
         print(f"[build] could not refresh the agent commands — {err}")
         return 0
-    for line in emission_sync.describe(written, unreached, project):
+    for line in emission_sync.describe(written, created, unreached, project):
         print(line)
     return 0
 

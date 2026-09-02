@@ -114,6 +114,8 @@ Where it runs is one key in its own `_order.yml`:
 after: implement
 ```
 
+The build gives it an agent command too. `extension.yml` lists what the extension ships and is what the installer reads, so a step a project wrote can never be registered by a reinstall — the build writes that emission itself, copying the shape of a sibling in the same agent directory and swapping the identity, because one of those formats is TOML and rendering it from a spec nobody wrote down would be a guess.
+
 A step with `after:` takes its turn in the run and is drawn between the two steps it sits between. A step without one is drawn beside the board, like `auto` — available, not part of the sequence. Everything else about it works like a shipped step: nodes can be added, reordered, replaced and hooked, and its `_frame.md` is its own preamble.
 
 The name becomes a command, so it has to be one you can type: lowercase letters, digits and dashes, and not a name a step already has.
