@@ -173,8 +173,15 @@ export function Inspector(props: Props) {
 
                 <dt>Source</dt>
                 <dd>
-                    {node.replaced ? 'Yours — this project replaced it.' : 'Ships with Companion.'}
-                    <span class="pb-facts-path" title={node.source}>{node.source}</span>
+                    {/* The path used to sit here in full and wrap over four
+                        lines — an absolute path nobody reads, taking more room
+                        than every other fact combined. "Open the file" is what
+                        it was for, and that is a button. */}
+                    <span title={node.source}>
+                        {node.replaced
+                            ? 'Yours — this project replaced it.'
+                            : 'Ships with Companion.'}
+                    </span>
                 </dd>
             </dl>
 
@@ -261,7 +268,7 @@ export function Inspector(props: Props) {
                                 onPick={props.onUseVariant}
                             />
                         )}
-                        {node.replaced && (
+                        {node.replaced && node.shipped && (
                             <button class="pb-inspector-action pb-inspector-action--remove"
                                 onClick={props.onRestore}>Use the shipped node</button>
                         )}

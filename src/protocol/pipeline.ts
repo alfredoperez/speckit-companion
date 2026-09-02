@@ -69,6 +69,13 @@ export interface PipelineNode {
     reads: string[];
     /** Files this node is declared to produce. */
     writes: string[];
+    /**
+     * Files it produces only sometimes — the size budget can fold them away.
+     *
+     * `plan` counted four artifacts while `side-files`, which writes three of
+     * them, showed none: the card only ever rendered `writes`.
+     */
+    mayWrite: string[];
     hooks: PipelineHook[];
     /** Why this node cannot be dragged, or empty when it can. */
     pinned: string;
@@ -76,6 +83,16 @@ export interface PipelineNode {
     source: string;
     /** Whether that file is the project's own copy rather than the shipped one. */
     replaced: boolean;
+    /**
+     * Whether Companion ships a version of this node at all.
+     *
+     * Every node the project wrote is `replaced`, including one it INVENTED —
+     * the single document a step was handed to, or a node someone added. "Use
+     * the shipped node" on one of those deleted the only copy and left the
+     * configuration ordering a file that was gone, which read as a broken
+     * pipeline with no way back from inside the panel.
+     */
+    shipped: boolean;
 }
 
 /** The middle block: a named group of nodes, and a place a hook can attach. */
@@ -158,6 +175,15 @@ export interface PipelineStep {
      * identically, so the list gave no clue which was which.
      */
     addOns: string[];
+    /**
+     * What each offerable node is, keyed by id — its name and one line saying
+     * what it does.
+     *
+     * The picker listed bare ids under one repeated sentence about the category
+     * ("specify ships this and does not run it"), which is the same for every
+     * row and never says what picking one gets you.
+     */
+    offers: Record<string, { name: string; summary: string }>;
     /** The step's own instructions, which nothing could reach before. */
     frame: PipelineFrame;
     /** Hooks stock spec-kit extensions attach to this step. Not ours, and not editable here. */

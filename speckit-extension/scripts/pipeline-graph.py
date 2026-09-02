@@ -19,6 +19,7 @@ import argparse
 import importlib
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +30,7 @@ from _command_parts import (  # noqa: E402
     decomposed_commands,
     frame_source,
     node_source,
+    nodes_command_dir,
     project_commands,
     read_node,
     use_project_nodes,
@@ -72,15 +74,29 @@ def _template(command: str, resolved, project_root: str, config: dict):
 
 
 def _summary(command: str, node_id: str) -> str:
-    """A node's first line of instruction — what it does, for a picker."""
+    """One sentence saying what a node does, for a picker to show.
+
+    A node's body opens as a numbered instruction — `5. **Adversarial gap review
+    - attack the artifacts...**` - which is the step's voice, not a description
+    of the node. The numbering, the emphasis and everything past the first
+    sentence come off, so what is left reads as a line about the node.
+    """
     try:
         _meta, body = read_node(command, node_id)
     except SystemExit:
         return ""
     for line in body.splitlines():
         line = line.strip()
-        if line and not line.startswith(("<!--", "#")):
-            return line[:120]
+        if not line or line.startswith(("<!--", "#", "```")):
+            continue
+        line = re.sub(r"^\d+\.\s*", "", line)
+        line = line.replace("**", "").replace("`", "")
+        # The first sentence. An em dash usually opens the elaboration, so it
+        # ends the summary too.
+        cut = re.search(r"(?<=[.!?])\s|\s\u2014\s", line)
+        if cut:
+            line = line[:cut.start()]
+        return line.rstrip(".").strip()[:110]
     return ""
 
 
@@ -104,6 +120,13 @@ def _variants(command: str, node_id: str, offered: dict) -> list:
     return out
 
 
+def _as_files(value) -> list:
+    """A `writes:`-shaped value as a list, whether it was written as one or not."""
+    if isinstance(value, str):
+        return [value]
+    return list(value or [])
+
+
 def _node(command: str, node_id: str, hooks: list, pinned: str = "",
           variants: list = ()) -> dict:
     meta, _body = read_node(command, node_id)
@@ -121,6 +144,12 @@ def _node(command: str, node_id: str, hooks: list, pinned: str = "",
         # file someone can edit instead of the assembled body they cannot.
         "source": source,
         "replaced": replaced,
+        # Whether Companion ships a version of this node at all. Every node the
+        # project wrote is `replaced`, including one it INVENTED — the single
+        # document a step was handed to, or a node someone added. Offering "use
+        # the shipped node" on one of those deleted the only copy and left the
+        # configuration ordering a file that was gone.
+        "shipped": os.path.isfile(os.path.join(nodes_command_dir(command), f"{node_id}.md")),
         # The id is a handle; the name is what a person reads. A project's copy
         # may have dropped the frontmatter, and it is still the same node — so
         # the shipped name stands in before the id does.
@@ -128,6 +157,11 @@ def _node(command: str, node_id: str, hooks: list, pinned: str = "",
         "kind": meta.get("kind") or "control",
         "reads": list(meta.get("reads") or []),
         "writes": ([writes] if isinstance(writes, str) else list(writes or [])),
+        # Files this node produces only sometimes — the size budget can fold them
+        # away, so `may-write` is the honest declaration. Nothing carried them to
+        # the panel, so `plan` counted four artifacts while `side-files`, which
+        # writes three of them, showed none at all.
+        "mayWrite": _as_files(meta.get("may-write")),
         "hooks": [_hook(h) for h in hooks if h["anchor"] == node_id],
     }
 
@@ -280,6 +314,13 @@ def build_graph(project_root: str) -> dict:
             # is "put it back" and the other is "this step can also do this" —
             # a list that says neither reads as a pile of ids.
             "addOns": [n for n in add_ons if n not in order],
+            # What each of them does, so the picker says something about the node
+            # rather than repeating one sentence about the category it is in.
+            "offers": {
+                n: {"name": _shipped_name(command, n) or n, "summary": _summary(command, n)}
+                for n in ([x for x in default if x not in order]
+                          + [x for x in add_ons if x not in order])
+            },
             "changes": {
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],

@@ -906,9 +906,7 @@ body {
 .pb-facts dd { margin: 0; color: var(--text-body); overflow-wrap: anywhere; }
 
 .pb-facts-mono,
-.pb-facts-path { font-family: var(--font-mono); font-size: var(--text-xs); }
 
-.pb-facts-path { display: block; margin-top: 2px; color: var(--text-muted); }
 
 .pb-doc { flex-grow: 1; padding: var(--space-3) var(--space-4); }
 

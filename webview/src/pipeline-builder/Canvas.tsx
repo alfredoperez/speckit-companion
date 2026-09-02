@@ -340,12 +340,23 @@ function Node({ node, actions, stock, seams }: {
                         ? "Read this project's instructions for this node"
                         : 'Read the instructions this node contributes'}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.writes.length > 0) && (
+                    {(node.replaced || node.writes.length > 0
+                        || node.mayWrite.length > 0) && (
                         <span class="pb-node-meta">
                             {node.replaced && <span class="pb-yours">yours</span>}
                             {node.writes.map(file => (
                                 <span key={file} class="pb-writes"
                                     title="this node produces it">{file}</span>
+                            ))}
+                            {/* Produced only sometimes — the size budget can fold
+                                these away. Without them the step counted four
+                                artifacts while the node writing three of them
+                                showed none. */}
+                            {node.mayWrite.map(file => (
+                                <span key={file} class="pb-writes pb-writes--sometimes"
+                                    title="this node produces it at some sizes, and folds it away at others">
+                                    {file}
+                                </span>
                             ))}
                         </span>
                     )}
@@ -391,6 +402,8 @@ interface PhaseControls {
     dropped: string[];
     /** Which of those are shipped add-ons rather than nodes the recipe took out. */
     addOns: string[];
+    /** What each offerable node is, so the picker names it rather than its id. */
+    offers: PipelineStep['offers'];
     /** The step this phase belongs to, named when explaining where nodes come from. */
     step: string;
     /**
@@ -453,14 +466,15 @@ function Phase({ phase, actions, controls }: {
                             + `write your own at .specify/companion/nodes/${controls.step}/`}
                         options={controls.dropped.map(id => ({
                             id,
-                            label: id,
-                            // A node the recipe took out and one this step ships
-                            // but does not run read identically as bare ids. The
-                            // difference is what it means to pick one, so it gets
-                            // a line rather than a suffix glued to the name.
-                            note: controls.addOns.includes(id)
-                                ? `${controls.step} ships this and does not run it`
-                                : 'this project took it out',
+                            // What the node IS, and what it does. The list used
+                            // to be bare ids under one sentence about the
+                            // category they were in — the same words on every
+                            // row, and never what picking one gets you.
+                            label: controls.offers[id]?.name || id,
+                            note: controls.offers[id]?.summary
+                                || (controls.addOns.includes(id)
+                                    ? `${controls.step} ships this and does not run it`
+                                    : 'this project took it out'),
                         }))}
                         onPick={id => controls.onAddNode(phase.name, id)}
                     />
@@ -698,6 +712,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         controls={{
                             dropped: step.dropped,
                             addOns: step.addOns,
+                            offers: step.offers,
                             step: step.name,
                             stockBefore: at === 0
                                 ? step.stockHooks.filter(h => h.when === 'before') : [],

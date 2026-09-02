@@ -227,9 +227,28 @@ export class PipelineBuilderPanel {
             await vscode.window.showTextDocument(vscode.Uri.file(own));
         },
 
+        /**
+         * Give a node back to the shipped one.
+         *
+         * Only meaningful when there IS a shipped one. Every node the project
+         * wrote is marked `replaced`, which included the single document a step
+         * was handed to — so the panel offered "use the shipped node" on a node
+         * that exists nowhere else, deleted the only copy, and left the
+         * configuration ordering a file that was gone. The pipeline then read as
+         * broken, with no way back from inside the panel.
+         *
+         * Reverting a whole step is a different action: it puts the order and
+         * the grouping back as well, which is what `restoreStep` does.
+         */
         restoreNode: async message => {
             const own = this.projectNodePath(message.command, message.nodeId);
             if (!fs.existsSync(own)) { return; }
+            if (!this.shippedNodePath(message.command, message.nodeId)) {
+                this.say(`${message.nodeId} is not a node Companion ships, so there is `
+                    + 'nothing to give it back to. To stop running it, remove it from '
+                    + `${message.command}.`);
+                return;
+            }
             fs.unlinkSync(own);
             await this.send();
         },
@@ -419,6 +438,22 @@ export class PipelineBuilderPanel {
                 'nodes', command, `${nodeId}.md`),
         ];
         return candidates.find(file => fs.existsSync(file));
+    }
+
+    /**
+     * Where Companion's own copy of a node lives, if it ships one at all.
+     *
+     * The project's copy is deliberately not a candidate: this answers "is there
+     * something to give this node back TO", and a node the project invented — a
+     * step handed to one document, a node someone wrote — has no answer.
+     */
+    private shippedNodePath(command: string, nodeId: string): string | undefined {
+        return [
+            path.join(this.workspaceRoot, '.specify', 'extensions', 'companion',
+                'nodes', command, `${nodeId}.md`),
+            path.join(this.context.extensionPath, 'speckit-extension',
+                'nodes', command, `${nodeId}.md`),
+        ].find(file => fs.existsSync(file));
     }
 
     /** Last resort: show the node's region of the body the assistant reads. */

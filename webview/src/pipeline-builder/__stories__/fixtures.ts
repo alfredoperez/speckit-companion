@@ -24,8 +24,8 @@ export function node(
     id: string, name: string, over: Partial<PipelineNode> = {},
 ): PipelineNode {
     return {
-        id, name, kind: 'control', reads: [], writes: [], hooks: [], pinned: '',
-        variants: [], source: `/ext/nodes/${id}.md`, replaced: false, ...over,
+        id, name, kind: 'control', reads: [], writes: [], mayWrite: [], hooks: [], pinned: '',
+        variants: [], source: `/ext/nodes/${id}.md`, replaced: false, shipped: true, ...over,
     };
 }
 
@@ -54,6 +54,7 @@ export function step(
         hooks: [],
         dropped: [],
         addOns: [],
+        offers: {},
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         phases,
         decisions: [],

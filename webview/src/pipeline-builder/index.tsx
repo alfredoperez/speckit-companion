@@ -77,6 +77,9 @@ function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
             pinned: 'the frame always comes first — it is what every node sits under',
             source: step.frame.source,
             replaced: step.frame.replaced,
+            // Every step Companion ships has a frame, so a project's copy of one
+            // always has something to go back to.
+            shipped: !step.own,
         };
     }
     for (const phase of step.phases) {

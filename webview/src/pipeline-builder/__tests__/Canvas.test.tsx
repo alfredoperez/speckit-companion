@@ -11,8 +11,8 @@ import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/
 function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
     return {
         id: 'resolve-dir', name: 'Resolve the spec folder', kind: 'control',
-        reads: [], writes: [], hooks: [], variants: [], pinned: '',
-        source: '/ext/nodes/specify/resolve-dir.md', replaced: false,
+        reads: [], writes: [], mayWrite: [], hooks: [], variants: [], pinned: '',
+        source: '/ext/nodes/specify/resolve-dir.md', replaced: false, shipped: true,
         ...overrides,
     };
 }
@@ -32,6 +32,7 @@ function step(overrides: Partial<PipelineStep> = {}): PipelineStep {
         hooks: [],
         dropped: [],
         addOns: [],
+        offers: {},
         frame: { source: '/ext/nodes/specify/_frame.md', replaced: false },
         phases: [
             { name: 'gather', hooks: [], nodes: [node()] },
@@ -1064,6 +1065,37 @@ describe('switching workflows', () => {
         (options[options.length - 1] as HTMLButtonElement).click();
 
         expect(count()).toBe(1);
+    });
+});
+
+describe('giving a node back to the shipped one', () => {
+    const noop = () => undefined;
+
+    function inspect(over: Partial<PipelineNode>) {
+        const host = mount(
+            <Inspector node={node(over)} step="specify" body="Words." editable="Words."
+                parts={[]} onClose={noop} onOpenFile={noop} onSave={noop}
+                onRestore={noop} onAttach={noop} onUseVariant={noop} />,
+        );
+        return Array.from(host.querySelectorAll('.pb-inspector-action'))
+            .map(el => el.textContent);
+    }
+
+    it('offers it for a node this project rewrote', () => {
+        expect(inspect({ replaced: true, shipped: true })).toContain('Use the shipped node');
+    });
+
+    // The bug this exists for: a step handed to one document, or a node someone
+    // wrote, is `replaced` and ships nowhere. Giving it "back" deleted the only
+    // copy while the configuration still ordered it, and the pipeline read as
+    // broken with no way out from inside the panel.
+    it('does not offer it for a node that ships nowhere', () => {
+        expect(inspect({ id: 'specify-ours', replaced: true, shipped: false }))
+            .not.toContain('Use the shipped node');
+    });
+
+    it('does not offer it for a node the project never touched', () => {
+        expect(inspect({ replaced: false, shipped: true })).not.toContain('Use the shipped node');
     });
 });
 

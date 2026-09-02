@@ -34,8 +34,8 @@ const NO_CHANGES = {
 
 function node(id: string, name: string, over: Partial<PipelineNode> = {}): PipelineNode {
     return {
-        id, name, kind: 'control', reads: [], writes: [], hooks: [], variants: [],
-        source: `/ext/nodes/${id}.md`, replaced: false, pinned: '', ...over,
+        id, name, kind: 'control', reads: [], writes: [], mayWrite: [], hooks: [], variants: [],
+        source: `/ext/nodes/${id}.md`, replaced: false, shipped: true, pinned: '', ...over,
     };
 }
 
@@ -46,7 +46,7 @@ function phase(name: string, nodes: PipelineNode[], hooks: PipelineHook[] = []):
 function step(name: string, phases: PipelinePhase[], over: Partial<PipelineStep> = {}): PipelineStep {
     return {
         name, inSequence: name !== 'auto', own: false, after: '',
-        stockHooks: [], dropped: [], addOns: [], phases,
+        stockHooks: [], dropped: [], addOns: [], offers: {}, phases,
         hooks: [],
         frame: { source: `/ext/nodes/${name}/_frame.md`, replaced: false },
         decisions: [], artifacts: [], template: null,

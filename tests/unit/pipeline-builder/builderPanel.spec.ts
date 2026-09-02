@@ -259,6 +259,13 @@ describe('saving a node is what makes it yours', () => {
 });
 
 describe('giving a node back', () => {
+    // This used to stand up the project's copy and nothing else, and assert the
+    // delete happened — which is the bug in miniature. "Give it back" only means
+    // something when there is something to give it back TO.
+    beforeEach(() => {
+        shippedNode('specify', 'draft', '---\nid: draft\n---\n\nWrite the spec.\n');
+    });
+
     it('drops the project\'s copy and redraws', async () => {
         const own = ownNode('specify', 'draft');
         fs.mkdirSync(path.dirname(own), { recursive: true });
@@ -602,6 +609,24 @@ describe('starting a new workflow', () => {
         graph.createWorkflow.mockResolvedValue('a workflow called ours already exists.');
         await panel.__receive({ type: 'newWorkflow', from: 'shipped', name: 'ours' });
         expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+});
+
+describe('a node that ships nowhere cannot be given back', () => {
+    // A step handed to one document, or a node someone wrote, exists nowhere
+    // else. Deleting it left the configuration ordering a file that was gone —
+    // the pipeline read as broken, with no way back from inside the panel.
+    it('refuses, and says what to do instead', async () => {
+        fs.mkdirSync(path.dirname(ownNode('specify', 'specify-ours')), { recursive: true });
+        fs.writeFileSync(ownNode('specify', 'specify-ours'), 'Ours.', 'utf8');
+
+        await panel.__receive({
+            type: 'restoreNode', command: 'specify', nodeId: 'specify-ours',
+        });
+
+        expect(fs.existsSync(ownNode('specify', 'specify-ours'))).toBe(true);
+        expect(panel.__lastPosted('notice').text)
+            .toContain('not a node Companion ships');
     });
 });
 
