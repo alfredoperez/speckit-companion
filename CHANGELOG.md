@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Build now reaches your assistant.** Every customisation the panel made — a hook, a reordered step, a swapped block, a rewritten node — was written into the extension's own copy of the commands, and your assistant reads a separate copy the installer rendered once at install time. So Build reported five commands and changed nothing that would ever run. It refreshes those copies now, and says how many and where.
+- **Replace works from the panel.** Swapping a block for one of its alternatives sent the grouping and the order as two writes, and each is checked against the other as it stands — so whichever went first was refused for disagreeing with the half that had not moved yet. It never worked outside the tests, which sent both together. Putting a dropped node back and handing a step to your own document had the same shape and the same fix.
+- **A changed document section is followed, not just written.** Pointing a section at a different shape resolved a template correctly into a file the assistant had no reason to open, because Companion's nodes carry their shape in their own instructions. A step you reshaped now tells the assistant to follow the resolved file; a step you left alone is unchanged.
+- **A refused edit can no longer empty `companion.yml`.** A hook index that was not there — a panel drawn before someone edited the file by hand — printed "there is no hook 6" and left the file at zero bytes, taking every order, phase and hook the project had written. Six writes had that shape; all of them now compute the whole file before touching it, and publish it in one move.
+- **Removing a hook no longer removes another step's.** `handoff` is a node in every step, so `specify` and `plan` both have one as a hook anchor. Removing the last hook under one of them deleted the first block of that name in the file — another step's, hooks and all — and left the emptied one behind.
+- **A step you added records when it started.** Its finish was journaled and its start was refused, so the spec's history ended in a completion that never began and the run never left implement.
+
 ### Added
 
 - **Start a workflow from something rather than nothing.** **New workflow…** now asks what to start from: what this project runs today, the pipeline as it ships, or one of two whole configurations Companion ships. **Classic spec-kit** puts the stock document shapes back — prioritized P1/P2/P3 user stories, the full Technical Context block. **Brownfield** is for changing a system that already exists: the spec says only what changes, the task list is attacked before it runs, and a person opens the thing before it counts as done. Picking one copies it in; everything in it is yours to change from there.

@@ -409,6 +409,42 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
         self.assertIn("### Outcomes", self.resolved())
         self.assertNotIn("Shipped words here.", self.resolved())
 
+    # A resolved template is a file the assistant has no reason to open:
+    # Companion's authoring nodes carry the document's shape in their own
+    # instructions rather than loading a template, which is where the leaner spec
+    # comes from. So every fragment resolved correctly into a file nothing read,
+    # and a project watching the build report the swap got the shipped shape.
+    def test_the_command_tells_the_assistant_to_follow_it(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        body = self.project.body("specify")
+        self.assertIn("reshaped what this step writes", body)
+        self.assertIn("templates/spec-template.md", body)
+        self.assertIn("**User Scenarios & Testing**", body)
+
+    def test_the_note_sits_with_the_node_that_writes_the_document(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        body = self.project.body("specify")
+        opened = body.index("<!-- speckit-companion:node draft-spec -->")
+        closed = body.index("<!-- /speckit-companion:node draft-spec -->")
+        self.assertTrue(opened < body.index("reshaped what this step writes") < closed)
+
+    def test_restoring_the_section_takes_the_note_with_it(self):
+        self.point_at("outcomes")
+        self.project.build_ok()
+        self.project.write("--command", "specify", "--template-section",
+                           "User Scenarios & Testing", "--fragment", "")
+        self.project.build_ok()
+        self.assertNotIn("reshaped what this step writes", self.project.body("specify"))
+
+    def test_a_project_that_reshaped_nothing_gets_no_note(self):
+        """Present by default, latent: an unchanged project's body is unchanged."""
+        plain = Project()
+        self.addCleanup(plain.close)
+        plain.build_ok()
+        self.assertNotIn("reshaped what this step writes", plain.body("specify"))
+
     def test_the_heading_and_the_other_sections_survive(self):
         self.point_at("outcomes")
         self.project.build_ok()

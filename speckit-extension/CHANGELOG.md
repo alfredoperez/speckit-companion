@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+
+- **A build carries its work out to the agents.** It wrote `.specify/extensions/companion/commands/`, which is the extension's copy and which nothing dispatches; what an assistant loads is the file the installer rendered into its own directory when the extension was added. So a build was real and reached nothing. Every emission is refreshed from the freshly built body now — the agent's own frontmatter and any provenance banner left exactly as the installer wrote them, and a pointer file with no body left alone. A command with no emission anywhere, which is what a step you added is until the installer sees it, is named rather than counted.
+- **A refused write leaves the file it refused alone.** Six writes were shaped `open(path, "w")` and then computed what to put in it, so anything that raised — a stale hook index, a section a template does not have, an order the phases cannot express — truncated the configuration to nothing first. They compute in full and publish through a rename now, so a crash cannot leave half a file either.
+- **Emptying an anchor removes that anchor, not the first of its name.** A node id is not unique across steps, so removing `plan`'s last `handoff` hook took `specify`'s block and its hooks with it.
+- **A step this project added is one whose start can be recorded.** The step-name guard was resolved before the feature directory, so the bare hook form of a start — which carries no `--feature-dir` — consulted only the steps that ship. A misspelling is still refused, by name.
+
 ### Added
 
 - **A step can offer blocks it does not run by default.** `_order.yml` takes an `optional:` list and a `variants:` map, so Companion can ship alternatives without running them: the spec as a delta for a change to something that already exists, the spec as a fix contract (defect, expected, and what must not change), a quality checklist that loops and then stops and asks, a feature branch of its own, and a manual click-through gate for the person who has to open the app. The adversarial gap review that has been in the tree since it was written is offerable now too.

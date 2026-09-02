@@ -96,6 +96,36 @@ def replace_section(text: str, name: str, replacement: str) -> str:
     )
 
 
+#: Where a build leaves a template it resolved, relative to the project root.
+RESOLVED_REL = os.path.join(".specify", "extensions", "companion", "templates")
+
+
+def render_shape_note(name: str, changed: list) -> str:
+    """The note spliced into a body when a project reshaped this step's document.
+
+    Companion's authoring nodes carry their document's shape in their own
+    instructions rather than loading a template — that is where the leaner spec
+    comes from. So resolving a template wrote a correct file that nothing read:
+    a project could point a section at a fragment, watch the build report it
+    resolved, and get the shipped shape anyway. Every fragment, and the whole
+    Classic preset, was decoration.
+
+    The note is what closes that. It is absent unless a project changed a
+    section, so a project that changed nothing gets a byte-identical body and the
+    shipped default keeps its own shape.
+    """
+    if not changed:
+        return ""
+    sections = ", ".join(f"**{s}**" for s in changed)
+    return (
+        f"**This project has reshaped what this step writes.** Read "
+        f"`{os.path.join(RESOLVED_REL, name)}` and follow it for {sections} — "
+        f"its wording there replaces the shape described below for "
+        f"{'that section' if len(changed) == 1 else 'those sections'}. Every "
+        f"other instruction in this step still applies."
+    )
+
+
 def template_config(config: dict, command: str) -> dict:
     """The template settings that apply to a command, inner-most wins.
 

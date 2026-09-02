@@ -22,6 +22,7 @@ Stdlib `unittest` only.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -96,6 +97,24 @@ class AProjectCanAddAStep(unittest.TestCase):
     def test_a_project_with_no_steps_of_its_own_knows_only_the_shipped_ones(self):
         with tempfile.TemporaryDirectory() as bare:
             self.assertNotIn("review", sc.known_steps(Path(bare) / "specs" / "001-y"))
+
+    # The hook form of a step-start carries no `--feature-dir` — it is a bare
+    # `--step <name> --kind start`. Deriving the project only from that argument
+    # consulted the extension's own steps and nothing else, so a project's own
+    # step had its finish journaled and its START refused: a history ending in a
+    # completion that never began, and `currentStep` never leaving implement.
+    def test_a_step_is_still_this_projects_when_no_feature_dir_is_named(self):
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        self.assertIn("review", sc.known_steps())
+
+    def test_a_misspelling_is_still_refused_when_no_feature_dir_is_named(self):
+        """The guard is against a typo, which would journal against the wrong step."""
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        self.assertNotIn("reveiw", sc.known_steps())
 
     # ── journaling ─────────────────────────────────────────
 

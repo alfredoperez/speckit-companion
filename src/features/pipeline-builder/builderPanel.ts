@@ -174,34 +174,24 @@ export class PipelineBuilderPanel {
             await this.sendBody(message.command, message.nodeId);
         },
 
+        // One write, not two. The order says when a node runs and the phase says
+        // where it sits, and each is validated against the other as it currently
+        // stands — so whichever went first was refused for disagreeing with the
+        // half that had not moved yet, and the whole gesture failed with the file
+        // untouched. Sending both lets the writer check the pair it is given.
         addNode: async message => {
-            // Two writes, one intent: the order says when it runs and the phase
-            // says where it sits. Writing one without the other leaves a
-            // pipeline that disagrees with itself, so a refusal on the second
-            // has to leave neither.
-            const written = await this.write(
-                script => writePhases(
-                    script, this.workspaceRoot, message.command, message.phases),
-                'Adding a node');
-            if (!written) { return; }
             await this.write(
-                script => writeNodeOrder(
-                    script, this.workspaceRoot, message.command, message.order),
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases,
+                    undefined, message.order),
                 'Adding a node');
         },
 
         useVariant: async message => {
-            // A variant is a node of its own, so swapping to one is the recipe
-            // write the panel already makes — the grouping first, because a
-            // node needs a phase before the order check will accept it running.
-            const written = await this.write(
-                script => writePhases(
-                    script, this.workspaceRoot, message.command, message.phases),
-                'Replacing the block');
-            if (!written) { return; }
             await this.write(
-                script => writeNodeOrder(
-                    script, this.workspaceRoot, message.command, message.order),
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases,
+                    undefined, message.order),
                 'Replacing the block');
         },
 
@@ -223,17 +213,12 @@ export class PipelineBuilderPanel {
                 fs.mkdirSync(path.dirname(own), { recursive: true });
                 fs.writeFileSync(own, seed, 'utf8');
             }
-            // The order goes first here, unlike everywhere else: it is what
-            // drops the shipped nodes, and until they are dropped a grouping
-            // that does not mention them is refused for leaving them homeless.
             const written = await this.write(
-                script => writeNodeOrder(script, this.workspaceRoot, message.command, [step]),
+                script => writePhases(script, this.workspaceRoot, message.command,
+                    [{ name: `our ${message.command}`, nodes: [step] }],
+                    undefined, [step]),
                 'Replacing the step');
             if (!written) { return; }
-            await this.write(
-                script => writePhases(script, this.workspaceRoot, message.command,
-                    [{ name: `our ${message.command}`, nodes: [step] }]),
-                'Replacing the step');
             await vscode.window.showTextDocument(vscode.Uri.file(own));
         },
 

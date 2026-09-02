@@ -62,13 +62,23 @@ def known_steps(feature_dir=None) -> set:
 
 
 def _node_roots(feature_dir=None) -> list:
-    """Where step directories live: the extension's, and the project's own."""
+    """Where step directories live: the extension's, and the project's own.
+
+    The project is found from the feature directory when one was named, and from
+    the repository otherwise. Both are needed: the hook form of a step-start
+    carries no `--feature-dir` at all, so deriving the project only from that
+    argument consulted the extension's own steps and nothing else — a project's
+    own step had its finish journaled and its start refused, which is a history
+    ending in a completion that never began.
+    """
     here = os.path.dirname(os.path.abspath(__file__))
     roots = [os.path.join(os.path.dirname(here), "nodes")]
     if feature_dir:
         # `specs/<name>/` sits two below the project root.
         project = os.path.dirname(os.path.dirname(os.path.abspath(str(feature_dir))))
-        roots.append(os.path.join(project, ".specify", "companion", "nodes"))
+    else:
+        project = str(_repo_root())
+    roots.append(os.path.join(project, ".specify", "companion", "nodes"))
     return roots
 # Narrower guard for per-task / backstop writes: "implemented" is the implement
 # step's own same-step terminal, so per-task journaling is still allowed there;

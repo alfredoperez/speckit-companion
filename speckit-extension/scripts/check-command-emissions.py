@@ -75,15 +75,11 @@ SKIP_DIRS = {
 
 # How a command name becomes an entry in each agent's install dir. `dir` areas hold
 # one directory per command; `file` areas hold one file per command.
-KNOWN_AREAS = {
-    ".claude/skills": ("dir", ""),
-    ".agents/skills": ("dir", ""),
-    ".cursor/skills": ("dir", ""),
-    ".github/prompts": ("file", ".prompt.md"),
-    ".github/agents": ("file", ".agent.md"),
-    ".qwen/commands": ("file", ".md"),
-    ".gemini/commands": ("file", ".toml"),
-}
+#
+# Declared once, in the module a build imports to refresh these same files. Two
+# copies would let the sync stop covering an agent this gate still checks — the
+# drift this gate exists to catch, one level down.
+from emission_sync import KNOWN_AREAS  # noqa: E402
 
 DOCS = {
     "speckit-extension/README.md": "the README command table",

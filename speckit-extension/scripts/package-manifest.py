@@ -88,6 +88,10 @@ BUILD_ONLY = frozenset({
     # packaging change that makes a user's own `companion.yml` buildable. That
     # step is deliberate and separate; the gate is what will ask for it.
     "build-pipeline.py",
+    # Carries a built body out to the copies each agent reads. Reached only from
+    # the build, and rewriting an install area is exactly the thing a shipped
+    # command body should never be able to do.
+    "emission_sync.py",
     "hook_render.py",
     "template_render.py",
     "decision_routes.py",

@@ -38,12 +38,14 @@ sys.path.insert(0, HERE)
 
 import companion_config as cc  # noqa: E402
 import decision_routes as decisions_mod  # noqa: E402
+import emission_sync  # noqa: E402
 import hook_render  # noqa: E402
 import template_render  # noqa: E402
 from _command_parts import (  # noqa: E402
     PROJECT_NODES_REL,
     decomposed_commands,
     node_source,
+    read_node,
     nodes_command_dir,
     project_commands,
     use_project_nodes,
@@ -392,7 +394,7 @@ def plan_templates(config: dict, project_root: str) -> dict:
     return resolved
 
 
-def render(command: str, entry: dict) -> str:
+def render(command: str, entry: dict, template=None) -> str:
     """The finished body: nodes in the resolved order, hooks and any routing change spliced in."""
     body = assemble.assemble_command(command, order=entry["order"])
     body = hook_render.insert_hooks(
@@ -409,7 +411,36 @@ def render(command: str, entry: dict) -> str:
             if marker in body:
                 body = body.replace(marker, marker + note + "\n", 1)
                 break
+
+    # A reshaped document is only reshaped if the assistant is told to follow it.
+    # The nodes carry their own shape in their instructions, so a resolved
+    # template sat on disk read by nothing. The note goes above the first node
+    # that writes the document, where the shape is about to be used.
+    if template:
+        name, _text, changed = template
+        shape = template_render.render_shape_note(name, changed)
+        if shape:
+            body = _above_first_writer(body, command, entry["order"], shape)
     return body
+
+
+def _above_first_writer(body: str, command: str, order: list, note: str) -> str:
+    """Put `note` immediately before the first node in `order` that writes a file.
+
+    Above the node that produces the document, so it is read with the
+    instructions it changes rather than as a preamble far from them. A step whose
+    nodes declare nothing takes it at the top of the first node instead — still
+    inside the run, still before any authoring.
+    """
+    writers = [
+        nid for nid in order
+        if (read_node(command, nid)[0].get("writes") or "")
+    ]
+    for nid in (writers or order):
+        marker = f"<!-- speckit-companion:node {nid} -->\n"
+        if marker in body:
+            return body.replace(marker, marker + note + "\n\n", 1)
+    return note + "\n\n" + body
 
 
 def describe(command: str, entry: dict) -> str:
@@ -493,8 +524,11 @@ def main() -> int:
         plan, warnings = plan_build(config)
         # Every body and template is resolved before any is written: a build that
         # cannot finish must leave the working pipeline in place.
-        bodies = {command: render(command, entry) for command, entry in plan.items()}
+        # Templates first: a body now carries a note naming the sections this
+        # project reshaped, so it cannot be rendered before they are resolved.
         templates = plan_templates(config, project)
+        bodies = {command: render(command, entry, templates.get(command))
+                  for command, entry in plan.items()}
     except BuildError as err:
         print(f"[build] cannot build — nothing was written\n  {err}", file=sys.stderr)
         return 1
@@ -536,6 +570,16 @@ def main() -> int:
         print("[build] what would change:")
         for line in preview(bodies, out_dir):
             print(line)
+        # A preview that lists the extension's copies and stays silent about the
+        # files the assistant reads is the same half-answer the build gave.
+        reachable = {c: emission_sync.emission_paths(project, c) for c in bodies}
+        count = sum(len(p) for p in reachable.values())
+        if count:
+            print(f"  and refresh {count} agent command "
+                  f"{'file' if count == 1 else 'files'} from them")
+        missing = [c for c, paths in sorted(reachable.items()) if not paths]
+        if missing:
+            print(f"  no agent command exists for: {', '.join(missing)}")
         return 0
 
     os.makedirs(out_dir, exist_ok=True)
@@ -556,6 +600,20 @@ def main() -> int:
 
     print(f"[build] wrote {len(bodies)} command bodies + the manifest to "
           f"{os.path.relpath(out_dir, project)}")
+
+    # The bodies above are the extension's copy, and nothing dispatches it. What
+    # an assistant loads is the emission the installer rendered into that agent's
+    # own directory, once, when the extension was added. Without this a build
+    # reported five commands and changed nothing the assistant would ever read.
+    try:
+        written, unreached = emission_sync.sync(project, bodies)
+    except emission_sync.EmissionError as err:
+        # The commands are written and correct; only the hand-off failed. Saying
+        # so beats failing a build that did its own job.
+        print(f"[build] could not refresh the agent commands — {err}")
+        return 0
+    for line in emission_sync.describe(written, unreached, project):
+        print(line)
     return 0
 
 

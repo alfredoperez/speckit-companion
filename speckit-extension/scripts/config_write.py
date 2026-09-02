@@ -137,6 +137,41 @@ def write_nodes(path: str, command: str, nodes: list) -> str:
     return updated
 
 
+def read_config(path: str) -> str:
+    """The configuration as it stands, or `""` when there is none yet."""
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def save_config(path: str, text: str) -> None:
+    """Publish a configuration — computed in full, then written in one move.
+
+    `open(path, "w")` truncates the instant it is called, so a site shaped
+    `with open(path, "w") as fh: fh.write(f(existing))` leaves the file at zero
+    bytes whenever `f` raises. Six of these existed, and the reachable one was
+    ordinary: a stale hook index from a panel drawn before someone edited the
+    file by hand printed "there is no hook 6" and took every order, phase and
+    hook the project had written with it.
+
+    So the text is complete before this is called, and the write goes through a
+    temp file and a rename — a crash mid-write cannot leave a half-file either.
+    """
+    import companion_config as cc
+
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    if not os.path.exists(path):
+        # `atomic_write_text` preserves the mode of a file that exists; there is
+        # nothing to preserve yet, and it handles the create case itself.
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return
+    cc.atomic_write_text(path, text)
+
+
 def _quote(value: str) -> str:
     """A quoted scalar this project's reader gives back unchanged.
 
@@ -237,14 +272,27 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
     return "\n".join(out) + ("\n" if trailing_newline else "")
 
 
+#: What `_hook_items` reports when the anchor is not there: no entries, and no
+#: anchor to point at.
+_NO_ANCHOR = ([], 0, None, 0)
+
+
 def _hook_items(lines: list, command: str, when: str, anchor: str):
     """Line numbers of the hook entries at one anchor, in declared order.
 
-    Returns `(indices, item_indent)`, or `([], 0)` when the anchor has none.
+    Returns `(indices, item_indent, anchor_at, anchor_indent)` — the entries, the
+    indent they sit at, and WHERE the anchor key itself is.
+
+    That last pair matters. An anchor name is not unique in the file: `handoff`
+    is a node in every step, so `specify` and `plan` both have a `handoff:` under
+    their own hooks. Removing the last hook under one of them used to look the
+    anchor up again from the top of the file, delete the first `handoff:` it
+    found — another step's, with its hooks inside it — and leave the emptied one
+    behind. Reporting the line this walk already reached is the whole fix.
     """
     commands_at = _find_key(lines, "commands", 0, len(lines), 0)
     if commands_at is None:
-        return [], 0
+        return _NO_ANCHOR
     _open_block(lines, commands_at)
     commands_end = _block_end(lines, commands_at, 0, len(lines))
     cmd_indent = next(
@@ -253,7 +301,7 @@ def _hook_items(lines: list, command: str, when: str, anchor: str):
 
     at = _find_key(lines, command, commands_at + 1, commands_end, cmd_indent)
     if at is None:
-        return [], 0
+        return _NO_ANCHOR
     end = _block_end(lines, at, cmd_indent, commands_end)
     indent = cmd_indent
 
@@ -263,7 +311,7 @@ def _hook_items(lines: list, command: str, when: str, anchor: str):
             indent + len(INDENT))
         found = _find_key(lines, key, at + 1, end, step)
         if found is None:
-            return [], 0
+            return _NO_ANCHOR
         at, indent = found, step
         end = _block_end(lines, found, step, end)
 
@@ -275,7 +323,7 @@ def _hook_items(lines: list, command: str, when: str, anchor: str):
         if not _is_blank(lines[i])
         and _indent_of(lines[i]) == item_indent
         and lines[i].lstrip().startswith("- ")
-    ], item_indent
+    ], item_indent, at, indent
 
 
 def replace_hook(text: str, command: str, when: str, anchor: str,
@@ -287,7 +335,7 @@ def replace_hook(text: str, command: str, when: str, anchor: str,
     """
     lines = text.splitlines()
     trailing_newline = text.endswith("\n") or not text
-    items, item_indent = _hook_items(lines, command, when, anchor)
+    items, item_indent, _at, _indent = _hook_items(lines, command, when, anchor)
     if index < 0 or index >= len(items):
         raise ConfigWriteError(
             f"{command}: there is no hook {index + 1} {when} {anchor}")
@@ -301,12 +349,12 @@ def replace_hook(text: str, command: str, when: str, anchor: str,
 
     if hook is None:
         out = lines[:at] + lines[stop:]
-        # An anchor with nothing left under it is a key pointing at nothing.
-        remaining, _ = _hook_items(out, command, when, anchor)
-        if not remaining:
-            key = _find_key(out, anchor, 0, len(out), item_indent - len(INDENT))
-            if key is not None:
-                out = out[:key] + out[_block_end(out, key, item_indent - len(INDENT), len(out)):]
+        # An anchor with nothing left under it is a key pointing at nothing. The
+        # walk reports which `anchor:` is this command's, so the tidy-up removes
+        # that one rather than the first of that name anywhere in the file.
+        remaining, _ind, key, key_indent = _hook_items(out, command, when, anchor)
+        if not remaining and key is not None:
+            out = out[:key] + out[_block_end(out, key, key_indent, len(out)):]
     else:
         out = lines[:at] + [f"{' ' * item_indent}- {_hook_line(hook)}"] + lines[stop:]
     return "\n".join(out) + ("\n" if trailing_newline else "")
@@ -1000,37 +1048,21 @@ def main() -> int:
                 else config_path(project))
         if args.new_workflow:
             created = new_workflow(project, args.new_workflow, args.seed_from)
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(set_workflow(existing, args.new_workflow))
+            save_config(path, set_workflow(read_config(path), args.new_workflow))
             print(f"[config] created {os.path.relpath(created, project)} and switched to it")
             return 0
 
         if args.workflow:
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(set_workflow(existing, args.workflow))
+            save_config(path, set_workflow(read_config(path), args.workflow))
             print(f"[config] now running '{args.workflow}'")
             return 0
 
         if args.remove_index is not None:
             if not (args.command and args.when and args.anchor):
                 raise ConfigWriteError("removing a hook needs --command, --when and --anchor")
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(replace_hook(
-                    existing, args.command, args.when, args.anchor, args.remove_index, None))
+            save_config(path, replace_hook(
+                read_config(path), args.command, args.when, args.anchor,
+                args.remove_index, None))
             print(f"[config] removed a hook {args.when} {args.anchor}")
             return 0
 
@@ -1040,18 +1072,13 @@ def main() -> int:
             if not args.when or not args.anchor:
                 raise ConfigWriteError("a hook needs --when and --anchor")
             hook = {"type": args.hook, "ref": args.ref, "run": args.run, "text": args.text}
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
+            existing = read_config(path)
             if args.edit_index is not None:
                 updated = replace_hook(
                     existing, args.command, args.when, args.anchor, args.edit_index, hook)
             else:
                 updated = add_hook(existing, args.command, args.when, args.anchor, hook)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(updated)
+            save_config(path, updated)
             print(f"[config] {args.command}: {args.hook} hook added {args.when} {args.anchor}")
             return 0
 
@@ -1064,15 +1091,9 @@ def main() -> int:
                 raise ConfigWriteError("a template section needs --command")
             check_template_section(project, args.command, args.template_section,
                                    args.fragment)
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(set_template_section(
-                    existing, args.command, args.template_section,
-                    args.fragment or None))
+            save_config(path, set_template_section(
+                read_config(path), args.command, args.template_section,
+                args.fragment or None))
             where = f"uses {args.fragment}" if args.fragment else "back to the shipped one"
             print(f"[config] {args.command}: '{args.template_section}' {where}")
             return 0
@@ -1100,16 +1121,10 @@ def main() -> int:
                 check_order(args.command, nodes)
 
             renamed = tuple(args.renamed) if args.renamed else None
-            existing = ""
-            if os.path.isfile(path):
-                with open(path, encoding="utf-8") as fh:
-                    existing = fh.read()
-            updated = set_phases(existing, args.command, phases, renamed)
+            updated = set_phases(read_config(path), args.command, phases, renamed)
             if nodes is not None:
                 updated = set_nodes(updated, args.command, nodes)
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(updated)
+            save_config(path, updated)
             what = "phases and order" if nodes is not None else "phases"
             print(f"[config] {args.command}: {what} saved to {os.path.relpath(path, project)}")
             return 0

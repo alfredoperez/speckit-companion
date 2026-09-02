@@ -113,16 +113,29 @@ export function removeHook(
     ]);
 }
 
-/** Save a step's phase grouping. Returns the reason on refusal. */
+/**
+ * Save a step's phase grouping, and its order alongside when both change.
+ *
+ * A change to WHICH nodes run moves both halves at once, and each half is
+ * validated against the other as it currently stands — so writing the grouping
+ * first is refused for naming a node the order does not have, and writing the
+ * order first is refused for naming one no phase holds. Neither can go first.
+ * Passing both lets the writer check the pair it is being asked for.
+ *
+ * `order` is omitted for a pure regroup (a rename, a node dragged between two
+ * phases), where the set of nodes is unchanged and the order still agrees.
+ */
 export function writePhases(
     script: string,
     workspaceRoot: string,
     command: string,
     phases: Array<{ name: string; nodes: string[] }>,
     renamed?: { from: string; to: string },
+    order?: string[],
 ): Promise<string | null> {
     return runConfigWrite(script, workspaceRoot, [
         '--command', command, '--phases', JSON.stringify(phases),
+        ...(order ? ['--nodes', order.join(',')] : []),
         ...(renamed ? ['--renamed', renamed.from, renamed.to] : []),
     ]);
 }

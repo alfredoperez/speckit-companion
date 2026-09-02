@@ -389,16 +389,18 @@ describe('putting a dropped node back', () => {
         phases: [{ name: 'gather', nodes: ['research', 'draft'] }],
     };
 
-    it('writes where it sits and when it runs, both', async () => {
+    it('sends where it sits and when it runs in one write', async () => {
         await panel.__receive(message);
-        expect(graph.writePhases).toHaveBeenCalled();
-        expect(graph.writeNodeOrder).toHaveBeenCalled();
+        expect(graph.writePhases).toHaveBeenCalledWith(
+            WRITE_SCRIPT, workspace, 'plan',
+            [{ name: 'gather', nodes: ['research', 'draft'] }],
+            undefined, ['research', 'draft']);
+        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
     });
 
-    it('leaves neither written when the first is refused', async () => {
+    it('reports a refusal in the panel, with nothing written', async () => {
         graph.writePhases.mockResolvedValue('that phase does not exist.');
         await panel.__receive(message);
-        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
         expect(panel.__lastPosted('notice').text).toBe('that phase does not exist.');
     });
 });
@@ -410,22 +412,22 @@ describe('running a different block in a node\'s place', () => {
         phases: [{ name: 'author', nodes: ['resolve-dir', 'draft-spec-ears', 'handoff'] }],
     };
 
-    it('writes where it sits and when it runs, both', async () => {
+    // A swap is an add and a drop at once, and each half is checked against the
+    // other as it currently stands — so whichever went first was refused for
+    // disagreeing with the half that had not moved. Replace never worked from
+    // the panel; only the tests, which sent both halves together, ever saw it.
+    it('sends both halves in one write, so neither is checked against a stale other', async () => {
         await panel.__receive(message);
-        expect(graph.writePhases).toHaveBeenCalled();
-        expect(graph.writeNodeOrder).toHaveBeenCalled();
+        expect(graph.writePhases).toHaveBeenCalledWith(
+            WRITE_SCRIPT, workspace, 'specify',
+            [{ name: 'author', nodes: ['resolve-dir', 'draft-spec-ears', 'handoff'] }],
+            undefined, ['resolve-dir', 'draft-spec-ears', 'handoff']);
+        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
     });
 
-    it('writes the grouping first, so the block has a phase before it runs', async () => {
-        await panel.__receive(message);
-        expect(graph.writePhases.mock.invocationCallOrder[0])
-            .toBeLessThan(graph.writeNodeOrder.mock.invocationCallOrder[0]);
-    });
-
-    it('leaves neither written when the first is refused', async () => {
+    it('reports a refusal in the panel, with nothing written', async () => {
         graph.writePhases.mockResolvedValue('that node has no phase.');
         await panel.__receive(message);
-        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
         expect(panel.__lastPosted('notice').text).toBe('that node has no phase.');
     });
 });
@@ -478,24 +480,15 @@ describe('handing a step to a document of your own', () => {
         await panel.__receive({ type: 'replaceStep', command: 'plan' });
         expect(graph.writePhases).toHaveBeenCalledWith(
             WRITE_SCRIPT, workspace, 'plan',
-            [{ name: 'our plan', nodes: ['plan-ours'] }]);
-        expect(graph.writeNodeOrder).toHaveBeenCalledWith(
-            WRITE_SCRIPT, workspace, 'plan', ['plan-ours']);
+            [{ name: 'our plan', nodes: ['plan-ours'] }],
+            undefined, ['plan-ours']);
+        expect(graph.writeNodeOrder).not.toHaveBeenCalled();
     });
 
-    it('writes the order first, because that is what makes the grouping legal', async () => {
-        // The order is what drops the shipped nodes. Until they are dropped, a
-        // grouping that does not mention them is refused for leaving them
-        // without a phase — so grouping-first silently broke the whole feature.
+    it('opens nothing when the write was refused', async () => {
+        graph.writePhases.mockResolvedValue('plan-ours reads something it cannot.');
         await panel.__receive({ type: 'replaceStep', command: 'plan' });
-        expect(graph.writeNodeOrder.mock.invocationCallOrder[0])
-            .toBeLessThan(graph.writePhases.mock.invocationCallOrder[0]);
-    });
-
-    it('writes no grouping when the order was refused', async () => {
-        graph.writeNodeOrder.mockResolvedValue('plan-ours reads something it cannot.');
-        await panel.__receive({ type: 'replaceStep', command: 'plan' });
-        expect(graph.writePhases).not.toHaveBeenCalled();
+        expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
         expect(panel.__lastPosted('notice').text).toBe('plan-ours reads something it cannot.');
     });
 
