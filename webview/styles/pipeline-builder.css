@@ -1456,12 +1456,11 @@ body {
     color: var(--text-primary);
 }
 
-/* A section with nothing else written for it says so, rather than offering an
-   empty menu that reads as a bug. */
-.pb-template-none {
+/* What the chosen fragment does, under the row that chose it. */
+.pb-template-summary {
     font-size: var(--text-xs);
-    color: var(--text-muted);
-    font-style: italic;
+    line-height: var(--leading-normal);
+    color: var(--text-body);
 }
 
 /* The alternatives a node offers, in the inspector's action row. Sized like the
@@ -1801,6 +1800,161 @@ body {
     font-size: var(--text-xs);
     line-height: 1.4;
     color: var(--text-secondary);
+}
+
+/* ── L3 ──────────────────────────────────────────────────────
+   The side column: the node pane's header, facts and action row, and the
+   forms' labelled rows, segments and menu-as-field triggers. */
+
+/* Beside the identifier it opens, not in the row of things that write. */
+.pb-inspector-open {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.pb-inspector-open:hover { color: var(--accent-hover); }
+
+/* The same mark the card carries, so the Kind row is its legend. */
+.pb-kind-tick {
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    margin-right: var(--space-2);
+    vertical-align: -1px;
+    border-radius: 1px;
+    background: var(--gray);
+}
+
+.pb-kind-tick--author { background: var(--text-body); }
+.pb-kind-tick--investigate { background: var(--info); }
+.pb-kind-tick--gate { background: var(--warning); }
+.pb-kind-tick--control { background: var(--gray); }
+
+.pb-facts-note {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+}
+
+/* Announced, not drawn: the board is already the visible answer to a move. */
+.pb-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* The row sits at the foot of a pane that clips, so its menus open upward. */
+.pb-inspector-actions .pb-menu-list {
+    top: auto;
+    bottom: calc(100% + var(--space-1));
+}
+
+.pb-more { display: inline-flex; }
+
+/* The one entry in this menu that spends the ownership colour. */
+.pb-more--restore .pb-menu-list li:last-child {
+    margin-top: var(--space-1);
+    padding-top: var(--space-1);
+    border-top: 1px solid var(--border);
+}
+
+.pb-more--restore .pb-menu-list li:last-child .pb-menu-label { color: var(--review); }
+
+/* ---- Forms: a label column, so a field reads as one line ---- */
+
+.pb-field--labelled {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: start;
+}
+
+.pb-field--labelled > .pb-field-label { padding-top: var(--space-2); }
+
+.pb-runs { display: flex; gap: var(--space-2); min-width: 0; }
+.pb-runs-when { flex: 0 0 auto; }
+.pb-runs-where { flex: 1 1 0; }
+
+.pb-kind,
+.pb-note { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* A menu standing in for an input is sized and drawn like the input it replaced. */
+.pb-runs-when,
+.pb-runs-where,
+.pb-template-pick {
+    display: flex;
+    min-width: 0;
+}
+
+.pb-runs-when > *,
+.pb-runs-where > *,
+.pb-template-pick > * {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.pb-menu-trigger--field {
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--vscode-input-foreground, var(--text-primary));
+    background: var(--vscode-input-background, var(--bg-primary));
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
+}
+
+.pb-menu-trigger--field .pb-menu-caret { flex-shrink: 0; }
+
+.pb-trigger-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Four kinds on one row, so three help texts stop competing ---- */
+
+.pb-segments {
+    display: flex;
+    background: var(--vscode-input-background, var(--bg-primary));
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.pb-segment {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: var(--space-1) 0;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 0;
+    border-left: 1px solid var(--vscode-input-border, var(--border));
+    cursor: pointer;
+}
+
+.pb-segment:first-child { border-left: 0; }
+.pb-segment:hover { background: var(--bg-hover); }
+
+.pb-segment--on {
+    color: var(--accent-strong);
+    background: var(--accent-subtle);
+    box-shadow: inset 0 0 0 1px var(--accent-strong);
 }
 
 /* ── Narrow panel ────────────────────────────────────────────

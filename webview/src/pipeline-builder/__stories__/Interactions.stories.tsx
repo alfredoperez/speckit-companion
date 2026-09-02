@@ -292,11 +292,34 @@ export const ChangeTheHookType: Story = {
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const radios = canvasElement.querySelectorAll('.pb-choice input');
-        (radios[1] as HTMLInputElement).click();
+        const segments = canvasElement.querySelectorAll('.pb-segment');
+        assert(segments.length === 4, 'the four kinds sit on one row');
+        (segments[1] as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
         assert(Boolean(canvasElement.querySelector('.pb-input--area')),
             'an instruction gets room to write in');
+        assert(canvasElement.querySelectorAll('.pb-kind .pb-field-note').length === 1,
+            'and one help line, for the kind that is on');
+    },
+};
+
+export const PlaceTheHookFirst: Story = {
+    name: 'Say where a hook goes before saying what it is',
+    render: () => (
+        <div class="builder">
+            <AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+                onCancel={noop} onAttach={noop} />
+        </div>
+    ),
+    play: async ({ canvasElement }) => {
+        const triggers = canvasElement.querySelectorAll('.pb-runs .pb-menu-trigger');
+        assert(triggers.length === 2, 'when and where, in the row that comes first');
+        (triggers[1] as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const options = Array.from(canvasElement.querySelectorAll('.pb-runs .pb-menu-option'));
+        assert(options.length > 0, 'the anchors are named, not listed as ids');
+        const draft = options.find(el => el.textContent?.startsWith('Draft the spec'));
+        (draft as HTMLButtonElement).click();
     },
 };
 
@@ -506,6 +529,49 @@ export const ReadAndAct: Story = {
         assert(!actions.includes('Make it mine'),
             'making it yours is what saving does, not a step before editing');
         assert(actions.includes('Add hook'), 'and work can be attached');
-        assert(actions.includes('Open the file'), 'with the editor still one click away');
+        // Reading the file is not changing it, so it sits beside the id.
+        assert(Boolean(canvasElement.querySelector('.pb-inspector-head .pb-inspector-open')),
+            'with the editor still one click away, from the header');
+    },
+};
+
+export const EverythingElseANodeCanDo: Story = {
+    name: 'Move, remove or give back a node, from one menu',
+    render: () => {
+        const { sent, on } = recorder();
+        (EverythingElseANodeCanDo as { sent?: Sent }).sent = sent;
+        return (
+            <div class="builder">
+                <Inspector
+                    node={node('draft-spec', 'Draft the spec', {
+                        kind: 'author', writes: ['spec.md'], replaced: true, shipped: true,
+                    })}
+                    step="specify" body="Write the spec the way THIS TEAM writes specs."
+                    editable="Write the spec the way THIS TEAM writes specs." parts={[]}
+                    onClose={noop} onOpenFile={noop} onSave={noop}
+                    onRestore={on('restoreNode')} onAttach={noop} onUseVariant={noop}
+                    onRemove={noop} onMove={noop} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const sent = (EverythingElseANodeCanDo as { sent?: Sent }).sent!;
+        const trigger = canvasElement.querySelector('.pb-more .pb-menu-trigger') as HTMLButtonElement;
+        trigger.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const offered = Array.from(canvasElement.querySelectorAll('.pb-more .pb-menu-label'))
+            .map(el => el.textContent);
+        assert(offered.includes('Move up') && offered.includes('Move down'),
+            'reordering has a keyboard path, not only a drag');
+        assert(offered.includes('Remove from the run'),
+            'and a node can stop running without its file being deleted');
+        assert(offered.includes('Use the shipped node'),
+            'the way back is here too, said once');
+
+        (Array.from(canvasElement.querySelectorAll('.pb-more .pb-menu-option'))
+            .find(el => el.textContent?.startsWith('Use the shipped node')) as HTMLButtonElement)
+            .click();
+        assert(sent[0]?.what === 'restoreNode', 'which asks for the revert, and says so');
     },
 };

@@ -266,10 +266,16 @@ describe('giving a node back', () => {
         shippedNode('specify', 'draft', '---\nid: draft\n---\n\nWrite the spec.\n');
     });
 
-    it('drops the project\'s copy and redraws', async () => {
+    /** A project's own copy of the shipped `draft` node, on disk. */
+    function ourCopy(): string {
         const own = ownNode('specify', 'draft');
         fs.mkdirSync(path.dirname(own), { recursive: true });
         fs.writeFileSync(own, 'ours', 'utf8');
+        return own;
+    }
+
+    it('drops the project\'s copy and redraws', async () => {
+        const own = ourCopy();
 
         await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
 
@@ -280,6 +286,39 @@ describe('giving a node back', () => {
     it('does nothing when there was no copy to give back', async () => {
         await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
         expect(panel.__lastPosted('graph')).toBeUndefined();
+    });
+
+    // It deleted the only copy of a file with nothing said and no way back.
+    it('says what it did, in the panel', async () => {
+        ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        const status = panel.__lastPosted('status').status;
+        expect(status.text).toBe('draft runs the shipped node again');
+        expect(status.detail).toBe('Your copy of it was deleted');
+        expect(status.undo.token).toBe('restore:specify:draft');
+    });
+
+    it('puts the deleted copy back, contents and all, when Undo is pressed', async () => {
+        const own = ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+        expect(fs.existsSync(own)).toBe(false);
+
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+
+        expect(fs.readFileSync(own, 'utf8')).toBe('ours');
+        expect(panel.__lastPosted('status').status).toBeNull();
+    });
+
+    it('refuses a node that ships nowhere, naming an action the panel can do', async () => {
+        const own = ownNode('specify', 'invented');
+        fs.mkdirSync(path.dirname(own), { recursive: true });
+        fs.writeFileSync(own, 'ours', 'utf8');
+
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'invented' });
+
+        expect(panel.__lastPosted('notice').text).toContain('Remove from the run');
+        expect(fs.existsSync(own)).toBe(true);
     });
 });
 
@@ -723,6 +762,89 @@ describe('reaching the panel from the palette', () => {
             .toBe(before + 1);
         panel = (vscode.window.createWebviewPanel as jest.Mock)
             .mock.results.at(-1)!.value as Panel;
+    });
+});
+
+describe('taking a node out of the run', () => {
+    /** The step as the graph reader would report it, so an undo has a shape to restore. */
+    function shaped(): void {
+        graph.readPipelineGraph.mockResolvedValue({
+            steps: [{
+                name: 'specify',
+                phases: [
+                    { name: 'gather', nodes: [{ id: 'resolve-dir' }] },
+                    { name: 'author', nodes: [{ id: 'draft' }] },
+                ],
+            }],
+        } as never);
+    }
+
+    it('writes the order and the grouping together, and says what it did', async () => {
+        shaped();
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+
+        const [, , command, phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(command).toBe('specify');
+        expect(phases).toEqual([{ name: 'gather', nodes: ['resolve-dir'] }]);
+        expect(order).toEqual(['resolve-dir']);
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('draft no longer runs in specify');
+    });
+
+    it('puts the node back where it was when Undo is pressed', async () => {
+        shaped();
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        await panel.__receive({ type: 'undo', token: 'remove:specify:draft' });
+
+        const [, , , phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(order).toEqual(['resolve-dir', 'draft']);
+        expect(phases).toEqual([
+            { name: 'gather', nodes: ['resolve-dir'] },
+            { name: 'author', nodes: ['draft'] },
+        ]);
+    });
+
+    // The line used to promise an Undo whatever happened, and pressing it
+    // answered that the change could not be taken back.
+    it('offers no Undo when the shape to go back to could not be read', async () => {
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        expect(panel.__lastPosted('status').status.undo).toBeUndefined();
+    });
+
+    it('writes nothing and says the reason when the configuration refuses', async () => {
+        shaped();
+        graph.writePhases.mockResolvedValue('draft has to run last.');
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        expect(panel.__lastPosted('notice').text).toBe('draft has to run last.');
+        expect(panel.__lastPosted('status')).toBeUndefined();
+    });
+});
+
+describe('moving a node without dragging it', () => {
+    it('sends the whole step\'s shape, and says which node moved', async () => {
+        await panel.__receive({
+            type: 'moveNode', command: 'specify', nodeId: 'draft',
+            order: ['draft', 'resolve-dir'],
+            phases: [{ name: 'gather', nodes: ['draft', 'resolve-dir'] }],
+        });
+
+        const [, , command, phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(command).toBe('specify');
+        expect(order).toEqual(['draft', 'resolve-dir']);
+        expect(phases).toEqual([{ name: 'gather', nodes: ['draft', 'resolve-dir'] }]);
+        expect(panel.__lastPosted('status').status.text).toBe('draft moved in specify');
     });
 });
 
