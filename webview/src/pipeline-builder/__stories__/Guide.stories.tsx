@@ -28,6 +28,7 @@ const CANVAS = {
     onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
     onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onNewStep: noop,
+    onRemoveNode: noop, onMoveNode: noop,
 };
 const HEAD = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,
@@ -35,7 +36,7 @@ const HEAD = {
 };
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop,
-    onAttach: noop, onSave: noop, onUseVariant: noop,
+    onAttach: noop, onSave: noop, onUseVariant: noop, onRemove: noop, onMove: noop,
 };
 
 /** The panel's own shell, so a shot has the ground the real thing has. */

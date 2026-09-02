@@ -115,7 +115,7 @@ const CANVAS_ACTIONS = {
     onOpenNode: noop, onRestoreNode: noop,
     onReorder: noop, onAddHook: noop, onEditHook: noop,
     onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onSetPhases: noop,
-    onNewStep: noop,
+    onNewStep: noop, onRemoveNode: noop, onMoveNode: noop,
 };
 const HEADER_ACTIONS = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,

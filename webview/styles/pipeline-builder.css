@@ -1735,6 +1735,7 @@ body {
     position: absolute;
     top: calc(100% + var(--space-1));
     left: 0;
+    right: auto;
     z-index: 5;
     min-width: 220px;
     max-width: 340px;
@@ -1777,6 +1778,13 @@ body {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-primary);
+}
+
+/* A trigger at the right edge of a lane opens a list that would otherwise run
+   off the board. */
+.pb-menu-list--right {
+    left: auto;
+    right: 0;
 }
 
 /* What picking this one does. A select had nowhere to put it. */

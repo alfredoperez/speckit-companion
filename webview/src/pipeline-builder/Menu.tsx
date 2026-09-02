@@ -25,8 +25,14 @@ export interface MenuOption {
 }
 
 interface Props {
-    /** What the closed control says. */
-    trigger: string;
+    /** What the closed control shows. A word, or a drawn mark. */
+    trigger: preact.ComponentChildren;
+    /** What a screen reader says when the trigger is a mark rather than a word. */
+    label?: string;
+    /** A mark that is already an affordance does not need a caret beside it. */
+    caret?: boolean;
+    /** Which edge the list hangs from, for a trigger near the right of a lane. */
+    align?: 'left' | 'right';
     title: string;
     options: MenuOption[];
     onPick: (id: string) => void;
@@ -46,7 +52,8 @@ interface Props {
 }
 
 export function Menu({
-    trigger, title, options, onPick, disabled, disabledTitle, defaultOpen, ...rest
+    trigger, title, options, onPick, disabled, disabledTitle, defaultOpen,
+    label, caret = true, align = 'left', ...rest
 }: Props) {
     const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
@@ -71,7 +78,7 @@ export function Menu({
     if (disabled || options.length === 0) {
         return (
             <span class={`pb-menu-trigger pb-menu-trigger--inert ${rest.class ?? ''}`}
-                title={disabledTitle ?? title}>
+                title={disabledTitle ?? title} aria-label={label}>
                 {trigger}
             </span>
         );
@@ -80,13 +87,16 @@ export function Menu({
     return (
         <div class="pb-menu" ref={root}>
             <button class={`pb-menu-trigger ${rest.class ?? ''}`} title={title}
-                aria-expanded={open} aria-haspopup="menu"
+                aria-label={label} aria-expanded={open} aria-haspopup="menu"
                 onClick={() => setOpen(!open)}>
                 {trigger}
-                <span class="pb-menu-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
+                {caret && (
+                    <span class="pb-menu-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
+                )}
             </button>
             {open && (
-                <ul class="pb-menu-list" role="menu">
+                <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}`}
+                    role="menu">
                     {options.map(option => (
                         <li key={option.id} role="none">
                             <button class="pb-menu-option" role="menuitem"

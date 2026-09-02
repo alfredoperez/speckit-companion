@@ -18,6 +18,7 @@ import {
     ExtensionToBuilderMessage,
     HookWhen,
     PipelineGraphResult,
+    PipelineStatus,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { nodeFile, readableNode } from './readableNode';
@@ -49,6 +50,9 @@ const PROJECT_NODES_REL = path.join('.specify', 'companion', 'nodes');
 const WORKFLOWS_REL = path.join('.specify', 'companion', 'workflows');
 const SHIPPED_WORKFLOW = 'shipped';
 
+/** Whether this workspace has already read the line explaining what the board is. */
+const FIRST_RUN_SEEN = 'speckit.pipelineBuilder.firstRunSeen';
+
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let out = '';
@@ -60,6 +64,9 @@ export class PipelineBuilderPanel {
     private static current: PipelineBuilderPanel | undefined;
 
     private readonly disposables: vscode.Disposable[] = [];
+
+    /** The way back from the last write, while the status line still offers it. */
+    private pendingUndo: { token: string; run: () => Promise<void> } | null = null;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -327,6 +334,69 @@ export class PipelineBuilderPanel {
                 `${message.name}-work.md`)));
         },
 
+        /**
+         * Stop running a node, keeping the file.
+         *
+         * The order and the grouping move together, the way adding one does —
+         * a node in the order with no phase is a pipeline that contradicts
+         * itself. Nothing is deleted, so it stays on offer under "Add node".
+         */
+        removeNode: async message => {
+            const before = await this.stepShape(message.command);
+            const ok = await this.write(
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases,
+                    undefined, message.order),
+                'Removing a node',
+                {
+                    tone: 'done',
+                    text: `${message.nodeId} no longer runs in ${message.command}`,
+                    detail: 'Build to apply',
+                    undo: { token: `remove:${message.command}:${message.nodeId}` },
+                });
+            if (ok && before) {
+                this.offerUndo(`remove:${message.command}:${message.nodeId}`, async () => {
+                    await this.write(
+                        script => writePhases(
+                            script, this.workspaceRoot, message.command, before.phases,
+                            undefined, before.order),
+                        'Putting the node back');
+                });
+            }
+        },
+
+        /** Move a node without dragging it — the only route there was a mouse. */
+        moveNode: async message => {
+            await this.write(
+                script => writePhases(
+                    script, this.workspaceRoot, message.command, message.phases,
+                    undefined, message.order),
+                'Moving a node',
+                {
+                    tone: 'done',
+                    text: `${message.nodeId} moved in ${message.command}`,
+                    detail: 'Build to apply',
+                });
+        },
+
+        /** Read once. The panel does not say it again in this workspace. */
+        dismissFirstRun: async () => {
+            await this.context.workspaceState.update(FIRST_RUN_SEEN, true);
+            await this.send();
+        },
+
+        undo: async message => {
+            const held = this.pendingUndo;
+            if (!held || held.token !== message.token) {
+                this.say('That change can no longer be taken back.');
+                return;
+            }
+            this.pendingUndo = null;
+            await held.run();
+            await this.send();
+            this.sayStatus(null);
+        },
+
         newWorkflow: async message => {
             const made = await this.write(
                 script => createWorkflow(script, this.workspaceRoot, message.name, message.from),
@@ -347,6 +417,7 @@ export class PipelineBuilderPanel {
     private async write(
         run: (script: string) => Promise<string | null>,
         what: string,
+        status?: PipelineStatus,
     ): Promise<boolean> {
         const script = resolveConfigWriteScript(this.workspaceRoot, this.context.extensionPath);
         if (!script) {
@@ -358,7 +429,46 @@ export class PipelineBuilderPanel {
         // to what is on disk — the drag or the form undoes itself.
         await this.send();
         if (refused) { this.say(refused); return false; }
+        if (status) { this.sayStatus(status); }
         return true;
+    }
+
+    /**
+     * What the last write did, said in the panel.
+     *
+     * A write that can be taken back registers how, and the status carries the
+     * token that finds it. One at a time: the next write replaces it, because an
+     * undo of something two changes ago is not an undo any more.
+     */
+    private sayStatus(status: PipelineStatus | null): void {
+        if (!status?.undo) { this.pendingUndo = null; }
+        void this.post({ type: 'status', status });
+    }
+
+    /** Hold the way back from the last write, until the next one. */
+    private offerUndo(token: string, run: () => Promise<void>): void {
+        this.pendingUndo = { token, run };
+    }
+
+    /**
+     * A step's order and grouping as they stand — what an undo puts back.
+     *
+     * Read before the write rather than reconstructed after it, because the
+     * write is the only thing that knows what it changed.
+     */
+    private async stepShape(command: string): Promise<
+        { order: string[]; phases: Array<{ name: string; nodes: string[] }> } | null
+    > {
+        const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
+        if (!script) { return null; }
+        const graph = await readPipelineGraph(script, this.workspaceRoot);
+        if ('error' in graph) { return null; }
+        const step = graph.steps.find(s => s.name === command);
+        if (!step) { return null; }
+        return {
+            order: step.phases.flatMap(p => p.nodes.map(n => n.id)),
+            phases: step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) })),
+        };
     }
 
     /** Send one node's instructions — what it says, and what an edit starts from. */

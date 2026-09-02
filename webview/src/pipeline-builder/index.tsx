@@ -13,10 +13,12 @@ import { useEffect, useState } from 'preact/hooks';
 import {
     ExtensionToBuilderMessage,
     PipelineBuildKind,
+    BuildReport,
     PipelineGraph,
     PipelineGraphResult,
     PipelineHook,
     PipelineNode,
+    PipelineStatus,
     isGraphError,
 } from '../../../src/protocol/pipeline';
 import { BrokenPipeline } from './BrokenPipeline';
@@ -61,6 +63,37 @@ function swapNode(graph: PipelineGraph, at: Selection, variantId: string) {
     };
 }
 
+/**
+ * The step's order and grouping with one node taken out.
+ *
+ * The same whole-step write a drag makes: order and grouping together, since a
+ * node in one and not the other is a pipeline that contradicts itself. A phase
+ * emptied by the removal goes with it — an empty phase cannot be written.
+ */
+function withoutNode(graph: PipelineGraph, at: Selection) {
+    const step = graph.steps.find(s => s.name === at.command);
+    if (!step) { return null; }
+    const phases = step.phases
+        .map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id).filter(id => id !== at.nodeId) }))
+        .filter(p => p.nodes.length > 0);
+    if (phases.length === 0) { return null; }
+    return { order: phases.flatMap(p => p.nodes), phases };
+}
+
+/** That shape again, with one node a place earlier or later inside its phase. */
+function movedNode(graph: PipelineGraph, at: Selection, direction: 'up' | 'down') {
+    const step = graph.steps.find(s => s.name === at.command);
+    if (!step) { return null; }
+    const phases = step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) }));
+    const phase = phases.find(p => p.nodes.includes(at.nodeId));
+    if (!phase) { return null; }
+    const from = phase.nodes.indexOf(at.nodeId);
+    const to = direction === 'up' ? from - 1 : from + 1;
+    if (to < 0 || to >= phase.nodes.length) { return null; }
+    [phase.nodes[from], phase.nodes[to]] = [phase.nodes[to], phase.nodes[from]];
+    return { order: phases.flatMap(p => p.nodes), phases };
+}
+
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
 function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
     const step = graph.steps.find(s => s.name === at.command);
@@ -73,7 +106,7 @@ function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
             id: '_frame',
             name: `${step.name} — the step's own instructions`,
             kind: 'control',
-            reads: [], writes: [], hooks: [], variants: [],
+            reads: [], writes: [], mayWrite: [], hooks: [], variants: [],
             pinned: 'the frame always comes first — it is what every node sits under',
             source: step.frame.source,
             replaced: step.frame.replaced,
@@ -95,6 +128,10 @@ function App() {
     const [busy, setBusy] = useState(false);
     const [side, setSide] = useState<Side>(null);
     const [notice, setNotice] = useState<string | null>(null);
+    // What the last write did, and what a build or preview reported. Both are
+    // said in the panel that asked, rather than in a channel somewhere else.
+    const [status, setStatus] = useState<PipelineStatus | null>(null);
+    const [report, setReport] = useState<BuildReport | null>(null);
     const [body, setBody] = useState<
         { key: string; body: string; parts: string[]; editable: string } | null>(null);
 
@@ -108,6 +145,10 @@ function App() {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
                 setNotice(message.text);
+            } else if (message.type === 'status') {
+                setStatus(message.status);
+            } else if (message.type === 'buildReport') {
+                setReport(message.report);
             } else if (message.type === 'nodeBody') {
                 setBody({
                     key: `${message.command}/${message.nodeId}`,
@@ -198,6 +239,10 @@ function App() {
                         setSide({ kind: 'template', command });
                     }}
                     onNewStep={() => { setNotice(null); setSide({ kind: 'new-step' }); }}
+                    onRemoveNode={(command, nodeId, order, phases) =>
+                        send({ type: 'removeNode', command, nodeId, order, phases })}
+                    onMoveNode={(command, nodeId, order, phases) =>
+                        send({ type: 'moveNode', command, nodeId, order, phases })}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);
@@ -312,6 +357,23 @@ function App() {
                         onRestore={() => vscode.postMessage({
                             type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
                         })}
+                        onRemove={() => {
+                            const shape = withoutNode(graph, selected);
+                            if (!shape) { return; }
+                            setSide(null);
+                            send({
+                                type: 'removeNode', command: selected.command,
+                                nodeId: selected.nodeId, ...shape,
+                            });
+                        }}
+                        onMove={(direction: 'up' | 'down') => {
+                            const shape = movedNode(graph, selected, direction);
+                            if (!shape) { return; }
+                            send({
+                                type: 'moveNode', command: selected.command,
+                                nodeId: selected.nodeId, ...shape,
+                            });
+                        }}
                         onAttach={() => vscode.postMessage({
                             type: 'addHook', command: selected.command,
                             anchor: selected.nodeId, when: 'before',

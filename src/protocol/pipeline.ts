@@ -291,6 +291,37 @@ export function isGraphError(result: PipelineGraphResult): result is PipelineGra
 /** Whether the built pipeline still matches the configuration behind it. */
 export type PipelineBuildKind = 'unconfigured' | 'never-built' | 'stale' | 'current';
 
+/**
+ * What just happened, said once, where the change was made.
+ *
+ * Every write redrew the board and only refusals spoke, so a hook added at the
+ * foot of a lane that is scrolled away changed nothing a person could see. A
+ * write says what it did; a write that can be taken back says so too, and the
+ * token is how the extension finds the undo it is holding.
+ */
+export interface PipelineStatus {
+    tone: 'done' | 'warning' | 'info';
+    /** What happened: "Hook added before Draft the spec". */
+    text: string;
+    /** What it means next: "Build to apply", "5 commands written". */
+    detail?: string;
+    undo?: { token: string; label?: string };
+}
+
+/** What a build or a preview did, reported in the panel that asked for it. */
+export interface BuildReport {
+    ok: boolean;
+    /** When it finished, as the panel shows it. */
+    at: string;
+    commands: number;
+    /** The commands whose text would change, or did. */
+    changed: string[];
+    /** A preview writes nothing. */
+    dryRun: boolean;
+    /** The full log, which the output channel also holds. */
+    output: string;
+}
+
 // ============================================
 // Messages
 // ============================================
@@ -417,7 +448,34 @@ export type BuilderToExtensionMessage =
     /** Switch the whole configuration. `shipped` is Companion with nothing changed. */
     | { type: 'selectWorkflow'; name: string }
     /** Start a new workflow, optionally seeded from the active one. */
-    | { type: 'newWorkflow'; from: string; name: string };
+    | { type: 'newWorkflow'; from: string; name: string }
+    /** Take back the last write, by the token the status line was given. */
+    | { type: 'undo'; token: string }
+    /**
+     * Stop running a node, without deleting anything.
+     *
+     * It leaves the order and the grouping and stays on offer under "Add node",
+     * so this is the same whole-step write a drag makes. There was no way to do
+     * it from the panel at all: a refusal even named an action only the file
+     * could perform.
+     */
+    | {
+        type: 'removeNode';
+        command: string;
+        nodeId: string;
+        order: string[];
+        phases: Array<{ name: string; nodes: string[] }>;
+    }
+    /** Move a node without dragging it — the only route there was a mouse. */
+    | {
+        type: 'moveNode';
+        command: string;
+        nodeId: string;
+        order: string[];
+        phases: Array<{ name: string; nodes: string[] }>;
+    }
+    /** The first-run line is read once; this is the person saying so. */
+    | { type: 'dismissFirstRun' };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
@@ -434,4 +492,8 @@ export type ExtensionToBuilderMessage =
      * Not a toast: this view is meant to run outside VS Code too, and a message
      * the panel cannot draw is a message that does not exist there.
      */
-    | { type: 'notice'; text: string };
+    | { type: 'notice'; text: string }
+    /** What the last write did. `null` clears the line. */
+    | { type: 'status'; status: PipelineStatus | null }
+    /** What a build or a preview did, for the header to report. */
+    | { type: 'buildReport'; report: BuildReport };

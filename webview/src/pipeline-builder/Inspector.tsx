@@ -28,6 +28,10 @@ interface Props {
     onAttach: () => void;
     /** Swap this node for one of its alternatives. */
     onUseVariant: (variantId: string) => void;
+    /** Stop running this node, keeping the file. */
+    onRemove: () => void;
+    /** Move it a place earlier or later in the step. */
+    onMove: (direction: 'up' | 'down') => void;
 }
 
 /** What each kind of node is for, said once, here, instead of as an abbreviation. */

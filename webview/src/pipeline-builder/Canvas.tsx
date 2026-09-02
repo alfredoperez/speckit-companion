@@ -55,6 +55,20 @@ interface Props {
     onOpenTemplate: (command: string) => void;
     /** Add a step of the project's own to the run. */
     onNewStep: () => void;
+    /**
+     * Stop running a node. The file stays, so it is still on offer to add back.
+     *
+     * Order and grouping go together, as they do for adding one.
+     */
+    onRemoveNode: (
+        command: string, nodeId: string,
+        order: string[], phases: Array<{ name: string; nodes: string[] }>,
+    ) => void;
+    /** Move a node without dragging it. */
+    onMoveNode: (
+        command: string, nodeId: string,
+        order: string[], phases: Array<{ name: string; nodes: string[] }>,
+    ) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,

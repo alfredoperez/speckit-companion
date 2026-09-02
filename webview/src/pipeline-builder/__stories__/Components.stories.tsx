@@ -21,6 +21,7 @@ const CANVAS = {
     onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
     onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onNewStep: noop,
+    onRemoveNode: noop, onMoveNode: noop,
 };
 
 const HEAD = {
@@ -30,7 +31,7 @@ const HEAD = {
 
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
-    onSave: noop, onUseVariant: noop,
+    onSave: noop, onUseVariant: noop, onRemove: noop, onMove: noop,
 };
 
 /** One step, drawn alone, in the panel's own shell. */

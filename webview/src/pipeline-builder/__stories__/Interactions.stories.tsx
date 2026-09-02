@@ -42,7 +42,8 @@ function board(g = graph([SPECIFY])) {
                 onAddNode={(c, id, p) => sent.push({ what: 'addNode', with: [c, id, p] })}
                 onOpenFrame={on('openFrame')}
                 onReplaceStep={on('replaceStep')} onOpenTemplate={on('openTemplate')}
-                onNewStep={on('newStep')} />
+                onNewStep={on('newStep')}
+                onRemoveNode={on('removeNode')} onMoveNode={on('moveNode')} />
             <pre class="sb-sent" style="display:none">{JSON.stringify(sent)}</pre>
         </div>
     );
@@ -454,7 +455,8 @@ export const EditANodeInPlace: Story = {
                     editable={'Load `spec-template.md`.\n<!-- speckit-companion:part timing -->'}
                     parts={['timing']}
                     onClose={noop} onOpenFile={noop} onSave={on('saveNode')}
-                    onRestore={noop} onAttach={noop} onUseVariant={noop} />
+                    onRestore={noop} onAttach={noop} onUseVariant={noop}
+                    onRemove={noop} onMove={noop} />
             </div>
         );
     },
@@ -493,7 +495,8 @@ export const ReadAndAct: Story = {
                 parts={['timing']}
                 editable={'Load `spec-template.md` and write the specification.'}
                 onClose={noop} onOpenFile={noop} onSave={noop}
-                onRestore={noop} onAttach={noop} onUseVariant={noop} />
+                onRestore={noop} onAttach={noop} onUseVariant={noop}
+                    onRemove={noop} onMove={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
