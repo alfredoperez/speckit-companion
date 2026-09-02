@@ -36,10 +36,30 @@ function WarningIcon() {
     );
 }
 
-/** How a workflow reads in the switcher. The stored name is a filename. */
 /** `1 step`, `3 phases`. A pipeline with one of something said "1 steps". */
 function tally(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/**
+ * The one fact about this pipeline you cannot get by looking at it.
+ *
+ * The header used to read `5 steps · 16 phases · 24 nodes · 0 hooks`. Three of
+ * those four are on screen, in columns, countable — restating them is chrome.
+ * The fourth was the only one worth having and it was WRONG: it counted the
+ * project's own hooks and ignored every hook an installed extension registers,
+ * so a board visibly carrying four of them said zero.
+ *
+ * Hooks are the thing you genuinely cannot total by eye — they sit at boundaries
+ * scattered down five lanes. So that is what the line says, and it says how many
+ * are the project's, because that is the part a reader is deciding about.
+ */
+function hookTally(graph: PipelineGraph): string {
+    const total = graph.counts.hooks + graph.counts.stockHooks;
+    if (total === 0) { return 'nothing attached'; }
+    return graph.counts.hooks > 0
+        ? `${tally(total, 'hook')} · ${graph.counts.hooks} yours`
+        : tally(total, 'hook');
 }
 
 function workflowLabel(name: string): string {
@@ -162,10 +182,15 @@ export function Header(props: Props) {
             </div>
 
             <div class="builder-facts">
-                <span class="builder-count">
-                    {tally(graph.counts.steps, 'step')} · {tally(graph.counts.phases, 'phase')}
-                    {' · '}{tally(graph.counts.nodes, 'node')}
-                    {' · '}{tally(graph.counts.hooks, 'hook')}
+                <span class="builder-count"
+                    title={`${tally(graph.counts.steps, 'step')}, `
+                        + `${tally(graph.counts.phases, 'phase')}, `
+                        + `${tally(graph.counts.nodes, 'node')}`
+                        + (graph.counts.stockHooks
+                            ? `\n${tally(graph.counts.stockHooks, 'hook')} from installed `
+                              + 'spec-kit extensions, which this panel shows but does not edit'
+                            : '')}>
+                    {hookTally(graph)}
                 </span>
                 {/* Every one of these says what it does. The filename alone was a
                     noun among verbs, and it is the same action the error screen

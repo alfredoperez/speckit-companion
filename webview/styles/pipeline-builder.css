@@ -472,11 +472,29 @@ body {
     background: var(--bg-primary);
 }
 
+/* Two rows: what the step IS, then what describes it. One row could not hold
+   seven things in a 300px lane without breaking words. */
 .pb-step-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-1) var(--space-2);
+}
+
+.pb-step-identity {
     display: flex;
     align-items: baseline;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
+/* The quiet line under the name. Metadata voice — the counts and the chips are
+   what a reader glances at, never what they scan the board for. */
+.pb-step-facts {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
 }
 
 .pb-step-index {
@@ -487,15 +505,30 @@ body {
 
 .pb-step-name {
     margin: 0;
+    min-width: 0;
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--text-primary);
+    /* A step name is one word. Breaking it is never right. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* `9 nodes` broke across two lines in the old single-row header. */
 .pb-step-counts {
-    margin-left: auto;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Pushed to the end of the facts line, so it is not competing with the step's
+   name for the row above. It stays hover-revealed (see the rule further down)
+   — a rare, consequential action, and five lanes of permanent button is what
+   the facts line is trying to get away from. */
+.pb-step-replace {
+    margin-left: auto;
 }
 
 .pb-step-body {
@@ -514,11 +547,39 @@ body {
     padding: var(--space-2) var(--space-1) var(--space-1);
 }
 
+/* A band label, not small prose.
+   `wrap-up` broke across two lines as "wrap-" / "up" — the phase tools share
+   this flex row and squeezed the name until it hyphenated at its own dash. It
+   never shrinks now; the rule after it takes the slack.
+
+   Mono, uppercase and letterspaced is the metadata voice this design reserves
+   for exactly this: a structural label, read as a band rather than as a
+   sentence. It is what makes a phase distinguishable from a node at a glance,
+   which the old 11px secondary-grey text did not. */
 .pb-phase-name {
     margin: 0;
+    flex-shrink: 0;
+    max-width: 100%;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* It is contentEditable, so the clipping that keeps a long name from breaking
+   the row would otherwise take the caret off-screen while someone types. While
+   it has focus the name owns the row and shows all of it. */
+.pb-phase-name:focus {
+    flex-shrink: 1;
+    overflow: visible;
+    text-overflow: clip;
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .pb-phase-head::after {
@@ -673,6 +734,13 @@ body {
     align-items: stretch;
     gap: var(--space-1);
     padding-left: var(--space-4);
+    /* A flex item's floor is its content, so a long command name pushed the
+       whole group wider than the nodes it hangs off and the chip ran out past
+       the phase. The group is never wider than the lane; the chip inside it
+       wraps or ellipses instead. */
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .pb-hooks-arm {
@@ -702,6 +770,7 @@ body {
 .pb-hooks-list {
     flex-grow: 1;
     min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -716,6 +785,11 @@ body {
     align-items: baseline;
     gap: var(--space-2);
     padding: var(--space-1) var(--space-2);
+    /* Its own width, never its content's. `speckit.companion.after-implement`
+       is one unbreakable token wider than a lane. */
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     background: var(--review-subtle);
     border-radius: var(--radius-sm);
 }
@@ -1221,10 +1295,16 @@ body {
     transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
-/* No background behind the glyph. It was meant to notch the dashed line, but
-   the line is the parent's top border and this sits below it — so all the fill
-   did was paint a grey block in the lane, with the glyph too dark to read
-   against it. */
+/* The glyph is revealed, not resident.
+   Every boundary in the pipeline is a slot, so a persistent `+` on each one
+   turned a five-lane board into a field of pluses — twenty-odd of them, all
+   identical, none of them the thing anyone came to read. The dashed rule is
+   already the affordance and it stays; the `+` and the name it labels appear
+   together on hover, which is when they mean something.
+
+   Discoverability does not rest on it: every phase carries an explicit
+   **Add hook** button, which is the answer to "how do I attach work here".
+   The seams are the precise placement for someone who already knows. */
 .pb-slot::before {
     content: '+';
     flex-shrink: 0;
@@ -1232,7 +1312,13 @@ body {
     font-size: var(--text-xs);
     line-height: 1;
     color: var(--text-muted);
-    transition: color var(--transition-fast);
+    opacity: 0;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.pb-slot:hover:not(:disabled)::before,
+.pb-slot:focus-visible:not(:disabled)::before {
+    opacity: 1;
 }
 
 /* The name is laid out at rest and merely invisible, so revealing it paints
@@ -1353,12 +1439,7 @@ body {
    What a step produces — with its name, not below its nodes
    ============================================ */
 
-.pb-step-produces {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-}
+
 
 .pb-produces {
     display: inline-flex;
@@ -1625,6 +1706,8 @@ body {
     padding: 1px var(--space-2);
     font-family: inherit;
     font-size: var(--text-xs);
+    /* Two words, one line. It read "Make it / ours" in every lane. */
+    white-space: nowrap;
     color: var(--text-secondary);
     background: transparent;
     border: 1px solid var(--border);
@@ -1641,6 +1724,95 @@ body {
     color: var(--review);
     border-color: var(--review);
     background: var(--review-subtle);
+}
+
+/* ============================================
+   Menu — the panel's own picker
+   ============================================
+   Replaces the two native `<select>`s. A select is drawn by the operating
+   system: its popup cannot be styled, its highlight is the system blue, and it
+   flattens every option to a single line — which is why an option had to read
+   "review-gaps — add-on", with the kind of thing glued onto the name of it. */
+
+.pb-menu {
+    position: relative;
+    display: inline-flex;
+}
+
+.pb-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* Shown with nothing to offer, and saying so on hover. Hiding it left "how do I
+   add a node here?" with no answer anywhere on screen. */
+.pb-menu-trigger--inert {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.pb-menu-caret {
+    font-size: 9px;
+    opacity: 0.7;
+}
+
+.pb-menu-list {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    z-index: 5;
+    min-width: 220px;
+    max-width: 340px;
+    margin: 0;
+    padding: var(--space-1);
+    list-style: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+.pb-menu-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    font: inherit;
+    color: var(--text-body);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-menu-option:hover,
+.pb-menu-option:focus-visible {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.pb-menu-option:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
+}
+
+.pb-menu-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-primary);
+}
+
+/* What picking this one does. A select had nowhere to put it. */
+.pb-menu-note {
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    color: var(--text-secondary);
 }
 
 /* ── Narrow panel ────────────────────────────────────────────

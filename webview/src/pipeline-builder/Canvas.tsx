@@ -17,6 +17,7 @@
  *   after sits below with the arrow coming up out of it.
  */
 
+import { Menu } from './Menu';
 import {
     PipelineDecision,
     PipelineGraph,
@@ -442,32 +443,27 @@ function Phase({ phase, actions, controls }: {
                     {/* Shown even with nothing to offer. Hiding it left "how do I
                         add a node here?" with no answer anywhere on screen — the
                         control simply was not there to explain itself. */}
-                    {controls.dropped.length === 0 ? (
-                        <span class="pb-phase-tool pb-phase-add-node pb-phase-tool--inert"
-                            title={`Every node ${controls.step} has is already in a phase. `
-                                + 'To put another one here: drag it in from another phase, or '
-                                + `write your own at .specify/companion/nodes/${controls.step}/`}
-                        >+ node</span>
-                    ) : (
-                        <select class="pb-phase-tool pb-phase-add-node"
-                            title="Put a node this project dropped back, here"
-                            onChange={event => {
-                                const select = event.currentTarget as HTMLSelectElement;
-                                const id = select.value;
-                                select.value = '';
-                                if (id) { controls.onAddNode(phase.name, id); }
-                            }}>
-                            <option value="">+ node</option>
-                            {/* A node the recipe took out and one this step ships
-                                but does not run read identically as bare ids, so
-                                the list gave no clue which was which. */}
-                            {controls.dropped.map(id => (
-                                <option key={id} value={id}>
-                                    {controls.addOns.includes(id) ? `${id} — add-on` : id}
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                    <Menu
+                        class="pb-phase-tool pb-phase-add-node"
+                        trigger="+ node"
+                        title="Put a node in this phase"
+                        disabled={controls.dropped.length === 0}
+                        disabledTitle={`Every node ${controls.step} has is already in a phase. `
+                            + 'To put another one here: drag it in from another phase, or '
+                            + `write your own at .specify/companion/nodes/${controls.step}/`}
+                        options={controls.dropped.map(id => ({
+                            id,
+                            label: id,
+                            // A node the recipe took out and one this step ships
+                            // but does not run read identically as bare ids. The
+                            // difference is what it means to pick one, so it gets
+                            // a line rather than a suffix glued to the name.
+                            note: controls.addOns.includes(id)
+                                ? `${controls.step} ships this and does not run it`
+                                : 'this project took it out',
+                        }))}
+                        onPick={id => controls.onAddNode(phase.name, id)}
+                    />
                     <button class="pb-attach" onClick={() => actions.onAdd(phase.name)}
                         title={`Add a hook in ${phase.name} — a skill, an instruction or a command`}>
                         <HookIcon />
@@ -643,18 +639,29 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}>
             {/* What the step leaves behind sits on its own line, not as a row
                 of its own and not at the bottom of a lane you must scroll to. */}
+            {/* Two rows, because seven things did not fit in one. A lane holds
+                300px and the header was cramming an index, a name, a changed
+                mark, an artifact count, a template chip, a node count and a
+                two-word button into it — so "9 nodes" broke across lines and
+                "Make it ours" became "Make it / ours". The step's NAME is what
+                a reader scans a board for, so it gets the row to itself and
+                everything that describes it drops to a quiet line below. */}
             <header class="pb-step-head">
-                {step.inSequence && <span class="pb-step-index">{index + 1}</span>}
-                <h2 class="pb-step-name">
-                    <button class="pb-step-open" onClick={() => onOpenFrame(step.name)}
-                        title="Read this step's own instructions — the text every node sits under">
-                        {step.name}
-                    </button>
-                </h2>
-                {changed(step) && (
-                    <span class="pb-changed-dot" title={changeSummary(step)} aria-label="changed" />
-                )}
-                <div class="pb-step-produces">
+                <div class="pb-step-identity">
+                    {step.inSequence && <span class="pb-step-index">{index + 1}</span>}
+                    <h2 class="pb-step-name">
+                        <button class="pb-step-open" onClick={() => onOpenFrame(step.name)}
+                            title="Read this step's own instructions — the text every node sits under">
+                            {step.name}
+                        </button>
+                    </h2>
+                    {changed(step) && (
+                        <span class="pb-changed-dot" title={changeSummary(step)}
+                            aria-label="changed" />
+                    )}
+                </div>
+                <div class="pb-step-facts">
+                    <span class="pb-step-counts">{nodes} nodes</span>
                     {step.artifacts.length > 0 && (
                         <span class="pb-produces"
                             title={`produces ${step.artifacts.join(', ')}`}>
@@ -679,11 +686,10 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             ) : <span>§</span>}
                         </button>
                     )}
+                    <button class="pb-step-replace"
+                        title={`Hand ${step.name} to one document of your own, seeded from what it says today`}
+                        onClick={() => onReplaceStep(step.name)}>Make it ours</button>
                 </div>
-                <span class="pb-step-counts">{nodes} nodes</span>
-                <button class="pb-step-replace"
-                    title={`Hand ${step.name} to one document of your own, seeded from what it says today`}
-                    onClick={() => onReplaceStep(step.name)}>Make it ours</button>
             </header>
 
             <div class="pb-step-body">

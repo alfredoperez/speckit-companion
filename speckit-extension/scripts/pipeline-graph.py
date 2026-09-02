@@ -211,11 +211,17 @@ def build_graph(project_root: str) -> dict:
 
         pinned = assemble.movability(command, entry["order"])
         default = entry["default"]
-        # Shipped nodes this step does not run by default and could — the ones a
-        # project adds rather than puts back.
-        add_ons = [n for n in assemble.optional_nodes(command)
-                   if n not in default and os.path.isfile(node_source(command, n)[0])]
         offered = assemble.slot_variants(command)
+        # Which optional nodes stand in for a node rather than adding to it.
+        # A variant belongs to Replace and to nowhere else: adding one beside the
+        # node it replaces gives the step two blocks doing the same job — two
+        # spec drafters in `specify`, which is what "+ draft-spec-delta" offered.
+        stands_in = assemble.stands_in_for(command)
+        # Shipped nodes this step does not run by default and genuinely ADDS —
+        # an adversarial gap review, a manual click-through gate. Not a variant.
+        add_ons = [n for n in assemble.optional_nodes(command)
+                   if n not in default and n not in stands_in
+                   and os.path.isfile(node_source(command, n)[0])]
         drawn_phases = []
         for phase in phases:
             drawn_phases.append({
@@ -261,11 +267,10 @@ def build_graph(project_root: str) -> dict:
             # every `##` the step's template has, so the panel can offer a row
             # per section instead of only showing the ones already changed.
             "template": _template(command, template, project_root, config),
-            # Everything this step could run but is not running: nodes the
-            # recipe dropped, plus the shipped optional ones — add-ons and the
-            # variants of a slot. These are the only nodes that can be added,
-            # so the panel offers exactly these rather than a free-text box
-            # that build-errors.
+            # Everything this step could ADD: nodes the recipe dropped, and the
+            # shipped add-ons it does not run. Variants are deliberately absent
+            # — they replace a node rather than joining it, and Replace is where
+            # they are offered.
             "dropped": (
                 [n for n in default if n not in order]
                 + [n for n in add_ons if n not in order]

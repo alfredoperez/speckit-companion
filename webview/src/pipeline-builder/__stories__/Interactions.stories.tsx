@@ -160,7 +160,7 @@ export const APhaseOffersOnlyWhatWorks: Story = {
     render: () => board().view,
     play: async ({ canvasElement }) => {
         const tools = Array.from(canvasElement.querySelectorAll('.pb-phase')[1]
-            .querySelectorAll('button.pb-phase-tool')) as HTMLButtonElement[];
+            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)')) as HTMLButtonElement[];
         assert(tools.length === 2, 'split and merge — reordering is not on offer');
         // Moving a phase moves its nodes, and no such move in any shipped step
         // survives the `reads:` dependencies. The arrows could only ever fire,
@@ -176,7 +176,7 @@ export const MergeAPhase: Story = {
     render: () => board().view,
     play: async ({ canvasElement }) => {
         const tools = canvasElement.querySelectorAll('.pb-phase')[1]
-            .querySelectorAll('button.pb-phase-tool');
+            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)');
         (tools[1] as HTMLButtonElement).click();
     },
 };
@@ -186,7 +186,7 @@ export const SplitAPhase: Story = {
     render: () => board().view,
     play: async ({ canvasElement }) => {
         const tools = canvasElement.querySelectorAll('.pb-phase')[0]
-            .querySelectorAll('button.pb-phase-tool');
+            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)');
         (tools[0] as HTMLButtonElement).click();
     },
 };
@@ -202,10 +202,15 @@ export const PutADroppedNodeBack: Story = {
         return board(g).view;
     },
     play: async ({ canvasElement }) => {
-        const select = canvasElement.querySelector('.pb-phase-add-node') as HTMLSelectElement;
-        assert(select.options.length === 3, 'the placeholder plus the two dropped nodes');
-        select.value = 'branch';
-        select.dispatchEvent(new Event('change', { bubbles: true }));
+        // The panel's own menu, not a native select: a `<select>` is drawn by
+        // the operating system, so those two pickers arrived in a different
+        // visual language from everything around them.
+        const open = canvasElement.querySelector('.pb-phase-add-node') as HTMLButtonElement;
+        open.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const options = canvasElement.querySelectorAll('.pb-menu-option');
+        assert(options.length === 2, 'the two dropped nodes, with no placeholder row');
+        (options[0] as HTMLButtonElement).click();
     },
 };
 

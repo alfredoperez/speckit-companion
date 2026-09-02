@@ -8,6 +8,7 @@
  * you actually wanted.
  */
 
+import { Menu } from './Menu';
 import { useState } from 'preact/hooks';
 import { PipelineNode } from '../../../src/protocol/pipeline';
 
@@ -244,22 +245,21 @@ export function Inspector(props: Props) {
                         <button class="pb-inspector-action"
                             onClick={props.onAttach}>Add hook</button>
                         {node.variants.length > 0 && (
-                            /* A pick, not a rewrite. Resets to blank so choosing
-                               the same one twice still reads as an action. */
-                            <select class="pb-inspector-action pb-inspector-variants"
+                            /* A pick, not a rewrite. What each alternative does
+                               is the whole basis for choosing, so it gets a line
+                               rather than a tooltip a `<select>` had nowhere to
+                               put. */
+                            <Menu
+                                class="pb-inspector-action"
+                                trigger="Replace"
                                 title="Run a different block in this node's place"
-                                onChange={event => {
-                                    const select = event.currentTarget as HTMLSelectElement;
-                                    const id = select.value;
-                                    select.value = '';
-                                    if (id) { props.onUseVariant(id); }
-                                }}>
-                                <option value="">Replace…</option>
-                                {node.variants.map(variant => (
-                                    <option key={variant.id} value={variant.id}
-                                        title={variant.summary}>{variant.name}</option>
-                                ))}
-                            </select>
+                                options={node.variants.map(variant => ({
+                                    id: variant.id,
+                                    label: variant.name,
+                                    note: variant.summary,
+                                }))}
+                                onPick={props.onUseVariant}
+                            />
                         )}
                         {node.replaced && (
                             <button class="pb-inspector-action pb-inspector-action--remove"

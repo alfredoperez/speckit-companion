@@ -475,7 +475,7 @@ describe('a node says whether it can move, and why not', () => {
 describe('what a step produces sits with its name', () => {
     it('counts the artifacts at the top and names them on hover', () => {
         const { host } = canvas();
-        const chip = host.querySelector('.pb-step-produces .pb-produces');
+        const chip = host.querySelector('.pb-step-facts .pb-produces');
 
         expect(chip?.textContent).toContain('1');
         expect(chip?.getAttribute('title')).toBe('produces spec.md');
@@ -560,10 +560,12 @@ describe('a phase is a block a project owns', () => {
         });
     }
 
-    // The add-node select shares the class, so ask for buttons.
+    // The phase's own split/merge tools. `+ node` shares the class and is now a
+    // button too, so it is excluded by name rather than by tag.
     const tools = (host: HTMLElement, phase: number) =>
         Array.from(host.querySelectorAll('.pb-phase')[phase]
-            .querySelectorAll('button.pb-phase-tool')) as HTMLButtonElement[];
+            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)'),
+        ) as HTMLButtonElement[];
 
     it('does not offer to reorder phases', () => {
         // A phase is a contiguous run of the step, so moving one moves its
@@ -633,11 +635,13 @@ describe('a dropped node can be put back', () => {
         })],
     });
 
-    it('offers only the nodes this step actually dropped', () => {
+    it('offers only the nodes this step actually dropped', async () => {
         const { host } = canvas(withDropped());
-        const options = Array.from(host.querySelectorAll('.pb-phase-add-node option'))
-            .map(el => el.getAttribute('value'));
-        expect(options).toEqual(['', 'branch', 'finalize']);
+        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
+        await flush();
+        const options = Array.from(host.querySelectorAll('.pb-menu-label'))
+            .map(el => el.textContent);
+        expect(options).toEqual(['branch', 'finalize']);
     });
 
     it('still says where nodes come from when there are none to put back', () => {
@@ -649,15 +653,16 @@ describe('a dropped node can be put back', () => {
         expect(control).not.toBeNull();
         expect(control!.tagName).toBe('SPAN');
         expect(control!.getAttribute('title')).toMatch(/drag it in from another phase/);
+        expect(control!.classList.contains('pb-menu-trigger--inert')).toBe(true);
     });
 
     // The order says when it runs and the phase says where it sits; one without
     // the other is a pipeline that contradicts itself.
-    it('sends the order and the grouping together', () => {
+    it('sends the order and the grouping together', async () => {
         const { host, addedNodes } = canvas(withDropped());
-        const select = host.querySelector('.pb-phase-add-node') as HTMLSelectElement;
-        select.value = 'branch';
-        select.dispatchEvent(new Event('change', { bubbles: true }));
+        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
+        await flush();
+        (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
 
         expect(addedNodes).toEqual([{
             c: 'specify', id: 'branch', phase: 'gather',
@@ -1065,14 +1070,20 @@ describe('switching workflows', () => {
 describe('what the + node picker offers', () => {
     // A node the recipe took out and one the step ships but does not run read
     // identically as bare ids, so the list gave no clue which was which.
-    it('marks a shipped add-on as one, and leaves a dropped node bare', () => {
+    it('says what picking one means, rather than gluing a suffix to its name', async () => {
         const { host } = canvas(graph({
             steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
         }));
-        const options = Array.from(host.querySelectorAll('.pb-phase-add-node option'))
-            .map(el => el.textContent?.trim());
-        expect(options).toContain('branch');
-        expect(options).toContain('clarify — add-on');
+        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
+        await flush();
+        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
+            label: el.querySelector('.pb-menu-label')?.textContent,
+            note: el.querySelector('.pb-menu-note')?.textContent,
+        }));
+        expect(rows).toEqual([
+            { label: 'branch', note: 'this project took it out' },
+            { label: 'clarify', note: 'specify ships this and does not run it' },
+        ]);
     });
 });
 

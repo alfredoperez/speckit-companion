@@ -7,6 +7,10 @@ __pycache__/**
 *.pyc
 src/**
 !src/resources/**
+# Visual-regression baselines. `**/*.ts` drops the webview sources but not the
+# PNGs beside them, so 100 screenshots — the whole approved set, both widths and
+# both themes — were riding along in every .vsix. Nothing at runtime reads them.
+**/__screenshots__/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
