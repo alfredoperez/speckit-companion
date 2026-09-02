@@ -318,7 +318,11 @@ function App() {
                             if (!swapped) { return; }
                             setSide({ kind: 'node', at: { command: selected.command, nodeId: variantId } });
                             setBody(null);
-                            send({ type: 'useVariant', command: selected.command, ...swapped });
+                            send({
+                                type: 'useVariant', command: selected.command,
+                                replaces: selected.nodeId, variant: variantId,
+                                ...swapped,
+                            });
                         }}
                     />
                 )}

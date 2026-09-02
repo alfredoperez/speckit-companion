@@ -537,11 +537,12 @@ def _render_phases(phases: list, indent: str) -> list:
 
 
 def rename_anchor(text: str, command: str, old: str, new: str) -> str:
-    """Point this command's hooks at a phase's new name.
+    """Point this command's hooks at an anchor's new name.
 
-    A phase name is a hook anchor. Renaming the phase without renaming the
-    anchor leaves the hooks pointing at something that no longer exists — the
-    build warns and skips them, so a rename quietly detaches work.
+    Both kinds of anchor get renamed by an ordinary edit: a phase when it is
+    renamed, and a NODE when it is swapped for one of its variants. Either way
+    the hooks are left pointing at something that no longer exists — the build
+    warns and skips them — so the edit quietly detaches work someone attached.
     """
     lines = text.splitlines()
     trailing_newline = text.endswith("\n") or not text

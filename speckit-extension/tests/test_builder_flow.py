@@ -414,6 +414,34 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
     # instructions rather than loading a template, which is where the leaner spec
     # comes from. So every fragment resolved correctly into a file nothing read,
     # and a project watching the build report the swap got the shipped shape.
+    def test_swapping_a_block_carries_the_hooks_on_it(self):
+        """A node id is a hook anchor, so a swap renames one.
+
+        The same detachment a phase rename used to cause: the build warns and
+        skips a hook pointing at a name nothing has any more, so work someone
+        attached quietly stops running while the panel still drew it.
+        """
+        project = Project()
+        self.addCleanup(project.close)
+        project.write("--command", "specify", "--when", "before", "--anchor", "draft-spec",
+                      "--hook", "prompt", "--text", "Read the house rules first.")
+        phases = [
+            {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+            {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
+            {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+            {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
+        ]
+        order = [n for p in phases for n in p["nodes"]]
+        project.write("--command", "specify", "--phases", json.dumps(phases),
+                      "--nodes", ",".join(order),
+                      "--renamed", "draft-spec", "draft-spec-delta")
+        out = project.build_ok()
+        body = project.body("specify")
+        self.assertIn("Read the house rules first.", body)
+        self.assertNotIn("not in active recipe", out)
+        self.assertLess(body.index("Read the house rules first."),
+                        body.index("<!-- speckit-companion:node draft-spec-delta -->"))
+
     def test_the_command_tells_the_assistant_to_follow_it(self):
         self.point_at("outcomes")
         self.project.build_ok()

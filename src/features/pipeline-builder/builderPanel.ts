@@ -191,7 +191,12 @@ export class PipelineBuilderPanel {
             await this.write(
                 script => writePhases(
                     script, this.workspaceRoot, message.command, message.phases,
-                    undefined, message.order),
+                    // A node id is a hook anchor. Swapping the node renames it,
+                    // and a hook left on the old id is warned about and skipped
+                    // — so work attached to the block you replaced would quietly
+                    // stop running. The carry a phase rename already does.
+                    { from: message.replaces, to: message.variant },
+                    message.order),
                 'Replacing the block');
         },
 

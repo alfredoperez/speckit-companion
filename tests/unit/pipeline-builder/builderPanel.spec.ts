@@ -408,6 +408,7 @@ describe('putting a dropped node back', () => {
 describe('running a different block in a node\'s place', () => {
     const message = {
         type: 'useVariant', command: 'specify',
+        replaces: 'draft-spec', variant: 'draft-spec-ears',
         order: ['resolve-dir', 'draft-spec-ears', 'handoff'],
         phases: [{ name: 'author', nodes: ['resolve-dir', 'draft-spec-ears', 'handoff'] }],
     };
@@ -421,8 +422,18 @@ describe('running a different block in a node\'s place', () => {
         expect(graph.writePhases).toHaveBeenCalledWith(
             WRITE_SCRIPT, workspace, 'specify',
             [{ name: 'author', nodes: ['resolve-dir', 'draft-spec-ears', 'handoff'] }],
-            undefined, ['resolve-dir', 'draft-spec-ears', 'handoff']);
+            { from: 'draft-spec', to: 'draft-spec-ears' },
+            ['resolve-dir', 'draft-spec-ears', 'handoff']);
         expect(graph.writeNodeOrder).not.toHaveBeenCalled();
+    });
+
+    // A node id is a hook anchor, so the swap renames one. Without the carry,
+    // work attached to the block you replaced is warned about and skipped —
+    // the same silent detachment a phase rename used to cause.
+    it('carries the hooks that were on the block it replaced', async () => {
+        await panel.__receive(message);
+        expect(graph.writePhases.mock.calls[0][4])
+            .toEqual({ from: 'draft-spec', to: 'draft-spec-ears' });
     });
 
     it('reports a refusal in the panel, with nothing written', async () => {

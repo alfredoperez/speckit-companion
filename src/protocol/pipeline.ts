@@ -291,6 +291,16 @@ export type BuilderToExtensionMessage =
     | {
         type: 'useVariant';
         command: string;
+        /**
+         * The node being replaced.
+         *
+         * A node id is a hook anchor, so a swap renames one — and hooks left
+         * pointing at the old id are warned about and skipped, which detaches
+         * work silently. The same carry a phase rename already does.
+         */
+        replaces: string;
+        /** The variant taking its place. */
+        variant: string;
         /** The whole step, with the variant's id in the old node's place. */
         order: string[];
         phases: Array<{ name: string; nodes: string[] }>;
