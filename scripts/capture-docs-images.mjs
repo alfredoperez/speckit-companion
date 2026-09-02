@@ -145,6 +145,21 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
+    // ── The pipeline builder guide (docs/pipeline-builder.md) ──
+    // One shot per gesture the guide teaches. Re-shoot just these with
+    // `node scripts/capture-docs-images.mjs --only builder-`.
+    { story: 'pipeline-builder-guide--the-board', out: 'builder-board.png' },
+    { story: 'pipeline-builder-guide--a-step-header', out: 'builder-step.png' },
+    { story: 'pipeline-builder-guide--reading-a-block', out: 'builder-read-block.png' },
+    { story: 'pipeline-builder-guide--replacing-a-block', out: 'builder-replace.png' },
+    { story: 'pipeline-builder-guide--adding-a-block', out: 'builder-add-node.png' },
+    { story: 'pipeline-builder-guide--changing-the-document', out: 'builder-template.png' },
+    { story: 'pipeline-builder-guide--work-attached-to-a-block', out: 'builder-hooks.png' },
+    { story: 'pipeline-builder-guide--attaching-work', out: 'builder-attach.png' },
+    { story: 'pipeline-builder-guide--starting-from-a-preset', out: 'builder-preset.png' },
+    { story: 'pipeline-builder-guide--adding-a-step', out: 'builder-new-step.png' },
+    { story: 'pipeline-builder-guide--a-step-of-your-own', out: 'builder-own-step.png' },
+    { story: 'pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────
@@ -243,6 +258,15 @@ const CLIPS_MODE = process.argv.includes('--clips');
  * rewrite every other composition's captures. Documentation mode ignores it.
  */
 const ONLY_CLIP = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? null;
+/**
+ * Optional name filter for documentation mode, so re-shooting one guide's
+ * images does not rewrite every other image in `generated/`. Substring match
+ * against the output filename: `--only builder-` takes the builder guide.
+ */
+const ONLY = (process.argv.find((a) => a.startsWith('--only')) ?? '').split('=')[1]
+    ?? (process.argv.includes('--only')
+        ? process.argv[process.argv.indexOf('--only') + 1]
+        : null);
 
 /** Where one entry's PNG goes, and the label the log prints for it. */
 function targetFor(entry) {
@@ -319,6 +343,10 @@ async function removeAnnotation(page) {
 
 async function main() {
     let work = CLIPS_MODE ? CLIP_CAPTURES : STORIES;
+    if (!CLIPS_MODE && ONLY) {
+        work = work.filter((e) => e.out.includes(ONLY));
+        if (work.length === 0) throw new Error(`No documentation images match "${ONLY}".`);
+    }
     if (CLIPS_MODE && ONLY_CLIP) {
         work = work.filter((e) => e.clip === ONLY_CLIP);
         if (work.length === 0) {

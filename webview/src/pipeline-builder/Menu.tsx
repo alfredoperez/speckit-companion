@@ -35,10 +35,20 @@ interface Props {
     /** Shown, and inert, when there is nothing to offer. */
     disabled?: boolean;
     disabledTitle?: string;
+    /**
+     * Render it already open.
+     *
+     * For a story and a documentation capture: an open menu is a state worth
+     * reviewing and worth a screenshot, and driving it there with a click means
+     * the shot depends on a `play` function having run.
+     */
+    defaultOpen?: boolean;
 }
 
-export function Menu({ trigger, title, options, onPick, disabled, disabledTitle, ...rest }: Props) {
-    const [open, setOpen] = useState(false);
+export function Menu({
+    trigger, title, options, onPick, disabled, disabledTitle, defaultOpen, ...rest
+}: Props) {
+    const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
 
     // A menu that stays open after you look away is a menu you have to dismiss.

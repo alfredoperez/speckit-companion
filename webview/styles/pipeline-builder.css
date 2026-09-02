@@ -379,10 +379,31 @@ body {
 }
 
 /* `auto` runs the others: a band above the row, never a column in it. */
+/* The tail of the row. `auto` used to be a full-width band ACROSS THE TOP of
+   the board — the most prominent place on screen, given to the one thing that
+   is not part of the sequence. It belongs after the steps that are, beside the
+   invitation to add another one. */
+.pb-outside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-3) 0;
+    border-left: 1px solid var(--border);
+}
+
+.pb-outside-head {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
 .pb-aside {
     display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
+    flex-direction: column;
+    gap: 2px;
     padding: var(--space-2) var(--space-3);
     background: var(--bg-secondary);
     border: 1px dashed var(--border-hover);
@@ -436,9 +457,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    margin: var(--space-3) var(--space-3) 0;
     padding: var(--space-4) var(--space-3);
-    min-height: 96px;
+    min-height: 72px;
     border: 1px dashed var(--border);
     border-radius: var(--radius-md);
     background: none;
@@ -729,56 +749,7 @@ body {
 
 /* ---- Hooks: drawn on the side they run, pointing at their anchor ---- */
 
-.pb-hooks {
-    display: flex;
-    align-items: stretch;
-    gap: var(--space-1);
-    padding-left: var(--space-4);
-    /* A flex item's floor is its content, so a long command name pushed the
-       whole group wider than the nodes it hangs off and the chip ran out past
-       the phase. The group is never wider than the lane; the chip inside it
-       wraps or ellipses instead. */
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-.pb-hooks-arm {
-    position: relative;
-    flex-shrink: 0;
-    width: 9px;
-    border-left: 1px solid var(--review);
-}
-
 /* The arrowhead sits on the edge nearest the block the hook attaches to. */
-.pb-hooks-arm::after {
-    content: '';
-    position: absolute;
-    left: -4px;
-    width: 7px;
-    height: 7px;
-    border-left: 1px solid var(--review);
-    border-bottom: 1px solid var(--review);
-}
-
-.pb-hooks--before .pb-hooks-arm::after { bottom: 0; transform: rotate(-45deg); }
-.pb-hooks--after .pb-hooks-arm::after { top: 0; transform: rotate(135deg); }
-
-.pb-hooks--before { padding-bottom: 2px; }
-.pb-hooks--after { padding-top: 2px; }
-
-.pb-hooks-list {
-    flex-grow: 1;
-    min-width: 0;
-    max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
 .pb-hook {
     display: flex;
     flex-wrap: wrap;
@@ -1357,29 +1328,10 @@ body {
  * this" — and drawing an installed extension's hook in it said the opposite of
  * the truth. It keeps the same shape, so it still reads as work that runs at
  * this point, in the muted voice of something you did not write. */
-.pb-hooks--theirs .pb-hooks-arm { border-left-color: var(--border-hover); }
-.pb-hooks--theirs .pb-hooks-head,
-.pb-hooks--theirs .pb-hooks-icon { color: var(--text-muted); }
-
 /* The arrowhead is the arm's, and it points at the block the hook attaches to.
    Muted it read as a stray diamond, so this group ends the line plainly. */
-.pb-hooks--theirs .pb-hooks-arm::after { display: none; }
-
 /* The chip too — the fill and the identifier were still the review hue, which
    is the one thing on this board that means the project wrote it. */
-.pb-hooks--theirs .pb-hook {
-    background: var(--bg-elevated);
-    cursor: default;
-}
-
-.pb-hooks--theirs .pb-hook::before {
-    border-left-color: var(--border-hover);
-    border-bottom-color: var(--border-hover);
-}
-
-.pb-hooks--theirs .pb-hook-ref,
-.pb-hooks--theirs .pb-hook-verb { color: var(--text-secondary); }
-
 /* A hook another extension registered. Same shape as your own so it reads as
    part of the run, dimmed and unclickable so it does not read as yours. */
 .pb-hook--stock {
@@ -1513,53 +1465,6 @@ body {
 /* ============================================
    Hooks — one heading per side, its actions beneath
    ============================================ */
-
-.pb-hooks-body {
-    flex-grow: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.pb-hooks-head {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin: 0;
-    font-size: var(--text-xs);
-    color: var(--review);
-}
-
-.pb-hooks-icon {
-    display: inline-flex;
-    color: var(--review);
-}
-
-.pb-hooks-anchor {
-    font-family: var(--font-mono);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-}
-
-.pb-hooks-add {
-    margin-left: auto;
-    padding: 0 var(--space-1);
-    font-family: inherit;
-    font-size: var(--text-xs);
-    color: var(--review);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    opacity: 0;
-}
-
-.pb-hooks:hover .pb-hooks-add,
-.pb-hooks-add:focus-visible { opacity: 1; }
-
-.pb-hooks-add:hover { text-decoration: underline; }
 
 /* Each action reads as a branch off the heading above it. */
 .pb-hook {
@@ -1722,6 +1627,74 @@ body {
     color: var(--review);
     border-color: var(--review);
     background: var(--review-subtle);
+}
+
+/* Somebody else's, in the same block and the same shape as yours, without the
+   colour that means "this project changed it". The extension's name was on
+   every one of these; the hue already said it. */
+.pb-hook--stock {
+    background: var(--bg-inset, var(--bg-secondary));
+}
+
+.pb-hook--stock .pb-hook-ref { color: var(--text-secondary); }
+
+/* ============================================
+   Attached work — one block per anchor
+   ============================================
+   Each side used to be its own box with its own connector arm and its own
+   "before draft-spec" heading, so a node with work on both sides sat between
+   two of them and four repetitions of its own name. Position was carrying the
+   before/after meaning and it was not carrying it — the arrows were the thing
+   nobody could read. One block, two sides named in words. */
+
+.pb-attached {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 2px 0 var(--space-1) var(--space-4);
+    padding: var(--space-2);
+    min-width: 0;
+    box-sizing: border-box;
+    border-left: 1px solid var(--review);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--bg-elevated);
+}
+
+.pb-attached-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0 0 2px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.pb-attached-side {
+    display: grid;
+    grid-template-columns: 3.6rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-2);
+}
+
+/* The word, not an arrow. */
+.pb-attached-when {
+    padding-top: 3px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-attached-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 /* ============================================

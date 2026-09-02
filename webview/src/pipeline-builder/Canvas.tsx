@@ -193,79 +193,97 @@ function HookIcon() {
  * in the same place and the same shape as your own, marked as somebody else's
  * and not editable here.
  */
-function Hooks({ hooks, stock = [], side, anchor, seam = true, onAdd, onEdit }: {
-    hooks: PipelineHook[];
-    /** Hooks an installed spec-kit extension fires at this same boundary. */
-    stock?: StockHook[];
-    side: 'before' | 'after';
+/**
+ * Everything attached to one anchor, in one block.
+ *
+ * Before this, each side got its own block with its own connector arm and its
+ * own "before draft-spec" heading, so a node with work on both sides was
+ * sandwiched between two boxes and four repetitions of its own name. Position
+ * was carrying the before/after meaning and it did not carry it: the arrows
+ * were the thing people could not read.
+ *
+ * So one block, under the anchor it belongs to, with the two sides named in
+ * words. A row is the hook's own text and nothing else — whose it is comes from
+ * the hue, which is the panel's one colour rule, so `companion` no longer
+ * appears on every second line.
+ */
+function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
+    before: PipelineHook[];
+    after: PipelineHook[];
+    stockBefore?: StockHook[];
+    stockAfter?: StockHook[];
     anchor: string;
-    /** Whether an empty anchor draws its seam, or yields it to a neighbour. */
-    seam?: boolean;
-    onAdd?: () => void;
     onEdit?: (hook: PipelineHook) => void;
 }) {
-    if (hooks.length === 0 && stock.length === 0) {
-        if (!seam) { return null; }
-        return (
-            <button class={`pb-slot pb-slot--${side}`} onClick={onAdd} disabled={!onAdd}
-                title={`Nothing runs ${side} ${anchor} — click to attach a skill, `
-                    + 'an instruction or a command'}>
-                <span class="pb-slot-label">{side} {anchor}</span>
-            </button>
-        );
-    }
-    // A group holding only somebody else's hooks is not the project's work, so
-    // it does not take the colour that means "yours".
-    const theirs = hooks.length === 0 && stock.length > 0;
+    const sides: Array<[string, PipelineHook[], StockHook[]]> = [
+        ['before', before, stockBefore],
+        ['after', after, stockAfter],
+    ];
+    if (!sides.some(([, ours, theirs]) => ours.length + theirs.length > 0)) { return null; }
+
     return (
-        <div class={`pb-hooks pb-hooks--${side} ${theirs ? 'pb-hooks--theirs' : ''}`}>
-            <div class="pb-hooks-arm" aria-hidden="true" />
-            <div class="pb-hooks-body">
-                <p class="pb-hooks-head">
-                    <span class="pb-hooks-icon"><HookIcon /></span>
-                    {side} <span class="pb-hooks-anchor">{anchor}</span>
-                    {onAdd && (
-                        <button class="pb-hooks-add" onClick={onAdd}
-                            title={`Attach something else ${side} ${anchor}`}>add</button>
-                    )}
-                </p>
-                <ul class="pb-hooks-list">
-                    {hooks.map((hook, i) => (
-                        <li key={i}>
-                            <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
-                                onClick={() => onEdit?.(hook)}>
-                                <span class="pb-hook-verb">
-                                    {HOOK_VERB[hook.type] ?? hook.type}
-                                </span>
-                                <span class={hook.type === 'prompt' ? 'pb-hook-text' : 'pb-hook-ref'}>
-                                    {clip(hook.type === 'command'
-                                        ? shellName(hook.summary) : hook.summary)}
-                                </span>
-                            </button>
-                        </li>
-                    ))}
-                    {stock.map((hook, i) => (
-                        <li key={`stock-${i}`}>
-                            {/* Not a button: it belongs to another extension, and
-                                offering a click that cannot edit it would be a
-                                worse lie than showing it plainly. */}
-                            {/* No "run the command" verb here: the command's own
-                                name already says what it is, and the chip has to
-                                fit a lane beside four other fragments. */}
-                            <span class="pb-hook pb-hook--stock"
-                                title={`${hook.description || hook.command}\n\n`
-                                    + `Registered by the ${hook.extension} extension. `
-                                    + 'It runs here, but it is not edited in this panel.'
-                                    + (hook.conditional ? '\nIt does not run every time.' : '')}>
-                                <span class="pb-hook-ref">{clip(hook.command)}</span>
-                                <span class="pb-hook-from">{hook.extension}</span>
-                                {hook.optional && <span class="pb-hook-note">asks first</span>}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+        <div class="pb-attached">
+            <p class="pb-attached-head">
+                <HookIcon />
+                hooks
+            </p>
+            {sides.map(([side, ours, theirs]) => (
+                (ours.length + theirs.length) > 0 && (
+                    <div key={side} class="pb-attached-side">
+                        <span class="pb-attached-when">{side}</span>
+                        <ul class="pb-attached-list">
+                            {ours.map((hook, i) => (
+                                <li key={`ours-${i}`}>
+                                    <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
+                                        onClick={() => onEdit?.(hook)}>
+                                        <span class="pb-hook-verb">
+                                            {HOOK_VERB[hook.type] ?? hook.type}
+                                        </span>
+                                        <span class={hook.type === 'prompt'
+                                            ? 'pb-hook-text' : 'pb-hook-ref'}>
+                                            {clip(hook.type === 'command'
+                                                ? shellName(hook.summary) : hook.summary)}
+                                        </span>
+                                    </button>
+                                </li>
+                            ))}
+                            {theirs.map((hook, i) => (
+                                <li key={`theirs-${i}`}>
+                                    {/* Another extension's. Not editable here, but
+                                        readable — refusing the click told you
+                                        nothing about what it does. */}
+                                    <span class="pb-hook pb-hook--stock"
+                                        title={`${hook.description || hook.command}\n\n`
+                                            + `Registered by the ${hook.extension} extension. `
+                                            + 'It runs here, and is not edited in this panel.'
+                                            + (hook.conditional ? '\nIt does not run every time.' : '')}>
+                                        <span class="pb-hook-ref">{clip(hook.command)}</span>
+                                        {hook.optional && (
+                                            <span class="pb-hook-note">asks first</span>
+                                        )}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )
+            ))}
         </div>
+    );
+}
+
+/** The quiet affordance for attaching work where nothing is attached yet. */
+function Seam({ side, anchor, onAdd }: {
+    side: 'before' | 'after';
+    anchor: string;
+    onAdd?: () => void;
+}) {
+    if (!onAdd) { return null; }
+    return (
+        <button class={`pb-slot pb-slot--${side}`} onClick={onAdd}
+            title={`Attach a skill, an instruction or a command ${side} ${anchor}`}>
+            <span class="pb-slot-label">{side} {anchor}</span>
+        </button>
     );
 }
 
@@ -293,9 +311,10 @@ function Node({ node, actions, stock, seams }: {
 
     return (
         <div class="pb-node-group">
-            <Hooks hooks={before} stock={stock?.before} side="before" anchor={node.id}
-                seam={seams?.before ?? true}
-                onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
+            {(seams?.before ?? true) && (
+                <Seam side="before" anchor={node.id}
+                    onAdd={() => actions.onAdd(node.id)} />
+            )}
             <div
                 class={[
                     'pb-node',
@@ -372,9 +391,12 @@ function Node({ node, actions, stock, seams }: {
                         onClick={() => actions.onRestoreNode(actions.step, node.id)}>Undo</button>
                 )}
             </div>
-            <Hooks hooks={after} stock={stock?.after} side="after" anchor={node.id}
-                seam={seams?.after ?? true}
-                onAdd={() => actions.onAdd(node.id)} onEdit={actions.onEditHook} />
+            <Attached before={before} after={after}
+                stockBefore={stock?.before} stockAfter={stock?.after}
+                anchor={node.id} onEdit={actions.onEditHook} />
+            {(seams?.after ?? true) && (
+                <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id)} />
+            )}
         </div>
     );
 }
@@ -497,8 +519,8 @@ function Phase({ phase, actions, controls }: {
                         onClick={() => controls.onRemove(phase.name)}>&minus;</button>
                 </span>
             </header>
-            <Hooks hooks={before} side="before" anchor={phase.name}
-                onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
+            <Attached before={before} after={after} anchor={phase.name}
+                onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
                     // An installed extension registers against the step, not a
@@ -517,8 +539,6 @@ function Phase({ phase, actions, controls }: {
                     }} />
                 ))}
             </div>
-            <Hooks hooks={after} side="after" anchor={phase.name}
-                onAdd={() => actions.onAdd(phase.name)} onEdit={actions.onEditHook} />
         </section>
     );
 }
@@ -785,21 +805,6 @@ export function Canvas(
 
     return (
         <main class="pb-canvas">
-            {aside.map(step => (
-                <div key={step.name} class="pb-aside">
-                    <span class="pb-aside-name">{step.name}</span>
-                    <span class="pb-aside-note">
-                        {step.own
-                            ? 'yours — launched when you want it, not part of the run'
-                            : `runs the ${sequence.length} steps below, hands-off `
-                              + '— not a step of its own'}
-                    </span>
-                    <span class="pb-aside-counts">
-                        {step.phases.reduce((n, p) => n + p.nodes.length, 0)} nodes of its own
-                    </span>
-                </div>
-            ))}
-
             <div class="pb-run" style={`--pb-steps: ${sequence.length}`}>
                 {sequence.map((step, index) => (
                     <Step key={step.name} step={step} index={index} actions={actions}
@@ -809,14 +814,36 @@ export function Canvas(
                         onReplaceStep={onReplaceStep}
                         onOpenTemplate={onOpenTemplate} />
                 ))}
-                {/* The set of steps was the one thing the board could show and
-                    not change. A review or a verification pass had to hide
-                    inside implement, or not exist. */}
-                <button class="pb-add-step" onClick={onNewStep}
-                    title="Add a step of your own to the run">
-                    <span class="pb-add-step-mark" aria-hidden="true">+</span>
-                    <span class="pb-add-step-label">step</span>
-                </button>
+                {/* The tail of the row: everything that does not take a turn in
+                    the run, and the invitation to add something that does. This
+                    used to sit as a band ACROSS THE TOP of the board, above the
+                    first step — the most prominent place on screen, for the one
+                    thing that is not part of the sequence. */}
+                <div class="pb-outside">
+                    <p class="pb-outside-head">Outside the run</p>
+                    {aside.map(step => (
+                        <div key={step.name} class="pb-aside">
+                            <span class="pb-aside-name">{step.name}</span>
+                            <span class="pb-aside-note">
+                                {step.own
+                                    ? 'yours — launched when you want it'
+                                    : `runs the ${sequence.length} steps to its left, `
+                                      + 'hands-off'}
+                            </span>
+                            <span class="pb-aside-counts">
+                                {step.phases.reduce((n, p) => n + p.nodes.length, 0)} nodes
+                            </span>
+                        </div>
+                    ))}
+                    {/* The set of steps was the one thing the board could show
+                        and not change. A review or a verification pass had to
+                        hide inside implement, or not exist. */}
+                    <button class="pb-add-step" onClick={onNewStep}
+                        title="Add a step of your own to the run">
+                        <span class="pb-add-step-mark" aria-hidden="true">+</span>
+                        <span class="pb-add-step-label">step</span>
+                    </button>
+                </div>
             </div>
         </main>
     );

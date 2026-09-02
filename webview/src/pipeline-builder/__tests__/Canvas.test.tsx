@@ -146,17 +146,21 @@ describe('the run reads left to right', () => {
             .map(el => el.textContent)).toEqual(['1', '2']);
     });
 
-    // `auto` runs the others. Drawn as a peer it reads as a fifth step.
-    it('keeps a step outside the run out of the row', () => {
+    // `auto` runs the others. Drawn as a peer it reads as a fifth step — but it
+    // used to be a full-width band across the TOP of the board, which is the
+    // most prominent place on screen for the one thing outside the sequence.
+    it('keeps a step outside the run out of the row, at the end of it', () => {
         const withAuto = graph({
             steps: [step({ name: 'specify' }), step({ name: 'auto', inSequence: false })],
         });
         const { host } = canvas(withAuto);
 
         expect(host.querySelectorAll('.pb-run .pb-step')).toHaveLength(1);
+        const run = host.querySelector('.pb-run') as HTMLElement;
+        expect(run.lastElementChild?.className).toContain('pb-outside');
         const aside = host.querySelector('.pb-aside');
         expect(aside?.textContent).toContain('auto');
-        expect(aside?.textContent).toContain('not a step of its own');
+        expect(host.querySelector('.pb-outside-head')?.textContent).toBe('Outside the run');
     });
 
     it('puts every phase inside its step, and every node inside its phase', () => {
@@ -182,26 +186,11 @@ describe('the run reads left to right', () => {
     });
 });
 
-describe('every place a hook can attach is drawn', () => {
-    // The board used to show only what a project had already done, so the only
-    // way to learn work could be attached somewhere was to hover it.
-    //
-    // One seam per gap, though: `after <a node>` and `before <the next>` are two
-    // anchors for a single insertion point, and drawing both put a pair of
-    // dashed lines at every join. A phase owns its two edges; each node after
-    // the first owns the gap above it.
-    it('marks an empty anchor with a slot naming it', () => {
-        const { host } = canvas();
-        const slots = Array.from(host.querySelectorAll('.pb-slot'))
-            .map(el => el.textContent);
-        expect(slots).toEqual([
-            'before gather', 'after gather', 'before author', 'after author',
-        ]);
-    });
-
-    it('draws one seam per gap rather than one per anchor', () => {
-        // Three nodes in a phase: the phase's two edges plus the two joins
-        // between its nodes — four, not eight.
+describe('where work can be attached', () => {
+    // A seam per gap between two nodes. The phase's own edges lost theirs: the
+    // phase header carries an explicit "Add hook", which answers "how do I
+    // attach work here" better than a dashed line ever did.
+    it('marks each gap between two nodes', () => {
         const { host } = canvas(graph({
             steps: [step({
                 phases: [{
@@ -210,36 +199,114 @@ describe('every place a hook can attach is drawn', () => {
                 }],
             })],
         }));
-        const slots = Array.from(host.querySelectorAll('.pb-slot'))
-            .map(el => el.textContent);
-        expect(slots).toEqual(['before gather', 'before b', 'before c', 'after gather']);
+        expect(Array.from(host.querySelectorAll('.pb-slot')).map(el => el.textContent))
+            .toEqual(['before b', 'before c']);
     });
 
-    it('adds a hook at the anchor whose slot was clicked', () => {
-        const { host, added } = canvas();
-        const slot = Array.from(host.querySelectorAll('.pb-slot'))
-            .find(el => el.textContent === 'before author') as HTMLButtonElement;
-        slot.click();
-        expect(added).toEqual([['specify', 'author', 'before']]);
+    it('adds a hook at the anchor whose seam was clicked', () => {
+        const { host, added } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'gather', hooks: [],
+                    nodes: [node({ id: 'a' }), node({ id: 'b' })],
+                }],
+            })],
+        }));
+        (host.querySelector('.pb-slot') as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'b', 'before']]);
     });
 
-    it('shows the hooks instead of a slot once an anchor has any', () => {
+    it('offers Add hook on every phase, which is the discoverable way in', () => {
+        const { host } = canvas();
+        expect(host.querySelectorAll('.pb-attach')).toHaveLength(2);
+    });
+});
+
+describe('everything attached to one anchor sits in one block', () => {
+    const hooked = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'wrap-up', hooks: [],
+                nodes: [node({
+                    id: 'complete', name: 'Mark the spec complete',
+                    hooks: [
+                        { when: 'before', type: 'command', summary: 'doctor.py --chat', anchor: '', index: 0, note: '' },
+                        { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: '' },
+                    ],
+                })],
+            }],
+        })],
+    });
+
+    // Two boxes with two connector arms used to straddle a node with work on
+    // both sides, repeating its name four times. Position was carrying the
+    // before/after meaning and was not carrying it.
+    it('is one block, under the node, however many sides have work', () => {
+        const { host } = canvas(hooked());
+        const group = host.querySelector('.pb-node-group')!;
+        expect(group.querySelectorAll('.pb-attached')).toHaveLength(1);
+        expect(Array.from(group.children).map(el => el.className)[0]).toContain('pb-node');
+    });
+
+    it('names the two sides in words rather than by where they sit', () => {
+        const { host } = canvas(hooked());
+        expect(Array.from(host.querySelectorAll('.pb-attached-when')).map(el => el.textContent))
+            .toEqual(['before', 'after']);
+    });
+
+    it('keeps each side to its own list', () => {
+        const { host } = canvas(hooked());
+        const sides = Array.from(host.querySelectorAll('.pb-attached-side'));
+        expect(sides[0].textContent).toContain('doctor.py');
+        expect(sides[0].textContent).not.toContain('create-pr');
+        expect(sides[1].textContent).toContain('create-pr');
+    });
+
+    it('draws nothing at all for an anchor with no work', () => {
+        const { host } = canvas();
+        expect(host.querySelector('.pb-attached')).toBeNull();
+    });
+
+    it('says what a hook does in a verb, not its type name', () => {
+        const { host } = canvas(hooked());
+        const after = host.querySelectorAll('.pb-attached-side')[1];
+        expect(after.querySelector('.pb-hook-verb')?.textContent).toBe('run the skill');
+    });
+
+    it('cuts a long hook at a word, and keeps the whole of it on the title', () => {
+        const full = 'Read the doctor report above and act on it by this rule, fixing only bookkeeping';
         const { host } = canvas(graph({
             steps: [step({
                 phases: [{
-                    name: 'gather',
-                    hooks: [{
-                        when: 'before', type: 'prompt', summary: 'check the branch',
-                        anchor: 'gather', index: 0, note: '',
-                    }],
+                    name: 'wrap-up', hooks: [],
+                    nodes: [node({ hooks: [{
+                        when: 'after', type: 'prompt', summary: full,
+                        anchor: 'resolve-dir', index: 0, note: '',
+                    }] })],
+                }],
+            })],
+        }));
+        const chip = host.querySelector('.pb-hook')!;
+        const shown = chip.querySelector('.pb-hook-text')!.textContent!.replace('\u2026', '');
+        expect(chip.getAttribute('title')).toContain(full);
+        expect(full).toContain(shown);
+        expect(shown.endsWith(' ')).toBe(false);
+    });
+
+    it('hangs a phase hook off the phase, not off a node', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'author',
+                    hooks: [{ when: 'before', type: 'prompt', summary: 'read the steering docs', anchor: '', index: 0, note: '' }],
                     nodes: [node()],
                 }],
             })],
         }));
-        const slots = Array.from(host.querySelectorAll('.pb-slot')).map(el => el.textContent);
-        expect(slots).not.toContain('before gather');
-        expect(slots).toContain('after gather');
-        expect(host.querySelector('.pb-hooks')).not.toBeNull();
+        const phase = host.querySelector('.pb-phase')!;
+        expect(phase.querySelector(':scope > .pb-attached')?.textContent)
+            .toContain('read the steering docs');
+        expect(host.querySelector('.pb-node-group .pb-attached')).toBeNull();
     });
 });
 
@@ -249,27 +316,32 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         description: 'Commit the work', optional: true, conditional: false,
     });
 
-    it('draws them at the step edges, in the same shape as your own hooks', () => {
+    it('draws them in the same block and the same shape as your own', () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('before'), stock('after')] })],
         }));
-        // Not a separate labelled block at the foot of the lane any more.
         expect(host.querySelector('.pb-stock')).toBeNull();
-
         const chips = Array.from(host.querySelectorAll('.pb-hook--stock'));
         expect(chips).toHaveLength(2);
         expect(chips[0].textContent).toContain('speckit.git.commit');
-        expect(chips[0].textContent).toContain('git');
     });
 
-    it('says whose they are and that they are not edited here', () => {
+    // The extension's name was printed on every one of these. The hue already
+    // says whose it is, and it was the most repeated word on the board.
+    it('does not repeat whose it is on every row', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('after')] })],
+        }));
+        expect(host.querySelector('.pb-hook-from')).toBeNull();
+        expect(host.querySelector('.pb-hook--stock')!.getAttribute('title')).toContain('git');
+    });
+
+    it('says it is not edited here, and is still readable', () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('after')] })],
         }));
         const chip = host.querySelector('.pb-hook--stock')!;
-        expect(chip.getAttribute('title')).toContain('git');
         expect(chip.getAttribute('title')).toContain('not edited in this panel');
-        // A click that cannot edit would be a worse lie than no click.
         expect(chip.tagName).toBe('SPAN');
     });
 
@@ -280,105 +352,6 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         const groups = Array.from(host.querySelectorAll('.pb-node-group'));
         expect(groups[0].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
         expect(groups[groups.length - 1].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
-    });
-});
-
-describe('a hook is drawn on the side it runs', () => {
-    const hooked = () => graph({
-        steps: [step({
-            phases: [{
-                name: 'wrap-up', hooks: [],
-                nodes: [node({
-                    id: 'complete', name: 'Mark the spec complete',
-                    hooks: [
-                        { when: 'before', type: 'command', summary: 'doctor.py --chat', anchor: '', index: 0, note: ''  },
-                        { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
-                    ],
-                })],
-            }],
-        })],
-    });
-
-    it('puts before above the node and after below it', () => {
-        const { host } = canvas(hooked());
-        const group = host.querySelector('.pb-node-group')!;
-        const kinds = Array.from(group.children).map(el => el.className);
-
-        expect(kinds[0]).toContain('pb-hooks--before');
-        expect(kinds[1]).toContain('pb-node');
-        expect(kinds[2]).toContain('pb-hooks--after');
-    });
-
-    it('separates the two sides, never mixing them into one list', () => {
-        const { host } = canvas(hooked());
-        expect(host.querySelector('.pb-hooks--before')?.textContent).toContain('doctor.py');
-        expect(host.querySelector('.pb-hooks--before')?.textContent).not.toContain('create-pr');
-        expect(host.querySelector('.pb-hooks--after')?.textContent).toContain('create-pr');
-    });
-
-    it('draws one connector per side, however many hooks share it', () => {
-        const many = graph({
-            steps: [step({
-                phases: [{
-                    name: 'wrap-up', hooks: [],
-                    nodes: [node({
-                        hooks: [
-                            { when: 'after', type: 'prompt', summary: 'one', anchor: '', index: 0, note: ''  },
-                            { when: 'after', type: 'prompt', summary: 'two', anchor: '', index: 0, note: ''  },
-                            { when: 'after', type: 'skill', summary: 'create-pr', anchor: '', index: 0, note: ''  },
-                        ],
-                    })],
-                }],
-            })],
-        });
-        const { host } = canvas(many);
-        expect(host.querySelectorAll('.pb-hooks-arm')).toHaveLength(1);
-        expect(host.querySelectorAll('.pb-hook')).toHaveLength(3);
-    });
-
-    it('says what a hook does in a verb, not its type name', () => {
-        const { host } = canvas(hooked());
-        expect(host.querySelector('.pb-hooks--after .pb-hook-verb')?.textContent)
-            .toBe('run the skill');
-    });
-
-    it('cuts a long hook at a word, and keeps the whole of it on the title', () => {
-        const full = 'Read the doctor report above and act on it by this rule, fixing only bookkeeping';
-        const long = graph({
-            steps: [step({
-                phases: [{
-                    name: 'wrap-up', hooks: [],
-                    nodes: [node({ hooks: [{
-                        when: 'after', type: 'prompt', summary: full,
-                        anchor: 'resolve-dir', index: 0, note: '',
-                    }] })],
-                }],
-            })],
-        });
-        const { host } = canvas(long);
-        const chip = host.querySelector('.pb-hook')!;
-        const shown = chip.querySelector('.pb-hook-text')!.textContent!.replace('…', '');
-
-        expect(chip.getAttribute('title')).toContain(full);
-        expect(full).toContain(shown);
-        expect(shown.endsWith(' ')).toBe(false);
-    });
-
-    it('hangs a phase hook off the phase, not off a node', () => {
-        const onPhase = graph({
-            steps: [step({
-                phases: [{
-                    name: 'author',
-                    hooks: [{ when: 'before', type: 'prompt', summary: 'read the steering docs', anchor: '', index: 0, note: ''  }],
-                    nodes: [node()],
-                }],
-            })],
-        });
-        const { host } = canvas(onPhase);
-        const phase = host.querySelector('.pb-phase')!;
-        expect(phase.querySelector(':scope > .pb-hooks--before')?.textContent)
-            .toContain('read the steering docs');
-        expect(host.querySelector('.pb-node-group .pb-hooks')).toBeNull();
     });
 });
 
@@ -1135,13 +1108,16 @@ describe('a step of the project\'s own', () => {
         expect(newSteps()).toBe(1);
     });
 
-    // The invitation belongs after the last lane, not before the first.
+    // The invitation belongs after the last lane, beside the other things that
+    // do not take a turn in the run.
     it('draws the invitation after every step in the run', () => {
         const { host } = canvas(graph({
             steps: [step({ name: 'specify' }), step({ name: 'plan' })],
         }));
         const run = host.querySelector('.pb-run') as HTMLElement;
-        expect(run.lastElementChild?.classList.contains('pb-add-step')).toBe(true);
+        const tail = run.lastElementChild!;
+        expect(tail.classList.contains('pb-outside')).toBe(true);
+        expect(tail.querySelector('.pb-add-step')).not.toBeNull();
     });
 
     // `auto` is not a step; a project's own step outside the run is. They sit in
