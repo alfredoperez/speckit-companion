@@ -5,13 +5,16 @@
  * button that runs it and reports what it said. Two commands: preview, which
  * writes nothing, and build, which does.
  *
- * The result goes to the output channel rather than a notification, because a
- * build's output is the diff it is about to apply and a toast cannot hold that.
+ * The output channel keeps the whole log, because a build's output is the diff
+ * it is about to apply and a toast cannot hold that. It only takes the screen
+ * when something failed: stealing the editor to say a build worked is a cost
+ * paid on every successful run for the sake of the rare one that did not.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { BuildReport } from '../../protocol/pipeline';
 import { needsRebuild, readPipelineBuildState } from './pipelineBuild';
 
 /** How long a build may take before it is abandoned. Assembly is fast; a hang is a bug. */
@@ -59,15 +62,56 @@ export function runBuild(
     });
 }
 
+/** How many commands the run said it handled. */
+function commandCount(output: string): number {
+    const said = /\[build\] (?:would build|built) (\d+) commands?/.exec(output);
+    return said ? Number(said[1]) : 0;
+}
+
+/**
+ * The commands a preview says would change.
+ *
+ * The script prints one `  name: …` row per command under its heading, and
+ * `unchanged` is the one answer that is not a change. A real build prints no
+ * such list, so it reports none.
+ */
+function changedCommands(output: string): string[] {
+    const lines = output.split('\n');
+    const heading = lines.findIndex(line => line.startsWith('[build] what would change:'));
+    if (heading < 0) { return []; }
+    const changed: string[] = [];
+    for (const line of lines.slice(heading + 1)) {
+        const row = /^ {2}(\S+): (.+)$/.exec(line);
+        if (row && row[2] !== 'unchanged') { changed.push(row[1]); }
+    }
+    return changed;
+}
+
+/** What the run did, in the shape the panel reports it. */
+export function readBuildReport(outcome: BuildOutcome, dryRun: boolean): BuildReport {
+    return {
+        ok: outcome.ok,
+        // `h23` rather than `hour12: false`, which renders midnight as 24:05 in
+        // some locales.
+        at: new Date().toLocaleTimeString([], {
+            hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+        }),
+        commands: commandCount(outcome.output),
+        changed: changedCommands(outcome.output),
+        dryRun,
+        output: outcome.output,
+    };
+}
+
 export function registerPipelineBuildCommands(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel,
 ): void {
-    const build = async (dryRun: boolean): Promise<void> => {
+    const build = async (dryRun: boolean): Promise<BuildReport | null> => {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
             void vscode.window.showWarningMessage('Open a workspace folder to build its pipeline.');
-            return;
+            return null;
         }
 
         const script = resolveBuildScript(workspaceRoot, context.extensionPath);
@@ -75,24 +119,25 @@ export function registerPipelineBuildCommands(
             void vscode.window.showWarningMessage(
                 'The pipeline builder is not available — install the companion spec-kit extension.',
             );
-            return;
+            return null;
         }
 
-        outputChannel.show(true);
         outputChannel.appendLine(`[Pipeline] ${dryRun ? 'previewing' : 'building'} from companion.yml…`);
 
         const result = await runBuild(script, workspaceRoot, dryRun);
         outputChannel.appendLine(result.output || '(no output)');
 
         if (!result.ok) {
+            outputChannel.show(true);
             void vscode.window.showErrorMessage(
                 'The pipeline could not be built — nothing was written. See the output for the reason.',
             );
-            return;
-        }
-        if (!dryRun) {
+        } else if (!dryRun) {
+            // Still said out here, because the palette runs this with no panel
+            // open and a build that reports only into the panel reports nothing.
             void vscode.window.showInformationMessage('Pipeline built from companion.yml.');
         }
+        return readBuildReport(result, dryRun);
     };
 
     context.subscriptions.push(

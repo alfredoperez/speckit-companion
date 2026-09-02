@@ -14,11 +14,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
+    BuildReport,
     BuilderToExtensionMessage,
     ExtensionToBuilderMessage,
     HookWhen,
     PipelineGraphResult,
     PipelineStatus,
+    isGraphError,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { nodeFile, readableNode } from './readableNode';
@@ -52,6 +54,13 @@ const SHIPPED_WORKFLOW = 'shipped';
 
 /** Whether this workspace has already read the line explaining what the board is. */
 const FIRST_RUN_SEEN = 'speckit.pipelineBuilder.firstRunSeen';
+
+/** A workflow named as the header names it, so a status reads like the switcher. */
+function workflowLabel(name: string): string {
+    if (name === '') { return 'this project'; }
+    if (name === SHIPPED_WORKFLOW) { return 'the pipeline as it ships'; }
+    return name;
+}
 
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -303,7 +312,12 @@ export class PipelineBuilderPanel {
         selectWorkflow: async message => {
             await this.write(
                 script => writeWorkflow(script, this.workspaceRoot, message.name),
-                'Switching workflows');
+                'Switching workflows',
+                {
+                    tone: 'done',
+                    text: `Now running ${workflowLabel(message.name)}`,
+                    detail: 'Build to apply',
+                });
         },
 
         repair: async message => {
@@ -400,7 +414,12 @@ export class PipelineBuilderPanel {
         newWorkflow: async message => {
             const made = await this.write(
                 script => createWorkflow(script, this.workspaceRoot, message.name, message.from),
-                'Creating a workflow');
+                'Creating a workflow',
+                {
+                    tone: 'done',
+                    text: `${message.name} created from ${workflowLabel(message.from)}`,
+                    detail: 'Now running it — Build to apply',
+                });
             if (!made) { return; }
             await vscode.window.showTextDocument(vscode.Uri.file(path.join(
                 this.workspaceRoot, WORKFLOWS_REL, `${message.name}.yml`)));
@@ -593,10 +612,18 @@ export class PipelineBuilderPanel {
             `[PipelineBuilder] ignored message: ${(message as { type: string }).type}`),
     });
 
+    /**
+     * Run the build, and say here what it did.
+     *
+     * The command reports what it built; the panel that asked is where a person
+     * is looking, so that is where the answer goes. The output channel still
+     * holds the whole log — it just no longer takes the screen to say "fine".
+     */
     private async run(command: string): Promise<void> {
         await this.post({ type: 'busy', busy: true });
         try {
-            await vscode.commands.executeCommand(command);
+            const report = await vscode.commands.executeCommand<BuildReport | null>(command);
+            if (report) { await this.post({ type: 'buildReport', report }); }
         } finally {
             await this.post({ type: 'busy', busy: false });
             await this.send();
@@ -608,6 +635,12 @@ export class PipelineBuilderPanel {
         const graph: PipelineGraphResult = script
             ? await readPipelineGraph(script, this.workspaceRoot)
             : { error: 'The pipeline builder needs the companion spec-kit extension.' };
+        // Whether the board still has to explain itself is a fact about this
+        // workspace's reader, not about the pipeline, so the graph script has no
+        // way to know it and the panel fills it in on the way out.
+        if (!isGraphError(graph)) {
+            graph.firstRun = !this.context.workspaceState?.get<boolean>(FIRST_RUN_SEEN);
+        }
         await this.post({
             type: 'graph',
             graph,

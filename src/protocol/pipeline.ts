@@ -244,6 +244,13 @@ export interface PipelineGraph {
     configured: boolean;
     /** Whether anything differs from the shipped pipeline. */
     customised: boolean;
+    /**
+     * Whether this workspace has yet to read the line saying what the board is.
+     *
+     * The panel, not the graph script, answers this — it is a fact about the
+     * person rather than about the pipeline — so it is filled in on the way out.
+     */
+    firstRun?: boolean;
     warnings: string[];
     counts: {
         steps: number; phases: number; nodes: number;

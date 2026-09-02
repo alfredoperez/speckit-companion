@@ -288,7 +288,20 @@ body {
    Workflow switcher
    ============================================ */
 
-.builder-workflow { position: relative; }
+.builder-workflow {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Which of the two dropdowns this is. Without it "This project" and the change
+   summary read as a pair of unlabelled selects. */
+.builder-workflow-label {
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    color: var(--text-label);
+}
 
 .builder-workflow-current {
     display: inline-flex;
@@ -1802,6 +1815,105 @@ body {
     line-height: 1.4;
     color: var(--text-secondary);
 }
+
+/* ── L1 ── Feedback: what a write did, and what a build did ──
+   Two lines the panel never had. The build reported into the Output channel,
+   which took the editor to say it had worked; a write reported nowhere at all,
+   so a hook added at the foot of a lane that is scrolled away changed nothing
+   a person could see. */
+
+.builder-notice--info,
+.builder-notice--done {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--text-body);
+    background: transparent;
+    padding-left: 0;
+}
+
+.builder-notice-icon--info { color: var(--info); }
+.builder-notice-icon--done { color: var(--success); }
+
+/* The filename inside a sentence, not a code block. */
+.builder-notice-file {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+}
+
+.builder-report-line { flex-grow: 1; }
+
+/* The channel's own words. Scrolls rather than stretching the header. */
+.builder-report-log {
+    max-height: 220px;
+    overflow: auto;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--text-body);
+    white-space: pre-wrap;
+}
+
+/* The status line sits at the foot of the panel, under the board, because that
+   is where a person's eye is free — the header is where the pipeline is named.
+   `order` rather than a move in the markup: it is a flex child of `.builder`
+   like the header and the board, and everything else defaults to 0. */
+.builder-status {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+}
+
+/* Wraps rather than truncates: a refusal's reason is the useful half of it, and
+   an ellipsis would be exactly where the reason starts. */
+.builder-status-text { min-width: 0; }
+
+/* What it means next, quieter than what happened. */
+.builder-status-detail {
+    flex-grow: 1;
+    font-size: var(--text-xs);
+    color: var(--text-label);
+    white-space: nowrap;
+}
+
+.builder-status-detail::before {
+    content: '·';
+    margin-right: var(--space-2);
+}
+
+/* The only Undo in the interface. A link, because it undoes rather than does. */
+.builder-status-undo {
+    flex-shrink: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.builder-status-undo:hover { color: var(--accent-hover); }
+
+.builder-status-close {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.builder-status-close:hover { color: var(--text-body); }
 
 /* ── Narrow panel ────────────────────────────────────────────
    Last on purpose: `@container` adds no specificity, so these have to

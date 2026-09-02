@@ -8,13 +8,20 @@
  */
 
 import { useState } from 'preact/hooks';
-import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
+import { BuildReport, PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
 import { changed } from './changes';
+import { Menu } from './Menu';
+
+/** Starts a workflow rather than switching to one. A workflow is a `.yml`
+    stem, so `#` cannot be the name of a real one. */
+const NEW_WORKFLOW = '#new';
 
 interface Props {
     graph: PipelineGraph;
     buildState: PipelineBuildKind;
     busy: boolean;
+    /** What the last build or preview did. Absent until one has run. */
+    report?: BuildReport | null;
     onBuild: () => void;
     onPreview: () => void;
     onOpenConfig: () => void;
@@ -22,17 +29,36 @@ interface Props {
     onSelectWorkflow: (name: string) => void;
     /** Start a new workflow, seeded from the one in force. */
     onNewWorkflow: () => void;
+    /** The first-run line has been read. Absent outside the panel. */
+    onDismissFirstRun?: () => void;
 }
 
-/** Drawn, so it takes the warning hue rather than a font's idea of one. */
-function WarningIcon() {
+/**
+ * The mark a line carries, drawn rather than typed.
+ *
+ * A glyph takes a font's idea of the shape and none of the semantic hue; these
+ * take the tone's colour. Exported because the status line at the foot of the
+ * panel says the same three kinds of thing this band does, in the same marks.
+ */
+export function StatusIcon({ tone }: { tone: string }) {
+    if (tone === 'done') {
+        return (
+            <svg class="builder-notice-icon builder-notice-icon--done" width="14" height="14"
+                viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true" focusable="false">
+                <path d="M3 8.4 6.3 11.6 13 5" />
+            </svg>
+        );
+    }
     return (
-        <svg class="builder-notice-icon" width="14" height="14" viewBox="0 0 16 16"
-            fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-            aria-hidden="true" focusable="false">
+        <svg class={`builder-notice-icon builder-notice-icon--${tone}`} width="14" height="14"
+            viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"
+            stroke-linecap="round" aria-hidden="true" focusable="false">
             <circle cx="8" cy="8" r="6" />
-            <path d="M8 5v3.5" />
-            <path d="M8 10.8h.01" />
+            {tone === 'info'
+                ? <><path d="M8 7.2v3.6" /><path d="M8 5.1h.01" /></>
+                : <><path d="M8 5v3.5" /><path d="M8 10.8h.01" /></>}
         </svg>
     );
 }
@@ -69,12 +95,23 @@ function workflowLabel(name: string): string {
     return name;
 }
 
-/** What the build state means, in the words a person would use. */
-function buildNotice(state: PipelineBuildKind): { text: string; tone: string } | null {
+/**
+ * What the build state means, in the words a person would use.
+ *
+ * A stale build carries the count, because "it is behind" is only worrying once
+ * you know how much of your work is not in it.
+ */
+function buildNotice(
+    state: PipelineBuildKind, changedSteps: number,
+): { text: string; tone: string } | null {
     switch (state) {
         case 'stale':
             return {
-                text: 'companion.yml changed since the last build — the assistant is still reading the old commands',
+                text: changedSteps
+                    ? `${tally(changedSteps, 'changed step')} not built yet — the assistant `
+                      + 'is still reading the old commands'
+                    : 'companion.yml changed since the last build — the assistant is still '
+                      + 'reading the old commands',
                 tone: 'warning',
             };
         case 'never-built':
@@ -83,6 +120,33 @@ function buildNotice(state: PipelineBuildKind): { text: string; tone: string } |
         case 'unconfigured':
             return null;
     }
+}
+
+/** `a`, `a and b`, `a, b and c` — a list read the way it would be said. */
+function readList(names: string[]): string {
+    if (names.length < 2) { return names.join(''); }
+    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/** What a build or a preview did, in one line. */
+function reportLine(report: BuildReport): string {
+    if (!report.ok) {
+        return `The build failed at ${report.at} — nothing was written`;
+    }
+    if (!report.dryRun) {
+        return `Built ${report.at} · ${tally(report.commands, 'command')} written`;
+    }
+    if (report.changed.length === 0) {
+        return `Preview: nothing would change in ${tally(report.commands, 'command')}`;
+    }
+    return `Preview: ${report.changed.length} of ${report.commands} commands would change, `
+        + readList(report.changed);
+}
+
+/** A preview wrote nothing, so it is news rather than a job done. */
+function reportTone(report: BuildReport): string {
+    if (!report.ok) { return 'warning'; }
+    return report.dryRun ? 'info' : 'done';
 }
 
 function changeSummary(graph: PipelineGraph): string[] {
@@ -116,60 +180,47 @@ function changeSummary(graph: PipelineGraph): string[] {
 }
 
 export function Header(props: Props) {
-    const { graph, buildState, busy, onBuild, onPreview, onOpenConfig } = props;
+    const { graph, buildState, busy, report, onBuild, onPreview, onOpenConfig } = props;
     const [open, setOpen] = useState(false);
-    const [pickingWorkflow, setPickingWorkflow] = useState(false);
-    const notice = buildNotice(buildState);
+    const [showingLog, setShowingLog] = useState(false);
     const changes = changeSummary(graph);
     const changedSteps = graph.steps.filter(changed).length;
+    const notice = buildNotice(buildState, changedSteps);
+    const firstRun = buildState === 'unconfigured' && graph.firstRun === true;
+
+    const workflows = [
+        ...graph.workflows.available.map(name => ({
+            id: name,
+            label: workflowLabel(name),
+            // Which one is running was a bold row before; a Menu says it in words.
+            note: [
+                name === 'shipped' ? 'Companion with nothing changed' : '',
+                name === graph.workflows.active ? 'In force' : '',
+            ].filter(Boolean).join(' · ') || undefined,
+        })),
+        { id: NEW_WORKFLOW, label: 'New workflow…', note: 'Starts from the one in force' },
+    ];
 
     return (
         <header class="builder-header">
             <div class="builder-identity">
                 <span class="builder-title">Pipeline</span>
 
+                {/* Two dropdowns stood side by side, one naming a workflow and
+                    one summarising the changes, with nothing to say which was
+                    which. This one now says what it picks. */}
                 <div class="builder-workflow">
-                    <button class="builder-workflow-current"
-                        aria-expanded={pickingWorkflow}
-                        onClick={() => setPickingWorkflow(!pickingWorkflow)}
-                        title="The way of working this project is on">
-                        {workflowLabel(graph.workflows.active)}
-                        <span class="builder-chip-caret" aria-hidden="true">
-                            {pickingWorkflow ? '\u25b4' : '\u25be'}
-                        </span>
-                    </button>
-                    {pickingWorkflow && (
-                        <ul class="builder-workflow-menu">
-                            {graph.workflows.available.map(name => (
-                                <li key={name}>
-                                    <button
-                                        class={`builder-workflow-option ${
-                                            name === graph.workflows.active
-                                                ? 'builder-workflow-option--active' : ''}`}
-                                        onClick={() => {
-                                            setPickingWorkflow(false);
-                                            props.onSelectWorkflow(name);
-                                        }}>
-                                        {workflowLabel(name)}
-                                        {name === 'shipped' && (
-                                            <span class="builder-workflow-note">
-                                                Companion with nothing changed
-                                            </span>
-                                        )}
-                                    </button>
-                                </li>
-                            ))}
-                            <li class="builder-workflow-new">
-                                <button class="builder-workflow-option"
-                                    onClick={() => {
-                                        setPickingWorkflow(false);
-                                        props.onNewWorkflow();
-                                    }}>
-                                    New workflow…
-                                </button>
-                            </li>
-                        </ul>
-                    )}
+                    <span class="builder-workflow-label">Workflow</span>
+                    <Menu
+                        class="builder-workflow-current"
+                        trigger={workflowLabel(graph.workflows.active)}
+                        label={`Workflow: ${workflowLabel(graph.workflows.active)}`}
+                        title="The way of working this project is on"
+                        options={workflows}
+                        onPick={id => {
+                            if (id === NEW_WORKFLOW) { props.onNewWorkflow(); }
+                            else { props.onSelectWorkflow(id); }
+                        }} />
                 </div>
 
                 <button
@@ -203,7 +254,7 @@ export function Header(props: Props) {
                 </button>
                 <button class="builder-action builder-action--quiet" disabled={busy}
                     onClick={onPreview}>
-                    Preview
+                    Preview build
                 </button>
                 {/* "Build" — this runs the project's own build and writes the
                     command files. Claude is who reads them afterwards, not who
@@ -214,11 +265,51 @@ export function Header(props: Props) {
                 </button>
             </div>
 
+            {/* Nothing said that a change here writes a file, so the first thing
+                a project sees is what the board is and what Build does with it.
+                Read once per workspace. */}
+            {firstRun && (
+                <div class="builder-notice builder-notice--info">
+                    <StatusIcon tone="info" />
+                    <span>
+                        This is the pipeline as it ships. Change anything here and Build
+                        writes it to <code class="builder-notice-file">companion.yml</code>.
+                    </span>
+                    {props.onDismissFirstRun && (
+                        <button class="builder-link" onClick={props.onDismissFirstRun}>
+                            Got it
+                        </button>
+                    )}
+                </div>
+            )}
+
             {notice && (
                 <div class={`builder-notice builder-notice--${notice.tone}`}>
-                    <WarningIcon />
+                    <StatusIcon tone={notice.tone} />
                     {notice.text}
                 </div>
+            )}
+
+            {/* A build used to answer in the Output panel, which took the editor
+                to say it had worked. It answers here, where it was asked; the
+                channel still keeps the whole log. */}
+            {report && (
+                <div class={`builder-notice builder-report builder-notice--${
+                    reportTone(report)}`} role="status">
+                    <StatusIcon tone={reportTone(report)} />
+                    <span class="builder-report-line">{reportLine(report)}</span>
+                    {report.output && (
+                        <button class="builder-link" aria-expanded={showingLog}
+                            onClick={() => setShowingLog(!showingLog)}>
+                            {showingLog ? 'Hide the log'
+                                : report.dryRun ? 'Show what changes' : 'Show the log'}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {report && showingLog && (
+                <pre class="builder-changes builder-report-log">{report.output}</pre>
             )}
 
             {graph.warnings.length > 0 && (

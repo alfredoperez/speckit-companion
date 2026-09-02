@@ -319,7 +319,7 @@ export const SwitchWorkflow: Story = {
         const chip = canvasElement.querySelector('.builder-workflow-current') as HTMLButtonElement;
         chip.click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        const options = canvasElement.querySelectorAll('.builder-workflow-option');
+        const options = canvasElement.querySelectorAll('.pb-menu-option');
         assert(options.length === 4, 'three workflows and a way to make another');
         (options[1] as HTMLButtonElement).click();
     },

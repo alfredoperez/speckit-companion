@@ -158,6 +158,21 @@ describe('building', () => {
         expect(busy.at(-1)).toEqual({ type: 'busy', busy: false });
     });
 
+    it('reports what the build did, in the panel that asked for it', async () => {
+        const report = {
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: '[build] ok',
+        };
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(report);
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('buildReport').report).toEqual(report);
+    });
+
+    it('says nothing when the command had nothing to report', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(null);
+        await panel.__receive({ type: 'preview' });
+        expect(panel.__posted.some((m: { type: string }) => m.type === 'buildReport')).toBe(false);
+    });
+
     it('logs a failed action rather than losing it to an unhandled rejection', async () => {
         const channel = (vscode.window.createOutputChannel as jest.Mock)
             .mock.results.at(-1)!.value;

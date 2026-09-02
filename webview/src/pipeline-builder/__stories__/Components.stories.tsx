@@ -7,7 +7,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
-import { Header } from '../Header';
+import { Header, StatusIcon } from '../Header';
 import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import {
@@ -320,6 +320,72 @@ export const HeaderWorkflows: Story = {
                 workflows: { available: ['shipped', 'bugfix', 'client'], active: 'bugfix' },
             })}
             buildState="current" busy={false} {...HEAD} /></One>
+    ),
+};
+
+export const HeaderFirstRun: Story = {
+    name: 'Header · the first time, nothing configured',
+    render: () => (
+        <One><Header graph={graph([SPECIFY], { firstRun: true })} buildState="unconfigured"
+            busy={false} {...HEAD} onDismissFirstRun={noop} /></One>
+    ),
+};
+
+export const HeaderBuilt: Story = {
+    name: 'Header · what the build did',
+    render: () => (
+        <One><Header graph={graph([SPECIFY])} buildState="current" busy={false} {...HEAD}
+            report={{
+                ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
+                output: '[build] built 5 commands from .specify/companion.yml',
+            }} /></One>
+    ),
+};
+
+export const HeaderPreviewed: Story = {
+    name: 'Header · what a preview would change',
+    render: () => (
+        <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD}
+            report={{
+                ok: true, at: '14:02', commands: 5, changed: ['specify', 'implement'],
+                dryRun: true,
+                output: '[build] would build 5 commands from .specify/companion.yml\n'
+                    + '[build] what would change:\n'
+                    + '  implement: +12 −4 lines\n  plan: unchanged\n  specify: +31 −0 lines',
+            }} /></One>
+    ),
+};
+
+// The strip lives at the foot of the panel rather than in this band, but it is
+// the header's other half of the same conversation: one says what a build did,
+// the other says what a write did.
+export const StatusLine: Story = {
+    name: 'Status line · a write, with the way back',
+    render: () => (
+        <div class="builder">
+            <div class="builder-status builder-status--done" role="status">
+                <StatusIcon tone="done" />
+                <span class="builder-status-text">Hook added before Draft the spec</span>
+                <button class="builder-status-undo">Undo</button>
+                <span class="builder-status-detail">Build to apply</span>
+                <button class="builder-status-close" title="Dismiss">×</button>
+            </div>
+        </div>
+    ),
+};
+
+export const StatusLineRefused: Story = {
+    name: 'Status line · a write the configuration refused',
+    render: () => (
+        <div class="builder">
+            <div class="builder-status builder-status--warning" role="status">
+                <StatusIcon tone="warning" />
+                <span class="builder-status-text">
+                    review-gaps is not a node specify can run — nothing was written
+                </span>
+                <button class="builder-status-close" title="Dismiss">×</button>
+            </div>
+        </div>
     ),
 };
 
