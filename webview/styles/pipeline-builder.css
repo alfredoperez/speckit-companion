@@ -164,9 +164,9 @@ body {
 }
 
 .builder-chip--customised {
-    color: var(--info);
-    border-color: var(--info);
-    background: var(--info-subtle);
+    color: var(--review);
+    border-color: var(--review);
+    background: var(--review-subtle);
 }
 
 .builder-chip-caret {
@@ -400,9 +400,12 @@ body {
     color: var(--text-muted);
 }
 
+/* The tail sizes to its content, so a card that never wraps would set the
+   column's width. This one wraps instead. */
 .pb-aside {
     display: flex;
     flex-direction: column;
+    max-width: 160px;
     gap: 2px;
     padding: var(--space-2) var(--space-3);
     background: var(--bg-secondary);
@@ -426,10 +429,10 @@ body {
 
 .pb-run {
     display: grid;
-    grid-auto-flow: column;
     /* A lane never narrows past readable. Four fit on a wide editor; on a split
-       pane the board scrolls sideways, the way a board should. */
-    grid-auto-columns: minmax(300px, 1fr);
+       pane the board scrolls sideways, the way a board should. The tail is not
+       a lane, so it takes only the width it needs. */
+    grid-template-columns: repeat(var(--pb-steps), minmax(300px, 1fr)) max-content;
     gap: 0;
     align-items: start;
     overflow-x: auto;
@@ -876,8 +879,10 @@ body {
 
 .pb-facts dd { margin: 0; color: var(--text-body); overflow-wrap: anywhere; }
 
-.pb-facts-mono,
-
+.pb-facts-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+}
 
 .pb-doc { flex-grow: 1; padding: var(--space-3) var(--space-4); }
 
@@ -1071,12 +1076,15 @@ body {
     flex-direction: column;
     gap: var(--space-4);
     min-height: 0;
+    overflow-y: auto;
 }
 
-/* The confirm sits at the foot of the column, not halfway up it. */
+/* The confirm sits at the foot of the column, opaque, so a field scrolls under
+   it rather than through it. */
 .pb-form-actions {
     align-self: end;
     padding-top: var(--space-3);
+    background: var(--bg-secondary);
     border-top: 1px solid var(--border);
 }
 
@@ -1428,6 +1436,7 @@ body {
     gap: var(--space-4);
     padding: var(--space-4);
     overflow-y: auto;
+    min-height: 0;
 }
 
 .pb-template-row {

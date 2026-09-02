@@ -30,16 +30,19 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
     const forStep = fragments.filter(f => !f.for || f.for === step.name);
 
     return (
-        <aside class="pb-sheet">
-            <header class="pb-sheet-head">
-                <h2 class="pb-sheet-title">{template.file}</h2>
-                <button class="pb-sheet-close" onClick={onCancel} title="Close">×</button>
+        <aside class="pb-side" aria-label="Template">
+            <header class="pb-side-head">
+                <h2 class="pb-side-title">What {step.name} writes</h2>
+                <button class="pb-side-close" onClick={onCancel} title="Close">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
+                </button>
+                <p class="pb-side-where">
+                    <span class="pb-facts-mono">{template.file}</span> · section by section.
+                    Changing one leaves the rest alone.
+                </p>
             </header>
-
-            <p class="pb-sheet-note">
-                What <span class="pb-facts-mono">{step.name}</span> writes, section by
-                section. Changing one leaves the rest of the template alone.
-            </p>
 
             <div class="pb-template-rows">
                 {template.sectionsAvailable.map(heading => {
