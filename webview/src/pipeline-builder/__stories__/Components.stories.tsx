@@ -260,7 +260,7 @@ export const StepWithDecision: Story = {
 export const HeaderShipped: Story = {
     name: 'Header · nothing changed',
     render: () => (
-        <One><Header graph={graph([SPECIFY, PLAN])} buildState="unconfigured"
+        <One><Header graph={graph([PLAN, TASKS])} buildState="unconfigured"
             busy={false} {...HEAD} /></One>
     ),
 };

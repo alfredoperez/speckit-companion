@@ -14,10 +14,42 @@ describe('the header says what this pipeline is', () => {
         onSelectWorkflow: noop, onNewWorkflow: noop,
     };
 
-    it('reads as the shipped default when nothing was changed', () => {
+    it('reads as no changes when nothing was changed', () => {
         const host = mount(
             <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-chip')?.textContent).toContain('Shipped default');
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('No changes');
+    });
+
+    it('counts the steps this project changed', () => {
+        const two = graph({
+            steps: [
+                step({ name: 'specify', changes: { ...NO_CHANGES, hooks: 2 } }),
+                step({ name: 'plan' }),
+                step({ name: 'implement', changes: { ...NO_CHANGES, replaced: ['draft-spec'] } }),
+            ],
+        });
+        const host = mount(
+            <Header graph={two} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 2 steps');
+    });
+
+    it('ignores a graph that claims changes its steps do not have', () => {
+        const lying = graph({ customised: true, steps: [step()] });
+        const host = mount(
+            <Header graph={lying} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('No changes');
+        expect(host.querySelector('.builder-chip')?.className)
+            .not.toContain('builder-chip--customised');
+    });
+
+    it('ignores a graph that claims nothing changed when a step did', () => {
+        const lying = graph({
+            customised: false,
+            steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })],
+        });
+        const host = mount(
+            <Header graph={lying} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
     });
 
     it('expands to say what changed', async () => {
@@ -27,6 +59,7 @@ describe('the header says what this pipeline is', () => {
         });
         const host = mount(
             <Header graph={customised} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
         expect(host.querySelector('.builder-changes')).toBeNull();
 
         (host.querySelector('.builder-chip') as HTMLButtonElement).click();

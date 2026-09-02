@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'preact/hooks';
-import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
+import { PipelineBuildKind, PipelineGraph, PipelineStep } from '../../../src/protocol/pipeline';
 
 interface Props {
     graph: PipelineGraph;
@@ -84,9 +84,18 @@ function buildNotice(state: PipelineBuildKind): { text: string; tone: string } |
     }
 }
 
+/** What the board marks as changed, so the chip cannot say otherwise. */
+function changed(step: PipelineStep): boolean {
+    const c = step.changes;
+    return Boolean(c.added.length || c.removed.length || c.reordered || c.hooks
+        || c.decisions.length || c.replaced.length || c.phases.length
+        || step.template?.sections.length);
+}
+
 function changeSummary(graph: PipelineGraph): string[] {
     const lines: string[] = [];
     for (const step of graph.steps) {
+        if (!changed(step)) { continue; }
         const bits: string[] = [];
         if (step.changes.removed.length) { bits.push(`−${step.changes.removed.join(', ')}`); }
         if (step.changes.added.length) { bits.push(`+${step.changes.added.join(', ')}`); }
@@ -119,6 +128,7 @@ export function Header(props: Props) {
     const [pickingWorkflow, setPickingWorkflow] = useState(false);
     const notice = buildNotice(buildState);
     const changes = changeSummary(graph);
+    const changedSteps = graph.steps.filter(changed).length;
 
     return (
         <header class="builder-header">
@@ -170,13 +180,13 @@ export function Header(props: Props) {
                 </div>
 
                 <button
-                    class={`builder-chip ${graph.customised ? 'builder-chip--customised' : ''}`}
+                    class={`builder-chip ${changedSteps ? 'builder-chip--customised' : ''}`}
                     aria-expanded={open}
                     onClick={() => setOpen(!open)}
                 >
-                    {graph.customised
-                        ? `Customised · ${changes.length} step${changes.length === 1 ? '' : 's'}`
-                        : 'Shipped default · no changes'}
+                    {changedSteps
+                        ? `Changed · ${changedSteps} step${changedSteps === 1 ? '' : 's'}`
+                        : 'No changes'}
                     <span class="builder-chip-caret">{open ? '▴' : '▾'}</span>
                 </button>
             </div>
