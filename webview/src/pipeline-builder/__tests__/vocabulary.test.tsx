@@ -2,16 +2,18 @@
  * @jest-environment jsdom
  */
 import { AttachForm } from '../AttachForm';
-import { canvas, mount, step } from './support';
+import { canvas, flush, mount, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
 describe('one action keeps one name through the flow', () => {
     const noop = () => undefined;
 
-    it('says "Add hook" on the phase, in the sheet, and on the confirm', () => {
+    it('says "Add hook" on the phase, in the sheet, and on the confirm', async () => {
         const { host } = canvas();
-        expect(host.querySelector('.pb-attach')?.textContent).toContain('Add hook');
+        (host.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+        await flush();
+        expect(host.querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
 
         document.body.innerHTML = '';
         const sheet = mount(

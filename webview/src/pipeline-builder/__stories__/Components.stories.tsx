@@ -155,6 +155,15 @@ export const HooksOnAPhase: Story = {
     ),
 };
 
+export const HooksYoursAndAnExtensions: Story = {
+    name: 'Hooks · yours beside an extension\'s',
+    render: () => (
+        <One><Canvas graph={graph([step('implement', IMPLEMENT.phases, {
+            stockHooks: STOCK, changes: { ...NO_CHANGES, hooks: 3 },
+        })])} {...CANVAS} /></One>
+    ),
+};
+
 export const HooksLongShellLine: Story = {
     name: 'Hooks · a shell line longer than the lane',
     render: () => (

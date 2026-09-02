@@ -155,15 +155,16 @@ export const AddingABlock: Story = {
     render: () => (
         <div class="builder" style="width: 420px; padding: 16px">
             <Menu
-                class="pb-phase-tool pb-phase-add-node"
-                trigger="+ node"
+                class="pb-inspector-action"
+                trigger="Add node"
                 title="Put a node in this phase"
                 defaultOpen
                 options={[
                     { id: 'review-gaps', label: 'Review the task list for gaps',
-                      note: 'Adversarial gap review' },
+                      note: 'Attacks the task list for gaps before it runs · '
+                          + 'tasks ships this and does not run it' },
                     { id: 'branch', label: 'Create the feature branch',
-                      note: 'this project took it out' },
+                      note: 'Creates the feature branch · removed from this run' },
                 ]}
                 onPick={noop} />
         </div>

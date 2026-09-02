@@ -6,6 +6,23 @@ import { NO_CHANGES, canvas, drag, flush, graph, mount, node, step } from './sup
 
 afterEach(() => { document.body.innerHTML = ''; });
 
+/** Open a phase's one resting control and read back what it offers. */
+async function phaseMenu(host: HTMLElement, at = 0) {
+    const phase = host.querySelectorAll('.pb-phase')[at];
+    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    await flush();
+    return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
+}
+
+/** Open it and take the entry with this label. */
+async function fromPhaseMenu(host: HTMLElement, at: number, label: string) {
+    const options = await phaseMenu(host, at);
+    const hit = options.find(o => o.querySelector('.pb-menu-label')?.textContent === label);
+    if (!hit) { throw new Error(`no "${label}" in the phase menu`); }
+    hit.click();
+    await flush();
+}
+
 describe('the run reads left to right', () => {
     it('gives every step in the sequence a column, in order', () => {
         const four = graph({
@@ -96,9 +113,11 @@ describe('where work can be attached', () => {
         expect(added).toEqual([['specify', 'b', 'before']]);
     });
 
-    it('offers Add hook on every phase, which is the discoverable way in', () => {
+    it('offers Add hook on every phase, which is the discoverable way in', async () => {
         const { host } = canvas();
-        expect(host.querySelectorAll('.pb-attach')).toHaveLength(2);
+        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
+        const options = await phaseMenu(host);
+        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
     });
 });
 
@@ -147,10 +166,18 @@ describe('everything attached to one anchor sits in one block', () => {
         expect(host.querySelector('.pb-attached')).toBeNull();
     });
 
-    it('says what a hook does in a verb, not its type name', () => {
+    it('says what kind of hook it is, on the one line the row has', () => {
         const { host } = canvas(hooked());
         const after = host.querySelectorAll('.pb-attached-side')[1];
-        expect(after.querySelector('.pb-hook-verb')?.textContent).toBe('run the skill');
+        expect(after.querySelector('.pb-hook-kind')?.textContent).toBe('skill');
+    });
+
+    // A heading above rows one line tall was a third of the block's height, for
+    // a word the purple rule and `before`/`after` were already saying.
+    it('carries no HOOKS heading and no connector arms', () => {
+        const { host } = canvas(hooked());
+        expect(host.querySelector('.pb-attached-head')).toBeNull();
+        expect(host.querySelectorAll('.pb-attached-side')).toHaveLength(2);
     });
 
     it('cuts a long hook at a word, and keeps the whole of it on the title', () => {
@@ -216,6 +243,27 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         expect(host.querySelector('.pb-hook--stock')!.getAttribute('title')).toContain('git');
     });
 
+    // Hue alone is not a cue: it separates these from your own for anyone who
+    // can see the difference, and for nobody else.
+    it('marks the minority with a word, and leaves your own unmarked', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [stock('after')],
+                phases: [{
+                    name: 'gather', hooks: [],
+                    nodes: [node({ hooks: [{
+                        when: 'after', type: 'skill', summary: 'create-pr',
+                        anchor: 'resolve-dir', index: 0, note: '',
+                    }] })],
+                }],
+            })],
+        }));
+        const marked = Array.from(host.querySelectorAll('.pb-hook-ext'));
+        expect(marked).toHaveLength(1);
+        expect(marked[0].textContent).toBe('ext');
+        expect(marked[0].closest('.pb-hook')?.className).toContain('pb-hook--stock');
+    });
+
     it('says it is not edited here, and is still readable', () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('after')] })],
@@ -257,10 +305,19 @@ describe('one hue marks everything the project owns', () => {
         const { host } = canvas(swapped);
         expect(host.querySelector('.pb-template--yours')).not.toBeNull();
         // The count is a chip in the lane head; the section names are the title,
-        // since a lane is 300px and a heading can be any length.
-        expect(host.querySelector('.pb-template .pb-yours')?.textContent).toBe('1 §');
+        // since a lane is 300px and a heading can be any length. `§` on its own
+        // named nothing a reader could read.
+        expect(host.querySelector('.pb-template .pb-yours')?.textContent)
+            .toBe('template · 1');
         expect(host.querySelector('.pb-template')?.getAttribute('title'))
             .toContain('Requirements');
+    });
+
+    it('says the word when nothing in the template was replaced', () => {
+        const { host } = canvas(graph({
+            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: ['Requirements'], chosenBy: {} } })],
+        }));
+        expect(host.querySelector('.pb-template')?.textContent).toBe('template');
     });
 
     it('leaves a shipped node and a stock template unmarked', () => {
@@ -327,14 +384,23 @@ describe('a node says whether it can move, and why not', () => {
 });
 
 describe('what a step produces sits with its name', () => {
-    it('counts the artifacts at the top and names them on hover', () => {
+    // A green pill holding a bare `1` said neither what it counted nor why it
+    // was green. The facts line speaks in one voice now: `2 nodes · 1 file`.
+    it('counts the artifacts in words, and names them on hover', () => {
         const { host } = canvas();
         const chip = host.querySelector('.pb-step-facts .pb-produces');
 
-        expect(chip?.textContent).toContain('1');
+        expect(chip?.textContent).toBe('1 file');
         expect(chip?.getAttribute('title')).toBe('produces spec.md');
         // It used to be a footer line below every node in the lane.
         expect(host.querySelector('.pb-artifacts')).toBeNull();
+    });
+
+    it('says "files" once there is more than one', () => {
+        const { host } = canvas(graph({
+            steps: [step({ artifacts: ['spec.md', 'checklists/requirements.md'] })],
+        }));
+        expect(host.querySelector('.pb-produces')?.textContent).toBe('2 files');
     });
 
     it('says nothing when a step produces no file', () => {
@@ -344,6 +410,23 @@ describe('what a step produces sits with its name', () => {
 });
 
 describe('phases are the project\'s to name and group', () => {
+    // contentEditable with no role and no label reads to a screen reader as a
+    // heading, which is what it also looks like.
+    it('says the name is a field, and what field it is', () => {
+        const { host } = canvas();
+        const name = host.querySelector('.pb-phase-name') as HTMLElement;
+        expect(name.getAttribute('role')).toBe('textbox');
+        expect(name.getAttribute('aria-label')).toBe('Phase name');
+    });
+
+    // Hovering a heading to discover it can be typed into is not discovery.
+    it('puts the caret in the name from the phase menu', async () => {
+        const { host } = canvas();
+        await fromPhaseMenu(host, 0, 'Rename phase');
+        expect(document.activeElement)
+            .toBe(host.querySelectorAll('.pb-phase-name')[0]);
+    });
+
     it('renames a phase in place, and sends the whole grouping', () => {
         const { host, grouped } = canvas();
         const name = host.querySelector('.pb-phase-name') as HTMLElement;
@@ -414,55 +497,66 @@ describe('a phase is a block a project owns', () => {
         });
     }
 
-    // The phase's own split/merge tools. `+ node` shares the class and is now a
-    // button too, so it is excluded by name rather than by tag.
-    const tools = (host: HTMLElement, phase: number) =>
-        Array.from(host.querySelectorAll('.pb-phase')[phase]
-            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)'),
-        ) as HTMLButtonElement[];
+    // Five buttons at `opacity: 0` became one that is always there. Everything
+    // a phase can do is said in words inside it.
+    it('says everything a phase can do, in one resting control', async () => {
+        const { host } = canvas(three());
+        const labels = (await phaseMenu(host, 1))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(labels).toEqual([
+            'Add hook', 'Add node', 'Rename phase', 'Split phase',
+            'Merge into the phase above',
+        ]);
+    });
 
-    it('does not offer to reorder phases', () => {
+    it('does not offer to reorder phases', async () => {
         // A phase is a contiguous run of the step, so moving one moves its
         // nodes — and across every step this pipeline ships, not one such move
         // survives the `reads:` dependencies: 0 of 18. The arrows that used to
         // sit here fired, were refused by the writer, and left the panel
         // redrawn unchanged, which reads as a button that does nothing.
         const { host } = canvas(three());
-        const titles = tools(host, 1).map(button => button.title);
-        expect(titles.some(title => /move/i.test(title))).toBe(false);
+        const labels = (await phaseMenu(host, 1))
+            .map(o => o.textContent ?? '');
+        expect(labels.some(label => /move/i.test(label))).toBe(false);
     });
 
     // A phase's nodes have to land somewhere; dropping them would drop work.
-    it('folds a removed phase into the one above it', () => {
+    it('folds a removed phase into the one above it', async () => {
         const { host, grouped } = canvas(three());
-        tools(host, 1)[1].click();
+        await fromPhaseMenu(host, 1, 'Merge into the phase above');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
         ]);
     });
 
-    it('folds the first phase into the one below it', () => {
+    it('folds the first phase into the one below it', async () => {
         const { host, grouped } = canvas(three());
-        tools(host, 0)[1].click();
+        await fromPhaseMenu(host, 0, 'Merge into the phase above');
         expect(grouped[0][1]).toEqual([
             { name: 'author', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
         ]);
     });
 
-    it('will not remove the only phase a step has', () => {
-        const { host } = canvas(graph({
+    it('will not remove the only phase a step has', async () => {
+        const { host, grouped } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        expect(tools(host, 0)[1].disabled).toBe(true);
+        const options = await phaseMenu(host, 0);
+        const merge = options[4];
+        expect(merge.querySelector('.pb-menu-note')?.textContent)
+            .toBe('a step needs at least one phase');
+        merge.click();
+        expect(grouped).toEqual([]);
     });
 
     // A new phase is born empty, and an empty phase cannot be written — so it
     // takes a node from the phase it follows.
-    it('adds a phase by splitting the one before it', () => {
+    it('adds a phase by splitting the one before it', async () => {
         const { host, grouped } = canvas(three());
-        tools(host, 0)[0].click();
+        await fromPhaseMenu(host, 0, 'Split phase');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a'] },
             { name: 'new phase', nodes: ['b'] },
@@ -471,12 +565,14 @@ describe('a phase is a block a project owns', () => {
         ]);
     });
 
-    it('will not offer to split a phase that has only one node', () => {
-        // Disabled rather than silently doing nothing: the split has to take a
-        // node off the end, and a one-node phase has none to give.
+    it('will not offer to split a phase that has only one node', async () => {
+        // The row says why rather than vanishing: the split has to take a node
+        // off the end, and a one-node phase has none to give.
         const { host, grouped } = canvas(three());
-        expect(tools(host, 1)[0].disabled).toBe(true);
-        tools(host, 1)[0].click();
+        const options = await phaseMenu(host, 1);
+        expect(options[3].querySelector('.pb-menu-note')?.textContent)
+            .toBe('one node here, so there is nothing to split off');
+        options[3].click();
         expect(grouped).toEqual([]);
     });
 });
@@ -491,31 +587,28 @@ describe('a dropped node can be put back', () => {
 
     it('offers only the nodes this step actually dropped', async () => {
         const { host } = canvas(withDropped());
-        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
-        await flush();
+        await fromPhaseMenu(host, 0, 'Add node');
         const options = Array.from(host.querySelectorAll('.pb-menu-label'))
             .map(el => el.textContent);
         expect(options).toEqual(['branch', 'finalize']);
     });
 
-    it('still says where nodes come from when there are none to put back', () => {
+    it('still says where nodes come from when there are none to put back', async () => {
         // Hiding the control left "how do I add a node here?" with no answer
         // anywhere on screen — the thing that would have explained itself was
         // the thing that was absent.
         const { host } = canvas();
-        const control = host.querySelector('.pb-phase-add-node');
-        expect(control).not.toBeNull();
-        expect(control!.tagName).toBe('SPAN');
-        expect(control!.getAttribute('title')).toMatch(/drag it in from another phase/);
-        expect(control!.classList.contains('pb-menu-trigger--inert')).toBe(true);
+        const options = await phaseMenu(host, 0);
+        expect(options[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
+        expect(options[1].querySelector('.pb-menu-note')?.textContent)
+            .toMatch(/drag one in\s+from another/);
     });
 
     // The order says when it runs and the phase says where it sits; one without
     // the other is a pipeline that contradicts itself.
     it('sends the order and the grouping together', async () => {
         const { host, addedNodes } = canvas(withDropped());
-        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
-        await flush();
+        await fromPhaseMenu(host, 0, 'Add node');
         (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
 
         expect(addedNodes).toEqual([{
@@ -533,36 +626,46 @@ describe("a step has instructions of its own", () => {
         expect(frames).toEqual(['specify']);
     });
 
-    // Rewriting each shipped node in place is the wrong shape for "use their
-    // plan instead of ours" — you want one file to paste into.
-    it('hands the whole step to one document of your own', () => {
-        const { host, replacedSteps } = canvas();
-        const button = host.querySelector('.pb-step-replace') as HTMLButtonElement;
-        expect(button.textContent).toBe('Make it ours');
-        button.click();
-        expect(replacedSteps).toEqual(['specify']);
+    // Handing a whole step to one document of your own is a rare and
+    // consequential action, and it reads as one in the side column. On the
+    // board it was a hover-only button and a fourth word for ownership.
+    it('carries no step-level action on the board', () => {
+        const { host } = canvas();
+        expect(host.querySelector('.pb-step-replace')).toBeNull();
+        expect(host.querySelector('.pb-step-head')?.textContent)
+            .not.toContain('Make it ours');
     });
 });
 
 describe('attaching work', () => {
     it('offers one add-hook per phase, not a pair on every block', () => {
         const { host } = canvas();   // two phases, one node each
-        expect(host.querySelectorAll('.pb-attach')).toHaveLength(2);
+        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
     });
 
     // "Attach" read as "add a block". It adds a hook, and says so.
-    it('says a hook is what it adds', () => {
+    it('says a hook is what it adds', async () => {
         const { host } = canvas();
-        const button = host.querySelector('.pb-attach')!;
-        expect(button.textContent).toContain('Add hook');
-        expect(button.getAttribute('title')).toContain('Add a hook in gather');
-        expect(button.querySelector('svg')).not.toBeNull();
+        const options = await phaseMenu(host, 0);
+        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
+        expect(options[0].querySelector('.pb-menu-note')?.textContent)
+            .toBe('a skill, an instruction or a command');
     });
 
-    it('names the phase it would attach to', () => {
+    it('names the phase it would attach to', async () => {
         const { host, added } = canvas();
-        (host.querySelector('.pb-attach') as HTMLButtonElement).click();
+        await fromPhaseMenu(host, 0, 'Add hook');
         expect(added).toEqual([['specify', 'gather', 'before']]);
+    });
+
+    // The one control on a phase is there without a pointer, and says whose
+    // phase it belongs to.
+    it('is reachable at rest, and named', () => {
+        const { host } = canvas();
+        const control = host.querySelector('.pb-phase-add') as HTMLElement;
+        expect(control.tagName).toBe('BUTTON');
+        expect(control.getAttribute('aria-label')).toBe('Add or change gather');
+        expect(control.getAttribute('aria-haspopup')).toBe('menu');
     });
 });
 
@@ -655,18 +758,22 @@ describe('a hook can be changed once it is there', () => {
 });
 
 describe('the changed mark says what changed', () => {
-    it('names the change on the dot', () => {
+    // A 6px dot with no role said nothing without a hover, and there is no
+    // hover on a touch screen.
+    it('says the word, and names the change on it', () => {
         const { host } = canvas(graph({
             steps: [step({ changes: { ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'] } })],
         }));
-        const title = host.querySelector('.pb-changed-dot')?.getAttribute('title') ?? '';
+        const mark = host.querySelector('.pb-changed');
+        expect(mark?.textContent).toBe('changed');
+        const title = mark?.getAttribute('title') ?? '';
         expect(title).toContain('2 hooks');
         expect(title).toContain('rewrote draft-spec');
     });
 
     it('shows no mark on a step the project left alone', () => {
         const { host } = canvas();
-        expect(host.querySelector('.pb-changed-dot')).toBeNull();
+        expect(host.querySelector('.pb-changed')).toBeNull();
     });
 
     // One fact, one mark: a CSS ::after and a real element both drew a dot, and
@@ -675,27 +782,131 @@ describe('the changed mark says what changed', () => {
         const { host } = canvas(graph({
             steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })],
         }));
-        expect(host.querySelectorAll('.pb-changed-dot')).toHaveLength(1);
-        const css = Array.from(document.styleSheets).length;
-        void css;
+        expect(host.querySelectorAll('.pb-changed')).toHaveLength(1);
+    });
+
+    // `§` is not a word. The chip says what it is and how much of it is yours.
+    it('names the template rather than marking it with a glyph', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                changes: { ...NO_CHANGES },
+                template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [], chosenBy: {} },
+            })],
+        }));
+        expect(host.querySelector('.pb-step-facts')?.textContent).not.toContain('§');
+        expect(host.querySelector('.pb-changed')?.getAttribute('title'))
+            .toContain('template sections Requirements');
     });
 });
 
-describe('what the + node picker offers', () => {
-    // A node the recipe took out and one the step ships but does not run read
-    // identically as bare ids, so the list gave no clue which was which.
-    it('says what picking one means, rather than gluing a suffix to its name', async () => {
-        const { host } = canvas(graph({
-            steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
+describe('a node card says what its node does, and can be taken out of the run', () => {
+    const kinds = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'gather', hooks: [],
+                nodes: [
+                    node({ id: 'gather-context', kind: 'investigate' }),
+                    node({ id: 'draft-spec', kind: 'author' }),
+                    node({ id: 'constitution-check', kind: 'gate' }),
+                    node({ id: 'resolve-dir', kind: 'control' }),
+                ],
+            }],
+        })],
+    });
+
+    it('carries its kind on the card, not only in the pane you have to open', () => {
+        const { host } = canvas(kinds());
+        expect(Array.from(host.querySelectorAll('.pb-node'))
+            .map(el => el.className.match(/pb-node--(\w+)/)?.[1])).toEqual([
+            'investigate', 'author', 'gate', 'control',
+        ]);
+    });
+
+    // The refusal at the writer named an action the panel could not perform.
+    it('sends the order and the grouping the drag handler would', () => {
+        const { host, removedNodes } = canvas(graph({
+            steps: [step({
+                phases: [
+                    { name: 'gather', hooks: [], nodes: [node({ id: 'a' }), node({ id: 'b' })] },
+                    { name: 'author', hooks: [], nodes: [node({ id: 'c' })] },
+                ],
+            })],
         }));
-        (host.querySelector('.pb-phase-add-node') as HTMLButtonElement).click();
-        await flush();
+        (host.querySelectorAll('.pb-node-drop')[1] as HTMLButtonElement).click();
+
+        expect(removedNodes).toEqual([{
+            c: 'specify', n: 'b',
+            order: ['a', 'c'],
+            phases: [{ name: 'gather', nodes: ['a'] }, { name: 'author', nodes: ['c'] }],
+        }]);
+    });
+
+    it('drops a phase the removal emptied', () => {
+        const { host, removedNodes } = canvas();
+        (host.querySelectorAll('.pb-node-drop')[0] as HTMLButtonElement).click();
+        expect(removedNodes[0].phases)
+            .toEqual([{ name: 'author', nodes: ['draft-spec'] }]);
+    });
+
+    // "Undo" on a node card deleted the project's copy with no notice, and is
+    // not what undo means anywhere else in this panel.
+    it('says nothing about undo', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'author', hooks: [],
+                    nodes: [node({ id: 'draft-spec', replaced: true })],
+                }],
+            })],
+        }));
+        expect(host.querySelector('.pb-node-action')).toBeNull();
+        expect(host.querySelector('.pb-node')?.textContent).not.toContain('Undo');
+    });
+});
+
+describe('what the Add node picker offers', () => {
+    // A node the recipe took out and one the step ships but does not run read
+    // identically as bare ids, so the list gave no clue which was which. And a
+    // summary the offer already carries was being thrown away for one of them.
+    it('says what the node is AND where it went, rather than one or the other', async () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                dropped: ['branch', 'review-gaps'], addOns: ['review-gaps'],
+                offers: {
+                    branch: { name: 'Create the feature branch', summary: 'Creates the feature branch' },
+                    'review-gaps': { name: 'Review the task list for gaps', summary: 'Attacks the task list for gaps before it runs' },
+                },
+            })],
+        }));
+        await fromPhaseMenu(host, 0, 'Add node');
         const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
             label: el.querySelector('.pb-menu-label')?.textContent,
             note: el.querySelector('.pb-menu-note')?.textContent,
         }));
         expect(rows).toEqual([
-            { label: 'branch', note: 'this project took it out' },
+            {
+                label: 'Create the feature branch',
+                note: 'Creates the feature branch · removed from this run',
+            },
+            {
+                label: 'Review the task list for gaps',
+                note: 'Attacks the task list for gaps before it runs · '
+                    + 'specify ships this and does not run it',
+            },
+        ]);
+    });
+
+    it('falls back to where it went when the offer carries no summary', async () => {
+        const { host } = canvas(graph({
+            steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
+        }));
+        await fromPhaseMenu(host, 0, 'Add node');
+        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
+            label: el.querySelector('.pb-menu-label')?.textContent,
+            note: el.querySelector('.pb-menu-note')?.textContent,
+        }));
+        expect(rows).toEqual([
+            { label: 'branch', note: 'removed from this run' },
             { label: 'clarify', note: 'specify ships this and does not run it' },
         ]);
     });
