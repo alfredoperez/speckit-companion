@@ -164,9 +164,9 @@ body {
 }
 
 .builder-chip--customised {
-    color: var(--info);
-    border-color: var(--info);
-    background: var(--info-subtle);
+    color: var(--review);
+    border-color: var(--review);
+    background: var(--review-subtle);
 }
 
 .builder-chip-caret {
@@ -400,9 +400,12 @@ body {
     color: var(--text-muted);
 }
 
+/* The tail sizes to its content, so a card that never wraps would set the
+   column's width. This one wraps instead. */
 .pb-aside {
     display: flex;
     flex-direction: column;
+    max-width: 160px;
     gap: 2px;
     padding: var(--space-2) var(--space-3);
     background: var(--bg-secondary);

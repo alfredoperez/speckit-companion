@@ -8,7 +8,8 @@
  */
 
 import { useState } from 'preact/hooks';
-import { PipelineBuildKind, PipelineGraph, PipelineStep } from '../../../src/protocol/pipeline';
+import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
+import { changed } from './changes';
 
 interface Props {
     graph: PipelineGraph;
@@ -82,14 +83,6 @@ function buildNotice(state: PipelineBuildKind): { text: string; tone: string } |
         case 'unconfigured':
             return null;
     }
-}
-
-/** What the board marks as changed, so the chip cannot say otherwise. */
-function changed(step: PipelineStep): boolean {
-    const c = step.changes;
-    return Boolean(c.added.length || c.removed.length || c.reordered || c.hooks
-        || c.decisions.length || c.replaced.length || c.phases.length
-        || step.template?.sections.length);
 }
 
 function changeSummary(graph: PipelineGraph): string[] {

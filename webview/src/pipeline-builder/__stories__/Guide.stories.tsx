@@ -59,8 +59,6 @@ type Story = StoryObj;
 
 const WHOLE = graph([SPECIFY, PLAN, TASKS, IMPLEMENT], {
     configured: true,
-    // Two of the four carry hooks this project attached.
-    customised: true,
     workflows: { available: ['shipped'], active: '' },
 });
 
