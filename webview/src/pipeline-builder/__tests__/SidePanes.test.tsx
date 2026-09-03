@@ -519,8 +519,16 @@ describe('the kind tick is three steps of one neutral', () => {
             new RegExp(`--${kind}[^}]*background:\\s*var\\((--[a-z-]+)\\)`).exec(rules)?.[1];
         expect(weight('author')).toBe('--text-body');
         expect(weight('gate')).toBe('--text-secondary');
+        expect(weight('investigate')).toBe('--text-muted');
+        expect(weight('control')).toBe('--text-muted');
         expect(rules).toMatch(/--investigate,\s*\n\.pb-kind-tick--control/);
-        expect(rules).toContain('var(--border)');
+    });
+
+    // A chrome token is the colour of the thing behind the tick: `--border` sat at
+    // 1.06:1 on a dark panel, under the 3:1 a non-text indicator has to clear.
+    it('takes every weight off the foreground, never off the panel chrome', () => {
+        expect(rules).not.toContain('var(--border)');
+        expect(rules).not.toContain('var(--border-hover)');
     });
 
     // Two steps of grey at 3px is not a difference every eye makes.
