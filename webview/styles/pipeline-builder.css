@@ -628,20 +628,21 @@ body {
     min-width: 0;
     background: var(--bg-primary);
     border: 1px solid var(--border);
-    /* The tick that carries the node's kind. Neutral by default: `investigate`
-       and `control` neither produce a file nor stop the run, so the tick stays
-       the card's own edge for them. */
+    /* The tick that carries the node's kind. The quiet end of the ramp for
+       `investigate` and `control`, which neither produce a file nor stop the
+       run. Not `--border`: an indicator is judged against 3:1, and the card's
+       own edge measures 1.06 on dark — blank space beside a legend label. */
     border-left-width: 3px;
-    border-left-color: var(--border);
+    border-left-color: var(--text-muted);
     border-radius: var(--radius-sm);
 }
 
 /* Weight, not hue: three steps of one neutral. Every colour this panel has left
    already means something else — green produces, purple yours, blue selection,
    and amber paints the stale-build banner one row above these same cards — so a
-   fifth hue would be read as one of those. `investigate` and `control` keep the
-   card's own edge, set above. A gate carries the word as well, since two steps
-   of grey is a difference not everyone can see. */
+   fifth hue would be read as one of those. `investigate` and `control` sit at
+   the quiet end of that ramp, set above. A gate carries the word as well, since
+   two steps of grey is a difference not everyone can see. */
 .pb-node--author { border-left-color: var(--text-body); }
 .pb-node--gate { border-left-color: var(--text-secondary); }
 
@@ -768,7 +769,6 @@ body {
     border-radius: 999px;
 }
 
-.pb-template--yours .pb-template-file { color: var(--review); }
 
 /* ---- Hooks: drawn on the side they run, pointing at their anchor ---- */
 
