@@ -148,18 +148,31 @@ const STORIES = [
     // ── The pipeline builder guide (docs/pipeline-builder.md) ──
     // One shot per gesture the guide teaches. Re-shoot just these with
     // `node scripts/capture-docs-images.mjs --only builder-`.
+    //
+    // An `out` filename is permanent: the published README resolves images
+    // against `main`, so a rename retroactively 404s the Marketplace listing.
+    // Four stories were renamed from "block" to "node" when the guide dropped
+    // the word; they still write the files they always wrote, which is why
+    // `builder-read-block.png` is fed by "reading a node".
+    { story: 'pipeline-builder-guide--two-lanes', out: 'builder-lanes.png' },
     { story: 'pipeline-builder-guide--the-board', out: 'builder-board.png' },
     { story: 'pipeline-builder-guide--a-step-header', out: 'builder-step.png' },
-    { story: 'pipeline-builder-guide--reading-a-block', out: 'builder-read-block.png' },
-    { story: 'pipeline-builder-guide--replacing-a-block', out: 'builder-replace.png' },
-    { story: 'pipeline-builder-guide--adding-a-block', out: 'builder-add-node.png' },
+    { story: 'pipeline-builder-guide--the-phase-menu', out: 'builder-phase-menu.png' },
+    { story: 'pipeline-builder-guide--what-changed', out: 'builder-changes.png' },
+    { story: 'pipeline-builder-guide--reading-a-node', out: 'builder-read-block.png' },
+    { story: 'pipeline-builder-guide--a-node-you-rewrote', out: 'builder-yours.png' },
+    { story: 'pipeline-builder-guide--the-way-back', out: 'builder-revert.png' },
+    { story: 'pipeline-builder-guide--replacing-a-node', out: 'builder-replace.png' },
+    { story: 'pipeline-builder-guide--adding-a-node', out: 'builder-add-node.png' },
     { story: 'pipeline-builder-guide--changing-the-document', out: 'builder-template.png' },
-    { story: 'pipeline-builder-guide--work-attached-to-a-block', out: 'builder-hooks.png' },
+    { story: 'pipeline-builder-guide--work-attached-to-a-node', out: 'builder-hooks.png' },
     { story: 'pipeline-builder-guide--attaching-work', out: 'builder-attach.png' },
     { story: 'pipeline-builder-guide--starting-from-a-preset', out: 'builder-preset.png' },
     { story: 'pipeline-builder-guide--adding-a-step', out: 'builder-new-step.png' },
     { story: 'pipeline-builder-guide--a-step-of-your-own', out: 'builder-own-step.png' },
     { story: 'pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
+    { story: 'pipeline-builder-guide--what-the-build-did', out: 'builder-built.png' },
+    { story: 'pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────

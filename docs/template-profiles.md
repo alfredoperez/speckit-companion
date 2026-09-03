@@ -65,9 +65,9 @@ On the **command path**, the `simple` verdict folds plan/tasks inside the `speci
 
 The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-complete`) that writes `status: completed` — the command writes it, never the AI. That same step also **folds the feature's changes back into the living specs it touched**: before the fold, the assistant authors a `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` block per loaded-and-changed capability (each marked `<!-- capability: <name> -->`) into the feature `spec.md`, then `write-context.py --fold-living-spec` routes each block to its capability's `capabilities/<name>/spec.md` — a feature that changed several capabilities updates each, and each spec receives only its own requirements. The extension/scripts never invent spec content; the assistant authors the deltas from the real change and the Python only applies them, so the fold shows up in the feature's PR diff. Both the decomposed `implement` command (the `complete` node) and the standalone `mark-complete` command carry the authoring instruction. Runs pause at the review gates and resume from the exact node with `specify workflow resume <run_id>`; each step still captures into `.spec-context.json`.
 
-## Picking a different block or shape
+## Picking a different node or shape
 
-The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first.
+The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first. This section is the single list of what ships; the [Pipeline Builder guide](./pipeline-builder.md) teaches the gestures and links here rather than keeping a second copy that can drift.
 
 **A variant is a shipped node with its own id.** `speckit-extension/nodes/<step>/_order.yml` names them under `optional:`, and `variants:` says which default node each stands in for:
 
@@ -81,7 +81,23 @@ variants:
   quality-checklist: [quality-checklist-blocking]
 ```
 
-A node with alternatives shows **Replace** in the inspector. Picking one rewrites the step's order and grouping with that id in place of the old one — the same recipe write a drag makes — so the block stays editable, restorable, and yours the moment you save over it. A node listed under `optional:` but not under `variants:` is an add-on: it appears in the phase's **+ node** picker instead.
+A node with alternatives shows **Replace** in its panel. Picking one rewrites the step's order and grouping with that id in place of the old one — the same recipe write a drag makes — so the node stays editable, restorable, and yours the moment you save over it. A node listed under `optional:` but not under `variants:` is an add-on: it appears under **Add node** in the phase's `+` menu instead.
+
+Shipped alternatives today:
+
+| Step | Instead of | You can run |
+|---|---|---|
+| specify | Resolve the spec folder | `resolve-dir-git` — numbered against every branch, not just what is on disk |
+| specify | Draft the spec | `draft-spec-delta` — only what changes, for a system that already exists |
+| specify | Draft the spec | `draft-spec-bugfix` — defect, expected, and what must not change |
+| specify | Quality checklist | `quality-checklist-blocking` — loops, then stops and asks |
+
+Shipped add-ons today, offered under **Add node** and not run by default:
+
+| Step | Add-on | What it does |
+|---|---|---|
+| tasks | `review-gaps` | attacks the task list before it runs — the destructive and edge-case interactions a lean spec under-specifies |
+| implement | `verify-manually` | stops and has a person open the thing before the step counts as done |
 
 Two rules make swaps work, and both are worth knowing if you write a variant:
 
@@ -99,13 +115,23 @@ summary: Observable outcomes instead of prioritized user stories.
 ---
 ```
 
-The `§` button on a step opens its document's shape: one row per section the template has, each offering the fragments written for it and **As it ships**. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
+The **template** chip on a step opens its document's shape: one row per section the template has, each offering the fragments written for it and **As shipped**. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
 
 The resolved copy is written beside the built commands, and **the built command names it**. Companion's authoring nodes carry the document's shape in their own instructions rather than loading a template — that is where the leaner spec comes from — so a resolved template on its own was a correct file the assistant had no reason to open. A step whose sections a project changed now carries one line above the node that writes the document, naming the file and the sections to follow. A step nobody reshaped carries nothing, so an unchanged project's body stays byte-identical.
 
-Shipped today: `outcomes` and `ears-requirements` as alternatives to prioritized user stories, `stories-classic` and `technical-context-classic` for the stock shapes, and `tasks-self-verify` / `tasks-coding-only` / `tasks-demo-line` as constraint blocks for the task list.
+Shipped fragments today:
 
-**A step is a directory of nodes**, so a project can add one. **+ step** at the end of the board writes `.specify/companion/nodes/<step>/` seeded runnable — a frame, an `_order.yml`, and one authoring node — and opens that node to edit. The build finds it the same way it finds the shipped four (`decomposed_commands()` is a directory listing), so it assembles into `/speckit.companion.<step>` and the capture layer records runs of it: the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
+| For | Section | Fragment | Instead gives you |
+|---|---|---|---|
+| specify | User Scenarios & Testing | `outcomes` | observable outcomes instead of prioritized user stories |
+| specify | User Scenarios & Testing | `ears-requirements` | numbered requirements with WHEN/THEN/SHALL criteria |
+| specify | User Scenarios & Testing | `stories-classic` | stock spec-kit's three P1/P2/P3 stories |
+| plan | Technical Context | `technical-context-classic` | stock spec-kit's full stack block |
+| tasks | Format | `tasks-self-verify` | a verification line on every task |
+| tasks | Format | `tasks-demo-line` | a demo line per task |
+| tasks | Notes | `tasks-coding-only` | coding tasks only |
+
+**A step is a directory of nodes**, so a project can add one. **Add step** at the end of the board writes `.specify/companion/nodes/<step>/` seeded runnable — a frame, an `_order.yml`, and one authoring node — and opens that node to edit. The build finds it the same way it finds the shipped four (`decomposed_commands()` is a directory listing), so it assembles into `/speckit.companion.<step>` and the capture layer records runs of it: the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
 
 Where it runs is one key in its own `_order.yml`:
 

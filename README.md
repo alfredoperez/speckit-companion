@@ -98,23 +98,27 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 ### See the pipeline your project runs
 
-The Companion pipeline is assembled from blocks: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
+The Companion pipeline is assembled: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The four steps are columns in run order, with `auto` above the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached — each drawn on the side it runs, with a connector into the block it acts on.
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`. Full guide: [Pipeline builder](./docs/pipeline-builder.md).
 
 **One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
 
-**Several ways of working.** A workflow is a whole named configuration in `.specify/companion/workflows/`. Switch between them from the header and everything swaps at once — node order, hooks, templates, routing — so a one-line fix and a client deliverable can run different pipelines out of the same repository. Nodes and fragments are shared across all of them, and "as it ships" is always there to compare against.
+**Several ways of working.** A workflow is a whole named configuration in `.specify/companion/workflows/`. Switch between them from the header and everything swaps at once — node order, hooks, templates, routing — so a one-line fix and a client deliverable can run different pipelines out of the same repository. Nodes and fragments are shared across all of them, and **As shipped** is always there to compare against.
 
-**Start from something.** A new workflow asks what to begin with: what you run today, the pipeline as it ships, or one of two Companion ships. **Classic spec-kit** puts the stock document shapes back — prioritized P1/P2/P3 user stories, the full Technical Context block. **Brownfield** is for changing a system that already exists: the spec says only what changes, the task list is attacked before it runs, and a person opens the thing before it counts as done. Whichever you pick is copied in and yours to change from there.
+**Start from something.** A new workflow offers what to begin with as cards: what you run today, or one of two whole configurations Companion ships. **Classic spec-kit** puts the stock document shapes back — prioritized P1/P2/P3 user stories, the full Technical Context block. **Brownfield** is for changing a system that already exists: the spec says only what changes, the task list is attacked before it runs, and a person opens the thing before it counts as done. Whichever you pick is copied in and yours to change from there.
 
-**Add a step of your own.** **+ step** at the end of the board gives the run a turn it did not have — a review pass after implement, an audit you launch when you want it. Say where it goes and what it writes; the panel writes a step that already runs and opens the one node there is to edit. It gets its own `/speckit.companion.<name>` command and everything a shipped step has.
+**Add a step of your own.** **Add step** at the end of the board gives the run a turn it did not have — a review pass after implement, an audit you launch when you want it. Say where it goes and what it writes; the panel writes a step that already runs and opens the one node there is to edit. It gets its own `/speckit.companion.<name>` command and everything a shipped step has.
 
-**Rearrange it.** Drag a node to move it within its phase. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
+**Every phase says what it can do.** One `+` on each phase rule opens the lot: add a hook, add a node, rename the phase, split it, merge it into its neighbour. Nothing waits for a hover, and a row that cannot run here is shown greyed with the reason, so a control you never needed still teaches you it exists.
 
-**Attach your own work.** **Attach** on any phase asks what should happen there — invoke a **skill** you already have, follow an **instruction**, or run a **command**. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
+**Every write says what it did.** A line at the foot of the panel names the change, offers **Undo** where there is one, and reminds you that a change is not in the pipeline until Build writes it. Build and Preview answer in the header too, rather than taking the editor to say they worked.
 
-**Rewrite a node in your own words.** Press **Replace** on any node and its instructions are copied to `.specify/companion/nodes/<step>/<node>.md`, where you can edit them. Build, and your version is what your assistant reads; the node is marked **YOURS** in the panel until you press **Use shipped** to hand it back. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
+**Rearrange it.** Drag a node to move it within its phase, or use **Move up** and **Move down** in its panel. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
+
+**Attach your own work.** Every phase carries a `+` holding **Add hook**, which asks where it runs and what it is — a **skill** you already have, an **instruction**, a shell **command**, or one of your own nodes. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
+
+**Rewrite a node in your own words.** Click a node, press **Edit**, and save: that write is what copies it to `.specify/companion/nodes/<step>/<node>.md`, so making it yours and doing the thing you came to do are one action. Build, and your version is what your assistant reads; the node is marked `yours` until **Use the shipped node** hands it back, with an undo in the status line. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
 
 Build from the same panel, or from the palette:
 
@@ -147,6 +151,7 @@ Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a termina
 - [Getting started](./docs/getting-started.md): full install story, required vs. optional pieces, platform support
 - [Spec viewer reference](./docs/viewer.md): reading, reviewing, creating, safety affordances
 - [Sidebar reference](./docs/sidebar.md): every view, icon, and action
+- [Pipeline builder](./docs/pipeline-builder.md): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
 - [Configuration](./docs/configuration.md): all settings, custom workflows, custom commands
 - [Supported AI providers](./docs/providers.md): the compatibility matrix and dispatch styles
 - [Living specs](./speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
