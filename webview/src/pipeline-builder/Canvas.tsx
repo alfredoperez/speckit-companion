@@ -90,6 +90,25 @@ function flatOrder(step: PipelineStep): string[] {
     return step.phases.flatMap(phase => phase.nodes.map(n => n.id));
 }
 
+/**
+ * A step's order and grouping with one node taken out, or null when it cannot be.
+ *
+ * A phase emptied by the removal goes with it, since an empty phase cannot be
+ * written — and a step whose every phase empties cannot be written at all, so
+ * that removal is refused here rather than sent and refused by the writer. The
+ * board and the side column both take a node out; deriving this twice is how
+ * they came to disagree, and the disagreement was a button that fired, was
+ * refused, and redrew the panel unchanged.
+ */
+export function withoutNode(step: PipelineStep, nodeId: string):
+{ order: string[]; phases: Array<{ name: string; nodes: string[] }> } | null {
+    const phases = step.phases
+        .map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id).filter(id => id !== nodeId) }))
+        .filter(p => p.nodes.length > 0);
+    if (phases.length === 0) { return null; }
+    return { order: phases.flatMap(p => p.nodes), phases };
+}
+
 /** That list with `moved` taken out and put back before `target`. */
 function reordered(order: string[], moved: string, target: string): string[] {
     const without = order.filter(id => id !== moved);
@@ -112,6 +131,11 @@ function shellName(line: string): string {
     if (script < 0) { return line; }
     const base = parts[script].split('/').pop() ?? parts[script];
     return [base, ...parts.slice(script + 1)].join(' ');
+}
+
+/** A count and its noun, agreeing. */
+function count(n: number): string {
+    return `${n}${n === 1 ? ' node' : ' nodes'}`;
 }
 
 /** Cut at a word boundary, so a chip never ends mid-token. */
@@ -188,6 +212,8 @@ type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
     onEditHook: (hook: PipelineHook) => void;
     /** Stop running one node, with the order and the grouping a drag would send. */
     onRemove: (nodeId: string) => void;
+    /** Whether taking it out would leave a step that can still be written. */
+    canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
     step: string;
 };
@@ -385,10 +411,16 @@ function Node({ node, actions, stock, seams }: {
                         ? "Read this project's instructions for this node"
                         : 'Read the instructions this node contributes'}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.writes.length > 0
+                    {(node.replaced || node.kind === 'gate' || node.writes.length > 0
                         || node.mayWrite.length > 0) && (
                         <span class="pb-node-meta">
                             {node.replaced && <span class="pb-yours">yours</span>}
+                            {/* In a word, not a hue: every colour this panel
+                                has left already means something else. */}
+                            {node.kind === 'gate' && (
+                                <span class="pb-node-gate"
+                                    title="This node can stop the run">gate</span>
+                            )}
                             {node.writes.map(file => (
                                 <span key={file} class="pb-writes"
                                     title="this node produces it">{file}</span>
@@ -412,11 +444,16 @@ function Node({ node, actions, stock, seams }: {
                     saving that edit is what makes it yours — so a separate step
                     stood between someone and the thing they came to do. Going
                     back to the shipped node lives in that same panel. */}
-                <button class="pb-node-drop"
-                    title={`Stop running ${node.name}. The file stays, so it is `
-                        + 'still on offer under Add node.'}
-                    aria-label={`Stop running ${node.name}`}
-                    onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
+                {/* Absent, not inert, on the last node a step has: taking it out
+                    would leave a step with no phases, which cannot be written.
+                    A step added through "Add step" ships with exactly one. */}
+                {actions.canRemove(node.id) && (
+                    <button class="pb-node-drop"
+                        title={`Stop running ${node.name}. The file stays, so it is `
+                            + 'still on offer under Add node.'}
+                        aria-label={`Stop running ${node.name}`}
+                        onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
+                )}
             </div>
             <Attached before={before} after={after}
                 stockBefore={stock?.before} stockAfter={stock?.after}
@@ -465,25 +502,9 @@ interface PhaseControls {
     canSplit: boolean;
     /** A step needs at least one phase, so the last one cannot be removed. */
     only: boolean;
+    /** The first phase has nothing above it, so its nodes merge downward. */
+    first: boolean;
 }
-
-/**
- * What a phase's one resting control offers, in the order it offers it.
- *
- * Every one of these used to be a separate button that was `opacity: 0` until
- * the pointer arrived, so the board showed nothing that could change anything
- * and touch reached none of it. One `+` on the rule, always there, and the
- * five things it can do said in words.
- */
-const PHASE_ACTIONS = ['hook', 'node', 'rename', 'split', 'merge'] as const;
-
-const PHASE_LABELS: Record<(typeof PHASE_ACTIONS)[number], string> = {
-    hook: 'Add hook',
-    node: 'Add node',
-    rename: 'Rename phase',
-    split: 'Split phase',
-    merge: 'Merge into the phase above',
-};
 
 function Phase({ phase, actions, controls }: {
     phase: PipelinePhase;
@@ -524,27 +545,56 @@ function Phase({ phase, actions, controls }: {
         selection?.addRange(range);
     };
 
-    const note: Record<(typeof PHASE_ACTIONS)[number], string> = {
-        hook: 'a skill, an instruction or a command',
-        node: controls.dropped.length
-            ? `${controls.dropped.length} on offer`
-            : `every node ${controls.step} has is already in a phase — drag one in `
-              + `from another, or write your own at .specify/companion/nodes/${controls.step}/`,
-        rename: 'its hooks follow the new name',
-        split: controls.canSplit
-            ? 'its last node starts a new phase after it'
-            : 'one node here, so there is nothing to split off',
-        merge: controls.only
-            ? 'a step needs at least one phase'
-            : 'its nodes go with it',
-    };
+    /**
+     * What this phase can actually do, in the order it offers it.
+     *
+     * Every one of these used to be a separate button that was `opacity: 0`
+     * until the pointer arrived, so the board showed nothing that could change
+     * anything and touch reached none of it. One `+` on the rule, always there.
+     *
+     * A row is here only when picking it would do something. `Menu` has no
+     * per-option disabled state, so an entry that cannot run would be a live
+     * row that silently does nothing — and a note saying why is a reason, not
+     * a state. The two that can lapse come back the moment they can act: a
+     * phase can be split once it holds two nodes, and merged once the step
+     * holds two phases.
+     */
+    const offered: Array<{ id: string; label: string; note: string }> = [
+        { id: 'hook', label: 'Add hook', note: 'a skill, an instruction or a command' },
+    ];
+    if (controls.dropped.length) {
+        offered.push({
+            id: 'node', label: 'Add node',
+            note: `${controls.dropped.length} on offer`,
+        });
+    }
+    offered.push({ id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' });
+    if (controls.canSplit) {
+        offered.push({
+            id: 'split', label: 'Split phase',
+            note: 'its last node starts a new phase after it',
+        });
+    }
+    if (!controls.only) {
+        // The first phase has nothing above it, so its nodes go down into the
+        // second. The label used to say "above" in both directions.
+        offered.push(controls.first
+            ? {
+                id: 'merge', label: 'Merge into the phase below',
+                note: 'nothing sits above this one, so its nodes go down',
+            }
+            : {
+                id: 'merge', label: 'Merge into the phase above',
+                note: 'its nodes go with it',
+            });
+    }
 
     const act = (id: string) => {
         if (id === 'hook') { actions.onAdd(phase.name); }
-        if (id === 'node' && controls.dropped.length) { setPicking(true); }
+        if (id === 'node') { setPicking(true); }
         if (id === 'rename') { startRename(); }
-        if (id === 'split' && controls.canSplit) { controls.onAddPhaseAfter(phase.name); }
-        if (id === 'merge' && !controls.only) { controls.onRemove(phase.name); }
+        if (id === 'split') { controls.onAddPhaseAfter(phase.name); }
+        if (id === 'merge') { controls.onRemove(phase.name); }
     };
 
     return (
@@ -605,9 +655,7 @@ function Phase({ phase, actions, controls }: {
                         align="right"
                         label={`Add or change ${phase.name}`}
                         title={`Add or change ${phase.name}`}
-                        options={PHASE_ACTIONS.map(id => ({
-                            id, label: PHASE_LABELS[id], note: note[id],
-                        }))}
+                        options={offered}
                         onPick={act}
                     />
                 )}
@@ -693,7 +741,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove'>;
+    actions: Omit<NodeActions,
+        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove'>;
     onReorder: Props['onReorder'];
     onAddHook: Props['onAddHook'];
     onEditHook: Props['onEditHook'];
@@ -749,14 +798,12 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
         onAdd: anchor => onAddHook(step.name, anchor, 'before'),
         onEditHook: hook => onEditHook(step.name, hook),
-        // Order and grouping go together here for the same reason they do on a
-        // drag: a node in one and not the other is a step contradicting itself.
         onRemove: nodeId => {
-            const phases = settled(grouping().map(phase => ({
-                ...phase, nodes: phase.nodes.filter(id => id !== nodeId),
-            })));
-            onRemoveNode(step.name, nodeId, phases.flatMap(p => p.nodes), phases);
+            const shape = withoutNode(step, nodeId);
+            if (!shape) { return; }
+            onRemoveNode(step.name, nodeId, shape.order, shape.phases);
         },
+        canRemove: nodeId => withoutNode(step, nodeId) !== null,
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
@@ -785,7 +832,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     )}
                 </div>
                 <div class="pb-step-facts">
-                    <span class="pb-step-counts">{nodes} nodes</span>
+                    <span class="pb-step-counts">{count(nodes)}</span>
                     {step.artifacts.length > 0 && (
                         <>
                             <span class="pb-fact-dot" aria-hidden="true">·</span>
@@ -835,6 +882,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                                 ? step.stockHooks.filter(h => h.when === 'after') : [],
                             canSplit: phase.nodes.length > 1,
                             only: step.phases.length === 1,
+                            first: at === 0,
                             // The name is a hook anchor, so the hooks come with it.
                             onRename: (from, to) => onSetPhases(step.name, settled(
                                 grouping().map(p => p.name === from ? { ...p, name: to } : p)),
@@ -926,7 +974,7 @@ export function Canvas(
                                       + 'hands-off'}
                             </span>
                             <span class="pb-aside-counts">
-                                {step.phases.reduce((n, p) => n + p.nodes.length, 0)} nodes
+                                {count(step.phases.reduce((n, p) => n + p.nodes.length, 0))}
                             </span>
                         </div>
                     ))}

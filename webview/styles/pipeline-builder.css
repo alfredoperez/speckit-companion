@@ -601,12 +601,16 @@ body {
 
 /* The band between the name and the phase's one control. It was a `::after`
    pseudo-element, which cannot sit between two real children — the control had
-   to be ordered around it. It is an element now, and stronger: at `--border` it
-   was all but invisible in the light palette. */
+   to be ordered around it. It is an element now, and stronger.
+
+   Mixed off the foreground rather than off `--border-hover`: that token is
+   `--vscode-contrastBorder`, which every theme outside high-contrast sets to
+   `#00000000`, so the rule painted nothing at all and the `+` floated a lane's
+   width from the name it belongs to. */
 .pb-phase-rule {
     flex-grow: 1;
     height: 1px;
-    background: var(--border-hover);
+    background: color-mix(in srgb, var(--text-muted) 50%, transparent);
 }
 
 .pb-phase-nodes {
@@ -624,17 +628,22 @@ body {
     min-width: 0;
     background: var(--bg-primary);
     border: 1px solid var(--border);
-    /* The tick that carries the node's kind. */
+    /* The tick that carries the node's kind. Neutral by default: `investigate`
+       and `control` neither produce a file nor stop the run, so the tick stays
+       the card's own edge for them. */
     border-left-width: 3px;
-    border-left-color: var(--border-hover);
+    border-left-color: var(--border);
     border-radius: var(--radius-sm);
 }
 
-/* What the node does, without opening it: it writes a file, it can stop the
-   run, or it does neither. Investigate and control share the quiet neutral —
-   neither produces anything and neither can refuse to continue. */
+/* Weight, not hue: three steps of one neutral. Every colour this panel has left
+   already means something else — green produces, purple yours, blue selection,
+   and amber paints the stale-build banner one row above these same cards — so a
+   fifth hue would be read as one of those. `investigate` and `control` keep the
+   card's own edge, set above. A gate carries the word as well, since two steps
+   of grey is a difference not everyone can see. */
 .pb-node--author { border-left-color: var(--text-body); }
-.pb-node--gate { border-left-color: var(--warning); }
+.pb-node--gate { border-left-color: var(--text-secondary); }
 
 .pb-node--over { border-color: var(--accent); }
 .pb-node--dragging { opacity: 0.4; }
@@ -701,6 +710,17 @@ body {
 
 .pb-writes { color: var(--success); }
 
+/* A node that can stop the run, said in a word. */
+.pb-node-gate {
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
 /* Taking a node out of the run. Revealed on the card it acts on rather than
    resident on all of them — the phase's `+` is the resting control, and a
    permanent bin on every card would be the one thing a lane repeats most. */
@@ -721,6 +741,12 @@ body {
 
 .pb-node:hover .pb-node-drop,
 .pb-node-drop:focus-visible { opacity: 1; }
+
+/* Where there is no pointer there is no hover, and this lane exists because
+   hover-only controls are unreachable. Keyboard already reaches it above. */
+@media (hover: none) {
+    .pb-node-drop { opacity: 1; }
+}
 
 .pb-node-drop:hover {
     color: var(--error);
@@ -1273,6 +1299,10 @@ body {
     line-height: 1;
     color: var(--text-muted);
     --pb-seam: var(--border);
+    /* Named, because a `<button>` with only a background-IMAGE keeps the
+       browser's `ButtonFace` underneath it — a near-white bar per gap on any
+       dark theme, five to a lane. */
+    background-color: transparent;
     background-image: linear-gradient(
         to right, var(--pb-seam) 0 4px, transparent 4px 8px);
     background-size: 8px 1px;
@@ -1317,10 +1347,12 @@ body {
     transition: opacity var(--transition-fast);
 }
 
+/* Accent, not the review hue: purple on this board means "this project owns
+   it", and a pointer resting on a seam owns nothing yet. */
 .pb-slot:hover:not(:disabled),
 .pb-slot:focus-visible:not(:disabled) {
-    color: var(--review);
-    --pb-seam: var(--review);
+    color: var(--accent);
+    --pb-seam: var(--accent);
 }
 
 /* A seam is thin, so the ring is what makes the focused one findable. */
@@ -1330,7 +1362,7 @@ body {
 }
 
 .pb-slot:hover:not(:disabled)::before,
-.pb-slot:focus-visible:not(:disabled)::before { color: var(--review); }
+.pb-slot:focus-visible:not(:disabled)::before { color: var(--accent); }
 
 .pb-slot:hover:not(:disabled) .pb-slot-label,
 .pb-slot:focus-visible:not(:disabled) .pb-slot-label { opacity: 1; }
@@ -1575,14 +1607,16 @@ body {
 
 .pb-phase-add:hover {
     color: var(--text-primary);
-    border-color: var(--border-hover);
+    border-color: color-mix(in srgb, var(--text-muted) 50%, transparent);
     background: var(--bg-hover);
 }
 
+/* Accent, not the review hue: an open menu is a selection, and purple on this
+   board means the project owns the thing wearing it. */
 .pb-phase-add[aria-expanded='true'] {
-    color: var(--review);
-    border-color: var(--review);
-    background: var(--review-subtle);
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-subtle);
 }
 
 /* A step's name opens the step's own instructions. */

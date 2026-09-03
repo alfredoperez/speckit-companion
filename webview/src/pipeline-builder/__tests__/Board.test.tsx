@@ -396,6 +396,18 @@ describe('what a step produces sits with its name', () => {
         expect(host.querySelector('.pb-artifacts')).toBeNull();
     });
 
+    // `file`/`files` agreed on this line while `nodes` never did.
+    it('agrees the node count with its noun, as the file count does', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                artifacts: ['spec.md'],
+                phases: [{ name: 'gather', hooks: [], nodes: [node()] }],
+            })],
+        }));
+        // The spacing between them is the flex gap, not text.
+        expect(host.querySelector('.pb-step-facts')?.textContent).toBe('1 node·1 file');
+    });
+
     it('says "files" once there is more than one', () => {
         const { host } = canvas(graph({
             steps: [step({ artifacts: ['spec.md', 'checklists/requirements.md'] })],
@@ -501,12 +513,37 @@ describe('a phase is a block a project owns', () => {
     // a phase can do is said in words inside it.
     it('says everything a phase can do, in one resting control', async () => {
         const { host } = canvas(three());
-        const labels = (await phaseMenu(host, 1))
+        const labels = (await phaseMenu(host, 0))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
         expect(labels).toEqual([
             'Add hook', 'Add node', 'Rename phase', 'Split phase',
-            'Merge into the phase above',
+            'Merge into the phase below',
         ]);
+    });
+
+    // `Menu` has no per-option disabled state, so a row that cannot run would
+    // be a live row that silently does nothing.
+    it('offers no row that would do nothing when picked', async () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                dropped: [],
+                phases: [{ name: 'only', hooks: [], nodes: [node()] }],
+            })],
+        }));
+        const labels = (await phaseMenu(host, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(labels).toEqual(['Add hook', 'Rename phase']);
+    });
+
+    // The first phase has nothing above it, and the write merges downward.
+    it('names the direction a merge actually goes', async () => {
+        const { host } = canvas(three());
+        const first = (await phaseMenu(host, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        const middle = (await phaseMenu(host, 1))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(first).toContain('Merge into the phase below');
+        expect(middle).toContain('Merge into the phase above');
     });
 
     it('does not offer to reorder phases', async () => {
@@ -533,7 +570,7 @@ describe('a phase is a block a project owns', () => {
 
     it('folds the first phase into the one below it', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 0, 'Merge into the phase above');
+        await fromPhaseMenu(host, 0, 'Merge into the phase below');
         expect(grouped[0][1]).toEqual([
             { name: 'author', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
@@ -541,15 +578,12 @@ describe('a phase is a block a project owns', () => {
     });
 
     it('will not remove the only phase a step has', async () => {
-        const { host, grouped } = canvas(graph({
+        const { host } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        const options = await phaseMenu(host, 0);
-        const merge = options[4];
-        expect(merge.querySelector('.pb-menu-note')?.textContent)
-            .toBe('a step needs at least one phase');
-        merge.click();
-        expect(grouped).toEqual([]);
+        const labels = (await phaseMenu(host, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(labels.some(label => /merge/i.test(label ?? ''))).toBe(false);
     });
 
     // A new phase is born empty, and an empty phase cannot be written — so it
@@ -566,14 +600,15 @@ describe('a phase is a block a project owns', () => {
     });
 
     it('will not offer to split a phase that has only one node', async () => {
-        // The row says why rather than vanishing: the split has to take a node
-        // off the end, and a one-node phase has none to give.
-        const { host, grouped } = canvas(three());
-        const options = await phaseMenu(host, 1);
-        expect(options[3].querySelector('.pb-menu-note')?.textContent)
-            .toBe('one node here, so there is nothing to split off');
-        options[3].click();
-        expect(grouped).toEqual([]);
+        // The split has to take a node off the end, and a one-node phase has
+        // none to give. It comes back the moment the phase holds two.
+        const { host } = canvas(three());
+        const one = (await phaseMenu(host, 1))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        const two = (await phaseMenu(host, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(one).not.toContain('Split phase');
+        expect(two).toContain('Split phase');
     });
 });
 
@@ -593,15 +628,17 @@ describe('a dropped node can be put back', () => {
         expect(options).toEqual(['branch', 'finalize']);
     });
 
-    it('still says where nodes come from when there are none to put back', async () => {
-        // Hiding the control left "how do I add a node here?" with no answer
-        // anywhere on screen — the thing that would have explained itself was
-        // the thing that was absent.
-        const { host } = canvas();
-        const options = await phaseMenu(host, 0);
-        expect(options[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
-        expect(options[1].querySelector('.pb-menu-note')?.textContent)
-            .toMatch(/drag one in\s+from another/);
+    it('says how many are on offer, and offers nothing when none are', async () => {
+        const { host } = canvas(withDropped());
+        const offered = await phaseMenu(host, 0);
+        expect(offered[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
+        expect(offered[1].querySelector('.pb-menu-note')?.textContent).toBe('2 on offer');
+
+        document.body.innerHTML = '';
+        const bare = canvas();
+        const labels = (await phaseMenu(bare.host, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        expect(labels).not.toContain('Add node');
     });
 
     // The order says when it runs and the phase says where it sits; one without
@@ -822,6 +859,28 @@ describe('a node card says what its node does, and can be taken out of the run',
         ]);
     });
 
+    // Every hue this panel has left already means something else, and a gate is
+    // the one kind whose consequence a reader has to know about.
+    it('says a gate can stop the run in a word, on the gate alone', () => {
+        const { host } = canvas(kinds());
+        const marked = Array.from(host.querySelectorAll('.pb-node-gate'));
+        expect(marked).toHaveLength(1);
+        expect(marked[0].textContent).toBe('gate');
+        expect(marked[0].closest('.pb-node')?.className).toContain('pb-node--gate');
+    });
+
+    it('marks a gate that produces nothing, which has no other meta to carry', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'check', hooks: [],
+                    nodes: [node({ id: 'review-gaps', kind: 'gate' })],
+                }],
+            })],
+        }));
+        expect(host.querySelector('.pb-node-gate')?.textContent).toBe('gate');
+    });
+
     // The refusal at the writer named an action the panel could not perform.
     it('sends the order and the grouping the drag handler would', () => {
         const { host, removedNodes } = canvas(graph({
@@ -849,18 +908,48 @@ describe('a node card says what its node does, and can be taken out of the run',
     });
 
     // "Undo" on a node card deleted the project's copy with no notice, and is
-    // not what undo means anywhere else in this panel.
-    it('says nothing about undo', () => {
+    // not what undo means anywhere else in this panel. Going back to the
+    // shipped node lives in the side column now.
+    it('carries one action, and it is not called Undo', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [
+                    { name: 'author', hooks: [], nodes: [node({ id: 'draft-spec', replaced: true })] },
+                    { name: 'wrap-up', hooks: [], nodes: [node({ id: 'handoff' })] },
+                ],
+            })],
+        }));
+        const card = host.querySelector('.pb-node')!;
+        expect(card.textContent).not.toContain('Undo');
+        expect(card.querySelectorAll('button')).toHaveLength(2);
+        expect(card.querySelector('.pb-node-drop')?.getAttribute('aria-label'))
+            .toBe('Stop running Resolve the spec folder');
+    });
+
+    // The write would leave a step with no phases, which cannot be written — so
+    // the writer refuses it and the panel redraws unchanged. A step added
+    // through "Add step" ships with exactly one node, so this is the first
+    // thing a person meets.
+    it('offers no way out of the run for the last node a step has', () => {
+        const { host, removedNodes } = canvas(graph({
+            steps: [step({
+                phases: [{ name: 'only', hooks: [], nodes: [node({ id: 'a' })] }],
+            })],
+        }));
+        expect(host.querySelector('.pb-node-drop')).toBeNull();
+        expect(removedNodes).toEqual([]);
+    });
+
+    it('offers it again as soon as something would survive the removal', () => {
         const { host } = canvas(graph({
             steps: [step({
                 phases: [{
-                    name: 'author', hooks: [],
-                    nodes: [node({ id: 'draft-spec', replaced: true })],
+                    name: 'only', hooks: [],
+                    nodes: [node({ id: 'a' }), node({ id: 'b' })],
                 }],
             })],
         }));
-        expect(host.querySelector('.pb-node-action')).toBeNull();
-        expect(host.querySelector('.pb-node')?.textContent).not.toContain('Undo');
+        expect(host.querySelectorAll('.pb-node-drop')).toHaveLength(2);
     });
 });
 

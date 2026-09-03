@@ -192,6 +192,16 @@ export const APhaseOffersOnlyWhatWorks: Story = {
         assert(labels.includes('Merge into the phase above'),
             'and merged into the one above');
         assert(labels[0] === 'Add hook', 'and the commonest change is first');
+
+        // `Menu` has no per-option disabled state, so a row that could not run
+        // would be a live row that silently did nothing. The first phase has
+        // nothing above it, and says which way its nodes would actually go.
+        const first = (await phaseMenu(canvasElement, 0))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
+        assert(first.includes('Merge into the phase below'),
+            'the first phase merges downward, and says so');
+        assert(!first.includes('Merge into the phase above'),
+            'and never claims a direction it does not go');
     },
 };
 
@@ -240,9 +250,13 @@ export const AShippedNodeCarriesNoExtraAction: Story = {
         // Clicking the node opens the panel where its instructions are edited,
         // and saving that edit is what makes it yours — so the card no longer
         // carries a "make mine" step in front of the thing people came to do,
-        // and no "Undo" that silently deleted the copy it made.
-        assert(canvasElement.querySelector('.pb-node-action') === null,
-            'a shipped node card has no action of its own');
+        // and no "Undo" that silently deleted the copy it made. Going back to
+        // the shipped node lives in that same panel.
+        const card = canvasElement.querySelector('.pb-node') as HTMLElement;
+        assert(!card.textContent?.includes('Undo'),
+            'nothing on a node card is called Undo');
+        assert(!card.textContent?.includes('Make it ours'),
+            'and nothing asks to make it yours before you have read it');
         (canvasElement.querySelector('.pb-node-main') as HTMLButtonElement | null)?.click();
     },
 };
