@@ -261,12 +261,32 @@ export class PipelineBuilderPanel {
             if (!fs.existsSync(own)) { return; }
             if (!this.shippedNodePath(message.command, message.nodeId)) {
                 this.say(`${message.nodeId} is not a node Companion ships, so there is `
-                    + 'nothing to give it back to. To stop running it, remove it from '
-                    + `${message.command}.`);
+                    + 'nothing to give it back to. Use "Remove from the run" to stop '
+                    + 'running it, which keeps the file.');
                 return;
             }
-            fs.unlinkSync(own);
-            await this.send();
+            // The only copy, so it is held until the next write rather than lost.
+            // The panel forgets it on close; the trash is where it survives that.
+            const held = fs.readFileSync(own, 'utf8');
+            const token = `restore:${message.command}:${message.nodeId}`;
+            const ok = await this.write(
+                async () => {
+                    await vscode.workspace.fs.delete(
+                        vscode.Uri.file(own), { useTrash: true });
+                    return null;
+                },
+                'Giving a node back',
+                {
+                    tone: 'done',
+                    text: `${message.nodeId} runs the shipped node again`,
+                    detail: 'Your copy went to the trash',
+                    undo: { token },
+                });
+            if (!ok) { return; }
+            this.offerUndo(token, async () => {
+                fs.mkdirSync(path.dirname(own), { recursive: true });
+                fs.writeFileSync(own, held, 'utf8');
+            });
         },
 
         reorderNodes: async message => {
@@ -357,6 +377,7 @@ export class PipelineBuilderPanel {
          */
         removeNode: async message => {
             const before = await this.stepShape(message.command);
+            const token = `remove:${message.command}:${message.nodeId}`;
             const ok = await this.write(
                 script => writePhases(
                     script, this.workspaceRoot, message.command, message.phases,
@@ -366,10 +387,11 @@ export class PipelineBuilderPanel {
                     tone: 'done',
                     text: `${message.nodeId} no longer runs in ${message.command}`,
                     detail: 'Build to apply',
-                    undo: { token: `remove:${message.command}:${message.nodeId}` },
+                    // Promised only when there is a shape to put back.
+                    undo: before ? { token } : undefined,
                 });
             if (ok && before) {
-                this.offerUndo(`remove:${message.command}:${message.nodeId}`, async () => {
+                this.offerUndo(token, async () => {
                     await this.write(
                         script => writePhases(
                             script, this.workspaceRoot, message.command, before.phases,
@@ -405,8 +427,15 @@ export class PipelineBuilderPanel {
                 this.say('That change can no longer be taken back.');
                 return;
             }
+            try {
+                await held.run();
+            } catch (err) {
+                // Kept, not cleared: this is the only copy of what was undone,
+                // and dropping it on a failed restore loses the file for good.
+                this.say(`Could not take that back: ${err instanceof Error ? err.message : err}`);
+                return;
+            }
             this.pendingUndo = null;
-            await held.run();
             await this.send();
             this.sayStatus(null);
         },

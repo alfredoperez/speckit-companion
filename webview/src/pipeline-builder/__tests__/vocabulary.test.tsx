@@ -22,13 +22,15 @@ describe('one action keeps one name through the flow', () => {
         expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Add hook');
     });
 
-    it('names the anchor field for where it goes, not what it is', () => {
+    it('names the anchor row for when and where it goes, not what it is', () => {
         const sheet = mount(
             <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />);
         const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
             .map(el => el.textContent);
-        expect(labels).toContain('Where');
+        expect(labels).toContain('Runs');
         expect(labels).not.toContain('What');
+        expect(Array.from(sheet.querySelectorAll('.pb-runs .pb-menu-trigger'))
+            .map(el => el.getAttribute('aria-label'))).toEqual(['When', 'Where']);
     });
 });

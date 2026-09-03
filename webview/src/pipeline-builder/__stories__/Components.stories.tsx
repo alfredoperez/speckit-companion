@@ -12,6 +12,7 @@ import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { TemplateForm } from '../TemplateForm';
 import {
     AUTO, CHOICES, IMPLEMENT, NO_CHANGES, OWN_STEP, PLAN, SPECIFY, STOCK, TASKS,
     graph, hook, node, phase, step,
@@ -32,7 +33,7 @@ const HEAD = {
 };
 
 const INSPECT = {
-    onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop, onAttach: noop,
+    onClose: noop, onOpenFile: noop, onRestore: noop, onAttach: noop,
     onSave: noop, onUseVariant: noop, onRemove: noop, onMove: noop,
 };
 
@@ -478,6 +479,20 @@ export const InspectorPinned: Story = {
     ),
 };
 
+export const InspectorFrame: Story = {
+    name: 'Inspector · a step\'s own instructions',
+    render: () => (
+        <One><Inspector
+            node={node('_frame', 'specify — the step\'s own instructions', {
+                pinned: 'the frame always comes first — it is what every node sits under',
+            })}
+            step="specify"
+            body={'## User Input\n\nWhat the person asked for, verbatim.\n\n'
+                + '## Outline\n\nWrite the specification for this feature.'}
+            parts={[]} editable="## Outline" {...INSPECT} onReplaceStep={noop} /></One>
+    ),
+};
+
 // ── Forms ───────────────────────────────────────────────
 
 export const AttachSkill: Story = {
@@ -505,6 +520,36 @@ export const AttachNothingToPick: Story = {
     render: () => (
         <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
+    ),
+};
+
+export const AttachCommand: Story = {
+    name: 'Add hook · a command, after a node',
+    render: () => (
+        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+            editing={hook({
+                when: 'after', type: 'command', anchor: 'draft-spec', index: 0,
+                summary: 'npm run lint-spec',
+            })}
+            onCancel={noop} onAttach={noop} onRemove={noop} /></One>
+    ),
+};
+
+export const TemplateSections: Story = {
+    name: 'Template · the document a step writes',
+    render: () => (
+        <One><TemplateForm
+            step={step('specify', SPECIFY.phases, {
+                template: {
+                    file: 'spec-template.md',
+                    sections: ['User Scenarios & Testing'],
+                    sectionsAvailable: [
+                        'User Scenarios & Testing', 'Requirements', 'Success Criteria',
+                    ],
+                    chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
+                },
+            })}
+            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
     ),
 };
 

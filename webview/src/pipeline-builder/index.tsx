@@ -363,6 +363,11 @@ function App() {
                         onRestore={() => vscode.postMessage({
                             type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
                         })}
+                        // The step header no longer carries this, so the pane is
+                        // the only route to it.
+                        onReplaceStep={() => send({
+                            type: 'replaceStep', command: selected.command,
+                        })}
                         onRemove={() => {
                             const shape = withoutNode(graph, selected);
                             if (!shape) { return; }
