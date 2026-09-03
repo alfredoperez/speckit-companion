@@ -1,0 +1,13 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "border-left-color: var(--text-muted)",
+        "createdAt": "2026-09-03T02:03:49.653Z"
+      }
+    ]
+  }
+}
