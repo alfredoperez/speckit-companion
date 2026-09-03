@@ -100,19 +100,25 @@ body {
 }
 
 /* The manual escape stays available, but reads as the smaller option now that
-   the panel can do the repair itself. */
+   the panel can do the repair itself.
+
+   Underlined text at the foreground colour, not `--accent`: that token is the
+   editor's focus border, which several themes set to a grey a shade off the
+   background — around 1.6:1 on one of them, for what is the only way out of a
+   broken pipeline. */
 .builder-link {
     padding: 0;
     border: 0;
     background: none;
     font: inherit;
-    color: var(--accent);
+    color: var(--text-primary);
     text-decoration: underline;
     cursor: pointer;
 }
 
 .builder-link:hover {
-    color: var(--accent-hover);
+    color: var(--text-primary);
+    background: var(--bg-hover);
 }
 
 /* ============================================

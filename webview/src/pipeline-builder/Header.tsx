@@ -91,7 +91,7 @@ function hookTally(graph: PipelineGraph): string {
 
 function workflowLabel(name: string): string {
     if (name === '') { return 'This project'; }
-    if (name === 'shipped') { return 'As it ships'; }
+    if (name === 'shipped') { return 'As shipped'; }
     return name;
 }
 

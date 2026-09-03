@@ -22,7 +22,7 @@ import {
     isGraphError,
 } from '../../../src/protocol/pipeline';
 import { BrokenPipeline } from './BrokenPipeline';
-import { Canvas } from './Canvas';
+import { Canvas, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
@@ -64,21 +64,10 @@ function swapNode(graph: PipelineGraph, at: Selection, variantId: string) {
     };
 }
 
-/**
- * The step's order and grouping with one node taken out.
- *
- * The same whole-step write a drag makes: order and grouping together, since a
- * node in one and not the other is a pipeline that contradicts itself. A phase
- * emptied by the removal goes with it — an empty phase cannot be written.
- */
+/** The step's order and grouping with one node taken out, found by selection. */
 function withoutNode(graph: PipelineGraph, at: Selection) {
     const step = graph.steps.find(s => s.name === at.command);
-    if (!step) { return null; }
-    const phases = step.phases
-        .map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id).filter(id => id !== at.nodeId) }))
-        .filter(p => p.nodes.length > 0);
-    if (phases.length === 0) { return null; }
-    return { order: phases.flatMap(p => p.nodes), phases };
+    return step ? withoutNodeOf(step, at.nodeId) : null;
 }
 
 /** That shape again, with one node a place earlier or later inside its phase. */

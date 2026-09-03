@@ -134,7 +134,7 @@ describe('switching workflows', () => {
 
         const options = Array.from(host.querySelectorAll('.pb-menu-option'));
         expect(options.map(el => el.textContent)).toEqual([
-            'As it shipsCompanion with nothing changed', 'bugfix', 'client',
+            'As shippedCompanion with nothing changed', 'bugfix', 'client',
             'New workflow…Starts from the one in force',
         ]);
     });
