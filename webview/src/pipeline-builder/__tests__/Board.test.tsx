@@ -523,16 +523,23 @@ describe('a phase is a block a project owns', () => {
 
     // `Menu` has no per-option disabled state, so a row that cannot run would
     // be a live row that silently does nothing.
-    it('offers no row that would do nothing when picked', async () => {
+    // The same five words every time, whatever this phase happens to allow —
+    // the note on an inert row is what teaches the capability.
+    it('says the same five things, marking the ones that cannot run here', async () => {
         const { host } = canvas(graph({
             steps: [step({
                 dropped: [],
                 phases: [{ name: 'only', hooks: [], nodes: [node()] }],
             })],
         }));
-        const labels = (await phaseMenu(host, 0))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(labels).toEqual(['Add hook', 'Rename phase']);
+        const rows = await phaseMenu(host, 0);
+        expect(rows.map(o => o.querySelector('.pb-menu-label')?.textContent)).toEqual([
+            'Add hook', 'Add node', 'Rename phase', 'Split phase',
+            'Merge into the phase above',
+        ]);
+        expect(rows.map(o => o.getAttribute('aria-disabled'))).toEqual([
+            null, 'true', null, 'true', 'true',
+        ]);
     });
 
     // The first phase has nothing above it, and the write merges downward.
@@ -577,13 +584,16 @@ describe('a phase is a block a project owns', () => {
         ]);
     });
 
-    it('will not remove the only phase a step has', async () => {
-        const { host } = canvas(graph({
+    it('will not remove the only phase a step has, and says why', async () => {
+        const { host, grouped } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        const labels = (await phaseMenu(host, 0))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(labels.some(label => /merge/i.test(label ?? ''))).toBe(false);
+        const merge = (await phaseMenu(host, 0))[4];
+        expect(merge.getAttribute('aria-disabled')).toBe('true');
+        expect(merge.querySelector('.pb-menu-note')?.textContent)
+            .toBe('a step needs at least one phase');
+        merge.click();
+        expect(grouped).toEqual([]);
     });
 
     // A new phase is born empty, and an empty phase cannot be written — so it
@@ -599,16 +609,20 @@ describe('a phase is a block a project owns', () => {
         ]);
     });
 
-    it('will not offer to split a phase that has only one node', async () => {
+    it('will not split a one-node phase, and teaches the split saying so', async () => {
         // The split has to take a node off the end, and a one-node phase has
-        // none to give. It comes back the moment the phase holds two.
-        const { host } = canvas(three());
-        const one = (await phaseMenu(host, 1))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        const two = (await phaseMenu(host, 0))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(one).not.toContain('Split phase');
-        expect(two).toContain('Split phase');
+        // none to give. The row stays, because its note is where someone finds
+        // out a phase can be split at all.
+        const { host, grouped } = canvas(three());
+        const one = (await phaseMenu(host, 1))[3];
+        expect(one.getAttribute('aria-disabled')).toBe('true');
+        expect(one.querySelector('.pb-menu-note')?.textContent)
+            .toBe('one node here, so there is nothing to split off');
+        one.click();
+        expect(grouped).toEqual([]);
+
+        const two = (await phaseMenu(host, 0))[3];
+        expect(two.getAttribute('aria-disabled')).toBeNull();
     });
 });
 
@@ -628,7 +642,7 @@ describe('a dropped node can be put back', () => {
         expect(options).toEqual(['branch', 'finalize']);
     });
 
-    it('says how many are on offer, and offers nothing when none are', async () => {
+    it('says how many are on offer, and why there are none when there are none', async () => {
         const { host } = canvas(withDropped());
         const offered = await phaseMenu(host, 0);
         expect(offered[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
@@ -636,9 +650,10 @@ describe('a dropped node can be put back', () => {
 
         document.body.innerHTML = '';
         const bare = canvas();
-        const labels = (await phaseMenu(bare.host, 0))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(labels).not.toContain('Add node');
+        const none = (await phaseMenu(bare.host, 0))[1];
+        expect(none.getAttribute('aria-disabled')).toBe('true');
+        expect(none.querySelector('.pb-menu-note')?.textContent)
+            .toMatch(/drag one in\s+from another/);
     });
 
     // The order says when it runs and the phase says where it sits; one without

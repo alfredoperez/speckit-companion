@@ -193,15 +193,20 @@ export const APhaseOffersOnlyWhatWorks: Story = {
             'and merged into the one above');
         assert(labels[0] === 'Add hook', 'and the commonest change is first');
 
-        // `Menu` has no per-option disabled state, so a row that could not run
-        // would be a live row that silently did nothing. The first phase has
-        // nothing above it, and says which way its nodes would actually go.
-        const first = (await phaseMenu(canvasElement, 0))
-            .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        assert(first.includes('Merge into the phase below'),
+        // The first phase has nothing above it, and says which way its nodes
+        // would actually go.
+        const first = await phaseMenu(canvasElement, 0);
+        const firstLabels = first.map(o => o.querySelector('.pb-menu-label')?.textContent);
+        assert(firstLabels.includes('Merge into the phase below'),
             'the first phase merges downward, and says so');
-        assert(!first.includes('Merge into the phase above'),
+        assert(!firstLabels.includes('Merge into the phase above'),
             'and never claims a direction it does not go');
+
+        // A row that cannot run here is inert rather than absent: its note is
+        // where someone learns the capability exists at all.
+        const inert = first.filter(o => o.getAttribute('aria-disabled') === 'true');
+        assert(inert.every(o => (o.querySelector('.pb-menu-note')?.textContent ?? '') !== ''),
+            'every inert row still says why it cannot run here');
     },
 };
 

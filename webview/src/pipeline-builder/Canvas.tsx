@@ -537,58 +537,70 @@ function Phase({ phase, actions, controls }: {
     const startRename = () => {
         const el = name.current;
         if (!el) { return; }
-        el.focus();
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        const selection = window.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
+        // After the menu has finished closing, not during it. A menu hands the
+        // keyboard back to its trigger on the way out, which is right for every
+        // other entry and would take the caret straight back off this one.
+        setTimeout(() => {
+            el.focus();
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }, 0);
     };
 
     /**
-     * What this phase can actually do, in the order it offers it.
+     * Everything a phase can do, said in the same five words every time.
      *
      * Every one of these used to be a separate button that was `opacity: 0`
      * until the pointer arrived, so the board showed nothing that could change
      * anything and touch reached none of it. One `+` on the rule, always there.
      *
-     * A row is here only when picking it would do something. `Menu` has no
-     * per-option disabled state, so an entry that cannot run would be a live
-     * row that silently does nothing — and a note saying why is a reason, not
-     * a state. The two that can lapse come back the moment they can act: a
-     * phase can be split once it holds two nodes, and merged once the step
-     * holds two phases.
+     * A row that cannot run here is shown inert rather than dropped, because
+     * the note is what teaches the capability: "one node here, so there is
+     * nothing to split off" says a phase can be split at the same moment it
+     * says why this one cannot. A dropped row teaches nothing, and a person
+     * who never sees Split never learns to look for it.
      */
-    const offered: Array<{ id: string; label: string; note: string }> = [
+    const offered = [
         { id: 'hook', label: 'Add hook', note: 'a skill, an instruction or a command' },
-    ];
-    if (controls.dropped.length) {
-        offered.push({
-            id: 'node', label: 'Add node',
-            note: `${controls.dropped.length} on offer`,
-        });
-    }
-    offered.push({ id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' });
-    if (controls.canSplit) {
-        offered.push({
-            id: 'split', label: 'Split phase',
-            note: 'its last node starts a new phase after it',
-        });
-    }
-    if (!controls.only) {
-        // The first phase has nothing above it, so its nodes go down into the
-        // second. The label used to say "above" in both directions.
-        offered.push(controls.first
+        controls.dropped.length
+            ? { id: 'node', label: 'Add node', note: `${controls.dropped.length} on offer` }
+            : {
+                id: 'node', label: 'Add node', disabled: true,
+                note: `every node ${controls.step} has is already in a phase — drag one in `
+                    + `from another, or write your own at .specify/companion/nodes/${controls.step}/`,
+            },
+        { id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' },
+        controls.canSplit
             ? {
-                id: 'merge', label: 'Merge into the phase below',
-                note: 'nothing sits above this one, so its nodes go down',
+                id: 'split', label: 'Split phase',
+                note: 'its last node starts a new phase after it',
             }
             : {
-                id: 'merge', label: 'Merge into the phase above',
-                note: 'its nodes go with it',
-            });
-    }
+                id: 'split', label: 'Split phase', disabled: true,
+                note: 'one node here, so there is nothing to split off',
+            },
+        // The first phase has nothing above it, so its nodes go down into the
+        // second. The label used to say "above" in both directions.
+        controls.only
+            ? {
+                id: 'merge', label: 'Merge into the phase above', disabled: true,
+                note: 'a step needs at least one phase',
+            }
+            : controls.first
+                ? {
+                    id: 'merge', label: 'Merge into the phase below',
+                    note: 'nothing sits above this one, so its nodes go down',
+                }
+                : {
+                    id: 'merge', label: 'Merge into the phase above',
+                    note: 'its nodes go with it',
+                },
+    ];
 
+    // No guards here: `Menu` will not call this for a row it drew inert.
     const act = (id: string) => {
         if (id === 'hook') { actions.onAdd(phase.name); }
         if (id === 'node') { setPicking(true); }
