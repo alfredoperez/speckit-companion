@@ -105,6 +105,22 @@ export function AttachForm(props: Props) {
         : hookType === 'node' ? choices.nodes : [];
     const ready = value.trim().length > 0;
 
+    const pick = (type: HookType) => { setHookType(type); setValue(''); };
+
+    /** Arrows, Home and End move the selection, the way a radio group does. */
+    const pickKind = (event: KeyboardEvent, index: number) => {
+        const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+        const to = step !== undefined
+            ? (index + step + KINDS.length) % KINDS.length
+            : event.key === 'Home' ? 0
+                : event.key === 'End' ? KINDS.length - 1 : -1;
+        if (to < 0) { return; }
+        event.preventDefault();
+        pick(KINDS[to].type);
+        const group = (event.currentTarget as HTMLElement).parentElement;
+        (group?.children[to] as HTMLButtonElement | undefined)?.focus();
+    };
+
     const submit = (event: Event) => {
         event.preventDefault();
         if (!ready) { return; }
@@ -154,12 +170,16 @@ export function AttachForm(props: Props) {
                     <span class="pb-field-label" id="pb-kind-label">Kind</span>
                     <div class="pb-kind">
                         <div class="pb-segments" role="radiogroup" aria-labelledby="pb-kind-label">
-                            {KINDS.map(option => (
+                            {KINDS.map((option, index) => (
                                 <button key={option.type} type="button" role="radio"
                                     aria-checked={hookType === option.type}
+                                    // One tab stop for the group, arrows within it —
+                                    // what the radio inputs this replaced did for free.
+                                    tabIndex={hookType === option.type ? 0 : -1}
                                     class={`pb-segment${hookType === option.type
                                         ? ' pb-segment--on' : ''}`}
-                                    onClick={() => { setHookType(option.type); setValue(''); }}>
+                                    onKeyDown={event => pickKind(event, index)}
+                                    onClick={() => pick(option.type)}>
                                     {option.label}
                                 </button>
                             ))}
@@ -195,7 +215,9 @@ export function AttachForm(props: Props) {
                     </div>
                 </div>
 
-                {(hookType === 'skill' || hookType === 'node') && (
+                {/* Skills only: the renderer splices a node hook's body whole and
+                    never reads this, so a note typed here would be written and lost. */}
+                {hookType === 'skill' && (
                     <div class="pb-field pb-field--labelled">
                         <span class="pb-field-label">Note</span>
                         <div class="pb-note">

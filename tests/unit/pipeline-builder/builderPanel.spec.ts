@@ -86,6 +86,11 @@ beforeEach(() => {
         (write as jest.Mock).mockResolvedValue(null);
     }
 
+    // The shared stub records the call and does nothing; these handlers write and
+    // delete real files, so the delete has to actually happen for a test to mean it.
+    (vscode.workspace.fs.delete as jest.Mock).mockImplementation(
+        async (uri: { fsPath: string }) => { fs.rmSync(uri.fsPath, { force: true }); });
+
     (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(
         createMockWebviewPanel);
     panel = openPanel();
@@ -288,15 +293,24 @@ describe('giving a node back', () => {
         expect(panel.__lastPosted('graph')).toBeUndefined();
     });
 
-    // It deleted the only copy of a file with nothing said and no way back.
     it('says what it did, in the panel', async () => {
         ourCopy();
         await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
 
         const status = panel.__lastPosted('status').status;
         expect(status.text).toBe('draft runs the shipped node again');
-        expect(status.detail).toBe('Your copy of it was deleted');
+        expect(status.detail).toBe('Your copy went to the trash');
         expect(status.undo.token).toBe('restore:specify:draft');
+    });
+
+    // The panel forgets the held copy on close; the trash outlives that.
+    it('deletes through the editor, into the trash, not straight off the disk', async () => {
+        ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        const [uri, options] = (vscode.workspace.fs.delete as jest.Mock).mock.calls.at(-1)!;
+        expect(uri.fsPath).toBe(ownNode('specify', 'draft'));
+        expect(options).toEqual({ useTrash: true });
     });
 
     it('puts the deleted copy back, contents and all, when Undo is pressed', async () => {
@@ -308,6 +322,26 @@ describe('giving a node back', () => {
 
         expect(fs.readFileSync(own, 'utf8')).toBe('ours');
         expect(panel.__lastPosted('status').status).toBeNull();
+    });
+
+    // The way back holds the only copy, so a failed restore must not spend it.
+    it('keeps the way back when the restore fails, and says so', async () => {
+        const own = ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        // A file standing where the node's directory has to go, so the restore
+        // cannot make the folder and throws.
+        const dir = path.dirname(own);
+        fs.rmSync(dir, { recursive: true, force: true });
+        fs.writeFileSync(dir, 'in the way', 'utf8');
+
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+        expect(panel.__lastPosted('notice').text).toContain('Could not take that back');
+
+        // Still on offer, so the second press succeeds where the first failed.
+        fs.rmSync(dir, { force: true });
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+        expect(fs.readFileSync(own, 'utf8')).toBe('ours');
     });
 
     it('refuses a node that ships nowhere, naming an action the panel can do', async () => {
@@ -810,8 +844,7 @@ describe('taking a node out of the run', () => {
         ]);
     });
 
-    // The line used to promise an Undo whatever happened, and pressing it
-    // answered that the change could not be taken back.
+    // A promised Undo the panel cannot honour is worse than none offered.
     it('offers no Undo when the shape to go back to could not be read', async () => {
         await panel.__receive({
             type: 'removeNode', command: 'specify', nodeId: 'draft',

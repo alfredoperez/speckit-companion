@@ -44,6 +44,9 @@ const KIND_MEANS: Record<string, string> = {
     control: 'sets up, routes, or finishes',
 };
 
+/** The order the legend reads in: strongest mark first, the two faint ones last. */
+const KINDS = ['author', 'gate', 'investigate', 'control'];
+
 /** The step's own preamble reads in this panel, but it is not a node in a phase. */
 const FRAME = '_frame';
 
@@ -173,7 +176,7 @@ export function Inspector(props: Props) {
         more.push({
             id: 'shipped',
             label: 'Use the shipped node',
-            note: 'Deletes your copy. Undo in the status line puts it back.',
+            note: 'Sends your copy to the trash. Undo in the status line puts it back.',
         });
     }
 
@@ -213,9 +216,19 @@ export function Inspector(props: Props) {
                 <dd>
                     <span class={`pb-kind-tick pb-kind-tick--${node.kind}`} aria-hidden="true" />
                     {node.kind}{' · '}{KIND_MEANS[node.kind] ?? 'part of the step'}
-                    <span class="pb-facts-note">
-                        The card in the run carries this mark, one colour per kind.
-                    </span>
+                    <span class="pb-facts-note">How the card in the run marks each kind:</span>
+                    <ul class="pb-kind-legend">
+                        {KINDS.map(kind => (
+                            <li key={kind}>
+                                <span class={`pb-kind-tick pb-kind-tick--${kind}`}
+                                    aria-hidden="true" />
+                                {kind === 'gate' && (
+                                    <span class="pb-kind-chip" aria-hidden="true">gate</span>
+                                )}
+                                <span class="pb-kind-legend-name">{kind}</span>
+                            </li>
+                        ))}
+                    </ul>
                 </dd>
 
                 {node.writes.length > 0 && (
@@ -232,8 +245,8 @@ export function Inspector(props: Props) {
                 )}
                 <dt>Order</dt>
                 <dd>{node.pinned
-                    ? `Held in place — ${node.pinned}`
-                    : 'Free to move, into another phase too'}</dd>
+                    ? `held in place: ${node.pinned}`
+                    : 'free to move, into another phase too'}</dd>
 
                 <dt>Source</dt>
                 <dd>
@@ -244,7 +257,7 @@ export function Inspector(props: Props) {
                     <span title={node.source}>
                         {node.replaced
                             ? <><span class="pb-yours">yours</span>{' '}this project replaced it</>
-                            : 'As shipped'}
+                            : 'as shipped'}
                     </span>
                 </dd>
             </dl>

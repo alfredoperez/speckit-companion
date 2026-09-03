@@ -5,6 +5,8 @@ import { Inspector } from '../Inspector';
 import { AttachForm, Attachment, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import { TemplateForm } from '../TemplateForm';
 import type { PipelineNode } from '../../../../src/protocol/pipeline';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { flush, mount, node, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
@@ -101,22 +103,50 @@ describe('the inspector reads a node here', () => {
         expect(kind.querySelector('.pb-kind-tick--author')).not.toBeNull();
         expect(kind.textContent).toContain('author · writes a deliverable');
         expect(kind.querySelector('.pb-facts-note')?.textContent)
-            .toContain('one colour per kind');
+            .toContain('marks each kind');
+
+        // Four rows, so a mark is read against the other three rather than alone.
+        const rows = Array.from(kind.querySelectorAll('.pb-kind-legend li'));
+        expect(rows.map(el => el.querySelector('.pb-kind-legend-name')?.textContent))
+            .toEqual(['author', 'gate', 'investigate', 'control']);
+        for (const [i, k] of ['author', 'gate', 'investigate', 'control'].entries()) {
+            expect(rows[i].querySelector(`.pb-kind-tick--${k}`)).not.toBeNull();
+        }
+        // The chip belongs to the gate row and to no other.
+        expect(kind.querySelectorAll('.pb-kind-chip')).toHaveLength(1);
+        expect(rows[1].querySelector('.pb-kind-chip')?.textContent).toBe('gate');
     });
 
     // Every other row is a fragment; Order was the one full sentence among them.
-    it('says the order as a fragment, the way the rows around it read', () => {
-        const host = mount(
-            <Inspector node={node({ writes: ['spec.md'] })} step="specify" body="x" parts={[]}
-                {...actions} />);
-        for (const note of Array.from(host.querySelectorAll('.pb-facts-note'))) {
-            note.remove();
+    // Source has two states, and both have to read the same way.
+    it('holds one grammar across every row, in both states of Source', () => {
+        const fragments = (over: Partial<PipelineNode>) => {
+            document.body.innerHTML = '';
+            const host = mount(
+                <Inspector node={node({ writes: ['spec.md'], reads: ['resolve-dir'], ...over })}
+                    step="specify" body="x" parts={[]} {...actions} />);
+            // The legend is a picture of every kind, not one of this node's facts.
+            for (const aside of Array.from(
+                host.querySelectorAll('.pb-facts-note, .pb-kind-legend'))) {
+                aside.remove();
+            }
+            return Array.from(host.querySelectorAll('.pb-facts dd'))
+                .map(el => (el.textContent ?? '').trim());
+        };
+
+        const shipped = fragments({});
+        expect(shipped).toContain('free to move, into another phase too');
+        expect(shipped).toContain('as shipped');
+        expect(fragments({ replaced: true })).toContain('yours this project replaced it');
+        expect(fragments({ pinned: 'draft-spec has to run after it' }))
+            .toContain('held in place: draft-spec has to run after it');
+
+        for (const rows of [shipped, fragments({ replaced: true })]) {
+            for (const row of rows) {
+                expect(row).toBe(row[0].toLowerCase() + row.slice(1));
+                expect(row.endsWith('.')).toBe(false);
+            }
         }
-        const rows = Array.from(host.querySelectorAll('.pb-facts dd'))
-            .map(el => (el.textContent ?? '').trim());
-        expect(rows).toContain('Free to move, into another phase too');
-        expect(rows).toContain('As shipped');
-        expect(rows.some(row => row.endsWith('.'))).toBe(false);
     });
 
     it('edits in place, and saves the stored text rather than the rendered text', async () => {
@@ -237,6 +267,18 @@ describe('everything else a node can do, in one menu', () => {
         expect(await moreOptions(host)).not.toContain('Move up');
     });
 
+    // The stylesheet paints the last entry purple, having no way to match one by
+    // name, so the position is load-bearing rather than incidental.
+    it('keeps Use the shipped node last, which is what the purple rule targets', async () => {
+        const host = mount(
+            <Inspector node={node({ replaced: true, shipped: true })} step="specify"
+                body="x" parts={[]} {...actions} />);
+        const offered = await moreOptions(host);
+        expect(offered.at(-1)).toBe('Use the shipped node');
+        expect(host.querySelector('.pb-more--restore')).not.toBeNull();
+    });
+
+    // Cross-phase movement is still drag-only; these two move within a phase.
     it('stops a node running without deleting it', async () => {
         const removed: string[] = [];
         const host = mount(
@@ -455,6 +497,38 @@ describe('naming a new step', () => {
     });
 });
 
+// The tick is a mark on a board that already spends colour on build state, so it
+// encodes by weight. Read from the stylesheet because jsdom resolves no cascade.
+describe('the kind tick is three steps of one neutral', () => {
+    const css = readFileSync(
+        join(__dirname, '..', '..', '..', 'styles', 'pipeline-builder.css'), 'utf8');
+    const rules = css.slice(css.indexOf('.pb-kind-tick'), css.indexOf('.pb-facts-note'));
+
+    it('spends no hue, so nothing competes with the stale-build amber', () => {
+        for (const hue of ['--info', '--warning', '--error', '--success', '--review',
+            '--accent', '--purple', '--gray']) {
+            expect(rules).not.toContain(hue);
+        }
+        expect(rules).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    });
+
+    // The legend describes the card, so these are the board lane's tokens and
+    // have to stay the board lane's tokens.
+    it('gives the four kinds three weights, the ones the card paints', () => {
+        const weight = (kind: string) =>
+            new RegExp(`--${kind}[^}]*background:\\s*var\\((--[a-z-]+)\\)`).exec(rules)?.[1];
+        expect(weight('author')).toBe('--text-body');
+        expect(weight('gate')).toBe('--text-secondary');
+        expect(rules).toMatch(/--investigate,\s*\n\.pb-kind-tick--control/);
+        expect(rules).toContain('var(--border)');
+    });
+
+    // Two steps of grey at 3px is not a difference every eye makes.
+    it('gives the kind that can stop a run a word as well as a weight', () => {
+        expect(css).toContain('.pb-kind-chip');
+    });
+});
+
 describe('the hook form asks for the placement first', () => {
     const noop = () => undefined;
     const CHOICES = {
@@ -527,6 +601,49 @@ describe('the hook form asks for the placement first', () => {
         expect(host.querySelector('.pb-kind .pb-field-note')?.textContent)
             .toContain('needs a terminal');
         expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Command');
+    });
+
+    // A radiogroup is one tab stop, and arrows move inside it.
+    it('walks the kinds with arrows, on one tab stop', async () => {
+        const { host } = form();
+        const segments = () => Array.from(host.querySelectorAll('.pb-segment'));
+        const stops = () => segments().map(el => el.getAttribute('tabindex'));
+        expect(stops()).toEqual(['0', '-1', '-1', '-1']);
+
+        segments()[0].dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Instruction');
+        expect(stops()).toEqual(['-1', '0', '-1', '-1']);
+
+        segments()[1].dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Node');
+
+        // Wraps, so the group has no dead end at either edge.
+        segments()[3].dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Skill');
+    });
+
+    // Only a skill hook renders its note; the other three drop it.
+    it('asks for a note only where one is rendered', async () => {
+        const { host } = form();
+        expect(host.querySelector('.pb-note')).not.toBeNull();
+        const segment = (label: string) =>
+            Array.from(host.querySelectorAll('.pb-segment'))
+                .find(el => el.textContent === label) as HTMLButtonElement;
+
+        for (const label of ['Instruction', 'Command', 'Node']) {
+            segment(label).click();
+            await flush();
+            expect(host.querySelector('.pb-note')).toBeNull();
+        }
+        segment('Skill').click();
+        await flush();
+        expect(host.querySelector('.pb-note')).not.toBeNull();
     });
 
     it('names the note for what it is, and marks it optional', () => {

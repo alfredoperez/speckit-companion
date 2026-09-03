@@ -257,15 +257,20 @@ export class PipelineBuilderPanel {
                 return;
             }
             // The only copy, so it is held until the next write rather than lost.
+            // The panel forgets it on close; the trash is where it survives that.
             const held = fs.readFileSync(own, 'utf8');
             const token = `restore:${message.command}:${message.nodeId}`;
             const ok = await this.write(
-                async () => { fs.rmSync(own); return null; },
+                async () => {
+                    await vscode.workspace.fs.delete(
+                        vscode.Uri.file(own), { useTrash: true });
+                    return null;
+                },
                 'Giving a node back',
                 {
                     tone: 'done',
                     text: `${message.nodeId} runs the shipped node again`,
-                    detail: 'Your copy of it was deleted',
+                    detail: 'Your copy went to the trash',
                     undo: { token },
                 });
             if (!ok) { return; }
@@ -408,8 +413,15 @@ export class PipelineBuilderPanel {
                 this.say('That change can no longer be taken back.');
                 return;
             }
+            try {
+                await held.run();
+            } catch (err) {
+                // Kept, not cleared: this is the only copy of what was undone,
+                // and dropping it on a failed restore loses the file for good.
+                this.say(`Could not take that back: ${err instanceof Error ? err.message : err}`);
+                return;
+            }
             this.pendingUndo = null;
-            await held.run();
             await this.send();
             this.sayStatus(null);
         },

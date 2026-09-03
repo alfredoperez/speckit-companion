@@ -843,6 +843,12 @@ body {
 
 .pb-inspector-close {
     align-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* A 14px mark in 4px of padding is a 22px target; 24 is the floor. */
+    min-width: 24px;
+    min-height: 24px;
     padding: var(--space-1);
     color: var(--text-secondary);
     background: transparent;
@@ -1043,6 +1049,11 @@ body {
 
 .pb-side-close {
     align-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
     padding: var(--space-1);
     color: var(--text-secondary);
     background: transparent;
@@ -1819,21 +1830,56 @@ body {
 
 .pb-inspector-open:hover { color: var(--accent-hover); }
 
-/* The same mark the card carries, so the Kind row is its legend. */
+/* The same mark the card carries, so the Kind row is its legend. Three steps of
+   one neutral, never a hue: colour on this screen already means build state. */
 .pb-kind-tick {
     display: inline-block;
+    flex-shrink: 0;
     width: 3px;
     height: 12px;
     margin-right: var(--space-2);
     vertical-align: -1px;
     border-radius: 1px;
-    background: var(--gray);
+    background: var(--border);
 }
 
 .pb-kind-tick--author { background: var(--text-body); }
-.pb-kind-tick--investigate { background: var(--info); }
-.pb-kind-tick--gate { background: var(--warning); }
-.pb-kind-tick--control { background: var(--gray); }
+.pb-kind-tick--gate { background: var(--text-secondary); }
+.pb-kind-tick--investigate,
+.pb-kind-tick--control { background: var(--border); }
+
+/* Two steps of grey at 3px is a difference not every eye makes, so the kind that
+   can stop a run says so in a word as well. */
+.pb-kind-chip {
+    padding: 0 var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
+/* One row per kind, so the mark is read against the other three rather than
+   alone. Every row is the mark itself, at the size the card draws it. */
+.pb-kind-legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pb-kind-legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.pb-kind-legend li > .pb-kind-tick { margin-right: 0; }
 
 .pb-facts-note {
     display: block;
@@ -1905,7 +1951,11 @@ body {
     min-width: 0;
 }
 
+/* An enabled Menu wraps its button in a div and an inert one does not, so the
+   flex above reaches a different element in each case; the width is set here,
+   on the control itself, where both cases meet it. */
 .pb-menu-trigger--field {
+    width: 100%;
     justify-content: space-between;
     box-sizing: border-box;
     padding: var(--space-2);
@@ -1915,6 +1965,9 @@ body {
     border: 1px solid var(--vscode-input-border, var(--border));
     border-radius: var(--radius-sm);
 }
+
+/* One option is not a choice: it reads as settled rather than as an empty box. */
+.pb-menu-trigger--field.pb-menu-trigger--inert { color: var(--text-secondary); }
 
 .pb-menu-trigger--field .pb-menu-caret { flex-shrink: 0; }
 
@@ -1938,7 +1991,7 @@ body {
 .pb-segment {
     flex: 1 1 0;
     min-width: 0;
-    padding: var(--space-1) 0;
+    padding: var(--space-1) var(--space-1);
     font-family: inherit;
     font-size: var(--text-sm);
     color: var(--text-secondary);
@@ -1946,10 +1999,23 @@ body {
     border: 0;
     border-left: 1px solid var(--vscode-input-border, var(--border));
     cursor: pointer;
+    /* Four labels in one row is the wide case; a squeezed row must clip rather
+       than print one word over the next. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .pb-segment:first-child { border-left: 0; }
 .pb-segment:hover { background: var(--bg-hover); }
+
+/* Two rows of two below the width four labels need, so every kind stays legible. */
+@container builder (max-width: 860px) {
+    .pb-segments { flex-wrap: wrap; }
+    .pb-segment { flex: 1 1 45%; }
+    .pb-segment:nth-child(3) { border-left: 0; }
+    .pb-segment:nth-child(n + 3) { border-top: 1px solid var(--vscode-input-border, var(--border)); }
+}
 
 .pb-segment--on {
     color: var(--accent-strong);
