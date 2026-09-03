@@ -364,7 +364,11 @@ body {
 }
 
 /* The tail sizes to its content, so a card that never wraps would set the
-   column's width. This one wraps instead. */
+   column's width. This one wraps instead.
+
+   Borderless: a dashed edge is the panel's mark for "this adds something", and
+   `auto` adds nothing — it is a step that already exists, sitting out of the
+   row. The fill is enough to make it a card. */
 .pb-aside {
     display: flex;
     flex-direction: column;
@@ -372,7 +376,7 @@ body {
     gap: 2px;
     padding: var(--space-2) var(--space-3);
     background: var(--bg-secondary);
-    border: 1px dashed var(--border-hover);
+    border: 0;
     border-radius: var(--radius-md);
 }
 
@@ -444,11 +448,7 @@ body {
     outline-offset: 2px;
 }
 
-.pb-add-step-mark {
-    font-family: var(--font-mono);
-    font-size: var(--text-lg);
-    line-height: 1;
-}
+.pb-add-step-label { white-space: nowrap; }
 
 /* The lane header stays put while its nodes scroll past. */
 .pb-step-head {
@@ -509,14 +509,6 @@ body {
     white-space: nowrap;
 }
 
-/* Pushed to the end of the facts line, so it is not competing with the step's
-   name for the row above. It stays hover-revealed (see the rule further down)
-   — a rare, consequential action, and five lanes of permanent button is what
-   the facts line is trying to get away from. */
-.pb-step-replace {
-    margin-left: auto;
-}
-
 .pb-step-body {
     display: flex;
     flex-direction: column;
@@ -551,7 +543,9 @@ body {
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-secondary);
+    /* A phase name is how the board is navigated, not a piece of metadata about
+       it — `--text-secondary` is below AA on dark and reserved for the latter. */
+    color: var(--text-label);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -568,37 +562,19 @@ body {
     outline-offset: 2px;
 }
 
-.pb-phase-head::after {
-    content: '';
+/* The band between the name and the phase's one control. It was a `::after`
+   pseudo-element, which cannot sit between two real children — the control had
+   to be ordered around it. It is an element now, and stronger.
+
+   Mixed off the foreground rather than off `--border-hover`: that token is
+   `--vscode-contrastBorder`, which every theme outside high-contrast sets to
+   `#00000000`, so the rule painted nothing at all and the `+` floated a lane's
+   width from the name it belongs to. */
+.pb-phase-rule {
     flex-grow: 1;
     height: 1px;
-    background: var(--border);
-    order: 1;
+    background: color-mix(in srgb, var(--text-muted) 50%, transparent);
 }
-
-/* One Attach per phase — not a pair on every node and every phase. */
-.pb-attach {
-    order: 2;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    white-space: nowrap;
-    padding: 1px var(--space-2);
-    font-family: inherit;
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity var(--transition-fast), background var(--transition-fast);
-}
-
-.pb-phase:hover .pb-attach,
-.pb-attach:focus-visible { opacity: 1; }
-
-.pb-attach:hover { color: var(--text-primary); background: var(--bg-hover); }
 
 .pb-phase-nodes {
     display: flex;
@@ -615,12 +591,34 @@ body {
     min-width: 0;
     background: var(--bg-primary);
     border: 1px solid var(--border);
+    /* The tick that carries the node's kind. The quiet end of the ramp for
+       `investigate` and `control`, which neither produce a file nor stop the
+       run. Not `--border`: an indicator is judged against 3:1, and the card's
+       own edge measures 1.06 on dark — blank space beside a legend label. */
+    border-left-width: 3px;
+    border-left-color: var(--text-muted);
     border-radius: var(--radius-sm);
 }
 
+/* Weight, not hue: three steps of one neutral. Every colour this panel has left
+   already means something else — green produces, purple yours, blue selection,
+   and amber paints the stale-build banner one row above these same cards — so a
+   fifth hue would be read as one of those. `investigate` and `control` sit at
+   the quiet end of that ramp, set above. A gate carries the word as well, since
+   two steps of grey is a difference not everyone can see. */
+.pb-node--author { border-left-color: var(--text-body); }
+.pb-node--gate { border-left-color: var(--text-secondary); }
+
 .pb-node--over { border-color: var(--accent); }
 .pb-node--dragging { opacity: 0.4; }
-.pb-node--open { border-color: var(--accent); background: var(--accent-subtle); }
+
+/* A ring rather than a hairline: at 1px the open node was the same weight as
+   every other card in the lane. */
+.pb-node--open {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
 
 .pb-grip {
     display: flex;
@@ -676,12 +674,26 @@ body {
 
 .pb-writes { color: var(--success); }
 
-.pb-node-action {
-    align-self: stretch;
-    padding: 0 var(--space-2);
-    font-family: inherit;
+/* A node that can stop the run, said in a word. */
+.pb-node-gate {
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
-    white-space: nowrap;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* Taking a node out of the run. Revealed on the card it acts on rather than
+   resident on all of them — the phase's `+` is the resting control, and a
+   permanent bin on every card would be the one thing a lane repeats most. */
+.pb-node-drop {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    min-width: 24px;
+    padding: 0 var(--space-2);
     color: var(--text-secondary);
     background: transparent;
     border: none;
@@ -691,10 +703,19 @@ body {
     transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 
-.pb-node:hover .pb-node-action,
-.pb-node-action:focus-visible { opacity: 1; }
+.pb-node:hover .pb-node-drop,
+.pb-node-drop:focus-visible { opacity: 1; }
 
-.pb-node-action:hover { color: var(--text-primary); background: var(--bg-hover); }
+/* Where there is no pointer there is no hover, and this lane exists because
+   hover-only controls are unreachable. Keyboard already reaches it above. */
+@media (hover: none) {
+    .pb-node-drop { opacity: 1; }
+}
+
+.pb-node-drop:hover {
+    color: var(--error);
+    background: var(--error-subtle);
+}
 
 /* ---- One hue for everything the project owns ----
    Hooks, replaced nodes and replaced template sections share it, and nothing
@@ -711,17 +732,18 @@ body {
     border-radius: 999px;
 }
 
-.pb-template--yours .pb-template-file { color: var(--review); }
 
 /* ---- Hooks: drawn on the side they run, pointing at their anchor ---- */
 
-/* The arrowhead sits on the edge nearest the block the hook attaches to. */
+/* One row, one line. The block under "Mark the spec complete" was about five
+   times the height of the card it hangs from, because a chip wrapped to as many
+   lines as its text needed. The line is cut to the lane instead, and the whole
+   of it is read by opening the hook in the side column. */
 .pb-hook {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
-    padding: var(--space-1) var(--space-2);
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
     /* Its own width, never its content's. `speckit.companion.after-implement`
        is one unbreakable token wider than a lane. */
     min-width: 0;
@@ -731,27 +753,32 @@ body {
     border-radius: var(--radius-sm);
 }
 
-.pb-hook-verb { font-size: var(--text-xs); color: var(--review); opacity: 0.85; }
+.pb-hook-kind,
+.pb-hook-dot { flex-shrink: 0; font-size: var(--text-xs); color: var(--review); }
 
-.pb-hook-text {
-    font-size: var(--text-xs);
-    color: var(--review);
-    overflow-wrap: break-word;
-}
+.pb-hook-kind { opacity: 0.85; }
+.pb-hook-dot { opacity: 0.6; }
 
+.pb-hook-text,
 .pb-hook-ref {
-    font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--review);
-    overflow-wrap: anywhere;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+.pb-hook-ref { font-family: var(--font-mono); }
 
 /* ---- The decision ---- */
 
+/* Solid: a dashed edge is the panel's mark for "this adds something", and a
+   decision adds nothing — it reports where a verdict sends the run. */
 .pb-decisions {
     margin: var(--space-2) var(--space-1) 0;
     padding: var(--space-2);
-    border: 1px dashed var(--border-hover);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
 }
 
@@ -1231,19 +1258,33 @@ body {
     /* Fixed, and tall enough to hold the name it reveals. Growing on hover
        animated a layout property, which thrashes and — worse — shoved every
        node below the seam down while the pointer was on its way to one. A seam
-       reserves its own space once and never moves the board. */
-    height: 15px;
+       reserves its own space once and never moves the board.
+
+       24px because it was the smallest target on the board at 15 — a hairline
+       between two cards, and the only route to placing a hook precisely. The
+       line is drawn down the middle of that box rather than along its top edge:
+       a rule with 24px of nothing under it reads as a gap belonging to the card
+       above, where a centred one reads as the divider it is. */
+    height: 24px;
     padding: 0;
     text-align: left;
     font-family: inherit;
     font-size: var(--text-xs);
     line-height: 1;
     color: var(--text-muted);
-    background: none;
+    --pb-seam: var(--border);
+    /* Named, because a `<button>` with only a background-IMAGE keeps the
+       browser's `ButtonFace` underneath it — a near-white bar per gap on any
+       dark theme, five to a lane. */
+    background-color: transparent;
+    background-image: linear-gradient(
+        to right, var(--pb-seam) 0 4px, transparent 4px 8px);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: 0 50%;
     border: 0;
-    border-top: 1px dashed var(--border);
     cursor: pointer;
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+    transition: color var(--transition-fast);
 }
 
 /* The glyph is revealed, not resident.
@@ -1253,9 +1294,9 @@ body {
    already the affordance and it stays; the `+` and the name it labels appear
    together on hover, which is when they mean something.
 
-   Discoverability does not rest on it: every phase carries an explicit
-   **Add hook** button, which is the answer to "how do I attach work here".
-   The seams are the precise placement for someone who already knows. */
+   Discoverability does not rest on it: every phase carries a `+` that is
+   always there, and **Add hook** is the first thing its menu offers. The seams
+   are the precise placement for someone who already knows. */
 .pb-slot::before {
     content: '+';
     flex-shrink: 0;
@@ -1280,10 +1321,12 @@ body {
     transition: opacity var(--transition-fast);
 }
 
+/* Accent, not the review hue: purple on this board means "this project owns
+   it", and a pointer resting on a seam owns nothing yet. */
 .pb-slot:hover:not(:disabled),
 .pb-slot:focus-visible:not(:disabled) {
-    color: var(--review);
-    border-top-color: var(--review);
+    color: var(--accent);
+    --pb-seam: var(--accent);
 }
 
 /* A seam is thin, so the ring is what makes the focused one findable. */
@@ -1293,7 +1336,7 @@ body {
 }
 
 .pb-slot:hover:not(:disabled)::before,
-.pb-slot:focus-visible:not(:disabled)::before { color: var(--review); }
+.pb-slot:focus-visible:not(:disabled)::before { color: var(--accent); }
 
 .pb-slot:hover:not(:disabled) .pb-slot-label,
 .pb-slot:focus-visible:not(:disabled) .pb-slot-label { opacity: 1; }
@@ -1322,7 +1365,8 @@ body {
 }
 
 .pb-hook-from,
-.pb-hook-note {
+.pb-hook-note,
+.pb-hook-ext {
     margin-left: var(--space-1);
     padding: 0 4px;
     font-size: var(--text-xs);
@@ -1331,11 +1375,13 @@ body {
     border-radius: var(--radius-sm);
 }
 
-/* The inert "+ node" — present so the question has an answer, and plainly not
-   a button, since there is nothing for it to offer here. */
-.pb-phase-tool--inert {
-    color: var(--text-muted);
-    cursor: help;
+/* Whose it is, in a word — the only thing separating a stock hook from one of
+   yours was a hue. Pushed to the end of the row so the text keeps the width. */
+.pb-hook-ext {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
 }
 
 .pb-stock-command {
@@ -1362,18 +1408,19 @@ body {
 
 
 
-.pb-produces {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: 0 var(--space-2);
+/* The facts line speaks in one voice. A green pill counting files, a mono node
+   count and a bare `§` were three registers on one row, and only one of them
+   said in words what it was counting. */
+.pb-produces,
+.pb-fact-dot {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--success);
-    background: var(--success-subtle);
-    border-radius: 999px;
+    color: var(--text-muted);
+    white-space: nowrap;
     cursor: default;
 }
+
+.pb-fact-dot { opacity: 0.6; }
 
 .pb-template {
     display: inline-flex;
@@ -1383,6 +1430,7 @@ body {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
+    white-space: nowrap;
     /* A button now: the document's shape opens from the step that writes it. */
     background: none;
     border: 0;
@@ -1431,28 +1479,6 @@ body {
 .pb-inspector-variants {
     font-family: inherit;
     font-size: var(--text-sm);
-}
-
-/* ============================================
-   Hooks — one heading per side, its actions beneath
-   ============================================ */
-
-/* Each action reads as a branch off the heading above it. */
-.pb-hook {
-    position: relative;
-    padding-left: var(--space-4);
-}
-
-.pb-hook::before {
-    content: '';
-    position: absolute;
-    left: var(--space-2);
-    top: 0;
-    bottom: 50%;
-    border-left: 1px solid var(--review);
-    border-bottom: 1px solid var(--review);
-    width: 5px;
-    opacity: 0.6;
 }
 
 /* ============================================
@@ -1507,61 +1533,53 @@ body {
     background: var(--error-subtle);
 }
 
-/* The mark that says a step differs from the shipped pipeline. */
-.pb-changed-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--review);
+/* The mark that says a step differs from the shipped pipeline. It was a 6px
+   dot with no role and no label, so it meant nothing without a hover. */
+.pb-changed {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--review);
+    white-space: nowrap;
     cursor: help;
 }
 
 /* ============================================
-   Phase controls — add, remove, reorder
+   Phase controls — one `+`, always there
    ============================================ */
 
-.pb-phase-tools {
-    order: 2;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.pb-phase:hover .pb-phase-tools,
-.pb-phase-tools:focus-within { opacity: 1; }
-
-.pb-phase-tool {
+/* Add hook, the node picker, split and merge were four separate buttons at
+   `opacity: 0`, so a phase showed nothing that could change it and touch
+   reached none of them. One control at the end of the rule, resident, and the
+   five things it can do said in words inside it. */
+.pb-phase-add {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 var(--space-1);
-    font-family: inherit;
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 0;
+    color: var(--text-muted);
     background: transparent;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     cursor: pointer;
 }
 
-.pb-phase-tool:hover:not(:disabled) {
+.pb-phase-add:hover {
     color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--text-muted) 50%, transparent);
     background: var(--bg-hover);
 }
 
-.pb-phase-tool:disabled { opacity: 0.35; cursor: default; }
-
-.pb-phase-tool--remove:hover:not(:disabled) {
-    color: var(--error);
-    border-color: var(--error);
-    background: var(--error-subtle);
+/* Accent, not the review hue: an open menu is a selection, and purple on this
+   board means the project owns the thing wearing it. */
+.pb-phase-add[aria-expanded='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-subtle);
 }
-
-.pb-phase-add-node { padding-right: var(--space-1); }
 
 /* A step's name opens the step's own instructions. */
 .pb-step-open {
@@ -1574,31 +1592,6 @@ body {
 }
 
 .pb-step-open:hover { text-decoration: underline; }
-
-/* Handing a whole step to a document of your own. */
-.pb-step-replace {
-    padding: 1px var(--space-2);
-    font-family: inherit;
-    font-size: var(--text-xs);
-    /* Two words, one line. It read "Make it / ours" in every lane. */
-    white-space: nowrap;
-    color: var(--text-secondary);
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.pb-step:hover .pb-step-replace,
-.pb-step-replace:focus-visible { opacity: 1; }
-
-.pb-step-replace:hover {
-    color: var(--review);
-    border-color: var(--review);
-    background: var(--review-subtle);
-}
 
 /* Somebody else's, in the same block and the same shape as yours, without the
    colour that means "this project changed it". The extension's name was on
@@ -1616,12 +1609,16 @@ body {
    "before draft-spec" heading, so a node with work on both sides sat between
    two of them and four repetitions of its own name. Position was carrying the
    before/after meaning and it was not carrying it — the arrows were the thing
-   nobody could read. One block, two sides named in words. */
+   nobody could read. One block, two sides named in words.
+
+   No HOOKS heading either: the purple rule down the side and the words `before`
+   and `after` already say what the block is, and the heading was a third line
+   of chrome above rows one line tall. */
 
 .pb-attached {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     margin: 2px 0 var(--space-1) var(--space-4);
     padding: var(--space-2);
     min-width: 0;
@@ -1629,18 +1626,6 @@ body {
     border-left: 1px solid var(--review);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     background: var(--bg-elevated);
-}
-
-.pb-attached-head {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin: 0 0 2px;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
 }
 
 .pb-attached-side {
@@ -1652,7 +1637,7 @@ body {
 
 /* The word, not an arrow. */
 .pb-attached-when {
-    padding-top: 3px;
+    padding-top: 2px;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-secondary);
@@ -2137,6 +2122,21 @@ body {
     background: var(--accent-subtle);
     box-shadow: inset 0 0 0 1px var(--accent-strong);
 }
+
+/* ── L2 ──────────────────────────────────────────────────────
+   After the menu's own rules, because the phase's `+` is a menu trigger and
+   source order is what decides between two single-class selectors. */
+
+/* The rule takes the slack in a phase header; the control never does. */
+.pb-phase-head .pb-menu { flex-shrink: 0; }
+
+/* The trigger is a 24px square, so the caret's gap would push the mark
+   off-centre inside it. */
+.pb-phase-add { gap: 0; }
+
+/* The open node's ring is drawn with an inset shadow, which a `--yours` border
+   would otherwise sit inside and read as two rings of different colours. */
+.pb-node--yours.pb-node--open { box-shadow: inset 0 0 0 1px var(--review); }
 
 /* ── Narrow panel ────────────────────────────────────────────
    Last on purpose: `@container` adds no specificity, so these have to

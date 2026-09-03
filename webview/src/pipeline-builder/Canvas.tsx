@@ -12,11 +12,12 @@
  *   Anything the project owns is marked with one hue and nothing else uses it,
  *   so "what did we change here" is answerable without reading.
  *
- *   A hook is drawn on the side it runs, with a connector into the block it
- *   attaches to. Before sits above with the arrow pointing down into the node;
- *   after sits below with the arrow coming up out of it.
+ *   A hook is drawn under the node it attaches to, one line each, under the
+ *   word for the side it runs on. Position was carrying that meaning before,
+ *   through connector arms nobody could read.
  */
 
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
 import {
     PipelineDecision,
@@ -49,7 +50,7 @@ interface Props {
     ) => void;
     /** Read a step's own preamble — the text every node in it sits under. */
     onOpenFrame: (command: string) => void;
-    /** Hand the whole step to one document of your own, seeded from this one. */
+    /** Hand the whole step to one document of your own. Offered in the side column. */
     onReplaceStep: (command: string) => void;
     /** Open the panel for this step's document shape. */
     onOpenTemplate: (command: string) => void;
@@ -89,6 +90,25 @@ function flatOrder(step: PipelineStep): string[] {
     return step.phases.flatMap(phase => phase.nodes.map(n => n.id));
 }
 
+/**
+ * A step's order and grouping with one node taken out, or null when it cannot be.
+ *
+ * A phase emptied by the removal goes with it, since an empty phase cannot be
+ * written — and a step whose every phase empties cannot be written at all, so
+ * that removal is refused here rather than sent and refused by the writer. The
+ * board and the side column both take a node out; deriving this twice is how
+ * they came to disagree, and the disagreement was a button that fired, was
+ * refused, and redrew the panel unchanged.
+ */
+export function withoutNode(step: PipelineStep, nodeId: string):
+{ order: string[]; phases: Array<{ name: string; nodes: string[] }> } | null {
+    const phases = step.phases
+        .map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id).filter(id => id !== nodeId) }))
+        .filter(p => p.nodes.length > 0);
+    if (phases.length === 0) { return null; }
+    return { order: phases.flatMap(p => p.nodes), phases };
+}
+
 /** That list with `moved` taken out and put back before `target`. */
 function reordered(order: string[], moved: string, target: string): string[] {
     const without = order.filter(id => id !== moved);
@@ -111,6 +131,11 @@ function shellName(line: string): string {
     if (script < 0) { return line; }
     const base = parts[script].split('/').pop() ?? parts[script];
     return [base, ...parts.slice(script + 1)].join(' ');
+}
+
+/** A count and its noun, agreeing. */
+function count(n: number): string {
+    return `${n}${n === 1 ? ' node' : ' nodes'}`;
 }
 
 /** Cut at a word boundary, so a chip never ends mid-token. */
@@ -158,13 +183,26 @@ function PlusIcon() {
     );
 }
 
-/** What a hook does, in a word. The type is jargon; this is the verb. */
-const HOOK_VERB: Record<string, string> = {
-    skill: 'run the skill',
-    prompt: 'tell the assistant',
-    command: 'run',
-    node: 'include',
-};
+/** Stop running a node. The file stays, so it is still on offer to add back. */
+function TrashIcon() {
+    return (
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true" focusable="false">
+            <path d="M3 4h10M6 4V2.5h4V4M5 4l.6 9h4.8L11 4" />
+        </svg>
+    );
+}
+
+/** The mark that opens a hook row, so the kind that follows reads as a label. */
+function HookMark() {
+    return (
+        <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor"
+            aria-hidden="true" focusable="false">
+            <path d="M4 2.5v11l8-5.5z" />
+        </svg>
+    );
+}
 
 // ── Nodes ───────────────────────────────────────────────
 
@@ -172,20 +210,13 @@ type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string) => void;
     onEditHook: (hook: PipelineHook) => void;
+    /** Stop running one node, with the order and the grouping a drag would send. */
+    onRemove: (nodeId: string) => void;
+    /** Whether taking it out would leave a step that can still be written. */
+    canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
     step: string;
 };
-
-function HookIcon() {
-    return (
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true" focusable="false">
-            <path d="M10 2v6a3 3 0 0 1-6 0" />
-            <path d="M4 11.5v2" />
-        </svg>
-    );
-}
 
 /**
  * One side's hooks, headed by what they run against.
@@ -217,9 +248,10 @@ function HookIcon() {
  * were the thing people could not read.
  *
  * So one block, under the anchor it belongs to, with the two sides named in
- * words. A row is the hook's own text and nothing else — whose it is comes from
- * the hue, which is the panel's one colour rule, so `companion` no longer
- * appears on every second line.
+ * words, and one line per hook — the block under "Mark the spec complete" was
+ * about five times the height of the card it hangs from. A row is a mark, the
+ * kind, and the hook's own text, cut to the lane; the whole of it is read by
+ * opening the hook in the side column.
  */
 function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
     before: PipelineHook[];
@@ -237,10 +269,6 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
 
     return (
         <div class="pb-attached">
-            <p class="pb-attached-head">
-                <HookIcon />
-                hooks
-            </p>
             {sides.map(([side, ours, theirs]) => (
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
@@ -250,9 +278,9 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                 <li key={`ours-${i}`}>
                                     <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
                                         onClick={() => onEdit?.(hook)}>
-                                        <span class="pb-hook-verb">
-                                            {HOOK_VERB[hook.type] ?? hook.type}
-                                        </span>
+                                        <HookMark />
+                                        <span class="pb-hook-kind">{hook.type}</span>
+                                        <span class="pb-hook-dot" aria-hidden="true">·</span>
                                         <span class={hook.type === 'prompt'
                                             ? 'pb-hook-text' : 'pb-hook-ref'}>
                                             {clip(hook.type === 'command'
@@ -271,10 +299,16 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                             + `Registered by the ${hook.extension} extension. `
                                             + 'It runs here, and is not edited in this panel.'
                                             + (hook.conditional ? '\nIt does not run every time.' : '')}>
+                                        <HookMark />
                                         <span class="pb-hook-ref">{clip(hook.command)}</span>
                                         {hook.optional && (
                                             <span class="pb-hook-note">asks first</span>
                                         )}
+                                        {/* Whose it is, in a word rather than a
+                                            hue alone. Only the minority carry
+                                            it: a badge on every row is the noise
+                                            the one-line row is removing. */}
+                                        <span class="pb-hook-ext">ext</span>
                                     </span>
                                 </li>
                             ))}
@@ -332,6 +366,10 @@ function Node({ node, actions, stock, seams }: {
             <div
                 class={[
                     'pb-node',
+                    // The tick down the left says what the node does — writes a
+                    // file, can stop the run, or neither — so the kind is on the
+                    // board rather than only in the pane you have to open.
+                    `pb-node--${node.kind}`,
                     node.replaced ? 'pb-node--yours' : '',
                     movable ? 'pb-node--movable' : 'pb-node--pinned',
                     open ? 'pb-node--open' : '',
@@ -373,10 +411,16 @@ function Node({ node, actions, stock, seams }: {
                         ? "Read this project's instructions for this node"
                         : 'Read the instructions this node contributes'}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.writes.length > 0
+                    {(node.replaced || node.kind === 'gate' || node.writes.length > 0
                         || node.mayWrite.length > 0) && (
                         <span class="pb-node-meta">
                             {node.replaced && <span class="pb-yours">yours</span>}
+                            {/* In a word, not a hue: every colour this panel
+                                has left already means something else. */}
+                            {node.kind === 'gate' && (
+                                <span class="pb-node-gate"
+                                    title="This node can stop the run">gate</span>
+                            )}
                             {node.writes.map(file => (
                                 <span key={file} class="pb-writes"
                                     title="this node produces it">{file}</span>
@@ -395,14 +439,20 @@ function Node({ node, actions, stock, seams }: {
                     )}
                 </button>
 
-                {/* Nothing here for a shipped node any more. Clicking it opens
-                    the panel where its instructions can be edited, and saving
-                    that edit is what makes it yours — so a separate "make mine"
-                    was a step between someone and the thing they came to do. */}
-                {node.replaced && (
-                    <button class="pb-node-action"
-                        title="Delete your copy and go back to the shipped node"
-                        onClick={() => actions.onRestoreNode(actions.step, node.id)}>Undo</button>
+                {/* Nothing on the card says "make this mine" any more. Clicking
+                    it opens the panel where its instructions can be edited, and
+                    saving that edit is what makes it yours — so a separate step
+                    stood between someone and the thing they came to do. Going
+                    back to the shipped node lives in that same panel. */}
+                {/* Absent, not inert, on the last node a step has: taking it out
+                    would leave a step with no phases, which cannot be written.
+                    A step added through "Add step" ships with exactly one. */}
+                {actions.canRemove(node.id) && (
+                    <button class="pb-node-drop"
+                        title={`Stop running ${node.name}. The file stays, so it is `
+                            + 'still on offer under Add node.'}
+                        aria-label={`Stop running ${node.name}`}
+                        onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
                 )}
             </div>
             <Attached before={before} after={after}
@@ -452,6 +502,8 @@ interface PhaseControls {
     canSplit: boolean;
     /** A step needs at least one phase, so the last one cannot be removed. */
     only: boolean;
+    /** The first phase has nothing above it, so its nodes merge downward. */
+    first: boolean;
 }
 
 function Phase({ phase, actions, controls }: {
@@ -462,6 +514,17 @@ function Phase({ phase, actions, controls }: {
     const { onRename } = controls;
     const before = phase.hooks.filter(hook => hook.when === 'before');
     const after = phase.hooks.filter(hook => hook.when === 'after');
+    const name = useRef<HTMLHeadingElement>(null);
+    const [picking, setPicking] = useState(false);
+
+    // The node picker is the phase menu's second step, so a click that dismisses
+    // the list has to put the trigger back to the menu it opened from.
+    useEffect(() => {
+        if (!picking) { return undefined; }
+        const done = () => setPicking(false);
+        document.addEventListener('click', done);
+        return () => document.removeEventListener('click', done);
+    }, [picking]);
 
     const rename = (event: Event) => {
         const el = event.currentTarget as HTMLElement;
@@ -470,12 +533,89 @@ function Phase({ phase, actions, controls }: {
         else { el.textContent = phase.name; }
     };
 
+    /** Put the caret in the name on the board rather than in a second field. */
+    const startRename = () => {
+        const el = name.current;
+        if (!el) { return; }
+        // After the menu has finished closing, not during it. A menu hands the
+        // keyboard back to its trigger on the way out, which is right for every
+        // other entry and would take the caret straight back off this one.
+        setTimeout(() => {
+            el.focus();
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }, 0);
+    };
+
+    /**
+     * Everything a phase can do, said in the same five words every time.
+     *
+     * Every one of these used to be a separate button that was `opacity: 0`
+     * until the pointer arrived, so the board showed nothing that could change
+     * anything and touch reached none of it. One `+` on the rule, always there.
+     *
+     * A row that cannot run here is shown inert rather than dropped, because
+     * the note is what teaches the capability: "one node here, so there is
+     * nothing to split off" says a phase can be split at the same moment it
+     * says why this one cannot. A dropped row teaches nothing, and a person
+     * who never sees Split never learns to look for it.
+     */
+    const offered = [
+        { id: 'hook', label: 'Add hook', note: 'a skill, an instruction or a command' },
+        controls.dropped.length
+            ? { id: 'node', label: 'Add node', note: `${controls.dropped.length} on offer` }
+            : {
+                id: 'node', label: 'Add node', disabled: true,
+                note: `every node ${controls.step} has is already in a phase — drag one in `
+                    + `from another, or write your own at .specify/companion/nodes/${controls.step}/`,
+            },
+        { id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' },
+        controls.canSplit
+            ? {
+                id: 'split', label: 'Split phase',
+                note: 'its last node starts a new phase after it',
+            }
+            : {
+                id: 'split', label: 'Split phase', disabled: true,
+                note: 'one node here, so there is nothing to split off',
+            },
+        // The first phase has nothing above it, so its nodes go down into the
+        // second. The label used to say "above" in both directions.
+        controls.only
+            ? {
+                id: 'merge', label: 'Merge into the phase above', disabled: true,
+                note: 'a step needs at least one phase',
+            }
+            : controls.first
+                ? {
+                    id: 'merge', label: 'Merge into the phase below',
+                    note: 'nothing sits above this one, so its nodes go down',
+                }
+                : {
+                    id: 'merge', label: 'Merge into the phase above',
+                    note: 'its nodes go with it',
+                },
+    ];
+
+    // No guards here: `Menu` will not call this for a row it drew inert.
+    const act = (id: string) => {
+        if (id === 'hook') { actions.onAdd(phase.name); }
+        if (id === 'node') { setPicking(true); }
+        if (id === 'rename') { startRename(); }
+        if (id === 'split') { controls.onAddPhaseAfter(phase.name); }
+        if (id === 'merge') { controls.onRemove(phase.name); }
+    };
+
     return (
         <section class="pb-phase">
             <header class="pb-phase-head">
                 {/* A phase name is the project's to choose — it is also a hook
                     anchor, so renaming it is a real edit, not a label. */}
                 <h3 class="pb-phase-name" contentEditable spellcheck={false}
+                    ref={name} role="textbox" aria-label="Phase name"
                     title="Rename this phase"
                     onBlur={rename}
                     onKeyDown={event => {
@@ -488,18 +628,20 @@ function Phase({ phase, actions, controls }: {
                             (event.currentTarget as HTMLElement).blur();
                         }
                     }}>{phase.name}</h3>
-                <span class="pb-phase-tools">
-                    {/* Shown even with nothing to offer. Hiding it left "how do I
-                        add a node here?" with no answer anywhere on screen — the
-                        control simply was not there to explain itself. */}
+                <span class="pb-phase-rule" aria-hidden="true" />
+                {picking ? (
                     <Menu
-                        class="pb-phase-tool pb-phase-add-node"
-                        trigger="+ node"
-                        title="Put a node in this phase"
-                        disabled={controls.dropped.length === 0}
-                        disabledTitle={`Every node ${controls.step} has is already in a phase. `
-                            + 'To put another one here: drag it in from another phase, or '
-                            + `write your own at .specify/companion/nodes/${controls.step}/`}
+                        // Keyed apart from the menu it replaces: without it
+                        // Preact reuses the instance, and the picker inherits
+                        // the closed state the pick that opened it left behind.
+                        key="pick"
+                        class="pb-phase-add"
+                        trigger={<PlusIcon />}
+                        caret={false}
+                        align="right"
+                        defaultOpen
+                        label={`Put a node in ${phase.name}`}
+                        title={`Put a node in ${phase.name}`}
                         options={controls.dropped.map(id => ({
                             id,
                             // What the node IS, and what it does. The list used
@@ -507,31 +649,28 @@ function Phase({ phase, actions, controls }: {
                             // category they were in — the same words on every
                             // row, and never what picking one gets you.
                             label: controls.offers[id]?.name || id,
-                            note: controls.offers[id]?.summary
-                                || (controls.addOns.includes(id)
+                            note: [
+                                controls.offers[id]?.summary,
+                                controls.addOns.includes(id)
                                     ? `${controls.step} ships this and does not run it`
-                                    : 'this project took it out'),
+                                    : 'removed from this run',
+                            ].filter(Boolean).join(' · '),
                         }))}
-                        onPick={id => controls.onAddNode(phase.name, id)}
+                        onPick={id => { setPicking(false); controls.onAddNode(phase.name, id); }}
                     />
-                    <button class="pb-attach" onClick={() => actions.onAdd(phase.name)}
-                        title={`Add a hook in ${phase.name} — a skill, an instruction or a command`}>
-                        <HookIcon />
-                        Add hook
-                    </button>
-                    <button class="pb-phase-tool"
-                        title={controls.canSplit
-                            ? `Split ${phase.name} — its last node starts a new phase after it`
-                            : `${phase.name} has one node, so there is nothing to split off`}
-                        disabled={!controls.canSplit}
-                        onClick={() => controls.onAddPhaseAfter(phase.name)}><PlusIcon /></button>
-                    <button class="pb-phase-tool pb-phase-tool--remove"
-                        title={controls.only
-                            ? 'A step needs at least one phase'
-                            : `Merge ${phase.name} into the phase above — its nodes go with it`}
-                        disabled={controls.only}
-                        onClick={() => controls.onRemove(phase.name)}>&minus;</button>
-                </span>
+                ) : (
+                    <Menu
+                        key="menu"
+                        class="pb-phase-add"
+                        trigger={<PlusIcon />}
+                        caret={false}
+                        align="right"
+                        label={`Add or change ${phase.name}`}
+                        title={`Add or change ${phase.name}`}
+                        options={offered}
+                        onPick={act}
+                    />
+                )}
             </header>
             <Attached before={before} after={after} anchor={phase.name}
                 onEdit={actions.onEditHook} />
@@ -598,7 +737,7 @@ function changeSummary(step: PipelineStep): string {
     if (c.replaced.length) { bits.push(`rewrote ${c.replaced.join(', ')}`); }
     if (c.phases.length) { bits.push(`phases named ${c.phases.join(', ')}`); }
     if (step.template?.sections.length) {
-        bits.push(`template § ${step.template.sections.join(', ')}`);
+        bits.push(`template sections ${step.template.sections.join(', ')}`);
     }
     return `You changed this step: ${bits.join(' · ')}`;
 }
@@ -610,28 +749,19 @@ function changed(step: PipelineStep): boolean {
         || step.template?.sections.length);
 }
 
-function FilesIcon() {
-    return (
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.3" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <path d="M3.5 2h5l3 3v9h-8z" />
-            <path d="M8.5 2v3h3" />
-        </svg>
-    );
-}
-
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onReplaceStep, onOpenTemplate }: {
+    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook'>;
+    actions: Omit<NodeActions,
+        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove'>;
     onReorder: Props['onReorder'];
     onAddHook: Props['onAddHook'];
     onEditHook: Props['onEditHook'];
     onSetPhases: Props['onSetPhases'];
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
-    onReplaceStep: Props['onReplaceStep'];
+    onRemoveNode: Props['onRemoveNode'];
     onOpenTemplate: Props['onOpenTemplate'];
 }) {
     const grouping = () => step.phases.map(p => ({
@@ -680,6 +810,12 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
         onAdd: anchor => onAddHook(step.name, anchor, 'before'),
         onEditHook: hook => onEditHook(step.name, hook),
+        onRemove: nodeId => {
+            const shape = withoutNode(step, nodeId);
+            if (!shape) { return; }
+            onRemoveNode(step.name, nodeId, shape.order, shape.phases);
+        },
+        canRemove: nodeId => withoutNode(step, nodeId) !== null,
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
@@ -689,11 +825,11 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                 of its own and not at the bottom of a lane you must scroll to. */}
             {/* Two rows, because seven things did not fit in one. A lane holds
                 300px and the header was cramming an index, a name, a changed
-                mark, an artifact count, a template chip, a node count and a
-                two-word button into it — so "9 nodes" broke across lines and
-                "Make it ours" became "Make it / ours". The step's NAME is what
-                a reader scans a board for, so it gets the row to itself and
-                everything that describes it drops to a quiet line below. */}
+                mark, an artifact count, a template chip and a node count into
+                it, so "9 nodes" broke across lines. The step's NAME is what a
+                reader scans a board for, so it gets the row to itself and
+                everything that describes it drops to a quiet line below — one
+                register, one separator, and no glyph a reader has to guess. */}
             <header class="pb-step-head">
                 <div class="pb-step-identity">
                     {step.inSequence && <span class="pb-step-index">{index + 1}</span>}
@@ -704,39 +840,43 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         </button>
                     </h2>
                     {changed(step) && (
-                        <span class="pb-changed-dot" title={changeSummary(step)}
-                            aria-label="changed" />
+                        <span class="pb-changed" title={changeSummary(step)}>changed</span>
                     )}
                 </div>
                 <div class="pb-step-facts">
-                    <span class="pb-step-counts">{nodes} nodes</span>
+                    <span class="pb-step-counts">{count(nodes)}</span>
                     {step.artifacts.length > 0 && (
-                        <span class="pb-produces"
-                            title={`produces ${step.artifacts.join(', ')}`}>
-                            <FilesIcon />
-                            {step.artifacts.length}
-                        </span>
+                        <>
+                            <span class="pb-fact-dot" aria-hidden="true">·</span>
+                            <span class="pb-produces"
+                                title={`produces ${step.artifacts.join(', ')}`}>
+                                {step.artifacts.length}
+                                {step.artifacts.length === 1 ? ' file' : ' files'}
+                            </span>
+                        </>
                     )}
                     {/* The document's shape, opened from the step that writes
                         it. Carries the "yours" hue only once a section has been
                         replaced — otherwise it is an offer, not a change. */}
                     {step.template && (step.template.sectionsAvailable.length > 0
                         || step.template.sections.length > 0) && (
-                        <button
-                            class={`pb-template${
-                                step.template.sections.length ? ' pb-template--yours' : ''}`}
-                            title={step.template.sections.length
-                                ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
-                                : `Change the shape of ${step.template.file}`}
-                            onClick={() => onOpenTemplate(step.name)}>
-                            {step.template.sections.length ? (
-                                <span class="pb-yours">{step.template.sections.length} §</span>
-                            ) : <span>§</span>}
-                        </button>
+                        <>
+                            <span class="pb-fact-dot" aria-hidden="true">·</span>
+                            <button
+                                class={`pb-template${
+                                    step.template.sections.length ? ' pb-template--yours' : ''}`}
+                                title={step.template.sections.length
+                                    ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
+                                    : `Change the shape of ${step.template.file}`}
+                                onClick={() => onOpenTemplate(step.name)}>
+                                {step.template.sections.length ? (
+                                    <span class="pb-yours">
+                                        template · {step.template.sections.length}
+                                    </span>
+                                ) : <span>template</span>}
+                            </button>
+                        </>
                     )}
-                    <button class="pb-step-replace"
-                        title={`Hand ${step.name} to one document of your own, seeded from what it says today`}
-                        onClick={() => onReplaceStep(step.name)}>Make it ours</button>
                 </div>
             </header>
 
@@ -754,6 +894,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                                 ? step.stockHooks.filter(h => h.when === 'after') : [],
                             canSplit: phase.nodes.length > 1,
                             only: step.phases.length === 1,
+                            first: at === 0,
                             // The name is a hook anchor, so the hooks come with it.
                             onRename: (from, to) => onSetPhases(step.name, settled(
                                 grouping().map(p => p.name === from ? { ...p, name: to } : p)),
@@ -810,7 +951,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 
 export function Canvas(
     { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
-        onEditHook, onSetPhases, onAddNode, onOpenFrame, onReplaceStep,
+        onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
         onOpenTemplate, onNewStep, selected }: Props,
 ) {
     const actions = { onOpenNode, onRestoreNode, selected };
@@ -825,7 +966,7 @@ export function Canvas(
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
-                        onReplaceStep={onReplaceStep}
+                        onRemoveNode={onRemoveNode}
                         onOpenTemplate={onOpenTemplate} />
                 ))}
                 {/* The tail of the row: everything that does not take a turn in
@@ -845,7 +986,7 @@ export function Canvas(
                                       + 'hands-off'}
                             </span>
                             <span class="pb-aside-counts">
-                                {step.phases.reduce((n, p) => n + p.nodes.length, 0)} nodes
+                                {count(step.phases.reduce((n, p) => n + p.nodes.length, 0))}
                             </span>
                         </div>
                     ))}
@@ -854,8 +995,8 @@ export function Canvas(
                         hide inside implement, or not exist. */}
                     <button class="pb-add-step" onClick={onNewStep}
                         title="Add a step of your own to the run">
-                        <span class="pb-add-step-mark" aria-hidden="true">+</span>
-                        <span class="pb-add-step-label">step</span>
+                        <PlusIcon />
+                        <span class="pb-add-step-label">Add step</span>
                     </button>
                 </div>
             </div>

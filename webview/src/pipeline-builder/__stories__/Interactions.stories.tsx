@@ -72,6 +72,23 @@ function assert(condition: boolean, said: string) {
     if (!condition) { throw new Error(said); }
 }
 
+/** Open a phase's one resting control and read back what it offers. */
+async function phaseMenu(root: HTMLElement, at: number) {
+    const phase = root.querySelectorAll('.pb-phase')[at];
+    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
+}
+
+/** Open it and take the entry with this label. */
+async function fromPhaseMenu(root: HTMLElement, at: number, label: string) {
+    const options = await phaseMenu(root, at);
+    const hit = options.find(o => o.querySelector('.pb-menu-label')?.textContent === label);
+    assert(Boolean(hit), `the phase menu offers "${label}"`);
+    hit!.click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+}
+
 const meta: Meta = { title: 'Pipeline Builder/Interactions' };
 export default meta;
 type Story = StoryObj;
@@ -151,6 +168,11 @@ export const RenameAPhase: Story = {
     play: async ({ canvasElement }) => {
         const name = canvasElement.querySelector('.pb-phase-name') as HTMLElement;
         assert(name.getAttribute('contenteditable') === 'true', 'a phase name is editable');
+        // Labelled, since contentEditable on its own reads to a screen reader
+        // as the heading it also looks like.
+        assert(name.getAttribute('role') === 'textbox', 'and says it is a field');
+        await fromPhaseMenu(canvasElement, 0, 'Rename phase');
+        assert(document.activeElement === name, 'the menu puts the caret in it');
         name.textContent = 'set up';
         name.dispatchEvent(new Event('blur', { bubbles: true }));
     },
@@ -160,15 +182,31 @@ export const APhaseOffersOnlyWhatWorks: Story = {
     name: 'A phase offers only what can actually happen',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const tools = Array.from(canvasElement.querySelectorAll('.pb-phase')[1]
-            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)')) as HTMLButtonElement[];
-        assert(tools.length === 2, 'split and merge — reordering is not on offer');
+        const labels = (await phaseMenu(canvasElement, 1))
+            .map(o => o.querySelector('.pb-menu-label')?.textContent);
         // Moving a phase moves its nodes, and no such move in any shipped step
         // survives the `reads:` dependencies. The arrows could only ever fire,
         // be refused, and redraw unchanged.
-        assert(!tools.some(t => /move/i.test(t.title)), 'nothing claims to move a phase');
-        assert(tools.some(t => /split/i.test(t.title)), 'a phase can be split');
-        assert(tools.some(t => /merge/i.test(t.title)), 'and merged into the one above');
+        assert(!labels.some(l => /move/i.test(l ?? '')), 'nothing claims to move a phase');
+        assert(labels.includes('Split phase'), 'a phase can be split');
+        assert(labels.includes('Merge into the phase above'),
+            'and merged into the one above');
+        assert(labels[0] === 'Add hook', 'and the commonest change is first');
+
+        // The first phase has nothing above it, and says which way its nodes
+        // would actually go.
+        const first = await phaseMenu(canvasElement, 0);
+        const firstLabels = first.map(o => o.querySelector('.pb-menu-label')?.textContent);
+        assert(firstLabels.includes('Merge into the phase below'),
+            'the first phase merges downward, and says so');
+        assert(!firstLabels.includes('Merge into the phase above'),
+            'and never claims a direction it does not go');
+
+        // A row that cannot run here is inert rather than absent: its note is
+        // where someone learns the capability exists at all.
+        const inert = first.filter(o => o.getAttribute('aria-disabled') === 'true');
+        assert(inert.every(o => (o.querySelector('.pb-menu-note')?.textContent ?? '') !== ''),
+            'every inert row still says why it cannot run here');
     },
 };
 
@@ -176,9 +214,7 @@ export const MergeAPhase: Story = {
     name: 'Merge a phase into the one above',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const tools = canvasElement.querySelectorAll('.pb-phase')[1]
-            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)');
-        (tools[1] as HTMLButtonElement).click();
+        await fromPhaseMenu(canvasElement, 1, 'Merge into the phase above');
     },
 };
 
@@ -186,9 +222,7 @@ export const SplitAPhase: Story = {
     name: 'Split a phase in two',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const tools = canvasElement.querySelectorAll('.pb-phase')[0]
-            .querySelectorAll('button.pb-phase-tool:not(.pb-phase-add-node)');
-        (tools[0] as HTMLButtonElement).click();
+        await fromPhaseMenu(canvasElement, 0, 'Split phase');
     },
 };
 
@@ -205,10 +239,9 @@ export const PutADroppedNodeBack: Story = {
     play: async ({ canvasElement }) => {
         // The panel's own menu, not a native select: a `<select>` is drawn by
         // the operating system, so those two pickers arrived in a different
-        // visual language from everything around them.
-        const open = canvasElement.querySelector('.pb-phase-add-node') as HTMLButtonElement;
-        open.click();
-        await new Promise(resolve => setTimeout(resolve, 0));
+        // visual language from everything around them. Reached from the phase's
+        // one resting control, which is where every phase change starts.
+        await fromPhaseMenu(canvasElement, 0, 'Add node');
         const options = canvasElement.querySelectorAll('.pb-menu-option');
         assert(options.length === 2, 'the two dropped nodes, with no placeholder row');
         (options[0] as HTMLButtonElement).click();
@@ -221,20 +254,28 @@ export const AShippedNodeCarriesNoExtraAction: Story = {
     play: async ({ canvasElement }) => {
         // Clicking the node opens the panel where its instructions are edited,
         // and saving that edit is what makes it yours — so the card no longer
-        // carries a "make mine" step in front of the thing people came to do.
-        assert(canvasElement.querySelector('.pb-node-action') === null,
-            'a shipped node card has no action of its own');
+        // carries a "make mine" step in front of the thing people came to do,
+        // and no "Undo" that silently deleted the copy it made. Going back to
+        // the shipped node lives in that same panel.
+        const card = canvasElement.querySelector('.pb-node') as HTMLElement;
+        assert(!card.textContent?.includes('Undo'),
+            'nothing on a node card is called Undo');
+        assert(!card.textContent?.includes('Make it ours'),
+            'and nothing asks to make it yours before you have read it');
         (canvasElement.querySelector('.pb-node-main') as HTMLButtonElement | null)?.click();
     },
 };
 
-export const MakeAStepYours: Story = {
-    name: 'Make a whole step yours',
+export const TakeANodeOutOfTheRun: Story = {
+    name: 'Take a node out of the run',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const action = canvasElement.querySelector('.pb-step-replace') as HTMLButtonElement;
-        assert(action.textContent === 'Make it ours', 'a step can be handed to one document');
-        action.click();
+        // There was no way to stop running a node from the panel at all — the
+        // writer's own refusal named an action only the file could perform.
+        const drop = canvasElement.querySelector('.pb-node-drop') as HTMLButtonElement;
+        assert(drop.getAttribute('title')?.includes('The file stays') ?? false,
+            'it stops the node running, and says the file survives it');
+        drop.click();
     },
 };
 
@@ -244,10 +285,7 @@ export const AddAHook: Story = {
     name: 'Add a hook',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const attach = canvasElement.querySelector('.pb-attach') as HTMLButtonElement;
-        assert(attach.textContent?.includes('Add hook') ?? false,
-            'the button says what it adds');
-        attach.click();
+        await fromPhaseMenu(canvasElement, 0, 'Add hook');
     },
 };
 
