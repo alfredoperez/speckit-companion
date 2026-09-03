@@ -229,16 +229,21 @@ export function Header(props: Props) {
                         }} />
                 </div>
 
-                <button
-                    class={`builder-chip ${changedSteps ? 'builder-chip--customised' : ''}`}
-                    aria-expanded={open}
-                    onClick={() => setOpen(!open)}
-                >
-                    {changedSteps
-                        ? `Changed · ${changedSteps} step${changedSteps === 1 ? '' : 's'}`
-                        : 'No changes'}
-                    <span class="builder-chip-caret">{open ? '▴' : '▾'}</span>
-                </button>
+                {/* Nothing changed is a whole fact. Expanding it said "this
+                    project runs the pipeline exactly as it ships" under a line
+                    already saying the same thing, so the chip states it and
+                    stops. */}
+                {changedSteps === 0 ? (
+                    <span class="builder-chip builder-chip--flat">No changes</span>
+                ) : (
+                    <button class="builder-chip builder-chip--customised"
+                        aria-expanded={open}
+                        onClick={() => setOpen(!open)}
+                    >
+                        {`Changed · ${changedSteps} step${changedSteps === 1 ? '' : 's'}`}
+                        <span class="builder-chip-caret">{open ? '▴' : '▾'}</span>
+                    </button>
+                )}
             </div>
 
             <div class="builder-facts">
@@ -327,12 +332,7 @@ export function Header(props: Props) {
 
             {open && (
                 <div class="builder-changes">
-                    {changes.length === 0 ? (
-                        <p class="builder-changes-empty">
-                            This project runs the pipeline exactly as it ships. Anything it
-                            adds, removes or rewires will be listed here.
-                        </p>
-                    ) : (
+                    {changes.length === 0 ? null : (
                         <ul class="builder-changes-list">
                             {changes.map(line => <li key={line}>{line}</li>)}
                         </ul>

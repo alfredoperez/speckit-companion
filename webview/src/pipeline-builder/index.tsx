@@ -374,10 +374,17 @@ function App() {
                                 nodeId: selected.nodeId, ...shape,
                             });
                         }}
-                        onAttach={() => vscode.postMessage({
-                            type: 'addHook', command: selected.command,
-                            anchor: selected.nodeId, when: 'before',
-                        })}
+                        // Opens the form, the way every other route to a hook
+                        // does. Posting the message straight from here sent one
+                        // with no kind and no value, and the write refused it
+                        // with "unknown hook type 'undefined'".
+                        onAttach={() => {
+                            setNotice(null);
+                            setSide({
+                                kind: 'attach',
+                                at: { command: selected.command, anchor: selected.nodeId },
+                            });
+                        }}
                         onUseVariant={(variantId: string) => {
                             const swapped = swapNode(graph, selected, variantId);
                             if (!swapped) { return; }

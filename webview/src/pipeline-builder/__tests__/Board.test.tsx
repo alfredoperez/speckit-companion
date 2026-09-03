@@ -258,9 +258,11 @@ describe("hooks another extension registered run in the lane, not beneath it", (
                 }],
             })],
         }));
+        // Named, not just marked: "ext" said only "not yours", and left "then
+        // whose?" to a tooltip.
         const marked = Array.from(host.querySelectorAll('.pb-hook-ext'));
         expect(marked).toHaveLength(1);
-        expect(marked[0].textContent).toBe('ext');
+        expect(marked[0].textContent).toBe('git');
         expect(marked[0].closest('.pb-hook')?.className).toContain('pb-hook--stock');
     });
 

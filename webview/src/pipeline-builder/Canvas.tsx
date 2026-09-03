@@ -304,11 +304,17 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                         {hook.optional && (
                                             <span class="pb-hook-note">asks first</span>
                                         )}
-                                        {/* Whose it is, in a word rather than a
-                                            hue alone. Only the minority carry
-                                            it: a badge on every row is the noise
-                                            the one-line row is removing. */}
-                                        <span class="pb-hook-ext">ext</span>
+                                        {/* Whose it is, named rather than
+                                            marked. `ext` said only "not yours",
+                                            which leaves "then whose?" to a
+                                            tooltip — the thing this board is
+                                            trying to stop doing. Only the
+                                            minority carry it: a badge on every
+                                            row is the noise a one-line row is
+                                            removing. */}
+                                        <span class="pb-hook-ext">
+                                            {clip(hook.extension, 14)}
+                                        </span>
                                     </span>
                                 </li>
                             ))}

@@ -169,6 +169,12 @@ body {
     cursor: pointer;
 }
 
+/* Nothing changed is the whole of what it has to say, so it is a statement
+   rather than a control that opens on an empty list. */
+.builder-chip--flat {
+    cursor: default;
+}
+
 .builder-chip--customised {
     color: var(--review);
     border-color: var(--review);
@@ -1310,6 +1316,7 @@ body {
     font-size: var(--text-xs);
     line-height: 1;
     color: var(--text-muted);
+    background: var(--bg-primary);
     opacity: 0;
     transition: opacity var(--transition-fast), color var(--transition-fast);
 }
@@ -1320,9 +1327,15 @@ body {
 }
 
 /* The name is laid out at rest and merely invisible, so revealing it paints
-   rather than reflows. */
+   rather than reflows.
+
+   It carries the board's own background, because the dashed rule is painted
+   across the whole control and would otherwise run straight through the words
+   and strike them out. */
 .pb-slot-label {
     white-space: nowrap;
+    padding: 0 var(--space-1);
+    background: var(--bg-primary);
     opacity: 0;
     transition: opacity var(--transition-fast);
 }
