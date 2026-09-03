@@ -7,7 +7,9 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
-import { Header, StatusIcon } from '../Header';
+import { Header } from '../Header';
+import { Menu } from '../Menu';
+import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import {
@@ -326,8 +328,10 @@ export const HeaderWorkflows: Story = {
 export const HeaderFirstRun: Story = {
     name: 'Header · the first time, nothing configured',
     render: () => (
-        <One><Header graph={graph([SPECIFY], { firstRun: true })} buildState="unconfigured"
-            busy={false} {...HEAD} onDismissFirstRun={noop} /></One>
+        <One><Header
+            graph={graph([step('specify', SPECIFY.phases, { changes: { ...NO_CHANGES } })],
+                { firstRun: true, configured: false, customised: false })}
+            buildState="unconfigured" busy={false} {...HEAD} onDismissFirstRun={noop} /></One>
     ),
 };
 
@@ -359,32 +363,53 @@ export const HeaderPreviewed: Story = {
 // The strip lives at the foot of the panel rather than in this band, but it is
 // the header's other half of the same conversation: one says what a build did,
 // the other says what a write did.
-export const StatusLine: Story = {
+export const StatusAfterAWrite: Story = {
     name: 'Status line · a write, with the way back',
     render: () => (
         <div class="builder">
-            <div class="builder-status builder-status--done" role="status">
-                <StatusIcon tone="done" />
-                <span class="builder-status-text">Hook added before Draft the spec</span>
-                <button class="builder-status-undo">Undo</button>
-                <span class="builder-status-detail">Build to apply</span>
-                <button class="builder-status-close" title="Dismiss">×</button>
-            </div>
+            <StatusLine
+                status={{
+                    tone: 'done', text: 'Hook added before Draft the spec',
+                    detail: 'Build to apply', undo: { token: 'hook:specify:draft-spec' },
+                }}
+                onUndo={noop} onDismiss={noop} />
         </div>
     ),
 };
 
-export const StatusLineRefused: Story = {
+export const StatusAfterARefusal: Story = {
     name: 'Status line · a write the configuration refused',
     render: () => (
         <div class="builder">
-            <div class="builder-status builder-status--warning" role="status">
-                <StatusIcon tone="warning" />
-                <span class="builder-status-text">
-                    review-gaps is not a node specify can run — nothing was written
-                </span>
-                <button class="builder-status-close" title="Dismiss">×</button>
-            </div>
+            <StatusLine
+                status={{
+                    tone: 'warning',
+                    text: 'review-gaps is not a node specify can run — nothing was written',
+                }}
+                onUndo={noop} onDismiss={noop} />
+        </div>
+    ),
+};
+
+// A menu row that is offered and impossible, which is how a phase menu can keep
+// teaching what a phase can do while saying why it cannot do it here.
+export const MenuWithAnImpossibleRow: Story = {
+    name: 'Menu · a row that cannot be picked, and why',
+    render: () => (
+        <div class="builder" style="padding: var(--space-4); height: 260px">
+            <Menu trigger="⋯" title="Phase" defaultOpen onPick={noop}
+                options={[
+                    { id: 'add-hook', label: 'Add hook', note: 'Attach work at this boundary' },
+                    {
+                        id: 'add-node', label: 'Add node', disabled: true,
+                        note: 'This step runs every node it ships, so there is none to put back',
+                    },
+                    {
+                        id: 'split', label: 'Split phase', disabled: true,
+                        note: 'One node here, so there is nothing to split off',
+                    },
+                    { id: 'rename', label: 'Rename phase', note: 'Names this group in the run' },
+                ]} />
         </div>
     ),
 };

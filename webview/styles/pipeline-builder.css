@@ -320,56 +320,6 @@ body {
 
 .builder-workflow-current:hover { background: var(--bg-hover); }
 
-.builder-workflow-menu {
-    position: absolute;
-    top: calc(100% + var(--space-1));
-    left: 0;
-    z-index: 5;
-    min-width: 260px;
-    margin: 0;
-    padding: var(--space-1);
-    list-style: none;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-hover);
-    border-radius: var(--radius-md);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-.builder-workflow-option {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    text-align: left;
-    font-family: inherit;
-    font-size: var(--text-sm);
-    color: var(--text-body);
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-}
-
-.builder-workflow-option:hover { background: var(--bg-hover); }
-
-.builder-workflow-option--active {
-    color: var(--text-primary);
-    font-weight: 600;
-    background: var(--accent-subtle);
-}
-
-.builder-workflow-note {
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
-.builder-workflow-new {
-    margin-top: var(--space-1);
-    padding-top: var(--space-1);
-    border-top: 1px solid var(--border);
-}
-
 /* ============================================
    Canvas — the run, left to right
    ============================================ */
@@ -1395,17 +1345,6 @@ body {
     border-radius: var(--radius-sm);
 }
 
-/* An in-panel notice, since a toast cannot travel outside the editor. */
-.builder-notice-close {
-    float: right;
-    padding: 0 var(--space-2);
-    font-size: var(--text-sm);
-    color: inherit;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
 /* ============================================
    What a step produces — with its name, not below its nodes
    ============================================ */
@@ -1791,6 +1730,17 @@ body {
     outline: none;
 }
 
+/* Offered, and impossible here. The LABEL dims, because that is the part that
+   cannot be acted on; the note does the opposite and comes up to body weight,
+   because on a row like this the note is the whole message. */
+.pb-menu-option--inert { cursor: default; }
+
+.pb-menu-option--inert:hover { background: none; }
+
+.pb-menu-option--inert .pb-menu-label { opacity: 0.45; }
+
+.pb-menu-option--inert .pb-menu-note { color: var(--text-body); }
+
 .pb-menu-option:focus-visible {
     outline: 1px solid var(--accent);
     outline-offset: -1px;
@@ -1832,8 +1782,33 @@ body {
     padding-left: 0;
 }
 
-.builder-notice-icon--info { color: var(--info); }
-.builder-notice-icon--done { color: var(--success); }
+/* Neutral, both of them. `--info` resolves close to `--accent` on some palettes,
+   which put two blues a few pixels apart in one band; and green is the build's
+   word for "written", so nothing else takes it. The mark's SHAPE carries the
+   tone — a circle for news, a tick for a thing done. */
+.builder-notice-icon--info,
+.builder-notice-icon--done { color: var(--text-label); }
+
+/* The one exception: a build that wrote the files. */
+.builder-report .builder-notice-icon--done { color: var(--success); }
+
+/* `--accent` is the focus-border token, which computes to about 1.6:1 on a
+   near-black band — unreadable on the two lines where it is the only
+   affordance. The underline is what says "link"; the colour does not have to. */
+.builder-notice .builder-link,
+.builder-status-undo {
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.builder-notice .builder-link:hover,
+.builder-notice .builder-link:focus-visible,
+.builder-status-undo:hover,
+.builder-status-undo:focus-visible {
+    color: var(--text-primary);
+    text-decoration-thickness: 2px;
+}
 
 /* The filename inside a sentence, not a code block. */
 .builder-notice-file {
@@ -1842,6 +1817,13 @@ body {
 }
 
 .builder-report-line { flex-grow: 1; }
+
+.builder-notice .builder-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 var(--space-1);
+}
 
 /* The channel's own words. Scrolls rather than stretching the header. */
 .builder-report-log {
@@ -1861,26 +1843,35 @@ body {
    like the header and the board, and everything else defaults to 0. */
 .builder-status {
     order: 2;
+    /* The shell is a fixed-height column that hides its overflow, so a strip
+       that can shrink is a strip the board can squeeze to nothing. */
+    flex-shrink: 0;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-1) var(--space-4);
     font-size: var(--text-sm);
     color: var(--text-body);
     background: var(--bg-secondary);
     border-top: 1px solid var(--border);
 }
 
-/* Wraps rather than truncates: a refusal's reason is the useful half of it, and
-   an ellipsis would be exactly where the reason starts. */
-.builder-status-text { min-width: 0; }
+/* What happened takes the room first. It used to hold only a `min-width` while
+   the aside beside it grew and refused to wrap, so in a 380px panel the news
+   was squeezed into three lines to keep "Build to apply" on one. Wraps rather
+   than truncates: a refusal's reason is the useful half of it, and an ellipsis
+   would land exactly where the reason starts. */
+.builder-status-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
 
-/* What it means next, quieter than what happened. */
+/* What it means next, quieter than what happened, and the first to give way. */
 .builder-status-detail {
-    flex-grow: 1;
+    flex: 0 1 auto;
     font-size: var(--text-xs);
     color: var(--text-label);
-    white-space: nowrap;
 }
 
 .builder-status-detail::before {
@@ -1890,30 +1881,41 @@ body {
 
 /* The only Undo in the interface. A link, because it undoes rather than does. */
 .builder-status-undo {
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
-    padding: 0;
+    min-height: 24px;
+    padding: 0 var(--space-1);
     font: inherit;
-    color: var(--accent);
     background: none;
     border: 0;
-    text-decoration: underline;
     cursor: pointer;
 }
 
-.builder-status-undo:hover { color: var(--accent-hover); }
-
+/* 24px square. It was 23.8 by 15 — the smallest control in the panel, and one
+   whose whole job is to be hit. `--text-label` because `--text-muted` is for
+   metadata, not for something you click. */
 .builder-status-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    min-width: 24px;
+    min-height: 24px;
     margin-left: auto;
-    padding: 0 var(--space-2);
+    padding: 0;
     font-size: var(--text-sm);
-    color: var(--text-muted);
+    color: var(--text-label);
     background: transparent;
     border: none;
+    border-radius: var(--radius-sm);
     cursor: pointer;
 }
 
-.builder-status-close:hover { color: var(--text-body); }
+.builder-status-close:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
 
 /* ── Narrow panel ────────────────────────────────────────────
    Last on purpose: `@container` adds no specificity, so these have to

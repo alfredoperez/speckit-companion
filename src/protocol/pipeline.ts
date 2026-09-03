@@ -502,5 +502,9 @@ export type ExtensionToBuilderMessage =
     | { type: 'notice'; text: string }
     /** What the last write did. `null` clears the line. */
     | { type: 'status'; status: PipelineStatus | null }
-    /** What a build or a preview did, for the header to report. */
-    | { type: 'buildReport'; report: BuildReport };
+    /**
+     * What a build or a preview did, for the header to report. `null` clears
+     * it: the moment the configuration changes again, a timestamp saying what
+     * was built has stopped being true.
+     */
+    | { type: 'buildReport'; report: BuildReport | null };

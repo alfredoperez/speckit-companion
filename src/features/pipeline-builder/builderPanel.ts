@@ -395,7 +395,7 @@ export class PipelineBuilderPanel {
 
         /** Read once. The panel does not say it again in this workspace. */
         dismissFirstRun: async () => {
-            await this.context.workspaceState.update(FIRST_RUN_SEEN, true);
+            await this.context.workspaceState?.update(FIRST_RUN_SEEN, true);
             await this.send();
         },
 
@@ -617,16 +617,20 @@ export class PipelineBuilderPanel {
      *
      * The command reports what it built; the panel that asked is where a person
      * is looking, so that is where the answer goes. The output channel still
-     * holds the whole log — it just no longer takes the screen to say "fine".
+     * holds the whole log — it just no longer takes the screen to say "fine",
+     * and `quiet` drops the toast that would otherwise say it a second time.
      */
     private async run(command: string): Promise<void> {
         await this.post({ type: 'busy', busy: true });
+        let report: BuildReport | null = null;
         try {
-            const report = await vscode.commands.executeCommand<BuildReport | null>(command);
-            if (report) { await this.post({ type: 'buildReport', report }); }
+            report = await vscode.commands.executeCommand<BuildReport | null>(
+                command, { quiet: true }) ?? null;
         } finally {
             await this.post({ type: 'busy', busy: false });
+            // After the redraw, which is what clears the last one.
             await this.send();
+            if (report) { await this.post({ type: 'buildReport', report }); }
         }
     }
 
@@ -646,6 +650,11 @@ export class PipelineBuilderPanel {
             graph,
             buildState: readPipelineBuildState(this.workspaceRoot).kind,
         });
+        // A redraw means the pipeline moved — a panel write, an edit to
+        // companion.yml, a node saved. "Built 14:02 · 5 commands written" is
+        // then a claim about a pipeline that no longer exists, and it would sit
+        // beside the amber line saying so, the two contradicting each other.
+        await this.post({ type: 'buildReport', report: null });
     }
 
     private post(message: ExtensionToBuilderMessage): Thenable<boolean> {

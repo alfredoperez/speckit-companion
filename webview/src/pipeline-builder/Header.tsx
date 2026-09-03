@@ -131,7 +131,9 @@ function readList(names: string[]): string {
 /** What a build or a preview did, in one line. */
 function reportLine(report: BuildReport): string {
     if (!report.ok) {
-        return `The build failed at ${report.at} — nothing was written`;
+        return report.dryRun
+            ? `The preview failed at ${report.at} — the configuration could not be read`
+            : `The build failed at ${report.at} — nothing was written`;
     }
     if (!report.dryRun) {
         return `Built ${report.at} · ${tally(report.commands, 'command')} written`;
@@ -185,7 +187,11 @@ export function Header(props: Props) {
     const [showingLog, setShowingLog] = useState(false);
     const changes = changeSummary(graph);
     const changedSteps = graph.steps.filter(changed).length;
-    const notice = buildNotice(buildState, changedSteps);
+    // A report is the newer and more specific statement about the same file, so
+    // it replaces the build state rather than stacking under it — a preview that
+    // answers "2 of 5 would change" does not also need an amber line saying the
+    // build is behind, which is what asking for a preview already meant.
+    const notice = report ? null : buildNotice(buildState, changedSteps);
     const firstRun = buildState === 'unconfigured' && graph.firstRun === true;
 
     const workflows = [
@@ -246,12 +252,13 @@ export function Header(props: Props) {
                             : '')}>
                     {hookTally(graph)}
                 </span>
-                {/* Every one of these says what it does. The filename alone was a
-                    noun among verbs, and it is the same action the error screen
-                    already calls "Open companion.yml". */}
-                <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
-                    Open companion.yml
-                </button>
+                {/* Named for what it does, and offered only when there is a file
+                    to open — a project running the shipped pipeline has none. */}
+                {graph.configured && (
+                    <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
+                        Open companion.yml
+                    </button>
+                )}
                 <button class="builder-action builder-action--quiet" disabled={busy}
                     onClick={onPreview}>
                     Preview build

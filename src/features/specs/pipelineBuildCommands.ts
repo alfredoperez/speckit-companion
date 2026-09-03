@@ -107,7 +107,11 @@ export function registerPipelineBuildCommands(
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel,
 ): void {
-    const build = async (dryRun: boolean): Promise<BuildReport | null> => {
+    /**
+     * `quiet` is the builder panel, which draws the result itself. The toast is
+     * for the palette, where there is no panel and the alternative is silence.
+     */
+    const build = async (dryRun: boolean, quiet = false): Promise<BuildReport | null> => {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
             void vscode.window.showWarningMessage('Open a workspace folder to build its pipeline.');
@@ -132,17 +136,18 @@ export function registerPipelineBuildCommands(
             void vscode.window.showErrorMessage(
                 'The pipeline could not be built — nothing was written. See the output for the reason.',
             );
-        } else if (!dryRun) {
-            // Still said out here, because the palette runs this with no panel
-            // open and a build that reports only into the panel reports nothing.
+        } else if (!dryRun && !quiet) {
             void vscode.window.showInformationMessage('Pipeline built from companion.yml.');
         }
         return readBuildReport(result, dryRun);
     };
 
+    type RunOptions = { quiet?: boolean };
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.companion.buildPipeline', () => build(false)),
-        vscode.commands.registerCommand('speckit.companion.previewPipelineBuild', () => build(true)),
+        vscode.commands.registerCommand('speckit.companion.buildPipeline',
+            (options?: RunOptions) => build(false, options?.quiet)),
+        vscode.commands.registerCommand('speckit.companion.previewPipelineBuild',
+            (options?: RunOptions) => build(true, options?.quiet)),
     );
 }
 

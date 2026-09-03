@@ -306,6 +306,15 @@ describe('what a build or a preview did', () => {
         expect(host.querySelector('.builder-report-log')?.textContent).toContain('[build] built 5');
     });
 
+    it('replaces the stale line rather than stacking a warning over its own answer', () => {
+        const host = mount(
+            <Header graph={graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })] })}
+                buildState="stale" busy={false}
+                report={{ ...REPORT, dryRun: true, changed: ['specify'] }} {...HEAD} />);
+        expect(host.textContent).not.toContain('not built yet');
+        expect(host.querySelector('.builder-report-line')?.textContent).toContain('Preview');
+    });
+
     it('offers no log when the run said nothing', () => {
         const host = mount(
             <Header graph={graph()} buildState="current" busy={false}
@@ -328,6 +337,20 @@ describe('the first time a project opens the board', () => {
         onBuild: noop, onPreview: noop, onOpenConfig: noop,
         onSelectWorkflow: noop, onNewWorkflow: noop,
     };
+
+    it('offers no way to open a companion.yml the project does not have', () => {
+        const host = mount(
+            <Header graph={graph({ configured: false })} buildState="unconfigured"
+                busy={false} {...HEAD} />);
+        expect(host.textContent).not.toContain('Open companion.yml');
+    });
+
+    it('offers it once the project has one', () => {
+        const host = mount(
+            <Header graph={graph({ configured: true })} buildState="current"
+                busy={false} {...HEAD} />);
+        expect(host.textContent).toContain('Open companion.yml');
+    });
 
     it('says what the board is and what Build does with it', () => {
         const host = mount(

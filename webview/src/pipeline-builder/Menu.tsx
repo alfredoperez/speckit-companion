@@ -22,6 +22,13 @@ export interface MenuOption {
     label: string;
     /** A second line — what this option does, or what kind of thing it is. */
     note?: string;
+    /**
+     * Offered, and impossible here. Shown rather than omitted so the note can
+     * say why — "one node here, so there is nothing to split off" teaches that
+     * a phase can be split at the same moment it explains why this one cannot.
+     * An omitted row teaches nothing.
+     */
+    disabled?: boolean;
 }
 
 interface Props {
@@ -76,7 +83,10 @@ export function Menu({
     // Without it opening this from the keyboard left focus on the trigger, with
     // the only way into the list being a Tab through it.
     useEffect(() => {
-        if (open && byHand.current) { items()[0]?.focus(); }
+        if (!open || !byHand.current) { return; }
+        const entries = items();
+        const first = entries.find(item => item.getAttribute('aria-disabled') !== 'true');
+        (first ?? entries[0])?.focus();
     }, [open]);
 
     // A menu that stays open after you look away is a menu you have to dismiss.
@@ -96,17 +106,23 @@ export function Menu({
         };
     }, [open]);
 
-    /** Arrows walk the list, Home and End jump to its ends. */
+    /**
+     * Arrows walk the list, Home and End jump to its ends.
+     *
+     * A Map rather than an object literal: an object's prototype answers to
+     * `toString` and `constructor`, so a key named either would look up a
+     * truthy function and be called as an index.
+     */
     const steer = (event: KeyboardEvent) => {
         const entries = items();
         if (entries.length === 0) { return; }
         const at = entries.indexOf(document.activeElement as HTMLButtonElement);
-        const to = {
-            ArrowDown: (at + 1) % entries.length,
-            ArrowUp: (at <= 0 ? entries.length : at) - 1,
-            Home: 0,
-            End: entries.length - 1,
-        }[event.key];
+        const to = new Map<string, number>([
+            ['ArrowDown', (at + 1) % entries.length],
+            ['ArrowUp', (at <= 0 ? entries.length : at) - 1],
+            ['Home', 0],
+            ['End', entries.length - 1],
+        ]).get(event.key);
         if (to === undefined) { return; }
         event.preventDefault();
         entries[to].focus();
@@ -142,8 +158,18 @@ export function Menu({
                     role="menu" ref={list} onKeyDown={steer}>
                     {options.map(option => (
                         <li key={option.id} role="none">
-                            <button class="pb-menu-option" role="menuitem"
-                                onClick={() => { shut(); onPick(option.id); }}>
+                            {/* `aria-disabled` rather than the native attribute,
+                                which would take the row out of the focus order
+                                and take its note with it. */}
+                            <button role="menuitem"
+                                class={`pb-menu-option${
+                                    option.disabled ? ' pb-menu-option--inert' : ''}`}
+                                aria-disabled={option.disabled ? 'true' : undefined}
+                                onClick={() => {
+                                    if (option.disabled) { return; }
+                                    shut();
+                                    onPick(option.id);
+                                }}>
                                 <span class="pb-menu-label">{option.label}</span>
                                 {option.note && (
                                     <span class="pb-menu-note">{option.note}</span>

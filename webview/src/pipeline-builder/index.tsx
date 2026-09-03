@@ -23,7 +23,8 @@ import {
 } from '../../../src/protocol/pipeline';
 import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas } from './Canvas';
-import { Header, StatusIcon } from './Header';
+import { Header } from './Header';
+import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm, Attachment } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
@@ -218,24 +219,12 @@ function App() {
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
             {line && (
-                <div class={`builder-status builder-status--${line.tone}`} role="status">
-                    <StatusIcon tone={line.tone} />
-                    <span class="builder-status-text">{line.text}</span>
-                    {line.undo && (
-                        <button class="builder-status-undo"
-                            onClick={() => {
-                                vscode.postMessage({ type: 'undo', token: line.undo!.token });
-                                setStatus(null);
-                            }}>
-                            {line.undo.label ?? 'Undo'}
-                        </button>
-                    )}
-                    {line.detail && (
-                        <span class="builder-status-detail">{line.detail}</span>
-                    )}
-                    <button class="builder-status-close" title="Dismiss"
-                        onClick={() => { setStatus(null); setNotice(null); }}>×</button>
-                </div>
+                <StatusLine status={line}
+                    onUndo={token => {
+                        vscode.postMessage({ type: 'undo', token });
+                        setStatus(null);
+                    }}
+                    onDismiss={() => { setStatus(null); setNotice(null); }} />
             )}
             <div class="builder-body">
                 <Canvas
