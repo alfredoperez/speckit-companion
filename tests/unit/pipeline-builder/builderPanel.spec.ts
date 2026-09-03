@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import type { PipelineGraphResult } from '../../../src/protocol/pipeline';
 
 // The same module `vscode` maps to, imported by path for the stub factory,
 // which is a testing affordance rather than part of the editor's API.
@@ -141,7 +142,13 @@ describe('building', () => {
     it('runs the same command the palette runs', async () => {
         await panel.__receive({ type: 'build' });
         expect(vscode.commands.executeCommand)
-            .toHaveBeenCalledWith('speckit.companion.buildPipeline');
+            .toHaveBeenCalledWith('speckit.companion.buildPipeline', { quiet: true });
+    });
+
+    it('asks the command to keep quiet, since the panel reports the result itself', async () => {
+        await panel.__receive({ type: 'preview' });
+        expect(vscode.commands.executeCommand)
+            .toHaveBeenCalledWith('speckit.companion.previewPipelineBuild', { quiet: true });
     });
 
     it('marks the panel busy while it runs, and free again after', async () => {
@@ -158,6 +165,49 @@ describe('building', () => {
         expect(busy.at(-1)).toEqual({ type: 'busy', busy: false });
     });
 
+    it('reports what the build did, in the panel that asked for it', async () => {
+        const report = {
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: '[build] ok',
+        };
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(report);
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('buildReport').report).toEqual(report);
+    });
+
+    it('drops the report once the pipeline moves under it', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        await panel.__receive({ type: 'selectWorkflow', name: 'bugfix' });
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('drops it for a change made outside the panel too', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
+            .mock.results.map(r => r.value);
+        await watchers[0].fireChange(vscode.Uri.file('companion.yml'));
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('leaves the header saying nothing when the command had nothing to report', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(null);
+        await panel.__receive({ type: 'preview' });
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('reports after the redraw, so the redraw does not wipe what it just said', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('buildReport').report).not.toBeNull();
+    });
+
     it('logs a failed action rather than losing it to an unhandled rejection', async () => {
         const channel = (vscode.window.createOutputChannel as jest.Mock)
             .mock.results.at(-1)!.value;
@@ -166,6 +216,51 @@ describe('building', () => {
         await panel.__receive({ type: 'build' });
         expect(channel.appendLine).toHaveBeenCalledWith(
             expect.stringContaining('build blew up'));
+    });
+});
+
+describe('the line that explains the board', () => {
+    /** A readable graph, so the panel has something to stamp `firstRun` onto. */
+    const READABLE = { steps: [], warnings: [] } as unknown as PipelineGraphResult;
+
+    /** A panel whose workspace can actually remember, which the shared one cannot. */
+    function openWithMemory(store: Map<string, unknown>): Panel {
+        panel.__fireDispose();
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [
+            { uri: vscode.Uri.file(workspace) },
+        ];
+        PipelineBuilderPanel.show(
+            {
+                extensionPath,
+                subscriptions: [],
+                workspaceState: {
+                    get: (key: string) => store.get(key),
+                    update: async (key: string, value: unknown) => { store.set(key, value); },
+                },
+            } as unknown as vscode.ExtensionContext,
+            vscode.window.createOutputChannel('test') as vscode.OutputChannel,
+        );
+        return (vscode.window.createWebviewPanel as jest.Mock)
+            .mock.results.at(-1)!.value as Panel;
+    }
+
+    it('is offered to a workspace that has never read it', async () => {
+        graph.readPipelineGraph.mockResolvedValue(READABLE);
+        panel = openWithMemory(new Map());
+        await panel.__receive({ type: 'ready' });
+        expect(panel.__lastPosted('graph').graph.firstRun).toBe(true);
+    });
+
+    it('is not offered again once it has been read', async () => {
+        graph.readPipelineGraph.mockResolvedValue(READABLE);
+        panel = openWithMemory(new Map());
+        await panel.__receive({ type: 'dismissFirstRun' });
+        expect(panel.__lastPosted('graph').graph.firstRun).toBe(false);
+    });
+
+    it('does not fall over in a workspace with nothing to remember with', async () => {
+        await expect(panel.__receive({ type: 'dismissFirstRun' })).resolves.toBeUndefined();
+        expect(panel.__lastPosted('graph')).toBeDefined();
     });
 });
 

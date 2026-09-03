@@ -8,6 +8,8 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
+import { Menu } from '../Menu';
+import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import {
@@ -320,6 +322,95 @@ export const HeaderWorkflows: Story = {
                 workflows: { available: ['shipped', 'bugfix', 'client'], active: 'bugfix' },
             })}
             buildState="current" busy={false} {...HEAD} /></One>
+    ),
+};
+
+export const HeaderFirstRun: Story = {
+    name: 'Header · the first time, nothing configured',
+    render: () => (
+        <One><Header
+            graph={graph([step('specify', SPECIFY.phases, { changes: { ...NO_CHANGES } })],
+                { firstRun: true, configured: false, customised: false })}
+            buildState="unconfigured" busy={false} {...HEAD} onDismissFirstRun={noop} /></One>
+    ),
+};
+
+export const HeaderBuilt: Story = {
+    name: 'Header · what the build did',
+    render: () => (
+        <One><Header graph={graph([SPECIFY])} buildState="current" busy={false} {...HEAD}
+            report={{
+                ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
+                output: '[build] built 5 commands from .specify/companion.yml',
+            }} /></One>
+    ),
+};
+
+export const HeaderPreviewed: Story = {
+    name: 'Header · what a preview would change',
+    render: () => (
+        <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD}
+            report={{
+                ok: true, at: '14:02', commands: 5, changed: ['specify', 'implement'],
+                dryRun: true,
+                output: '[build] would build 5 commands from .specify/companion.yml\n'
+                    + '[build] what would change:\n'
+                    + '  implement: +12 −4 lines\n  plan: unchanged\n  specify: +31 −0 lines',
+            }} /></One>
+    ),
+};
+
+// The strip lives at the foot of the panel rather than in this band, but it is
+// the header's other half of the same conversation: one says what a build did,
+// the other says what a write did.
+export const StatusAfterAWrite: Story = {
+    name: 'Status line · a write, with the way back',
+    render: () => (
+        <div class="builder">
+            <StatusLine
+                status={{
+                    tone: 'done', text: 'Hook added before Draft the spec',
+                    detail: 'Build to apply', undo: { token: 'hook:specify:draft-spec' },
+                }}
+                onUndo={noop} onDismiss={noop} />
+        </div>
+    ),
+};
+
+export const StatusAfterARefusal: Story = {
+    name: 'Status line · a write the configuration refused',
+    render: () => (
+        <div class="builder">
+            <StatusLine
+                status={{
+                    tone: 'warning',
+                    text: 'review-gaps is not a node specify can run — nothing was written',
+                }}
+                onUndo={noop} onDismiss={noop} />
+        </div>
+    ),
+};
+
+// A menu row that is offered and impossible, which is how a phase menu can keep
+// teaching what a phase can do while saying why it cannot do it here.
+export const MenuWithAnImpossibleRow: Story = {
+    name: 'Menu · a row that cannot be picked, and why',
+    render: () => (
+        <div class="builder" style="padding: var(--space-4); height: 260px">
+            <Menu trigger="⋯" title="Phase" defaultOpen onPick={noop}
+                options={[
+                    { id: 'add-hook', label: 'Add hook', note: 'Attach work at this boundary' },
+                    {
+                        id: 'add-node', label: 'Add node', disabled: true,
+                        note: 'This step runs every node it ships, so there is none to put back',
+                    },
+                    {
+                        id: 'split', label: 'Split phase', disabled: true,
+                        note: 'One node here, so there is nothing to split off',
+                    },
+                    { id: 'rename', label: 'Rename phase', note: 'Names this group in the run' },
+                ]} />
+        </div>
     ),
 };
 

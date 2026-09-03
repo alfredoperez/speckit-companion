@@ -244,6 +244,13 @@ export interface PipelineGraph {
     configured: boolean;
     /** Whether anything differs from the shipped pipeline. */
     customised: boolean;
+    /**
+     * Whether this workspace has yet to read the line saying what the board is.
+     *
+     * The panel, not the graph script, answers this — it is a fact about the
+     * person rather than about the pipeline — so it is filled in on the way out.
+     */
+    firstRun?: boolean;
     warnings: string[];
     counts: {
         steps: number; phases: number; nodes: number;
@@ -495,5 +502,9 @@ export type ExtensionToBuilderMessage =
     | { type: 'notice'; text: string }
     /** What the last write did. `null` clears the line. */
     | { type: 'status'; status: PipelineStatus | null }
-    /** What a build or a preview did, for the header to report. */
-    | { type: 'buildReport'; report: BuildReport };
+    /**
+     * What a build or a preview did, for the header to report. `null` clears
+     * it: the moment the configuration changes again, a timestamp saying what
+     * was built has stopped being true.
+     */
+    | { type: 'buildReport'; report: BuildReport | null };
