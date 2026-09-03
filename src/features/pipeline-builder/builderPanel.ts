@@ -14,11 +14,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
+    BuildReport,
     BuilderToExtensionMessage,
     ExtensionToBuilderMessage,
     HookWhen,
     PipelineGraphResult,
     PipelineStatus,
+    isGraphError,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { nodeFile, readableNode } from './readableNode';
@@ -52,6 +54,13 @@ const SHIPPED_WORKFLOW = 'shipped';
 
 /** Whether this workspace has already read the line explaining what the board is. */
 const FIRST_RUN_SEEN = 'speckit.pipelineBuilder.firstRunSeen';
+
+/** A workflow named as the header names it, so a status reads like the switcher. */
+function workflowLabel(name: string): string {
+    if (name === '') { return 'this project'; }
+    if (name === SHIPPED_WORKFLOW) { return 'the pipeline as it ships'; }
+    return name;
+}
 
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -252,12 +261,32 @@ export class PipelineBuilderPanel {
             if (!fs.existsSync(own)) { return; }
             if (!this.shippedNodePath(message.command, message.nodeId)) {
                 this.say(`${message.nodeId} is not a node Companion ships, so there is `
-                    + 'nothing to give it back to. To stop running it, remove it from '
-                    + `${message.command}.`);
+                    + 'nothing to give it back to. Use "Remove from the run" to stop '
+                    + 'running it, which keeps the file.');
                 return;
             }
-            fs.unlinkSync(own);
-            await this.send();
+            // The only copy, so it is held until the next write rather than lost.
+            // The panel forgets it on close; the trash is where it survives that.
+            const held = fs.readFileSync(own, 'utf8');
+            const token = `restore:${message.command}:${message.nodeId}`;
+            const ok = await this.write(
+                async () => {
+                    await vscode.workspace.fs.delete(
+                        vscode.Uri.file(own), { useTrash: true });
+                    return null;
+                },
+                'Giving a node back',
+                {
+                    tone: 'done',
+                    text: `${message.nodeId} runs the shipped node again`,
+                    detail: 'Your copy went to the trash',
+                    undo: { token },
+                });
+            if (!ok) { return; }
+            this.offerUndo(token, async () => {
+                fs.mkdirSync(path.dirname(own), { recursive: true });
+                fs.writeFileSync(own, held, 'utf8');
+            });
         },
 
         reorderNodes: async message => {
@@ -303,7 +332,12 @@ export class PipelineBuilderPanel {
         selectWorkflow: async message => {
             await this.write(
                 script => writeWorkflow(script, this.workspaceRoot, message.name),
-                'Switching workflows');
+                'Switching workflows',
+                {
+                    tone: 'done',
+                    text: `Now running ${workflowLabel(message.name)}`,
+                    detail: 'Build to apply',
+                });
         },
 
         repair: async message => {
@@ -343,6 +377,7 @@ export class PipelineBuilderPanel {
          */
         removeNode: async message => {
             const before = await this.stepShape(message.command);
+            const token = `remove:${message.command}:${message.nodeId}`;
             const ok = await this.write(
                 script => writePhases(
                     script, this.workspaceRoot, message.command, message.phases,
@@ -352,10 +387,11 @@ export class PipelineBuilderPanel {
                     tone: 'done',
                     text: `${message.nodeId} no longer runs in ${message.command}`,
                     detail: 'Build to apply',
-                    undo: { token: `remove:${message.command}:${message.nodeId}` },
+                    // Promised only when there is a shape to put back.
+                    undo: before ? { token } : undefined,
                 });
             if (ok && before) {
-                this.offerUndo(`remove:${message.command}:${message.nodeId}`, async () => {
+                this.offerUndo(token, async () => {
                     await this.write(
                         script => writePhases(
                             script, this.workspaceRoot, message.command, before.phases,
@@ -381,7 +417,7 @@ export class PipelineBuilderPanel {
 
         /** Read once. The panel does not say it again in this workspace. */
         dismissFirstRun: async () => {
-            await this.context.workspaceState.update(FIRST_RUN_SEEN, true);
+            await this.context.workspaceState?.update(FIRST_RUN_SEEN, true);
             await this.send();
         },
 
@@ -391,8 +427,15 @@ export class PipelineBuilderPanel {
                 this.say('That change can no longer be taken back.');
                 return;
             }
+            try {
+                await held.run();
+            } catch (err) {
+                // Kept, not cleared: this is the only copy of what was undone,
+                // and dropping it on a failed restore loses the file for good.
+                this.say(`Could not take that back: ${err instanceof Error ? err.message : err}`);
+                return;
+            }
             this.pendingUndo = null;
-            await held.run();
             await this.send();
             this.sayStatus(null);
         },
@@ -400,7 +443,12 @@ export class PipelineBuilderPanel {
         newWorkflow: async message => {
             const made = await this.write(
                 script => createWorkflow(script, this.workspaceRoot, message.name, message.from),
-                'Creating a workflow');
+                'Creating a workflow',
+                {
+                    tone: 'done',
+                    text: `${message.name} created from ${workflowLabel(message.from)}`,
+                    detail: 'Now running it — Build to apply',
+                });
             if (!made) { return; }
             await vscode.window.showTextDocument(vscode.Uri.file(path.join(
                 this.workspaceRoot, WORKFLOWS_REL, `${message.name}.yml`)));
@@ -593,13 +641,25 @@ export class PipelineBuilderPanel {
             `[PipelineBuilder] ignored message: ${(message as { type: string }).type}`),
     });
 
+    /**
+     * Run the build, and say here what it did.
+     *
+     * The command reports what it built; the panel that asked is where a person
+     * is looking, so that is where the answer goes. The output channel still
+     * holds the whole log — it just no longer takes the screen to say "fine",
+     * and `quiet` drops the toast that would otherwise say it a second time.
+     */
     private async run(command: string): Promise<void> {
         await this.post({ type: 'busy', busy: true });
+        let report: BuildReport | null = null;
         try {
-            await vscode.commands.executeCommand(command);
+            report = await vscode.commands.executeCommand<BuildReport | null>(
+                command, { quiet: true }) ?? null;
         } finally {
             await this.post({ type: 'busy', busy: false });
+            // After the redraw, which is what clears the last one.
             await this.send();
+            if (report) { await this.post({ type: 'buildReport', report }); }
         }
     }
 
@@ -608,11 +668,22 @@ export class PipelineBuilderPanel {
         const graph: PipelineGraphResult = script
             ? await readPipelineGraph(script, this.workspaceRoot)
             : { error: 'The pipeline builder needs the companion spec-kit extension.' };
+        // Whether the board still has to explain itself is a fact about this
+        // workspace's reader, not about the pipeline, so the graph script has no
+        // way to know it and the panel fills it in on the way out.
+        if (!isGraphError(graph)) {
+            graph.firstRun = !this.context.workspaceState?.get<boolean>(FIRST_RUN_SEEN);
+        }
         await this.post({
             type: 'graph',
             graph,
             buildState: readPipelineBuildState(this.workspaceRoot).kind,
         });
+        // A redraw means the pipeline moved — a panel write, an edit to
+        // companion.yml, a node saved. "Built 14:02 · 5 commands written" is
+        // then a claim about a pipeline that no longer exists, and it would sit
+        // beside the amber line saying so, the two contradicting each other.
+        await this.post({ type: 'buildReport', report: null });
     }
 
     private post(message: ExtensionToBuilderMessage): Thenable<boolean> {

@@ -10,10 +10,18 @@
  *
  * One row per section the template actually has, so this reads as the document
  * it is about rather than as a list of things already changed. A section nobody
- * touched says "As it ships", which is the truth and not an empty state.
+ * touched says "As shipped", which is the truth and not an empty state.
  */
 
+import { Menu } from './Menu';
 import { PipelineFragment, PipelineStep } from '../../../src/protocol/pipeline';
+
+/** How a section goes back to the shipped shape, and what that shape is called. */
+const SHIPPED = {
+    id: '',
+    label: 'As shipped',
+    note: 'The section the way Companion writes it.',
+};
 
 interface Props {
     step: PipelineStep;
@@ -48,29 +56,36 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
                 {template.sectionsAvailable.map(heading => {
                     const options = forStep.filter(f => f.section === heading);
                     const replaced = template.sections.includes(heading);
+                    const chosen = template.chosenBy[heading] ?? '';
+                    const picked = options.find(f => f.name === chosen);
                     return (
                         <div class="pb-template-row" key={heading}>
                             <div class="pb-template-section">
                                 <span class="pb-template-heading">{heading}</span>
                                 {replaced && <span class="pb-yours">yours</span>}
                             </div>
-                            {options.length === 0 ? (
-                                <span class="pb-template-none">
-                                    nothing else written for this one yet
-                                </span>
-                            ) : (
-                                <select class="pb-input"
-                                    value={template.chosenBy[heading] ?? ''}
-                                    onChange={event => onPick(
-                                        heading,
-                                        (event.currentTarget as HTMLSelectElement).value)}>
-                                    <option value="">As it ships</option>
-                                    {options.map(fragment => (
-                                        <option key={fragment.name} value={fragment.name}
-                                            title={fragment.summary}>{fragment.name}</option>
-                                    ))}
-                                </select>
-                            )}
+                            {/* A select had nowhere to put a fragment's summary. */}
+                            <span class="pb-template-pick">
+                                <Menu class="pb-menu-trigger--field"
+                                    trigger={<span class="pb-trigger-text">
+                                        {picked?.name ?? SHIPPED.label}
+                                    </span>}
+                                    label={heading}
+                                    title={`What ${heading} says`}
+                                    disabledTitle={`What ${heading} says`}
+                                    disabled={options.length === 0}
+                                    options={[SHIPPED, ...options.map(fragment => ({
+                                        id: fragment.name,
+                                        label: fragment.name,
+                                        note: fragment.summary,
+                                    }))]}
+                                    onPick={fragment => onPick(heading, fragment)} />
+                            </span>
+                            <span class="pb-template-summary">
+                                {options.length === 0
+                                    ? 'Only the shipped version exists for this section.'
+                                    : picked?.summary ?? SHIPPED.note}
+                            </span>
                         </div>
                     );
                 })}

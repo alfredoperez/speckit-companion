@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'preact/hooks';
+import { Menu } from './Menu';
 import {
     HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
 } from '../../../src/protocol/pipeline';
@@ -35,40 +36,56 @@ interface Props {
     onRemove?: () => void;
 }
 
-const KINDS: Array<{ type: HookType; label: string; help: string; placeholder: string }> = [
+/** The four things a hook can be; `field` names the value box a segment cannot. */
+const KINDS: Array<{
+    type: HookType; label: string; field: string; help: string; placeholder: string;
+}> = [
     {
         type: 'skill',
-        label: 'Run a skill you already have',
+        label: 'Skill',
+        field: 'Which skill',
         help: 'The instructions stay in the skill, so editing it later changes what runs.',
         placeholder: 'verify-code-review',
     },
     {
         type: 'prompt',
-        label: 'Say something to the assistant',
+        label: 'Instruction',
+        field: 'The instruction',
         help: 'One instruction, kept in companion.yml.',
         placeholder: 'Check the CHANGELOG is updated before continuing.',
     },
     {
         type: 'command',
-        label: 'Run a command',
+        label: 'Command',
+        field: 'The command',
         help: 'A shell line. The assistant needs a terminal for this one.',
         placeholder: 'npm run lint-spec',
     },
     {
         type: 'node',
-        label: 'Include one of your nodes',
+        label: 'Node',
+        field: 'Which node',
         help: 'A file from .specify/companion/nodes/, reusable in more than one place.',
         placeholder: 'review',
     },
 ];
 
+const WHENS: Array<{ id: HookWhen; label: string; note: string }> = [
+    { id: 'before', label: 'before', note: 'ahead of it, every run' },
+    { id: 'after', label: 'after', note: 'once it has finished' },
+];
+
 /** Every place in this step something can attach to, in the order they run. */
-function anchors(step: PipelineStep): Array<{ id: string; label: string }> {
-    const out: Array<{ id: string; label: string }> = [];
+function anchors(step: PipelineStep): Array<{ id: string; label: string; note: string }> {
+    const out: Array<{ id: string; label: string; note: string }> = [];
     for (const phase of step.phases) {
-        out.push({ id: phase.name, label: `the ${phase.name} phase` });
+        out.push({
+            id: phase.name,
+            label: `the ${phase.name} phase`,
+            note: `every node in ${phase.name}`,
+        });
         for (const node of phase.nodes) {
-            out.push({ id: node.id, label: `${node.name} (${node.id})` });
+            out.push({ id: node.id, label: node.name, note: node.id });
         }
     }
     return out;
@@ -87,6 +104,22 @@ export function AttachForm(props: Props) {
     const named = hookType === 'skill' ? choices.skills
         : hookType === 'node' ? choices.nodes : [];
     const ready = value.trim().length > 0;
+
+    const pick = (type: HookType) => { setHookType(type); setValue(''); };
+
+    /** Arrows, Home and End move the selection, the way a radio group does. */
+    const pickKind = (event: KeyboardEvent, index: number) => {
+        const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+        const to = step !== undefined
+            ? (index + step + KINDS.length) % KINDS.length
+            : event.key === 'Home' ? 0
+                : event.key === 'End' ? KINDS.length - 1 : -1;
+        if (to < 0) { return; }
+        event.preventDefault();
+        pick(KINDS[to].type);
+        const group = (event.currentTarget as HTMLElement).parentElement;
+        (group?.children[to] as HTMLButtonElement | undefined)?.focus();
+    };
 
     const submit = (event: Event) => {
         event.preventDefault();
@@ -111,86 +144,94 @@ export function AttachForm(props: Props) {
 
             <form class="pb-form" onSubmit={submit}>
                 <div class="pb-form-fields">
-                <fieldset class="pb-field">
-                    <legend class="pb-field-label">What should happen</legend>
-                    {KINDS.map(option => (
-                        <label key={option.type}
-                            class={`pb-choice ${hookType === option.type ? 'pb-choice--on' : ''}`}>
-                            <input type="radio" name="hook-type" value={option.type}
-                                checked={hookType === option.type}
-                                onChange={() => { setHookType(option.type); setValue(''); }} />
-                            <span class="pb-choice-body">
-                                <span class="pb-choice-label">{option.label}</span>
-                                <span class="pb-choice-help">{option.help}</span>
-                            </span>
-                        </label>
-                    ))}
-                </fieldset>
-
-                <label class="pb-field">
-                    <span class="pb-field-label">
-                        {hookType === 'skill' ? 'Which skill'
-                            : hookType === 'node' ? 'Which node'
-                                : hookType === 'command' ? 'The command' : 'The instruction'}
-                    </span>
-                    {hookType === 'prompt' ? (
-                        <textarea class="pb-input pb-input--area" rows={3} value={value}
-                            placeholder={kind.placeholder}
-                            onInput={e => setValue((e.target as HTMLTextAreaElement).value)} />
-                    ) : (
-                        <>
-                            {/* A name typed from memory is a hook that invokes
-                                nothing. The list is what this project has; the
-                                field stays free so a new one can still be named. */}
-                            <input class="pb-input pb-input--mono" type="text" value={value}
-                                list={named.length ? `pb-known-${hookType}` : undefined}
-                                placeholder={kind.placeholder}
-                                onInput={e => setValue((e.target as HTMLInputElement).value)} />
-                            {named.length > 0 && (
-                                <datalist id={`pb-known-${hookType}`}>
-                                    {named.map(name => <option key={name} value={name} />)}
-                                </datalist>
-                            )}
-                        </>
-                    )}
-                    {named.length > 0 && (
-                        <span class="pb-field-help">
-                            {named.length} in this project — start typing to filter
+                {/* First, so the sentence reads "runs before Draft the spec". */}
+                <div class="pb-field pb-field--labelled">
+                    <span class="pb-field-label">Runs</span>
+                    <div class="pb-runs">
+                        <span class="pb-runs-when">
+                            <Menu class="pb-menu-trigger--field"
+                                trigger={<span class="pb-trigger-text">{when}</span>}
+                                label="When" title="Before the anchor, or after it"
+                                options={WHENS}
+                                onPick={id => setWhen(id as HookWhen)} />
                         </span>
-                    )}
-                </label>
-
-                {hookType === 'skill' && (
-                    <label class="pb-field">
-                        <span class="pb-field-label">Anything to add <span class="pb-optional">optional</span></span>
-                        <input class="pb-input" type="text" value={note}
-                            placeholder="Leave empty to just invoke the skill"
-                            onInput={e => setNote((e.target as HTMLInputElement).value)} />
-                    </label>
-                )}
-
-                <div class="pb-field pb-field--row pb-field--place">
-                    <label class="pb-field">
-                        <span class="pb-field-label">When</span>
-                        <select class="pb-input" value={when}
-                            onChange={e => setWhen((e.target as HTMLSelectElement).value as HookWhen)}>
-                            <option value="before">before</option>
-                            <option value="after">after</option>
-                        </select>
-                    </label>
-                    <label class="pb-field pb-field--grow">
-                        <span class="pb-field-label">Where</span>
-                        <select class="pb-input" value={where}
-                            onChange={e => setWhere((e.target as HTMLSelectElement).value)}>
-                            {places.map(place => (
-                                <option key={place.id} value={place.id}>{place.label}</option>
-                            ))}
-                        </select>
-                    </label>
+                        <span class="pb-runs-where">
+                            <Menu class="pb-menu-trigger--field"
+                                trigger={<span class="pb-trigger-text">
+                                    {places.find(p => p.id === where)?.label ?? where}
+                                </span>}
+                                label="Where" title="What this hook attaches to"
+                                options={places} onPick={setWhere} />
+                        </span>
+                    </div>
                 </div>
 
+                <div class="pb-field pb-field--labelled">
+                    <span class="pb-field-label" id="pb-kind-label">Kind</span>
+                    <div class="pb-kind">
+                        <div class="pb-segments" role="radiogroup" aria-labelledby="pb-kind-label">
+                            {KINDS.map((option, index) => (
+                                <button key={option.type} type="button" role="radio"
+                                    aria-checked={hookType === option.type}
+                                    // One tab stop for the group, arrows within it —
+                                    // what the radio inputs this replaced did for free.
+                                    tabIndex={hookType === option.type ? 0 : -1}
+                                    class={`pb-segment${hookType === option.type
+                                        ? ' pb-segment--on' : ''}`}
+                                    onKeyDown={event => pickKind(event, index)}
+                                    onClick={() => pick(option.type)}>
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                        {/* One line, for the kind that is on. */}
+                        <span class="pb-field-note">{kind.help}</span>
+                        {hookType === 'prompt' ? (
+                            <textarea class="pb-input pb-input--area" rows={3} value={value}
+                                aria-label={kind.field} placeholder={kind.placeholder}
+                                onInput={e => setValue((e.target as HTMLTextAreaElement).value)} />
+                        ) : (
+                            <>
+                                {/* A name typed from memory is a hook that invokes
+                                    nothing. The list is what this project has; the
+                                    field stays free so a new one can still be named. */}
+                                <input class="pb-input pb-input--mono" type="text" value={value}
+                                    aria-label={kind.field}
+                                    list={named.length ? `pb-known-${hookType}` : undefined}
+                                    placeholder={kind.placeholder}
+                                    onInput={e => setValue((e.target as HTMLInputElement).value)} />
+                                {named.length > 0 && (
+                                    <datalist id={`pb-known-${hookType}`}>
+                                        {named.map(name => <option key={name} value={name} />)}
+                                    </datalist>
+                                )}
+                            </>
+                        )}
+                        {named.length > 0 && (
+                            <span class="pb-field-help">
+                                {named.length} in this project · start typing to filter
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Skills only: the renderer splices a node hook's body whole and
+                    never reads this, so a note typed here would be written and lost. */}
+                {hookType === 'skill' && (
+                    <div class="pb-field pb-field--labelled">
+                        <span class="pb-field-label">Note</span>
+                        <div class="pb-note">
+                            <input class="pb-input" type="text" value={note}
+                                aria-label="Note to the assistant (optional)"
+                                placeholder="Anything the assistant should know first"
+                                onInput={e => setNote((e.target as HTMLInputElement).value)} />
+                            <span class="pb-field-help">optional</span>
+                        </div>
+                    </div>
+                )}
+
                 <p class="pb-form-preview">
-                    Adds to <span class="pb-mono">companion.yml</span>. You will still need to build.
+                    Writes to <span class="pb-mono">companion.yml</span>. Build to apply.
                 </p>
                 </div>
 
@@ -269,11 +310,15 @@ export function NewStepForm({ sequence, taken, onCancel, onCreate }: NewStepProp
                     {problem && <span class="pb-field-problem">{problem}</span>}
                 </label>
 
+                {/* Empty is what tells the writer to derive it from the name. */}
                 <label class="pb-field">
-                    <span class="pb-field-label">Reads as</span>
+                    <span class="pb-field-label">Display name</span>
                     <input class="pb-input" type="text" value={label}
                         placeholder={clean ? `${clean[0].toUpperCase()}${clean.slice(1)}` : 'Review'}
                         onInput={e => setLabel((e.target as HTMLInputElement).value)} />
+                    <span class="pb-field-note">
+                        Taken from the name unless you write something here.
+                    </span>
                 </label>
 
                 <label class="pb-field">
@@ -290,8 +335,12 @@ export function NewStepForm({ sequence, taken, onCancel, onCreate }: NewStepProp
                 <label class="pb-field">
                     <span class="pb-field-label">Writes</span>
                     <input class="pb-input pb-input--mono" type="text" value={writes}
-                        placeholder="review.md — leave empty if it writes nothing"
+                        placeholder="review.md"
                         onInput={e => setWrites((e.target as HTMLInputElement).value)} />
+                    <span class="pb-field-note">
+                        Several go in brackets: <span class="pb-mono">[review.md, notes.md]</span>.
+                        Leave it empty if the step writes nothing.
+                    </span>
                 </label>
 
                 <p class="pb-form-preview">
@@ -307,7 +356,8 @@ export function NewStepForm({ sequence, taken, onCancel, onCreate }: NewStepProp
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit"
                         disabled={!clean || Boolean(problem)}>Add step</button>
-                    <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
+                    <button class="pb-action pb-action--quiet" type="button"
+                        onClick={onCancel}>Cancel</button>
                 </div>
             </form>
         </aside>
@@ -331,9 +381,20 @@ export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: Ne
     // but…" needs and what this form did before there was anything else.
     const [seed, setSeed] = useState('');
     const clean = name.trim();
-    const preset = seed.startsWith('preset:')
-        ? presets.find(p => p.name === seed.slice('preset:'.length))
-        : undefined;
+
+    // Whole configurations, so each is read beside the others before the pick.
+    const starts = [
+        {
+            id: '',
+            label: from && from !== 'shipped'
+                ? `What ${from} runs now`
+                : 'The pipeline as shipped',
+            help: 'Your nodes, hooks and templates as they are today.',
+        },
+        ...presets.map(p => ({
+            id: `preset:${p.name}`, label: p.label, help: p.summary,
+        })),
+    ];
 
     const problem = !clean ? ''
         : !/^[a-z0-9][a-z0-9-]*$/.test(clean)
@@ -372,26 +433,21 @@ export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: Ne
                 {/* A blank file is the worst place to start and was the only
                     place to start. The presets are whole configurations, so the
                     first question becomes "which of these is closest?" */}
-                <label class="pb-field">
-                    <span class="pb-field-label">Start from</span>
-                    <select class="pb-input" value={seed}
-                        onChange={e => setSeed((e.target as HTMLSelectElement).value)}>
-                        <option value="">
-                            {from === 'shipped' || !from
-                                ? 'The pipeline as it ships'
-                                : `What ${from} runs now`}
-                        </option>
-                        {presets.length > 0 && (
-                            <optgroup label="A preset">
-                                {presets.map(p => (
-                                    <option key={p.name} value={`preset:${p.name}`}
-                                        title={p.summary}>{p.label}</option>
-                                ))}
-                            </optgroup>
-                        )}
-                    </select>
-                    {preset && <span class="pb-field-note">{preset.summary}</span>}
-                </label>
+                <fieldset class="pb-field">
+                    <legend class="pb-field-label">Start from</legend>
+                    {starts.map(start => (
+                        <label key={start.id}
+                            class={`pb-choice ${seed === start.id ? 'pb-choice--on' : ''}`}>
+                            <input type="radio" name="workflow-seed" value={start.id}
+                                checked={seed === start.id}
+                                onChange={() => setSeed(start.id)} />
+                            <span class="pb-choice-body">
+                                <span class="pb-choice-label">{start.label}</span>
+                                <span class="pb-choice-help">{start.help}</span>
+                            </span>
+                        </label>
+                    ))}
+                </fieldset>
 
                 <p class="pb-form-preview">
                     Writes <span class="pb-mono">
@@ -403,7 +459,8 @@ export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: Ne
                 <div class="pb-form-actions">
                     <button class="pb-action pb-action--primary" type="submit"
                         disabled={!clean || Boolean(problem)}>Create</button>
-                    <button class="pb-action" type="button" onClick={onCancel}>Cancel</button>
+                    <button class="pb-action pb-action--quiet" type="button"
+                        onClick={onCancel}>Cancel</button>
                 </div>
             </form>
         </aside>

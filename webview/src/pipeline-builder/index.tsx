@@ -24,6 +24,7 @@ import {
 import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas } from './Canvas';
 import { Header } from './Header';
+import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm, Attachment } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
@@ -197,28 +198,33 @@ function App() {
 
     const send = (message: unknown) => { setNotice(null); vscode.postMessage(message); };
 
+    // One strip at the foot, whatever it has to say. A refusal is a status with
+    // nothing to take back, so it reads in the same place as everything else
+    // rather than in a band of its own above the board.
+    const line: PipelineStatus | null = status
+        ?? (notice ? { tone: 'warning', text: notice } : null);
+
     return (
         <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
                 busy={busy}
+                report={report}
                 onBuild={() => vscode.postMessage({ type: 'build' })}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
+                onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
-            {notice && (
-                <div class="builder-notice builder-notice--warning" role="status">
-                    <svg class="builder-notice-icon" width="14" height="14" viewBox="0 0 16 16"
-                        fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-                        aria-hidden="true"><circle cx="8" cy="8" r="6" /><path d="M8 5v3.5" />
-                        <path d="M8 10.8h.01" /></svg>
-                    {notice}
-                    <button class="builder-notice-close" onClick={() => setNotice(null)}
-                        title="Dismiss">×</button>
-                </div>
+            {line && (
+                <StatusLine status={line}
+                    onUndo={token => {
+                        vscode.postMessage({ type: 'undo', token });
+                        setStatus(null);
+                    }}
+                    onDismiss={() => { setStatus(null); setNotice(null); }} />
             )}
             <div class="builder-body">
                 <Canvas
@@ -356,6 +362,11 @@ function App() {
                         })}
                         onRestore={() => vscode.postMessage({
                             type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
+                        })}
+                        // The step header no longer carries this, so the pane is
+                        // the only route to it.
+                        onReplaceStep={() => send({
+                            type: 'replaceStep', command: selected.command,
                         })}
                         onRemove={() => {
                             const shape = withoutNode(graph, selected);

@@ -8,7 +8,7 @@
  * you actually wanted.
  */
 
-import { Menu } from './Menu';
+import { Menu, MenuOption } from './Menu';
 import { useState } from 'preact/hooks';
 import { PipelineNode } from '../../../src/protocol/pipeline';
 
@@ -32,15 +32,23 @@ interface Props {
     onRemove: () => void;
     /** Move it a place earlier or later in the step. */
     onMove: (direction: 'up' | 'down') => void;
+    /** Hand the whole step to one document. Offered on a step's frame only. */
+    onReplaceStep?: () => void;
 }
 
 /** What each kind of node is for, said once, here, instead of as an abbreviation. */
 const KIND_MEANS: Record<string, string> = {
-    investigate: 'reads context and produces no file',
-    author: 'owns and writes a deliverable',
+    investigate: 'reads context, writes no file',
+    author: 'writes a deliverable',
     gate: 'a check that can stop or skip the run',
     control: 'sets up, routes, or finishes',
 };
+
+/** The order the legend reads in: strongest mark first, the two faint ones last. */
+const KINDS = ['author', 'gate', 'investigate', 'control'];
+
+/** The step's own preamble reads in this panel, but it is not a node in a phase. */
+const FRAME = '_frame';
 
 /**
  * Enough markdown for an instruction block.
@@ -137,7 +145,53 @@ export function Inspector(props: Props) {
     // the copy is written when you save, so the thing you wanted to do and the
     // thing you had to do first are the same action.
     const [draft, setDraft] = useState<string | null>(null);
+    // A move rearranges the board, which a screen reader is not looking at.
+    const [moved, setMoved] = useState('');
     const editing = draft !== null;
+
+    const frame = node.id === FRAME;
+    const canRestore = Boolean(node.replaced && node.shipped);
+
+    const more: MenuOption[] = [];
+    if (!node.pinned) {
+        more.push({ id: 'up', label: 'Move up' });
+        more.push({ id: 'down', label: 'Move down' });
+    }
+    if (!frame) {
+        more.push({
+            id: 'remove',
+            label: 'Remove from the run',
+            note: 'Keeps the file — it stays on offer under Add node.',
+        });
+    }
+    if (frame && props.onReplaceStep) {
+        more.push({
+            id: 'replace-step',
+            label: 'Replace the whole step',
+            note: `Hands ${step} to one document of yours. Every node, phase and hook `
+                + 'in it stops running.',
+        });
+    }
+    if (canRestore) {
+        more.push({
+            id: 'shipped',
+            label: 'Use the shipped node',
+            note: 'Sends your copy to the trash. Undo in the status line puts it back.',
+        });
+    }
+
+    const pick = (id: string) => {
+        if (id === 'up' || id === 'down') {
+            props.onMove(id);
+            setMoved(`${node.name} moved ${id === 'up' ? 'up' : 'down'} in ${step}.`);
+        } else if (id === 'remove') {
+            props.onRemove();
+        } else if (id === 'replace-step') {
+            props.onReplaceStep?.();
+        } else if (id === 'shipped') {
+            props.onRestore();
+        }
+    };
 
     return (
         <aside class="pb-inspector" aria-label={`${node.name} instructions`}>
@@ -150,13 +204,32 @@ export function Inspector(props: Props) {
                 </button>
                 <p class="pb-inspector-where">
                     <span class="pb-inspector-id">{node.id}</span>
-                    {' · '}{step}{' / '}{node.kind}
+                    {' · '}{step}{' / '}{node.kind}{' · '}
+                    <button class="pb-inspector-open" onClick={props.onOpenFile}>
+                        Open the file
+                    </button>
                 </p>
             </header>
 
             <dl class="pb-facts">
                 <dt>Kind</dt>
-                <dd>{KIND_MEANS[node.kind] ?? 'part of the step'}</dd>
+                <dd>
+                    <span class={`pb-kind-tick pb-kind-tick--${node.kind}`} aria-hidden="true" />
+                    {node.kind}{' · '}{KIND_MEANS[node.kind] ?? 'part of the step'}
+                    <span class="pb-facts-note">How the card in the run marks each kind:</span>
+                    <ul class="pb-kind-legend">
+                        {KINDS.map(kind => (
+                            <li key={kind}>
+                                <span class={`pb-kind-tick pb-kind-tick--${kind}`}
+                                    aria-hidden="true" />
+                                {kind === 'gate' && (
+                                    <span class="pb-kind-chip" aria-hidden="true">gate</span>
+                                )}
+                                <span class="pb-kind-legend-name">{kind}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </dd>
 
                 {node.writes.length > 0 && (
                     <>
@@ -172,8 +245,8 @@ export function Inspector(props: Props) {
                 )}
                 <dt>Order</dt>
                 <dd>{node.pinned
-                    ? `Held in place — ${node.pinned}.`
-                    : 'Free to move, including into another phase.'}</dd>
+                    ? `held in place: ${node.pinned}`
+                    : 'free to move, into another phase too'}</dd>
 
                 <dt>Source</dt>
                 <dd>
@@ -183,8 +256,8 @@ export function Inspector(props: Props) {
                         it was for, and that is a button. */}
                     <span title={node.source}>
                         {node.replaced
-                            ? 'Yours — this project replaced it.'
-                            : 'Ships with Companion.'}
+                            ? <><span class="pb-yours">yours</span>{' '}this project replaced it</>
+                            : 'as shipped'}
                     </span>
                 </dd>
             </dl>
@@ -237,6 +310,7 @@ export function Inspector(props: Props) {
             </div>
 
             <footer class="pb-inspector-actions">
+                <p class="pb-live" role="status" aria-live="polite">{moved}</p>
                 {editing ? (
                     <>
                         <button class="pb-inspector-action pb-inspector-action--yours"
@@ -248,7 +322,8 @@ export function Inspector(props: Props) {
                     </>
                 ) : (
                     <>
-                        <button class="pb-inspector-action pb-inspector-action--yours"
+                        {/* Plain: purple marks a node that already changed. */}
+                        <button class="pb-inspector-action"
                             disabled={body === null}
                             onClick={() => setDraft(editable)}>
                             Edit
@@ -263,7 +338,7 @@ export function Inspector(props: Props) {
                             <Menu
                                 class="pb-inspector-action"
                                 trigger="Replace"
-                                title="Run a different block in this node's place"
+                                title="Run a different node in this one's place"
                                 options={node.variants.map(variant => ({
                                     id: variant.id,
                                     label: variant.name,
@@ -272,12 +347,17 @@ export function Inspector(props: Props) {
                                 onPick={props.onUseVariant}
                             />
                         )}
-                        {node.replaced && node.shipped && (
-                            <button class="pb-inspector-action pb-inspector-action--remove"
-                                onClick={props.onRestore}>Use the shipped node</button>
-                        )}
-                        <button class="pb-inspector-action pb-inspector-action--quiet"
-                            onClick={props.onOpenFile}>Open the file</button>
+                        <span class={`pb-more${canRestore ? ' pb-more--restore' : ''}`}>
+                            <Menu
+                                class="pb-inspector-action"
+                                trigger="More"
+                                align="right"
+                                title="Everything else this node can do"
+                                disabledTitle="Nothing else this node can do"
+                                options={more}
+                                onPick={pick}
+                            />
+                        </span>
                     </>
                 )}
             </footer>

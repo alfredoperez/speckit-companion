@@ -22,6 +22,13 @@ export interface MenuOption {
     label: string;
     /** A second line — what this option does, or what kind of thing it is. */
     note?: string;
+    /**
+     * Offered, and impossible here. Shown rather than omitted so the note can
+     * say why — "one node here, so there is nothing to split off" teaches that
+     * a phase can be split at the same moment it explains why this one cannot.
+     * An omitted row teaches nothing.
+     */
+    disabled?: boolean;
 }
 
 interface Props {
@@ -57,6 +64,30 @@ export function Menu({
 }: Props) {
     const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
+    const list = useRef<HTMLUListElement>(null);
+    const button = useRef<HTMLButtonElement>(null);
+    // Whether a person opened it. A story that renders one open is a picture of
+    // a menu, and a picture should not take the focus off the page.
+    const byHand = useRef(false);
+
+    const items = () => Array.from(
+        list.current?.querySelectorAll<HTMLButtonElement>('.pb-menu-option') ?? []);
+
+    /** Close, and give the keyboard back where it came from. */
+    const shut = () => {
+        setOpen(false);
+        button.current?.focus();
+    };
+
+    // The keyboard lands on the first entry, the way every other menu behaves.
+    // Without it opening this from the keyboard left focus on the trigger, with
+    // the only way into the list being a Tab through it.
+    useEffect(() => {
+        if (!open || !byHand.current) { return; }
+        const entries = items();
+        const first = entries.find(item => item.getAttribute('aria-disabled') !== 'true');
+        (first ?? entries[0])?.focus();
+    }, [open]);
 
     // A menu that stays open after you look away is a menu you have to dismiss.
     useEffect(() => {
@@ -65,7 +96,7 @@ export function Menu({
             if (!root.current?.contains(event.target as Node)) { setOpen(false); }
         };
         const escape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') { setOpen(false); }
+            if (event.key === 'Escape') { shut(); }
         };
         document.addEventListener('mousedown', away);
         document.addEventListener('keydown', escape);
@@ -74,6 +105,28 @@ export function Menu({
             document.removeEventListener('keydown', escape);
         };
     }, [open]);
+
+    /**
+     * Arrows walk the list, Home and End jump to its ends.
+     *
+     * A Map rather than an object literal: an object's prototype answers to
+     * `toString` and `constructor`, so a key named either would look up a
+     * truthy function and be called as an index.
+     */
+    const steer = (event: KeyboardEvent) => {
+        const entries = items();
+        if (entries.length === 0) { return; }
+        const at = entries.indexOf(document.activeElement as HTMLButtonElement);
+        const to = new Map<string, number>([
+            ['ArrowDown', (at + 1) % entries.length],
+            ['ArrowUp', (at <= 0 ? entries.length : at) - 1],
+            ['Home', 0],
+            ['End', entries.length - 1],
+        ]).get(event.key);
+        if (to === undefined) { return; }
+        event.preventDefault();
+        entries[to].focus();
+    };
 
     if (disabled || options.length === 0) {
         return (
@@ -86,9 +139,15 @@ export function Menu({
 
     return (
         <div class="pb-menu" ref={root}>
-            <button class={`pb-menu-trigger ${rest.class ?? ''}`} title={title}
+            <button class={`pb-menu-trigger ${rest.class ?? ''}`} title={title} ref={button}
                 aria-label={label} aria-expanded={open} aria-haspopup="menu"
-                onClick={() => setOpen(!open)}>
+                onClick={() => { byHand.current = true; setOpen(!open); }}
+                onKeyDown={(event: KeyboardEvent) => {
+                    if (event.key !== 'ArrowDown' || open) { return; }
+                    event.preventDefault();
+                    byHand.current = true;
+                    setOpen(true);
+                }}>
                 {trigger}
                 {caret && (
                     <span class="pb-menu-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
@@ -96,11 +155,21 @@ export function Menu({
             </button>
             {open && (
                 <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}`}
-                    role="menu">
+                    role="menu" ref={list} onKeyDown={steer}>
                     {options.map(option => (
                         <li key={option.id} role="none">
-                            <button class="pb-menu-option" role="menuitem"
-                                onClick={() => { setOpen(false); onPick(option.id); }}>
+                            {/* `aria-disabled` rather than the native attribute,
+                                which would take the row out of the focus order
+                                and take its note with it. */}
+                            <button role="menuitem"
+                                class={`pb-menu-option${
+                                    option.disabled ? ' pb-menu-option--inert' : ''}`}
+                                aria-disabled={option.disabled ? 'true' : undefined}
+                                onClick={() => {
+                                    if (option.disabled) { return; }
+                                    shut();
+                                    onPick(option.id);
+                                }}>
                                 <span class="pb-menu-label">{option.label}</span>
                                 {option.note && (
                                     <span class="pb-menu-note">{option.note}</span>

@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import type { PipelineGraphResult } from '../../../src/protocol/pipeline';
 
 // The same module `vscode` maps to, imported by path for the stub factory,
 // which is a testing affordance rather than part of the editor's API.
@@ -86,6 +87,11 @@ beforeEach(() => {
         (write as jest.Mock).mockResolvedValue(null);
     }
 
+    // The shared stub records the call and does nothing; these handlers write and
+    // delete real files, so the delete has to actually happen for a test to mean it.
+    (vscode.workspace.fs.delete as jest.Mock).mockImplementation(
+        async (uri: { fsPath: string }) => { fs.rmSync(uri.fsPath, { force: true }); });
+
     (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(
         createMockWebviewPanel);
     panel = openPanel();
@@ -141,7 +147,13 @@ describe('building', () => {
     it('runs the same command the palette runs', async () => {
         await panel.__receive({ type: 'build' });
         expect(vscode.commands.executeCommand)
-            .toHaveBeenCalledWith('speckit.companion.buildPipeline');
+            .toHaveBeenCalledWith('speckit.companion.buildPipeline', { quiet: true });
+    });
+
+    it('asks the command to keep quiet, since the panel reports the result itself', async () => {
+        await panel.__receive({ type: 'preview' });
+        expect(vscode.commands.executeCommand)
+            .toHaveBeenCalledWith('speckit.companion.previewPipelineBuild', { quiet: true });
     });
 
     it('marks the panel busy while it runs, and free again after', async () => {
@@ -158,6 +170,49 @@ describe('building', () => {
         expect(busy.at(-1)).toEqual({ type: 'busy', busy: false });
     });
 
+    it('reports what the build did, in the panel that asked for it', async () => {
+        const report = {
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: '[build] ok',
+        };
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(report);
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('buildReport').report).toEqual(report);
+    });
+
+    it('drops the report once the pipeline moves under it', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        await panel.__receive({ type: 'selectWorkflow', name: 'bugfix' });
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('drops it for a change made outside the panel too', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
+            .mock.results.map(r => r.value);
+        await watchers[0].fireChange(vscode.Uri.file('companion.yml'));
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('leaves the header saying nothing when the command had nothing to report', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce(null);
+        await panel.__receive({ type: 'preview' });
+        expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('reports after the redraw, so the redraw does not wipe what it just said', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('buildReport').report).not.toBeNull();
+    });
+
     it('logs a failed action rather than losing it to an unhandled rejection', async () => {
         const channel = (vscode.window.createOutputChannel as jest.Mock)
             .mock.results.at(-1)!.value;
@@ -166,6 +221,51 @@ describe('building', () => {
         await panel.__receive({ type: 'build' });
         expect(channel.appendLine).toHaveBeenCalledWith(
             expect.stringContaining('build blew up'));
+    });
+});
+
+describe('the line that explains the board', () => {
+    /** A readable graph, so the panel has something to stamp `firstRun` onto. */
+    const READABLE = { steps: [], warnings: [] } as unknown as PipelineGraphResult;
+
+    /** A panel whose workspace can actually remember, which the shared one cannot. */
+    function openWithMemory(store: Map<string, unknown>): Panel {
+        panel.__fireDispose();
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [
+            { uri: vscode.Uri.file(workspace) },
+        ];
+        PipelineBuilderPanel.show(
+            {
+                extensionPath,
+                subscriptions: [],
+                workspaceState: {
+                    get: (key: string) => store.get(key),
+                    update: async (key: string, value: unknown) => { store.set(key, value); },
+                },
+            } as unknown as vscode.ExtensionContext,
+            vscode.window.createOutputChannel('test') as vscode.OutputChannel,
+        );
+        return (vscode.window.createWebviewPanel as jest.Mock)
+            .mock.results.at(-1)!.value as Panel;
+    }
+
+    it('is offered to a workspace that has never read it', async () => {
+        graph.readPipelineGraph.mockResolvedValue(READABLE);
+        panel = openWithMemory(new Map());
+        await panel.__receive({ type: 'ready' });
+        expect(panel.__lastPosted('graph').graph.firstRun).toBe(true);
+    });
+
+    it('is not offered again once it has been read', async () => {
+        graph.readPipelineGraph.mockResolvedValue(READABLE);
+        panel = openWithMemory(new Map());
+        await panel.__receive({ type: 'dismissFirstRun' });
+        expect(panel.__lastPosted('graph').graph.firstRun).toBe(false);
+    });
+
+    it('does not fall over in a workspace with nothing to remember with', async () => {
+        await expect(panel.__receive({ type: 'dismissFirstRun' })).resolves.toBeUndefined();
+        expect(panel.__lastPosted('graph')).toBeDefined();
     });
 });
 
@@ -266,10 +366,16 @@ describe('giving a node back', () => {
         shippedNode('specify', 'draft', '---\nid: draft\n---\n\nWrite the spec.\n');
     });
 
-    it('drops the project\'s copy and redraws', async () => {
+    /** A project's own copy of the shipped `draft` node, on disk. */
+    function ourCopy(): string {
         const own = ownNode('specify', 'draft');
         fs.mkdirSync(path.dirname(own), { recursive: true });
         fs.writeFileSync(own, 'ours', 'utf8');
+        return own;
+    }
+
+    it('drops the project\'s copy and redraws', async () => {
+        const own = ourCopy();
 
         await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
 
@@ -280,6 +386,68 @@ describe('giving a node back', () => {
     it('does nothing when there was no copy to give back', async () => {
         await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
         expect(panel.__lastPosted('graph')).toBeUndefined();
+    });
+
+    it('says what it did, in the panel', async () => {
+        ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        const status = panel.__lastPosted('status').status;
+        expect(status.text).toBe('draft runs the shipped node again');
+        expect(status.detail).toBe('Your copy went to the trash');
+        expect(status.undo.token).toBe('restore:specify:draft');
+    });
+
+    // The panel forgets the held copy on close; the trash outlives that.
+    it('deletes through the editor, into the trash, not straight off the disk', async () => {
+        ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        const [uri, options] = (vscode.workspace.fs.delete as jest.Mock).mock.calls.at(-1)!;
+        expect(uri.fsPath).toBe(ownNode('specify', 'draft'));
+        expect(options).toEqual({ useTrash: true });
+    });
+
+    it('puts the deleted copy back, contents and all, when Undo is pressed', async () => {
+        const own = ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+        expect(fs.existsSync(own)).toBe(false);
+
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+
+        expect(fs.readFileSync(own, 'utf8')).toBe('ours');
+        expect(panel.__lastPosted('status').status).toBeNull();
+    });
+
+    // The way back holds the only copy, so a failed restore must not spend it.
+    it('keeps the way back when the restore fails, and says so', async () => {
+        const own = ourCopy();
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'draft' });
+
+        // A file standing where the node's directory has to go, so the restore
+        // cannot make the folder and throws.
+        const dir = path.dirname(own);
+        fs.rmSync(dir, { recursive: true, force: true });
+        fs.writeFileSync(dir, 'in the way', 'utf8');
+
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+        expect(panel.__lastPosted('notice').text).toContain('Could not take that back');
+
+        // Still on offer, so the second press succeeds where the first failed.
+        fs.rmSync(dir, { force: true });
+        await panel.__receive({ type: 'undo', token: 'restore:specify:draft' });
+        expect(fs.readFileSync(own, 'utf8')).toBe('ours');
+    });
+
+    it('refuses a node that ships nowhere, naming an action the panel can do', async () => {
+        const own = ownNode('specify', 'invented');
+        fs.mkdirSync(path.dirname(own), { recursive: true });
+        fs.writeFileSync(own, 'ours', 'utf8');
+
+        await panel.__receive({ type: 'restoreNode', command: 'specify', nodeId: 'invented' });
+
+        expect(panel.__lastPosted('notice').text).toContain('Remove from the run');
+        expect(fs.existsSync(own)).toBe(true);
     });
 });
 
@@ -723,6 +891,88 @@ describe('reaching the panel from the palette', () => {
             .toBe(before + 1);
         panel = (vscode.window.createWebviewPanel as jest.Mock)
             .mock.results.at(-1)!.value as Panel;
+    });
+});
+
+describe('taking a node out of the run', () => {
+    /** The step as the graph reader would report it, so an undo has a shape to restore. */
+    function shaped(): void {
+        graph.readPipelineGraph.mockResolvedValue({
+            steps: [{
+                name: 'specify',
+                phases: [
+                    { name: 'gather', nodes: [{ id: 'resolve-dir' }] },
+                    { name: 'author', nodes: [{ id: 'draft' }] },
+                ],
+            }],
+        } as never);
+    }
+
+    it('writes the order and the grouping together, and says what it did', async () => {
+        shaped();
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+
+        const [, , command, phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(command).toBe('specify');
+        expect(phases).toEqual([{ name: 'gather', nodes: ['resolve-dir'] }]);
+        expect(order).toEqual(['resolve-dir']);
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('draft no longer runs in specify');
+    });
+
+    it('puts the node back where it was when Undo is pressed', async () => {
+        shaped();
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        await panel.__receive({ type: 'undo', token: 'remove:specify:draft' });
+
+        const [, , , phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(order).toEqual(['resolve-dir', 'draft']);
+        expect(phases).toEqual([
+            { name: 'gather', nodes: ['resolve-dir'] },
+            { name: 'author', nodes: ['draft'] },
+        ]);
+    });
+
+    // A promised Undo the panel cannot honour is worse than none offered.
+    it('offers no Undo when the shape to go back to could not be read', async () => {
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        expect(panel.__lastPosted('status').status.undo).toBeUndefined();
+    });
+
+    it('writes nothing and says the reason when the configuration refuses', async () => {
+        shaped();
+        graph.writePhases.mockResolvedValue('draft has to run last.');
+        await panel.__receive({
+            type: 'removeNode', command: 'specify', nodeId: 'draft',
+            order: ['resolve-dir'], phases: [{ name: 'gather', nodes: ['resolve-dir'] }],
+        });
+        expect(panel.__lastPosted('notice').text).toBe('draft has to run last.');
+        expect(panel.__lastPosted('status')).toBeUndefined();
+    });
+});
+
+describe('moving a node without dragging it', () => {
+    it('sends the whole step\'s shape, and says which node moved', async () => {
+        await panel.__receive({
+            type: 'moveNode', command: 'specify', nodeId: 'draft',
+            order: ['draft', 'resolve-dir'],
+            phases: [{ name: 'gather', nodes: ['draft', 'resolve-dir'] }],
+        });
+
+        const [, , command, phases, , order] = graph.writePhases.mock.calls.at(-1)!;
+        expect(command).toBe('specify');
+        expect(order).toEqual(['draft', 'resolve-dir']);
+        expect(phases).toEqual([{ name: 'gather', nodes: ['draft', 'resolve-dir'] }]);
+        expect(panel.__lastPosted('status').status.text).toBe('draft moved in specify');
     });
 });
 
