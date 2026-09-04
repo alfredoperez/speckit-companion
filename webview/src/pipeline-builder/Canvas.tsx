@@ -55,7 +55,8 @@ interface Props {
     /** Open the panel for this step's document shape. */
     onOpenTemplate: (command: string) => void;
     /** Add a step of the project's own to the run. */
-    onNewStep: () => void;
+    /** `after` names the step a new one runs behind, when the click said where. */
+    onNewStep: (after?: string) => void;
     /**
      * Stop running a node. The file stays, so it is still on offer to add back.
      *
@@ -1006,7 +1007,10 @@ export function Canvas(
                     {/* The set of steps was the one thing the board could show
                         and not change. A review or a verification pass had to
                         hide inside implement, or not exist. */}
-                    <button class="pb-add-step" onClick={onNewStep}
+                    {/* The tail appends. Passing the handler straight to
+                        `onClick` would hand it a MouseEvent as the step to run
+                        behind. */}
+                    <button class="pb-add-step" onClick={() => onNewStep()}
                         title="Add a step of your own to the run">
                         <PlusIcon />
                         <span class="pb-add-step-label">Add step</span>

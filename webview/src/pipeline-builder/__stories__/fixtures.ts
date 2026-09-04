@@ -247,6 +247,53 @@ export const STOCK: StockHook[] = [
     },
 ];
 
+/**
+ * One lane carrying three of the project's own nodes, plus two swapped sections.
+ *
+ * No other fixture has more than one `yours` on a lane, so "a wall of purple"
+ * could not be judged from any capture — which is what the mark was accused of
+ * being.
+ */
+export const SPECIFY_THREE_YOURS = step('specify', [
+    phase('gather', [
+        node('resolve-dir', 'Resolve the spec folder', {
+            pinned: 'load-living-specs, draft-spec has to run after it',
+        }),
+        node('load-living-specs', 'Load living specs', {
+            kind: 'investigate', reads: ['resolve-dir'], replaced: true,
+        }),
+    ]),
+    phase('author', [
+        node('draft-spec', 'Draft the spec', {
+            kind: 'author', writes: ['spec.md'], reads: ['resolve-dir'], replaced: true,
+        }),
+        node('quality-checklist', 'Write the quality checklist', {
+            kind: 'gate', writes: ['checklists/requirements.md'], reads: ['draft-spec'],
+            replaced: true,
+        }),
+    ]),
+], {
+    artifacts: ['spec.md', 'checklists/requirements.md'],
+    template: {
+        file: 'spec-template.md',
+        sections: ['User Scenarios & Testing', 'Requirements'],
+        sectionsAvailable: ['User Scenarios & Testing', 'Requirements', 'Success Criteria'],
+        chosenBy: { 'User Scenarios & Testing': 'outcomes', Requirements: 'ears-requirements' },
+    },
+    changes: {
+        ...NO_CHANGES,
+        replaced: ['load-living-specs', 'draft-spec', 'quality-checklist'],
+    },
+});
+
+/**
+ * A step declaring no phases at all.
+ *
+ * Every affordance for adding something lives in a phase header, so a step
+ * without one had no way in: its name, `0 nodes`, and nothing else.
+ */
+export const NO_PHASES = step('doctor', [], { inSequence: false, own: true });
+
 /** The whole pipeline, as this repository runs it. */
 export const WHOLE = graph([AUTO, SPECIFY, PLAN, TASKS, IMPLEMENT], {
     configured: true,

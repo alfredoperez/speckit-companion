@@ -78,6 +78,11 @@
 
     /* Review mode colors - purple for reviewing completed steps */
     --review: #a855f7;
+    /* The hue MARKS, it does not fill: `--review` is for rules, borders and
+       tints; every purple word takes `--review-ink`, which is derived per theme
+       because #a855f7 measures 3.7:1 on a light editor and carries hook text at
+       11px. Same failure `--text-muted` already documents, one token over. */
+    --review-ink: #c084fc;
     --review-subtle: color-mix(in srgb, #a855f7 10%, transparent);
     --review-glow: 0 0 12px color-mix(in srgb, #a855f7 50%, transparent);
 
@@ -161,6 +166,9 @@ body.vscode-light {
     --text-body: #4a4a4a;
     --text-muted: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 50%, transparent);
     --text-label: color-mix(in srgb, var(--vscode-editor-foreground, #333333) 82%, transparent);
+    /* Darkened rather than lightened: the same hue has to clear AA against a
+       near-white editor background. */
+    --review-ink: #7e22ce;
     --border: var(--vscode-panel-border, #e0e0e0);
     --border-hover: var(--vscode-contrastBorder, #c0c0c0);
 

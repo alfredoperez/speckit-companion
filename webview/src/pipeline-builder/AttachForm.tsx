@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'preact/hooks';
+import { KIND_LABELS } from './hookKinds';
 import { Menu } from './Menu';
 import {
     HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
@@ -56,28 +57,28 @@ const KINDS: Array<{
 }> = [
     {
         type: 'skill',
-        label: 'Skill',
+        label: KIND_LABELS.skill,
         field: 'Which skill',
         help: 'The instructions stay in the skill, so editing it later changes what runs.',
         placeholder: 'verify-code-review',
     },
     {
         type: 'prompt',
-        label: 'Instruction',
+        label: KIND_LABELS.prompt,
         field: 'The instruction',
         help: 'One instruction, kept in companion.yml.',
         placeholder: 'Check the CHANGELOG is updated before continuing.',
     },
     {
         type: 'command',
-        label: 'Command',
+        label: KIND_LABELS.command,
         field: 'The command',
         help: 'A shell line. The assistant needs a terminal for this one.',
         placeholder: 'npm run lint-spec',
     },
     {
         type: 'node',
-        label: 'Node',
+        label: KIND_LABELS.node,
         field: 'Which node',
         help: 'A file from .specify/companion/nodes/, reusable in more than one place.',
         placeholder: 'review',
@@ -282,6 +283,13 @@ interface NewStepProps {
     sequence: string[];
     /** Every step name already in use. */
     taken: string[];
+    /**
+     * The step this one should run behind, when the click already said where.
+     *
+     * A seam between two lanes IS the answer to "runs after", so arriving from
+     * one should not ask again.
+     */
+    initialAfter?: string;
     onCancel: () => void;
     onCreate: (step: { name: string; label: string; after: string; writes: string }) => void;
 }
@@ -292,10 +300,13 @@ interface NewStepProps {
  * The board could show the steps and not change them, so a review pass had to
  * hide inside implement. A step is a directory of nodes; this writes one.
  */
-export function NewStepForm({ sequence, taken, onCancel, onCreate }: NewStepProps) {
+export function NewStepForm({
+    sequence, taken, initialAfter, onCancel, onCreate,
+}: NewStepProps) {
     const [name, setName] = useState('');
     const [label, setLabel] = useState('');
-    const [after, setAfter] = useState(sequence[sequence.length - 1] ?? '');
+    const [after, setAfter] = useState(
+        initialAfter ?? sequence[sequence.length - 1] ?? '');
     const [writes, setWrites] = useState('');
     const clean = name.trim();
 

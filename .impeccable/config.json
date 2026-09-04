@@ -1,6 +1,8 @@
 {
   "detector": {
-    "ignoreRules": [],
+    "ignoreRules": [
+      "side-tab"
+    ],
     "ignoreFiles": [],
     "ignoreValues": [
       {

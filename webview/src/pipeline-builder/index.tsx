@@ -47,7 +47,7 @@ type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
-    | { kind: 'new-step' }
+    | { kind: 'new-step'; after?: string }
     | { kind: 'template'; command: string }
     | null;
 
@@ -240,7 +240,10 @@ function App() {
                         setNotice(null);
                         setSide({ kind: 'template', command });
                     }}
-                    onNewStep={() => { setNotice(null); setSide({ kind: 'new-step' }); }}
+                    onNewStep={(after?: string) => {
+                        setNotice(null);
+                        setSide({ kind: 'new-step', after });
+                    }}
                     onRemoveNode={(command, nodeId, order, phases) =>
                         send({ type: 'removeNode', command, nodeId, order, phases })}
                     onMoveNode={(command, nodeId, order, phases) =>
@@ -322,6 +325,7 @@ function App() {
                         sequence={graph.steps.filter(s => s.inSequence && !s.own)
                             .map(s => s.name)}
                         taken={graph.steps.map(s => s.name)}
+                        initialAfter={side.after}
                         onCancel={() => setSide(null)}
                         onCreate={step => {
                             setSide(null);

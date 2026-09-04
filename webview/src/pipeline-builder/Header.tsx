@@ -10,6 +10,7 @@
 import { useState } from 'preact/hooks';
 import { BuildReport, PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
 import { changed } from './changes';
+import { totals } from './counts';
 import { Menu } from './Menu';
 
 /** Starts a workflow rather than switching to one. A workflow is a `.yml`
@@ -80,13 +81,15 @@ function tally(count: number, noun: string): string {
  * Hooks are the thing you genuinely cannot total by eye — they sit at boundaries
  * scattered down five lanes. So that is what the line says, and it says how many
  * are the project's, because that is the part a reader is deciding about.
+ *
+ * Counted from the steps the canvas draws, not from `graph.counts`: those two
+ * disagreed, and a board showing five hooks was topped by `nothing attached`.
  */
 function hookTally(graph: PipelineGraph): string {
-    const total = graph.counts.hooks + graph.counts.stockHooks;
+    const { hooks, stockHooks } = totals(graph);
+    const total = hooks + stockHooks;
     if (total === 0) { return 'nothing attached'; }
-    return graph.counts.hooks > 0
-        ? `${tally(total, 'hook')} · ${graph.counts.hooks} yours`
-        : tally(total, 'hook');
+    return hooks > 0 ? `${tally(total, 'hook')} · ${hooks} yours` : tally(total, 'hook');
 }
 
 function workflowLabel(name: string): string {
@@ -186,6 +189,7 @@ function changeSummary(graph: PipelineGraph): string[] {
 
 export function Header(props: Props) {
     const { graph, buildState, busy, report, onBuild, onPreview, onOpenConfig } = props;
+    const counts = totals(graph);
     const [open, setOpen] = useState(false);
     const [showingLog, setShowingLog] = useState(false);
     const changes = changeSummary(graph);
@@ -255,11 +259,11 @@ export function Header(props: Props) {
 
             <div class="builder-facts">
                 <span class="builder-count"
-                    title={`${tally(graph.counts.steps, 'step')}, `
-                        + `${tally(graph.counts.phases, 'phase')}, `
-                        + `${tally(graph.counts.nodes, 'node')}`
-                        + (graph.counts.stockHooks
-                            ? `\n${tally(graph.counts.stockHooks, 'hook')} from installed `
+                    title={`${tally(counts.steps, 'step')}, `
+                        + `${tally(counts.phases, 'phase')}, `
+                        + `${tally(counts.nodes, 'node')}`
+                        + (counts.stockHooks
+                            ? `\n${tally(counts.stockHooks, 'hook')} from installed `
                               + 'spec-kit extensions, which this panel shows but does not edit'
                             : '')}>
                     {hookTally(graph)}

@@ -45,7 +45,7 @@ The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**`
 - **No hard-wrapped paragraphs** in any `.md` file — one logical line per paragraph.
 - **Comments: default none**, one line max, no spec/PR identifiers (`// per PR #182`); strip diagnostic `console.log`s before commit.
 - **Verify a backlog issue still reproduces on `main` before fixing** — queued issues are frequently already fixed or dups.
-- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254).
+- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254). The review hue marks, it does not fill: `--review` is for rules, borders and tints, and every purple *word* takes `--review-ink`, which is derived per theme.
 - Tests: BDD `describe`/`it`; VS Code API mocked at `tests/__mocks__/vscode.ts` — extend it there. Known gap: config-dependent webview paths have no config-mock harness.
 - Run the extension: F5 → Extension Development Host.
 

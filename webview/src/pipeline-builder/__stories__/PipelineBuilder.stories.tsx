@@ -66,8 +66,10 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
             steps: steps.length,
             phases: steps.reduce((n, s) => n + s.phases.length, 0),
             nodes: steps.reduce((n, s) => n + s.phases.reduce((m, p) => m + p.nodes.length, 0), 0),
-            hooks: 0,
-            stockHooks: 0,
+            // Counted, not zeroed. Hardcoding these produced a capture whose
+            // header said `nothing attached` above a lane drawing five hooks.
+            hooks: steps.reduce((n, s) => n + s.changes.hooks, 0),
+            stockHooks: steps.reduce((n, s) => n + s.stockHooks.length, 0),
         },
         ...over,
     };
