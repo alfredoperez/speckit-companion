@@ -1,6 +1,8 @@
 /**
  * @jest-environment jsdom
  */
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { AttachForm } from '../AttachForm';
 import { NO_CHANGES, canvas, drag, flush, graph, mount, node, step } from './support';
 
@@ -157,13 +159,37 @@ describe('everything attached to one anchor sits in one block', () => {
     });
 
     // Two boxes with two connector arms used to straddle a node with work on
-    // both sides, repeating its name four times. Position was carrying the
-    // before/after meaning and was not carrying it.
-    it('is one block, under the node, however many sides have work', () => {
+    // both sides, repeating its name four times — so it became one block under
+    // the card, with the sides named in words. The words are headings now, and
+    // a heading is an ordering claim: BEFORE cannot sit under the card it runs
+    // before, with the phase's own BEFORE above it.
+    it('puts what runs before the node above it, and what runs after below', () => {
         const { host } = canvas(hooked());
         const group = host.querySelector('.pb-node-group')!;
-        expect(group.querySelectorAll('.pb-attached')).toHaveLength(1);
-        expect(Array.from(group.children).map(el => el.className)[0]).toContain('pb-node');
+        const order = Array.from(group.children).map(el => el.className.split(' ')[0]);
+
+        expect(order).toEqual(['pb-attached', 'pb-node', 'pb-attached']);
+        expect(group.children[0].textContent).toContain('before');
+        expect(group.children[0].textContent).toContain('doctor.py');
+        expect(group.children[2].textContent).toContain('after');
+        expect(group.children[2].textContent).toContain('create-pr');
+    });
+
+    it('draws only the side that has work, on a node with one', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'wrap-up', hooks: [],
+                    nodes: [node({ hooks: [{
+                        when: 'after', type: 'skill', summary: 'create-pr',
+                        anchor: 'resolve-dir', index: 0, note: '',
+                    }] })],
+                }],
+            })],
+        }));
+        const group = host.querySelector('.pb-node-group')!;
+        expect(Array.from(group.children).map(el => el.className.split(' ')[0]))
+            .toEqual(['pb-node', 'pb-attached']);
     });
 
     it('names the two sides in words rather than by where they sit', () => {
@@ -341,7 +367,10 @@ describe('one hue marks everything the project owns', () => {
         const { host } = canvas(swapped);
         const chip = host.querySelector('.pb-template')!;
         expect(chip.querySelector('.pb-template-name')?.textContent).toBe('Document shape');
-        expect(chip.querySelector('.pb-template-count')?.textContent?.trim()).toBe('· 1');
+        // The separator is neither the offer nor the change, so it stays out of
+        // the ink that means "this is yours".
+        expect(chip.querySelector('.pb-template-count')?.textContent).toBe('1');
+        expect(chip.querySelector('.pb-fact-dot')?.textContent).toBe('·');
         // The section names are the title, since a lane is 300px and a heading
         // can be any length. `§` on its own named nothing a reader could read.
         expect(chip.getAttribute('title')).toContain('Requirements');
@@ -876,7 +905,11 @@ describe('the changed mark says what changed', () => {
         mark.click();
         await flush();
 
-        const line = host.querySelector('.pb-changed-line')?.textContent ?? '';
+        // Named, not just toggled: without it a reader hears a control that
+        // expands and never learns what it expanded.
+        const opened = host.querySelector('.pb-changed-line')!;
+        expect(mark.getAttribute('aria-controls')).toBe(opened.id);
+        const line = opened.textContent ?? '';
         expect(line).toContain('2 hooks');
         expect(line).toContain('your own: draft-spec');
         expect(host.querySelector('.pb-changed')?.getAttribute('aria-expanded'))
@@ -1239,5 +1272,35 @@ describe('a step that declares no phase', () => {
         const aside = host.querySelector('.pb-aside');
         expect(aside?.textContent).toContain('launched when you want it');
         expect(aside?.textContent).not.toContain('hands-off');
+    });
+});
+
+// Read from the stylesheet: jsdom resolves no cascade, so nothing else on the
+// board can catch a resting control going back to invisible.
+describe('a resting control on the board is drawn', () => {
+    const css = readFileSync(
+        join(__dirname, '..', '..', '..', 'styles', 'pipeline-builder.css'), 'utf8');
+
+    /** The declarations of one rule, by its selector. */
+    const rule = (selector: string) => {
+        const at = css.indexOf(`\n${selector} {`);
+        if (at < 0) { throw new Error(`no rule for ${selector}`); }
+        return css.slice(at, css.indexOf('}', at));
+    };
+
+    // Both were `opacity: 0`: the seam's `+` is the one route to placing a hook
+    // precisely, and the bin is a live destructive target.
+    it('gives the seam and the bin no opacity to hide behind', () => {
+        for (const selector of ['.pb-slot::before', '.pb-node-drop']) {
+            expect(rule(selector)).not.toMatch(/opacity:/);
+        }
+    });
+
+    // .45 over a token that already carries an alpha put both under the 3:1 a
+    // control that is not text has to clear. One ink, one stop, both the same.
+    it('rests them on the same ink, and on a token rather than a fraction of one', () => {
+        for (const selector of ['.pb-slot::before', '.pb-node-drop']) {
+            expect(rule(selector)).toContain('color: var(--text-secondary);');
+        }
     });
 });

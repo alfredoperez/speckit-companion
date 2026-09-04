@@ -291,6 +291,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                         title={`${hook.description || hook.command}\n\n`
                                             + `Registered by the ${hook.extension} extension. `
                                             + 'It runs here, and is not edited in this panel.'
+                                            + (hook.optional ? '\nIt asks before it runs.' : '')
                                             + (hook.conditional ? '\nIt does not run every time.' : '')}>
                                         <span class="pb-hook-kind">
                                             {KIND_LABELS.command}
@@ -298,9 +299,6 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                         <span class="pb-hook-name pb-hook-name--ref">
                                             {clip(hook.command)}
                                         </span>
-                                        {hook.optional && (
-                                            <span class="pb-hook-note">asks first</span>
-                                        )}
                                         {/* Whose it is, named rather than
                                             marked. `ext` said only "not yours",
                                             which leaves "then whose?" to a
@@ -366,6 +364,11 @@ function Node({ node, actions, stock, seams }: {
                 <Seam side="before" anchor={node.id}
                     onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
+            {/* Above the card, because BEFORE is an ordering claim and one
+                block under the card made it twice: a phase heading, the card,
+                and then a second BEFORE belonging to the card above it. */}
+            <Attached before={before} after={[]} stockBefore={stock?.before}
+                anchor={node.id} onEdit={actions.onEditHook} />
             <div
                 class={[
                     'pb-node',
@@ -464,8 +467,7 @@ function Node({ node, actions, stock, seams }: {
                         onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
                 )}
             </div>
-            <Attached before={before} after={after}
-                stockBefore={stock?.before} stockAfter={stock?.after}
+            <Attached before={[]} after={after} stockAfter={stock?.after}
                 anchor={node.id} onEdit={actions.onEditHook} />
             {(seams?.after ?? true) && (
                 <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
@@ -855,7 +857,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
     return (
-        <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}>
+        <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}
+            data-step={step.name}>
             {/* What the step leaves behind sits on its own line, not as a row
                 of its own and not at the bottom of a lane you must scroll to. */}
             {/* Two rows, because seven things did not fit in one. A lane holds
@@ -902,9 +905,12 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             onClick={() => onOpenTemplate(step.name)}>
                             <span class="pb-template-name">Document shape</span>
                             {step.template.sections.length > 0 && (
-                                <span class="pb-template-count">
-                                    · {step.template.sections.length}
-                                </span>
+                                <>
+                                    <span class="pb-fact-dot" aria-hidden="true">·</span>
+                                    <span class="pb-template-count">
+                                        {step.template.sections.length}
+                                    </span>
+                                </>
                             )}
                             <span class="pb-template-caret" aria-hidden="true">▸</span>
                         </button>
@@ -915,6 +921,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     a touch screen can reach. */}
                 {changed(step) && (
                     <button class="pb-changed" aria-expanded={showChanges}
+                        aria-controls={`pb-changed-${step.name}`}
                         onClick={() => setShowChanges(!showChanges)}>
                         changed
                         <span class="pb-changed-caret" aria-hidden="true">
@@ -923,7 +930,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                     </button>
                 )}
                 {showChanges && (
-                    <p class="pb-changed-line">{changeSummary(step).join(' · ')}</p>
+                    <p class="pb-changed-line" id={`pb-changed-${step.name}`}>
+                        {changeSummary(step).join(' · ')}
+                    </p>
                 )}
             </header>
 
@@ -1010,7 +1019,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNewStep'] }) {
     return (
         <button class="pb-lane-seam" onClick={() => onNewStep(after)}
-            title={`Add a step after ${after}`} aria-label={`Add a step after ${after}`} />
+            title={`Add a step after ${after}`}>
+            <span class="pb-lane-seam-label">Add a step after {after}</span>
+        </button>
     );
 }
 
