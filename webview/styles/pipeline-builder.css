@@ -881,54 +881,8 @@ button.builder-chip:hover { background: var(--bg-hover); }
    Inspector — a node, read here
    ============================================ */
 
-.pb-inspector {
-    flex-shrink: 0;
-    width: 420px;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-secondary);
-    border-left: 1px solid var(--border);
-    overflow: auto;
-}
-
-.pb-inspector-head {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-2);
-    padding: var(--space-4) var(--space-4) var(--space-3);
-    border-bottom: 1px solid var(--border);
-}
-
-.pb-inspector-title {
-    margin: 0;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.pb-inspector-close {
-    align-self: start;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* A 14px mark in 4px of padding is a 22px target; 24 is the floor. */
-    min-width: 24px;
-    min-height: 24px;
-    padding: var(--space-1);
-    color: var(--text-secondary);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.pb-inspector-close:hover { color: var(--text-primary); }
-
-.pb-inspector-where {
-    grid-column: 1 / -1;
-    margin: 0;
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
+/* The inspector wears the `.pb-side` shell; its rows are declared beside that
+   shell, and its width in the Lane C block, after the shell it overrides. */
 
 .pb-inspector-id { font-family: var(--font-mono); }
 
@@ -1117,6 +1071,7 @@ button.builder-chip:hover { background: var(--bg-hover); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* A 14px mark in 4px of padding is a 22px target; 24 is the floor. */
     min-width: 24px;
     min-height: 24px;
     padding: var(--space-1);
@@ -1300,7 +1255,9 @@ button.builder-chip:hover { background: var(--bg-hover); }
    the actions are never below the fold. */
 .pb-inspector {
     display: grid;
-    grid-template-rows: auto auto 1fr auto;
+    /* `minmax(0, …)`, not `1fr`: a grid row's automatic minimum is its
+       content, so the body refused to shrink and pushed the actions out. */
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     overflow: hidden;
 }
 
@@ -1533,8 +1490,11 @@ button.builder-chip:hover { background: var(--bg-hover); }
     color: var(--text-primary);
 }
 
-/* What the chosen fragment does, under the row that chose it. */
+/* What the chosen fragment does, under the row that chose it — or, once at the
+   top, that nothing else is written for any of them. The container's `gap`
+   spaces these, so a `p` here must not bring the UA's own margin with it. */
 .pb-template-summary {
+    margin: 0;
     font-size: var(--text-xs);
     line-height: var(--leading-normal);
     color: var(--text-body);
@@ -2080,7 +2040,7 @@ button.builder-chip:hover { background: var(--bg-hover); }
     border-top: 1px solid var(--border);
 }
 
-.pb-more--restore .pb-menu-list li:last-child .pb-menu-label { color: var(--review); }
+.pb-more--restore .pb-menu-list li:last-child .pb-menu-label { color: var(--review-ink); }
 
 /* ---- Forms: a label column, so a field reads as one line ---- */
 
@@ -2262,6 +2222,45 @@ button.builder-chip:hover { background: var(--bg-hover); }
 
 @media (prefers-reduced-motion: reduce) {
     .pb-step--found { animation: none; box-shadow: inset 0 0 0 1px var(--review); }
+}
+
+/* ── Lane C ──────────────────────────────────────────────────
+   After `.pb-side`, whose width this overrides: two single-class selectors
+   are settled by source order. Its rows and its scrolling are already
+   declared beside the shell. */
+
+.pb-inspector { width: 420px; }
+
+/* A sentence with two buttons on it. Flex so the second wraps to the `dd`'s
+   own left edge rather than hanging 8px past it. */
+.pb-facts dd:has(.pb-order-move) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+}
+
+/* Dragging needs a pointer. These two are the Order row's own answer, on the
+   sentence that claims a node is free to move. Coloured like the panel's
+   other link-button: the underline says "link", the colour need not. */
+.pb-order-move {
+    padding: 3px 0;
+    font: inherit;
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.pb-order-move:hover,
+.pb-order-move:focus-visible { text-decoration-thickness: 2px; }
+
+.pb-order-move:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
 }
 
 
