@@ -398,6 +398,68 @@ export const PlaceTheHookFirst: Story = {
     },
 };
 
+// ── Steps ───────────────────────────────────────────────
+
+export const AddAStepBetweenTwoLanes: Story = {
+    name: 'Add a step between two lanes',
+    render: () => board(graph([
+        step('specify', SPECIFY.phases),
+        step('plan', SPECIFY.phases),
+        step('tasks', SPECIFY.phases),
+        step('implement', SPECIFY.phases),
+    ])).view,
+    play: async ({ canvasElement }) => {
+        // `Add step` appends, and the step people want is usually a review
+        // BEFORE implement. The seam is the only control that says where.
+        const seams = Array.from(canvasElement.querySelectorAll('.pb-lane-seam'));
+        assert(seams.length === 3, 'one seam per join, and none at either end');
+
+        (seams[2] as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'newStep' && sent[0].with === 'tasks',
+            'the seam after tasks opens New step with tasks already in Runs after');
+    },
+};
+
+export const OpenWhatChangedOnAStep: Story = {
+    name: 'Open what changed on a step',
+    render: () => board(graph([step('tasks', SPECIFY.phases, {
+        changes: { ...NO_CHANGES, added: ['review-gaps'], reordered: true },
+    })])).view,
+    play: async ({ canvasElement }) => {
+        const mark = canvasElement.querySelector('.pb-changed') as HTMLButtonElement;
+        assert(mark.tagName === 'BUTTON' && mark.getAttribute('title') === null,
+            'the facts are disclosed, not parked in a tooltip nobody opens');
+        assert(!canvasElement.querySelector('.pb-changed-line'), 'closed to start with');
+
+        mark.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const line = canvasElement.querySelector('.pb-changed-line')?.textContent ?? '';
+        assert(line.includes('+review-gaps') && line.includes('reordered'),
+            "and opens the step's own change line under its head");
+    },
+};
+
+export const ReachASeamWithNoPointer: Story = {
+    name: 'Reach a seam with no pointer',
+    render: () => board().view,
+    play: async ({ canvasElement }) => {
+        // The seam's `+` used to be `opacity: 0` until a pointer arrived, on the
+        // one route to placing a hook precisely.
+        const seam = canvasElement.querySelector('.pb-slot') as HTMLButtonElement;
+        assert(seam.tagName === 'BUTTON' && !seam.disabled,
+            'a seam is a real button, so tab order reaches it');
+
+        seam.focus();
+        assert(canvasElement.ownerDocument.activeElement === seam, 'and it takes the focus');
+
+        seam.click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'addHook', 'and adds a hook at the gap it marks');
+    },
+};
+
 // ── Workflows ───────────────────────────────────────────
 
 export const SwitchWorkflow: Story = {
