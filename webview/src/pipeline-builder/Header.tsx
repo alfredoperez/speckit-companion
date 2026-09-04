@@ -171,10 +171,13 @@ function changeSummary(graph: PipelineGraph): string[] {
         if (step.changes.decisions.length) {
             bits.push(`routing: ${step.changes.decisions.join(', ')}`);
         }
-        if (step.template) {
-            bits.push(step.template.sections.length
-                ? `template § ${step.template.sections.join(', ')}`
-                : `template ${step.template.file}`);
+        // Only a section someone pointed elsewhere. Every step that writes a
+        // document has a template, so naming the file listed "template
+        // spec-template.md" as a change on a step whose template nobody had
+        // touched — which is why the derivation this list belongs to ignores
+        // its presence too.
+        if (step.template?.sections.length) {
+            bits.push(`template: ${step.template.sections.join(', ')}`);
         }
         if (bits.length) { lines.push(`${step.name}: ${bits.join(' · ')}`); }
     }
@@ -192,7 +195,11 @@ export function Header(props: Props) {
     // answers "2 of 5 would change" does not also need an amber line saying the
     // build is behind, which is what asking for a preview already meant.
     const notice = report ? null : buildNotice(buildState, changedSteps);
-    const firstRun = buildState === 'unconfigured' && graph.firstRun === true;
+    // Nothing configured AND nothing changed. Editing a node writes a project
+    // file and no configuration at all, so keying on the configuration alone
+    // let the panel say "Changed · 1 step" and, one line below, that this is
+    // the pipeline as it ships.
+    const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0;
 
     const workflows = [
         ...graph.workflows.available.map(name => ({

@@ -733,7 +733,11 @@ body {
    Hooks, replaced nodes and replaced template sections share it, and nothing
    else in the panel does, so "what did we change" needs no reading. */
 
-.pb-node--yours { border-color: var(--review); }
+/* A node you own carries the `yours` pill and nothing else. Ringing the whole
+   card as well said the same thing twice, and the louder half drowned the
+   node's own name — on a board where several nodes are yours it read as a wall
+   of purple boxes rather than as a mark you can scan for. The class stays: it
+   is what the board is asked about, and the pill hangs off the same fact. */
 
 .pb-yours {
     padding: 0 var(--space-2);
@@ -2153,9 +2157,6 @@ body {
    off-centre inside it. */
 .pb-phase-add { gap: 0; }
 
-/* The open node's ring is drawn with an inset shadow, which a `--yours` border
-   would otherwise sit inside and read as two rings of different colours. */
-.pb-node--yours.pb-node--open { box-shadow: inset 0 0 0 1px var(--review); }
 
 /* ── Narrow panel ────────────────────────────────────────────
    Last on purpose: `@container` adds no specificity, so these have to

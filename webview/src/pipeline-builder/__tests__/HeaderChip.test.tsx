@@ -370,8 +370,24 @@ describe('the first time a project opens the board', () => {
 
     it('stops saying it once the project has a configuration of its own', () => {
         const host = mount(
-            <Header graph={graph({ firstRun: true })} buildState="current"
+            <Header graph={graph({ firstRun: true, configured: true })} buildState="current"
                 busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-notice--info')).toBeNull();
+    });
+
+    // Editing a node writes `.specify/companion/nodes/...` and no configuration
+    // at all, so the board could say "Changed · 1 step" with a line under it
+    // saying this is the pipeline as it ships.
+    it('stops saying it once a node has been rewritten, configuration or not', () => {
+        const host = mount(
+            <Header
+                graph={graph({
+                    firstRun: true,
+                    configured: false,
+                    steps: [step({ changes: { ...NO_CHANGES, replaced: ['draft-spec'] } })],
+                })}
+                buildState="unconfigured" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
         expect(host.querySelector('.builder-notice--info')).toBeNull();
     });
 
