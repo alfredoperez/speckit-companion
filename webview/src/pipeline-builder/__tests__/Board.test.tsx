@@ -344,6 +344,27 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         expect(marked[0].closest('.pb-hook')?.className).toContain('pb-hook--stock');
     });
 
+    // A hook that stops and asks is the one fact on the row with a consequence.
+    // It briefly lived in the title, which is where this round took every other
+    // mark out of.
+    it('says on the row that a hook will stop and ask', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('after')] })],
+        }));
+        const asks = host.querySelectorAll('.pb-hook-asks');
+        expect(asks).toHaveLength(1);
+        expect(asks[0].textContent).toBe('asks first');
+    });
+
+    it('leaves the word off a hook that just runs', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), optional: false }],
+            })],
+        }));
+        expect(host.querySelector('.pb-hook-asks')).toBeNull();
+    });
+
     it('says it is not edited here, and is still readable', () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('after')] })],

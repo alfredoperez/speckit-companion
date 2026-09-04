@@ -1415,6 +1415,19 @@ body {
    already cut to 14 characters where it is written, and `git` shortened to
    `g…` names nobody. What made the tail expensive was the second chip beside
    it, which has gone. */
+
+/* A hook that stops and asks before it runs. The one fact on this row with a
+   consequence, so it is a word on the row rather than a line in a tooltip. */
+.pb-hook-asks {
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+    border-radius: var(--radius-sm);
+}
+
 .pb-hook-ext {
     flex-shrink: 0;
     margin-left: auto;

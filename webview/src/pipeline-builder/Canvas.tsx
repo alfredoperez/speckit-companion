@@ -307,6 +307,14 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                             minority carry it: a badge on every
                                             row is the noise a one-line row is
                                             removing. */}
+                                        {/* A hook that stops and asks is the one
+                                            fact here with a consequence, so it
+                                            stays a word. Every other mark this
+                                            round took out of a tooltip; this one
+                                            must not go back in. */}
+                                        {hook.optional && (
+                                            <span class="pb-hook-asks">asks first</span>
+                                        )}
                                         <span class="pb-hook-ext">
                                             {clip(hook.extension, 14)}
                                         </span>
