@@ -252,7 +252,6 @@ function App() {
                     graph={graph}
                     selected={selected}
                     onOpenNode={openNode}
-                    onRestoreNode={(command, nodeId) =>
                         vscode.postMessage({ type: 'restoreNode', command, nodeId })}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
@@ -260,15 +259,9 @@ function App() {
                         send({ type: 'setPhases', command, phases, renamed })}
                     onAddNode={(command, nodeId, phase, order, phases) =>
                         send({ type: 'addNode', command, nodeId, phase, order, phases })}
-                    onReplaceStep={command => send({ type: 'replaceStep', command })}
-                    onOpenTemplate={command => {
-                        setNotice(null);
-                        setSide({ kind: 'template', command });
-                    }}
                     onNewStep={newStep}
                     onRemoveNode={(command, nodeId, order, phases) =>
                         send({ type: 'removeNode', command, nodeId, order, phases })}
-                    onMoveNode={(command, nodeId, order, phases) =>
                         send({ type: 'moveNode', command, nodeId, order, phases })}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });

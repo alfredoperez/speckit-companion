@@ -86,3 +86,4 @@ specs/_*/
 # The seeded design-canvas payload (~2MB of editor). The .dc.html artboards it
 # is built from are the sources and stay tracked.
 /design/pipeline-builder-redesign.html
+webview/src/pipeline-builder/__screenshots__/diff/

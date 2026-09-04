@@ -37,16 +37,15 @@ function board(g = graph([SPECIFY])) {
             }}>
             <Canvas graph={g}
                 onOpenNode={(c, n) => sent.push({ what: 'openNode', with: [c, n] })}
-                onRestoreNode={on('restoreNode')}
                 onReorder={(c, order) => sent.push({ what: 'reorder', with: [c, order] })}
                 onAddHook={(c, a, w) => sent.push({ what: 'addHook', with: [c, a, w] })}
                 onEditHook={(c, h) => sent.push({ what: 'editHook', with: [c, h.anchor, h.index] })}
                 onSetPhases={(c, p, r) => sent.push({ what: 'setPhases', with: [c, p, r] })}
                 onAddNode={(c, id, p) => sent.push({ what: 'addNode', with: [c, id, p] })}
                 onOpenFrame={on('openFrame')}
-                onReplaceStep={on('replaceStep')} onOpenTemplate={on('openTemplate')}
                 onNewStep={on('newStep')}
-                onRemoveNode={on('removeNode')} onMoveNode={on('moveNode')} />
+                onOpenTemplate={on('openTemplate')}
+                onRemoveNode={on('removeNode')} />
         </div>
     );
     return { view, sent };

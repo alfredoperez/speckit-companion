@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **A task is a line with an id on it.** Progress, the phase-complete notice and the check that implement has finished all count checkboxes in `tasks.md`, and they counted every checkbox — including the verification notes and prose checklists that sit among the tasks. The spec-kit half never counted those, so the two could disagree about whether a run was done. Both sides now require a task id (`T001`), which both task templates emit, and a shared set of cases holds them to it. A hand-written `tasks.md` whose items carry no id will read as no tasks; give them ids to have them counted.
+
 - **Build now reaches your assistant.** Every customisation the panel made — a hook, a reordered step, a swapped node, a rewritten one — was written into the extension's own copy of the commands, and your assistant reads a separate copy the installer rendered once at install time. So Build reported five commands and changed nothing that would ever run. It refreshes those copies now, and says how many and where.
 - **Swapping a node keeps the work attached to it.** A node's name is where a hook attaches, so replacing the node renamed it and every hook on it was warned about and skipped — the work stopped running while the panel still drew it. Hooks now follow the swap, the same way they already followed a renamed phase.
 - **Replace works from the panel.** Swapping a node for one of its alternatives sent the grouping and the order as two writes, and each is checked against the other as it stands — so whichever went first was refused for disagreeing with the half that had not moved yet. It never worked outside the tests, which sent both together. Putting a dropped node back and handing a step to your own document had the same shape and the same fix.
@@ -58,7 +60,7 @@ All notable changes to this project will be documented in this file.
 - **Attach work at any boundary from the panel.** **Add hook** asks where it runs first, then what it is: a **skill** the project already has, an **instruction**, a shell **command**, or one of your own nodes. Pointing at a skill is the one to reach for — the instructions stay in the skill instead of being copied into the pipeline.
 - **Rewrite a node in your own words.** **Edit** in a node's panel opens its instructions; saving is what writes your copy into `.specify/companion/nodes/`, so making it yours and doing the thing you came to do are one action. The node is marked `yours` until **Use the shipped node** hands it back. Rewriting how a step is written used to mean forking the extension.
 - **Build your pipeline from the editor.** "Build Pipeline from companion.yml" applies your configuration; "Preview Pipeline Build" shows what would change and writes nothing. The output channel keeps the whole log.
-- **A stale pipeline says so.** When `companion.yml` is newer than the commands built from it, the two disagree — the file says one thing and the command your assistant is handed says another, with nothing about a run looking wrong. That is now stated once per session, with the rebuild a click away.
+- **A stale pipeline says so.** When `companion.yml` is newer than the commands built from it, the two disagree — the file says one thing and the command your assistant is handed says another, with nothing about a run looking wrong. The panel's header states it whenever the two are out of step, with **Build** a click away.
 
 ### Removed
 

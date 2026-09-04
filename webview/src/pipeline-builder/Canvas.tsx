@@ -37,8 +37,6 @@ type NodeAction = (command: string, nodeId: string) => void;
 interface Props {
     graph: PipelineGraph;
     onOpenNode: NodeAction;
-    /** Drop the project's copy and go back to the shipped node. */
-    onRestoreNode: NodeAction;
     /** Save a step's whole node order after a drag. */
     onReorder: (command: string, order: string[]) => void;
     /** Attach work at a boundary — the panel asks what kind. */
@@ -52,8 +50,6 @@ interface Props {
     ) => void;
     /** Read a step's own preamble — the text every node in it sits under. */
     onOpenFrame: (command: string) => void;
-    /** Hand the whole step to one document of your own. Offered in the side column. */
-    onReplaceStep: (command: string) => void;
     /** Open the panel for this step's document shape. */
     onOpenTemplate: (command: string) => void;
     /** Add a step of the project's own to the run. */
@@ -65,11 +61,6 @@ interface Props {
      * Order and grouping go together, as they do for adding one.
      */
     onRemoveNode: (
-        command: string, nodeId: string,
-        order: string[], phases: Array<{ name: string; nodes: string[] }>,
-    ) => void;
-    /** Move a node without dragging it. */
-    onMoveNode: (
         command: string, nodeId: string,
         order: string[], phases: Array<{ name: string; nodes: string[] }>,
     ) => void;
@@ -188,7 +179,7 @@ function TrashIcon() {
 
 // ── Nodes ───────────────────────────────────────────────
 
-type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
+type NodeActions = Pick<Props, 'onOpenNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string, when: HookWhen) => void;
     onEditHook: (hook: PipelineHook) => void;
@@ -1040,11 +1031,11 @@ function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNew
 }
 
 export function Canvas(
-    { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
+    { graph, onOpenNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
         onOpenTemplate, onNewStep, selected }: Props,
 ) {
-    const actions = { onOpenNode, onRestoreNode, selected };
+    const actions = { onOpenNode, selected };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 

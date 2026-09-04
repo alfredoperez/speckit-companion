@@ -299,6 +299,8 @@ Watches multiple patterns with debouncing (1 second):
 | `**/.specify/**/*` | SpecKit files refresh |
 | `**/specs/**/tasks.md` | Phase completion notifications |
 
+A task is a checkbox line carrying a task id — `- [ ] T001 …`. Both task templates emit one, and the spec-kit half reads the same grammar, so the two agree on whether a run has finished. A checkbox without an id is a verification note or a prose checklist rather than work, and is not counted.
+
 **Debounce implementation (`fileWatchers.ts:62-76`):**
 ```typescript
 let refreshTimeout: NodeJS.Timeout | undefined;

@@ -15,7 +15,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { BuildReport } from '../../protocol/pipeline';
-import { needsRebuild, readPipelineBuildState } from './pipelineBuild';
 
 /** How long a build may take before it is abandoned. Assembly is fast; a hang is a bug. */
 const BUILD_TIMEOUT_MS = 60_000;
@@ -149,37 +148,4 @@ export function registerPipelineBuildCommands(
         vscode.commands.registerCommand('speckit.companion.previewPipelineBuild',
             (options?: RunOptions) => build(true, options?.quiet)),
     );
-}
-
-/**
- * Tell the user once per session when the built pipeline is behind its
- * configuration, with the rebuild one click away.
- *
- * Once, because staleness persists until acted on and a notice that returns on
- * every window focus is one people learn to dismiss without reading.
- */
-export async function notifyIfPipelineStale(
-    workspaceRoot: string,
-    outputChannel: vscode.OutputChannel,
-): Promise<void> {
-    const state = readPipelineBuildState(workspaceRoot);
-    if (!needsRebuild(state)) {
-        return;
-    }
-    outputChannel.appendLine(`[Pipeline] ${state.kind === 'stale'
-        ? 'companion.yml is newer than the built commands'
-        : 'companion.yml has never been built'}`);
-
-    const choice = await vscode.window.showInformationMessage(
-        state.kind === 'stale'
-            ? 'Your companion.yml changed since the pipeline was last built.'
-            : 'Your companion.yml has not been built yet.',
-        'Build now',
-        'Preview',
-    );
-    if (choice === 'Build now') {
-        await vscode.commands.executeCommand('speckit.companion.buildPipeline');
-    } else if (choice === 'Preview') {
-        await vscode.commands.executeCommand('speckit.companion.previewPipelineBuild');
-    }
 }

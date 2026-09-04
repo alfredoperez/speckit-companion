@@ -103,15 +103,12 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
         <Canvas graph={g} selected={selected}
             onNewStep={after => { newSteps += 1; newStepAfter.push(after); }}
             onRemoveNode={(c, n, order, phases) => removedNodes.push({ c, n, order, phases })}
-            onMoveNode={(c, n, order, phases) => movedNodes.push({ c, n, order, phases })}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
-            onReplaceStep={c => replacedSteps.push(c)}
             onOpenTemplate={c => templates.push(c)}
             onOpenNode={(c, n) => opened.push([c, n])}
-            onRestoreNode={(c, n) => restored.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );

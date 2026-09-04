@@ -13,7 +13,7 @@ import { OverviewProvider } from './features/settings';
 import { ensureStandardFamily } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
-import { registerPipelineBuildCommands, notifyIfPipelineStale } from './features/specs/pipelineBuildCommands';
+import { registerPipelineBuildCommands } from './features/specs/pipelineBuildCommands';
 import { registerPipelineBuilderCommands } from './features/pipeline-builder/builderPanel';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';

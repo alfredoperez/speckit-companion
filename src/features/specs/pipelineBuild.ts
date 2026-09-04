@@ -123,21 +123,3 @@ export function readPipelineBuildState(workspaceRoot: string): PipelineBuildStat
         ? { kind: 'stale', configuredAt, builtAt }
         : { kind: 'current', builtAt };
 }
-
-/** Whether the user should be told to rebuild. */
-export function needsRebuild(state: PipelineBuildState): boolean {
-    return needsBuild(state.kind);
-}
-
-/** One line for the sidebar, or null when there is nothing worth saying. */
-export function describeBuildState(state: PipelineBuildState): string | null {
-    switch (state.kind) {
-        case 'stale':
-            return 'Pipeline needs rebuilding — companion.yml changed since the last build';
-        case 'never-built':
-            return 'Pipeline not built yet — companion.yml has never been applied';
-        case 'current':
-        case 'unconfigured':
-            return null;
-    }
-}

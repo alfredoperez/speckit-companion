@@ -22,10 +22,10 @@ import {
 const noop = () => undefined;
 
 const CANVAS = {
-    onOpenNode: noop, onRestoreNode: noop, onReorder: noop,
+    onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onReplaceStep: noop, onOpenTemplate: noop, onNewStep: noop,
-    onRemoveNode: noop, onMoveNode: noop,
+    onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
+    onRemoveNode: noop,
 };
 
 const HEAD = {

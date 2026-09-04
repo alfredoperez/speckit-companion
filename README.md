@@ -128,7 +128,7 @@ Build from the same panel, or from the palette:
 | **Preview Pipeline Build** | Show what a build would change, writing nothing |
 | **Build Pipeline from companion.yml** | Apply the configuration |
 
-When `companion.yml` is newer than the commands built from it, the extension says so once per session — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](./docs/getting-started.md#install-the-spec-kit-extension), which holds the pipeline sources.
+When `companion.yml` is newer than the commands built from it, the panel's header says so — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](./docs/getting-started.md#install-the-spec-kit-extension), which holds the pipeline sources.
 
 ## No lock-in, no server
 
