@@ -13,6 +13,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { needsBuild } from '../../protocol/pipeline';
 
 export const COMPANION_CONFIG_REL = path.join('.specify', 'companion.yml');
 export const BUILT_COMMANDS_REL = path.join('.specify', 'extensions', 'companion', 'commands');
@@ -125,7 +126,7 @@ export function readPipelineBuildState(workspaceRoot: string): PipelineBuildStat
 
 /** Whether the user should be told to rebuild. */
 export function needsRebuild(state: PipelineBuildState): boolean {
-    return state.kind === 'stale' || state.kind === 'never-built';
+    return needsBuild(state.kind);
 }
 
 /** One line for the sidebar, or null when there is nothing worth saying. */

@@ -8,7 +8,9 @@
  */
 
 import { useState } from 'preact/hooks';
-import { BuildReport, PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
+import {
+    BuildReport, PipelineBuildKind, PipelineGraph, needsBuild,
+} from '../../../src/protocol/pipeline';
 import { changed } from './changes';
 import { PipelineTotals, totals } from './counts';
 import { Menu, MenuOption } from './Menu';
@@ -196,11 +198,6 @@ export function Header(props: Props) {
     const differs = changedSteps === 1
         ? '1 step differs from shipped'
         : `${changedSteps} steps differ from shipped`;
-    // On a fresh project a filled, disabled Build was the loudest thing on
-    // screen, over the first-run line that is the actual entry point. It takes
-    // the fill when there is work in it and stays outlined otherwise.
-    const somethingToBuild = changedSteps > 0
-        || buildState === 'stale' || buildState === 'never-built';
     // A report is the newer and more specific statement about the same file, so
     // it replaces the build state rather than stacking under it — a preview that
     // answers "2 of 5 would change" does not also need an amber line saying the
@@ -302,16 +299,22 @@ export function Header(props: Props) {
                 </button>
                 {/* "Build" — this runs the project's own build and writes the
                     command files. Claude is who reads them afterwards, not who
-                    does this, and naming it here promised a step that never ran. */}
+                    does this, and naming it here promised a step that never ran.
+
+                    The fill follows the build state alone. A changed step is
+                    divergence from the shipped pipeline, not an unbuilt delta —
+                    every edit here writes to disk and turns the state stale by
+                    itself — so keying on it left Build permanently accented on
+                    any project that had ever used the panel. */}
                 <button class={`builder-action${
-                    somethingToBuild ? ' builder-action--primary' : ''}`}
+                    needsBuild(buildState) ? ' builder-action--primary' : ''}`}
                     disabled={busy} onClick={onBuild}>
                     {busy ? 'Building…' : 'Build'}
                 </button>
                 {/* Narrow only. Row one keeps the name, the workflow and the
-                    forward action; row two holds the two chips, which at this
-                    width is all it holds — so `+ Add step` folds in here with
-                    the two quiet actions rather than taking a third row. */}
+                    forward action; the two quiet actions fold in here. Add step
+                    stays on the band as well — this is a second way to it, not
+                    the only one. */}
                 <div class="builder-overflow">
                     <Menu class="builder-action"
                         trigger="⋯" caret={false} align="right"

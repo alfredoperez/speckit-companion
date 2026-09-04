@@ -82,11 +82,12 @@ export function Menu({
     // The keyboard lands on the first entry, the way every other menu behaves.
     // Without it opening this from the keyboard left focus on the trigger, with
     // the only way into the list being a Tab through it.
+    // Nothing to land on when every row is inert: the fallback drew an accent
+    // ring on the first one, which reads as a selection on a list that offers
+    // no selection. The keyboard still reaches the rows by Tab.
     useEffect(() => {
         if (!open || !byHand.current) { return; }
-        const entries = items();
-        const first = entries.find(item => item.getAttribute('aria-disabled') !== 'true');
-        (first ?? entries[0])?.focus();
+        items().find(item => item.getAttribute('aria-disabled') !== 'true')?.focus();
     }, [open]);
 
     // A menu that stays open after you look away is a menu you have to dismiss.

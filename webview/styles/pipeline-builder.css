@@ -206,8 +206,13 @@ body {
 
 /* Both chips are buttons; the flat one is a span, so this leaves it alone. The
    workflow switcher beside them has always lit up and these did not, which left
-   one band holding two dropdown triggers that behaved differently. */
-button.builder-chip:hover { background: var(--bg-hover); }
+   one band holding two dropdown triggers that behaved differently.
+
+   The tinted one answers in its own hue: a grey wash over it would have taken
+   the purple off the one control whose whole job is to carry it. */
+button.builder-chip:not(.builder-chip--customised):hover { background: var(--bg-hover); }
+
+button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 /* The hue marks; it does not fill. The word takes `--review-ink`, the outline
    takes `--review`, and the tint stays a tint. */
@@ -2296,10 +2301,12 @@ button.builder-chip:hover { background: var(--bg-hover); }
        Build onto a row of its own. */
     .builder-workflow-label { display: none; }
 
-    /* Row two holds the two chips and nothing else fits beside them, so the
-       way in folds into the `⋯` with the other two actions. */
-    .builder-facts .builder-action--quiet,
-    .builder-action--add { display: none; }
+    /* `+ Add step` stays on row two and takes a third row when the chip beside
+       it is long. Folding it into the `⋯` bought 34px on a 900px panel and cost
+       the only visible way to add a step at this width — the tail card that
+       also offers one is four lanes right, behind a horizontal scroll. The `⋯`
+       keeps a duplicate entry, which costs nothing. */
+    .builder-facts .builder-action--quiet { display: none; }
     .builder-overflow { display: block; }
     .builder-overflow .pb-menu-trigger { display: inline-flex; }
 

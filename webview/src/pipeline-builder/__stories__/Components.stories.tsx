@@ -398,7 +398,7 @@ export const HeaderNarrow: Story = {
     name: 'Header · a docked panel',
     parameters: { capture: { width: 380, height: 160 } },
     render: () => (
-        <div style="width: 380px; container-type: inline-size; container-name: builder;">
+        <div style="width: 380px;">
             <One><Header
                 graph={graph([step('specify', SPECIFY.phases, {
                     changes: { ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'] },

@@ -225,9 +225,17 @@ function App() {
                 onShowChanged={name => {
                     const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
                         .find(el => el.dataset.step === name);
-                    lane?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    lane?.classList.add('pb-step--found');
-                    setTimeout(() => lane?.classList.remove('pb-step--found'), 1200);
+                    if (!lane) { return; }
+                    // Absent in jsdom, so a test of this path would throw on it.
+                    lane.scrollIntoView?.({
+                        behavior: 'smooth', block: 'nearest', inline: 'center',
+                    });
+                    // Removed and re-added around a layout read, or a second
+                    // click on a lane already marked plays no pulse at all.
+                    lane.classList.remove('pb-step--found');
+                    void lane.offsetWidth;
+                    lane.classList.add('pb-step--found');
+                    setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
                 }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />

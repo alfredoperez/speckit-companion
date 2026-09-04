@@ -546,11 +546,15 @@ describe('Build earns its fill', () => {
         expect(filled(host)).toBe(false);
     });
 
-    it('fills once a step has changed', () => {
+    // Every edit here writes to disk and turns the state stale by itself, so a
+    // changed step on a current build means the changes ARE built. Keying the
+    // fill on divergence left it accented forever on any project that had used
+    // the panel — the same false urgency, one state over.
+    it('stays outlined when the changes are already built', () => {
         const host = mount(
             <Header graph={graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })] })}
                 buildState="current" busy={false} {...HEAD} />);
-        expect(filled(host)).toBe(true);
+        expect(filled(host)).toBe(false);
     });
 
     it('stays outlined on a project that has never configured one', () => {
@@ -559,7 +563,7 @@ describe('Build earns its fill', () => {
         expect(filled(host)).toBe(false);
     });
 
-    it('fills when the built commands are behind, changed steps or not', () => {
+    it('fills when the built commands are behind', () => {
         const host = mount(
             <Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
         expect(filled(host)).toBe(true);
@@ -586,7 +590,7 @@ describe('the header at a docked width', () => {
         return host;
     }
 
-    it('folds the two quiet actions into one menu', async () => {
+    it('folds the actions row two cannot hold into one menu', async () => {
         const host = await overflow();
         const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
         expect(said).toEqual(['Add step', 'Open companion.yml', 'Preview build']);
