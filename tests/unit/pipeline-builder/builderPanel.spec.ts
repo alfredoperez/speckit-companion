@@ -126,13 +126,24 @@ describe('drawing the pipeline', () => {
         expect(graph.readPipelineGraph).not.toHaveBeenCalled();
     });
 
-    it('redraws when the configuration changes on disk', async () => {
+    // Every input a build reads, not only `companion.yml`: a rewritten node, a
+    // named workflow the panel is writing to instead, a fragment, a template.
+    it('redraws when any build input changes on disk', async () => {
+        const watched = (vscode.workspace.createFileSystemWatcher as jest.Mock)
+            .mock.calls.map(([pattern]) => pattern.pattern ?? String(pattern));
+        expect(watched).toEqual(expect.arrayContaining([
+            expect.stringContaining('companion.yml'),
+            expect.stringContaining('nodes'),
+            expect.stringContaining('workflows'),
+        ]));
+
         const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
             .mock.results.map(r => r.value);
-        expect(watchers).toHaveLength(2);
-        const before = panel.__posted.length;
-        await watchers[0].fireChange(vscode.Uri.file('x'));
-        expect(panel.__posted.length).toBeGreaterThan(before);
+        for (const watcher of watchers) {
+            const before = panel.__posted.length;
+            await watcher.fireChange(vscode.Uri.file('x'));
+            expect(panel.__posted.length).toBeGreaterThan(before);
+        }
     });
 
     it('watches the project\'s own nodes, not only the configuration file', () => {

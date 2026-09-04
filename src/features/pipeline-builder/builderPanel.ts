@@ -97,8 +97,17 @@ export class PipelineBuilderPanel {
         );
 
         // Rebuilding elsewhere, or editing the configuration, should be visible
-        // here without anyone remembering to refresh.
-        for (const pattern of ['.specify/companion.yml', '.specify/companion/nodes/**/*.md']) {
+        // here without anyone remembering to refresh. Every input a build reads,
+        // not only `companion.yml`: while a named workflow is in force the
+        // panel's own writes go to its file instead, so watching the one file
+        // left the board showing a configuration nobody was running.
+        for (const pattern of [
+            '.specify/companion.yml',
+            '.specify/companion/nodes/**/*.md',
+            '.specify/companion/workflows/**/*.yml',
+            '.specify/companion/fragments/**/*.md',
+            '.specify/companion/templates/**/*.md',
+        ]) {
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(workspaceRoot, pattern),
             );
