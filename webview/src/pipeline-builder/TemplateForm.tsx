@@ -37,8 +37,7 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
     if (!template) { return null; }
 
     const forStep = fragments.filter(f => !f.for || f.for === step.name);
-    const anywhere = template.sectionsAvailable.some(
-        heading => forStep.some(f => f.section === heading));
+    const anywhere = forStep.some(f => template.sectionsAvailable.includes(f.section));
 
     return (
         <SidePanel

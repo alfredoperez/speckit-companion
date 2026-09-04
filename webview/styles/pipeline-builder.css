@@ -1499,8 +1499,11 @@ body {
     color: var(--text-primary);
 }
 
-/* What the chosen fragment does, under the row that chose it. */
+/* What the chosen fragment does, under the row that chose it — or, once at the
+   top, that nothing else is written for any of them. The container's `gap`
+   spaces these, so a `p` here must not bring the UA's own margin with it. */
 .pb-template-summary {
+    margin: 0;
     font-size: var(--text-xs);
     line-height: var(--leading-normal);
     color: var(--text-body);
@@ -2046,7 +2049,7 @@ body {
     border-top: 1px solid var(--border);
 }
 
-.pb-more--restore .pb-menu-list li:last-child .pb-menu-label { color: var(--review); }
+.pb-more--restore .pb-menu-list li:last-child .pb-menu-label { color: var(--review-ink); }
 
 /* ---- Forms: a label column, so a field reads as one line ---- */
 
