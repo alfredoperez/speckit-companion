@@ -97,9 +97,11 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
     const replacedSteps: string[] = [];
     const templates: string[] = [];
     let newSteps = 0;
+    /** The step each request named to run behind, or `undefined` for the tail. */
+    const newStepAfter: Array<string | undefined> = [];
     const host = mount(
         <Canvas graph={g} selected={selected}
-            onNewStep={() => { newSteps += 1; }}
+            onNewStep={after => { newSteps += 1; newStepAfter.push(after); }}
             onRemoveNode={(c, n, order, phases) => removedNodes.push({ c, n, order, phases })}
             onMoveNode={(c, n, order, phases) => movedNodes.push({ c, n, order, phases })}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
@@ -115,7 +117,7 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
     );
     return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes,
         removedNodes, movedNodes,
-        frames, replacedSteps, templates, newSteps: () => newSteps };
+        frames, replacedSteps, templates, newStepAfter, newSteps: () => newSteps };
 }
 
 

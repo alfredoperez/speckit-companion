@@ -19,6 +19,8 @@
 
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
+import { changeSummary, changed } from './changes';
+import { KIND_LABELS } from './hookKinds';
 import {
     HookWhen,
     PipelineDecision,
@@ -164,17 +166,6 @@ function GripIcon() {
     );
 }
 
-/** A node something else depends on cannot move, and shows why on hover. */
-function PinnedIcon() {
-    return (
-        <svg width="12" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.4" aria-hidden="true" focusable="false">
-            <path d="M5 7V5.2a3 3 0 0 1 6 0V7" />
-            <rect x="3.6" y="7" width="8.8" height="6" rx="1" />
-        </svg>
-    );
-}
-
 function PlusIcon() {
     return (
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
@@ -191,16 +182,6 @@ function TrashIcon() {
             stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
             aria-hidden="true" focusable="false">
             <path d="M3 4h10M6 4V2.5h4V4M5 4l.6 9h4.8L11 4" />
-        </svg>
-    );
-}
-
-/** The mark that opens a hook row, so the kind that follows reads as a label. */
-function HookMark() {
-    return (
-        <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor"
-            aria-hidden="true" focusable="false">
-            <path d="M4 2.5v11l8-5.5z" />
         </svg>
     );
 }
@@ -250,8 +231,12 @@ type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
  *
  * So one block, under the anchor it belongs to, with the two sides named in
  * words, and one line per hook — the block under "Mark the spec complete" was
- * about five times the height of the card it hangs from. A row is a mark, the
- * kind, and the hook's own text, cut to the lane; the whole of it is read by
+ * about five times the height of the card it hangs from.
+ *
+ * The side's word heads its list rather than sitting in a column beside it: a
+ * 3.6rem gutter cost every row on a 300px lane the width that decides whether
+ * `doctor.py --chat` fits. A row is the kind as a badge and then the name, in
+ * the panel's reading colour; the whole of a long instruction is read by
  * opening the hook in the side column.
  */
 function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
@@ -279,11 +264,18 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                 <li key={`ours-${i}`}>
                                     <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
                                         onClick={() => onEdit?.(hook)}>
-                                        <HookMark />
-                                        <span class="pb-hook-kind">{hook.type}</span>
-                                        <span class="pb-hook-dot" aria-hidden="true">·</span>
+                                        {/* The kind as a badge in the same
+                                            neutral register the `gate` word
+                                            uses. Four hues for four kinds
+                                            would have been a fifth meaning
+                                            for colour on a board that already
+                                            has four. */}
+                                        <span class="pb-hook-kind">
+                                            {KIND_LABELS[hook.type]}
+                                        </span>
                                         <span class={hook.type === 'prompt'
-                                            ? 'pb-hook-text' : 'pb-hook-ref'}>
+                                            ? 'pb-hook-name'
+                                            : 'pb-hook-name pb-hook-name--ref'}>
                                             {clip(hook.type === 'command'
                                                 ? shellName(hook.summary) : hook.summary)}
                                         </span>
@@ -299,12 +291,14 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                         title={`${hook.description || hook.command}\n\n`
                                             + `Registered by the ${hook.extension} extension. `
                                             + 'It runs here, and is not edited in this panel.'
+                                            + (hook.optional ? '\nIt asks before it runs.' : '')
                                             + (hook.conditional ? '\nIt does not run every time.' : '')}>
-                                        <HookMark />
-                                        <span class="pb-hook-ref">{clip(hook.command)}</span>
-                                        {hook.optional && (
-                                            <span class="pb-hook-note">asks first</span>
-                                        )}
+                                        <span class="pb-hook-kind">
+                                            {KIND_LABELS.command}
+                                        </span>
+                                        <span class="pb-hook-name pb-hook-name--ref">
+                                            {clip(hook.command)}
+                                        </span>
                                         {/* Whose it is, named rather than
                                             marked. `ext` said only "not yours",
                                             which leaves "then whose?" to a
@@ -370,6 +364,11 @@ function Node({ node, actions, stock, seams }: {
                 <Seam side="before" anchor={node.id}
                     onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
+            {/* Above the card, because BEFORE is an ordering claim and one
+                block under the card made it twice: a phase heading, the card,
+                and then a second BEFORE belonging to the card above it. */}
+            <Attached before={before} after={[]} stockBefore={stock?.before}
+                anchor={node.id} onEdit={actions.onEditHook} />
             <div
                 class={[
                     'pb-node',
@@ -404,12 +403,12 @@ function Node({ node, actions, stock, seams }: {
                     if (moved && moved !== node.id) { actions.onDrop(moved, node.id); }
                 }}>
 
+                {/* A padlock read "read-only", and the truth is only "cannot be
+                    reordered" — so the grip stays a grip, quieter, and the
+                    word in the meta row carries the reason. */}
                 <span class={`pb-grip ${movable ? '' : 'pb-grip--pinned'}`}
-                    title={movable
-                        ? 'Drag to reorder within this phase'
-                        : `Cannot be reordered — ${node.pinned}. You can still rewrite it, `
-                          + 'attach work to it, or drop it from companion.yml.'}>
-                    {movable ? <GripIcon /> : <PinnedIcon />}
+                    title={movable ? 'Drag to reorder within this phase' : undefined}>
+                    <GripIcon />
                 </span>
 
                 <button class="pb-node-main"
@@ -418,15 +417,20 @@ function Node({ node, actions, stock, seams }: {
                         ? "Read this project's instructions for this node"
                         : 'Read the instructions this node contributes'}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.kind === 'gate' || node.writes.length > 0
-                        || node.mayWrite.length > 0) && (
+                    {(node.replaced || node.pinned || node.kind === 'gate'
+                        || node.writes.length > 0 || node.mayWrite.length > 0) && (
                         <span class="pb-node-meta">
-                            {node.replaced && <span class="pb-yours">yours</span>}
                             {/* In a word, not a hue: every colour this panel
                                 has left already means something else. */}
                             {node.kind === 'gate' && (
                                 <span class="pb-node-gate"
                                     title="This node can stop the run">gate</span>
+                            )}
+                            {!movable && (
+                                <span class="pb-held"
+                                    title={`Cannot be reordered — ${node.pinned}. `
+                                        + 'You can still rewrite it, attach work to it, '
+                                        + 'or drop it from companion.yml.'}>held</span>
                             )}
                             {node.writes.map(file => (
                                 <span key={file} class="pb-writes"
@@ -442,6 +446,7 @@ function Node({ node, actions, stock, seams }: {
                                     {file}
                                 </span>
                             ))}
+                            {node.replaced && <span class="pb-yours">yours</span>}
                         </span>
                     )}
                 </button>
@@ -462,8 +467,7 @@ function Node({ node, actions, stock, seams }: {
                         onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
                 )}
             </div>
-            <Attached before={before} after={after}
-                stockBefore={stock?.before} stockAfter={stock?.after}
+            <Attached before={[]} after={after} stockAfter={stock?.after}
                 anchor={node.id} onEdit={actions.onEditHook} />
             {(seams?.after ?? true) && (
                 <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
@@ -686,7 +690,11 @@ function Phase({ phase, actions, controls }: {
                     />
                 )}
             </header>
-            <Attached before={before} after={after} anchor={phase.name}
+            {/* Split the same way a node's are: a phase's `after` hooks run
+                after its nodes, so drawing them above the nodes made the
+                heading contradict the layout. Neither block is indented, which
+                is what separates a phase's from the card-hung ones below. */}
+            <Attached before={before} after={[]} anchor={phase.name}
                 onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
@@ -706,6 +714,8 @@ function Phase({ phase, actions, controls }: {
                     }} />
                 ))}
             </div>
+            <Attached before={[]} after={after} anchor={phase.name}
+                onEdit={actions.onEditHook} />
         </section>
     );
 }
@@ -740,27 +750,45 @@ function Decisions({ decisions }: { decisions: PipelineDecision[] }) {
 
 // ── Steps ───────────────────────────────────────────────
 
-/** What this project changed about a step, for the mark that says it did. */
-function changeSummary(step: PipelineStep): string {
-    const c = step.changes;
-    const bits: string[] = [];
-    if (c.removed.length) { bits.push(`dropped ${c.removed.join(', ')}`); }
-    if (c.added.length) { bits.push(`added ${c.added.join(', ')}`); }
-    if (c.reordered) { bits.push('reordered'); }
-    if (c.hooks) { bits.push(`${c.hooks} hook${c.hooks === 1 ? '' : 's'}`); }
-    if (c.replaced.length) { bits.push(`rewrote ${c.replaced.join(', ')}`); }
-    if (c.phases.length) { bits.push(`phases named ${c.phases.join(', ')}`); }
-    if (step.template?.sections.length) {
-        bits.push(`template sections ${step.template.sections.join(', ')}`);
-    }
-    return `You changed this step: ${bits.join(' · ')}`;
-}
+/** What a phase this panel invents is called, wherever it invents one. */
+const FRESH_PHASE = 'new phase';
 
-function changed(step: PipelineStep): boolean {
-    const c = step.changes;
-    return Boolean(c.added.length || c.removed.length || c.reordered || c.hooks
-        || c.decisions.length || c.replaced.length || c.phases.length
-        || step.template?.sections.length);
+/**
+ * The way into a step that declares no phase at all.
+ *
+ * Every control that adds something hangs off a phase header, so a step without
+ * one drew its name, `0 nodes`, and no way to change that — a lane you can read
+ * and nothing else. A phase is written with the node it holds, since the writer
+ * refuses an empty one, so the first phase and the first node are made in one
+ * move and the name is editable in place from the moment it exists.
+ */
+function FirstPhase({ step, onAddNode }: {
+    step: PipelineStep;
+    onAddNode: Props['onAddNode'];
+}) {
+    const offered = step.dropped.length
+        ? step.dropped.map(id => ({
+            id, label: step.offers[id]?.name || id, note: step.offers[id]?.summary,
+        }))
+        : [{
+            id: 'none', label: 'Nothing to put in it yet', disabled: true,
+            note: `${step.name} runs no node — write one at `
+                + `.specify/companion/nodes/${step.name}/ and it is offered here`,
+        }];
+
+    return (
+        <Menu
+            class="pb-first-phase-add"
+            caret={false}
+            trigger={<>
+                <PlusIcon />
+                <span class="pb-add-step-label">Add the first phase</span>
+            </>}
+            title={`Add the first phase to ${step.name}`}
+            options={offered}
+            onPick={id => onAddNode(step.name, id, FRESH_PHASE, [id],
+                [{ name: FRESH_PHASE, nodes: [id] }])} />
+    );
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
@@ -778,6 +806,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onRemoveNode: Props['onRemoveNode'];
     onOpenTemplate: Props['onOpenTemplate'];
 }) {
+    const [showChanges, setShowChanges] = useState(false);
     const grouping = () => step.phases.map(p => ({
         name: p.name, nodes: p.nodes.map(n => n.id),
     }));
@@ -834,7 +863,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
     return (
-        <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}>
+        <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}
+            data-step={step.name}>
             {/* What the step leaves behind sits on its own line, not as a row
                 of its own and not at the bottom of a lane you must scroll to. */}
             {/* Two rows, because seven things did not fit in one. A lane holds
@@ -853,9 +883,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             {step.name}
                         </button>
                     </h2>
-                    {changed(step) && (
-                        <span class="pb-changed" title={changeSummary(step)}>changed</span>
-                    )}
                 </div>
                 <div class="pb-step-facts">
                     <span class="pb-step-counts">{count(nodes)}</span>
@@ -870,28 +897,49 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         </>
                     )}
                     {/* The document's shape, opened from the step that writes
-                        it. Carries the "yours" hue only once a section has been
-                        replaced — otherwise it is an offer, not a change. */}
+                        it — and the only door to the whole template feature, so
+                        it is a chip rather than a grey word set exactly like the
+                        node count beside it. The count carries the review ink
+                        once a section has been replaced; the chip itself is an
+                        offer, not a change. */}
                     {step.template && (step.template.sectionsAvailable.length > 0
                         || step.template.sections.length > 0) && (
-                        <>
-                            <span class="pb-fact-dot" aria-hidden="true">·</span>
-                            <button
-                                class={`pb-template${
-                                    step.template.sections.length ? ' pb-template--yours' : ''}`}
-                                title={step.template.sections.length
-                                    ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
-                                    : `Change the shape of ${step.template.file}`}
-                                onClick={() => onOpenTemplate(step.name)}>
-                                {step.template.sections.length ? (
-                                    <span class="pb-yours">
-                                        template · {step.template.sections.length}
+                        <button class="pb-template"
+                            title={step.template.sections.length
+                                ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
+                                : `Change the shape of ${step.template.file}`}
+                            onClick={() => onOpenTemplate(step.name)}>
+                            <span class="pb-template-name">Document shape</span>
+                            {step.template.sections.length > 0 && (
+                                <>
+                                    <span class="pb-fact-dot" aria-hidden="true">·</span>
+                                    <span class="pb-template-count">
+                                        {step.template.sections.length}
                                     </span>
-                                ) : <span>template</span>}
-                            </button>
-                        </>
+                                </>
+                            )}
+                            <span class="pb-template-caret" aria-hidden="true">▸</span>
+                        </button>
                     )}
                 </div>
+                {/* What changed, on the step it changed. It was a word with the
+                    facts in a `title`, which is a fact nobody reads and nothing
+                    a touch screen can reach. */}
+                {changed(step) && (
+                    <button class="pb-changed" aria-expanded={showChanges}
+                        aria-controls={`pb-changed-${step.name}`}
+                        onClick={() => setShowChanges(!showChanges)}>
+                        changed
+                        <span class="pb-changed-caret" aria-hidden="true">
+                            {showChanges ? '▴' : '▾'}
+                        </span>
+                    </button>
+                )}
+                {showChanges && (
+                    <p class="pb-changed-line" id={`pb-changed-${step.name}`}>
+                        {changeSummary(step).join(' · ')}
+                    </p>
+                )}
             </header>
 
             <div class="pb-step-body">
@@ -955,6 +1003,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             },
                         }} />
                 ))}
+                {step.phases.length === 0 && (
+                    <FirstPhase step={step} onAddNode={onAddNode} />
+                )}
                 <Decisions decisions={step.decisions} />
             </div>
         </section>
@@ -962,6 +1013,23 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
 }
 
 // ── The canvas ──────────────────────────────────────────
+
+/**
+ * The join between two lanes, and the only place a step can be added mid-run.
+ *
+ * `Add step` appended, and appending is not what someone wants when the step
+ * they are adding is a review that has to run before implement. The seam says
+ * where: clicking the one after `tasks` opens the form with "Runs after" already
+ * reading `tasks`.
+ */
+function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNewStep'] }) {
+    return (
+        <button class="pb-lane-seam" onClick={() => onNewStep(after)}
+            title={`Add a step after ${after}`}>
+            <span class="pb-lane-seam-label">Add a step after {after}</span>
+        </button>
+    );
+}
 
 export function Canvas(
     { graph, onOpenNode, onRestoreNode, onReorder, onAddHook,
@@ -974,22 +1042,45 @@ export function Canvas(
 
     return (
         <main class="pb-canvas">
-            <div class="pb-run" style={`--pb-steps: ${sequence.length}`}>
-                {sequence.map((step, index) => (
+            <div class={`pb-run${sequence.length > 1 ? ' pb-run--seamed' : ''}`}
+                style={`--pb-steps: ${sequence.length}; `
+                    + `--pb-seams: ${Math.max(sequence.length - 1, 0)}`}>
+                {/* Flattened rather than wrapped: a fragment around each pair
+                    would be a DOM-less element, and these have to be grid
+                    children of the run itself. */}
+                {sequence.flatMap((step, index) => [
+                    index > 0 && (
+                        <LaneSeam key={`seam-${step.name}`}
+                            after={sequence[index - 1].name} onNewStep={onNewStep} />
+                    ),
                     <Step key={step.name} step={step} index={index} actions={actions}
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
                         onRemoveNode={onRemoveNode}
-                        onOpenTemplate={onOpenTemplate} />
-                ))}
+                        onOpenTemplate={onOpenTemplate} />,
+                ])}
                 {/* The tail of the row: everything that does not take a turn in
                     the run, and the invitation to add something that does. This
                     used to sit as a band ACROSS THE TOP of the board, above the
                     first step — the most prominent place on screen, for the one
                     thing that is not part of the sequence. */}
                 <div class="pb-outside">
-                    <p class="pb-outside-head">Outside the run</p>
+                    {/* The set of steps was the one thing the board could show
+                        and not change. A review or a verification pass had to
+                        hide inside implement, or not exist. */}
+                    {/* The tail appends. Passing the handler straight to
+                        `onClick` would hand it a MouseEvent as the step to run
+                        behind. */}
+                    <button class="pb-add-step" onClick={() => onNewStep()}
+                        title="Add a step of your own to the end of the run">
+                        <PlusIcon />
+                        <span class="pb-add-step-label">Add step</span>
+                    </button>
+                    {/* The heading names what follows it and nothing else. It
+                        used to sit above `+ Add step`, so the one control that
+                        adds a step TO the run was filed under "outside" it. */}
+                    {aside.length > 0 && <p class="pb-outside-head">Outside the run</p>}
                     {aside.map(step => (
                         <div key={step.name} class="pb-aside">
                             <span class="pb-aside-name">{step.name}</span>
@@ -1004,17 +1095,6 @@ export function Canvas(
                             </span>
                         </div>
                     ))}
-                    {/* The set of steps was the one thing the board could show
-                        and not change. A review or a verification pass had to
-                        hide inside implement, or not exist. */}
-                    {/* The tail appends. Passing the handler straight to
-                        `onClick` would hand it a MouseEvent as the step to run
-                        behind. */}
-                    <button class="pb-add-step" onClick={() => onNewStep()}
-                        title="Add a step of your own to the run">
-                        <PlusIcon />
-                        <span class="pb-add-step-label">Add step</span>
-                    </button>
                 </div>
             </div>
         </main>

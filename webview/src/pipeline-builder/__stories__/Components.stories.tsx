@@ -14,7 +14,8 @@ import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import { TemplateForm } from '../TemplateForm';
 import {
-    AUTO, CHOICES, IMPLEMENT, NO_CHANGES, OWN_STEP, PLAN, SPECIFY, STOCK, TASKS,
+    AUTO, CHOICES, IMPLEMENT, NO_CHANGES, NO_PHASES, OWN_STEP, PLAN, SPECIFY,
+    SPECIFY_THREE_YOURS, STOCK, TASKS,
     graph, hook, node, phase, step,
 } from './fixtures';
 
@@ -83,6 +84,20 @@ export const NodeYours: Story = {
                 node('quality-checklist', 'Write the quality checklist', { kind: 'gate' }),
             ]),
         ], { changes: { ...NO_CHANGES, replaced: ['draft-spec'] } })])} {...CANVAS} /></One>
+    ),
+};
+
+/**
+ * The frame the `yours` mark is judged from.
+ *
+ * No other fixture puts more than one on a lane, so "a wall of purple" — the
+ * thing the filled pill was accused of being — could not be seen in any
+ * capture. Three of them, plus two swapped template sections.
+ */
+export const ThreeYours: Story = {
+    name: 'Node · three yours on one lane',
+    render: () => (
+        <One><Canvas graph={graph([SPECIFY_THREE_YOURS])} {...CANVAS} /></One>
     ),
 };
 
@@ -184,6 +199,46 @@ export const HooksLongShellLine: Story = {
     ),
 };
 
+/**
+ * The frame a hook row is actually read at.
+ *
+ * The same anchors drawn one step wide fill a 1300px lane, where every row fits
+ * and nothing truncates — which is the wrong frame to judge a row from. Four
+ * lanes put them at the width a docked panel gives them.
+ */
+export const HookRowsAtLaneWidth: Story = {
+    name: 'Hooks · at the width a lane actually has',
+    render: () => (
+        <One><Canvas graph={graph([
+            step('implement', [
+                phase('wrap-up', [
+                    node('complete', 'Mark the spec complete', {
+                        hooks: [
+                            hook({ when: 'before', type: 'command', anchor: 'complete',
+                                summary: 'python3 .specify/extensions/companion/scripts/'
+                                    + 'doctor.py --chat || true' }),
+                            hook({ when: 'before', type: 'node', anchor: 'complete', index: 1,
+                                summary: 'house-review' }),
+                        ],
+                    }),
+                    node('handoff', 'Hand off at the end', {
+                        hooks: [
+                            hook({ when: 'after', type: 'prompt', anchor: 'handoff',
+                                summary: 'Before this spec is marked complete, self-review '
+                                    + 'your full diff against the project conventions and '
+                                    + 'the review checklist, and fix any violations.' }),
+                            hook({ when: 'after', type: 'skill', anchor: 'handoff', index: 1,
+                                summary: 'create-pr' }),
+                        ],
+                    }),
+                ], [hook({ when: 'before', type: 'prompt', anchor: 'wrap-up',
+                    summary: 'Read the doctor report above and act on it.' })]),
+            ], { stockHooks: STOCK, changes: { ...NO_CHANGES, hooks: 5 } }),
+            PLAN, TASKS, OWN_STEP,
+        ])} {...CANVAS} /></One>
+    ),
+};
+
 // ── Phase ───────────────────────────────────────────────
 
 export const PhaseWithTools: Story = {
@@ -265,6 +320,30 @@ export const StepWithStockHooks: Story = {
 export const StepWithDecision: Story = {
     name: 'Step · where a verdict routes',
     render: () => <One><Canvas graph={graph([SPECIFY])} {...CANVAS} /></One>,
+};
+
+/**
+ * The joins between the lanes, where a step is added in the middle of the run.
+ *
+ * `Add step` appends, and the step people want is usually a review before
+ * implement rather than a fifth lane after it.
+ */
+export const LaneSeam: Story = {
+    name: 'Step · the seam between two lanes',
+    render: () => (
+        <One><Canvas graph={graph([SPECIFY, PLAN, TASKS, IMPLEMENT])} {...CANVAS} /></One>
+    ),
+};
+
+/** A step declaring no phase at all — the one lane that could not be changed. */
+export const NoPhases: Story = {
+    name: 'Step · no phases yet',
+    render: () => (
+        <One><Canvas graph={graph([
+            { ...NO_PHASES, inSequence: true, dropped: ['report'],
+              offers: { report: { name: 'Report on the run', summary: 'Says what ran' } } },
+        ])} {...CANVAS} /></One>
+    ),
 };
 
 // ── Header ──────────────────────────────────────────────
