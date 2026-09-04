@@ -83,23 +83,32 @@ function tally(count: number, noun: string): string {
  * now, and this is what the closed chip says.
  *
  * Counted from the steps the canvas draws, not from `graph.counts`: those two
- * disagreed, and a board showing five hooks was topped by `nothing attached`.
+ * disagreed, and a board showing five hooks was topped by a header saying
+ * nothing was attached.
  */
 function hookTally(counts: PipelineTotals): string {
     const total = counts.hooks + counts.stockHooks;
-    return total === 0 ? 'nothing attached' : tally(total, 'hook');
+    return total === 0 ? 'no hooks' : tally(total, 'hook');
 }
 
-/** What the tally chip opens onto — the counts, each one a line of its own. */
+/**
+ * What the tally chip opens onto — the counts, each one a line of its own.
+ *
+ * Every line is `disabled`, which is what makes them read as facts: a menu of
+ * three focusable rows that close the sheet and do nothing is the same
+ * fires-and-changes-nothing control this round took out elsewhere.
+ */
 function tallyOptions(counts: PipelineTotals): MenuOption[] {
     const options: MenuOption[] = [{
         id: 'shape',
+        disabled: true,
         label: `${tally(counts.steps, 'step')} · ${tally(counts.phases, 'phase')} · `
             + tally(counts.nodes, 'node'),
     }];
     if (counts.hooks) {
         options.push({
             id: 'yours',
+            disabled: true,
             label: `${tally(counts.hooks, 'hook')} yours`,
             note: 'Attached by this project',
         });
@@ -107,6 +116,7 @@ function tallyOptions(counts: PipelineTotals): MenuOption[] {
     if (counts.stockHooks) {
         options.push({
             id: 'extensions',
+            disabled: true,
             label: `${tally(counts.stockHooks, 'hook')} from extensions`,
             note: 'Registered by installed spec-kit extensions, which this panel '
                 + 'shows but does not edit',
@@ -183,6 +193,9 @@ export function Header(props: Props) {
     const [showingLog, setShowingLog] = useState(false);
     const changedSteps = graph.steps.filter(changed).length;
     const firstChanged = graph.steps.find(changed)?.name ?? '';
+    const differs = changedSteps === 1
+        ? '1 step differs from shipped'
+        : `${changedSteps} steps differ from shipped`;
     // On a fresh project a filled, disabled Build was the loudest thing on
     // screen, over the first-run line that is the actual entry point. It takes
     // the fill when there is work in it and stays outlined otherwise.
@@ -240,15 +253,20 @@ export function Header(props: Props) {
             <div class="builder-tools">
                 {/* Nothing changed is a whole fact, so it states it and stops.
                     Something changed is a place on the board, so the chip goes
-                    there — a `›` rather than a `▾`, because it moves you. */}
+                    there — a `›` rather than a `▾`, because it moves you.
+
+                    It says "differs from shipped" rather than "changed": the
+                    stale-build notice two lines below also says "changed", and
+                    meant something else entirely by it. */}
                 {changedSteps === 0 ? (
                     <span class="builder-chip builder-chip--flat">No changes</span>
                 ) : (
                     <button class="builder-chip builder-chip--customised"
-                        title="Go to the first changed step"
+                        title={`Go to ${firstChanged}`}
+                        aria-label={`${differs} — go to ${firstChanged}`}
                         onClick={() => props.onShowChanged?.(firstChanged)}
                     >
-                        {`Changed · ${changedSteps} step${changedSteps === 1 ? '' : 's'}`}
+                        {differs}
                         <span class="builder-chip-caret" aria-hidden="true">›</span>
                     </button>
                 )}
@@ -290,18 +308,25 @@ export function Header(props: Props) {
                     disabled={busy} onClick={onBuild}>
                     {busy ? 'Building…' : 'Build'}
                 </button>
-                {/* Narrow only: the two quiet actions fold in here so row one
-                    keeps the name, the workflow and the forward action. */}
+                {/* Narrow only. Row one keeps the name, the workflow and the
+                    forward action; row two holds the two chips, which at this
+                    width is all it holds — so `+ Add step` folds in here with
+                    the two quiet actions rather than taking a third row. */}
                 <div class="builder-overflow">
                     <Menu class="builder-action"
                         trigger="⋯" caret={false} align="right"
                         label="More pipeline actions" title="More"
                         options={[
+                            { id: 'step', label: 'Add step' },
                             ...(graph.configured
                                 ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                             { id: 'preview', label: 'Preview build', disabled: busy },
                         ]}
-                        onPick={id => { if (id === 'open') { onOpenConfig(); } else { onPreview(); } }} />
+                        onPick={id => {
+                            if (id === 'step') { props.onNewStep?.(); }
+                            else if (id === 'open') { onOpenConfig(); }
+                            else { onPreview(); }
+                        }} />
                 </div>
             </div>
 

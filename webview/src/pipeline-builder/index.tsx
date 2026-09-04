@@ -200,6 +200,13 @@ function App() {
     const line: PipelineStatus | null = status
         ?? (notice ? { tone: 'warning', text: notice } : null);
 
+    // The header appends and passes nothing; a lane seam places and passes the
+    // step to its left. One handler, so the two cannot drift apart.
+    const newStep = (after?: string) => {
+        setNotice(null);
+        setSide({ kind: 'new-step', after });
+    };
+
     return (
         <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
             <Header
@@ -212,7 +219,7 @@ function App() {
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
-                onNewStep={() => { setNotice(null); setSide({ kind: 'new-step' }); }}
+                onNewStep={newStep}
                 // Matched on the property rather than through a selector, since
                 // a step is named by whoever wrote the workflow.
                 onShowChanged={name => {
@@ -250,10 +257,7 @@ function App() {
                         setNotice(null);
                         setSide({ kind: 'template', command });
                     }}
-                    onNewStep={(after?: string) => {
-                        setNotice(null);
-                        setSide({ kind: 'new-step', after });
-                    }}
+                    onNewStep={newStep}
                     onRemoveNode={(command, nodeId, order, phases) =>
                         send({ type: 'removeNode', command, nodeId, order, phases })}
                     onMoveNode={(command, nodeId, order, phases) =>

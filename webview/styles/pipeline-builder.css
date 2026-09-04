@@ -197,10 +197,17 @@ body {
 }
 
 /* Nothing changed is the whole of what it has to say, so it is a statement
-   rather than a control that opens on an empty list. */
+   rather than a control that opens on an empty list — and it loses the outline,
+   because a fact and a control should not wear the same pill. */
 .builder-chip--flat {
     cursor: default;
+    border-color: transparent;
 }
+
+/* Both chips are buttons; the flat one is a span, so this leaves it alone. The
+   workflow switcher beside them has always lit up and these did not, which left
+   one band holding two dropdown triggers that behaved differently. */
+button.builder-chip:hover { background: var(--bg-hover); }
 
 /* The hue marks; it does not fill. The word takes `--review-ink`, the outline
    takes `--review`, and the tint stays a tint. */
@@ -2218,6 +2225,11 @@ body {
 
 .builder-tally + .pb-menu-list .pb-menu-note { color: var(--text-body); }
 
+/* These rows are inert because they are facts, not offers. The shared rule
+   dims an inert LABEL, which is right for an option you cannot take and wrong
+   for a number you came here to read. */
+.builder-tally + .pb-menu-list .pb-menu-label { opacity: 1; }
+
 /* Dashed, because it makes something that is not there yet. The outline says
    "a step goes here" the way the board's own seams do. */
 .builder-action--add {
@@ -2232,9 +2244,10 @@ body {
 .builder-overflow,
 .builder-overflow .pb-menu-trigger { display: none; }
 
+/* It keeps `.builder-action`'s resting border, or three dots beside a filled
+   Build read as punctuation rather than as the control they are. */
 .builder-overflow .pb-menu-trigger {
     padding: var(--space-1) var(--space-2);
-    border-color: transparent;
     line-height: 1;
 }
 
@@ -2274,11 +2287,20 @@ body {
     .builder-facts { order: 2; margin-left: 0; flex-basis: auto; }
     .builder-tools { order: 3; flex-basis: 100%; }
 
+    /* Everything else in the band runs full width under those three. Without
+       it they default to `order: 0` and sort FIRST, so the first-run line
+       preceded the header it explains and a warning was the top row. */
+    .builder-notice,
+    .builder-changes { order: 4; }
+
     /* The switcher's own `aria-label` names it, and the word is what pushes
        Build onto a row of its own. */
     .builder-workflow-label { display: none; }
 
-    .builder-facts .builder-action--quiet { display: none; }
+    /* Row two holds the two chips and nothing else fits beside them, so the
+       way in folds into the `⋯` with the other two actions. */
+    .builder-facts .builder-action--quiet,
+    .builder-action--add { display: none; }
     .builder-overflow { display: block; }
     .builder-overflow .pb-menu-trigger { display: inline-flex; }
 
