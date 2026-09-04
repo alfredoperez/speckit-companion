@@ -690,7 +690,11 @@ function Phase({ phase, actions, controls }: {
                     />
                 )}
             </header>
-            <Attached before={before} after={after} anchor={phase.name}
+            {/* Split the same way a node's are: a phase's `after` hooks run
+                after its nodes, so drawing them above the nodes made the
+                heading contradict the layout. Neither block is indented, which
+                is what separates a phase's from the card-hung ones below. */}
+            <Attached before={before} after={[]} anchor={phase.name}
                 onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
@@ -710,6 +714,8 @@ function Phase({ phase, actions, controls }: {
                     }} />
                 ))}
             </div>
+            <Attached before={[]} after={after} anchor={phase.name}
+                onEdit={actions.onEditHook} />
         </section>
     );
 }

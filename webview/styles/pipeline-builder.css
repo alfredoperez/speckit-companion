@@ -1454,19 +1454,18 @@ body {
 }
 
 /* Whose it is, in a word — the only thing separating a stock hook from one of
-   yours was a hue. Pushed to the end of the row, and it gives before the name
-   does: a fixed tail with a shrinking name spent a 380px row on ~110px of badge
-   and five characters of identity. */
+   yours was a hue. Pushed to the end of the row and never truncated: it is
+   already cut to 14 characters where it is written, and `git` shortened to
+   `g…` names nobody. What made the tail expensive was the second chip beside
+   it, which has gone. */
 .pb-hook-ext {
-    min-width: 0;
+    flex-shrink: 0;
     margin-left: auto;
     padding: 0 4px;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -2328,9 +2327,13 @@ body {
    focus. Off the accent: two shipped themes resolve it to under 2:1. */
 .pb-lane-seam-label {
     position: absolute;
-    top: 30px;
+    /* Beside the mark, and inert. An `opacity: 0` element still hit-tests, so
+       parked below the `+` it reserved an invisible band 30px into the next
+       lane and swallowed clicks on the bottom of that step's own heading. */
+    top: 0;
     left: 30px;
     z-index: 2;
+    pointer-events: none;
     padding: 2px var(--space-1);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -2349,6 +2352,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .pb-lane-seam-label { transition: none; }
 }
+
+/* A phase's own hooks hang off the phase, so they sit at the lane's edge; a
+   node's hang off its card and keep the indent. Two BEFORE headings back to
+   back said nothing about which anchor each belonged to. */
+.pb-phase > .pb-attached { margin-left: 0; }
 
 /* A row inside a lane, not the lane's own tail: 72px is the tail's height. */
 .pb-menu-trigger.pb-first-phase-add {

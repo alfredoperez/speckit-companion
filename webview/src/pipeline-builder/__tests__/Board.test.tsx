@@ -273,6 +273,26 @@ describe('everything attached to one anchor sits in one block', () => {
             .toContain('read the steering docs');
         expect(host.querySelector('.pb-node-group .pb-attached')).toBeNull();
     });
+
+    // The same claim one level up: a phase's `after` hooks run after its nodes,
+    // and drawing them above the nodes made the heading contradict the layout.
+    it('puts a phase\'s own sides either side of its nodes', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'author',
+                    hooks: [
+                        { when: 'before', type: 'prompt', summary: 'read the steering docs', anchor: '', index: 0, note: '' },
+                        { when: 'after', type: 'skill', summary: 'code-review', anchor: '', index: 1, note: '' },
+                    ],
+                    nodes: [node()],
+                }],
+            })],
+        }));
+        const phase = host.querySelector('.pb-phase')!;
+        expect(Array.from(phase.children).map(el => el.className.split(' ')[0]))
+            .toEqual(['pb-phase-head', 'pb-attached', 'pb-phase-nodes', 'pb-attached']);
+    });
 });
 
 describe("hooks another extension registered run in the lane, not beneath it", () => {
@@ -1294,6 +1314,13 @@ describe('a resting control on the board is drawn', () => {
         for (const selector of ['.pb-slot::before', '.pb-node-drop']) {
             expect(rule(selector)).not.toMatch(/opacity:/);
         }
+    });
+
+    // An `opacity: 0` element still hit-tests: parked below its `+`, the lane
+    // seam's label reserved an invisible band over the next step's heading and
+    // took the clicks meant for it.
+    it('leaves the pointer nothing to hit on a label it has hidden', () => {
+        expect(rule('.pb-lane-seam-label')).toContain('pointer-events: none;');
     });
 
     // .45 over a token that already carries an alpha put both under the 3:1 a
