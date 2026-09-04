@@ -200,6 +200,13 @@ function App() {
     const line: PipelineStatus | null = status
         ?? (notice ? { tone: 'warning', text: notice } : null);
 
+    // The header appends and passes nothing; a lane seam places and passes the
+    // step to its left. One handler, so the two cannot drift apart.
+    const newStep = (after?: string) => {
+        setNotice(null);
+        setSide({ kind: 'new-step', after });
+    };
+
     return (
         <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
             <Header
@@ -212,6 +219,24 @@ function App() {
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
+                onNewStep={newStep}
+                // Matched on the property rather than through a selector, since
+                // a step is named by whoever wrote the workflow.
+                onShowChanged={name => {
+                    const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
+                        .find(el => el.dataset.step === name);
+                    if (!lane) { return; }
+                    // Absent in jsdom, so a test of this path would throw on it.
+                    lane.scrollIntoView?.({
+                        behavior: 'smooth', block: 'nearest', inline: 'center',
+                    });
+                    // Removed and re-added around a layout read, or a second
+                    // click on a lane already marked plays no pulse at all.
+                    lane.classList.remove('pb-step--found');
+                    void lane.offsetWidth;
+                    lane.classList.add('pb-step--found');
+                    setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
+                }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
             {line && (
@@ -240,10 +265,7 @@ function App() {
                         setNotice(null);
                         setSide({ kind: 'template', command });
                     }}
-                    onNewStep={(after?: string) => {
-                        setNotice(null);
-                        setSide({ kind: 'new-step', after });
-                    }}
+                    onNewStep={newStep}
                     onRemoveNode={(command, nodeId, order, phases) =>
                         send({ type: 'removeNode', command, nodeId, order, phases })}
                     onMoveNode={(command, nodeId, order, phases) =>

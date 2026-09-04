@@ -2,10 +2,16 @@
  * @jest-environment jsdom
  */
 import { Header } from '../Header';
-import type { PipelineGraph } from '../../../../src/protocol/pipeline';
+import type { PipelineGraph, PipelineHook } from '../../../../src/protocol/pipeline';
 import { NO_CHANGES, flush, graph, mount, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
+
+/** Found the way a reader finds it — by the word on it. */
+function buildButton(host: HTMLElement): HTMLButtonElement {
+    return Array.from(host.querySelectorAll<HTMLButtonElement>('.builder-action'))
+        .find(el => /Build/.test(el.textContent ?? ''))!;
+}
 
 describe('the header says what this pipeline is', () => {
     const noop = () => undefined;
@@ -30,7 +36,7 @@ describe('the header says what this pipeline is', () => {
         });
         const host = mount(
             <Header graph={two} buildState="current" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 2 steps');
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('2 steps differ from shipped');
     });
 
     it('ignores a graph that claims changes its steps do not have', () => {
@@ -49,24 +55,50 @@ describe('the header says what this pipeline is', () => {
         });
         const host = mount(
             <Header graph={lying} buildState="current" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('1 step differs from shipped');
     });
 
-    it('expands to say what changed', async () => {
+    // The board already draws every one of these lines, lane by lane. Printing
+    // them again under the header said the whole thing twice and took nobody
+    // anywhere; the chip is a way to the lane now, not a second copy of it.
+    it('lists nothing, because the board is the list', async () => {
         const customised = graph({
             customised: true,
             steps: [step({ changes: { ...NO_CHANGES, removed: ['quality-checklist'], hooks: 2 } })],
         });
         const host = mount(
             <Header graph={customised} buildState="current" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
-        expect(host.querySelector('.builder-changes')).toBeNull();
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('1 step differs from shipped');
 
         (host.querySelector('.builder-chip') as HTMLButtonElement).click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-        const listed = host.querySelector('.builder-changes')?.textContent ?? '';
-        expect(listed).toContain('quality-checklist');
-        expect(listed).toContain('2 hooks');
+        await flush();
+        expect(host.querySelector('.builder-changes')).toBeNull();
+        expect(host.textContent).not.toContain('quality-checklist');
+    });
+
+    it('takes the reader to the first changed step', async () => {
+        const shown: string[] = [];
+        const two = graph({
+            steps: [
+                step({ name: 'specify' }),
+                step({ name: 'plan', changes: { ...NO_CHANGES, reordered: true } }),
+                step({ name: 'tasks', changes: { ...NO_CHANGES, hooks: 1 } }),
+            ],
+        });
+        const host = mount(
+            <Header graph={two} buildState="current" busy={false} {...HEAD}
+                onShowChanged={name => shown.push(name)} />);
+        (host.querySelector('.builder-chip') as HTMLButtonElement).click();
+        await flush();
+        expect(shown).toEqual(['plan']);
+    });
+
+    it('points forward rather than down, because it moves you', () => {
+        const host = mount(
+            <Header graph={graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })] })}
+                buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-chip-caret')?.textContent).toBe('›');
+        expect(host.querySelector('.builder-chip')?.getAttribute('aria-expanded')).toBeNull();
     });
 
     it('says plainly when the built commands are behind the configuration', () => {
@@ -84,9 +116,9 @@ describe('the header says what this pipeline is', () => {
 
     it('disables the actions while a build is running', () => {
         const host = mount(<Header graph={graph()} buildState="current" busy {...HEAD} />);
-        const primary = host.querySelector('.builder-action--primary') as HTMLButtonElement;
-        expect(primary.disabled).toBe(true);
-        expect(primary.textContent).toContain('Building');
+        const build = buildButton(host);
+        expect(build.disabled).toBe(true);
+        expect(build.textContent).toContain('Building');
     });
 
     it('surfaces a warning the build reported', () => {
@@ -376,7 +408,7 @@ describe('the first time a project opens the board', () => {
     });
 
     // Editing a node writes `.specify/companion/nodes/...` and no configuration
-    // at all, so the board could say "Changed · 1 step" with a line under it
+    // at all, so the board could say "1 step differs from shipped" with a line under it
     // saying this is the pipeline as it ships.
     it('stops saying it once a node has been rewritten, configuration or not', () => {
         const host = mount(
@@ -387,7 +419,7 @@ describe('the first time a project opens the board', () => {
                     steps: [step({ changes: { ...NO_CHANGES, replaced: ['draft-spec'] } })],
                 })}
                 buildState="unconfigured" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-chip')?.textContent).toContain('Changed · 1 step');
+        expect(host.querySelector('.builder-chip')?.textContent).toContain('1 step differs from shipped');
         expect(host.querySelector('.builder-notice--info')).toBeNull();
     });
 
@@ -399,6 +431,202 @@ describe('the first time a project opens the board', () => {
         (host.querySelector('.builder-notice--info .builder-link') as HTMLButtonElement).click();
         await flush();
         expect(dismissed).toBe(1);
+    });
+});
+
+describe('what the pipeline holds', () => {
+    const noop = () => undefined;
+    const HEAD = {
+        onBuild: noop, onPreview: noop, onOpenConfig: noop,
+        onSelectWorkflow: noop, onNewWorkflow: noop,
+    };
+
+    const hook = (overrides: Partial<PipelineHook> = {}): PipelineHook => ({
+        when: 'before', type: 'skill', summary: 'house-check', anchor: 'specify',
+        index: 0, note: '', ...overrides,
+    });
+
+    function opened(g = graph()) {
+        const host = mount(<Header graph={g} buildState="current" busy={false} {...HEAD} />);
+        (host.querySelector('.builder-tally') as HTMLButtonElement).click();
+        return host;
+    }
+
+    it('says how many hooks are attached, which is the fact you cannot count by eye', () => {
+        const host = mount(
+            <Header graph={graph({ steps: [step({ hooks: [hook(), hook({ index: 1 })] })] })}
+                buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-tally')?.textContent).toContain('2 hooks');
+    });
+
+    it('says so plainly when there are none', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-tally')?.textContent).toContain('no hooks');
+    });
+
+    // A native `title` on grey mono text is where these went to die.
+    it('opens onto the counts the board cannot be asked for', async () => {
+        const host = opened();
+        await flush();
+        const options = Array.from(host.querySelectorAll('.pb-menu-option'));
+        expect(options[0].textContent).toBe('1 step · 2 phases · 2 nodes');
+    });
+
+    it('separates the project\'s own hooks from the ones extensions registered', async () => {
+        const host = opened(graph({
+            steps: [step({
+                hooks: [hook()],
+                stockHooks: [{
+                    when: 'after', extension: 'speckit', command: 'speckit-lint',
+                    description: 'lints the spec', optional: false, conditional: false,
+                }],
+            })],
+        }));
+        await flush();
+        const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
+        expect(said[1]).toContain('1 hook yours');
+        expect(said[2]).toContain('1 hook from extensions');
+        expect(said[2]).toContain('shows but does not edit');
+    });
+
+    // Three focusable rows that close the sheet and do nothing are a control
+    // that fires and changes nothing. These are facts.
+    it('offers the counts as facts, not as choices', async () => {
+        const host = opened();
+        await flush();
+        const rows = Array.from(host.querySelectorAll('.pb-menu-option'));
+        expect(rows.map(el => el.getAttribute('aria-disabled'))).toEqual(['true']);
+    });
+
+    it('leaves out a count nobody has', async () => {
+        const host = opened();
+        await flush();
+        expect(host.textContent).not.toContain('yours');
+        expect(host.textContent).not.toContain('from extensions');
+    });
+});
+
+describe('adding a step', () => {
+    const noop = () => undefined;
+    const HEAD = {
+        onBuild: noop, onPreview: noop, onOpenConfig: noop,
+        onSelectWorkflow: noop, onNewWorkflow: noop,
+    };
+
+    // It used to be parked past the last lane, behind a horizontal scroll.
+    it('offers the way in from the band, not from the far end of the board', async () => {
+        let started = 0;
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD}
+                onNewStep={() => { started += 1; }} />);
+        const add = host.querySelector('.builder-action--add') as HTMLButtonElement;
+        expect(add.textContent).toContain('Add step');
+        add.click();
+        await flush();
+        expect(started).toBe(1);
+    });
+});
+
+describe('Build earns its fill', () => {
+    const noop = () => undefined;
+    const HEAD = {
+        onBuild: noop, onPreview: noop, onOpenConfig: noop,
+        onSelectWorkflow: noop, onNewWorkflow: noop,
+    };
+
+    const filled = (host: HTMLElement) =>
+        buildButton(host).className.includes('builder-action--primary');
+
+    // A filled, disabled Build was the loudest thing on a fresh project's
+    // screen, over a first-run line that is the actual entry point.
+    it('stays outlined when there is nothing to build', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
+        expect(filled(host)).toBe(false);
+    });
+
+    // Every edit here writes to disk and turns the state stale by itself, so a
+    // changed step on a current build means the changes ARE built. Keying the
+    // fill on divergence left it accented forever on any project that had used
+    // the panel — the same false urgency, one state over.
+    it('stays outlined when the changes are already built', () => {
+        const host = mount(
+            <Header graph={graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 1 } })] })}
+                buildState="current" busy={false} {...HEAD} />);
+        expect(filled(host)).toBe(false);
+    });
+
+    it('stays outlined on a project that has never configured one', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="unconfigured" busy={false} {...HEAD} />);
+        expect(filled(host)).toBe(false);
+    });
+
+    it('fills when the built commands are behind', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
+        expect(filled(host)).toBe(true);
+    });
+
+    it('fills when nothing has ever been built', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="never-built" busy={false} {...HEAD} />);
+        expect(filled(host)).toBe(true);
+    });
+});
+
+describe('the header at a docked width', () => {
+    const noop = () => undefined;
+    const HEAD = {
+        onBuild: noop, onPreview: noop, onOpenConfig: noop,
+        onSelectWorkflow: noop, onNewWorkflow: noop,
+    };
+
+    async function overflow(g = graph({ configured: true })) {
+        const host = mount(<Header graph={g} buildState="current" busy={false} {...HEAD} />);
+        (host.querySelector('.builder-overflow button') as HTMLButtonElement).click();
+        await flush();
+        return host;
+    }
+
+    it('folds the actions row two cannot hold into one menu', async () => {
+        const host = await overflow();
+        const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
+        expect(said).toEqual(['Add step', 'Open companion.yml', 'Preview build']);
+    });
+
+    it('offers no companion.yml the project does not have', async () => {
+        const host = await overflow(graph({ configured: false }));
+        const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
+        expect(said).toEqual(['Add step', 'Preview build']);
+    });
+
+    it('names the fold for a screen reader, since it is drawn as a mark', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-overflow button')?.getAttribute('aria-label'))
+            .toBe('More pipeline actions');
+    });
+
+    it('runs the same actions the row does', async () => {
+        let previewed = 0;
+        let started = 0;
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD}
+                onPreview={() => { previewed += 1; }}
+                onNewStep={() => { started += 1; }} />);
+        const open = async () => {
+            (host.querySelector('.builder-overflow button') as HTMLButtonElement).click();
+            await flush();
+        };
+        await open();
+        (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
+        await flush();
+        await open();
+        (host.querySelectorAll('.pb-menu-option')[1] as HTMLButtonElement).click();
+
+        expect([started, previewed]).toEqual([1, 1]);
     });
 });
 

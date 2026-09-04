@@ -299,6 +299,15 @@ export function isGraphError(result: PipelineGraphResult): result is PipelineGra
 export type PipelineBuildKind = 'unconfigured' | 'never-built' | 'stale' | 'current';
 
 /**
+ * Whether there is a build to run. Lives beside the union rather than with the
+ * build state itself, because that module reads the file system and the webview
+ * cannot import it — and one predicate written twice is one that drifts.
+ */
+export function needsBuild(kind: PipelineBuildKind): boolean {
+    return kind === 'stale' || kind === 'never-built';
+}
+
+/**
  * What just happened, said once, where the change was made.
  *
  * Every write redrew the board and only refusals spoke, so a hook added at the

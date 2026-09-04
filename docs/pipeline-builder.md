@@ -13,7 +13,7 @@ Open it from the **circuit** icon at the top of the Specs sidebar, or from the p
 3. **Save.** Your version is written to `.specify/companion/nodes/`, and the node is marked `yours`. The shipped file is untouched.
 4. **Preview build.** The header says which commands would change. Nothing is written.
 5. **Build.** The header says what it wrote and when.
-6. **Confirm.** The chip beside the workflow name reads `Changed · 1 step`; the amber "not built yet" line is gone. Your assistant is now reading the new commands.
+6. **Confirm.** The chip beside the workflow name reads `1 step differs from shipped`; the amber "not built yet" line is gone. Your assistant is now reading the new commands.
 
 ## Before you change anything
 
@@ -48,11 +48,11 @@ The whole board, at the width it really has:
 
 ![The pipeline builder, showing four steps as columns with their phases, nodes and attached hooks](screenshots/generated/builder-board.png)
 
-At the far right, **Outside the run** holds what does not take a turn: `auto`, which runs the other steps hands-off, and **Add step**.
+At the far right, **Outside the run** holds what does not take a turn: `auto`, which runs the other steps hands-off.
 
-The header names the configuration you are on under **Workflow**, and carries the one fact you cannot get by looking: how many hooks are attached across the whole board, and how many of them are yours. Beside it, a chip reading `No changes` or `Changed · 2 steps`. Open it for the list.
+The header names the configuration you are on under **Workflow**. Beside it, a chip reading `No changes` or `2 steps differ from shipped` — click that one and the first lane that differs scrolls into view. Next to it, a chip reading `5 hooks`, which opens onto what the pipeline holds: how many steps, phases and nodes there are, how many hooks are yours, and how many an installed extension registered. **Add step** is the last of the three; it appends, and a seam between two lanes adds a step in that place instead. Docked narrow, the band folds to two rows and **Add step** joins **Open companion.yml** and **Preview build** under the `⋯`.
 
-![The header's changes chip expanded, listing what each changed step differs by](screenshots/generated/builder-changes.png)
+![The header's tally chip open on the counts: steps, phases, nodes, and whose hooks these are](screenshots/generated/builder-changes.png)
 
 ### A step, close up
 

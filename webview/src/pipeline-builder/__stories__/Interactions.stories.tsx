@@ -485,28 +485,91 @@ export const SwitchWorkflow: Story = {
     },
 };
 
-export const ExpandWhatChanged: Story = {
-    name: 'See what this project changed',
+/**
+ * The chip used to print the same list the board draws, one lane per line. Now
+ * it names a lane and goes there, so the panel says each thing once.
+ */
+export const GoToWhatChanged: Story = {
+    name: 'Go to what this project changed',
+    render: () => {
+        const shown: string[] = [];
+        (GoToWhatChanged as { shown?: string[] }).shown = shown;
+        return (
+            <div class="builder">
+                <Header
+                    graph={graph([
+                        step('plan', SPECIFY.phases),
+                        step('tasks', SPECIFY.phases, {
+                            changes: {
+                                ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'],
+                                removed: ['branch'], phases: ['our review'],
+                            },
+                        }),
+                    ], { customised: true, configured: true })}
+                    buildState="current" busy={false}
+                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                    onSelectWorkflow={noop} onNewWorkflow={noop}
+                    onShowChanged={name => shown.push(name)} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        (canvasElement.querySelector('.builder-chip') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const shown = (GoToWhatChanged as { shown?: string[] }).shown ?? [];
+        assert(canvasElement.querySelector('.builder-changes') === null,
+            'no list under the header, because the board is the list');
+        assert(shown.length === 1, 'the chip asks to be taken somewhere');
+        assert(shown[0] === 'tasks', 'and it is the first lane that changed');
+    },
+};
+
+/** The way to grow the run, in the band that names it. */
+export const AddAStepFromTheHeader: Story = {
+    name: 'Add a step from the header',
+    render: () => {
+        const started: string[] = [];
+        (AddAStepFromTheHeader as { started?: string[] }).started = started;
+        return (
+            <div class="builder">
+                <Header
+                    graph={graph([SPECIFY], { configured: true })}
+                    buildState="current" busy={false}
+                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                    onSelectWorkflow={noop} onNewWorkflow={noop}
+                    onNewStep={() => started.push('new')} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const add = canvasElement.querySelector('.builder-action--add') as HTMLButtonElement;
+        assert(Boolean(add), 'the header offers a way to add a step');
+        add.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        assert((AddAStepFromTheHeader as { started?: string[] }).started?.length === 1,
+            'and it opens the new-step form');
+    },
+};
+
+/** The counts, which used to be a native tooltip nobody found. */
+export const OpenTheTally: Story = {
+    name: 'See what the pipeline holds',
     render: () => (
         <div class="builder">
             <Header
-                graph={graph([step('specify', SPECIFY.phases, {
-                    changes: {
-                        ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'],
-                        removed: ['branch'], phases: ['our review'],
-                    },
-                })], { customised: true, configured: true })}
+                graph={graph([SPECIFY], { configured: true })}
                 buildState="current" busy={false}
                 onBuild={noop} onPreview={noop} onOpenConfig={noop}
                 onSelectWorkflow={noop} onNewWorkflow={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        (canvasElement.querySelector('.builder-chip') as HTMLButtonElement).click();
+        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        const listed = canvasElement.querySelector('.builder-changes')?.textContent ?? '';
-        assert(listed.includes('draft-spec'), 'the rewritten node is listed');
-        assert(listed.includes('our review'), 'and the renamed phase');
+        const said = Array.from(canvasElement.querySelectorAll('.pb-menu-option'))
+            .map(el => el.textContent ?? '');
+        assert(said.some(line => /\d+ steps? · \d+ phases? · \d+ nodes?/.test(line)),
+            'the shape of the pipeline is a line you can read');
     },
 };
 

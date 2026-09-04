@@ -30,7 +30,7 @@ const CANVAS = {
 
 const HEAD = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,
-    onSelectWorkflow: noop, onNewWorkflow: noop,
+    onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop, onShowChanged: noop,
 };
 
 const INSPECT = {
@@ -446,6 +446,44 @@ export const HeaderPreviewed: Story = {
                     + '[build] what would change:\n'
                     + '  implement: +12 −4 lines\n  plan: unchanged\n  specify: +31 −0 lines',
             }} /></One>
+    ),
+};
+
+/** Nothing configured, nothing changed: the first-run line is the loudest thing. */
+export const HeaderFresh: Story = {
+    name: 'Header · a fresh project',
+    render: () => (
+        <One><Header
+            graph={graph([PLAN, TASKS], { firstRun: true, configured: false })}
+            buildState="unconfigured" busy={false} {...HEAD} onDismissFirstRun={noop} /></One>
+    ),
+};
+
+/** What the pipeline holds, which used to be a native tooltip on grey text. */
+export const HeaderTally: Story = {
+    name: 'Header · what the pipeline holds',
+    render: () => (
+        <One><Header
+            graph={graph([SPECIFY, PLAN, TASKS, IMPLEMENT], { configured: true })}
+            buildState="current" busy={false} {...HEAD} /></One>
+    ),
+    play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
+        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement | null)?.click();
+    },
+};
+
+/** Two rows: the name and the forward action, then the marks and the way in. */
+export const HeaderNarrow: Story = {
+    name: 'Header · a docked panel',
+    parameters: { capture: { width: 380, height: 160 } },
+    render: () => (
+        <div style="width: 380px;">
+            <One><Header
+                graph={graph([step('specify', SPECIFY.phases, {
+                    changes: { ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'] },
+                }), PLAN], { configured: true, customised: true })}
+                buildState="stale" busy={false} {...HEAD} /></One>
+        </div>
     ),
 };
 
