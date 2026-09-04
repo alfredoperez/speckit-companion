@@ -26,12 +26,15 @@ export function StatusLine({ status, onUndo, onDismiss }: Props) {
         <div class="builder-status" role="status">
             <StatusIcon tone={status.tone} />
             <span class="builder-status-text">{status.text}</span>
+            {/* What happened and what it means next are one sentence, so the
+                detail follows the text. Undo stood between them, and the `·`
+                that opens the detail then read as Undo's own separator. */}
+            {status.detail && <span class="builder-status-detail">{status.detail}</span>}
             {status.undo && (
                 <button class="builder-status-undo" onClick={() => onUndo(status.undo!.token)}>
                     {status.undo.label ?? 'Undo'}
                 </button>
             )}
-            {status.detail && <span class="builder-status-detail">{status.detail}</span>}
             <button class="builder-status-close" title="Dismiss" onClick={onDismiss}>×</button>
         </div>
     );

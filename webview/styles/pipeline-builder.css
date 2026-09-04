@@ -45,6 +45,11 @@ body {
     color: var(--text-secondary);
 }
 
+/* One reading column for the whole screen, not just for the repairs. The error
+   itself is a sentence on a filled band, and across a docked editor it drew
+   that band the full 1500px to hold sixty characters. */
+.builder-error { max-width: 42rem; }
+
 .builder-error h2 {
     margin: 0 0 var(--space-2);
     font-size: var(--text-lg);
@@ -67,25 +72,30 @@ body {
 
 .builder-repairs {
     margin-top: var(--space-5);
-    max-width: 42rem;
 }
 
+/* The panel's one voice for a structural label — mono, uppercase, letterspaced —
+   the same as the phase bands and the tail of the board. It was a sans heading
+   at 600, which is a fourth register for the sixth kind of label. */
 .builder-repairs-title {
     margin: 0 0 var(--space-3);
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    color: var(--text-label);
 }
 
+/* Each way out is a button and the sentence saying what it costs. Those two are
+   one thing; the next way out is another. */
 .builder-repair-list {
     margin: 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
 }
 
 .builder-repair-detail {
@@ -153,6 +163,20 @@ body {
     color: var(--text-primary);
 }
 
+/* One height for every control in the band.
+   The changes chip is a `<button>` when it has changes to show and a `<span>`
+   when it has none, and a button takes the browser's own `line-height` rather
+   than the page's — so the same chip drew 19px in one state and 24 in the
+   other, in a row of 26px controls, and the 19px one was the only thing here
+   under the 24px target floor. Pinned rather than padded, because the three
+   controls carry three different type sizes and only a floor makes them agree. */
+.builder-chip,
+.builder-workflow-current,
+.builder-action {
+    min-height: 26px;
+    box-sizing: border-box;
+}
+
 .builder-chip {
     display: inline-flex;
     align-items: center;
@@ -194,12 +218,17 @@ body {
 }
 
 /* One line, or none of it. Broken mid-list it read "17 / nodes", which is
-   harder to scan than the count is worth. */
+   harder to scan than the count is worth.
+
+   The margin is what separates a fact from the buttons after it: at the row's
+   own 8px it was the fourth item in a row of three controls, and read as a
+   label belonging to the button beside it rather than as the panel's tally. */
 .builder-count {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
     white-space: nowrap;
+    margin-right: var(--space-2);
 }
 
 .builder-action {
@@ -404,18 +433,27 @@ body {
 
 .pb-aside-note { font-size: var(--text-sm); color: var(--text-secondary); }
 
+/* The card is a column of three lines, so the count starts where the name and
+   the note start. `margin-left: auto` in a flex column is a cross-axis push: it
+   sent this one line to the right edge, alone. */
 .pb-aside-counts {
-    margin-left: auto;
     font-size: var(--text-xs);
     color: var(--text-muted);
 }
 
 .pb-run {
     display: grid;
-    /* A lane never narrows past readable. Four fit on a wide editor; on a split
-       pane the board scrolls sideways, the way a board should. The tail is not
-       a lane, so it takes only the width it needs. */
-    grid-template-columns: repeat(var(--pb-steps), minmax(300px, 1fr)) max-content;
+    /* A lane never narrows past readable, and never widens past it either.
+       Four fit on a wide editor; on a split pane the board scrolls sideways,
+       the way a board should. The tail is not a lane, so it takes only the
+       width it needs.
+
+       The ceiling is what `1fr` was missing: a run of one or two steps shared
+       the whole editor between them, so a node card ran 1300px wide to hold a
+       four-word name and a hook chip became a purple bar with 200px of text at
+       one end of it. Lanes are a fixed-width column of cards; the leftover
+       width belongs to the canvas, not to the lane. */
+    grid-template-columns: repeat(var(--pb-steps), minmax(300px, 420px)) max-content;
     gap: 0;
     align-items: start;
     overflow-x: auto;
@@ -448,7 +486,10 @@ body {
     border: 1px dashed var(--border);
     border-radius: var(--radius-md);
     background: none;
-    color: var(--text-muted);
+    /* `--text-muted` is the panel's metadata voice, and this is a label
+       somebody reads and presses. The status line's close button settled the
+       same question the same way. */
+    color: var(--text-label);
     font: inherit;
     font-size: var(--text-sm);
     cursor: pointer;
@@ -475,12 +516,16 @@ body {
 }
 
 /* Two rows: what the step IS, then what describes it. One row could not hold
-   seven things in a 300px lane without breaking words. */
+   seven things in a 300px lane without breaking words.
+
+   The horizontal padding is the step body's, not its own: a lane has one
+   content column, and at 4px the number, the name and the counts hung 4px
+   left of every card they head. */
 .pb-step-head {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-3) var(--space-1) var(--space-2);
+    padding: var(--space-3) var(--space-2) var(--space-2);
 }
 
 .pb-step-identity {
@@ -525,20 +570,27 @@ body {
     white-space: nowrap;
 }
 
+/* One phase is further from the next than two nodes inside one are. It was the
+   other way round: 4px between phases against the 32px a seam puts between two
+   cards, so the bands read as one long column of cards with labels dropped into
+   it. The separation is here, in one place, rather than in each phase's own
+   padding. */
 .pb-step-body {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-4);
     padding: 0 var(--space-2) var(--space-2);
 }
 
 .pb-phase { padding: var(--space-1) 0; }
 
+/* Flush with the cards below it: the label, the rule and the `+` share the
+   lane's one content column, so the `+` ends where a card ends. */
 .pb-phase-head {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2) var(--space-1) var(--space-1);
+    padding: var(--space-2) 0 var(--space-1);
 }
 
 /* A band label, not small prose.
@@ -592,10 +644,13 @@ body {
     background: color-mix(in srgb, var(--text-muted) 50%, transparent);
 }
 
+/* No gap: the seam between two cards is already 24px of reserved space with a
+   rule down the middle of it, and 4px on each side of that made two nodes in
+   one phase sit further apart than two phases did. */
 .pb-phase-nodes {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 0;
 }
 
 .pb-node-group { display: flex; flex-direction: column; }
@@ -677,7 +732,8 @@ body {
 .pb-writes {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--text-muted);
+    /* Green is the panel's word for a file. */
+    color: var(--success);
     /* A path is a name. Broken across lines it stops being readable as one —
        `checklists/requiremen` / `ts.md` — so it ends in an ellipsis and the
        whole of it is on the title. */
@@ -686,8 +742,6 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-.pb-writes { color: var(--success); }
 
 /* Produced only sometimes. Drawn the same as a guaranteed file, it claimed an
    artifact the run may never make — so the line under it says "not always",
@@ -771,6 +825,9 @@ body {
     align-items: center;
     gap: var(--space-1);
     padding: 2px var(--space-2);
+    /* A hook row is a button — it opens the hook to be changed or removed — and
+       at 17px it was the smallest target in the panel, in a stack of three. */
+    min-height: 24px;
     /* Its own width, never its content's. `speckit.companion.after-implement`
        is one unbreakable token wider than a lane. */
     min-width: 0;
@@ -803,7 +860,7 @@ body {
 /* Solid: a dashed edge is the panel's mark for "this adds something", and a
    decision adds nothing — it reports where a verdict sends the run. */
 .pb-decisions {
-    margin: var(--space-2) var(--space-1) 0;
+    margin: var(--space-2) 0 0;
     padding: var(--space-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -1099,10 +1156,14 @@ body {
     min-height: 0;
 }
 
+/* One field is three times further from the next than a label is from the
+   input it names. At 16px against the 8px inside a field the whole form was one
+   evenly spaced column, and a help line under one field sat almost as close to
+   the label below it as to the input it explains. */
 .pb-form-fields {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
     min-height: 0;
     overflow-y: auto;
 }
@@ -1432,6 +1493,8 @@ body {
 
 .pb-fact-dot { opacity: 0.6; }
 
+/* The one thing on the facts line that can be pressed, so it is a step brighter
+   than the counts beside it rather than the same grey. */
 .pb-template {
     display: inline-flex;
     align-items: center;
@@ -1439,7 +1502,7 @@ body {
     padding: 0;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--text-muted);
+    color: var(--text-label);
     white-space: nowrap;
     /* A button now: the document's shape opens from the step that writes it. */
     background: none;
@@ -1451,10 +1514,12 @@ body {
 
 /* ---- The document's shape: one row per section it has ---- */
 
+/* The same rhythm the forms keep: a section's heading, its choice and what that
+   choice does are one group, and the next section starts well clear of it. */
 .pb-template-rows {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
     padding: var(--space-4);
     overflow-y: auto;
     min-height: 0;
@@ -1489,7 +1554,10 @@ body {
    A phase name is editable in place
    ============================================ */
 
+/* The padding is the hover target's, not the label's, so it hangs into the
+   step body's own inset and the word itself starts where the cards start. */
 .pb-phase-name {
+    margin-left: calc(-1 * var(--space-1));
     padding: 0 var(--space-1);
     border-radius: var(--radius-sm);
     cursor: text;
@@ -1564,7 +1632,8 @@ body {
     box-sizing: border-box;
     flex-shrink: 0;
     padding: 0;
-    color: var(--text-muted);
+    /* A control, so not the metadata grey. */
+    color: var(--text-label);
     background: transparent;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -2037,8 +2106,14 @@ body {
 .pb-runs-when { flex: 0 0 auto; }
 .pb-runs-where { flex: 1 1 0; }
 
+/* Inside the Kind field: the sentence belongs to the row of kinds above it and
+   the count belongs to the box above it, so those sit at 4px and the two
+   controls stand 12px apart. Four things at one interval read as four
+   unrelated lines. */
 .pb-kind,
-.pb-note { display: flex; flex-direction: column; gap: var(--space-2); }
+.pb-note { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.pb-kind > .pb-input { margin-top: var(--space-2); }
 
 /* A menu standing in for an input is sized and drawn like the input it replaced. */
 .pb-runs-when,
