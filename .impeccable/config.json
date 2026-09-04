@@ -7,6 +7,11 @@
         "rule": "side-tab",
         "value": "border-left-color: var(--text-muted)",
         "createdAt": "2026-09-03T02:03:49.653Z"
+      },
+      {
+        "rule": "side-tab",
+        "value": "border-left-width: 3px",
+        "createdAt": "2026-09-04T02:08:14.556Z"
       }
     ]
   }
