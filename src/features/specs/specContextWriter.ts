@@ -14,8 +14,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+    completedStatusForStep,
     HistoryEntry,
     HistoryEntryBy,
+    inFlightStatusForStep,
     SpecContext,
     StepName,
 } from '../../core/types/specContext';
@@ -154,7 +156,7 @@ export function setStepStarted(
     const advanced: SpecContext = {
         ...ctx,
         currentStep: step,
-        status: deriveInProgressStatus(step),
+        status: inFlightStatusForStep(step),
     };
     // Idempotent per (step, substep=null) like the Python writer: skip a redundant start but still realign currentStep/status; forceStatus opts out via dedupe=false to re-stamp a recovery boundary.
     if (dedupe && hasStepStart(ctx.history, step, null)) {
@@ -174,7 +176,7 @@ export function setStepCompleted(
     return appendHistory(
         {
             ...ctx,
-            status: deriveCompletedStatus(step),
+            status: completedStatusForStep(step),
         },
         entry
     );
@@ -205,43 +207,7 @@ export function setSubstepCompleted(
 /** @deprecated Renamed to `appendHistory`. */
 export const appendTransition = appendHistory;
 
-// `clarify` is a sub-phase of specify → reuses `specifying`.
-// `analyze` is a sub-phase of tasks  → reuses `tasking`.
-// Keeps the 10-entry status vocab from data-model.md.
-function deriveInProgressStatus(step: StepName): SpecContext['status'] {
-    switch (step) {
-        case 'specify':
-        case 'clarify':
-            return 'specifying';
-        case 'plan':
-            return 'planning';
-        case 'tasks':
-        case 'analyze':
-            return 'tasking';
-        case 'implement':
-            return 'implementing';
-    }
-}
 
-function deriveCompletedStatus(step: StepName): SpecContext['status'] {
-    switch (step) {
-        case 'specify':
-        case 'clarify':
-            return 'specified';
-        case 'plan':
-            return 'planned';
-        case 'tasks':
-        case 'analyze':
-            return 'ready-to-implement';
-        case 'implement':
-            // The implement step finishing means the AI is done writing code,
-            // but the spec is not yet terminally completed. The user has to
-            // click "Mark Completed" to advance from `implemented` →
-            // `completed`. That final approval gate keeps the user in
-            // control of when the spec is truly closed.
-            return 'implemented';
-    }
-}
 
 /**
  * Per-target write chains. Each `.spec-context.json` gets its own promise so

@@ -25,6 +25,9 @@ export class OverviewProvider extends BaseTreeDataProvider<OverviewItem> {
     async getChildren(element?: OverviewItem): Promise<OverviewItem[]> {
         if (element) { return []; }
         return [
+            new OverviewItem('Pipeline Builder', vscode.TreeItemCollapsibleState.None,
+                'pipeline-builder', 'circuit-board',
+                { command: 'speckit.companion.openPipelineBuilder', title: 'Open Pipeline Builder' }),
             new OverviewItem('Open Settings', vscode.TreeItemCollapsibleState.None,
                 'settings-open', 'gear', { command: Commands.settings.open, title: 'Open Settings' }),
             new OverviewItem('Report a Bug', vscode.TreeItemCollapsibleState.None,

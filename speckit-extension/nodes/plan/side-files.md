@@ -1,7 +1,12 @@
 ---
 id: side-files
+name: Write the design side files
 kind: author
 command: plan
+# The size budget can fold these into plan.md, so a run without them is not a
+# failed run. `may-write` is the honest shape: the panel counts them, and the
+# verifier does not call a `simple` run incomplete for skipping them.
+may-write: [research.md, data-model.md, contracts/]
 reads: [plan-doc]
 ---
 4. **Phase 0 — Research (first).** Write `<feature_directory>/research.md` before the Phase 1 docs, since they build on its decisions. *(The size budget above governs: at `simple` size, fold the rationale into a short Key Decisions note in `plan.md` instead of a separate `research.md`.)* For each genuine unknown the plan leaves open — a stack or dependency choice the codebase doesn't already settle, an integration, or a significant design choice — record a short entry as **Decision** (what you chose) / **Rationale** (why) / **Alternatives considered** (what else, and why not). Resolve every `NEEDS CLARIFICATION` here — this is where a maintainer sees *why* the design is shaped this way.

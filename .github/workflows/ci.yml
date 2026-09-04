@@ -29,6 +29,30 @@ jobs:
       - name: Run tests
         run: npm test
 
+  visual:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Geometry only, never pixels: font rasterisation differs between a
+      # developer's Mac and this runner, so a pixel gate here would cry wolf on
+      # every push. The baselines are compared locally with `npm run test:visual`.
+      # Chrome is preinstalled on ubuntu-latest, which is what `channel: 'chrome'`
+      # drives — no browser download.
+      - name: Pipeline Builder layout (real browser, both widths and themes)
+        run: npm run test:visual:ci
+
   capture-suite:
     runs-on: ubuntu-latest
 
@@ -55,6 +79,15 @@ jobs:
 
       - name: Check command inventory (emissions, install records, and docs match the manifest)
         run: python3 speckit-extension/scripts/check-command-emissions.py
+
+      # Reported, not gated: the ceiling is a guardrail for the composable work,
+      # and today's bodies are already over it. Printing it on every build is what
+      # makes a change to the budget visible in the diff that caused it.
+      - name: Report the instruction budget per command
+        run: python3 speckit-extension/scripts/instruction-budget.py
+
+      - name: Report what a run of the pipeline is expected to produce
+        run: python3 speckit-extension/scripts/manifest.py
 
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |

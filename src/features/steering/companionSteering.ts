@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
+import { unsupportedForRuntime } from '../specs/livingSpecsModel';
 
 const COMPANION_CONFIG_REL = '.specify/companion.yml';
 const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
@@ -12,11 +13,24 @@ export interface CompanionCommand {
     file: string;
 }
 
-/** Top-level setting groups of `.specify/companion.yml`; `[]` when absent or unparseable. */
+/**
+ * Top-level setting groups of `.specify/companion.yml`; `[]` when absent,
+ * unparseable, or written in YAML the runtime cannot read.
+ *
+ * That last case is the one this used to get wrong. `js-yaml` accepts anchors,
+ * block scalars and tab indentation; the runtime reader rejects all three and
+ * falls back to the shipped defaults. Reading the file more permissively than
+ * the thing that acts on it meant the editor listed groups from a configuration
+ * that was never going to be applied.
+ */
 export function readCompanionConfigGroups(workspaceRoot: string): string[] {
     const file = path.join(workspaceRoot, COMPANION_CONFIG_REL);
     try {
-        const parsed = yaml.load(fs.readFileSync(file, 'utf8'));
+        const text = fs.readFileSync(file, 'utf8');
+        if (unsupportedForRuntime(text)) {
+            return [];
+        }
+        const parsed = yaml.load(text);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
             return [];
         }

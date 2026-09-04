@@ -1,5 +1,6 @@
 ---
 id: load-living-specs
+name: Load living specs
 kind: investigate
 command: specify
 reads: [resolve-dir]

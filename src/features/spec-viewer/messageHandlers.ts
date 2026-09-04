@@ -33,7 +33,7 @@ import {
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { isPathWithinRoot } from "../specs/livingSpecsModel";
-import { resolveDispatchWithFallback } from "../specs/profileDispatch";
+import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
@@ -420,49 +420,20 @@ async function executeStepInTerminal(
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
-  const label = step.label || step.name;
-  // Guard the missing-extension case: never dispatch a /speckit.companion.* command
-  // when the spec-kit extension isn't installed — fall back to stock + warn (FR-006/FR-007).
-  const resolution = resolveDispatchWithFallback(step.command, specDirectory);
-  if (resolution.fellBack) {
-    // command === null means a companion-only step (e.g. mark-complete) has no
-    // stock twin and the extension is missing — suppress dispatch entirely.
-    const suffix = resolution.command ? `running stock ${resolution.command}` : 'no stock equivalent — skipping';
-    deps.outputChannel.appendLine(
-      `[SpecViewer] Companion command unavailable — spec-kit extension not installed; ${suffix}.`,
-    );
-    void vscode.window
-      .showWarningMessage(
-        'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
-        'Install spec-kit Extension',
-      )
-      .then(choice => {
-        if (choice === 'Install spec-kit Extension') {
-          void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
-        }
-      });
-  }
-  const command = resolution.command;
-  if (!command) {
-    return;
-  }
-  const specTelemetry = getSpecTelemetryContext(specDirectory);
-  sendTelemetryEvent('phase.dispatched', {
-    providerId: getConfiguredProviderType(),
-    phase: phaseTelemetryId(step.name),
-    ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
-  });
-  const formatted = formatCommandForProvider(command);
-  const rawPrompt = `/${formatted} ${targetPath}`;
-  const prompt = buildPrompt({
-    command: rawPrompt,
-    step: step.name,
-    specDir: targetPath,
-  });
-  deps.outputChannel.appendLine(
-    `[SpecViewer] Executing step "${label}": ${rawPrompt}`,
+  await dispatchStep(
+    {
+      baseCommand: step.command,
+      step: step.name,
+      targetPath,
+      specDirectory,
+      promptSpecDir: targetPath,
+    },
+    {
+      outputChannel: deps.outputChannel,
+      logPrefix: 'SpecViewer',
+      run: prompt => deps.executeInTerminal(prompt),
+    },
   );
-  await deps.executeInTerminal(prompt);
 }
 
 /**

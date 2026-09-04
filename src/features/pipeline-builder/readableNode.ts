@@ -1,0 +1,95 @@
+/**
+ * A node file as something worth reading.
+ *
+ * Opening a node used to hand over the raw `.md`: frontmatter first, then empty
+ * HTML comment fences where the shared parts get stitched in at build time. Both
+ * are real and neither is what someone opened the node to read — they are the
+ * authoring format leaking into the answer.
+ *
+ * So the frontmatter comes off, the fences are replaced by a list of the parts
+ * they stand for, and what is left is the instruction text itself.
+ */
+
+/**
+ * What a stripped marker leaves behind, before the blank lines are collapsed.
+ *
+ * A character no instruction contains, so a line that is only this is a line
+ * that held only a fence. Written as the escape rather than as the byte: three
+ * raw NULs in this file made git call it binary, which costs its diff, its
+ * blame, and any line-level review of it.
+ */
+const NOTHING = '\0';
+
+/** `<!-- speckit-companion:part NAME -->` and its closing twin, on their own lines. */
+const PART_FENCE = /^[ \t]*<!--[ \t]*\/?speckit-companion:part[ \t]+([\w-]+)[ \t]*-->[ \t]*$/gm;
+
+/** Any other boundary marker the build writes — node and phase fences. */
+const OTHER_MARKER = /^[ \t]*<!--[ \t]*\/?speckit-companion:(?:node|phase|hook)[ \t]+[\w-]+[ \t]*-->[ \t]*$/gm;
+
+const FRONTMATTER = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+
+/** A node file with no frontmatter still opens with `key: value` lines. */
+const BARE_META = /^(?:[a-z][\w-]*:.*\r?\n)+---\r?\n?/;
+
+export interface ReadableNode {
+    /** The instruction text, ready to render. */
+    body: string;
+    /** Shared blocks the build stitches in here, named rather than shown empty. */
+    parts: string[];
+    /**
+     * The same text as it is actually stored — fences kept, frontmatter off.
+     *
+     * Reading and editing want different things. The rendered `body` drops the
+     * fences because they are empty comments nobody opened the node to read; an
+     * edit cannot, because a fence is *where* a shared block lands, and saving
+     * the rendered text back would silently delete every one of them. So the
+     * editor gets this, and `nodeFile` puts the frontmatter back.
+     */
+    editable: string;
+    /** The leading metadata block, kept so an edit can be written back whole. */
+    meta: string;
+}
+
+/** The node's leading metadata block, and everything after it. */
+function split(source: string): { meta: string; rest: string } {
+    const front = source.match(FRONTMATTER) ?? source.match(BARE_META);
+    return front
+        ? { meta: front[0], rest: source.slice(front[0].length) }
+        : { meta: '', rest: source };
+}
+
+/**
+ * A node file, rebuilt from edited instruction text.
+ *
+ * The metadata is the build's, not the author's — `id`, `kind`, `reads` and
+ * `writes` are what order the pipeline and what the manifest reports. Editing
+ * the instructions must not be a way to lose them, so they are carried over
+ * rather than retyped.
+ */
+export function nodeFile(meta: string, body: string): string {
+    const text = body.replace(/\s+$/, '');
+    return `${meta}${text}\n`;
+}
+
+export function readableNode(source: string): ReadableNode {
+    const { meta, rest } = split(source);
+    let text = rest;
+
+    const parts: string[] = [];
+    text = text.replace(PART_FENCE, (_line, name: string) => {
+        if (!parts.includes(name)) { parts.push(name); }
+        return NOTHING;
+    });
+    text = text.replace(OTHER_MARKER, NOTHING);
+
+    // A fence pair leaves two placeholders around whatever sat between them;
+    // collapsing here keeps the surrounding blank lines from stacking up.
+    text = text
+        .split('\n')
+        .filter(line => line.trim() !== NOTHING)
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    return { body: text, parts, editable: rest.replace(/^\n+/, '').replace(/\s+$/, ''), meta };
+}

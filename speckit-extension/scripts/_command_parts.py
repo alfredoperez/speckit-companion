@@ -34,11 +34,43 @@ PART_FENCE = re.compile(
 PART_OPEN = re.compile(r"<!-- speckit-companion:part ([\w-]+) -->")
 PART_CLOSE = re.compile(r"<!-- /speckit-companion:part ([\w-]+) -->")
 
+# Node boundary: <!-- speckit-companion:node ID -->\n<body>\n<!-- /speckit-companion:node ID -->
+#
+# A separate namespace segment from `part` on purpose. The part fences are
+# filled by `fill_parts`, which raises on a name it does not recognise, so a
+# node marker sharing that namespace would abort assembly.
+#
+# These exist so a hook or a replacement can name an exact point in an assembled
+# command. Without them the only way to target a node's contribution was to match
+# the prose around it.
+NODE_OPEN = re.compile(r"<!-- speckit-companion:node ([\w-]+) -->")
+NODE_CLOSE = re.compile(r"<!-- /speckit-companion:node ([\w-]+) -->")
+# Phase boundary: the middle block. A phase groups the nodes of one step and is
+# where a hook attaches — the design's "a phase is a hook boundary, not a
+# dispatch boundary", so a step remains one dispatched command.
+PHASE_OPEN = re.compile(r"<!-- speckit-companion:phase ([\w-]+) -->")
+PHASE_CLOSE = re.compile(r"<!-- /speckit-companion:phase ([\w-]+) -->")
+PHASE_FENCE = re.compile(
+    r"<!-- speckit-companion:phase ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:phase \1 -->\n?",
+    re.DOTALL,
+)
+
+NODE_FENCE = re.compile(
+    r"<!-- speckit-companion:node ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:node \1 -->\n?",
+    re.DOTALL,
+)
+
 # Marker-comment lines stripped before golden comparison (legacy timing + the
 # generalized part fences). Content survives; only the convention scaffolding
 # is normalized away, so a marker rename is not counted as a content change.
 _MARKER_LINE = re.compile(
-    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|timing) -->[ \t]*\n?",
+    r"^[ \t]*<!-- /?speckit-companion:(?:part [\w-]+|node [\w-]+|phase [\w-]+|timing) -->[ \t]*\n?",
+    re.MULTILINE,
+)
+
+#: Node and phase boundaries alone — whole lines, newline included.
+_NODE_MARKER_LINE = re.compile(
+    r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w-]+ -->[ \t]*\n?",
     re.MULTILINE,
 )
 
@@ -54,6 +86,8 @@ _COMMANDS_BLOCK = re.compile(
 )
 _COMMAND_NAME = re.compile(r"^\s*-\s*name:\s*(\S+)\s*$", re.MULTILINE)
 _COMMAND_FILE = re.compile(r"^\s*file:\s*(\S+)\s*$", re.MULTILINE)
+_COMMAND_DESC = re.compile(r"^\s*description:\s*(.+)$", re.MULTILINE)
+_BODY_DESC = re.compile(r"^description:\s*(.+)$", re.MULTILINE)
 
 
 def declared_commands(path: str | None = None) -> list:
@@ -87,6 +121,32 @@ def declared_commands(path: str | None = None) -> list:
 
 def declared_command_names() -> list:
     return [name for name, _ in declared_commands()]
+
+
+def declared_descriptions(path: str | None = None) -> dict:
+    """`{command name: description}` as the manifest states it."""
+    path = path or os.path.join(EXT, MANIFEST)
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    block = _COMMANDS_BLOCK.search(text)
+    if not block:
+        raise SystemExit(f"[parts] no provides.commands block in {MANIFEST}")
+    body = block.group(1)
+    starts = [(m.start(), m.group(1)) for m in _COMMAND_NAME.finditer(body)]
+    out = {}
+    for i, (pos, name) in enumerate(starts):
+        end = starts[i + 1][0] if i + 1 < len(starts) else len(body)
+        found = _COMMAND_DESC.search(body, pos, end)
+        if found:
+            out[name] = found.group(1).strip().strip('"')
+    return out
+
+
+def body_description(rel: str) -> str | None:
+    """The `description:` a command body states in its own frontmatter — what the
+    agent's command list shows, against the manifest's, which the catalog shows."""
+    found = _BODY_DESC.search(read(rel))
+    return found.group(1).strip().strip('"') if found else None
 
 
 def golden_path(rel: str) -> str:
@@ -184,6 +244,21 @@ def canonical(text: str) -> str:
     return _MARKER_LINE.sub("", text)
 
 
+def strip_node_markers(text: str) -> str:
+    """Remove node boundary lines, leaving every node's body exactly as it was.
+
+    This is what makes the boundaries provably additive: the golden bodies are
+    kept marker-free, and assembly is checked against them through this function.
+    A marker that shifted a line, swallowed a blank one, or reordered anything
+    fails that comparison.
+
+    Whole lines are removed, including the newline that ends them, and nothing
+    else is normalised — no whitespace collapsing, which would let a real
+    difference hide behind the tidying.
+    """
+    return _NODE_MARKER_LINE.sub("", text)
+
+
 def fill_parts(text: str, rel: str) -> str:
     """Fill every part-fence region in text from its presets/_parts/NAME.md file.
 
@@ -208,11 +283,22 @@ def fill_parts(text: str, rel: str) -> str:
 
 
 def nodes_command_dir(command: str) -> str:
-    return os.path.join(EXT, NODES_DIR, command)
+    """Where a step's `_order.yml` and node files live.
+
+    A step the extension ships is read from `nodes/<command>/`. A step the
+    project added exists only under its own directory, so that is where its order
+    and its nodes come from — the same fallback `node_source` already applies to
+    one file, applied to the directory that holds them.
+    """
+    shipped = os.path.join(EXT, NODES_DIR, command)
+    if os.path.isdir(shipped):
+        return shipped
+    own = project_command_dir(command)
+    return own if own and os.path.isdir(own) else shipped
 
 
-def decomposed_commands() -> list:
-    """Namespaced commands assembled from node files (a nodes/<command>/ dir exists)."""
+def shipped_commands() -> list:
+    """Steps the extension ships, whatever project is being built."""
     base = os.path.join(EXT, NODES_DIR)
     if not os.path.isdir(base):
         return []
@@ -220,6 +306,37 @@ def decomposed_commands() -> list:
         d for d in os.listdir(base)
         if os.path.isdir(os.path.join(base, d)) and not d.startswith("_")
     )
+
+
+def project_commands() -> list:
+    """Steps this project added — a node directory the extension does not ship.
+
+    A step IS a directory of nodes, so adding one needs no new concept: the
+    project writes `.specify/companion/nodes/<step>/` with an `_order.yml` and it
+    assembles like any other. A directory whose name the extension already ships
+    is that step's replacements, not a new step.
+    """
+    if not _project_root:
+        return []
+    base = os.path.join(_project_root, PROJECT_NODES_REL)
+    if not os.path.isdir(base):
+        return []
+    shipped = set(shipped_commands())
+    return sorted(
+        d for d in os.listdir(base)
+        if d not in shipped and not d.startswith("_")
+        and os.path.isdir(os.path.join(base, d))
+        and os.path.isfile(os.path.join(base, d, "_order.yml"))
+    )
+
+
+def decomposed_commands() -> list:
+    """Every step that assembles from node files — the shipped ones, then the project's.
+
+    Golden parity never points this at a project, so a project's own steps can
+    never move the shipped goldens.
+    """
+    return shipped_commands() + project_commands()
 
 
 def split_frontmatter(text: str) -> tuple:
@@ -279,9 +396,194 @@ def parse_order(path: str) -> list:
     return ids
 
 
+def parse_phases(path: str) -> list:
+    """Read an `_order.yml` `phases:` block — `[{name, nodes: [...]}, ...]`.
+
+    Returns `[]` for a file that declares only a flat `order:`. Both shapes are
+    supported: phases are the middle block the design asks for, and a command
+    that has not been grouped into them still assembles exactly as before.
+    """
+    phases = []
+    current = None
+    in_phases = False
+    in_nodes = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("phases:"):
+            in_phases = True
+            continue
+        # A new top-level key ends the block. Without this, the `- name:` lines
+        # inside `decisions:` read as phases — invisible only because empty
+        # phases happen to be dropped downstream.
+        if in_phases and not raw[0].isspace() and not s.startswith("- "):
+            break
+        if not in_phases:
+            continue
+        if s.startswith("- name:"):
+            if current:
+                phases.append(current)
+            current = {"name": s[len("- name:"):].strip(), "nodes": []}
+            in_nodes = False
+            continue
+        if current is None:
+            continue
+        if s.startswith("nodes:"):
+            rest = s[len("nodes:"):].strip()
+            if rest.startswith("[") and rest.endswith("]"):
+                inner = rest[1:-1].strip()
+                if inner:
+                    current["nodes"].extend(x.strip() for x in inner.split(","))
+                in_nodes = False
+            else:
+                in_nodes = True
+            continue
+        if in_nodes and s.startswith("- "):
+            current["nodes"].append(s[2:].strip())
+        elif not s.startswith("- "):
+            in_nodes = False
+    if current:
+        phases.append(current)
+    return phases
+
+
+def parse_after(path: str) -> str:
+    """Read `after:` — which step this one runs behind, or `""` for none.
+
+    Only a step a project added needs this: the shipped four have a fixed order
+    everything already knows. A step with no `after:` is one you launch when you
+    want it, and is drawn outside the run rather than between two steps that do
+    not actually lead to it.
+    """
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as fh:
+        for raw in fh:
+            s = raw.strip()
+            if not s or s.startswith("#"):
+                continue
+            if s.startswith("after:"):
+                return s[len("after:"):].strip().strip("\"'")
+    return ""
+
+
+def parse_optional(path: str) -> list:
+    """Read `optional:` — shipped nodes a recipe may add, outside the default order.
+
+    These are real node files in the command's directory that the pipeline does
+    not run by default: add-ons (clarify, analyze) and variants of a default
+    node. They assemble like any other node once a recipe names them; this list
+    is what lets the panel offer them without a free-text box that build-errors.
+    """
+    ids = []
+    in_block = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("optional:"):
+            rest = s[len("optional:"):].strip()
+            if rest.startswith("[") and rest.endswith("]"):
+                inner = rest[1:-1].strip()
+                return [x.strip() for x in inner.split(",")] if inner else []
+            in_block = True
+            continue
+        if in_block and s.startswith("- "):
+            ids.append(s[2:].strip())
+        elif in_block:
+            break
+    return ids
+
+
+def parse_variants(path: str) -> dict:
+    """Read `variants:` — `{slot_id: [variant_ids]}`, the alternatives for one slot.
+
+    A variant is an optional node that stands in for a default one: same place
+    in the run, different instructions. The map is what makes "replace this
+    node" a pick instead of a rewrite.
+    """
+    variants = {}
+    in_block = False
+    with open(path, encoding="utf-8") as fh:
+        raw_lines = fh.readlines()
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("variants:"):
+            in_block = True
+            continue
+        if not in_block:
+            continue
+        # Entries are `slot: [a, b]`, indented under the key. Any top-level
+        # line — a new key, a list item of something else — ends the block.
+        if not raw[0].isspace():
+            break
+        if ":" not in s:
+            continue
+        slot, rest = s.split(":", 1)
+        rest = rest.strip()
+        if rest.startswith("[") and rest.endswith("]"):
+            inner = rest[1:-1].strip()
+            variants[slot.strip()] = (
+                [x.strip() for x in inner.split(",")] if inner else [])
+    return variants
+
+
+#: A project's own node files, which replace the shipped ones of the same id.
+PROJECT_NODES_REL = os.path.join(".specify", "companion", "nodes")
+
+#: Set by a build for one project; unset means shipped nodes only. Golden parity
+#: never sets it, so a project's replacements can never move the shipped goldens.
+_project_root = None
+
+
+def use_project_nodes(root):
+    """Point node reads at one project's replacements. `None` restores shipped-only."""
+    global _project_root
+    _project_root = root
+
+
+def project_command_dir(command: str):
+    """Where this project keeps its own files for a step, or None if unset."""
+    if not _project_root:
+        return None
+    return os.path.join(_project_root, PROJECT_NODES_REL, command)
+
+
+def project_node_path(command: str, node_id: str):
+    """Where this project's replacement for a node would live, or None if unset."""
+    if not _project_root:
+        return None
+    return os.path.join(_project_root, PROJECT_NODES_REL, command, f"{node_id}.md")
+
+
+def node_source(command: str, node_id: str) -> tuple:
+    """Return (path, replaced) for a node — the project's copy when it has one.
+
+    `_frame` is the step's own preamble rather than a node in the order, but it
+    is a file of instructions like any other, so a project can replace it the
+    same way. It was the one piece of a step's text nothing could reach.
+    """
+    own = project_node_path(command, node_id)
+    if own and os.path.isfile(own):
+        return own, True
+    return os.path.join(nodes_command_dir(command), f"{node_id}.md"), False
+
+
+def frame_source(command: str) -> tuple:
+    """Return (path, replaced) for a step's frame."""
+    return node_source(command, "_frame")
+
+
 def read_node(command: str, node_id: str) -> tuple:
     """Return (meta_dict, body) for a node file, or raise if missing."""
-    path = os.path.join(nodes_command_dir(command), f"{node_id}.md")
+    path, _replaced = node_source(command, node_id)
     if not os.path.isfile(path):
         raise SystemExit(f"[nodes] missing node file: {command}/{node_id}.md")
     with open(path, encoding="utf-8") as fh:

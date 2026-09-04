@@ -107,6 +107,37 @@ class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
                                  (SCRIPTS / "write-context.py").read_text()).group(1).split("|"))
         self.assertEqual(emitted, accepted)
 
+    def test_the_workflow_file_routes_on_a_verdict_the_classifier_emits(self):
+        """The routing switch is the one consumer no test had ever opened, and it
+        branched on `small` — a word the classifier never emits — so the folded
+        path was unreachable and every spec silently took the full pipeline."""
+        import re
+        emitted = set(re.search(r"size=<([^>]+)>", self.BODY.read_text()).group(1).split("|"))
+        workflow = (REPO / "speckit-extension" / "workflows"
+                    / "speckit-companion.workflow.yml").read_text()
+
+        cases_block = workflow.split("cases:", 1)[1]
+        # Case keys are the lines indented one level under `cases:`; stop at the
+        # first line that dedents back out of the block (`default:` is a sibling
+        # of `cases:`, not a case).
+        keys = []
+        for line in cases_block.splitlines()[1:]:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            indent = len(line) - len(line.lstrip())
+            if indent < 6:
+                break
+            if indent == 6 and line.rstrip().endswith(":"):
+                keys.append(line.strip().rstrip(":"))
+
+        self.assertRegex(workflow, r"(?m)^ {4}default:",
+                         "the safe fallback that keeps an unmatched size on the full pipeline is gone")
+        self.assertTrue(keys, "the switch routes on nothing")
+        for key in keys:
+            self.assertIn(key, emitted,
+                          f"the workflow routes on '{key}', which the classifier never emits "
+                          f"(it emits {sorted(emitted)}) — that branch is unreachable")
+
 
 class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
     """#584 — a spec joining mid-run must be pinned before the next dispatch."""
@@ -143,34 +174,26 @@ class CaptureWritesAreAtomic(unittest.TestCase):
         self.assertEqual(leftovers, [], "a completed write left temp debris")
 
 
-class SilentPaletteCommandsAreHidden(unittest.TestCase):
-    """#593 — a command that only writes a log line must not be reachable."""
-
-    STUBS = {
-        "speckit.workflowEditor.removeSection", "speckit.workflowEditor.addUserStory",
-        "speckit.workflowEditor.approveAndContinue", "speckit.workflowEditor.regenerate",
-        "speckit.workflowEditor.navigateToPhase", "speckit.workflowEditor.editSource",
-    }
+class SilentPaletteCommandsAreGone(unittest.TestCase):
+    """#593 hid six commands that only wrote a log line; the editor they belonged
+    to has since been deleted, so the stronger property holds: they do not exist."""
 
     def setUp(self):
         self.pkg = json.loads((REPO / "package.json").read_text())
 
-    def test_every_silent_stub_is_suppressed_from_the_palette(self):
-        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
-               if str(e.get("when", "")).strip() == "false"}
-        self.assertTrue(self.STUBS <= pal, f"still reachable: {sorted(self.STUBS - pal)}")
-
-    def test_no_workflow_editor_command_is_palette_reachable(self):
-        # refineSection dispatches real work, but only when the webview passes it
-        # (uri, sectionId, prompt). From the palette it gets none of them and
-        # sends an undefined prompt to the terminal — the same defect as the six
-        # silent stubs, so it is suppressed too. It stays fully usable in-webview.
+    def test_no_workflow_editor_command_is_contributed_at_all(self):
         contributed = {c["command"] for c in self.pkg["contributes"]["commands"]
                        if c["command"].startswith("speckit.workflowEditor.")}
-        pal = {e["command"] for e in self.pkg["contributes"]["menus"]["commandPalette"]
-               if str(e.get("when", "")).strip() == "false"}
-        self.assertTrue(contributed <= pal,
-                        f"palette-reachable and argument-dependent: {sorted(contributed - pal)}")
+        self.assertEqual(contributed, set(), f"still contributed: {sorted(contributed)}")
+
+    def test_no_menu_entry_points_at_a_workflow_editor_command(self):
+        offenders = sorted(
+            e["command"]
+            for entries in self.pkg["contributes"]["menus"].values()
+            for e in entries
+            if str(e.get("command", "")).startswith("speckit.workflowEditor.")
+        )
+        self.assertEqual(offenders, [], f"menu entries survive their command: {offenders}")
 
 
 class PartialCaptureIsNotClean(unittest.TestCase):

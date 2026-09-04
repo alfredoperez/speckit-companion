@@ -1,4 +1,10 @@
-import { CANONICAL_SUBSTEPS } from '../core/types/specContext';
+import {
+    CANONICAL_SUBSTEPS,
+    completedStatusForStep,
+    HISTORY_ENTRY_BY,
+    STATUSES,
+    STEP_NAMES,
+} from '../core/types/specContext';
 
 export type PromptStep = keyof typeof CANONICAL_SUBSTEPS;
 
@@ -9,11 +15,20 @@ export function isKnownStep(step: string | null | undefined): step is PromptStep
     return !!step && Object.prototype.hasOwnProperty.call(CANONICAL_SUBSTEPS, step);
 }
 
+/** `"a","b"` for embedding a vocabulary in the schema block below. */
+function jsonEnum(values: readonly string[]): string {
+    return values.map(v => `"${v}"`).join(',');
+}
+
 /**
  * Compact JSON Schema for `.spec-context.json`. Embedded at the top of every
  * preamble so the AI has a precise contract — not prose — for the canonical
  * shape. Kept terse to control token cost; the invariants beyond JSON Schema
  * (atomic writes, `history` ↔ `currentStep` consistency) live below it.
+ *
+ * Every vocabulary in it is read from the canonical contract rather than
+ * retyped: a hand-copied version of this block had been telling the assistant
+ * that `by` accepts four values when the schema and the writers accept five.
  */
 const SPEC_CONTEXT_SCHEMA = [
     '```jsonschema',
@@ -26,10 +41,8 @@ const SPEC_CONTEXT_SCHEMA = [
     '    "specName":    { "type": "string" },',
     '    "branch":      { "type": "string" },',
     '    "selectedAt":  { "type": "string", "format": "date-time" },',
-    '    "currentStep": { "enum": ["specify","clarify","plan","tasks","analyze","implement"] },',
-    '    "status":      { "enum": ["draft","specifying","specified","planning","planned",',
-    '                              "tasking","ready-to-implement","implementing","implemented",',
-    '                              "completed","archived"] },',
+    `    "currentStep": { "enum": [${jsonEnum(STEP_NAMES)}] },`,
+    `    "status":      { "enum": [${jsonEnum(STATUSES)}] },`,
     '    "history": {',
     '      "type": "array",',
     '      "items": {',
@@ -39,7 +52,7 @@ const SPEC_CONTEXT_SCHEMA = [
     '          "step":    { "$ref": "#/properties/currentStep" },',
     '          "substep": { "type": ["string","null"] },',
     '          "kind":    { "enum": ["start","complete"] },',
-    '          "by":      { "enum": ["extension","user","cli","ai"] },',
+    `          "by":      { "enum": [${jsonEnum(HISTORY_ENTRY_BY)}] },`,
     '          "at":      { "type": "string", "format": "date-time" }',
     '        }',
     '      }',
@@ -166,18 +179,10 @@ function captureBlock(step: PromptStep, featureDir: string, writerPath: string):
     ];
 }
 
-const COMPLETED_STATUS_BY_STEP: Record<PromptStep, string> = {
-    specify: 'specified',
-    clarify: 'specified',
-    plan: 'planned',
-    tasks: 'ready-to-implement',
-    analyze: 'ready-to-implement',
-    // F8: implement ends at `implemented` (NOT `completed`). The final
-    // `completed` status is the user's explicit Mark-Completed click in
-    // the viewer — keeps closure under the user's control even when
-    // manual verification steps remain (build/test/eyeball UI).
-    implement: 'implemented',
-};
+// The status each step ends at comes from the one map in specContext.ts, so
+// what the prompt tells the assistant and what the extension writes can never
+// disagree. Note that implement settles at `implemented`, not `completed` —
+// the final status is the user's Mark Completed click.
 
 const DONE_PHRASE_BY_STEP: Record<PromptStep, string> = {
     specify: 'Done specifying',
@@ -193,25 +198,36 @@ const ADVANCING_STEPS: ReadonlySet<PromptStep> = new Set([
     'specify', 'plan', 'tasks',
 ]);
 
-// Which steps the AI self-closes by hand. `clarify/plan/tasks/analyze` always do.
-// `specify` is conditional (see `aiSelfClosesStep`): the companion specify command
-// records its own `--kind complete`, so when companion is installed the AI defers
-// — but in STOCK mode the upstream `/speckit.specify` makes no such call, so the
-// AI MUST close specify itself or it sticks at `specifying` forever (#332).
-// `implement` always defers: the always-on `tasks.md` watcher closes it, and an
-// early `ai` complete would trip the hook's no-backward-clobber guard.
+// Steps nothing else ever closes. Neither pipeline stamps a boundary for
+// clarify or analyze, so the AI records their finish in both modes.
 const AI_SELF_CLOSE_STEPS: ReadonlySet<PromptStep> = new Set([
-    'clarify', 'plan', 'tasks', 'analyze',
+    'clarify', 'analyze',
+]);
+
+// Steps the companion pipeline closes for itself: specify and implement from
+// their own command bodies, plan and tasks from a body-recorded start plus the
+// after-step hook. In STOCK mode none of that exists, so the AI must close them
+// or they stick at their in-flight status forever (#332).
+//
+// Getting this wrong is silent and permanent: the completion append is
+// idempotent and first-writer-wins, so an early `by: ai` complete blocks the
+// hook's extension-stamped close and leaves the step's duration untrusted —
+// which is what "only 1 of 4 phases measured" looked like before #509.
+// `presets/_parts/timing.md` states the same rule to the companion commands.
+const COMPANION_CLOSES_STEPS: ReadonlySet<PromptStep> = new Set([
+    'specify', 'plan', 'tasks',
 ]);
 
 /**
- * True when the AI must write `<step>`'s completion itself. The four steps above
- * always do; `specify` joins them only when companion is NOT installed (no
- * companion command to record it). `implement` never does — its watcher closes it.
+ * True when the AI must write `<step>`'s completion itself. clarify and analyze
+ * always do. specify, plan and tasks do so only in stock mode — under companion
+ * the command bodies and hooks own those boundaries. `implement` never does:
+ * the always-on `tasks.md` watcher closes it, and an early `ai` complete would
+ * trip the hook's no-backward-clobber guard.
  */
 function aiSelfClosesStep(step: PromptStep, companionInstalled: boolean): boolean {
     if (AI_SELF_CLOSE_STEPS.has(step)) return true;
-    return step === 'specify' && !companionInstalled;
+    return COMPANION_CLOSES_STEPS.has(step) && !companionInstalled;
 }
 
 function renderClosingInstruction(
@@ -277,7 +293,7 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
     const substepsLine = substepsList.length === 0
         ? `Canonical substeps for ${step}: none — single-pass step.`
         : `Canonical substeps for ${step}: ${substepsList.join(', ')}. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at } the moment it ends (fresh \`date -u\`) — one per substep, never two sharing a timestamp, never a separate start. The delta between finishes is each substep's duration.`;
-    const completedStatus = COMPLETED_STATUS_BY_STEP[step];
+    const completedStatus = completedStatusForStep(step);
     const donePhrase = DONE_PHRASE_BY_STEP[step];
     const capture = captureBlock(step, specDir, writerPath);
     return [

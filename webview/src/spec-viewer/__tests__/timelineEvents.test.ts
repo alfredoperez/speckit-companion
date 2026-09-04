@@ -1,9 +1,10 @@
 import { mergeStepEvents, buildTransitionIndex, normalizeSubsteps } from '../timelineEvents';
-import type { Transition, StepHistoryEntry } from '../types';
+import type { HistoryEntry, StepHistoryEntry } from '../types';
 
-const tx = (overrides: Partial<Transition>): Transition => ({
+const tx = (overrides: Partial<HistoryEntry>): HistoryEntry => ({
     step: 'plan',
     substep: 'research',
+    kind: 'complete',
     from: { step: null, substep: null },
     by: 'ai',
     at: '2026-04-29T00:00:00Z',
@@ -117,14 +118,16 @@ describe('mergeStepEvents', () => {
     });
 
     it('handles Record-shaped substeps (speckit specs)', () => {
-        const recordHistory: StepHistoryEntry = {
+        // The legacy persisted shape, which reaches the viewer only through
+        // `normalizeSubsteps` — hence the cast rather than a contract change.
+        const recordHistory = {
             startedAt: '2026-04-25T11:13:42Z',
             completedAt: '2026-04-25T11:18:37Z',
             substeps: {
                 research: { startedAt: '2026-04-25T11:14:30Z', completedAt: '2026-04-25T11:16:30Z' },
                 design:   { startedAt: '2026-04-25T11:16:30Z', completedAt: '2026-04-25T11:18:00Z' },
             },
-        };
+        } as unknown as StepHistoryEntry;
         const events = mergeStepEvents('plan', recordHistory, []);
         expect(events.map(e => e.name)).toEqual(['research', 'design']);
         expect(events[0].source).toBe('tracked');

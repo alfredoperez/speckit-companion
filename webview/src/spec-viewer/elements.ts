@@ -5,10 +5,8 @@
  *
  * The refine-modal fields (refineBackdrop / refinePopover / refineInput /
  * etc.) were removed when `modal.ts` and the hardcoded refine HTML in
- * `html/generator.ts` were deleted. The active refine flow lives in
- * `ui/refinePopover.ts`, which builds its popover dynamically — there's no
- * stable DOM element to reach for via `getElementById` anymore. Don't add
- * fields back here that point at HTML the renderer no longer emits.
+ * `html/generator.ts` were deleted. Don't add fields back here that point at
+ * HTML the renderer no longer emits.
  */
 
 export interface ViewerElements {

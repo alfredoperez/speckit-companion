@@ -68,6 +68,39 @@ export function isInFlightStatus(status?: string | null): boolean {
 }
 
 /**
+ * The status a step owns while it runs and once it has finished — the single
+ * home for that pairing on the TypeScript side. Mirrored by
+ * `STEP_COMPLETED_STATUS` in `speckit-extension/scripts/spec_context.py`; the
+ * vocabulary consistency test holds the two together.
+ *
+ * `clarify` is a sub-phase of specify and `analyze` a sub-phase of tasks, so
+ * each reuses its parent's pair rather than adding statuses.
+ *
+ * Note where `implement` lands: finishing it means the code is written, not
+ * that the spec is closed. The step settles at `implemented`, and only the
+ * user's Mark Completed advances that to `completed` — a copy of this map that
+ * returns `completed` here silently skips that gate.
+ */
+export const STEP_STATUS: Readonly<Record<StepName, { inFlight: Status; completed: Status }>> = {
+    specify: { inFlight: 'specifying', completed: 'specified' },
+    clarify: { inFlight: 'specifying', completed: 'specified' },
+    plan: { inFlight: 'planning', completed: 'planned' },
+    tasks: { inFlight: 'tasking', completed: 'ready-to-implement' },
+    analyze: { inFlight: 'tasking', completed: 'ready-to-implement' },
+    implement: { inFlight: 'implementing', completed: 'implemented' },
+};
+
+/** The status a step carries while it is running. */
+export function inFlightStatusForStep(step: StepName): Status {
+    return STEP_STATUS[step].inFlight;
+}
+
+/** The status a step advances to when it finishes. */
+export function completedStatusForStep(step: StepName): Status {
+    return STEP_STATUS[step].completed;
+}
+
+/**
  * Per-substep timing entry. Derived in-memory by the viewer from
  * `history[]`; not persisted on disk.
  */
@@ -84,6 +117,12 @@ export interface SubstepEntry {
 export interface StepHistoryEntry {
     startedAt: string;
     completedAt: string | null;
+    /**
+     * The array form is what the deriver emits and what every consumer reads.
+     * Old specs persisted a record keyed by substep name; that shape reaches the
+     * viewer only as input to `normalizeSubsteps`, which is where the tolerance
+     * is declared — it is not part of this contract.
+     */
     substeps?: SubstepEntry[];
     /**
      * True only when BOTH boundaries were stamped by the extension's own clock
@@ -124,6 +163,19 @@ export interface HistoryEntryFrom {
 }
 
 export type HistoryEntryBy = 'extension' | 'user' | 'cli' | 'ai' | 'derive';
+
+/** Every author a writer may stamp on a history entry. */
+export const HISTORY_ENTRY_BY: HistoryEntryBy[] = ['extension', 'user', 'cli', 'ai', 'derive'];
+
+/**
+ * The steps a default pipeline dispatches and measures, in order.
+ *
+ * A narrower list than `STEP_NAMES`: clarify and analyze are optional and are
+ * not part of the default path, so they are not expected to be timed. A project
+ * whose workflow defines its own steps overrides this — it is the fallback, not
+ * a definition of what a pipeline may contain.
+ */
+export const DEFAULT_PIPELINE_STEPS: readonly StepName[] = ['specify', 'plan', 'tasks', 'implement'];
 
 /** Discriminates between a step/substep start and a step/substep completion. */
 export type HistoryEntryKind = 'start' | 'complete';

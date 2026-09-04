@@ -33,9 +33,17 @@ const isPerTaskEntry = (e: DiscriminatorEntry): boolean => e.task != null;
  *
  * Normalize both into the array form so consumers don't branch.
  */
-export function normalizeSubsteps(
-    substeps: StepHistoryEntry['substeps']
-): SubstepEntry[] {
+/**
+ * Legacy record form: specs written before `stepHistory` became derived
+ * persisted their substeps keyed by name. The tolerance lives here, in the one
+ * function that converts it, rather than widening the contract every consumer
+ * reads — they all take the array form the deriver emits.
+ */
+export type PersistedSubsteps =
+    | StepHistoryEntry['substeps']
+    | Record<string, { startedAt: string; completedAt: string | null }>;
+
+export function normalizeSubsteps(substeps: PersistedSubsteps): SubstepEntry[] {
     if (!substeps) return [];
     if (Array.isArray(substeps)) return substeps;
     return Object.entries(substeps).map(([name, entry]) => ({

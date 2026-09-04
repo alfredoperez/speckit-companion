@@ -1,5 +1,6 @@
 ---
 id: tasks-doc
+name: Write the task list
 kind: author
 command: tasks
 writes: tasks.md

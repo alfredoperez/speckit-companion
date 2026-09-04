@@ -1,5 +1,6 @@
 ---
 id: plan-doc
+name: Write the plan
 kind: author
 command: plan
 writes: plan.md

@@ -1,5 +1,6 @@
 ---
 id: persist-size
+name: Record the size verdict
 kind: control
 command: specify
 reads: [classify-size]

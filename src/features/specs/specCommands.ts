@@ -17,7 +17,8 @@ import {
     WorkflowConfig,
 } from '../workflows';
 import { updateStepProgress, readSpecContextSync } from './specContextManager';
-import { resolveDispatchWithFallback, resolveDispatchForRoot } from './profileDispatch';
+import { resolveDispatchForRoot } from './profileDispatch';
+import { dispatchStep } from './dispatchStep';
 import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
@@ -709,68 +710,41 @@ async function executeWorkflowStep(
     // Resolve the command for this step from the spec's workflow (a `companion`
     // spec resolves the /speckit.companion.* command family).
     const baseCommand = resolveStepCommand(workflow, step);
-    // Guard the missing-extension case: if this is a /speckit.companion.* command
-    // but the spec-kit extension isn't installed, fall back to the stock command +
-    // a non-blocking warning rather than dispatch something the AI CLI can't
-    // resolve (FR-006/FR-007).
-    const resolution = resolveDispatchWithFallback(baseCommand, targetDir);
-    if (resolution.fellBack) {
-        // command === null means a companion-only step (e.g. mark-complete) has no
-        // stock twin and the extension is missing — suppress dispatch entirely.
-        const suffix = resolution.command ? `running stock ${resolution.command}` : 'no stock equivalent — skipping';
-        outputChannel.appendLine(
-            `[SpecKit] Companion command unavailable — spec-kit extension not installed; ${suffix}.`
-        );
-        void vscode.window.showWarningMessage(
-            'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
-            'Install spec-kit Extension'
-        ).then(choice => {
-            if (choice === 'Install spec-kit Extension') {
-                void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
-            }
-        });
-    }
-    const command = resolution.command;
-    if (!command) {
-        return;
-    }
-    outputChannel.appendLine(`[SpecKit] Resolved command: ${command}`);
 
-    const specTelemetry = getSpecTelemetryContext(targetDir);
-    sendTelemetryEvent('phase.dispatched', {
-        providerId: getConfiguredProviderType(),
-        phase: phaseTelemetryId(step),
-        ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
-    });
-
-    // Check if command exists (warn if custom command may not exist)
+    // Warn when the workflow names a custom command that may not exist.
     if (baseCommand !== `speckit.${step}`) {
         outputChannel.appendLine(`[SpecKit] Using custom command: ${baseCommand}`);
     }
 
-    // Build and execute the prompt (format command for current provider)
-    const formatted = formatCommandForProvider(command);
-    let prompt = `/${formatted} ${targetDir}`;
-    if (refinementContext) {
-        prompt += refinementContext;
-    }
+    // Per-step model/effort (Claude Code only; other providers ignore it).
+    const stepConfig = normalized.steps?.find(s => s.name === step);
+    const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
+        ? { model: stepConfig.model, effort: stepConfig.effort }
+        : undefined;
 
     // The step's complete-on-advance + start-write is owned entirely by the
     // awaited `updateStepProgress` above (its lifecycle path completes the prior
     // step and starts this one). A second start-write here is what raced with
     // that one and could drop the start marker — so there is exactly one
     // start-write per step now.
-    const wrapped = buildPrompt({
-        command: prompt,
-        step,
-        specDir: toWorkspaceRelative(targetDir),
-    });
-    // Per-step model/effort (Claude Code only; other providers ignore it).
-    const stepConfig = normalized.steps?.find(s => s.name === step);
-    const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
-        ? { model: stepConfig.model, effort: stepConfig.effort }
-        : undefined;
-    const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${title}`, dispatchOptions);
+    const terminal = await dispatchStep(
+        {
+            baseCommand,
+            step,
+            targetPath: targetDir,
+            specDirectory: targetDir,
+            promptSpecDir: toWorkspaceRelative(targetDir),
+            refinementContext,
+        },
+        {
+            outputChannel,
+            logPrefix: 'SpecKit',
+            run: prompt => getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`, dispatchOptions),
+        },
+    );
+    if (!terminal) {
+        return;
+    }
     if (LIFECYCLE_STEPS.has(step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }

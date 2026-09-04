@@ -6,3 +6,22 @@ order:
   - size-budget
   - tasks-doc
   - handoff
+
+# `phases:` is the middle block: it groups these same nodes, in this same order,
+# so a hook has a coarser place to attach than a single node and the builder has
+# something to show between a step and its nodes. The flat `order:` above stays
+# the authority on sequence; the phases must list exactly the same ids.
+
+phases:
+  - name: gather
+    nodes: [size-budget]
+  - name: author
+    nodes: [tasks-doc]
+  - name: wrap-up
+    nodes: [handoff]
+
+# Shipped nodes this step does NOT run by default — the ones a project can add
+# from the panel. They assemble like any other node once a recipe names them;
+# listing them here is what makes them offerable instead of a free-text box.
+optional:
+  - review-gaps

@@ -34,6 +34,52 @@ STEP_COMPLETED_STATUS = {
 # A spec at one of these statuses must never be dragged backward by a hook that
 # fires after an earlier step (e.g. after_specify re-resolving to a shipped spec).
 TERMINAL_STATUSES = {"implemented", "completed", "archived"}
+
+
+def known_steps(feature_dir=None) -> set:
+    """The canonical steps, plus any step this project actually declares.
+
+    The guard these back is against a TYPO — a misspelled step would otherwise
+    default to `specify` and journal a junk complete against the wrong one. It
+    was never meant to forbid a step that exists: a project that adds a node
+    directory has added a real step, and refusing to journal it leaves the run
+    with no record of a phase that genuinely happened.
+
+    So a directory is the declaration. `.specify/companion/nodes/<step>/` is a
+    step this project wrote; the extension's own `nodes/<step>/` is one that
+    ships. Anything else is still a typo and still refused, by name.
+    """
+    steps = set(CANONICAL_STEPS)
+    for base in _node_roots(feature_dir):
+        if not os.path.isdir(base):
+            continue
+        steps.update(
+            entry for entry in os.listdir(base)
+            if not entry.startswith(("_", "."))
+            and os.path.isfile(os.path.join(base, entry, "_order.yml"))
+        )
+    return steps
+
+
+def _node_roots(feature_dir=None) -> list:
+    """Where step directories live: the extension's, and the project's own.
+
+    The project is found from the feature directory when one was named, and from
+    the repository otherwise. Both are needed: the hook form of a step-start
+    carries no `--feature-dir` at all, so deriving the project only from that
+    argument consulted the extension's own steps and nothing else — a project's
+    own step had its finish journaled and its start refused, which is a history
+    ending in a completion that never began.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    roots = [os.path.join(os.path.dirname(here), "nodes")]
+    if feature_dir:
+        # `specs/<name>/` sits two below the project root.
+        project = os.path.dirname(os.path.dirname(os.path.abspath(str(feature_dir))))
+    else:
+        project = str(_repo_root())
+    roots.append(os.path.join(project, ".specify", "companion", "nodes"))
+    return roots
 # Narrower guard for per-task / backstop writes: "implemented" is the implement
 # step's own same-step terminal, so per-task journaling is still allowed there;
 # only a genuinely shipped spec (completed/archived) is left untouched.
@@ -265,9 +311,22 @@ def _fallback_name(feature_dir: Path) -> str:
     return slug.replace("-", " ").strip() or feature_dir.name
 
 
+#: A spec here is finished. Nothing reopens it, custom step or not.
+_SHIPPED_STATUSES = {"completed", "archived"}
+
+
 def _is_more_advanced(ctx: dict, step: str) -> bool:
     """True if the existing context already records a state past `step` — so a
-    hook firing after an earlier step must not regress it."""
+    hook firing after an earlier step must not regress it.
+
+    A step outside the canonical order is a step this project added, and the
+    canonical order says nothing about where it belongs. Ranking it against
+    `implement` would refuse exactly the case people add one for — a review or
+    a verification that runs after the work — so ordering is not applied to it.
+    A genuinely shipped spec is still closed to everything.
+    """
+    if step not in STEP_ORDER:
+        return ctx.get("status") in _SHIPPED_STATUSES
     if ctx.get("status") in TERMINAL_STATUSES:
         return True
     cur = ctx.get("currentStep")

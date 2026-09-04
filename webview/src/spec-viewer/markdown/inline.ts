@@ -59,8 +59,12 @@ export function parseInline(text: string): string {
             const ext = extMatch ? extMatch[0].toLowerCase() : '';
             if (ext && KNOWN_EXTENSIONS.has(ext)) {
                 const hasDir = code.includes('/');
-                const titleAttr = hasDir ? ` title="${code}"` : '';
-                codeSpans.push(`<button class="file-ref" data-filename="${code}"${titleAttr}><code>${basename}</code></button>`);
+                // `&`, `<` and `>` were escaped above, but a quote inside a code
+                // span would close the attribute it lands in and let whatever
+                // followed become markup of its own.
+                const inAttr = code.replace(/"/g, '&quot;');
+                const titleAttr = hasDir ? ` title="${inAttr}"` : '';
+                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${titleAttr}><code>${basename}</code></button>`);
             } else {
                 codeSpans.push(`<code>${code}</code>`);
             }

@@ -1,5 +1,5 @@
 import { useCallback } from 'preact/hooks';
-import type { ViewerToExtensionMessage, VSCodeApi } from '../../spec-viewer/types';
+import type { ViewerToExtensionMessage } from '../../../../src/protocol/viewer';
 
 /**
  * Typed dispatcher hook for sending messages from the webview to the
@@ -11,14 +11,15 @@ import type { ViewerToExtensionMessage, VSCodeApi } from '../../spec-viewer/type
  *     rate-limiting),
  *   - tests can stub one hook return value rather than every callsite.
  *
- * The hook is intentionally trivial today. Its value is establishing
- * the pattern so Phases 5b/5c/5d's new components don't add more inline
- * `vscode.postMessage` references.
+ * Generic over the protocol it sends. This hook was written for future webviews
+ * to share, but its message type was pinned to the spec viewer's — so a second
+ * webview could not have used it without widening the viewer's own union. The
+ * default keeps every existing call site unchanged.
  */
-declare const vscode: VSCodeApi;
+declare const vscode: { postMessage: (message: unknown) => void };
 
-export function useDispatch(): (msg: ViewerToExtensionMessage) => void {
-    return useCallback((msg: ViewerToExtensionMessage) => {
+export function useDispatch<M extends { type: string } = ViewerToExtensionMessage>(): (msg: M) => void {
+    return useCallback((msg: M) => {
         vscode.postMessage(msg);
     }, []);
 }

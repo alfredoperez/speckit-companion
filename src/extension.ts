@@ -13,7 +13,8 @@ import { OverviewProvider } from './features/settings';
 import { ensureStandardFamily } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
-import { registerWorkflowEditorCommands } from './features/workflow-editor';
+import { registerPipelineBuildCommands } from './features/specs/pipelineBuildCommands';
+import { registerPipelineBuilderCommands } from './features/pipeline-builder/builderPanel';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
 import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } from './features/workflows';
@@ -28,7 +29,6 @@ import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } f
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
-import { openSpecFile } from './core/utils/fileOpener';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
@@ -220,13 +220,6 @@ export async function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // Register file opener command for spec files (with retry logic)
-    context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.openSpecFile', async (filePath: string) => {
-            await openSpecFile(filePath, { outputChannel });
-        })
-    );
-
     // Initialize update checker
     const updateChecker = new UpdateChecker(context, outputChannel);
 
@@ -257,11 +250,10 @@ export async function activate(context: vscode.ExtensionContext) {
     updateChecker.checkForUpdates();
     outputChannel.appendLine('Update check initiated');
 
-    // Register workflow editor action commands
-    registerWorkflowEditorCommands(context, outputChannel);
-
     // Register spec editor commands
     registerSpecEditorCommands(context, outputChannel);
+    registerPipelineBuildCommands(context, outputChannel);
+    registerPipelineBuilderCommands(context, outputChannel);
 
     // Set up spec viewer file watcher (specViewer was created above before setupFileWatchers)
     setupSpecViewerWatcher(context, specViewer, outputChannel);

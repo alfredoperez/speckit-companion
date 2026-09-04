@@ -1,5 +1,10 @@
 # Canonical node order — the byte-parity baseline. A recipe's
 # nodes: [...] replaces this list.
+#
+# `phases:` is the middle block: it groups these same nodes, in this same order,
+# so a hook has a coarser place to attach than a single node and the builder has
+# something to show between a step and its nodes. The flat `order:` below stays
+# as the authority on sequence; the phases must list exactly the same ids.
 order:
   - resolve-dir
   - load-living-specs
@@ -10,3 +15,47 @@ order:
   - branch
   - finalize
   - handoff
+
+phases:
+  - name: gather
+    nodes: [resolve-dir, load-living-specs]
+  - name: author
+    nodes: [draft-spec, quality-checklist]
+  - name: classify
+    nodes: [classify-size, persist-size]
+  - name: wrap-up
+    nodes: [branch, finalize, handoff]
+
+# The step's decision points, as data rather than prose.
+#
+# `classify-size` is the one real branch in the pipeline: its verdict decides
+# whether later steps run in full or fold toward implement. That routing was
+# stated in three places — the shared routing part, the workflow file's switch,
+# and the classifier's own instructions — and expressible in none of them, so a
+# project could not change it and nothing could draw it.
+#
+# `folds:` names the steps a verdict skips. `warns:` is the visible notice a
+# verdict prints before continuing. A verdict that does neither runs everything.
+decisions:
+  - node: classify-size
+    verdicts:
+      - name: simple
+        folds: [plan, tasks]
+      - name: normal
+      - name: oversized
+        warns: Oversized change — running the full pipeline, no phase skipped
+
+
+# Shipped nodes this step does NOT run by default — what the panel can offer.
+# `variants:` says which of them stand in for which default node, so replacing
+# one is a pick rather than a rewrite.
+optional:
+  - draft-spec-delta
+  - draft-spec-bugfix
+  - quality-checklist-blocking
+  - resolve-dir-git
+
+variants:
+  draft-spec: [draft-spec-delta, draft-spec-bugfix]
+  quality-checklist: [quality-checklist-blocking]
+  resolve-dir: [resolve-dir-git]

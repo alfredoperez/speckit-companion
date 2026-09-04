@@ -1,0 +1,70 @@
+{
+  "comment": "companion.yml is read by two implementations in two languages — the runtime reader in speckit-extension/scripts/companion_config.py and the editor's pre-check in src/features/specs/livingSpecsModel.ts. They cannot share code, so they share these cases: every one is parsed by both test suites, and a verdict that differs fails the build. `supported: false` means the runtime falls back to the shipped defaults and the editor must agree that it will.",
+  "cases": [
+    {
+      "name": "an ordinary configuration",
+      "supported": true,
+      "yaml": "hooks:\n  before:\n    - command: npm run lint\n"
+    },
+    {
+      "name": "a shell command containing a redirect",
+      "supported": true,
+      "yaml": "hooks:\n  after:\n    - command: npm test 2>&1\n"
+    },
+    {
+      "name": "a quoted glob",
+      "supported": true,
+      "yaml": "hooks:\n  after:\n    - command: \"prettier --write '*.md'\"\n"
+    },
+    {
+      "name": "an unquoted glob in a value",
+      "supported": true,
+      "yaml": "hooks:\n  after:\n    - command: rm -f *.min.js\n"
+    },
+    {
+      "name": "a flow sequence of plain scalars",
+      "supported": true,
+      "yaml": "recipe:\n  nodes: [resolve-dir, draft-spec]\n"
+    },
+    {
+      "name": "a comment containing an ampersand",
+      "supported": true,
+      "yaml": "# tuned for CI & local\nhooks:\n  before: []\n"
+    },
+    {
+      "name": "an anchor definition",
+      "supported": false,
+      "yaml": "shared: &base\n  command: npm test\nhooks:\n  before:\n    - command: npm run lint\n"
+    },
+    {
+      "name": "an alias reference",
+      "supported": false,
+      "yaml": "shared: &base\n  command: npm test\nhooks:\n  after:\n    - *base\n"
+    },
+    {
+      "name": "an alias inside a flow collection",
+      "supported": false,
+      "yaml": "shared: &base\n  command: npm test\nrecipe:\n  nodes: [*base]\n"
+    },
+    {
+      "name": "tab indentation",
+      "supported": false,
+      "yaml": "hooks:\n\tbefore: []\n"
+    },
+    {
+      "name": "a block scalar",
+      "supported": false,
+      "yaml": "hooks:\n  before:\n    - command: |\n        npm run lint\n        npm test\n"
+    },
+    {
+      "name": "a folded scalar",
+      "supported": false,
+      "yaml": "note: >\n  a long line folded\n  across two source lines\n"
+    },
+    {
+      "name": "a second document",
+      "supported": false,
+      "yaml": "hooks:\n  before: []\n---\nhooks:\n  after: []\n"
+    }
+  ]
+}

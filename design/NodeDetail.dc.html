@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    a { color: #e0a92e; } a:hover { color: #f0bf55; }
+    .mono { font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; background: #1e1e1e; color: #d4d4d4; display: flex; overflow: hidden;">
+
+  <!-- dimmed canvas behind -->
+  <div style="flex-grow: 1; background: #1e1e1e; opacity: 0.35; padding: 20px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="height: 34px; background: #252526; border: 1px solid #3c3c3c;"></div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; flex-grow: 1;">
+      <div style="background: #232323; border: 1px solid #333;"></div>
+      <div style="background: #232323; border: 1px solid #333;"></div>
+      <div style="background: #232323; border: 1px solid #333;"></div>
+      <div style="background: #232323; border: 1px solid #0e639c;"></div>
+    </div>
+  </div>
+
+  <!-- ── The inspector ── -->
+  <div style="width: 560px; flex-shrink: 0; background: #252526; border-left: 1px solid #3c3c3c; display: flex; flex-direction: column; overflow: hidden;">
+
+    <div style="padding: 16px 20px 14px; border-bottom: 1px solid #3c3c3c;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round"><path d="M11 2l3 3-8 8-4 1 1-4z"/></svg>
+        <span style="font-size: 16px; font-weight: 600; color: #e4e4e4; flex-grow: 1;">Draft the spec</span>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8f8f8f" stroke-width="1.4" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </div>
+      <div class="mono" style="font-size: 11px; color: #767676; margin-top: 6px;">draft-spec &nbsp;·&nbsp; specify &nbsp;/&nbsp; author</div>
+    </div>
+
+    <!-- facts, as a definition grid not chips -->
+    <div style="padding: 14px 20px; border-bottom: 1px solid #3c3c3c; display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span style="width: 74px; flex-shrink: 0; font-size: 11px; color: #767676;">Kind</span>
+        <span style="font-size: 13px; color: #d0d0d0;">author — owns and writes a deliverable</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span style="width: 74px; flex-shrink: 0; font-size: 11px; color: #767676;">Writes</span>
+        <span class="mono" style="font-size: 13px; color: #9dbf87;">spec.md</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span style="width: 74px; flex-shrink: 0; font-size: 11px; color: #767676;">Needs</span>
+        <span class="mono" style="font-size: 13px; color: #d0d0d0;">resolve-dir</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span style="width: 74px; flex-shrink: 0; font-size: 11px; color: #767676;">Pinned</span>
+        <span style="font-size: 13px; color: #d0d0d0;">yes — <span class="mono">quality-checklist</span> reads it, so it cannot move after it</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: baseline;">
+        <span style="width: 74px; flex-shrink: 0; font-size: 11px; color: #767676;">Source</span>
+        <span style="display: flex; align-items: center; gap: 7px;">
+          <span style="font-size: 13px; color: #d0d0d0;">ships with Companion</span>
+          <span class="mono" style="font-size: 11px; color: #767676;">nodes/specify/draft-spec.md</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- the instructions, rendered -->
+    <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: center; gap: 9px; padding: 12px 20px 8px;">
+        <span style="font-size: 11px; letter-spacing: 0.05em; color: #6e6e6e; text-transform: uppercase;">What it tells the assistant</span>
+        <div style="flex-grow: 1; height: 1px; background: #333;"></div>
+        <span class="mono" style="font-size: 11px; color: #767676;">29 lines</span>
+      </div>
+
+      <div style="padding: 0 20px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 11px;">
+        <div style="font-size: 13px; color: #d0d0d0; line-height: 1.6;">
+          Load <span class="mono" style="color: #9cdcfe;">spec-template.md</span> and write the specification to
+          <span class="mono" style="color: #9cdcfe;">&lt;feature_directory&gt;/spec.md</span>, keeping every section the template declares, in its order.
+        </div>
+        <div style="font-size: 13px; color: #d0d0d0; line-height: 1.6;">
+          Write <strong style="color: #e4e4e4;">prioritised user stories</strong> — P1, P2, P3 — each independently testable, each with its own acceptance criteria. A story that cannot be tested on its own belongs to another story.
+        </div>
+        <div style="font-size: 13px; color: #d0d0d0; line-height: 1.6;">
+          Mark anything you had to assume with <span class="mono" style="color: #9cdcfe;">[NEEDS CLARIFICATION]</span> rather than inventing a detail the user did not give you.
+        </div>
+        <div style="height: 1px; background: #2e2e2e;"></div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#5f7a52" stroke-width="1.4"><rect x="2.5" y="2.5" width="11" height="11"/><path d="M5.5 8h5"/></svg>
+          <span style="font-size: 11px; color: #7f9a6e;">2 shared blocks are stitched in here at build time —</span>
+          <span class="mono" style="font-size: 11px; color: #7f9a6e; border-bottom: 1px dotted #5f7a52;">timing, self-advance</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- actions -->
+    <div style="border-top: 1px solid #3c3c3c; padding: 12px 20px; display: flex; align-items: center; gap: 9px;">
+      <div style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: #e0a92e; padding: 6px 12px; border: 1px solid #5a4a1e; background: #2a2413;">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#e0a92e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14V7"/><path d="M8 8c0-2.2-1.8-4-4-4 0 2.2 1.8 4 4 4Z"/><path d="M8 9c0-2.2 1.8-4 4-4 0 2.2-1.8 4-4 4Z"/></svg>
+        Make it mine
+      </div>
+      <div style="font-size: 13px; color: #d0d0d0; padding: 6px 12px; border: 1px solid #3c3c3c;">Attach work here</div>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #9d9d9d;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#9d9d9d" stroke-width="1.4"><path d="M9 2H3v12h10V6z"/><path d="M9 2v4h4"/></svg>
+        Open the file
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,5 +1,6 @@
 ---
 id: classify-size
+name: Classify the change size
 kind: control
 command: specify
 reads: [draft-spec]

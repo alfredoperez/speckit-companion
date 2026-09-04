@@ -35,6 +35,7 @@
 
 import {
     HistoryEntry,
+    DEFAULT_PIPELINE_STEPS,
     StepHistoryEntry,
     STEP_NAMES,
     StepName,
@@ -501,12 +502,10 @@ export function deriveStepHistory(
     return out;
 }
 
-const DEFAULT_TIMING_PHASES = ['specify', 'plan', 'tasks', 'implement'] as const;
-
 /** Derive timing coverage and, only for a complete sequence, wall-clock elapsed time. */
 export function deriveTimingSummary(
     stepHistory: Record<string, StepHistoryEntry>,
-    expectedPhases: readonly string[] = DEFAULT_TIMING_PHASES,
+    expectedPhases: readonly string[] = DEFAULT_PIPELINE_STEPS,
 ): TimingSummary {
     const expected = [...new Set(expectedPhases.filter(Boolean))];
     const measured = expected.filter(name => {

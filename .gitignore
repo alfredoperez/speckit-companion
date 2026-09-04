@@ -83,6 +83,10 @@ specs/_*/
 !specs/_02_demo-tasked/
 !specs/_03_demo-living/
 
+# The seeded design-canvas payload (~2MB of editor). The .dc.html artboards it
+# is built from are the sources and stay tracked.
+/design/pipeline-builder-redesign.html
+webview/src/pipeline-builder/__screenshots__/diff/
 # Third-party skills installed by `npx skills add`, which writes into the repo
 # rather than the home directory. They are tooling for whoever is working here,
 # not part of either shipped extension, and .agents/ and .claude/ are otherwise

@@ -1,5 +1,6 @@
 ---
 id: size-budget
+name: Apply the size budget
 kind: control
 command: tasks
 reads: []

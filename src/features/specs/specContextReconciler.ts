@@ -15,7 +15,9 @@
  */
 
 import {
+    completedStatusForStep,
     HistoryEntry,
+    inFlightStatusForStep,
     SpecContext,
     STATUSES,
     STATUS_OWNING_STEP,
@@ -24,36 +26,6 @@ import {
     StepName,
 } from '../../core/types/specContext';
 import { updateSpecContext } from './specContextWriter';
-
-function deriveStatusFromCurrentStep(currentStep: StepName): Status {
-    switch (currentStep) {
-        case 'specify':
-        case 'clarify':
-            return 'specifying';
-        case 'plan':
-            return 'planning';
-        case 'tasks':
-        case 'analyze':
-            return 'tasking';
-        case 'implement':
-            return 'implementing';
-    }
-}
-
-function deriveCompletedStatus(currentStep: StepName): Status {
-    switch (currentStep) {
-        case 'specify':
-        case 'clarify':
-            return 'specified';
-        case 'plan':
-            return 'planned';
-        case 'tasks':
-        case 'analyze':
-            return 'ready-to-implement';
-        case 'implement':
-            return 'completed';
-    }
-}
 
 /**
  * Pure function: detect and fix issues in a SpecContext.
@@ -69,12 +41,12 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
     // by whether the last history entry for currentStep was a completion
     // (`from.step === currentStep`).
     if (!(STATUSES as string[]).includes(result.status)) {
-        const completed = isLastEntryACompletionFor(result.history, result.currentStep);
+        const completed = isStepCompletedInHistory(result.history, result.currentStep);
         result = {
             ...result,
             status: completed
-                ? deriveCompletedStatus(result.currentStep)
-                : deriveStatusFromCurrentStep(result.currentStep),
+                ? completedStatusForStep(result.currentStep)
+                : inFlightStatusForStep(result.currentStep),
         };
         changed = true;
     }
@@ -105,7 +77,7 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
         result.currentStep !== 'implement' &&
         isStepCompletedInHistory(result.history, result.currentStep)
     ) {
-        result = { ...result, status: deriveCompletedStatus(result.currentStep) };
+        result = { ...result, status: completedStatusForStep(result.currentStep) };
         changed = true;
     }
 
@@ -147,20 +119,6 @@ function stepOwningCompletedStatus(status: SpecContext['status']): StepName | nu
     }
 }
 
-/**
- * A history entry whose `step === currentStep` AND `from.step === currentStep`
- * marks a completion of that step (vs. a start, where `from.step` is the
- * previous step or null). Used to tell "specified" from "specifying" when the
- * status string is missing or invalid.
- */
-function isLastEntryACompletionFor(history: HistoryEntry[], step: StepName): boolean {
-    for (let i = history.length - 1; i >= 0; i--) {
-        const e = history[i];
-        if (e.step !== step) continue;
-        return e.from?.step === step;
-    }
-    return false;
-}
 
 /**
  * Warn if `currentStep` doesn't match the last history entry's step. Catches

@@ -1,5 +1,6 @@
 ---
 id: draft-spec
+name: Draft the spec
 kind: author
 command: specify
 writes: spec.md

@@ -1,5 +1,6 @@
 ---
 id: orchestrate
+name: Run every step in order
 kind: control
 command: auto
 reads: []

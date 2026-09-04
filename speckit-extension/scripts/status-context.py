@@ -26,6 +26,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 wc = importlib.import_module("write-context")
 dff = importlib.import_module("derive-from-files")
+from spec_context import STEP_COMPLETED_STATUS, TERMINAL_STATUSES  # noqa: E402
 
 # Canonical forward pipeline (clarify/analyze are optional and not part of the
 # default next-action path). Mirrors src/core/types/specContext.ts STEP_NAMES.
@@ -67,21 +68,11 @@ def _step_command(step: str | None, companion: bool) -> str | None:
     table = COMPANION_STEP_COMMAND if companion else STEP_COMMAND
     return table.get(step)
 
-# Status that marks each step's own completion (the point at which we advance).
-STEP_DONE_STATUS = {
-    "specify": "specified",
-    "plan": "planned",
-    "tasks": "ready-to-implement",
-    "implement": "implemented",
-}
-
 NEXT_LABEL = {
     "plan": "Plan the feature",
     "tasks": "Generate tasks",
     "implement": "Implement",
 }
-
-TERMINAL_STATUSES = {"implemented", "completed", "archived"}
 
 # Pipeline ordering + the artifact each step requires on disk. Used to reconcile
 # recorded state against on-disk evidence (FR-011).
@@ -221,7 +212,7 @@ def resolve(feature_dir: Path) -> dict:
         resolution["nextActionLabel"] = f"Continue implementation at {next_task}"
         return resolution
 
-    done_status = STEP_DONE_STATUS.get(current_step)
+    done_status = STEP_COMPLETED_STATUS.get(current_step)
     if done_status is not None and status == done_status:
         # Current step finished — advance to the next pipeline step.
         next_step = NEXT_STEP.get(current_step)

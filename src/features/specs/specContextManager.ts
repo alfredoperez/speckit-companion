@@ -19,7 +19,6 @@ import {
     TransitionEntry,
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
-import { formatDocName } from '../workflow-editor/workflow/specInfoParser';
 import {
     HistoryEntry,
     HistoryEntryFrom,
@@ -172,7 +171,10 @@ export async function updateSpecContext(
 export function deriveSpecName(specDir: string): string {
     const slug = path.basename(specDir);
     const withoutPrefix = slug.replace(/^\d+[-_]/, '');
-    return formatDocName(withoutPrefix);
+    return withoutPrefix
+        .split(/[-_]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 }
 
 /**

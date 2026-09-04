@@ -21,6 +21,7 @@ What exists, so you know what a change can invalidate:
   - `Video Capture/Specs Sidebar (Recreation)` (`SidebarCapture.stories.tsx`): the sidebar recreation, B1 through B5 (collapsed, expanded, Living Specs and Steering, full sidebar, README triptych).
   - `Video Capture/README Composites` (`ReadmeCapture.stories.tsx`): multi-panel README art, C1 onward (hero, pipeline stat strip, Living Specs pair, benefits strip, the two cross-promo banners over the mascot art in speckit-extension/assets/, and the social card the site sets as `og:image`).
   - `Video Capture/Clip States` (`ClipCapture.stories.tsx`): the state pairs the newer clips film, D through H (the review loop and the side bar it closes on, the Living Specs work tree and the capability it opens onto, the phase-document switch, the workflow choice, and the two inline-comment states).
+  - `Pipeline Builder/Guide` (`webview/src/pipeline-builder/__stories__/Guide.stories.tsx`): every image in `docs/pipeline-builder.md`, one story per gesture the guide teaches. Re-shoot just these with `node scripts/capture-docs-images.mjs --only builder-`. These are the guide's only images, so a change to the panel makes the guide's pictures wrong even when its words are still right. Two things about this set: a story's `out` filename never changes even when the story is renamed (four are named for a node and still write `builder-*-block.png`, because the published README resolves images against `main`), and each capture box is sized to its content, so a component that grows needs its `parameters.capture.height` raised or the shot clips.
 - **Generated images**: the `STORIES` list in `scripts/capture-docs-images.mjs` is the authority for which story feeds which file, and the only place to read the current set — every entry names its story and its output filename in one line. Two mappings there are not guessable from the names: `pipeline-stats.png` quotes its numbers from `docs/configuration.md`, and `banner-install-engine.png` / `banner-install-vscode.png` are the "Install the other half" cross-promo pair, the first for the root README and the second for the extension one.
 - **GIFs**: the `GIFS` array in `scripts/build-clip-gifs.mjs` is the authority for which compositions publish a GIF and at what settings; `npm run clips:gifs` (optionally `-- <id>`) is how they get made. The encode used to be a three-command ffmpeg incantation copied out of each STORYBOARD by hand, which is how a retheme left the README showing the old palette; the script holds those same recorded settings now. Standard is 960 wide at 14 fps, lossy 30; `overview` and `run-in-flight` step down to 880 px / 12 fps at lossy 45, because almost every frame in those two is a camera move and the standard settings overshoot the 4 MB target. Note that `overview.gif` renders from the `overview` composition, not from `overview-readme` — the sibling covers the same page more slowly and no longer publishes. Each composition's STORYBOARD still records its loop verification.
 
@@ -124,6 +125,22 @@ Adding a pose means dropping a `mascot-<pose>-<timestamp>.png` into `assets/masc
 
 The contract, the field meanings, and which surface reads which key are in `docs/media-manifest.md`. Read that before adding a composition.
 
+## Visual tests for the Pipeline Builder
+
+`scripts/visual-builder.mjs` drives the panel in the same browser the capture script uses, across two widths (1600 and 380) and both themes — 332 renders from the 83 `Pipeline Builder/*` stories.
+
+```bash
+npm run test:visual        # layout + pixel baselines, compared locally
+npm run test:visual:ci     # layout only — what CI runs
+npm run test:visual -- --update   # re-bless the baselines after an intended change
+```
+
+Two things it checks, and the split matters. **Layout** is geometry a browser can answer and jsdom cannot: nothing overflows the panel shell, no control is drawn at zero size, nothing is clipped beyond reach, no console errors. That holds on any machine, so CI runs it on every push. **Pixels** are compared against baselines in `webview/src/pipeline-builder/__screenshots__/` (the situation stories, both widths, dark theme — 54 files). Those stay local: font rasterisation differs between macOS and a Linux runner, and a pixel gate in CI would fail on every push for reasons nobody could act on. A failing comparison writes the diff image next to the baselines under `diff/`.
+
+Stories need no changes to take part. Determinism — no animation, no transition, no caret, no scrollbars — is injected by the runner rather than declared per story, and both themes are reached through Storybook's `globals` URL parameter. Adding a story to `Pipeline Builder/*` puts it under layout checks automatically.
+
+The browser and Storybook plumbing is shared with the capture script: `scripts/lib/storybook-browser.mjs`. Change it and re-run **both**, because the determinism guarantee below is what proves the capture script still behaves.
+
 ## Social art is not packaged
 
 `assets/social/carousel-copilot/` holds the Copilot-audience carousel: `deck.html` composes real captures from `docs/screenshots/generated/` and `node assets/social/carousel-copilot/render.mjs` writes the slide PNGs. It follows the same rules as everything else generated: never hand-edit a slide, change the deck and re-run. `.vscodeignore` keeps it out of the `.vsix` alongside `assets/mascot/**` and `website/**`. Its `PROMPT.md` records the art direction it inherits from `speckit-extension/assets/HERO-PROMPT.md`.
@@ -155,6 +172,7 @@ Two runs of the capture script must produce byte-identical files; a pixel diff b
 - Each capture story declares `parameters.capture = { width, height }`; the preview decorator (`.storybook/preview.tsx`) turns that into an exact-pixel box, and the script screenshots that box at device pixel ratio 2.
 - A palette in `.storybook/capture-theme.ts` is a plain object built at module load. Nothing there reads the clock, the environment, or the DOM, so two capture runs see identical values.
 - `playwright-core` is a pinned exact devDependency in `package.json` (currently `1.62.1`) and drives the installed Google Chrome (`channel: 'chrome'`). Keep the pin exact; do not float it or swap in full `playwright`.
+- Two runs of the capture script producing identical files is also what proves a change to `scripts/lib/storybook-browser.mjs` was harmless: refactor it, re-run the capture, and `git status` on `docs/screenshots/generated/` must come back empty.
 
 ## The sidebar is a recreation
 

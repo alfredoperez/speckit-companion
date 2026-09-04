@@ -25,13 +25,15 @@ EXT = os.path.dirname(HERE)
 COMMANDS = os.path.join(EXT, "commands")
 PARTS = os.path.join(EXT, "presets", "_parts")
 
+sys.path.insert(0, HERE)
+# The fence pattern is imported, not restated: a second copy here meant a change
+# to the marker syntax silently stopped this script splitting own from shared,
+# and it would have gone on reporting a number.
+from _command_parts import PART_FENCE as _PART_FENCE  # noqa: E402
+
 #: Horthy's threshold, the point past which adherence is understood to diffuse.
 DEFAULT_CEILING = 40
 
-_PART_FENCE = re.compile(
-    r"<!-- speckit-companion:part ([\w-]+) -->\n(.*?)\n<!-- /speckit-companion:part \1 -->",
-    re.S,
-)
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
 _FENCED_CODE = re.compile(r"```.*?```", re.S)
 
@@ -59,7 +61,8 @@ def directives(text: str) -> int:
 
 
 def measure(path: str) -> dict:
-    body = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as fh:
+        body = fh.read()
     shared = {}
     for m in _PART_FENCE.finditer(body):
         shared[m.group(1)] = directives(m.group(2))

@@ -1,5 +1,6 @@
 ---
 id: constitution-check
+name: Check against the constitution
 kind: gate
 command: plan
 reads: [plan-doc]

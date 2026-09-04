@@ -1,0 +1,337 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    a { color: #c99cf5; } a:hover { color: #d9b8f8; }
+    .mono { font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .col { display: flex; flex-direction: column; }
+    .node { display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+            background: #252526; border: 1px solid #333334; border-radius: 6px; }
+    .nname { font-size: 13px; color: #d0d0d0; }
+    .nid { font-size: 11px; color: #8c8c8c; }
+    .phase { display: flex; align-items: center; gap: 9px; padding: 12px 2px 5px; }
+    .plabel { font-size: 11px; color: #9d9d9d; }
+    .rule { flex-grow: 1; height: 1px; background: #2e2e2e; }
+    .hook { display: flex; align-items: center; gap: 8px; padding: 6px 9px;
+            background: #241d2e; border: 1px solid #43325a; border-radius: 6px; min-width: 0; }
+    .htext { font-size: 11px; color: #c99cf5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .yours { font-size: 11px; color: #c99cf5; background: #241d2e; border: 1px solid #43325a;
+             border-radius: 999px; padding: 1px 7px; }
+    .writes { font-size: 11px; color: #89b87a; background: #1f261c; border-radius: 4px; padding: 2px 6px; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; background: #1e1e1e; color: #d4d4d4; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- ── Chrome: one band ─────────────────────────────── -->
+  <div style="display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 42px; background: #252526; border-bottom: 1px solid #3c3c3c; flex-shrink: 0;">
+    <span style="font-size: 13px; font-weight: 600; color: #e4e4e4;">Pipeline</span>
+
+    <!-- workflow switcher -->
+    <div style="display: flex; align-items: center; gap: 7px; padding: 4px 9px; background: #2f2f30; border: 1px solid #3c3c3c; border-radius: 4px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#9d9d9d" stroke-width="1.4" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h7"/></svg>
+      <span style="font-size: 13px; color: #d0d0d0;">Our house workflow</span>
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#9d9d9d" stroke-width="1.5" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div style="flex-grow: 1;"></div>
+    <span style="font-size: 11px; color: #8c8c8c;">24 nodes in 16 phases</span>
+    <span class="yours">9 yours</span>
+    <span style="width: 1px; height: 18px; background: #3c3c3c;"></span>
+    <span style="font-size: 13px; color: #d0d0d0; padding: 5px 11px; background: #2f2f30; border: 1px solid #3c3c3c; border-radius: 4px;">Preview</span>
+    <span style="font-size: 13px; color: #ffffff; padding: 5px 13px; background: #0e639c; border-radius: 4px;">Build</span>
+  </div>
+
+  <!-- ── auto: a command, not a step ─────────────────── -->
+  <div style="display: flex; align-items: center; gap: 9px; padding: 8px 16px; background: #202021; border-bottom: 1px solid #3c3c3c; flex-shrink: 0;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M3 8h10"/><path d="M10 5l3 3-3 3"/><path d="M3 4v8"/></svg>
+    <span class="mono" style="font-size: 13px; color: #d0d0d0;">auto</span>
+    <span style="font-size: 13px; color: #9d9d9d;">runs all four of these hands-off. It has two nodes of its own.</span>
+    <div style="flex-grow: 1;"></div>
+    <span style="font-size: 13px; color: #9d9d9d; padding: 3px 9px; border: 1px solid #3c3c3c; border-radius: 4px;">Open</span>
+  </div>
+
+  <!-- ── The four steps, in run order ────────────────── -->
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 14px; flex-grow: 1; overflow: hidden; align-items: start;">
+
+    <!-- ═══ 01 specify ═══ -->
+    <div class="col" style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">01</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">specify</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">9 nodes</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 7px;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.3"><path d="M3.5 2h6l3 3v9h-9z"/><path d="M9.5 2v3h3"/></svg>
+          <span class="mono" style="font-size: 11px; color: #9d9d9d;">spec-template.md</span>
+        </div>
+      </div>
+
+      <div class="col" style="gap: 4px; padding: 6px 10px 12px;">
+        <div class="phase"><span class="plabel">gather</span><div class="rule"></div></div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4"><circle cx="7" cy="7" r="4"/><path d="M10 10l3 3"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Resolve the spec folder</div><div class="mono nid">resolve-dir</div></div>
+        </div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4"><circle cx="7" cy="7" r="4"/><path d="M10 10l3 3"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Load living specs</div><div class="mono nid">load-living-specs</div></div>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><path d="M5 7V5.2a3 3 0 0 1 6 0V7"/><rect x="3.6" y="7" width="8.8" height="6" rx="1"/></svg>
+        </div>
+
+        <div class="phase"><span class="plabel">author</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="30" viewBox="0 0 13 30" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M6.5 2v22"/><path d="M3 21l3.5 3.5L10 21"/></svg>
+          <div class="hook" style="flex-grow: 1;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 8h5"/></svg>
+            <span class="mono htext">debug-timing</span>
+          </div>
+        </div>
+        <div class="node" style="background: #2a2a2b; border-color: #414142;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5-8 8-3.5 1 1-3.5z"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname" style="color: #e4e4e4;">Draft the spec</div><div class="mono nid">draft-spec</div></div>
+          <span class="mono writes">spec.md</span>
+        </div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2l5 2v4c0 3-2 5.2-5 6.1-3-.9-5-3.1-5-6.1v-4z"/><path d="M5.8 8l1.6 1.6L10.4 6.6"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Quality checklist</div><div class="mono nid">quality-checklist</div></div>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><path d="M5 7V5.2a3 3 0 0 1 6 0V7"/><rect x="3.6" y="7" width="8.8" height="6" rx="1"/></svg>
+        </div>
+
+        <div class="phase"><span class="plabel">classify</span><div class="rule"></div></div>
+        <div class="node" style="border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><circle cx="4" cy="4" r="1.8"/><circle cx="4" cy="12" r="1.8"/><circle cx="12" cy="8" r="1.8"/><path d="M4 5.8v4.4"/><path d="M5.8 4H8a2 2 0 0 1 2 2v.4"/><path d="M5.8 12H8a2 2 0 0 0 2-2v-.4"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Classify the change size</div><div class="mono nid">classify-size</div></div>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><path d="M5 7V5.2a3 3 0 0 1 6 0V7"/><rect x="3.6" y="7" width="8.8" height="6" rx="1"/></svg>
+        </div>
+        <div style="border: 1px solid #333334; border-top: none; border-radius: 0 0 6px 6px; background: #1c1c1d; padding: 7px 10px 8px; display: flex; flex-direction: column; gap: 4px; margin-top: -4px;">
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <span class="mono" style="font-size: 11px; color: #d0d0d0;">simple</span>
+            <svg width="18" height="8" viewBox="0 0 18 8" fill="none" stroke="#6b6b6b" stroke-width="1.2"><path d="M0 4h14"/><path d="M11.5 1.5L14 4l-2.5 2.5"/></svg>
+            <span style="font-size: 11px; color: #9d9d9d;">skips <span class="mono">plan</span>, <span class="mono">tasks</span></span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <span class="mono" style="font-size: 11px; color: #9d9d9d;">normal</span>
+            <svg width="18" height="8" viewBox="0 0 18 8" fill="none" stroke="#6b6b6b" stroke-width="1.2"><path d="M0 4h14"/><path d="M11.5 1.5L14 4l-2.5 2.5"/></svg>
+            <span style="font-size: 11px; color: #8c8c8c;">runs everything</span>
+          </div>
+        </div>
+
+        <div class="phase"><span class="plabel">wrap-up</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: center; gap: 7px; padding: 3px 2px; font-size: 11px; color: #8c8c8c;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4" stroke-linecap="round"><path d="M4 6.5l4 4 4-4"/></svg>
+          3 more nodes
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 02 plan ═══ -->
+    <div class="col" style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">02</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">plan</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">6 nodes</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 7px;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.3"><path d="M3.5 2h6l3 3v9h-9z"/><path d="M9.5 2v3h3"/></svg>
+          <span class="mono" style="font-size: 11px; color: #9d9d9d;">plan-template.md</span>
+        </div>
+      </div>
+
+      <div class="col" style="gap: 4px; padding: 6px 10px 12px;">
+        <div class="phase"><span class="plabel">gather</span><div class="rule"></div></div>
+        <div class="node" style="background: #2a2a2b; border-color: #4a4a4b;">
+          <svg width="10" height="14" viewBox="0 0 10 14" fill="#9d9d9d"><circle cx="2.5" cy="2.5" r="1.1"/><circle cx="7.5" cy="2.5" r="1.1"/><circle cx="2.5" cy="7" r="1.1"/><circle cx="7.5" cy="7" r="1.1"/><circle cx="2.5" cy="11.5" r="1.1"/><circle cx="7.5" cy="11.5" r="1.1"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Apply the size budget</div><div class="mono nid">size-budget</div></div>
+        </div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4"><circle cx="7" cy="7" r="4"/><path d="M10 10l3 3"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Gather context</div><div class="mono nid">gather-context</div></div>
+        </div>
+
+        <div class="phase"><span class="plabel">author</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="30" viewBox="0 0 13 30" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M6.5 2v22"/><path d="M3 21l3.5 3.5L10 21"/></svg>
+          <div class="hook" style="flex-grow: 1;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 8h5"/></svg>
+            <span class="mono htext">debug-timing</span>
+          </div>
+        </div>
+        <div class="node" style="background: #2a2a2b; border-color: #414142;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5-8 8-3.5 1 1-3.5z"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname" style="color: #e4e4e4;">Write the plan</div><div class="mono nid">plan-doc</div></div>
+          <span class="mono writes">plan.md</span>
+        </div>
+
+        <div class="phase"><span class="plabel">check</span><div class="rule"></div></div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2l5 2v4c0 3-2 5.2-5 6.1-3-.9-5-3.1-5-6.1v-4z"/><path d="M5.8 8l1.6 1.6L10.4 6.6"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Constitution check</div><div class="mono nid">constitution-check</div></div>
+        </div>
+
+        <div class="phase"><span class="plabel">wrap-up</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: center; gap: 7px; padding: 3px 2px; font-size: 11px; color: #8c8c8c;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4" stroke-linecap="round"><path d="M4 6.5l4 4 4-4"/></svg>
+          2 more nodes
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 03 tasks ═══ -->
+    <div class="col" style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">03</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">tasks</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">4 nodes</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 7px;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.3"><path d="M3.5 2h6l3 3v9h-9z"/><path d="M9.5 2v3h3"/></svg>
+          <span class="mono" style="font-size: 11px; color: #c99cf5;">tasks-template.md</span>
+          <span class="yours">1 section yours</span>
+        </div>
+      </div>
+
+      <div class="col" style="gap: 4px; padding: 6px 10px 12px;">
+        <div class="phase"><span class="plabel">gather</span><div class="rule"></div></div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><rect x="3" y="3" width="10" height="10" rx="1.5"/><path d="M6 7h4M6 10h4"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Apply the size budget</div><div class="mono nid">size-budget</div></div>
+        </div>
+
+        <div class="phase"><span class="plabel">author</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="30" viewBox="0 0 13 30" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M6.5 2v22"/><path d="M3 21l3.5 3.5L10 21"/></svg>
+          <div class="hook" style="flex-grow: 1;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 8h5"/></svg>
+            <span class="mono htext">debug-timing</span>
+          </div>
+        </div>
+        <div class="node" style="background: #2a2a2b; border-color: #414142;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5-8 8-3.5 1 1-3.5z"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname" style="color: #e4e4e4;">Write the task list</div><div class="mono nid">tasks-doc</div></div>
+          <span class="mono writes">tasks.md</span>
+        </div>
+
+        <div class="phase"><span class="plabel">check</span><div class="rule"></div></div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2l5 2v4c0 3-2 5.2-5 6.1-3-.9-5-3.1-5-6.1v-4z"/><path d="M5.8 8l1.6 1.6L10.4 6.6"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Review for gaps</div><div class="mono nid">review-gaps</div></div>
+        </div>
+
+        <div class="phase"><span class="plabel">wrap-up</span><div class="rule"></div></div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M3 8h10"/><path d="M10 5l3 3-3 3"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Hand off to the next step</div><div class="mono nid">handoff</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 04 implement ═══ -->
+    <div class="col" style="background: #212122; border: 1px solid #333334; border-radius: 6px; overflow: hidden;">
+      <div style="padding: 12px 13px 11px; border-bottom: 1px solid #2e2e2e;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span class="mono" style="font-size: 11px; color: #8c8c8c;">04</span>
+          <span style="font-size: 16px; font-weight: 600; color: #e4e4e4;">implement</span>
+          <div style="flex-grow: 1;"></div>
+          <span style="font-size: 11px; color: #8c8c8c;">3 nodes</span>
+        </div>
+        <div style="font-size: 11px; color: #6b6b6b; margin-top: 7px;">No template — this step writes code.</div>
+      </div>
+
+      <div class="col" style="gap: 4px; padding: 6px 10px 12px;">
+        <div class="phase"><span class="plabel">execute</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="30" viewBox="0 0 13 30" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M6.5 2v22"/><path d="M3 21l3.5 3.5L10 21"/></svg>
+          <div class="hook" style="flex-grow: 1;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/><path d="M5.5 8h5"/></svg>
+            <span class="mono htext">debug-timing</span>
+          </div>
+        </div>
+        <div class="node" style="background: #2a2a2b; border-color: #414142;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c9b06a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5-8 8-3.5 1 1-3.5z"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname" style="color: #e4e4e4;">Execute the tasks</div><div class="mono nid">implement-exec</div></div>
+          <span class="mono writes">code</span>
+        </div>
+
+        <div class="phase"><span class="plabel">wrap-up</span><div class="rule"></div></div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="64" viewBox="0 0 13 64" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M6.5 2v56"/><path d="M3 55l3.5 3.5L10 55"/></svg>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+            <div class="hook">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round"><path d="M3 4l3.5 3.5L3 11"/><path d="M8 12h5"/></svg>
+              <span class="mono htext">doctor.py --chat</span>
+            </div>
+            <div class="hook">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 9.5a1.5 1.5 0 0 1-1.5 1.5H5l-3 2.5V3.5A1.5 1.5 0 0 1 3.5 2h8.5A1.5 1.5 0 0 1 13.5 3.5z"/></svg>
+              <span class="htext">Read the doctor report and act on it…</span>
+            </div>
+          </div>
+        </div>
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><circle cx="4" cy="4" r="1.8"/><circle cx="4" cy="12" r="1.8"/><circle cx="12" cy="8" r="1.8"/><path d="M4 5.8v4.4"/><path d="M5.8 4H8a2 2 0 0 1 2 2v.4"/><path d="M5.8 12H8a2 2 0 0 0 2-2v-.4"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Mark the spec complete</div><div class="mono nid">complete</div></div>
+        </div>
+
+        <div class="node">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M3 8h10"/><path d="M10 5l3 3-3 3"/></svg>
+          <div style="flex-grow: 1; min-width: 0;"><div class="nname">Hand off at the end</div><div class="mono nid">handoff</div></div>
+        </div>
+        <div style="display: flex; align-items: stretch; gap: 5px;">
+          <svg width="13" height="96" viewBox="0 0 13 96" fill="none" stroke="#7d5fa0" stroke-width="1.3" style="flex-shrink: 0;"><path d="M3 5.5L6.5 2 10 5.5"/><path d="M6.5 2v92"/></svg>
+          <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+            <div class="hook">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 9.5a1.5 1.5 0 0 1-1.5 1.5H5l-3 2.5V3.5A1.5 1.5 0 0 1 3.5 2h8.5A1.5 1.5 0 0 1 13.5 3.5z"/></svg>
+              <span class="htext">Self-review the diff against conventions…</span>
+            </div>
+            <div class="hook">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 9.5a1.5 1.5 0 0 1-1.5 1.5H5l-3 2.5V3.5A1.5 1.5 0 0 1 3.5 2h8.5A1.5 1.5 0 0 1 13.5 3.5z"/></svg>
+              <span class="htext">Run the code-simplifier agent…</span>
+            </div>
+            <div class="hook">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>
+              <span class="mono htext">create-pr</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Legend ───────────────────────────────────────── -->
+  <div style="display: flex; align-items: center; gap: 24px; padding: 0 16px; height: 34px; background: #252526; border-top: 1px solid #3c3c3c; flex-shrink: 0;">
+    <span style="display: flex; align-items: center; gap: 7px; font-size: 11px; color: #9d9d9d;">
+      <span style="width: 15px; height: 12px; background: #252526; border: 1px solid #333334; border-radius: 3px;"></span>
+      ships with Companion
+    </span>
+    <span style="display: flex; align-items: center; gap: 7px; font-size: 11px; color: #9d9d9d;">
+      <span style="width: 15px; height: 12px; background: #241d2e; border: 1px solid #43325a; border-radius: 3px;"></span>
+      yours
+    </span>
+    <span style="display: flex; align-items: center; gap: 7px; font-size: 11px; color: #9d9d9d;">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6b6b" stroke-width="1.4"><path d="M5 7V5.2a3 3 0 0 1 6 0V7"/><rect x="3.6" y="7" width="8.8" height="6" rx="1"/></svg>
+      held in place by a dependency
+    </span>
+    <span style="display: flex; align-items: center; gap: 7px; font-size: 11px; color: #9d9d9d;">
+      <svg width="10" height="12" viewBox="0 0 10 14" fill="#9d9d9d"><circle cx="2.5" cy="2.5" r="1.1"/><circle cx="7.5" cy="2.5" r="1.1"/><circle cx="2.5" cy="7" r="1.1"/><circle cx="7.5" cy="7" r="1.1"/><circle cx="2.5" cy="11.5" r="1.1"/><circle cx="7.5" cy="11.5" r="1.1"/></svg>
+      free to reorder
+    </span>
+    <div style="flex-grow: 1;"></div>
+    <span style="font-size: 11px; color: #8c8c8c;">A hook's arrow points at the block it runs against.</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

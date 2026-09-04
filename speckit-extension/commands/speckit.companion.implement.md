@@ -74,6 +74,8 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** split by `⟶ Wait …` join lines — a dependency map where tasks within a wave are independent and a `⟶ Wait` marks where the next tasks depend on what came before. Build each task inline, in turn, stopping at each `⟶ Wait` line until the wave above is done. (A host with subagents *may* parallelize a wave whose tasks are each heavy enough to be worth a separate worker, but inline is the default and usually faster for ordinary edits.) Each task's finish is logged as it completes; then mark the spec complete.
+<!-- speckit-companion:phase execute -->
+<!-- speckit-companion:node implement-exec -->
 1. Read `.specify/feature.json` for the feature directory; load `<feature_directory>/tasks.md`, `plan.md`, and `spec.md` (and `data-model.md` / `contracts/` if present). Then record the **implement START** so the step's duration begins now (the script stamps the real clock; do not hand-write implement timing):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --status implementing --kind start --by extension
@@ -114,6 +116,10 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    One `--verified` per real check (tests, build, manual pass — include warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction — on a clean run record none (the empty list is itself the signal). All additive and de-duped; re-runs never duplicate.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
+<!-- /speckit-companion:node implement-exec -->
+<!-- /speckit-companion:phase execute -->
+<!-- speckit-companion:phase wrap-up -->
+<!-- speckit-companion:node complete -->
 7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
 
    **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced — fix it, or leave the spec at `implemented` and say why. Completing on red is how a run that looks finished ships broken code, and the completed status is the one signal a reader trusts without opening anything. Where the checks genuinely could not be run, record that as a concern before completing, so the state says "finished, unverified" rather than implying "finished, verified". Run from the repository root (the feature directory resolves on its own):
@@ -146,6 +152,8 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
      python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
      ```
      It parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and applies each to the resolved `capabilities/<name>/spec.md` — the changed-files-matched capability for unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest. Opt-in (only acts when `livingSpecs.enabled: true`), a clean no-op when there is no delta block, idempotent on re-run, and records the synced names onto `livingSpecs.synced`. Never fails the host command.
+<!-- /speckit-companion:node complete -->
+<!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
@@ -200,6 +208,8 @@ This is one step in the Companion pipeline. How the run continues depends on the
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
 ```
+<!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts

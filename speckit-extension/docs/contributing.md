@@ -35,6 +35,23 @@ Each migration step (see [ROADMAP.md](../ROADMAP.md)) is one PR-sized change:
 4. **Run the real command** (`/speckit.specify`, `/speckit.plan`, …), watch the hook fire, and confirm `.spec-context.json` updates (and the Companion GUI re-renders). See [how-it-works.md](./how-it-works.md#end-to-end-proof).
 5. **Commit** the source **and** the refreshed fixture/per-agent files together; open a PR; squash-merge; return to `main`.
 
+## Tests
+
+```bash
+python3 -m unittest discover -s speckit-extension/tests -p "test_*.py"
+```
+
+That is what CI runs, and it is all deterministic — no network, no model. `test_builder_flow.py` drives every change the pipeline builder can make through `config_write.py`, builds, and reads the built command bodies back; `test_customised_quality.py` then holds that customised build to the same quality eval and instruction budget as the shipped commands.
+
+One test is opt-in, because it runs a real model and takes a few minutes:
+
+```bash
+SPECKIT_RUN_E2E=1 python3 -m unittest discover -s speckit-extension/tests \
+    -p "test_customised_run.py"
+```
+
+It customises a real `specify init` project, builds it, and actually runs the specify step through the `claude` CLI — the only check that a customised pipeline still *runs* rather than merely building. It skips wherever `claude` or `specify` is missing, so CI reports it as skipped rather than failing. Worth running by hand after changing a node, a hook type, or anything in the build.
+
 ## Per-release checklist
 
 - Bump `version` in `extension.yml` (SemVer; independent of the VS Code extension's `package.json`).

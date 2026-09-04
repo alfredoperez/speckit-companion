@@ -1,5 +1,6 @@
 ---
 id: implement-exec
+name: Execute the tasks
 kind: author
 command: implement
 writes: tasks.md

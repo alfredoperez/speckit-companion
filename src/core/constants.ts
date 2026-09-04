@@ -34,16 +34,6 @@ export const Commands = {
         delete: 'speckit.steering.delete',
         refresh: 'speckit.steering.refresh',
     },
-    workflowEditor: {
-        editSource: 'speckit.workflowEditor.editSource',
-        refineSection: 'speckit.workflowEditor.refineSection',
-        removeSection: 'speckit.workflowEditor.removeSection',
-        addUserStory: 'speckit.workflowEditor.addUserStory',
-        approveAndContinue: 'speckit.workflowEditor.approveAndContinue',
-        regenerate: 'speckit.workflowEditor.regenerate',
-        navigateToPhase: 'speckit.workflowEditor.navigateToPhase',
-        refineLine: 'speckit.workflowEditor.refineLine',
-    },
     agents: { refresh: 'speckit.agents.refresh' },
     skills: { refresh: 'speckit.skills.refresh', openSkill: 'speckit.skills.openSkill' },
     settings: { open: 'speckit.settings.open' },
@@ -195,10 +185,6 @@ export const Views = {
     livingSpecs: 'speckit.views.livingSpecs',
     steering: 'speckit.views.steering',
     settings: 'speckit.views.settings',
-} as const;
-
-export const EditorTypes = {
-    workflowEditor: 'speckit.workflowEditor',
 } as const;
 
 /**

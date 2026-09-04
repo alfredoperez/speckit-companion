@@ -239,4 +239,38 @@ describe('parseInline', () => {
             );
         });
     });
+
+    // -------------------------------------------------------------------------
+    // A quote in a code span must not escape the attribute it lands in
+    // -------------------------------------------------------------------------
+    describe('attribute safety', () => {
+        it('escapes a double quote inside a file reference', () => {
+            // The earlier pass escapes &, < and > but not ", so a quote here
+            // closed data-filename and whatever followed became real markup.
+            const result = parseInline('`a" data-x="b.ts`');
+
+            // The whole thing stays one attribute value; the injected text
+            // survives only as inert characters inside it.
+            expect(result).toBe(
+                '<button class="file-ref" data-filename="a&quot; data-x=&quot;b.ts">'
+                + '<code>a" data-x="b.ts</code></button>'
+            );
+        });
+
+        it('escapes a quote in the title attribute of a path reference', () => {
+            const result = parseInline('`src/a" onmouseover="x/b.ts`');
+
+            expect(result).toBe(
+                '<button class="file-ref" data-filename="src/a&quot; onmouseover=&quot;x/b.ts"'
+                + ' title="src/a&quot; onmouseover=&quot;x/b.ts"><code>b.ts</code></button>'
+            );
+        });
+
+        it('leaves an ordinary path untouched', () => {
+            const result = parseInline('`src/app/main.ts`');
+
+            expect(result).toContain('data-filename="src/app/main.ts"');
+            expect(result).toContain('title="src/app/main.ts"');
+        });
+    });
 });

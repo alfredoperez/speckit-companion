@@ -4,3 +4,18 @@ order:
   - implement-exec
   - complete
   - handoff
+
+# `phases:` is the middle block: it groups these same nodes, in this same order,
+# so a hook has a coarser place to attach than a single node and the builder has
+# something to show between a step and its nodes. The flat `order:` above stays
+# the authority on sequence; the phases must list exactly the same ids.
+
+phases:
+  - name: execute
+    nodes: [implement-exec]
+  - name: wrap-up
+    nodes: [complete, handoff]
+
+# Shipped nodes this step does NOT run by default — what the panel can offer.
+optional:
+  - verify-manually

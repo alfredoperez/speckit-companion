@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    a { color: #c99cf5; } a:hover { color: #d9b8f8; }
+    .mono { font-family: 'SF Mono', 'JetBrains Mono', Consolas, Menlo, monospace; }
+    .path { font-size: 13px; }
+    .note { font-size: 13px; color: #9d9d9d; line-height: 1.5; }
+    .card { border: 1px solid #333334; border-radius: 6px; background: #212122; padding: 15px 17px; }
+  </style>
+</helmet>
+
+<div style="width: 1120px; height: 860px; background: #1e1e1e; color: #d4d4d4; display: flex; flex-direction: column; overflow: hidden; padding: 26px 28px;">
+
+  <div style="font-size: 16px; font-weight: 600; color: #e4e4e4;">Where your own work is kept</div>
+  <div class="note" style="margin-top: 7px; max-width: 74ch;">
+    Everything you add lives in your repository, in plain files you commit and review. Nothing is stored inside the extension, so an upgrade cannot overwrite it — and cannot silently take it away either.
+  </div>
+
+  <!-- yours -->
+  <div class="card" style="margin-top: 20px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c99cf5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14V7"/><path d="M8 8c0-2.2-1.8-4-4-4 0 2.2 1.8 4 4 4Z"/><path d="M8 9c0-2.2 1.8-4 4-4 0 2.2-1.8 4-4 4Z"/></svg>
+      <span style="font-size: 13px; font-weight: 600; color: #c99cf5;">Yours — committed with your code</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 13px; margin-top: 15px;">
+
+      <div style="display: flex; gap: 18px; align-items: flex-start;">
+        <div style="width: 340px; flex-shrink: 0;">
+          <div class="mono path" style="color: #d0d0d0;">.specify/companion.yml</div>
+        </div>
+        <div class="note" style="flex-grow: 1;">The one configuration file. Which nodes run, in what order, the hooks you attached, the template sections you replaced, where a verdict routes.</div>
+      </div>
+
+      <div style="height: 1px; background: #2e2e2e;"></div>
+
+      <div style="display: flex; gap: 18px; align-items: flex-start;">
+        <div style="width: 340px; flex-shrink: 0;">
+          <div class="mono path" style="color: #d0d0d0;">.specify/companion/nodes/<span style="color: #8c8c8c;">&lt;step&gt;/&lt;id&gt;.md</span></div>
+        </div>
+        <div class="note" style="flex-grow: 1;">
+          A <strong style="color: #d0d0d0;">replacement</strong> for a node that ships with Companion. Same id, your words. Pressing <span style="color: #d0d0d0;">Make it mine</span> on a node writes exactly this file.
+          <div class="mono" style="color: #6b6b6b; margin-top: 5px;">.specify/companion/nodes/specify/draft-spec.md</div>
+        </div>
+      </div>
+
+      <div style="height: 1px; background: #2e2e2e;"></div>
+
+      <div style="display: flex; gap: 18px; align-items: flex-start;">
+        <div style="width: 340px; flex-shrink: 0;">
+          <div class="mono path" style="color: #d0d0d0;">.specify/companion/nodes/<span style="color: #8c8c8c;">&lt;id&gt;.md</span></div>
+        </div>
+        <div class="note" style="flex-grow: 1;">
+          A <strong style="color: #d0d0d0;">brand-new node</strong> of your own, at the top level rather than under a step. It runs where a hook names it, so one node can be attached in several places.
+          <div class="mono" style="color: #6b6b6b; margin-top: 5px;">.specify/companion/nodes/review.md &nbsp;→&nbsp; { type: node, ref: review }</div>
+        </div>
+      </div>
+
+      <div style="height: 1px; background: #2e2e2e;"></div>
+
+      <div style="display: flex; gap: 18px; align-items: flex-start;">
+        <div style="width: 340px; flex-shrink: 0;">
+          <div class="mono path" style="color: #d0d0d0;">.specify/companion/fragments/<span style="color: #8c8c8c;">&lt;name&gt;.md</span></div>
+        </div>
+        <div class="note" style="flex-grow: 1;">The replacement body for one section of a template — addressed by the section's own heading, so there is no marker syntax to learn.</div>
+      </div>
+
+      <div style="height: 1px; background: #2e2e2e;"></div>
+
+      <div style="display: flex; gap: 18px; align-items: flex-start;">
+        <div style="width: 340px; flex-shrink: 0;">
+          <div class="mono path" style="color: #d0d0d0;">.specify/companion/workflows/<span style="color: #8c8c8c;">&lt;name&gt;.yml</span></div>
+        </div>
+        <div class="note" style="flex-grow: 1;">A whole named configuration you can switch to. Same shape as <span class="mono">companion.yml</span>; the nodes and fragments above are shared across all of them.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- not yours -->
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px;">
+    <div class="card">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4"><rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M2.5 6.5h11"/></svg>
+        <span style="font-size: 13px; font-weight: 600; color: #d0d0d0;">Ships with Companion</span>
+      </div>
+      <div class="mono path" style="color: #9d9d9d; margin-top: 12px;">.specify/extensions/companion/nodes/</div>
+      <div class="note" style="margin-top: 7px;">The 24 shipped nodes. Read-only from your side — replace one rather than editing it here, or the next install undoes your work.</div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8c8c8c" stroke-width="1.4" stroke-linecap="round"><path d="M8 2v5"/><path d="M4.5 4.5a5 5 0 1 0 7 0"/></svg>
+        <span style="font-size: 13px; font-weight: 600; color: #d0d0d0;">Built, not written</span>
+      </div>
+      <div class="mono path" style="color: #9d9d9d; margin-top: 12px;">.specify/extensions/companion/commands/</div>
+      <div class="note" style="margin-top: 7px;">What <span style="color: #d0d0d0;">Build</span> produces and the assistant actually reads. Derived output — gitignored, and safe to delete at any time.</div>
+    </div>
+  </div>
+
+  <!-- the flow -->
+  <div style="display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 14px 17px; background: #212122; border: 1px solid #333334; border-radius: 6px;">
+    <span class="mono" style="font-size: 13px; color: #c99cf5;">your files</span>
+    <svg width="26" height="10" viewBox="0 0 26 10" fill="none" stroke="#6b6b6b" stroke-width="1.3"><path d="M0 5h21"/><path d="M18 2l3 3-3 3"/></svg>
+    <span style="font-size: 13px; color: #ffffff; padding: 4px 11px; background: #0e639c; border-radius: 4px;">Build</span>
+    <svg width="26" height="10" viewBox="0 0 26 10" fill="none" stroke="#6b6b6b" stroke-width="1.3"><path d="M0 5h21"/><path d="M18 2l3 3-3 3"/></svg>
+    <span class="mono" style="font-size: 13px; color: #9d9d9d;">command bodies</span>
+    <svg width="26" height="10" viewBox="0 0 26 10" fill="none" stroke="#6b6b6b" stroke-width="1.3"><path d="M0 5h21"/><path d="M18 2l3 3-3 3"/></svg>
+    <span style="font-size: 13px; color: #d0d0d0;">what the assistant reads</span>
+    <div style="flex-grow: 1;"></div>
+    <span class="note">Edit a file and the panel says the build is behind.</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

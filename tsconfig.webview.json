@@ -4,7 +4,11 @@
     "module": "ES2020",
     "lib": ["ES2020", "DOM"],
     "outDir": "./dist/webview",
-    "rootDir": "./webview/src",
+    // Rooted at the repo so the webview can import the protocol and the
+    // `.spec-context.json` contract from `src/` instead of re-declaring them.
+    // Nothing is emitted from here — webpack bundles this project — so widening
+    // the root changes no output path.
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -17,7 +21,10 @@
     "declaration": false
   },
   "include": [
-    "webview/src/**/*"
+    "webview/src/**/*",
+    "src/protocol/**/*",
+    "src/core/types/**/*",
+    "src/core/utils/dispatcher.ts"
   ],
   "exclude": [
     "node_modules",

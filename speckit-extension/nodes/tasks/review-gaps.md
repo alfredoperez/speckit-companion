@@ -1,5 +1,6 @@
 ---
 id: review-gaps
+name: Review the task list for gaps
 kind: author
 command: tasks
 writes: tasks.md

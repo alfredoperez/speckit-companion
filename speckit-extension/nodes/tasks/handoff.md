@@ -1,8 +1,10 @@
 ---
 id: handoff
+name: Hand off to the next step
 kind: control
 command: tasks
 reads: []
+last: true
 ---
 <!-- speckit-companion:part timing -->
 

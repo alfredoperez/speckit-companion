@@ -226,3 +226,23 @@ describe('detectCurrentStepDrift', () => {
         expect(detectCurrentStepDrift(ctx)).toBeNull();
     });
 });
+
+describe('reconciled status never skips the mark-complete gate', () => {
+    it('settles a finished implement step at implemented, not completed', () => {
+        // A second copy of the step-to-status map once answered `completed`
+        // here, which advanced the spec past the user's Mark Completed click.
+        const ctx = makeContext({
+            currentStep: 'implement',
+            status: 'not-a-real-status' as SpecContext['status'],
+            history: [
+                h({ step: 'implement', from: { step: 'tasks', substep: null } }),
+                h({ step: 'implement', kind: 'complete', at: '2026-04-29T00:05:00Z' }),
+            ],
+        });
+
+        const result = reconcile(ctx);
+
+        expect(result?.status).toBe('implemented');
+        expect(result?.status).not.toBe('completed');
+    });
+});

@@ -5,6 +5,7 @@ import {
     buildSpecifyCreationPreamble,
     rewriteImageRefsToStaged,
 } from '../promptBuilder';
+import { HISTORY_ENTRY_BY } from '../../core/types/specContext';
 
 describe('rewriteImageRefsToStaged (#208)', () => {
     it('swaps each markdown image target from its source path to the staged path', () => {
@@ -237,8 +238,10 @@ describe('buildPrompt', () => {
         // workflow is now an open string type, no longer an enum of speckit/sdd.
         expect(out).toContain('"workflow":    { "type": "string" }');
         expect(out).not.toContain('"enum": ["speckit", "sdd"]');
-        // history `by` enum dropped the sdd-skill author; it's now extension/user/cli/ai.
-        expect(out).toContain('"by":      { "enum": ["extension","user","cli","ai"] }');
+        // The `by` enum is rendered from the canonical author list rather than
+        // retyped here — a hardcoded copy in this test is how the block came to
+        // omit `derive` while still passing.
+        expect(out).toContain(`"by":      { "enum": [${HISTORY_ENTRY_BY.map(a => `"${a}"`).join(',')}] }`);
         expect(out).not.toContain('sdd-skill');
     });
 

@@ -65,6 +65,100 @@ On the **command path**, the `simple` verdict folds plan/tasks inside the `speci
 
 The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-complete`) that writes `status: completed` — the command writes it, never the AI. That same step also **folds the feature's changes back into the living specs it touched**: before the fold, the assistant authors a `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` block per loaded-and-changed capability (each marked `<!-- capability: <name> -->`) into the feature `spec.md`, then `write-context.py --fold-living-spec` routes each block to its capability's `capabilities/<name>/spec.md` — a feature that changed several capabilities updates each, and each spec receives only its own requirements. The extension/scripts never invent spec content; the assistant authors the deltas from the real change and the Python only applies them, so the fold shows up in the feature's PR diff. Both the decomposed `implement` command (the `complete` node) and the standalone `mark-complete` command carry the authoring instruction. Runs pause at the review gates and resume from the exact node with `specify workflow resume <run_id>`; each step still captures into `.spec-context.json`.
 
+## Picking a different node or shape
+
+The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first. This section is the single list of what ships; the [Pipeline Builder guide](./pipeline-builder.md) teaches the gestures and links here rather than keeping a second copy that can drift.
+
+**A variant is a shipped node with its own id.** `speckit-extension/nodes/<step>/_order.yml` names them under `optional:`, and `variants:` says which default node each stands in for:
+
+```yaml
+optional:
+  - draft-spec-delta
+  - quality-checklist-blocking
+
+variants:
+  draft-spec: [draft-spec-delta]
+  quality-checklist: [quality-checklist-blocking]
+```
+
+A node with alternatives shows **Replace** in its panel. Picking one rewrites the step's order and grouping with that id in place of the old one — the same recipe write a drag makes — so the node stays editable, restorable, and yours the moment you save over it. A node listed under `optional:` but not under `variants:` is an add-on: it appears under **Add node** in the phase's `+` menu instead.
+
+Shipped alternatives today:
+
+| Step | Instead of | You can run |
+|---|---|---|
+| specify | Resolve the spec folder | `resolve-dir-git` — numbered against every branch, not just what is on disk |
+| specify | Draft the spec | `draft-spec-delta` — only what changes, for a system that already exists |
+| specify | Draft the spec | `draft-spec-bugfix` — defect, expected, and what must not change |
+| specify | Quality checklist | `quality-checklist-blocking` — loops, then stops and asks |
+
+Shipped add-ons today, offered under **Add node** and not run by default:
+
+| Step | Add-on | What it does |
+|---|---|---|
+| tasks | `review-gaps` | attacks the task list before it runs — the destructive and edge-case interactions a lean spec under-specifies |
+| implement | `verify-manually` | stops and has a person open the thing before the step counts as done |
+
+Two rules make swaps work, and both are worth knowing if you write a variant:
+
+- **The order and the grouping are written together.** A swap removes and adds at once, so writing either half alone is refused by the check that reads the other half as it still was.
+- **A variant satisfies what the slot promised.** `quality-checklist` declares `reads: [draft-spec]`; a variant of `draft-spec` occupies that slot, so the dependency holds. Without it, no node worth reading could ever be replaced.
+
+**A fragment is an alternative for one template section**, addressed by its `## heading`. They live in `speckit-extension/fragments/` and a project's own `.specify/companion/fragments/` wins over a shipped one of the same name. Each declares what it is for:
+
+```yaml
+---
+name: Outcomes
+section: User Scenarios & Testing
+for: specify
+summary: Observable outcomes instead of prioritized user stories.
+---
+```
+
+The **template** chip on a step opens its document's shape: one row per section the template has, each offering the fragments written for it and **As shipped**. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
+
+The resolved copy is written beside the built commands, and **the built command names it**. Companion's authoring nodes carry the document's shape in their own instructions rather than loading a template — that is where the leaner spec comes from — so a resolved template on its own was a correct file the assistant had no reason to open. A step whose sections a project changed now carries one line above the node that writes the document, naming the file and the sections to follow. A step nobody reshaped carries nothing, so an unchanged project's body stays byte-identical.
+
+Shipped fragments today:
+
+| For | Section | Fragment | Instead gives you |
+|---|---|---|---|
+| specify | User Scenarios & Testing | `outcomes` | observable outcomes instead of prioritized user stories |
+| specify | User Scenarios & Testing | `ears-requirements` | numbered requirements with WHEN/THEN/SHALL criteria |
+| specify | User Scenarios & Testing | `stories-classic` | stock spec-kit's three P1/P2/P3 stories |
+| plan | Technical Context | `technical-context-classic` | stock spec-kit's full stack block |
+| tasks | Format | `tasks-self-verify` | a verification line on every task |
+| tasks | Format | `tasks-demo-line` | a demo line per task |
+| tasks | Notes | `tasks-coding-only` | coding tasks only |
+
+**A step is a directory of nodes**, so a project can add one. **Add step** at the end of the board writes `.specify/companion/nodes/<step>/` seeded runnable — a frame, an `_order.yml`, and one authoring node — and opens that node to edit. The build finds it the same way it finds the shipped four (`decomposed_commands()` is a directory listing), so it assembles into `/speckit.companion.<step>` and the capture layer records runs of it: the step vocabulary is what the project declares, not a fixed list. A misspelling is still refused, by name, against the steps that exist.
+
+Where it runs is one key in its own `_order.yml`:
+
+```yaml
+# Omit this line for a step you launch when you want it.
+after: implement
+```
+
+The build gives it an agent command too. `extension.yml` lists what the extension ships and is what the installer reads, so a step a project wrote can never be registered by a reinstall — the build writes that emission itself, copying the shape of a sibling in the same agent directory and swapping the identity, because one of those formats is TOML and rendering it from a spec nobody wrote down would be a guess.
+
+A step with `after:` takes its turn in the run and is drawn between the two steps it sits between. A step without one is drawn beside the board, like `auto` — available, not part of the sequence. Everything else about it works like a shipped step: nodes can be added, reordered, replaced and hooked, and its `_frame.md` is its own preamble.
+
+The name becomes a command, so it has to be one you can type: lowercase letters, digits and dashes, and not a name a step already has.
+
+**Work can attach to a step's edges.** A hook anchored on the step name rather than a node or phase renders outside every phase — the one anchor a regroup cannot orphan.
+
+## Starting from something rather than nothing
+
+A **preset** is a whole configuration Companion ships as a starting point. **New workflow…** offers them under **Start from**, next to "what this project runs now" and "the pipeline as it ships". Picking one copies that file into `.specify/companion/workflows/<name>.yml` and switches to it; from there it is an ordinary workflow, and everything in it can be changed one node or one section at a time.
+
+Shipped today:
+
+- **Classic spec-kit** — stock spec-kit's document shapes: prioritized P1/P2/P3 user stories, and the full Technical Context block in the plan. It changes what the documents look like, not what the run does.
+- **Brownfield** — for changing a system that already exists: the spec is written as a delta (`draft-spec-delta`), the folder is numbered against every branch (`resolve-dir-git`), the task list is attacked before it runs (`review-gaps`), and a person opens the thing before it is called done (`verify-manually`).
+
+A preset lives at `speckit-extension/workflows/presets/<name>.yml`. It is an ordinary workflow file plus two keys that only describe it — `preset:` (how it reads in the picker) and `summary:` (what it does) — and those two are dropped from the copy, because they are documentation rather than configuration.
+
 ## Selecting a workflow — recorded per spec
 
 The workflow choice is **dispatch routing**, not a preset swap. Both command families are always present — the stock `/speckit.*` family (emitted by `specify init`, kept present by the always-on `companion-standard` carrier) and the namespaced `/speckit.companion.*` family (from the extension's `provides.commands`). The choice only picks which family a spec dispatches; nothing is ever removed.
@@ -82,6 +176,7 @@ The feature carries **no "sdd"** tokens. Canonical names: preset `companion-stan
 ## Files
 
 - `speckit-extension/presets/companion-standard/` — `preset.yml` (7 `type: command` `replaces:` entries) + `commands/speckit.<cmd>.md` (7) + `README.md`. The carrier for the timing-augmented stock command family.
+- `speckit-extension/workflows/presets/` — the whole configurations **New workflow…** can start from (`classic.yml`, `brownfield.yml`). Distinct from `presets/` above, which carries stock command bodies rather than a pipeline configuration.
 - `speckit-extension/presets/_parts/` — the single-source shared blocks each command body is composed from: `timing.md` (the canonical timing block, relocated here from the old `_shared/timing-partial.md`), `sizing.md` (the small/normal/oversized definition + the 5-files / 10-tasks bar), `routing.md` (which step runs next given the size), and `self-advance.md` (the agentic-CLI handoff). A rule lives in exactly one part; commands embed it via a `<!-- speckit-companion:part NAME -->…<!-- /…part NAME -->` fence.
 - `speckit-extension/commands/speckit.companion.{specify,plan,tasks,implement}.md` — the Companion pipeline commands; `speckit.companion.{classify,mark-complete}.md` — the routing/terminal commands.
 - `speckit-extension/scripts/build-commands.py` — assembles the parts into whole, self-contained command bodies (`--check` mode diffs instead of writing). `capture-golden.py` froze the pre-reshape command set under `tests/golden/commands/`.

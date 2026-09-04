@@ -74,6 +74,8 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 ## Outline
 
 Produce a dependency-ordered task list organized **by user story** into phases (Setup → Foundational → one phase per story → Polish), so each story is an independently testable increment.
+<!-- speckit-companion:phase gather -->
+<!-- speckit-companion:node size-budget -->
 **Right-size this task list to the change.** Before drafting, read the recorded size from the spec's context — `.spec-context.json` → the `size` field (treat a missing value as `normal`). **Apply the budget to the step below, omitting anything it says to skip.**
 
 - **`normal`** — produce the full phased task list exactly as the step describes. No trimming.
@@ -85,6 +87,10 @@ Produce a dependency-ordered task list organized **by user story** into phases (
   - Keep every task line precise (the `T###`, the exact file, the requirement) — trim the framing, never the tasks themselves.
 
 This budget governs the step that follows. Where it would produce something the budget skips, omit it.
+<!-- /speckit-companion:node size-budget -->
+<!-- /speckit-companion:phase gather -->
+<!-- speckit-companion:phase author -->
+<!-- speckit-companion:node tasks-doc -->
 1. Read `.specify/feature.json` for the feature directory, then record the **tasks START** so the step's duration begins now (the script stamps the real clock; do not hand-write tasks timing):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --status tasking --kind start --by extension
@@ -116,6 +122,10 @@ This budget governs the step that follows. Where it would produce something the 
    ```
 
 **Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases, each phase laid out as explicit waves with join points.
+<!-- /speckit-companion:node tasks-doc -->
+<!-- /speckit-companion:phase author -->
+<!-- speckit-companion:phase wrap-up -->
+<!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
@@ -170,6 +180,8 @@ This is one step in the Companion pipeline. How the run continues depends on the
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
 ```
+<!-- /speckit-companion:node handoff -->
+<!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
 ## Node hooks — run the project's `before`/`after` inserts

@@ -47,17 +47,20 @@
  * when it is done. Exits nonzero if any story fails to render or any
  * annotation target is missing.
  *
+ * The browser and Storybook plumbing is shared with the Pipeline Builder's
+ * visual tests — see scripts/lib/storybook-browser.mjs.
+ *
  * DO NOT HAND-EDIT THE OUTPUT
  * Everything in `docs/screenshots/generated/` is regenerable by this script.
  * A manual touch-up is lost on the next run; change the story (or this list)
  * instead.
  */
 
-import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright-core';
+import { join } from 'node:path';
+import {
+    REPO_ROOT, ensureStorybook, launchChrome, openStory, storyIndex,
+} from './lib/storybook-browser.mjs';
 
 // ── The image list. Adding a documentation image is one line here. ────────
 // story: the Storybook story id (see http://localhost:6017/index.json)
@@ -142,6 +145,34 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
+    // ── The pipeline builder guide (docs/pipeline-builder.md) ──
+    // One shot per gesture the guide teaches. Re-shoot just these with
+    // `node scripts/capture-docs-images.mjs --only builder-`.
+    //
+    // An `out` filename is permanent: the published README resolves images
+    // against `main`, so a rename retroactively 404s the Marketplace listing.
+    // Four stories were renamed from "block" to "node" when the guide dropped
+    // the word; they still write the files they always wrote, which is why
+    // `builder-read-block.png` is fed by "reading a node".
+    { story: 'pipeline-builder-guide--two-lanes', out: 'builder-lanes.png' },
+    { story: 'pipeline-builder-guide--the-board', out: 'builder-board.png' },
+    { story: 'pipeline-builder-guide--a-step-header', out: 'builder-step.png' },
+    { story: 'pipeline-builder-guide--the-phase-menu', out: 'builder-phase-menu.png' },
+    { story: 'pipeline-builder-guide--what-changed', out: 'builder-changes.png' },
+    { story: 'pipeline-builder-guide--reading-a-node', out: 'builder-read-block.png' },
+    { story: 'pipeline-builder-guide--a-node-you-rewrote', out: 'builder-yours.png' },
+    { story: 'pipeline-builder-guide--the-way-back', out: 'builder-revert.png' },
+    { story: 'pipeline-builder-guide--replacing-a-node', out: 'builder-replace.png' },
+    { story: 'pipeline-builder-guide--adding-a-node', out: 'builder-add-node.png' },
+    { story: 'pipeline-builder-guide--changing-the-document', out: 'builder-template.png' },
+    { story: 'pipeline-builder-guide--work-attached-to-a-node', out: 'builder-hooks.png' },
+    { story: 'pipeline-builder-guide--attaching-work', out: 'builder-attach.png' },
+    { story: 'pipeline-builder-guide--starting-from-a-preset', out: 'builder-preset.png' },
+    { story: 'pipeline-builder-guide--adding-a-step', out: 'builder-new-step.png' },
+    { story: 'pipeline-builder-guide--a-step-of-your-own', out: 'builder-own-step.png' },
+    { story: 'pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
+    { story: 'pipeline-builder-guide--what-the-build-did', out: 'builder-built.png' },
+    { story: 'pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────
@@ -233,9 +264,6 @@ const CLIP_CAPTURES = [
     { clip: 'specs-sidebar', story: 'video-capture-specs-sidebar-recreation--b-4-full-sidebar', out: 'sb-b4.png' },
 ];
 
-const PORT = 6017;
-const BASE = `http://localhost:${PORT}`;
-const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(REPO_ROOT, 'docs', 'screenshots', 'generated');
 const CLIPS_MODE = process.argv.includes('--clips');
 /**
@@ -243,6 +271,15 @@ const CLIPS_MODE = process.argv.includes('--clips');
  * rewrite every other composition's captures. Documentation mode ignores it.
  */
 const ONLY_CLIP = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? null;
+/**
+ * Optional name filter for documentation mode, so re-shooting one guide's
+ * images does not rewrite every other image in `generated/`. Substring match
+ * against the output filename: `--only builder-` takes the builder guide.
+ */
+const ONLY = (process.argv.find((a) => a.startsWith('--only')) ?? '').split('=')[1]
+    ?? (process.argv.includes('--only')
+        ? process.argv[process.argv.indexOf('--only') + 1]
+        : null);
 
 /** Where one entry's PNG goes, and the label the log prints for it. */
 function targetFor(entry) {
@@ -251,47 +288,6 @@ function targetFor(entry) {
         dir: join(REPO_ROOT, 'media', 'feature-clips', entry.clip, 'assets', 'captures'),
         label: `${entry.clip}/assets/captures/${entry.out}`,
     };
-}
-
-async function storybookIsUp() {
-    try {
-        const res = await fetch(`${BASE}/index.json`, { signal: AbortSignal.timeout(2000) });
-        return res.ok;
-    } catch {
-        return false;
-    }
-}
-
-/** Boot `storybook dev` and resolve once index.json answers. */
-async function bootStorybook() {
-    console.log(`No Storybook on :${PORT}, booting one (first boot takes a minute)...`);
-    const child = spawn('npx', ['storybook', 'dev', '-p', String(PORT), '--no-open'], {
-        cwd: REPO_ROOT,
-        stdio: 'ignore',
-        detached: false,
-    });
-    const deadline = Date.now() + 180_000;
-    while (Date.now() < deadline) {
-        if (child.exitCode !== null) {
-            throw new Error(`storybook dev exited early with code ${child.exitCode}`);
-        }
-        if (await storybookIsUp()) return child;
-        await new Promise((r) => setTimeout(r, 2000));
-    }
-    child.kill();
-    throw new Error('Storybook did not come up on :' + PORT + ' within 180s');
-}
-
-/** Wait until the story is painted: fonts loaded, two frames settled. */
-async function settle(page) {
-    await page.evaluate(() => document.fonts.ready);
-    await page.evaluate(
-        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
-    );
-    // Small fixed grace for story play() functions and layout of async content
-    // (e.g. mermaid). Deterministic content means waiting longer never changes
-    // the pixels, only guarantees they are all there.
-    await page.waitForTimeout(500);
 }
 
 /**
@@ -360,6 +356,10 @@ async function removeAnnotation(page) {
 
 async function main() {
     let work = CLIPS_MODE ? CLIP_CAPTURES : STORIES;
+    if (!CLIPS_MODE && ONLY) {
+        work = work.filter((e) => e.out.includes(ONLY));
+        if (work.length === 0) throw new Error(`No documentation images match "${ONLY}".`);
+    }
     if (CLIPS_MODE && ONLY_CLIP) {
         work = work.filter((e) => e.clip === ONLY_CLIP);
         if (work.length === 0) {
@@ -371,22 +371,11 @@ async function main() {
         mkdirSync(targetFor(entry).dir, { recursive: true });
     }
 
-    let spawned = null;
-    if (!(await storybookIsUp())) {
-        spawned = await bootStorybook();
-    }
-
-    const index = await (await fetch(`${BASE}/index.json`)).json();
-    const known = new Set(Object.keys(index.entries));
+    const spawned = await ensureStorybook();
+    const known = new Set(Object.keys(await storyIndex()));
 
     const failures = [];
-    const browser = await chromium.launch({ channel: 'chrome' }).catch((err) => {
-        throw new Error(
-            'Could not launch Chrome via playwright-core (channel "chrome"). ' +
-                'Install Google Chrome, or point the script at another channel. ' +
-                `Original error: ${err.message}`,
-        );
-    });
+    const browser = await launchChrome();
 
     try {
         const context = await browser.newContext({
@@ -401,15 +390,8 @@ async function main() {
                 failures.push(`${entry.story}: not in Storybook index (renamed or deleted?)`);
                 continue;
             }
-            const url = `${BASE}/iframe.html?id=${encodeURIComponent(entry.story)}&viewMode=story`;
             try {
-                await page.goto(url, { waitUntil: 'networkidle' });
-                await page.waitForSelector('#storybook-root > *', { timeout: 30_000 });
-                const errored = await page.evaluate(() =>
-                    document.body.classList.contains('sb-show-errordisplay'),
-                );
-                if (errored) throw new Error('story rendered the Storybook error screen');
-                await settle(page);
+                await openStory(page, entry.story);
 
                 // The preview decorator gives capture stories an exact-pixel
                 // box as the root child; screenshotting that element IS the

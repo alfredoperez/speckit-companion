@@ -79,6 +79,31 @@ BUILD_ONLY = frozenset({
     "_command_parts.py",
     "package-manifest.py",
     "check-command-emissions.py",
+    # Derives the artifact manifest from the node graph and reports what a run
+    # did not produce. Build-only while nothing shipped calls it; it moves to
+    # RUNTIME_SCRIPTS the moment a command body does.
+    "manifest.py",
+    # The build command and its hook renderer. Build-only for the same reason —
+    # they run from the extension's own sources, and shipping them is the
+    # packaging change that makes a user's own `companion.yml` buildable. That
+    # step is deliberate and separate; the gate is what will ask for it.
+    "build-pipeline.py",
+    # Carries a built body out to the copies each agent reads. Reached only from
+    # the build, and rewriting an install area is exactly the thing a shipped
+    # command body should never be able to do.
+    "emission_sync.py",
+    "hook_render.py",
+    "template_render.py",
+    "decision_routes.py",
+    # Emits the pipeline structure the builder panel draws. Runs from the
+    # extension's own sources like the build command it mirrors.
+    "pipeline-graph.py",
+    # Writes one key back into a project's companion.yml after a drag in the
+    # builder. Same story: the editor runs it, no shipped command body does.
+    "config_write.py",
+    # Diagnoses a configuration the builder could not read and offers the ways
+    # back. Runs from the panel, beside the writer it undoes.
+    "config_repair.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

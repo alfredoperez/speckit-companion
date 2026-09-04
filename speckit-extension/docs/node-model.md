@@ -58,7 +58,7 @@ reads: [gather-context]    # advisory ordering, validated against the active rec
 - **gate** — a check or pause that may abort or skip (e.g. `constitution-check`).
 - **control** — side-effecting orchestration: setup (`resolve-dir`), routing (`classify-size`, `branch`), finish (`finalize`), or the cross-cutting `handoff` that carries the trailing parts.
 
-`writes:` is metadata in v1 — the assembled body is still prose that makes the AI produce the same document in one pass. Real section-level composition (recipes that add or drop sections) is a later step.
+A node declares its output two ways. `writes:` is what the step always produces; `may-write:` is what it produces unless the size budget folds it away — `plan` writes `research.md` and `data-model.md` at `normal` and above and folds them into `plan.md` at `simple`. Both appear in the manifest and in the builder's artifact count, because a panel showing `plan` producing one file undercounts the step by three. Only `writes:` is checked by `--verify`: calling a `simple` run incomplete for doing what it was told is the manifest crying wolf.
 
 ## specify decomposition — the spike result
 
@@ -139,6 +139,28 @@ commands:
 
   Use it for slow, independent work (a test run, a build, a notification). **Don't** put it on anything that writes `.spec-context.json` (the timing/capture calls): those are fast already, and two of them racing in the background can lose an update on the shared file. Background is for side-effects, not bookkeeping.
 
+### Hook types
+
+| type | carries | use it for |
+|---|---|---|
+| `prompt` | `text` | one instruction at that point |
+| `command` | `run` | a shell line to run |
+| `node` | `ref` → a file in `presets/_parts/` | another node's body, spliced in whole |
+| `skill` | `ref` → a skill name, optional `text` | work the project has already written down |
+
+`skill` is the one that carries no text of its own. A project that has written a skill has already written the instructions; copying them into a node forks them the first time the skill is edited. The hook names it and the assistant loads it, the same way a person would ask for it:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        check:
+          - { type: skill, ref: verify-code-review, text: "Fail the plan on a regression." }
+```
+
+The build cannot see whether that skill exists — the assistant resolves it — so the only thing checked is that a name was given. An unnamed one would render an instruction to invoke nothing.
+
 ### Recipes
 
 A recipe replaces a command's node order with `nodes: [...]`:
@@ -150,6 +172,89 @@ commands:
 ```
 
 In v1 this changes *assembly order only*, not the per-node output text — true add/drop-a-section composition is a later step. A recipe that drops a node which a kept node still `reads:` is a **load-time error**, so a recipe can't silently break the pipeline.
+
+### Naming and grouping the phases
+
+The shipped grouping lives in each command's `_order.yml`. A project replaces it wholesale:
+
+```yaml
+commands:
+  specify:
+    phases:
+      - name: set up
+        nodes: [resolve-dir, load-living-specs]
+      - name: our review
+        nodes: [draft-spec, quality-checklist]
+      - name: size it
+        nodes: [classify-size, persist-size]
+      - name: finish
+        nodes: [branch, finalize, handoff]
+```
+
+A phase name is a hook anchor, so renaming one is a real edit: `hooks.after.our review` works the moment the phase exists. Four things are refused, because each would build something other than what was asked for:
+
+- a node in two phases, or in none
+- two phases with the same name — a hook anchored there could not say which
+- a phase naming a node that does not exist
+- an order, flattened from the grouping, that puts a node before something it `reads:`
+
+Whole rather than partial on purpose: the grouping is small, and half of one leaves the reader guessing where the rest of the nodes went.
+
+### Several workflows in one project
+
+A workflow is a whole named configuration:
+
+```
+.specify/companion/workflows/bugfix.yml     # a short loop
+.specify/companion/workflows/client.yml     # with a sign-off gate after every step
+```
+
+`companion.yml` picks one:
+
+```yaml
+workflow: bugfix
+```
+
+The selected file **replaces** `companion.yml` rather than merging with it. Switching is meant to swap the pipeline whole — order, hooks, templates, routing — and a merge would produce a third configuration nobody wrote. The reserved name `shipped` selects nothing at all, which is the thing to compare against.
+
+Nodes and fragments are shared: `.specify/companion/nodes/` and `.specify/companion/fragments/` belong to the project, not to a workflow, so a node written once is available to all of them (or to none — which workflow uses it is the workflow's business).
+
+A `workflow:` naming a file that is not there is a build error listing the workflows that do exist, rather than a silent fall back to the defaults.
+
+### Replacing a whole step
+
+A recipe may name a node the **project** wrote, not only one that ships:
+
+```yaml
+commands:
+  plan:
+    nodes: [our-plan]
+    phases:
+      - name: our plan
+        nodes: [our-plan]
+```
+
+with the instructions in `.specify/companion/nodes/plan/our-plan.md`. That is how a project hands a whole step to one document — someone else's plan, adapted — instead of rewriting each shipped node in place. A node named in a recipe that is neither shipped nor written is still refused, by name.
+
+A step's own preamble, `_frame.md`, resolves through the same seam, so `.specify/companion/nodes/<command>/_frame.md` replaces it.
+
+### Replacing a node's instructions
+
+A recipe decides *which* nodes run; a replacement decides *what one says*. Put a file at `.specify/companion/nodes/<command>/<node_id>.md` — same frontmatter, your own body — and it is read instead of the shipped node of that id:
+
+```
+.specify/companion/nodes/specify/draft-spec.md    # replaces nodes/specify/draft-spec.md
+```
+
+The resolution is one seam (`node_source` in `_command_parts.py`), so everything that reads a node picks it up: the built body, the phase grouping, `reads:` validation, the artifact manifest, and the graph the Pipeline Builder draws. A build prints which nodes came from the project.
+
+Three properties this deliberately keeps:
+
+- **The shipped sources are never written to.** An upgrade replaces `nodes/` wholesale and cannot touch a project's copy — and cannot silently revert it either.
+- **Parity never points at a project.** The overlay is off unless a build turns it on for one project root, so `assemble-nodes.py --check` compares the shipped goldens to the shipped nodes no matter what any project has replaced.
+- **A replacement is still a node.** It keeps its id, its phase, its `reads:` and `writes:`, so hooks anchored to it still fire and the manifest still attributes its artifact to it.
+
+To go back, delete the file — there is no state anywhere else recording that a node was replaced.
 
 ### Failure table
 
