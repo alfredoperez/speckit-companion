@@ -37,6 +37,8 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
     if (!template) { return null; }
 
     const forStep = fragments.filter(f => !f.for || f.for === step.name);
+    const anywhere = template.sectionsAvailable.some(
+        heading => forStep.some(f => f.section === heading));
 
     return (
         <SidePanel
@@ -49,6 +51,13 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
             onClose={onCancel}
         >
             <div class="pb-template-rows">
+                {/* Said once, rather than in every row, when it is true of all of them. */}
+                {!anywhere && (
+                    <p class="pb-template-summary">
+                        <span class="pb-facts-mono">{SHIPPED.label}</span>
+                        {' · nothing else is written for any section of this document.'}
+                    </p>
+                )}
                 {template.sectionsAvailable.map(heading => {
                     const options = forStep.filter(f => f.section === heading);
                     const replaced = template.sections.includes(heading);
@@ -61,12 +70,12 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
                                 {replaced && <span class="pb-yours">yours</span>}
                             </div>
                             {/* A dead field read as the working one a row above. */}
-                            {options.length === 0 ? (
+                            {options.length === 0 ? (anywhere && (
                                 <span class="pb-template-summary">
                                     <span class="pb-facts-mono">{SHIPPED.label}</span>
                                     {' · nothing else is written for this section.'}
                                 </span>
-                            ) : (
+                            )) : (
                                 <>
                                     {/* A select had nowhere to put a fragment's summary. */}
                                     <span class="pb-template-pick">

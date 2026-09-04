@@ -210,7 +210,10 @@ describe('the inspector reads a node here', () => {
             <Inspector node={node({ pinned: 'draft-spec has to run after it' })} step="specify"
                 body="x" parts={[]} {...actions} />);
         const where = host.querySelector('.pb-side-where')!;
-        expect(where.querySelector('.pb-node-gate')?.textContent).toBe('held');
+        const chip = where.querySelector('.pb-node-gate')!;
+        expect(chip.textContent).toBe('held');
+        // The padlock this replaced carried the reason; the word has to too.
+        expect(chip.getAttribute('title')).toBe('draft-spec has to run after it');
     });
 
     it('leaves the word off a node that is free to move', () => {
@@ -984,5 +987,26 @@ describe('the template picker shows what a fragment does', () => {
         const { host } = form();
         const rows = Array.from(host.querySelectorAll('.pb-template-row'));
         expect(rows[0].querySelector('.pb-template-pick .pb-menu-trigger')).not.toBeNull();
+    });
+
+    // Three dead rows saying the same thing is the sentence, three times.
+    it('says it once at the top when it is true of every section', () => {
+        const host = mount(
+            <TemplateForm
+                step={step({
+                    template: {
+                        file: 'plan-template.md', sections: [],
+                        sectionsAvailable: ['Technical Context', 'Constitution Check'],
+                        chosenBy: {},
+                    },
+                })}
+                fragments={FRAGMENTS} onCancel={noop} onPick={noop} />,
+        );
+        const said = Array.from(host.querySelectorAll('.pb-template-summary'))
+            .map(el => el.textContent);
+        expect(said).toEqual(
+            ['As shipped · nothing else is written for any section of this document.']);
+        expect(host.querySelectorAll('.pb-template-heading')).toHaveLength(2);
+        expect(host.querySelector('.pb-menu-trigger')).toBeNull();
     });
 });

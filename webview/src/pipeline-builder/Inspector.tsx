@@ -202,7 +202,9 @@ export function Inspector(props: Props) {
             where={<>
                 <span class="pb-inspector-id">{node.id}</span>
                 {' · '}{step}{' / '}{node.kind}{' · '}
-                {node.pinned && <><span class="pb-node-gate">held</span>{' · '}</>}
+                {node.pinned && <>
+                    <span class="pb-node-gate" title={node.pinned}>held</span>{' · '}
+                </>}
                 <button class="pb-inspector-open" onClick={props.onOpenFile}>
                     Open the file
                 </button>
