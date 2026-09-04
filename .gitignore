@@ -94,3 +94,15 @@ webview/src/pipeline-builder/__screenshots__/diff/
 # loosening the rules that keep those fixtures tracked.
 .agents/skills/higgsfield-*/
 .claude/skills/higgsfield-*
+skills-lock.json
+
+# Hook wiring each assistant writes into the repo when a skill installs its
+# hooks. Same class as the skills above: tooling for whoever is working here,
+# and every one of them is rewritten on the next install.
+.codex/hooks.json
+.cursor/hooks.json
+.github/hooks/
+
+# Mascot explorations, named by timestamp. The poses that survive are picked
+# by hand into assets/mascot/poses/, which stays tracked.
+assets/mascot/explore/
