@@ -130,6 +130,23 @@ def _is_command_body(body: str) -> bool:
     return any(marker in body for marker in _MARKERS)
 
 
+#: Emission formats this can rewrite. Everything here is frontmatter plus a
+#: markdown body, so splicing a built body in is a whole-file replacement of the
+#: part below the frontmatter.
+#:
+#: TOML is deliberately absent. A Gemini command wraps the same instructions in
+#: `prompt = """…"""`, and the markers ride inside that string — so the body test
+#: passes, and writing a bare markdown body over it produced a file with no
+#: `description` and no `prompt` key: invalid TOML that Gemini cannot dispatch,
+#: on every build of a project with Gemini installed. Splicing into the string
+#: is real work; until it is done this reports the file rather than breaking it.
+_REWRITABLE = (".md", ".prompt.md", ".agent.md")
+
+
+def _rewritable(path: str) -> bool:
+    return path.endswith(_REWRITABLE)
+
+
 def sync_command(project_root: str, command: str, built_body: str) -> list:
     """Rewrite every emission of `command` to carry `built_body`. Returns the paths.
 
@@ -140,6 +157,8 @@ def sync_command(project_root: str, command: str, built_body: str) -> list:
     _, new_body = _split_frontmatter(built_body)
     written = []
     for path in emission_paths(project_root, command):
+        if not _rewritable(path):
+            continue
         try:
             with open(path, encoding="utf-8") as fh:
                 current = fh.read()

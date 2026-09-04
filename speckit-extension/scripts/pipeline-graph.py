@@ -194,8 +194,16 @@ def _hook(entry: dict) -> dict:
         # remove it. Without an identity a hook could only ever be added.
         "anchor": entry["anchor"],
         "index": entry["index"],
-        # One line describing what this hook does, since that is what a chip shows.
-        "summary": (hook.get("run") or hook.get("text") or hook.get("ref") or "").strip(),
+        # What this hook IS, which is what a chip shows and what an edit starts
+        # from. By kind, not by whichever field happens to be filled: a skill
+        # hook carrying a note took the note as its summary, so the board named
+        # the hook after its note and saving an unchanged edit wrote that note
+        # into `ref` — leaving a hook pointing at a skill that does not exist.
+        "summary": (
+            (hook.get("ref") or "").strip()
+            if hook.get("type") in ("skill", "node")
+            else (hook.get("run") or hook.get("text") or "").strip()
+        ),
         # The extra line a skill hook may carry alongside its name.
         "note": (hook.get("text") or "").strip() if hook.get("type") == "skill" else "",
     }

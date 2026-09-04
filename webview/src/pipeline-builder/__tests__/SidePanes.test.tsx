@@ -665,6 +665,75 @@ describe('the hook form asks for the placement first', () => {
         expect(note.getAttribute('aria-label')).toBe('Note to the assistant (optional)');
         expect(host.querySelector('.pb-note .pb-field-help')?.textContent).toBe('optional');
     });
+
+    // An index only means anything under the anchor it was read from. Keeping it
+    // while moving the hook replaced whatever sat at that position under the new
+    // anchor — destroying an unrelated hook and leaving the original in place.
+    const editing = {
+        when: 'before' as const, type: 'skill' as const, summary: 'create-pr',
+        anchor: 'draft-spec', index: 1, note: '',
+    };
+
+    function editForm(anchor = 'draft-spec') {
+        const made: Attachment[] = [];
+        const host = mount(
+            <AttachForm step={step()} anchor={anchor} choices={CHOICES} editing={editing}
+                onCancel={noop} onAttach={a => made.push(a)} />,
+        );
+        return { host, made };
+    }
+
+    const send = async (host: HTMLElement) => {
+        (host.querySelector('form') as HTMLFormElement)
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flush();
+    };
+
+    const choose = async (host: HTMLElement, label: string) => {
+        (Array.from(host.querySelectorAll('.pb-menu-option'))
+            .find(el => el.textContent?.startsWith(label)) as HTMLButtonElement).click();
+        await flush();
+    };
+
+    // A `<button>` in a form submits it unless it says otherwise, and the Runs
+    // row is two menus inside the hook form. Picking an option attached the
+    // hook there and then — invisible while adding, because an empty value is
+    // refused, and live while editing, where the value arrives filled in.
+    it('does not attach anything just because a menu was used', async () => {
+        const { host, made } = editForm();
+        await open(host, 0);
+        await choose(host, 'after');
+        expect(made).toHaveLength(0);
+    });
+
+    it('replaces in place when the hook has not moved', async () => {
+        const { host, made } = editForm();
+        await send(host);
+        expect(made[0].editIndex).toBe(1);
+        expect(made[0].movedFrom).toBeUndefined();
+    });
+
+    it('does not carry the old index to a new anchor', async () => {
+        const { host, made } = editForm();
+        await open(host, 1);
+        await choose(host, 'Resolve the spec folder');
+        await send(host);
+
+        expect(made[0].anchor).toBe('resolve-dir');
+        expect(made[0].editIndex).toBeUndefined();
+        expect(made[0].movedFrom).toEqual({ anchor: 'draft-spec', when: 'before', index: 1 });
+    });
+
+    it('does not carry the old index across a change of side', async () => {
+        const { host, made } = editForm();
+        await open(host, 0);
+        await choose(host, 'after');
+        await send(host);
+
+        expect(made[0].when).toBe('after');
+        expect(made[0].editIndex).toBeUndefined();
+        expect(made[0].movedFrom?.when).toBe('before');
+    });
 });
 
 describe('the template picker shows what a fragment does', () => {

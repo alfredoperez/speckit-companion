@@ -19,8 +19,15 @@ export interface Attachment {
     hookType: HookType;
     value: string;
     note: string;
-    /** Set when this replaces a hook rather than adding one. */
+    /** Set when this replaces a hook in place, at the anchor it already had. */
     editIndex?: number;
+    /**
+     * Where the hook was, when the edit moved it to another boundary.
+     *
+     * An index belongs to its anchor, so a move cannot be a replace: it is a
+     * removal from the old place and an addition at the new one.
+     */
+    movedFrom?: { anchor: string; when: HookWhen; index: number };
 }
 
 interface Props {
@@ -124,9 +131,18 @@ export function AttachForm(props: Props) {
     const submit = (event: Event) => {
         event.preventDefault();
         if (!ready) { return; }
+        // An index only means anything under the anchor it was read from. Moving
+        // a hook to another boundary and keeping the index replaced whatever sat
+        // at that position under the NEW anchor — destroying an unrelated hook
+        // and leaving the original where it was. A move is a remove and an add.
+        const moved = Boolean(editing)
+            && (where !== editing?.anchor || when !== editing?.when);
         onAttach({
             anchor: where, when, hookType, value: value.trim(), note: note.trim(),
-            editIndex: editing?.index,
+            editIndex: moved ? undefined : editing?.index,
+            movedFrom: moved && editing
+                ? { anchor: editing.anchor, when: editing.when, index: editing.index }
+                : undefined,
         });
     };
 

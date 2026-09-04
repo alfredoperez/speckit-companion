@@ -139,7 +139,11 @@ export function Menu({
 
     return (
         <div class="pb-menu" ref={root}>
-            <button class={`pb-menu-trigger ${rest.class ?? ''}`} title={title} ref={button}
+            {/* `type="button"`, here and on every option: a button inside a
+                form submits it by default, and this menu is used inside the
+                hook form. Picking "after" from Runs was attaching the hook. */}
+            <button type="button" class={`pb-menu-trigger ${rest.class ?? ''}`}
+                title={title} ref={button}
                 aria-label={label} aria-expanded={open} aria-haspopup="menu"
                 onClick={() => { byHand.current = true; setOpen(!open); }}
                 onKeyDown={(event: KeyboardEvent) => {
@@ -161,7 +165,7 @@ export function Menu({
                             {/* `aria-disabled` rather than the native attribute,
                                 which would take the row out of the focus order
                                 and take its note with it. */}
-                            <button role="menuitem"
+                            <button type="button" role="menuitem"
                                 class={`pb-menu-option${
                                     option.disabled ? ' pb-menu-option--inert' : ''}`}
                                 aria-disabled={option.disabled ? 'true' : undefined}

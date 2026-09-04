@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -105,6 +106,40 @@ class TheGraphFollowsTheProjectsConfiguration(unittest.TestCase):
         self.assertEqual(len(draft["hooks"]), 1)
         self.assertEqual(draft["hooks"][0]["when"], "before")
         self.assertIn("check the canvas", draft["hooks"][0]["summary"])
+
+    def test_a_skill_hook_is_summarised_by_its_skill_not_its_note(self):
+        """The chip names the hook, and an edit starts from that name.
+
+        Taking whichever field was filled meant a skill hook carrying a note was
+        summarised by the note — so the board named it after the note, and
+        saving an unchanged edit wrote the note into `ref`, leaving a hook
+        pointing at a skill that does not exist.
+        """
+        tmp = project_with(
+            "commands:\n  specify:\n    hooks:\n      before:\n        draft-spec:\n"
+            "          - { type: skill, ref: house-check, text: mind the changelog }\n")
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        draft = next(n for p in specify["phases"] for n in p["nodes"] if n["id"] == "draft-spec")
+        self.assertEqual(draft["hooks"][0]["summary"], "house-check")
+        self.assertEqual(draft["hooks"][0]["note"], "mind the changelog")
+
+    def test_a_node_hook_is_summarised_by_the_node_it_includes(self):
+        tmp = project_with(
+            "commands:\n  specify:\n    hooks:\n      before:\n        draft-spec:\n"
+            "          - { type: node, ref: house-review }\n")
+        self.addCleanup(tmp.cleanup)
+        nodes = os.path.join(tmp.name, ".specify", "companion", "nodes")
+        os.makedirs(nodes, exist_ok=True)
+        with open(os.path.join(nodes, "house-review.md"), "w") as fh:
+            fh.write("---\nid: house-review\n---\n\nRe-read what you wrote.\n")
+        graph = graph_mod.build_graph(tmp.name)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        draft = next(n for p in specify["phases"] for n in p["nodes"] if n["id"] == "draft-spec")
+        self.assertEqual(draft["hooks"][0]["summary"], "house-review")
 
     def test_a_hook_on_a_phase_is_attached_to_the_phase(self):
         tmp = project_with(

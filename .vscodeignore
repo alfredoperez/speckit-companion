@@ -86,6 +86,7 @@ speckit-extension/**
 !speckit-extension/scripts/assemble-nodes.py
 !speckit-extension/scripts/instruction-budget.py
 !speckit-extension/scripts/_command_parts.py
+!speckit-extension/scripts/emission_sync.py
 # …and the sources they assemble from.
 !speckit-extension/nodes/**
 !speckit-extension/presets/_parts/**
