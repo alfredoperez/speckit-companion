@@ -238,9 +238,17 @@ export const WhatChanged: Story = {
         <Panel>
             <Header
                 graph={graph([
-                    step('specify', [phase('author', [node('draft-spec', 'Draft the spec')])], {
+                    step('specify', [phase('author', [node('draft-spec', 'Draft the spec', {
+                        // Real hooks, because the tally counts what the board
+                        // draws rather than what `changes` claims. A fixture that
+                        // only claimed them captured "no hooks".
+                        hooks: [
+                            hook({ when: 'before', type: 'skill', summary: 'house-check' }),
+                            hook({ when: 'after', type: 'prompt', summary: 'Check the changelog.' }),
+                        ],
+                    })])], {
                         changes: {
-                            ...NO_CHANGES, hooks: 1, replaced: ['draft-spec'],
+                            ...NO_CHANGES, hooks: 2, replaced: ['draft-spec'],
                         },
                         template: {
                             file: 'spec-template.md', sections: ['User Scenarios & Testing'],

@@ -32,15 +32,18 @@ The run reads left to right, in the order it happens in. Four steps ship, and a 
 | **specify**, **plan** | A step. Click the name to read the step's own preamble, the text every node in it sits under. |
 | `changed` | This step differs from the pipeline as it ships. The header's chip lists how. |
 | `4 nodes · 2 files` | How many nodes it runs, and how many files a run of it produces. The file count names them on hover. |
-| `template` | The shape of the document this step writes. Click it to change that shape. |
+| `Document shape` | The shape of the document this step writes. Click it to change that shape; a count beside it says how many sections you have swapped. |
 | **GATHER**, **AUTHOR** | A phase. It groups nodes and gives work a coarser place to attach than a single node. |
 | `+` | Everything a phase can do, in one menu. |
 | A card | A node. One piece of instruction the assistant reads. |
 | The bar down a card's left edge | What kind of node it is. A heavy bar writes a deliverable, a light one reads context or sets things up. |
 | `gate` | This node can stop the run. |
+| `held` | This node cannot be reordered. Something after it reads what it writes, and the panel names what. |
 | `yours` | You rewrote this node. |
 | `spec.md` in green | A file this node produces. |
-| `before`, `after` | Work you attached, on the side it runs on. |
+| `before`, `after` | A heading over the work attached on that side. A node's `before` block sits above its card and its `after` block below, so the words match the order. |
+| `+` on a dashed rule between two cards | Attach work exactly there. |
+| `+` in the gap between two lanes | Add a step in that place. |
 
 Anything the project changed carries one colour and nothing else does, so *"what did we change here"* is answerable without reading.
 
@@ -50,7 +53,7 @@ The whole board, at the width it really has:
 
 At the far right, **Outside the run** holds what does not take a turn: `auto`, which runs the other steps hands-off.
 
-The header names the configuration you are on under **Workflow**. Beside it, a chip reading `No changes` or `2 steps differ from shipped` — click that one and the first lane that differs scrolls into view. Next to it, a chip reading `5 hooks`, which opens onto what the pipeline holds: how many steps, phases and nodes there are, how many hooks are yours, and how many an installed extension registered. **Add step** is the last of the three; it appends, and a seam between two lanes adds a step in that place instead. Docked narrow, the band folds to two rows and **Add step** joins **Open companion.yml** and **Preview build** under the `⋯`.
+The header names the configuration you are on under **Workflow**. Beside it, a chip reading `No changes` or `2 steps differ from shipped` — click that one and the first lane that differs scrolls into view. Next to it, a chip reading `5 hooks`, which opens onto what the pipeline holds: how many steps, phases and nodes there are, how many hooks are yours, and how many an installed extension registered. **Add step** is the last of the three; it appends, and a seam between two lanes adds a step in that place instead. Docked narrow, the band folds and **Open companion.yml** and **Preview build** move under the `⋯`, where **Add step** also appears; **Add step** stays on the band as well.
 
 ![The header's tally chip open on the counts: steps, phases, nodes, and whose hooks these are](screenshots/generated/builder-changes.png)
 
@@ -74,7 +77,7 @@ Attaching your own work is the commonest change, and it is the one that needs no
 
 ![A node with hooks attached, one line each, grouped under before and after](screenshots/generated/builder-hooks.png)
 
-Everything attached to one anchor sits in one block, with the two sides named in words and one line per hook. Your own hooks carry the "yours" colour. Hooks that an installed spec-kit extension registers sit in the same place and the same shape, marked `ext` and quieter. Those run too. This panel shows them and does not edit them; one marked `asks first` will not run without being asked.
+Everything attached to one anchor sits in one block, headed by the side it runs on, one line per hook: what kind it is, then its name. Hooks that an installed spec-kit extension registers sit in the same place and the same shape, with the extension named at the end of the row. Those run too. This panel shows them and does not edit them; one marked `asks first` will not run without being asked.
 
 **Add hook** from any phase's `+` menu, from the **Add hook** button in a node's panel, or from the dotted slot between two nodes.
 
@@ -106,7 +109,7 @@ The panel renders what that node actually tells the assistant. No frontmatter, n
 | **Kind** | What this node is for, with the legend for the mark each kind carries on the board |
 | **Writes** | The files this node produces |
 | **Needs** | The nodes that must have run first |
-| **Order** | Whether it can be dragged, and what is holding it if not |
+| **Order** | Whether it can move, with **Move up** and **Move down** on the row, or what is holding it if not |
 | **Source** | Whether it ships with Companion or is yours |
 
 **Open the file** sits beside the node id, for when the editor is what you wanted.
@@ -119,7 +122,7 @@ To go back, open **More** and pick **Use the shipped node**. Your copy goes to t
 
 ![The status line saying draft-spec runs the shipped node again, with an Undo](screenshots/generated/builder-revert.png)
 
-**More** also holds **Move up**, **Move down** and **Remove from the run**. A removed node keeps its file and stays on offer under **Add node**.
+**Move up** and **Move down** sit on the **Order** row, which is the row that says a node can move. **More** holds what costs something: **Remove from the run**, which keeps the file so the node stays on offer under **Add node**, and **Use the shipped node**.
 
 ---
 
@@ -145,7 +148,7 @@ A node says what the assistant does. The **template** chip on a step says what t
 
 ![The template panel, one row per section of the document, each offering the alternatives written for it](screenshots/generated/builder-template.png)
 
-One row per `##` section the template has. Each offers the fragments written for that section, plus **As shipped**, with the chosen one's summary underneath. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
+One row per `##` section the template has. A section with alternatives offers the fragments written for it, plus **As shipped**, with the chosen one's summary underneath. A section with none draws no field at all, since a control that cannot be operated invites a click that answers nothing; it says `As shipped` and that nothing else is written for it. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
 
 A reshaped document is one the command tells the assistant to follow. A step you left alone is byte-identical to the shipped one. The fragments that ship today are listed in [`docs/template-profiles.md`](./template-profiles.md#picking-a-different-node-or-shape).
 
@@ -153,7 +156,7 @@ A reshaped document is one the command tells the assistant to follow. A step you
 
 ## Add a step
 
-The set of steps used to be fixed, so *"review the change before it counts as done"* had to hide inside implement or not exist. **Add step**, at the end of the row, gives the run a turn it did not have.
+The set of steps used to be fixed, so *"review the change before it counts as done"* had to hide inside implement or not exist. **Add step** in the header gives the run a turn it did not have, and appends it. To put one *between* two steps, click the `+` in the gap between their lanes: the form opens with **Runs after** already naming the step you clicked beside. The same card still sits at the end of the board.
 
 ![The New step form, asking for a name, a display name, where it runs and what it writes](screenshots/generated/builder-new-step.png)
 
