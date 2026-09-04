@@ -3,5 +3,5 @@
   "framework": "astro",
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ."
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../media/web ../media/manifest.json"
 }

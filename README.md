@@ -10,7 +10,11 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-**[speckit-companion.dev](https://speckit-companion.dev)** — the site, with the docs and a walkthrough of each feature.
+### [speckit-companion.dev](https://speckit-companion.dev)
+
+**[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/getting-started/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
+
+The site shows each feature as a short clip of the real thing — the Overview a finished run leaves behind, inline review, living specs — rather than describing it.
 
 **One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](./docs/configuration.md#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
@@ -141,6 +145,8 @@ Everything lives in plain files in your repo: the spec markdown plus a `.spec-co
 3. Click **+** in the Specs view, describe your feature, and pick the AI you already use.
 
 That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing.
+
+Prefer to be walked through it? VS Code opens a **Get Started with SpecKit Companion** walkthrough after install, and **Help → Get Started** reopens it any time. It runs the same three steps above, plus a one-click sample spec you can read before writing one of your own.
 
 ## Works with your AI
 

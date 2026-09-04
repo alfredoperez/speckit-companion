@@ -101,8 +101,8 @@
   --accent-solid: #8b5cf6;
   --accent-solid-rgb: 139 92 246;
 
-  /* Green only ever appears in the mark and the mascot. It is a brand colour,
-     not a UI colour. */
+  /* Green only ever appears in the mascot and the growing stem. It is a brand
+     colour, not a UI colour. */
   --green: #7cc98a;
   --green-leaf: #a5df6c;
 

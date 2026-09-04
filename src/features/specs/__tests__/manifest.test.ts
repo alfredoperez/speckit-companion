@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { CONTEXT_KEYS } from '../../../core/utils/contextKeys';
 
 const manifest = JSON.parse(
     fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
@@ -379,5 +380,77 @@ describe('Companion install nudge — viewsWelcome', () => {
         expect(block!.contents).toContain('command:speckit.companion.dismissInstallNudge');
         expect(block!.when).toContain('!speckit.companion.installed');
         expect(block!.when).toContain('!speckit.companion.installNudgeDismissed');
+    });
+});
+
+describe('Get Started walkthrough — contributes.walkthroughs', () => {
+    interface WalkthroughStep {
+        id: string;
+        title: string;
+        description?: string;
+        when?: string;
+        completionEvents?: string[];
+        media: { markdown?: string; svg?: string; image?: string; altText?: string };
+    }
+    const walkthroughs: Array<{ id: string; title: string; description: string; steps: WalkthroughStep[] }> =
+        manifest.contributes.walkthroughs;
+    const steps = walkthroughs.flatMap(w => w.steps);
+    const mediaPath = (step: WalkthroughStep) => step.media.markdown ?? step.media.svg ?? step.media.image;
+    const repoRoot = path.join(__dirname, '../../../..');
+
+    it('ships one walkthrough so the post-install Get Started page is not empty', () => {
+        expect(walkthroughs).toHaveLength(1);
+        expect(steps.length).toBeGreaterThan(0);
+    });
+
+    it('gives every step the id, title, and media the schema requires', () => {
+        for (const step of steps) {
+            expect(step.id).toBeTruthy();
+            expect(step.title).toBeTruthy();
+            expect(mediaPath(step)).toBeTruthy();
+        }
+        expect(new Set(steps.map(s => s.id)).size).toBe(steps.length);
+    });
+
+    it('uses exactly one media shape per step, with altText wherever the schema demands it', () => {
+        for (const step of steps) {
+            const shape = Object.keys(step.media).sort().join(',');
+            expect(['markdown', 'altText,svg', 'altText,image']).toContain(shape);
+        }
+    });
+
+    it('ships every media file it points at', () => {
+        for (const step of steps) {
+            expect(fs.existsSync(path.join(repoRoot, mediaPath(step)!))).toBe(true);
+        }
+    });
+
+    it('only links commands the extension actually contributes', () => {
+        const linked = steps
+            .flatMap(step => [...(step.description ?? '').matchAll(/\]\(command:([^)?]+)/g)])
+            .map(match => match[1].replace(/^toSide:/, ''))
+            .filter(id => !id.startsWith('vscode.') && !id.startsWith('workbench.'));
+        expect(linked.length).toBeGreaterThan(0);
+        for (const id of linked) {
+            expect(commandTitle(id)).toBeDefined();
+        }
+    });
+
+    it('completes steps on commands and context keys the extension really sets', () => {
+        const known = new Set(Object.values(CONTEXT_KEYS) as string[]);
+        for (const event of steps.flatMap(s => s.completionEvents ?? [])) {
+            if (event.startsWith('onCommand:')) {
+                const id = event.slice('onCommand:'.length);
+                if (id.startsWith('vscode.')) {
+                    continue;
+                }
+                expect(commandTitle(id)).toBeDefined();
+            } else if (event.startsWith('onContext:')) {
+                const key = event.slice('onContext:'.length).split(/\s/)[0];
+                if (key.startsWith('speckit.')) {
+                    expect(known.has(key)).toBe(true);
+                }
+            }
+        }
     });
 });

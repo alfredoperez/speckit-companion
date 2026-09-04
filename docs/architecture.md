@@ -4,13 +4,23 @@ SpecKit Companion is a VS Code extension that gives spec-driven development a vi
 
 > This document describes **responsibilities** and **boundaries**, not file-by-file inventories. File names rot the moment someone adds or renames a module — `ls src/` and the test `tests/integration/docs-consistency.test.ts` are the live source of truth. The test fails on every `npm test` if a path mentioned here disappears or a new `*Provider.ts` is added without a doc mention.
 
+## The diagram
+
+[`docs/architecture/diagram.html`](./architecture/diagram.html) — open it in a browser. One page, no build, no network. It carries three guided walkthroughs: **the whole loop** (a command leaves VS Code, reaches an AI CLI, runs spec-kit, and comes back as state the UI can read), **eleven CLIs behind one seam**, and **what is written down**. It has a present mode and exports to SVG and PNG.
+
+Read it before the module map below. The prose says what each part is responsible for; the diagram says how a command actually travels, which is the part that is hard to hold in your head from a list.
+
+**It is generated, not drawn.** [`docs/architecture/speckit-companion.architecture.json`](./architecture/speckit-companion.architecture.json) is the source, and [archify](https://www.npmjs.com/package/archify) renders the HTML from it. Edit the JSON and regenerate; do not hand-edit the HTML, and expect anything you do edit there to be lost.
+
+**Its numbers are claims like any other.** They were last checked against the code on 2026-08-30: eleven providers (the `speckit.aiProvider` enum, matching the column count in [providers.md](./providers.md)), ten feature modules under `src/features/`, 167 source and doc files under `webview/src/`. The generator does not count anything for you, so a provider added without touching this file leaves the diagram quietly wrong — which it already was, claiming nine.
+
 ## High-level layout
 
 The extension splits into three runtime layers and one configuration surface:
 
 - **Extension host** (`src/`) — Node.js code that owns tree views, custom editors, file watchers, terminal dispatch, and the `.spec-context.json` lifecycle.
 - **Webview** (`webview/src/`) — sandboxed-browser Preact code that renders the spec viewer and the spec/workflow editors. It receives state from the extension via `postMessage` and never touches the filesystem itself.
-- **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials.
+- **Static assets** (`assets/`, `webview/styles/`) — icons and CSS partials, plus `assets/sample-spec/` (the bundled sample the welcome seeds) and `assets/walkthrough/` (the media behind `contributes.walkthroughs`).
 - **Manifest** (`package.json`) — declarative contributions (views, commands, menus, configuration enums).
 
 The repo also carries a **marketing and documentation site** at `website/`: an Astro project with the Starlight docs integration, static output, deployed by Vercel from its own `package.json` and lockfile. It ships to nobody through the extension, because `.vscodeignore` excludes `website/**` from the `.vsix`, and no code under `src/` or `webview/src/` imports from it. The one coupling that runs the other way is visual: the Storybook capture palette is anchored to `website/src/styles/tokens.css`, and parts of `website/public/` are build outputs of scripts in this repo — `public/media/` from `website/scripts/sync-media.mjs`, `public/mascot/` from `scripts/build-mascot-assets.mjs`, `public/favicon-*.png` from `scripts/build-favicons.mjs`. The site's `build` script runs `sync:media` before `astro build`, so a deploy pulls in `media/web/` on its own. See [`visual-assets.md`](./visual-assets.md).

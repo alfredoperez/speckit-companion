@@ -1,273 +1,545 @@
 {
-  "celebrating": {
+  "building": {
     "source": {
-      "left": 334,
-      "top": 225,
-      "width": 1388,
-      "height": 1678
+      "left": 485,
+      "top": 279,
+      "width": 1108,
+      "height": 1623
     },
     "sizes": {
       "128": {
-        "width": 106,
+        "width": 87,
+        "height": 128,
+        "webp": "/mascot/building-128.webp",
+        "png": "/mascot/building-128.png",
+        "webpBytes": 4884,
+        "pngBytes": 7551
+      },
+      "256": {
+        "width": 175,
+        "height": 256,
+        "webp": "/mascot/building-256.webp",
+        "png": "/mascot/building-256.png",
+        "webpBytes": 10882,
+        "pngBytes": 21440
+      },
+      "512": {
+        "width": 350,
+        "height": 512,
+        "webp": "/mascot/building-512.webp",
+        "png": "/mascot/building-512.png",
+        "webpBytes": 23924,
+        "pngBytes": 66685
+      }
+    }
+  },
+  "celebrating": {
+    "source": {
+      "left": 300,
+      "top": 276,
+      "width": 1416,
+      "height": 1456
+    },
+    "sizes": {
+      "128": {
+        "width": 124,
         "height": 128,
         "webp": "/mascot/celebrating-128.webp",
         "png": "/mascot/celebrating-128.png",
-        "webpBytes": 6020,
-        "pngBytes": 7931
+        "webpBytes": 6190,
+        "pngBytes": 9266
       },
       "256": {
-        "width": 212,
+        "width": 249,
         "height": 256,
         "webp": "/mascot/celebrating-256.webp",
         "png": "/mascot/celebrating-256.png",
-        "webpBytes": 16910,
-        "pngBytes": 23240
+        "webpBytes": 13882,
+        "pngBytes": 25961
       },
       "512": {
-        "width": 424,
+        "width": 498,
         "height": 512,
         "webp": "/mascot/celebrating-512.webp",
         "png": "/mascot/celebrating-512.png",
-        "webpBytes": 56452,
-        "pngBytes": 82271
+        "webpBytes": 31366,
+        "pngBytes": 84413
       }
     }
   },
   "error": {
     "source": {
-      "left": 391,
-      "top": 200,
-      "width": 1268,
-      "height": 1730
+      "left": 414,
+      "top": 276,
+      "width": 1218,
+      "height": 1593
     },
     "sizes": {
       "128": {
-        "width": 94,
+        "width": 98,
         "height": 128,
         "webp": "/mascot/error-128.webp",
         "png": "/mascot/error-128.png",
-        "webpBytes": 6196,
-        "pngBytes": 7581
+        "webpBytes": 5146,
+        "pngBytes": 8302
       },
       "256": {
-        "width": 188,
+        "width": 196,
         "height": 256,
         "webp": "/mascot/error-256.webp",
         "png": "/mascot/error-256.png",
-        "webpBytes": 17216,
-        "pngBytes": 21995
+        "webpBytes": 11912,
+        "pngBytes": 23402
       },
       "512": {
-        "width": 375,
+        "width": 391,
         "height": 512,
         "webp": "/mascot/error-512.webp",
         "png": "/mascot/error-512.png",
-        "webpBytes": 56906,
-        "pngBytes": 82211
+        "webpBytes": 26810,
+        "pngBytes": 71666
       }
     }
   },
-  "pointing": {
+  "experimenting": {
     "source": {
-      "left": 354,
-      "top": 131,
-      "width": 1520,
-      "height": 1832
-    },
-    "sizes": {
-      "128": {
-        "width": 106,
-        "height": 128,
-        "webp": "/mascot/pointing-128.webp",
-        "png": "/mascot/pointing-128.png",
-        "webpBytes": 6216,
-        "pngBytes": 8274
-      },
-      "256": {
-        "width": 212,
-        "height": 256,
-        "webp": "/mascot/pointing-256.webp",
-        "png": "/mascot/pointing-256.png",
-        "webpBytes": 17088,
-        "pngBytes": 22592
-      },
-      "512": {
-        "width": 425,
-        "height": 512,
-        "webp": "/mascot/pointing-512.webp",
-        "png": "/mascot/pointing-512.png",
-        "webpBytes": 56494,
-        "pngBytes": 78097
-      }
-    }
-  },
-  "reading": {
-    "source": {
-      "left": 433,
-      "top": 242,
-      "width": 1167,
-      "height": 1612
-    },
-    "sizes": {
-      "128": {
-        "width": 93,
-        "height": 128,
-        "webp": "/mascot/reading-128.webp",
-        "png": "/mascot/reading-128.png",
-        "webpBytes": 6030,
-        "pngBytes": 7197
-      },
-      "256": {
-        "width": 185,
-        "height": 256,
-        "webp": "/mascot/reading-256.webp",
-        "png": "/mascot/reading-256.png",
-        "webpBytes": 15496,
-        "pngBytes": 20058
-      },
-      "512": {
-        "width": 371,
-        "height": 512,
-        "webp": "/mascot/reading-512.webp",
-        "png": "/mascot/reading-512.png",
-        "webpBytes": 54526,
-        "pngBytes": 75561
-      }
-    }
-  },
-  "tending": {
-    "source": {
-      "left": 375,
-      "top": 105,
-      "width": 1291,
-      "height": 1827
-    },
-    "sizes": {
-      "128": {
-        "width": 90,
-        "height": 128,
-        "webp": "/mascot/tending-128.webp",
-        "png": "/mascot/tending-128.png",
-        "webpBytes": 5066,
-        "pngBytes": 6661
-      },
-      "256": {
-        "width": 181,
-        "height": 256,
-        "webp": "/mascot/tending-256.webp",
-        "png": "/mascot/tending-256.png",
-        "webpBytes": 14862,
-        "pngBytes": 17719
-      },
-      "512": {
-        "width": 362,
-        "height": 512,
-        "webp": "/mascot/tending-512.webp",
-        "png": "/mascot/tending-512.png",
-        "webpBytes": 44154,
-        "pngBytes": 61286
-      }
-    }
-  },
-  "thinking": {
-    "source": {
-      "left": 434,
-      "top": 195,
-      "width": 1174,
-      "height": 1542
-    },
-    "sizes": {
-      "128": {
-        "width": 97,
-        "height": 128,
-        "webp": "/mascot/thinking-128.webp",
-        "png": "/mascot/thinking-128.png",
-        "webpBytes": 6312,
-        "pngBytes": 8213
-      },
-      "256": {
-        "width": 195,
-        "height": 256,
-        "webp": "/mascot/thinking-256.webp",
-        "png": "/mascot/thinking-256.png",
-        "webpBytes": 17568,
-        "pngBytes": 23240
-      },
-      "512": {
-        "width": 390,
-        "height": 512,
-        "webp": "/mascot/thinking-512.webp",
-        "png": "/mascot/thinking-512.png",
-        "webpBytes": 56188,
-        "pngBytes": 84321
-      }
-    }
-  },
-  "waving": {
-    "source": {
-      "left": 341,
-      "top": 222,
-      "width": 1466,
-      "height": 1632
+      "left": 351,
+      "top": 279,
+      "width": 1427,
+      "height": 1589
     },
     "sizes": {
       "128": {
         "width": 115,
         "height": 128,
-        "webp": "/mascot/waving-128.webp",
-        "png": "/mascot/waving-128.png",
-        "webpBytes": 6332,
-        "pngBytes": 8046
+        "webp": "/mascot/experimenting-128.webp",
+        "png": "/mascot/experimenting-128.png",
+        "webpBytes": 5422,
+        "pngBytes": 8091
       },
       "256": {
         "width": 230,
         "height": 256,
-        "webp": "/mascot/waving-256.webp",
-        "png": "/mascot/waving-256.png",
-        "webpBytes": 16450,
-        "pngBytes": 23235
+        "webp": "/mascot/experimenting-256.webp",
+        "png": "/mascot/experimenting-256.png",
+        "webpBytes": 12432,
+        "pngBytes": 22620
       },
       "512": {
         "width": 460,
         "height": 512,
+        "webp": "/mascot/experimenting-512.webp",
+        "png": "/mascot/experimenting-512.png",
+        "webpBytes": 27738,
+        "pngBytes": 71272
+      }
+    }
+  },
+  "inspecting": {
+    "source": {
+      "left": 401,
+      "top": 279,
+      "width": 1242,
+      "height": 1589
+    },
+    "sizes": {
+      "128": {
+        "width": 100,
+        "height": 128,
+        "webp": "/mascot/inspecting-128.webp",
+        "png": "/mascot/inspecting-128.png",
+        "webpBytes": 5032,
+        "pngBytes": 7820
+      },
+      "256": {
+        "width": 200,
+        "height": 256,
+        "webp": "/mascot/inspecting-256.webp",
+        "png": "/mascot/inspecting-256.png",
+        "webpBytes": 11438,
+        "pngBytes": 22379
+      },
+      "512": {
+        "width": 400,
+        "height": 512,
+        "webp": "/mascot/inspecting-512.webp",
+        "png": "/mascot/inspecting-512.png",
+        "webpBytes": 24852,
+        "pngBytes": 68901
+      }
+    }
+  },
+  "lost": {
+    "source": {
+      "left": 279,
+      "top": 279,
+      "width": 1564,
+      "height": 1589
+    },
+    "sizes": {
+      "128": {
+        "width": 126,
+        "height": 128,
+        "webp": "/mascot/lost-128.webp",
+        "png": "/mascot/lost-128.png",
+        "webpBytes": 5394,
+        "pngBytes": 8497
+      },
+      "256": {
+        "width": 252,
+        "height": 256,
+        "webp": "/mascot/lost-256.webp",
+        "png": "/mascot/lost-256.png",
+        "webpBytes": 11820,
+        "pngBytes": 23211
+      },
+      "512": {
+        "width": 504,
+        "height": 512,
+        "webp": "/mascot/lost-512.webp",
+        "png": "/mascot/lost-512.png",
+        "webpBytes": 25960,
+        "pngBytes": 71568
+      }
+    }
+  },
+  "planting": {
+    "source": {
+      "left": 199,
+      "top": 279,
+      "width": 1453,
+      "height": 1565
+    },
+    "sizes": {
+      "128": {
+        "width": 119,
+        "height": 128,
+        "webp": "/mascot/planting-128.webp",
+        "png": "/mascot/planting-128.png",
+        "webpBytes": 5494,
+        "pngBytes": 7873
+      },
+      "256": {
+        "width": 238,
+        "height": 256,
+        "webp": "/mascot/planting-256.webp",
+        "png": "/mascot/planting-256.png",
+        "webpBytes": 12272,
+        "pngBytes": 23925
+      },
+      "512": {
+        "width": 475,
+        "height": 512,
+        "webp": "/mascot/planting-512.webp",
+        "png": "/mascot/planting-512.png",
+        "webpBytes": 26974,
+        "pngBytes": 73050
+      }
+    }
+  },
+  "pointing": {
+    "source": {
+      "left": 362,
+      "top": 277,
+      "width": 1514,
+      "height": 1592
+    },
+    "sizes": {
+      "128": {
+        "width": 122,
+        "height": 128,
+        "webp": "/mascot/pointing-128.webp",
+        "png": "/mascot/pointing-128.png",
+        "webpBytes": 5234,
+        "pngBytes": 8107
+      },
+      "256": {
+        "width": 243,
+        "height": 256,
+        "webp": "/mascot/pointing-256.webp",
+        "png": "/mascot/pointing-256.png",
+        "webpBytes": 12116,
+        "pngBytes": 21725
+      },
+      "512": {
+        "width": 487,
+        "height": 512,
+        "webp": "/mascot/pointing-512.webp",
+        "png": "/mascot/pointing-512.png",
+        "webpBytes": 27950,
+        "pngBytes": 61207
+      }
+    }
+  },
+  "reading": {
+    "source": {
+      "left": 458,
+      "top": 275,
+      "width": 1129,
+      "height": 1590
+    },
+    "sizes": {
+      "128": {
+        "width": 91,
+        "height": 128,
+        "webp": "/mascot/reading-128.webp",
+        "png": "/mascot/reading-128.png",
+        "webpBytes": 5294,
+        "pngBytes": 8063
+      },
+      "256": {
+        "width": 182,
+        "height": 256,
+        "webp": "/mascot/reading-256.webp",
+        "png": "/mascot/reading-256.png",
+        "webpBytes": 12316,
+        "pngBytes": 23729
+      },
+      "512": {
+        "width": 364,
+        "height": 512,
+        "webp": "/mascot/reading-512.webp",
+        "png": "/mascot/reading-512.png",
+        "webpBytes": 28752,
+        "pngBytes": 74278
+      }
+    }
+  },
+  "running": {
+    "source": {
+      "left": 324,
+      "top": 233,
+      "width": 1441,
+      "height": 1600
+    },
+    "sizes": {
+      "128": {
+        "width": 115,
+        "height": 128,
+        "webp": "/mascot/running-128.webp",
+        "png": "/mascot/running-128.png",
+        "webpBytes": 5288,
+        "pngBytes": 8136
+      },
+      "256": {
+        "width": 231,
+        "height": 256,
+        "webp": "/mascot/running-256.webp",
+        "png": "/mascot/running-256.png",
+        "webpBytes": 11874,
+        "pngBytes": 24042
+      },
+      "512": {
+        "width": 461,
+        "height": 512,
+        "webp": "/mascot/running-512.webp",
+        "png": "/mascot/running-512.png",
+        "webpBytes": 25534,
+        "pngBytes": 75788
+      }
+    }
+  },
+  "sleeping": {
+    "source": {
+      "left": 294,
+      "top": 279,
+      "width": 1423,
+      "height": 1642
+    },
+    "sizes": {
+      "128": {
+        "width": 111,
+        "height": 128,
+        "webp": "/mascot/sleeping-128.webp",
+        "png": "/mascot/sleeping-128.png",
+        "webpBytes": 5084,
+        "pngBytes": 6639
+      },
+      "256": {
+        "width": 222,
+        "height": 256,
+        "webp": "/mascot/sleeping-256.webp",
+        "png": "/mascot/sleeping-256.png",
+        "webpBytes": 11042,
+        "pngBytes": 18211
+      },
+      "512": {
+        "width": 444,
+        "height": 512,
+        "webp": "/mascot/sleeping-512.webp",
+        "png": "/mascot/sleeping-512.png",
+        "webpBytes": 24076,
+        "pngBytes": 56354
+      }
+    }
+  },
+  "tending": {
+    "source": {
+      "left": 487,
+      "top": 277,
+      "width": 1070,
+      "height": 1592
+    },
+    "sizes": {
+      "128": {
+        "width": 86,
+        "height": 128,
+        "webp": "/mascot/tending-128.webp",
+        "png": "/mascot/tending-128.png",
+        "webpBytes": 4674,
+        "pngBytes": 7354
+      },
+      "256": {
+        "width": 172,
+        "height": 256,
+        "webp": "/mascot/tending-256.webp",
+        "png": "/mascot/tending-256.png",
+        "webpBytes": 10678,
+        "pngBytes": 20414
+      },
+      "512": {
+        "width": 344,
+        "height": 512,
+        "webp": "/mascot/tending-512.webp",
+        "png": "/mascot/tending-512.png",
+        "webpBytes": 24888,
+        "pngBytes": 60436
+      }
+    }
+  },
+  "thinking": {
+    "source": {
+      "left": 486,
+      "top": 277,
+      "width": 1158,
+      "height": 1592
+    },
+    "sizes": {
+      "128": {
+        "width": 93,
+        "height": 128,
+        "webp": "/mascot/thinking-128.webp",
+        "png": "/mascot/thinking-128.png",
+        "webpBytes": 4834,
+        "pngBytes": 7674
+      },
+      "256": {
+        "width": 186,
+        "height": 256,
+        "webp": "/mascot/thinking-256.webp",
+        "png": "/mascot/thinking-256.png",
+        "webpBytes": 11324,
+        "pngBytes": 20252
+      },
+      "512": {
+        "width": 372,
+        "height": 512,
+        "webp": "/mascot/thinking-512.webp",
+        "png": "/mascot/thinking-512.png",
+        "webpBytes": 26396,
+        "pngBytes": 57313
+      }
+    }
+  },
+  "waving": {
+    "source": {
+      "left": 249,
+      "top": 277,
+      "width": 1472,
+      "height": 1592
+    },
+    "sizes": {
+      "128": {
+        "width": 118,
+        "height": 128,
+        "webp": "/mascot/waving-128.webp",
+        "png": "/mascot/waving-128.png",
+        "webpBytes": 5246,
+        "pngBytes": 8322
+      },
+      "256": {
+        "width": 237,
+        "height": 256,
+        "webp": "/mascot/waving-256.webp",
+        "png": "/mascot/waving-256.png",
+        "webpBytes": 12288,
+        "pngBytes": 24948
+      },
+      "512": {
+        "width": 473,
+        "height": 512,
         "webp": "/mascot/waving-512.webp",
         "png": "/mascot/waving-512.png",
-        "webpBytes": 52290,
-        "pngBytes": 83462
+        "webpBytes": 27460,
+        "pngBytes": 77344
       }
     }
   },
   "welcoming": {
     "source": {
       "left": 296,
-      "top": 124,
-      "width": 1456,
-      "height": 1774
+      "top": 276,
+      "width": 1453,
+      "height": 1593
     },
     "sizes": {
       "128": {
-        "width": 105,
+        "width": 117,
         "height": 128,
         "webp": "/mascot/welcoming-128.webp",
         "png": "/mascot/welcoming-128.png",
-        "webpBytes": 5414,
-        "pngBytes": 7400
+        "webpBytes": 5276,
+        "pngBytes": 7997
       },
       "256": {
-        "width": 210,
+        "width": 234,
         "height": 256,
         "webp": "/mascot/welcoming-256.webp",
         "png": "/mascot/welcoming-256.png",
-        "webpBytes": 13406,
-        "pngBytes": 21151
+        "webpBytes": 11984,
+        "pngBytes": 22726
       },
       "512": {
-        "width": 420,
+        "width": 467,
         "height": 512,
         "webp": "/mascot/welcoming-512.webp",
         "png": "/mascot/welcoming-512.png",
-        "webpBytes": 50696,
-        "pngBytes": 74833
+        "webpBytes": 27184,
+        "pngBytes": 68671
+      }
+    }
+  },
+  "writing": {
+    "source": {
+      "left": 488,
+      "top": 279,
+      "width": 1068,
+      "height": 1558
+    },
+    "sizes": {
+      "128": {
+        "width": 88,
+        "height": 128,
+        "webp": "/mascot/writing-128.webp",
+        "png": "/mascot/writing-128.png",
+        "webpBytes": 5002,
+        "pngBytes": 7533
+      },
+      "256": {
+        "width": 175,
+        "height": 256,
+        "webp": "/mascot/writing-256.webp",
+        "png": "/mascot/writing-256.png",
+        "webpBytes": 10886,
+        "pngBytes": 22275
+      },
+      "512": {
+        "width": 351,
+        "height": 512,
+        "webp": "/mascot/writing-512.webp",
+        "png": "/mascot/writing-512.png",
+        "webpBytes": 24416,
+        "pngBytes": 71180
       }
     }
   }

@@ -5,12 +5,18 @@
  *   npm run favicons
  *
  * The two PNGs used to be made by hand, so a change to the mark left them
- * showing the old one. They are derived now: edit MascotMark.astro, mirror the
- * body path into public/favicon.svg, then run this.
+ * showing the old one. They are derived now: edit public/favicon.svg, then run
+ * this.
  *
- * Both sizes are opaque. The mark's eyes are holes in the body path, so on a
- * transparent icon they would take the colour of whatever tab bar the browser
- * painted, which is white as often as it is dark.
+ * favicon.svg is the SMALL CUT of the logo, not the full mark. The full mark
+ * lives in website/src/components/LogoMark.astro and is never the source here:
+ * its checkmark is gone by 32px and the whole thing is a blob by 16. Keep the
+ * two in the same family by hand, and re-measure at real pixels after a change
+ * rather than shrinking a big render.
+ *
+ * Both sizes are opaque. The pale chevron on a transparent icon would take the
+ * colour of whatever tab bar the browser painted, which is white as often as
+ * it is dark.
  */
 
 import { createRequire } from 'node:module';

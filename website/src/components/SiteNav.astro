@@ -1,5 +1,5 @@
 ---
-import MascotMark from './MascotMark.astro';
+import LogoMark from './LogoMark.astro';
 import SoonChip from './SoonChip.astro';
 import { INSTALL_HREF, isCurrentPath, navGroups } from './navLinks';
 
@@ -24,7 +24,7 @@ const here = Astro.url.pathname;
 <header class:list={['site-nav', className]}>
   <div class="inner">
     <a class="wordmark" href="/">
-      <MascotMark size={22} />
+      <LogoMark size={22} />
       <span>SpecKit Companion</span>
     </a>
 

@@ -1357,6 +1357,84 @@
           }
         }
       }
+    ],
+    "walkthroughs": [
+      {
+        "id": "speckitCompanionGettingStarted",
+        "title": "Get started with SpecKit Companion",
+        "description": "Read a real spec in about a minute, then take an idea of your own from spec to plan to tasks without leaving the editor.",
+        "steps": [
+          {
+            "id": "openFolder",
+            "title": "Open a project",
+            "description": "SpecKit Companion reads specs out of a folder in your repo, so it needs a project open before it can show you anything.\n[Open Folder](command:vscode.openFolder)",
+            "when": "workbenchState == empty || workspaceFolderCount == 0",
+            "media": {
+              "markdown": "assets/walkthrough/open-folder.md"
+            },
+            "completionEvents": [
+              "onCommand:vscode.openFolder",
+              "onContext:workspaceFolderCount > 0"
+            ]
+          },
+          {
+            "id": "sampleSpec",
+            "title": "See what a spec looks like",
+            "description": "The quickest way to understand this extension is to read a finished spec. This copies a small sample into your specs folder and opens it in the viewer. No CLI, no AI, no setup, and clicking again reopens it rather than making a second copy.\n[Open a live sample](command:speckit.openSampleSpec)",
+            "media": {
+              "svg": "assets/walkthrough/illustration-under-construction-spec-viewer.svg",
+              "altText": "Illustration under construction: a screenshot of the spec viewer belongs here"
+            },
+            "completionEvents": [
+              "onCommand:speckit.openSampleSpec"
+            ]
+          },
+          {
+            "id": "installCli",
+            "title": "Install the Spec Kit CLI",
+            "description": "Optional, and only for running phases. The viewer, review comments, and the sidebar work with no CLI at all. Install it when you want the specify, plan, tasks, and implement commands the extension dispatches to your AI.\n[Install Spec Kit CLI](command:speckit.installCli)",
+            "media": {
+              "markdown": "assets/walkthrough/install-cli.md"
+            },
+            "completionEvents": [
+              "onCommand:speckit.installCli",
+              "onContext:speckit.cliInstalled"
+            ]
+          },
+          {
+            "id": "initializeWorkspace",
+            "title": "Set up this project",
+            "description": "This writes the templates and phase commands your AI resolves into the repo, under a .specify folder. Reload the window once it finishes and the Specs view comes to life.\n[Initialize SpecKit](command:speckit.initWorkspace)",
+            "media": {
+              "markdown": "assets/walkthrough/initialize-workspace.md"
+            },
+            "completionEvents": [
+              "onCommand:speckit.initWorkspace",
+              "onContext:speckit.detected"
+            ]
+          },
+          {
+            "id": "firstSpec",
+            "title": "Write your first spec",
+            "description": "Describe the feature in a sentence and pick the AI you already use. The extension hands it the prompt and follows along as the spec, the plan, and the tasks land on disk.\n[New Spec](command:speckit.create)",
+            "media": {
+              "markdown": "assets/walkthrough/first-spec.md"
+            },
+            "completionEvents": [
+              "onCommand:speckit.create"
+            ]
+          },
+          {
+            "id": "runOverview",
+            "title": "Read the Overview it leaves behind",
+            "description": "A spec with recorded activity opens on its Overview: why it exists, how long each phase took, the decisions made and what they rejected, and which test covers which requirement. It is what a reviewer reads instead of asking you again.\n[How the Overview works](https://github.com/alfredoperez/speckit-companion#overview-the-runs-story)",
+            "media": {
+              "svg": "assets/walkthrough/illustration-under-construction-overview.svg",
+              "altText": "Illustration under construction: a screenshot of the Overview belongs here"
+            }
+          }
+        ]
+      }
     ]
   },
   "scripts": {

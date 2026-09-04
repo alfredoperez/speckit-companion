@@ -1,5 +1,5 @@
 ---
-import MascotMark from './MascotMark.astro';
+import LogoMark from './LogoMark.astro';
 
 /*
   Replaces Starlight's SiteTitle so the docs header carries the same mark the
@@ -8,10 +8,10 @@ import MascotMark from './MascotMark.astro';
 
   This is the component override rather than Starlight's `logo` config option on
   purpose: that option takes a path to a raster or SVG *file*, which would mean a
-  second copy of the mark on disk, drifting from MascotMark.astro the first time
+  second copy of the mark on disk, drifting from LogoMark.astro the first time
   either one changes. The override renders the one component, inline, so the mark
-  in the docs header is the same four paths as the mark in the nav and inherits
-  the same brand greens from the token file.
+  in the docs header is the same six paths as the mark in the nav and inherits
+  the same brand colours from the token file.
 
   The title text and its href come from Starlight's route data, so the site
   title stays configured in astro.config.mjs and is not restated here.
@@ -25,7 +25,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 ---
 
 <a class="docs-site-title" href={siteTitleHref}>
-  <MascotMark size={22} />
+  <LogoMark size={22} />
   <span translate="no">{siteTitle}</span>
 </a>
 

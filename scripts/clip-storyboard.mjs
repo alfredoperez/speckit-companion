@@ -26,7 +26,15 @@ const BEATS_RE = /(var\s+BEATS\s*=\s*\[)([\s\S]*?)(\n[ \t]*\];)/;
 const CUTS_RE = /(var\s+CUTS\s*=\s*\[)([\s\S]*?)(\n[ \t]*\];)/;
 const OBJECT_RE = /\{[^{}]*\}/g;
 const LABEL_FIELD_RE = /"label"\s*:\s*"(?:[^"\\]|\\.)*"/;
-const LBL_EL_RE = /(<div\s+class="lbl[^"]*"\s+id="lbl(\d+)"[^>]*>)([^<]*)(<\/div>)/g;
+/*
+  The optional <span class="eb"> is the eyebrow naming the region, and it is
+  deliberately swallowed by group 1 rather than captured as text. Group 3 has to
+  stay the caption alone: it is compared against BEATS.label, and its offsets
+  are what --apply rewrites. Let the eyebrow into group 3 and --apply would
+  overwrite it with a caption.
+*/
+const LBL_EL_RE =
+  /(<div\s+class="lbl[^"]*"\s+id="lbl(\d+)"[^>]*>(?:<span class="eb">[^<]*<\/span>)?)([^<]*)(<\/div>)/g;
 
 /** Pull one `var NAME = [ ... ];` array out of the source, with absolute offsets. */
 function findArray(html, re) {
@@ -386,6 +394,8 @@ function check() {
     }
   }
 
+  reportTimingDrift();
+
   const ok = results.filter((r) => r.status === 'ok').length;
   const skipped = results.filter((r) => r.status === 'skip').length;
   console.log(`\n${ok} in sync, ${skipped} skipped, ${failures.length} drifting.`);
@@ -393,6 +403,51 @@ function check() {
     console.log('Edit the STORYBOARD.md and run --apply to move a label, or fix the timing in index.html.');
   }
   return failures.length > 0 ? 1 : 0;
+}
+
+/*
+  Every composition carries its own copy of the animation constants, and that is
+  deliberate: a clip references nothing outside its own directory, which is what
+  lets it render deterministically offline. A shared timing module would buy one
+  source of truth at the cost of that guarantee, which is the wrong trade.
+
+  The cost of the copies is that one can drift without anyone choosing it. So
+  report the odd one out instead of centralising: if twelve clips fade a label in
+  over 0.34s and one does it in 0.30s, nobody decided that, and it shows up here.
+*/
+const TIMING_CONSTANTS = ['LBL_IN', 'LBL_OUT', 'MOVE_DUR', 'MARKER_PAD'];
+
+function reportTimingDrift() {
+  const values = new Map(TIMING_CONSTANTS.map((k) => [k, new Map()]));
+
+  for (const name of compositions()) {
+    const file = join(CLIPS_DIR, name, 'index.html');
+    if (!existsSync(file)) continue;
+    const html = readFileSync(file, 'utf8');
+    for (const key of TIMING_CONSTANTS) {
+      const m = html.match(new RegExp(`var\\s+${key}\\s*=\\s*([0-9.]+)`));
+      if (!m) continue;
+      const byValue = values.get(key);
+      if (!byValue.has(m[1])) byValue.set(m[1], []);
+      byValue.get(m[1]).push(name);
+    }
+  }
+
+  const odd = [];
+  for (const [key, byValue] of values) {
+    if (byValue.size < 2) continue;
+    // The value most compositions agree on is the house setting; the rest drifted.
+    const sorted = [...byValue.entries()].sort((a, b) => b[1].length - a[1].length);
+    const [houseValue, houseClips] = sorted[0];
+    for (const [value, clips] of sorted.slice(1)) {
+      if (clips.length >= houseClips.length) continue; // a genuine split, not drift
+      odd.push(`${key} is ${value} in ${clips.join(', ')} — ${houseValue} in the other ${houseClips.length}`);
+    }
+  }
+
+  if (odd.length === 0) return;
+  console.log('\nTiming constants that differ from the rest:');
+  for (const line of odd) console.log(`        - ${line}`);
 }
 
 /**
@@ -433,6 +488,30 @@ function outline(only) {
       const held = hold === null ? '  to end' : `${hold.toFixed(1)}s hold`.padStart(9);
       const what = b.label ?? '(rest: back to the opening pose)';
       console.log(`  ${when} ${held}   ${what}`);
+    }
+
+    /*
+      A clip whose every beat holds for the same length reads as a metronome.
+      Nothing is emphasised, because nothing gets more time than anything else,
+      and by the third beat a viewer is predicting the cut instead of reading
+      the screen. It is invisible in the source — the numbers look deliberate,
+      one per beat — and it only shows up when you watch.
+      So say it here, where the holds are already in front of you.
+
+      Not a failure. Even pacing is a legitimate choice for a short loop; it is
+      the wrong one for anything carrying narration or an argument.
+    */
+    const holds = beats.slice(0, -1).map((b, i) => beats[i + 1].t - b.t);
+    if (holds.length >= 4) {
+      const mean = holds.reduce((a, h) => a + h, 0) / holds.length;
+      const spread = Math.max(...holds) - Math.min(...holds);
+      if (mean > 0 && spread / mean < 0.08) {
+        console.log(
+          `\n  note: every beat holds ${mean.toFixed(1)}s (spread ${spread.toFixed(2)}s).` +
+            `\n        Even pacing reads as a metronome once there is narration or an` +
+            `\n        argument to follow. Give the dense panels longer than the short ones.`,
+        );
+      }
     }
   }
   return 0;

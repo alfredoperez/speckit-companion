@@ -87,3 +87,10 @@ specs/_*/
 # is built from are the sources and stay tracked.
 /design/pipeline-builder-redesign.html
 webview/src/pipeline-builder/__screenshots__/diff/
+# Third-party skills installed by `npx skills add`, which writes into the repo
+# rather than the home directory. They are tooling for whoever is working here,
+# not part of either shipped extension, and .agents/ and .claude/ are otherwise
+# committed manual-testing fixtures — so ignore these by name instead of
+# loosening the rules that keep those fixtures tracked.
+.agents/skills/higgsfield-*/
+.claude/skills/higgsfield-*

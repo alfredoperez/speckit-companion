@@ -35,5 +35,7 @@ The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, whi
 ## Rules
 
 - Emerald is scarce: only the pipeline, checkmarks, and seedling glow green — everything else stays cool navy/cyan
-- No neon spray, no glassmorphism, no annotations/brackets on screenshots
+- No neon spray, no glassmorphism
+- **No decorative annotation on generated art.** Brackets, viewfinder corners, and hand-drawn callouts stay off illustrated heroes and diagrams
+- **Measured callouts on product screenshots are allowed**, and only the kind `scripts/capture-docs-images.mjs` draws: a single box plus label positioned from a real `getBoundingClientRect` measurement, never from eyeballed coordinates. `docs/screenshots/generated/overview-annotated.png` is the reference. Anything hand-placed is not a measured callout
 - The magenta-gradient marketplace `icon.png` is legacy — do not derive new art from it

@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SpecKit Companion v0.32",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1240,
+      960
+    ],
+    "views": [
+      {
+        "id": "the-loop",
+        "label": "The whole loop",
+        "focus": [
+          "vscode",
+          "activation",
+          "core",
+          "registry",
+          "agents",
+          "speckit",
+          "skext",
+          "context"
+        ],
+        "note": "A command leaves VS Code, reaches an AI CLI, runs spec-kit, and comes back as state the UI can read. The loop closes at .spec-context.json."
+      },
+      {
+        "id": "provider-fanout",
+        "label": "Eleven CLIs, one seam",
+        "focus": [
+          "registry",
+          "agents"
+        ],
+        "note": "Every agent sits behind one registry. Adding a twelfth CLI touches the registry and nothing else."
+      },
+      {
+        "id": "state",
+        "label": "What is written down",
+        "focus": [
+          "skext",
+          "context",
+          "living"
+        ],
+        "note": "Two files hold everything durable: run state per spec, and the capability registry for living specs."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "vscode",
+      "type": "external",
+      "label": "VS Code",
+      "sublabel": "Extension host",
+      "pos": [
+        40,
+        360
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "activation",
+      "type": "backend",
+      "label": "extension.ts",
+      "sublabel": "Activation and wiring",
+      "pos": [
+        330,
+        360
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Core",
+      "sublabel": "Managers, providers, types",
+      "pos": [
+        620,
+        360
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "features",
+      "type": "backend",
+      "label": "Feature modules",
+      "sublabel": "10, one per surface",
+      "pos": [
+        620,
+        150
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "webview",
+      "type": "frontend",
+      "label": "Webview UI",
+      "sublabel": "167 files, postMessage",
+      "pos": [
+        910,
+        150
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "Provider registry",
+      "sublabel": "One factory, one seam",
+      "pos": [
+        910,
+        360
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "agents",
+      "type": "external",
+      "label": "11 AI CLIs",
+      "sublabel": "Claude, Codex, Copilot\u2026",
+      "pos": [
+        910,
+        570
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "context",
+      "type": "database",
+      "label": ".spec-context.json",
+      "sublabel": "Run state per spec",
+      "pos": [
+        620,
+        570
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "speckit",
+      "type": "external",
+      "label": "spec-kit engine",
+      "sublabel": ">= 0.9.5",
+      "pos": [
+        910,
+        780
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "skext",
+      "type": "backend",
+      "label": "speckit-extension",
+      "sublabel": "19 commands, 25 nodes",
+      "pos": [
+        620,
+        780
+      ],
+      "size": [
+        180,
+        68
+      ]
+    },
+    {
+      "id": "living",
+      "type": "database",
+      "label": "living-specs.yml",
+      "sublabel": "Capability registry",
+      "pos": [
+        330,
+        780
+      ],
+      "size": [
+        180,
+        68
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "spec-kit side",
+      "wraps": [
+        "skext",
+        "speckit"
+      ],
+      "pad": 28
+    }
+  ],
+  "connections": [
+    {
+      "id": "vscode-activation",
+      "from": "vscode",
+      "to": "activation",
+      "label": "activates"
+    },
+    {
+      "id": "activation-core",
+      "from": "activation",
+      "to": "core",
+      "label": "wires"
+    },
+    {
+      "id": "core-features",
+      "from": "core",
+      "to": "features",
+      "label": "registers"
+    },
+    {
+      "id": "features-webview",
+      "from": "features",
+      "to": "webview",
+      "label": "renders"
+    },
+    {
+      "id": "core-registry",
+      "from": "core",
+      "to": "registry",
+      "label": "resolves"
+    },
+    {
+      "id": "registry-agents",
+      "from": "registry",
+      "to": "agents",
+      "label": "dispatches",
+      "variant": "emphasis",
+      "labelDy": 90
+    },
+    {
+      "id": "agents-speckit",
+      "from": "agents",
+      "to": "speckit",
+      "label": "runs commands",
+      "labelDy": 90
+    },
+    {
+      "id": "speckit-skext",
+      "from": "speckit",
+      "to": "skext",
+      "label": "loads"
+    },
+    {
+      "id": "skext-living",
+      "from": "skext",
+      "to": "living",
+      "label": "drift \u00b7 sync"
+    },
+    {
+      "id": "skext-context",
+      "from": "skext",
+      "to": "context",
+      "label": "records step"
+    },
+    {
+      "id": "context-core",
+      "from": "context",
+      "to": "core",
+      "label": "read back"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The loop closes on one file",
+      "items": [
+        "Nothing reads the agent's output directly",
+        "Every surface reads .spec-context.json instead"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Eleven CLIs behind one registry",
+      "items": [
+        "Claude, Codex, Copilot, Gemini, OpenCode and more",
+        "A twelfth provider touches the registry and nothing else"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Two halves, one product",
+      "items": [
+        "The VS Code extension owns the UI and the providers",
+        "The spec-kit extension owns the pipeline and its nodes"
+      ]
+    }
+  ]
+}
