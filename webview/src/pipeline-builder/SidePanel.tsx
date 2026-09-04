@@ -14,7 +14,7 @@
 import { ComponentChildren } from 'preact';
 
 interface Props {
-    /** Names the region for a screen reader; the visible title when none is given. */
+    /** Names the region for a screen reader, where the visible title is longer. */
     label: string;
     title: ComponentChildren;
     /** The line under the title: where this thing lives, in the board's terms. */

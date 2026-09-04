@@ -9,6 +9,7 @@
  */
 
 import { Menu, MenuOption } from './Menu';
+import { SidePanel } from './SidePanel';
 import { useState } from 'preact/hooks';
 import { PipelineNode } from '../../../src/protocol/pipeline';
 
@@ -152,11 +153,8 @@ export function Inspector(props: Props) {
     const frame = node.id === FRAME;
     const canRestore = Boolean(node.replaced && node.shipped);
 
+    // Moving is what the Order row says, so it is where the two buttons are.
     const more: MenuOption[] = [];
-    if (!node.pinned) {
-        more.push({ id: 'up', label: 'Move up' });
-        more.push({ id: 'down', label: 'Move down' });
-    }
     if (!frame) {
         more.push({
             id: 'remove',
@@ -180,11 +178,13 @@ export function Inspector(props: Props) {
         });
     }
 
+    const move = (direction: 'up' | 'down') => {
+        props.onMove(direction);
+        setMoved(`${node.name} moved ${direction} in ${step}.`);
+    };
+
     const pick = (id: string) => {
-        if (id === 'up' || id === 'down') {
-            props.onMove(id);
-            setMoved(`${node.name} moved ${id === 'up' ? 'up' : 'down'} in ${step}.`);
-        } else if (id === 'remove') {
+        if (id === 'remove') {
             props.onRemove();
         } else if (id === 'replace-step') {
             props.onReplaceStep?.();
@@ -194,23 +194,22 @@ export function Inspector(props: Props) {
     };
 
     return (
-        <aside class="pb-inspector" aria-label={`${node.name} instructions`}>
-            <header class="pb-inspector-head">
-                <h2 class="pb-inspector-title">{node.name}</h2>
-                <button class="pb-inspector-close" onClick={props.onClose} title="Close">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-                        stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-                        aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+        <SidePanel
+            class="pb-inspector"
+            label={`${node.name} instructions`}
+            title={node.name}
+            onClose={props.onClose}
+            where={<>
+                <span class="pb-inspector-id">{node.id}</span>
+                {' · '}{step}{' / '}{node.kind}{' · '}
+                {node.pinned && <>
+                    <span class="pb-node-gate" title={node.pinned}>held</span>{' · '}
+                </>}
+                <button class="pb-inspector-open" onClick={props.onOpenFile}>
+                    Open the file
                 </button>
-                <p class="pb-inspector-where">
-                    <span class="pb-inspector-id">{node.id}</span>
-                    {' · '}{step}{' / '}{node.kind}{' · '}
-                    <button class="pb-inspector-open" onClick={props.onOpenFile}>
-                        Open the file
-                    </button>
-                </p>
-            </header>
-
+            </>}
+        >
             <dl class="pb-facts">
                 <dt>Kind</dt>
                 <dd>
@@ -253,9 +252,16 @@ export function Inspector(props: Props) {
                     </>
                 )}
                 <dt>Order</dt>
-                <dd>{node.pinned
-                    ? `held in place: ${node.pinned}`
-                    : 'free to move, into another phase too'}</dd>
+                {/* Dragging is pointer-only, so this row is the keyboard's. */}
+                <dd>{node.pinned ? `held in place: ${node.pinned}` : (
+                    <>
+                        free to move
+                        <button type="button" class="pb-order-move"
+                            onClick={() => move('up')}>Move up</button>
+                        <button type="button" class="pb-order-move"
+                            onClick={() => move('down')}>Move down</button>
+                    </>
+                )}</dd>
 
                 <dt>Source</dt>
                 <dd>
@@ -370,6 +376,6 @@ export function Inspector(props: Props) {
                     </>
                 )}
             </footer>
-        </aside>
+        </SidePanel>
     );
 }

@@ -103,7 +103,7 @@ describe('the inspector reads a node here', () => {
         const host = mount(
             <Inspector node={node({ id: 'draft-spec' })} step="specify" body="x" parts={[]}
                 {...actions} onOpenFile={() => opened.push('yes')} />);
-        const open = host.querySelector('.pb-inspector-head .pb-inspector-open') as HTMLButtonElement;
+        const open = host.querySelector('.pb-side-head .pb-inspector-open') as HTMLButtonElement;
         expect(open.textContent).toBe('Open the file');
         open.click();
         expect(opened).toHaveLength(1);
@@ -140,9 +140,10 @@ describe('the inspector reads a node here', () => {
             const host = mount(
                 <Inspector node={node({ writes: ['spec.md'], reads: ['resolve-dir'], ...over })}
                     step="specify" body="x" parts={[]} {...actions} />);
-            // The legend is a picture of every kind, not one of this node's facts.
+            // The legend is a picture of every kind, not one of this node's
+            // facts; the two moves are an action sitting on the sentence.
             for (const aside of Array.from(
-                host.querySelectorAll('.pb-facts-note, .pb-kind-legend'))) {
+                host.querySelectorAll('.pb-facts-note, .pb-kind-legend, .pb-order-move'))) {
                 aside.remove();
             }
             return Array.from(host.querySelectorAll('.pb-facts dd'))
@@ -150,7 +151,7 @@ describe('the inspector reads a node here', () => {
         };
 
         const shipped = fragments({});
-        expect(shipped).toContain('free to move, into another phase too');
+        expect(shipped).toContain('free to move');
         expect(shipped).toContain('as shipped');
         expect(fragments({ replaced: true })).toContain('yours this project replaced it');
         expect(fragments({ pinned: 'draft-spec has to run after it' }))
@@ -201,6 +202,95 @@ describe('the inspector reads a node here', () => {
         const host = mount(
             <Inspector node={node()} step="specify" body={null} parts={[]} {...actions} />);
         expect(host.querySelector('.pb-doc-waiting')?.textContent).toBe('Reading…');
+    });
+
+    // The padlock on the card said nothing; the where line says the word.
+    it('says a held node is held, in the line under its name', () => {
+        const host = mount(
+            <Inspector node={node({ pinned: 'draft-spec has to run after it' })} step="specify"
+                body="x" parts={[]} {...actions} />);
+        const where = host.querySelector('.pb-side-where')!;
+        const chip = where.querySelector('.pb-node-gate')!;
+        expect(chip.textContent).toBe('held');
+        // The padlock this replaced carried the reason; the word has to too.
+        expect(chip.getAttribute('title')).toBe('draft-spec has to run after it');
+    });
+
+    it('leaves the word off a node that is free to move', () => {
+        const host = mount(
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...actions} />);
+        expect(host.querySelector('.pb-node-gate')).toBeNull();
+    });
+});
+
+// Five panes shared the slot and two of them kept their own copy of the same
+// chrome, styled to nearly match.
+describe('every side pane wears one shell', () => {
+    const noop = () => undefined;
+    const INSPECT = {
+        onClose: noop, onOpenFile: noop, onSave: noop, onRestore: noop, onAttach: noop,
+        onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
+    };
+    const CHOICES = { skills: [], nodes: [], fragments: [], presets: [] };
+    const TEMPLATE = step({
+        template: {
+            file: 'spec-template.md', sections: [],
+            sectionsAvailable: ['Requirements'], chosenBy: {},
+        },
+    });
+
+    const panes: Array<[string, preact.VNode, string]> = [
+        ['the inspector',
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />,
+            'Resolve the spec folder'],
+        ['the hook form',
+            <AttachForm step={step()} anchor="author" choices={CHOICES}
+                onCancel={noop} onAttach={noop} />,
+            'Add hook'],
+        ['the document shape',
+            <TemplateForm step={TEMPLATE} fragments={[]} onCancel={noop} onPick={noop} />,
+            'What specify writes'],
+        ['a new step',
+            <NewStepForm sequence={['specify']} taken={['specify']}
+                onCancel={noop} onCreate={noop} />,
+            'New step'],
+        ['a new workflow',
+            <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />,
+            'New workflow'],
+    ];
+
+    it.each(panes)('draws %s in it', (_name, pane, title) => {
+        const host = mount(pane);
+        const aside = host.querySelector('aside.pb-side')!;
+        expect(aside).not.toBeNull();
+        expect(aside.getAttribute('aria-label')).toBeTruthy();
+        expect(aside.querySelector('.pb-side-head .pb-side-title')?.textContent).toBe(title);
+        expect(aside.querySelector('.pb-side-head .pb-side-close')).not.toBeNull();
+    });
+
+    it('names the close button rather than leaving it a bare mark', () => {
+        const host = mount(
+            <NewStepForm sequence={['specify']} taken={['specify']}
+                onCancel={noop} onCreate={noop} />);
+        const close = host.querySelector('.pb-side-close')!;
+        expect(close.getAttribute('aria-label')).toBe('Cancel');
+    });
+
+    it('lets the inspector keep its own rows on the shared aside', () => {
+        const host = mount(
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />);
+        const aside = host.querySelector('aside')!;
+        expect(aside.className.split(' ')).toEqual(['pb-side', 'pb-inspector']);
+    });
+
+    it('keeps no second copy of the head anywhere', () => {
+        const sheet = readFileSync(
+            join(__dirname, '../../../styles/pipeline-builder.css'), 'utf8');
+        expect(sheet).not.toContain('.pb-inspector-head');
+        expect(sheet).not.toContain('.pb-inspector-title');
+        expect(sheet).not.toContain('.pb-inspector-close');
+        expect(sheet).not.toContain('.pb-inspector-where');
+        expect(sheet.match(/^\.pb-side-head \{/gm)).toHaveLength(1);
     });
 });
 
@@ -259,27 +349,49 @@ describe('everything else a node can do, in one menu', () => {
         onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
     };
 
-    it('moves a node without a mouse, and says so where a reader will hear it', async () => {
+    // Dragging is pointer-only, so the row that says a node is free to move is
+    // the whole keyboard and touch story for moving it.
+    it('moves a node from the row that claims it can move, and says so aloud', async () => {
         const moves: string[] = [];
         const host = mount(
             <Inspector node={node({ name: 'Draft the spec' })} step="specify" body="x"
                 parts={[]} {...actions} onMove={(d: 'up' | 'down') => moves.push(d)} />);
-        await moreOptions(host);
-        (Array.from(host.querySelectorAll('.pb-more .pb-menu-option'))
-            .find(el => el.textContent === 'Move up') as HTMLButtonElement).click();
-        await flush();
+        const order = Array.from(host.querySelectorAll('.pb-facts dd'))
+            .find(el => el.textContent?.startsWith('free to move'))!;
+        const buttons = Array.from(order.querySelectorAll('button'));
+        expect(buttons.map(el => el.textContent)).toEqual(['Move up', 'Move down']);
+        expect(buttons.every(el => el.tagName === 'BUTTON')).toBe(true);
 
+        buttons[0].click();
+        await flush();
         expect(moves).toEqual(['up']);
         const live = host.querySelector('[aria-live="polite"]')!;
         expect(live.textContent).toBe('Draft the spec moved up in specify.');
+
+        buttons[1].click();
+        await flush();
+        expect(moves).toEqual(['up', 'down']);
     });
 
-    // A node held in place refuses the move, so offering it is a dead entry.
-    it('leaves the moves out for a node that is held in place', async () => {
+    // A node held in place refuses the move, so it keeps the reason instead.
+    it('gives a held node its reason and no buttons', async () => {
         const host = mount(
             <Inspector node={node({ pinned: 'draft-spec has to run after it' })} step="specify"
                 body="x" parts={[]} {...actions} />);
+        const order = Array.from(host.querySelectorAll('.pb-facts dd'))
+            .find(el => el.textContent?.startsWith('held in place'))!;
+        expect(order.querySelectorAll('button')).toHaveLength(0);
+        expect(host.querySelectorAll('.pb-order-move')).toHaveLength(0);
         expect(await moreOptions(host)).not.toContain('Move up');
+    });
+
+    // Three things, and every one of them costs something.
+    it('keeps More to what a node cannot take back on its own', async () => {
+        const host = mount(
+            <Inspector node={node({ id: '_frame', replaced: true, shipped: true })}
+                step="specify" body="x" parts={[]} {...actions} onReplaceStep={() => undefined} />);
+        expect(await moreOptions(host))
+            .toEqual(['Replace the whole step', 'Use the shipped node']);
     });
 
     // The stylesheet paints the last entry purple, having no way to match one by
@@ -447,6 +559,21 @@ describe('naming a new step', () => {
         await flush();
         submit(host);
         expect(made[0].after).toBe('implement');
+    });
+
+    // A seam between two lanes IS the answer to "runs after", so arriving from
+    // one must not ask again.
+    it('seeds Runs after from the seam it was opened at', async () => {
+        const made: Array<Record<string, string>> = [];
+        const host = mount(
+            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']} initialAfter="tasks"
+                onCancel={noop} onCreate={step => made.push(step)} />,
+        );
+        expect((host.querySelector('select') as HTMLSelectElement).value).toBe('tasks');
+        type(host, 'review');
+        await flush();
+        submit(host);
+        expect(made[0].after).toBe('tasks');
     });
 
     it('offers to leave it out of the run', () => {
@@ -845,11 +972,41 @@ describe('the template picker shows what a fragment does', () => {
         expect(picked).toEqual([['User Scenarios', '']]);
     });
 
-    it('says the shipped version is all there is, rather than apologising', () => {
+    // A dead field read as the working one a row above, with the reason sitting
+    // where the chosen fragment's summary goes.
+    it('draws no field for a section with nothing to pick, and says so on one line', () => {
         const { host } = form();
         const rows = Array.from(host.querySelectorAll('.pb-template-row'));
+        expect(rows[1].querySelector('.pb-template-pick')).toBeNull();
+        expect(rows[1].querySelector('.pb-menu-trigger')).toBeNull();
         expect(rows[1].querySelector('.pb-template-summary')?.textContent)
-            .toBe('Only the shipped version exists for this section.');
-        expect(rows[1].querySelector('.pb-menu-trigger--inert')).not.toBeNull();
+            .toBe('As shipped · nothing else is written for this section.');
+    });
+
+    it('leaves a section that does have fragments alone', () => {
+        const { host } = form();
+        const rows = Array.from(host.querySelectorAll('.pb-template-row'));
+        expect(rows[0].querySelector('.pb-template-pick .pb-menu-trigger')).not.toBeNull();
+    });
+
+    // Three dead rows saying the same thing is the sentence, three times.
+    it('says it once at the top when it is true of every section', () => {
+        const host = mount(
+            <TemplateForm
+                step={step({
+                    template: {
+                        file: 'plan-template.md', sections: [],
+                        sectionsAvailable: ['Technical Context', 'Constitution Check'],
+                        chosenBy: {},
+                    },
+                })}
+                fragments={FRAGMENTS} onCancel={noop} onPick={noop} />,
+        );
+        const said = Array.from(host.querySelectorAll('.pb-template-summary'))
+            .map(el => el.textContent);
+        expect(said).toEqual(
+            ['As shipped · nothing else is written for any section of this document.']);
+        expect(host.querySelectorAll('.pb-template-heading')).toHaveLength(2);
+        expect(host.querySelector('.pb-menu-trigger')).toBeNull();
     });
 });
