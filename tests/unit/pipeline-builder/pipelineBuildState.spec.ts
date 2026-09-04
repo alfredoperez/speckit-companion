@@ -70,7 +70,9 @@ describe('whether the built pipeline is still the one described', () => {
     it('is stale when a fragment or a template moved under it', () => {
         for (const rel of [
             '.specify/companion/fragments/ears-requirements.md',
-            '.specify/companion/templates/spec-template.md',
+            // The templates a build reshapes are spec-kit's own. Watching a
+            // Companion copy of them watched a directory nothing ever writes.
+            '.specify/templates/spec-template.md',
         ]) {
             const root = project();
             write(root, '.specify/companion.yml', EARLY);

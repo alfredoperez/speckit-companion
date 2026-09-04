@@ -106,7 +106,7 @@ export class PipelineBuilderPanel {
             '.specify/companion/nodes/**/*.md',
             '.specify/companion/workflows/**/*.yml',
             '.specify/companion/fragments/**/*.md',
-            '.specify/companion/templates/**/*.md',
+            '.specify/templates/**/*.md',
         ]) {
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(workspaceRoot, pattern),
@@ -145,7 +145,6 @@ export class PipelineBuilderPanel {
 
     private readonly handlers: DispatcherMap<BuilderToExtensionMessage, []> = {
         ready: () => this.send(),
-        refresh: () => this.send(),
         build: () => this.run(BUILD_COMMAND),
         preview: () => this.run('speckit.companion.previewPipelineBuild'),
 
@@ -197,6 +196,14 @@ export class PipelineBuilderPanel {
             fs.writeFileSync(own, nodeFile(meta, message.body), 'utf8');
             await this.send();
             await this.sendBody(message.command, message.nodeId);
+            // A save is a write like any other, so it clears the last way back.
+            // Left armed, an Undo offered before the edit put the held copy over
+            // what had just been typed.
+            this.sayStatus({
+                tone: 'done',
+                text: `${message.nodeId} is yours now`,
+                detail: 'Build to apply',
+            });
         },
 
         // One write, not two. The order says when a node runs and the phase says
@@ -209,7 +216,12 @@ export class PipelineBuilderPanel {
                 script => writePhases(
                     script, this.workspaceRoot, message.command, message.phases,
                     undefined, message.order),
-                'Adding a node');
+                'Adding a node',
+                {
+                    tone: 'done',
+                    text: `${message.nodeId} runs in ${message.command}`,
+                    detail: 'Build to apply',
+                });
         },
 
         useVariant: async message => {
@@ -222,7 +234,12 @@ export class PipelineBuilderPanel {
                     // stop running. The carry a phase rename already does.
                     { from: message.replaces, to: message.variant },
                     message.order),
-                'Replacing the block');
+                'Replacing the block',
+                {
+                    tone: 'done',
+                    text: `${message.command} runs ${message.variant} in place of ${message.replaces}`,
+                    detail: 'Build to apply',
+                });
         },
 
         setTemplateSection: async message => {
@@ -230,7 +247,14 @@ export class PipelineBuilderPanel {
                 script => writeTemplateSection(
                     script, this.workspaceRoot, message.command,
                     message.heading, message.fragment),
-                'Changing the template');
+                'Changing the template',
+                {
+                    tone: 'done',
+                    text: message.fragment
+                        ? `${message.heading} now uses ${message.fragment}`
+                        : `${message.heading} is back to the shipped section`,
+                    detail: 'Build to apply',
+                });
         },
 
         replaceStep: async message => {
@@ -252,7 +276,12 @@ export class PipelineBuilderPanel {
                 script => writePhases(script, this.workspaceRoot, message.command,
                     [{ name: `our ${message.command}`, nodes: [step] }],
                     undefined, [step]),
-                'Replacing the step');
+                'Replacing the step',
+                {
+                    tone: 'done',
+                    text: `${message.command} runs one document of yours`,
+                    detail: 'Build to apply',
+                });
             if (!written) {
                 if (seeded) {
                     try { fs.rmSync(own); } catch { /* it was never ours to clean */ }
@@ -313,14 +342,24 @@ export class PipelineBuilderPanel {
             await this.write(
                 script => writeNodeOrder(
                     script, this.workspaceRoot, message.command, message.order),
-                'Reordering');
+                'Reordering',
+                {
+                    tone: 'done',
+                    text: `${message.command} runs in a new order`,
+                    detail: 'Build to apply',
+                });
         },
 
         removeHook: async message => {
             await this.write(
                 script => removeHook(script, this.workspaceRoot, message.command,
                     message.when, message.anchor, message.index),
-                'Removing a hook');
+                'Removing a hook',
+                {
+                    tone: 'done',
+                    text: `Hook removed ${message.when} ${message.anchor}`,
+                    detail: 'Build to apply',
+                });
         },
 
         setPhases: async message => {
@@ -328,10 +367,28 @@ export class PipelineBuilderPanel {
                 script => writePhases(
                     script, this.workspaceRoot, message.command, message.phases,
                     message.renamed),
-                'Regrouping the phases');
+                'Regrouping the phases',
+                {
+                    tone: 'done',
+                    text: message.renamed
+                        ? `${message.renamed.from} is now called ${message.renamed.to}`
+                        : `${message.command} is grouped differently`,
+                    detail: 'Build to apply',
+                });
         },
 
         addHook: async message => {
+            // A move takes the hook off its old boundary first, and waits: both
+            // halves rewrite the same file, and run together they overwrote each
+            // other. A refused removal stops here rather than adding a second copy.
+            if (message.movedFrom) {
+                const from = message.movedFrom;
+                const gone = await this.write(
+                    script => removeHook(script, this.workspaceRoot, message.command,
+                        from.when, from.anchor, from.index),
+                    'Moving a hook');
+                if (!gone) { return; }
+            }
             await this.write(script => {
                 const draft: HookDraft = {
                     type: message.hookType, when: message.when, anchor: message.anchor,
@@ -346,7 +403,16 @@ export class PipelineBuilderPanel {
                     draft.text = message.value;
                 }
                 return writeHook(script, this.workspaceRoot, message.command, draft);
-            }, 'Attaching work');
+            }, 'Attaching work',
+            {
+                tone: 'done',
+                text: message.movedFrom
+                    ? `Hook moved to ${message.when} ${message.anchor}`
+                    : message.editIndex === undefined
+                        ? `Hook added ${message.when} ${message.anchor}`
+                        : `Hook changed ${message.when} ${message.anchor}`,
+                detail: 'Build to apply',
+            });
         },
 
         selectWorkflow: async message => {
@@ -371,7 +437,12 @@ export class PipelineBuilderPanel {
             }
             const refused = await applyRepair(script, this.workspaceRoot, message.repairId);
             await this.send();
-            if (refused) { this.say(refused); }
+            if (refused) { this.say(refused); return; }
+            this.sayStatus({
+                tone: 'done',
+                text: 'The configuration reads again',
+                detail: 'Build to apply',
+            });
         },
 
         newStep: async message => {

@@ -163,7 +163,7 @@ class WhatTheBuildSays(unittest.TestCase):
 
     def test_a_command_with_nowhere_to_go_is_named(self):
         """No agent directory at all — nothing to model an emission on."""
-        _w, _c, unreached = emission_sync.sync(str(self.root), {"review": BODY})
+        _w, _c, unreached, _s = emission_sync.sync(str(self.root), {"review": BODY})
         self.assertEqual(unreached, ["review"])
         said = " ".join(emission_sync.describe([], [], unreached, str(self.root)))
         self.assertIn("review", said)
@@ -171,12 +171,30 @@ class WhatTheBuildSays(unittest.TestCase):
 
     def test_what_was_refreshed_is_counted_by_area(self):
         emission(self.root, ".claude/skills", "specify", BODY)
-        written, created, unreached = emission_sync.sync(
+        written, created, unreached, stale = emission_sync.sync(
             str(self.root), {"specify": BODY.replace("Write the spec.", "New.")})
-        self.assertEqual((created, unreached), ([], []))
+        self.assertEqual((created, unreached, stale), ([], [], []))
         said = " ".join(emission_sync.describe(written, created, unreached, str(self.root)))
         self.assertIn(".claude/skills", said)
         self.assertIn("1 agent command file", said)
+
+    def test_a_format_the_build_cannot_rewrite_is_named_not_passed_over(self):
+        """A Gemini `.toml` keeps its old pipeline, so the build has to say so.
+
+        Rewriting it would produce invalid TOML, so leaving it alone is right —
+        but a build that only counts what it wrote reads as "every agent has
+        the new pipeline" when one of them does not.
+        """
+        emission(self.root, ".claude/skills", "specify", BODY)
+        emission(self.root, ".gemini/commands", "specify", BODY)
+        written, created, unreached, stale = emission_sync.sync(
+            str(self.root), {"specify": BODY.replace("Write the spec.", "New.")})
+        self.assertTrue(any(p.endswith(".toml") for p in stale), stale)
+        self.assertFalse(any(p.endswith(".toml") for p in written), written)
+        said = " ".join(
+            emission_sync.describe(written, created, unreached, str(self.root), stale))
+        self.assertIn(".gemini/commands", said)
+        self.assertIn("still carries the pipeline it had", said)
 
 
 class GivingAProjectsOwnStepACommand(unittest.TestCase):

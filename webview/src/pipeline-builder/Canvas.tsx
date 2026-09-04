@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
 import {
+    HookWhen,
     PipelineDecision,
     PipelineGraph,
     PipelineHook,
@@ -34,7 +35,6 @@ type NodeAction = (command: string, nodeId: string) => void;
 interface Props {
     graph: PipelineGraph;
     onOpenNode: NodeAction;
-    /** Take a shipped node over: copy it into the project and open the copy. */
     /** Drop the project's copy and go back to the shipped node. */
     onRestoreNode: NodeAction;
     /** Save a step's whole node order after a drag. */
@@ -208,7 +208,7 @@ function HookMark() {
 
 type NodeActions = Pick<Props, 'onOpenNode' | 'onRestoreNode'> & {
     onDrop: (moved: string, target: string) => void;
-    onAdd: (anchor: string) => void;
+    onAdd: (anchor: string, when: HookWhen) => void;
     onEditHook: (hook: PipelineHook) => void;
     /** Stop running one node, with the order and the grouping a drag would send. */
     onRemove: (nodeId: string) => void;
@@ -367,7 +367,7 @@ function Node({ node, actions, stock, seams }: {
         <div class="pb-node-group">
             {(seams?.before ?? true) && (
                 <Seam side="before" anchor={node.id}
-                    onAdd={() => actions.onAdd(node.id)} />
+                    onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
             <div
                 class={[
@@ -465,7 +465,7 @@ function Node({ node, actions, stock, seams }: {
                 stockBefore={stock?.before} stockAfter={stock?.after}
                 anchor={node.id} onEdit={actions.onEditHook} />
             {(seams?.after ?? true) && (
-                <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id)} />
+                <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
             )}
         </div>
     );
@@ -615,7 +615,7 @@ function Phase({ phase, actions, controls }: {
 
     // No guards here: `Menu` will not call this for a row it drew inert.
     const act = (id: string) => {
-        if (id === 'hook') { actions.onAdd(phase.name); }
+        if (id === 'hook') { actions.onAdd(phase.name, 'before'); }
         if (id === 'node') { setPicking(true); }
         if (id === 'rename') { startRename(); }
         if (id === 'split') { controls.onAddPhaseAfter(phase.name); }
@@ -821,7 +821,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
             }
             onReorder(step.name, reordered(flatOrder(step), moved, target));
         },
-        onAdd: anchor => onAddHook(step.name, anchor, 'before'),
+        onAdd: (anchor, when) => onAddHook(step.name, anchor, when),
         onEditHook: hook => onEditHook(step.name, hook),
         onRemove: nodeId => {
             const shape = withoutNode(step, nodeId);

@@ -73,6 +73,20 @@ describe('the panel posts nothing a handler cannot act on', () => {
         }
     });
 
+    // Two messages, each routed on its own, meant two `config_write.py` runs
+    // reading and rewriting `companion.yml` at the same time — and a refused
+    // add left the hook gone with nothing offering it back.
+    it('moves a hook in one message rather than a removal and an addition', () => {
+        expect(posts('removeHook').length).toBeGreaterThan(0);
+        for (const message of posts('addHook')) {
+            expect(message).toContain('movedFrom');
+        }
+        // No `removeHook` sits inside the branch that handles an attachment.
+        const attach = panel.slice(panel.indexOf('onAttach={(a: Attachment)'));
+        const until = attach.slice(0, attach.indexOf('onRemove='));
+        expect(until).not.toContain("type: 'removeHook'");
+    });
+
     it('names the step whose whole document is being replaced', () => {
         const sent = posts('replaceStep');
         expect(sent.length).toBeGreaterThan(0);

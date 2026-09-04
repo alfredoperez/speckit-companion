@@ -133,5 +133,77 @@ class RemovingTheLastHookAtAnAnchor(unittest.TestCase):
         self.assertIn("keep-me", self.project.body("specify"))
 
 
+class AStepWrittenAsAnEmptyMapping(unittest.TestCase):
+    """`specify: {}` is a value, and indented keys under it are not its keys.
+
+    A freshly seeded workflow is written that way, so the first edit anyone made
+    to one produced a file the reader stops at — and the panel then showed the
+    error state for a configuration the panel itself had just written.
+    """
+
+    def setUp(self):
+        import config_write as cw
+
+        self.cw = cw
+        self.text = "commands:\n  specify: {}\n"
+
+    def reads_back(self, text: str) -> dict:
+        import companion_config as cc
+
+        return cc.load_yaml(text)
+
+    def test_ordering_its_nodes_opens_the_block(self):
+        out = self.cw.set_nodes(self.text, "specify", ["draft-spec", "handoff"])
+        self.assertNotIn("{}", out)
+        self.assertEqual(
+            self.reads_back(out)["commands"]["specify"]["nodes"],
+            ["draft-spec", "handoff"])
+
+    def test_grouping_its_phases_opens_the_block(self):
+        out = self.cw.set_phases(
+            self.text, "specify", [{"name": "author", "nodes": ["draft-spec"]}])
+        self.assertNotIn("{}", out)
+        phases = self.reads_back(out)["commands"]["specify"]["phases"]
+        self.assertEqual(phases[0]["name"], "author")
+
+    def test_attaching_a_hook_opens_the_block(self):
+        out = self.cw.add_hook(self.text, "specify", "before", "draft-spec",
+                               {"type": "skill", "ref": "create-pr"})
+        self.assertNotIn("{}", out)
+        hooks = self.reads_back(out)["commands"]["specify"]["hooks"]
+        self.assertEqual(hooks["before"]["draft-spec"][0]["ref"], "create-pr")
+
+
+class SwitchingToAWorkflowThatIsNotThere(unittest.TestCase):
+    """The selection was written first and only failed on the next build."""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def test_a_name_with_no_file_is_refused(self):
+        with self.assertRaises(Refused) as caught:
+            self.project.write("--workflow", "does-not-exist")
+        self.assertIn("does-not-exist", str(caught.exception))
+        self.assertNotIn("does-not-exist", self.project.config_text())
+
+    def test_shipped_is_always_offered(self):
+        self.project.write("--workflow", "shipped")
+        self.assertIn("shipped", self.project.config_text())
+
+
+class AFragmentNameIsANameNotAPath(unittest.TestCase):
+    def test_a_path_does_not_resolve(self):
+        import template_render as tr
+
+        self.assertIsNone(tr.find_fragment("../../../../etc/hosts", "/tmp"))
+        self.assertIsNone(tr.find_fragment("Outcomes", "/tmp"))
+
+    def test_a_real_name_still_does(self):
+        import template_render as tr
+
+        self.assertIsNotNone(tr.find_fragment("outcomes", "/tmp"))
+
+
 if __name__ == "__main__":
     unittest.main()

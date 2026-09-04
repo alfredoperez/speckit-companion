@@ -31,7 +31,8 @@ const BUILD_INPUT_DIRS = [
     path.join('.specify', 'companion', 'nodes'),
     path.join('.specify', 'companion', 'workflows'),
     path.join('.specify', 'companion', 'fragments'),
-    path.join('.specify', 'companion', 'templates'),
+    // The templates a build reshapes are spec-kit's own, not a Companion copy.
+    path.join('.specify', 'templates'),
 ];
 
 export type PipelineBuildState =

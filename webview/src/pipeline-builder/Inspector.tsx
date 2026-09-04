@@ -237,6 +237,15 @@ export function Inspector(props: Props) {
                         <dd class="pb-facts-mono">{node.writes.join(', ')}</dd>
                     </>
                 )}
+                {/* Files the size budget can fold away. The board draws them and
+                    this pane did not, so a node read as writing less here than
+                    it does on the card beside it. */}
+                {node.mayWrite.length > 0 && (
+                    <>
+                        <dt>Writes sometimes</dt>
+                        <dd class="pb-facts-mono">{node.mayWrite.join(', ')}</dd>
+                    </>
+                )}
                 {node.reads.length > 0 && (
                     <>
                         <dt>Needs</dt>

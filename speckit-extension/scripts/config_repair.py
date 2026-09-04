@@ -251,8 +251,7 @@ def apply(project_root: str, repair_id: str) -> str:
     if updated == text:
         raise cw.ConfigWriteError(f"nothing to repair for {repair_id}")
 
-    with open(path, "w", encoding="utf-8") as fh:
-        fh.write(updated)
+    cw.save_config(path, updated)
     return said
 
 

@@ -31,7 +31,10 @@ function recorder() {
 function board(g = graph([SPECIFY])) {
     const { sent, on } = recorder();
     const view = (
-        <div class="builder">
+        <div class="builder"
+            ref={(el: HTMLElement | null) => {
+                if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+            }}>
             <Canvas graph={g}
                 onOpenNode={(c, n) => sent.push({ what: 'openNode', with: [c, n] })}
                 onRestoreNode={on('restoreNode')}
@@ -44,10 +47,22 @@ function board(g = graph([SPECIFY])) {
                 onReplaceStep={on('replaceStep')} onOpenTemplate={on('openTemplate')}
                 onNewStep={on('newStep')}
                 onRemoveNode={on('removeNode')} onMoveNode={on('moveNode')} />
-            <pre class="sb-sent" style="display:none">{JSON.stringify(sent)}</pre>
         </div>
     );
     return { view, sent };
+}
+
+/**
+ * What the board rendered by this story has sent so far.
+ *
+ * `render` and `play` are separate calls, so a recorder captured in `play` by
+ * building a second board belongs to a tree nobody clicked — every assertion
+ * against it passed on an empty array. The rendered tree carries its own.
+ */
+function sentFrom(root: HTMLElement): Sent {
+    const holder = (root.querySelector('.builder') ?? root) as HTMLElement & { __sent?: Sent };
+    if (!holder.__sent) { throw new Error('this story did not render a recorded board'); }
+    return holder.__sent;
 }
 
 /** Drag one `.pb-node` onto another, the way a browser does. */
@@ -99,12 +114,13 @@ export const OpenANode: Story = {
     name: 'Open a node',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const { view, sent } = board();
-        void view;
         const button = canvasElement.querySelector('.pb-node-main') as HTMLButtonElement;
         button.click();
-        void sent;
-        assert(Boolean(button), 'a node should be clickable to read it');
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'openNode',
+            'clicking a node asks the extension to read it');
+        assert(JSON.stringify(sent[0].with) === JSON.stringify(['specify', 'resolve-dir']),
+            'and names the step and the node it clicked');
     },
 };
 
@@ -133,8 +149,12 @@ export const DragWithinAPhase: Story = {
     },
     play: async ({ canvasElement }) => {
         drag(canvasElement, 1, 0);
-        assert(canvasElement.querySelectorAll('.pb-node').length === 2,
-            'both nodes survive a reorder');
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'reorder',
+            'a drag inside one phase saves the order, not the grouping');
+        assert(JSON.stringify(sent[0].with)
+            === JSON.stringify(['plan', ['gather-context', 'size-budget']]),
+            'and the order it saves is the one the drag produced');
     },
 };
 
@@ -142,9 +162,17 @@ export const DragAcrossPhases: Story = {
     name: 'Drag a node into another phase',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const before = canvasElement.querySelectorAll('.pb-phase').length;
-        drag(canvasElement, 0, 2);
-        assert(before === 4, 'specify has four phases to move between');
+        assert(canvasElement.querySelectorAll('.pb-phase').length === 4,
+            'specify has four phases to move between');
+        drag(canvasElement, 1, 3);
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'setPhases',
+            'a drag across a phase boundary saves the whole grouping');
+        const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
+        const holds = (name: string) =>
+            phases.find(p => p.name === name)?.nodes.includes('load-living-specs');
+        assert(holds('author') === true, 'the node landed in the phase it was dropped on');
+        assert(holds('gather') === false, 'and left the one it came from');
     },
 };
 
@@ -175,6 +203,15 @@ export const RenameAPhase: Story = {
         assert(document.activeElement === name, 'the menu puts the caret in it');
         name.textContent = 'set up';
         name.dispatchEvent(new Event('blur', { bubbles: true }));
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'setPhases',
+            'a rename saves the grouping');
+        const [, , renamed] = sent[0].with as [
+            string, unknown, { from: string; to: string } | undefined];
+        // Named, so the hooks anchored to the old phase follow it. Without this
+        // a rename detached every hook on that phase and said nothing.
+        assert(JSON.stringify(renamed) === JSON.stringify({ from: 'gather', to: 'set up' }),
+            'and says which phase was renamed, so its hooks travel');
     },
 };
 

@@ -17,6 +17,7 @@ import {
     PipelineGraph,
     PipelineGraphResult,
     PipelineHook,
+    HookWhen,
     PipelineNode,
     PipelineStatus,
     isGraphError,
@@ -33,7 +34,13 @@ declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void 
 const vscode = acquireVsCodeApi();
 
 interface Selection { command: string; nodeId: string }
-interface Attaching { command: string; anchor: string; hook?: PipelineHook }
+interface Attaching {
+    command: string;
+    anchor: string;
+    /** Which side of the anchor the button that opened this sat on. */
+    when?: HookWhen;
+    hook?: PipelineHook;
+}
 
 /** Only one thing occupies the side column at a time. */
 type Side =
@@ -248,9 +255,9 @@ function App() {
                         setNotice(null);
                         setSide({ kind: 'attach', at: { command, anchor: hook.anchor, hook } });
                     }}
-                    onAddHook={(command, anchor) => {
+                    onAddHook={(command, anchor, when) => {
                         setNotice(null);
-                        setSide({ kind: 'attach', at: { command, anchor } });
+                        setSide({ kind: 'attach', at: { command, anchor, when } });
                     }}
                 />
 
@@ -268,25 +275,20 @@ function App() {
                             : `${attaching.command}/new/${attaching.anchor}`}
                         step={attachStep}
                         anchor={attaching.anchor}
+                        when={attaching.when}
                         choices={graph.choices}
                         editing={attaching.hook ?? null}
                         onCancel={() => setSide(null)}
                         onAttach={(a: Attachment) => {
                             setSide(null);
-                            // A hook moved to another boundary leaves the old one
-                            // first: its index means nothing at the new anchor,
-                            // and replacing by it overwrote whatever sat there.
-                            if (a.movedFrom) {
-                                send({
-                                    type: 'removeHook', command: attaching.command,
-                                    anchor: a.movedFrom.anchor, when: a.movedFrom.when,
-                                    index: a.movedFrom.index,
-                                });
-                            }
+                            // A hook moved to another boundary travels as one
+                            // message: its index means nothing at the new anchor,
+                            // and the two halves sent separately rewrote the same
+                            // file at the same time.
                             send({
                                 type: 'addHook', command: attaching.command, anchor: a.anchor,
                                 when: a.when, hookType: a.hookType, value: a.value, note: a.note,
-                                editIndex: a.editIndex,
+                                editIndex: a.editIndex, movedFrom: a.movedFrom,
                             });
                         }}
                         onRemove={attaching.hook ? () => {

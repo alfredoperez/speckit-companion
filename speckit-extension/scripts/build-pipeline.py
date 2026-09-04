@@ -624,7 +624,7 @@ def main() -> int:
     # own directory, once, when the extension was added. Without this a build
     # reported five commands and changed nothing the assistant would ever read.
     try:
-        written, created, unreached = emission_sync.sync(
+        written, created, unreached, stale = emission_sync.sync(
             project, bodies,
             {c: _description(c) for c in bodies})
     except emission_sync.EmissionError as err:
@@ -632,7 +632,7 @@ def main() -> int:
         # so beats failing a build that did its own job.
         print(f"[build] could not refresh the agent commands — {err}")
         return 0
-    for line in emission_sync.describe(written, created, unreached, project):
+    for line in emission_sync.describe(written, created, unreached, project, stale):
         print(line)
     return 0
 

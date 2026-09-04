@@ -50,6 +50,21 @@ describe('the inspector reads a node here', () => {
         expect(host.textContent).toContain('no instructions of its own');
     });
 
+    // The board drew a node's optional files and this pane did not, so the same
+    // node read as writing less here than on the card beside it.
+    it('lists the files it writes only sometimes, the way the board does', () => {
+        const host = mount(
+            <Inspector step="plan" body="x" parts={[]} {...actions}
+                node={node({
+                    writes: ['plan.md'],
+                    mayWrite: ['data-model.md', 'contracts/api.md'],
+                })} />,
+        );
+        const facts = Array.from(host.querySelectorAll('dt')).map(el => el.textContent);
+        expect(facts).toContain('Writes sometimes');
+        expect(host.textContent).toContain('data-model.md, contracts/api.md');
+    });
+
     it('says why a node is held in place', () => {
         const host = mount(
             <Inspector node={node({ pinned: 'quality-checklist has to run after it' })}
@@ -543,19 +558,30 @@ describe('the hook form asks for the placement first', () => {
         skills: ['create-pr', 'verify-code-review'], nodes: [], fragments: [], presets: [],
     };
 
-    function form(anchor = 'draft-spec') {
+    function form(anchor = 'draft-spec', when?: 'before' | 'after') {
         const made: Attachment[] = [];
         const host = mount(
-            <AttachForm step={step()} anchor={anchor} choices={CHOICES}
+            <AttachForm step={step()} anchor={anchor} when={when} choices={CHOICES}
                 onCancel={noop} onAttach={a => made.push(a)} />,
         );
         return { host, made };
     }
 
+    const whenShown = (host: HTMLElement) =>
+        (host.querySelectorAll('.pb-runs .pb-trigger-text')[0].textContent ?? '').trim();
+
     const open = async (host: HTMLElement, which: number) => {
         (host.querySelectorAll('.pb-runs .pb-menu-trigger')[which] as HTMLButtonElement).click();
         await flush();
     };
+
+    // The seam under a node and the seam above it opened the same form seeded
+    // `before`, so attaching after something meant correcting the form first.
+    it('opens on the side of the anchor the button was pressed on', () => {
+        expect(whenShown(form('draft-spec', 'after').host)).toBe('after');
+        expect(whenShown(form('draft-spec', 'before').host)).toBe('before');
+        expect(whenShown(form().host)).toBe('before');
+    });
 
     // "Runs before Draft the spec" is the sentence, so it is read in that order.
     it('puts Runs at the top, as when and where in one row', () => {
@@ -652,6 +678,32 @@ describe('the hook form asks for the placement first', () => {
         segment('Skill').click();
         await flush();
         expect(host.querySelector('.pb-note')).not.toBeNull();
+    });
+
+    // The renderer reads a note only on a skill hook, so one left behind by a
+    // switch shipped a `text:` key into companion.yml that nothing ever reads.
+    it('drops a note typed under Skill when the kind changes', async () => {
+        const { host, made } = form();
+        const segment = (label: string) =>
+            Array.from(host.querySelectorAll('.pb-segment'))
+                .find(el => el.textContent === label) as HTMLButtonElement;
+
+        const note = host.querySelector('.pb-note .pb-input') as HTMLInputElement;
+        note.value = 'read the changelog first';
+        note.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+
+        segment('Node').click();
+        await flush();
+        const value = host.querySelector('.pb-field .pb-input') as HTMLInputElement;
+        value.value = 'review';
+        value.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+        (host.querySelector('form') as HTMLFormElement)
+            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+        expect(made).toHaveLength(1);
+        expect(made[0].note).toBe('');
     });
 
     it('names the note for what it is, and marks it optional', () => {

@@ -318,8 +318,9 @@ def create_command(project_root: str, command: str, built_body: str,
 def sync(project_root: str, bodies: dict, descriptions: dict = None) -> tuple:
     """Sync every built body out to its emissions, creating the ones that are missing.
 
-    Returns `(written, created, unreached)` — emissions updated, emissions made
-    for a command that had none, and commands still reachable by nothing.
+    Returns `(written, created, unreached, stale)` — emissions updated, emissions
+    made for a command that had none, commands still reachable by nothing, and
+    emissions in a format this cannot rewrite yet.
 
     A step this project added is the case that needs creating: it will never be
     in `extension.yml`, which is the extension's own file and what the installer
@@ -328,19 +329,22 @@ def sync(project_root: str, bodies: dict, descriptions: dict = None) -> tuple:
     project with no agent command directory to put one in.
     """
     descriptions = descriptions or {}
-    written, created, unreached = [], [], []
+    written, created, unreached, stale = [], [], [], []
     for command, body in sorted(bodies.items()):
-        if emission_paths(project_root, command):
+        paths = emission_paths(project_root, command)
+        if paths:
             written.extend(sync_command(project_root, command, body))
+            stale.extend(path for path in paths if not _rewritable(path))
             continue
         made = create_command(project_root, command, body, descriptions.get(command, ""))
         created.extend(made)
         if not made:
             unreached.append(command)
-    return written, created, unreached
+    return written, created, unreached, stale
 
 
-def describe(written: list, created: list, unreached: list, project_root: str) -> list:
+def describe(written: list, created: list, unreached: list, project_root: str,
+             stale: list = None) -> list:
     """The lines a build prints about what it carried out to the agents."""
     out = []
     if written:
@@ -357,6 +361,13 @@ def describe(written: list, created: list, unreached: list, project_root: str) -
         out.append(
             f"[build] nothing can dispatch {', '.join(unreached)} — this project "
             "has no agent command directory to put it in")
+    for path in sorted(stale or []):
+        # Named one by one on purpose. This file keeps the pipeline it had
+        # before the edit, and a count would let somebody read "built 5
+        # commands" as "every agent has the new one".
+        out.append(f"[build] left {os.path.relpath(path, project_root)} alone — this "
+                   "format is not one the build can rewrite yet, so it still "
+                   "carries the pipeline it had")
     return out
 
 

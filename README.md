@@ -114,7 +114,7 @@ Open it from the **circuit** icon at the top of the Specs sidebar, or from the p
 
 **Every write says what it did.** A line at the foot of the panel names the change, offers **Undo** where there is one, and reminds you that a change is not in the pipeline until Build writes it. Build and Preview answer in the header too, rather than taking the editor to say they worked.
 
-**Rearrange it.** Drag a node to move it within its phase, or use **Move up** and **Move down** in its panel. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
+**Rearrange it.** Drag a node onto another to move it — within its phase, or into a different one — or use **Move up** and **Move down** in its panel. A node free to move shows a grip; one held in place by something that reads it shows a lock and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
 
 **Attach your own work.** Every phase carries a `+` holding **Add hook**, which asks where it runs and what it is — a **skill** you already have, an **instruction**, a shell **command**, or one of your own nodes. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
 

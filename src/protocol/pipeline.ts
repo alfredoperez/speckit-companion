@@ -335,14 +335,12 @@ export interface BuildReport {
 
 export type BuilderToExtensionMessage =
     | { type: 'ready' }
-    | { type: 'refresh' }
     | { type: 'build' }
     | { type: 'preview' }
     | { type: 'openConfig' }
     | { type: 'repair'; repairId: string }
     | { type: 'saveNode'; command: string; nodeId: string; body: string }
     | { type: 'openNode'; command: string; nodeId: string }
-    /** Take ownership of a node: copy the shipped instructions in to edit. */
     /** Give it back: drop the project's copy and return to the shipped node. */
     | { type: 'restoreNode'; command: string; nodeId: string }
     /**
@@ -407,6 +405,15 @@ export type BuilderToExtensionMessage =
         note?: string;
         /** Set to replace the hook already at this index rather than add one. */
         editIndex?: number;
+        /**
+         * Where this hook was before, when the edit moved it to another boundary.
+         *
+         * One message rather than a `removeHook` followed by an `addHook`: each
+         * message is routed on its own, so the two read-modify-writes of
+         * `companion.yml` overlapped — and a refused add left the hook gone with
+         * nothing offering it back.
+         */
+        movedFrom?: { anchor: string; when: HookWhen; index: number };
     }
     /** Take a hook out. A hook could only ever be added before this. */
     | { type: 'removeHook'; command: string; anchor: string; when: HookWhen; index: number }

@@ -122,6 +122,7 @@ def set_nodes(text: str, command: str, nodes: list) -> str:
         out = lines[:commands_end] + block + lines[commands_end:]
         return "\n".join(out) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, command_at)
     command_end = _block_end(lines, command_at, cmd_indent, commands_end)
     key_indent = next(
         (_indent_of(lines[i]) for i in range(command_at + 1, command_end)
@@ -147,9 +148,7 @@ def write_nodes(path: str, command: str, nodes: list) -> str:
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
     updated = set_nodes(text, command, nodes)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
-        fh.write(updated)
+    save_config(path, updated)
     return updated
 
 
@@ -266,6 +265,8 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
         out = lines[:commands_end] + block + lines[commands_end:]
         return "\n".join(out) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, command_at)
+
     # Walk hooks -> when -> anchor, creating the first level that is absent.
     at, end, indent = command_at, _block_end(lines, command_at, cmd_indent, commands_end), cmd_indent
     for depth, key in enumerate(("hooks", when, anchor)):
@@ -374,6 +375,28 @@ def replace_hook(text: str, command: str, when: str, anchor: str,
     else:
         out = lines[:at] + [f"{' ' * item_indent}- {_hook_line(hook)}"] + lines[stop:]
     return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
+def check_workflow(project_root: str, name: str) -> None:
+    """Refuse a workflow that has no file, before the selection is written.
+
+    Writing the key first was silent for exactly as long as nobody built: the
+    panel said "now running 'bugfx'", and from then on every build and every
+    draw of the board failed on a configuration that pointed at nothing.
+    """
+    if name.strip() == "shipped":
+        return
+    path = os.path.join(project_root, ".specify", "companion", "workflows",
+                        f"{name.strip()}.yml")
+    if os.path.isfile(path):
+        return
+    directory = os.path.dirname(path)
+    known = sorted(f[:-4] for f in os.listdir(directory)
+                   if f.endswith(".yml")) if os.path.isdir(directory) else []
+    raise ConfigWriteError(
+        f"there is no workflow called '{name}'"
+        + (f" — this project has: {', '.join(known)}" if known
+           else " — this project has none yet"))
 
 
 def set_workflow(text: str, name: str) -> str:
@@ -669,7 +692,6 @@ def set_template_section(text: str, command: str, heading: str, fragment) -> str
     """
     lines = text.splitlines()
     trailing_newline = text.endswith("\n") or not text
-    entry = f"{{ {_quote(heading)}: {fragment} }}" if fragment else None
 
     found = _command_block(lines, command)
     if found is None:
@@ -760,6 +782,7 @@ def set_phases(text: str, command: str, phases: list, renamed: tuple = None) -> 
         out = lines[:commands_end] + block + lines[commands_end:]
         return "\n".join(out) + ("\n" if trailing_newline else "")
 
+    _open_block(lines, command_at)
     command_end = _block_end(lines, command_at, cmd_indent, commands_end)
     key_indent = next(
         (_indent_of(lines[i]) for i in range(command_at + 1, command_end)
@@ -1083,6 +1106,7 @@ def main() -> int:
             return 0
 
         if args.workflow:
+            check_workflow(project, args.workflow)
             save_config(path, set_workflow(read_config(path), args.workflow))
             print(f"[config] now running '{args.workflow}'")
             return 0

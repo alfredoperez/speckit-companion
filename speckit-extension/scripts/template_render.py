@@ -180,7 +180,12 @@ def find_fragment(name: str, fragments_dir: str):
 
     Same precedence as a node: a project that writes `outcomes.md` of its own
     replaces the shipped fragment of that name rather than colliding with it.
+
+    A name, not a path. Joined unchecked, `../../../../etc/hosts` resolved
+    outside the project and was spliced into the rendered template.
     """
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name or ""):
+        return None
     own = os.path.join(fragments_dir, f"{name}.md")
     if os.path.isfile(own):
         return own

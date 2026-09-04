@@ -34,6 +34,13 @@ interface Props {
     step: PipelineStep;
     /** The phase or node the button was pressed on. */
     anchor: string;
+    /**
+     * Which side of it that button sat on.
+     *
+     * The seam above a node and the seam below it opened the same form seeded
+     * `before`, so attaching after something meant correcting the form first.
+     */
+    when?: HookWhen;
     /** What this project can point a hook at, so a name is picked not typed. */
     choices: PipelineChoices;
     /** The hook being changed, when this is an edit rather than an addition. */
@@ -99,12 +106,12 @@ function anchors(step: PipelineStep): Array<{ id: string; label: string; note: s
 }
 
 export function AttachForm(props: Props) {
-    const { step, anchor, choices, editing, onCancel, onAttach } = props;
+    const { step, anchor, when: seededWhen, choices, editing, onCancel, onAttach } = props;
     const [hookType, setHookType] = useState<HookType>(editing?.type ?? 'skill');
     const [value, setValue] = useState(editing?.summary ?? '');
     const [note, setNote] = useState(editing?.note ?? '');
     const [where, setWhere] = useState(editing?.anchor ?? anchor);
-    const [when, setWhen] = useState<HookWhen>(editing?.when ?? 'before');
+    const [when, setWhen] = useState<HookWhen>(editing?.when ?? seededWhen ?? 'before');
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const places = anchors(step);
@@ -112,7 +119,9 @@ export function AttachForm(props: Props) {
         : hookType === 'node' ? choices.nodes : [];
     const ready = value.trim().length > 0;
 
-    const pick = (type: HookType) => { setHookType(type); setValue(''); };
+    // The note goes with the value: only a skill hook has one, so a note typed
+    // under Skill and left behind by a switch shipped a key nothing reads.
+    const pick = (type: HookType) => { setHookType(type); setValue(''); setNote(''); };
 
     /** Arrows, Home and End move the selection, the way a radio group does. */
     const pickKind = (event: KeyboardEvent, index: number) => {

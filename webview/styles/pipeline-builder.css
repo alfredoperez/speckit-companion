@@ -238,6 +238,14 @@ body {
     background: var(--accent-hover);
 }
 
+/* Secondary header actions. Drawn at full weight they competed with Build,
+   which is the one thing in the header meant to be pressed. */
+.builder-action--quiet {
+    /* The chrome goes, the contrast stays: these are labels somebody reads, and
+       Build is already the only filled thing in the row. */
+    border-color: transparent;
+}
+
 /* The way out that discards the most should not look like the one that keeps
    everything. Same size, different weight of consequence. */
 .builder-action--destructive {
@@ -685,6 +693,14 @@ body {
 }
 
 .pb-writes { color: var(--success); }
+
+/* Produced only sometimes. Drawn the same as a guaranteed file, it claimed an
+   artifact the run may never make — so the line under it says "not always",
+   and the title says when. */
+.pb-writes--sometimes {
+    color: var(--text-secondary);
+    border-bottom: 1px dashed currentColor;
+}
 
 /* A node that can stop the run, said in a word. */
 .pb-node-gate {
