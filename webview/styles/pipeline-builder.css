@@ -289,10 +289,6 @@ body {
     border-radius: var(--radius-md);
 }
 
-.builder-changes-empty {
-    margin: 0;
-    color: var(--text-secondary);
-}
 
 .builder-changes-list {
     margin: 0;
@@ -678,7 +674,6 @@ body {
     gap: var(--space-2);
 }
 
-.pb-node-id,
 .pb-writes {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -1121,9 +1116,6 @@ body {
     border-top: 1px solid var(--border);
 }
 
-.pb-field--place {
-    align-items: end;
-}
 
 .pb-field {
     display: flex;
@@ -1134,8 +1126,6 @@ body {
     border: none;
 }
 
-.pb-field--row { flex-direction: row; gap: var(--space-3); }
-.pb-field--grow { flex-grow: 1; min-width: 0; }
 
 .pb-field-label {
     padding: 0;
@@ -1143,7 +1133,6 @@ body {
     color: var(--text-secondary);
 }
 
-.pb-optional { color: var(--text-muted); }
 
 .pb-field-problem {
     font-size: var(--text-xs);
@@ -1403,7 +1392,6 @@ body {
     opacity: 0.75;
 }
 
-.pb-hook-from,
 .pb-hook-note,
 .pb-hook-ext {
     margin-left: var(--space-1);
@@ -1423,23 +1411,6 @@ body {
     letter-spacing: 0.04em;
 }
 
-.pb-stock-command {
-    font-family: var(--font-mono);
-    color: var(--text-secondary);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pb-stock-from,
-.pb-stock-note {
-    flex-shrink: 0;
-    padding: 0 var(--space-1);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-}
 
 /* ============================================
    What a step produces — with its name, not below its nodes
@@ -1513,12 +1484,6 @@ body {
     color: var(--text-body);
 }
 
-/* The alternatives a node offers, in the inspector's action row. Sized like the
-   buttons beside it so the row does not step. */
-.pb-inspector-variants {
-    font-family: inherit;
-    font-size: var(--text-sm);
-}
 
 /* ============================================
    A phase name is editable in place

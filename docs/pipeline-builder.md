@@ -2,7 +2,7 @@
 
 Your assistant runs a pipeline: a handful of steps, each assembled from **nodes** of instruction. The builder shows you that pipeline and lets you change it. Swap a node for a different one, attach your own work at any boundary, change the shape of the documents a step writes, add a step of your own. None of it forks anything.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette: **SpecKit Companion: Open Pipeline Builder**.
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette: **SpecKit Companion: Open Pipeline Builder**. The icon appears once the Companion spec-kit extension is installed — it is what the panel reads the pipeline from.
 
 ---
 
