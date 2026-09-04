@@ -186,7 +186,10 @@ body {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     letter-spacing: 0.04em;
-    color: var(--text-secondary);
+    /* Both chips state a fact somebody reads — how much changed, what the
+       pipeline holds — so they take the body colour rather than the one
+       reserved for metadata. */
+    color: var(--text-body);
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 999px;
@@ -199,8 +202,10 @@ body {
     cursor: default;
 }
 
+/* The hue marks; it does not fill. The word takes `--review-ink`, the outline
+   takes `--review`, and the tint stays a tint. */
 .builder-chip--customised {
-    color: var(--review);
+    color: var(--review-ink);
     border-color: var(--review);
     background: var(--review-subtle);
 }
@@ -215,20 +220,6 @@ body {
     align-items: center;
     gap: var(--space-2);
     margin-left: auto;
-}
-
-/* One line, or none of it. Broken mid-list it read "17 / nodes", which is
-   harder to scan than the count is worth.
-
-   The margin is what separates a fact from the buttons after it: at the row's
-   own 8px it was the fourth item in a row of three controls, and read as a
-   label belonging to the button beside it rather than as the panel's tally. */
-.builder-count {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    white-space: nowrap;
-    margin-right: var(--space-2);
 }
 
 .builder-action {
@@ -311,21 +302,14 @@ body {
     color: var(--warning);
 }
 
+/* The panel of the header that runs full width under the band. The changes
+   list that used to sit here has gone — the board draws it — so what is left
+   is the build log. */
 .builder-changes {
     flex-basis: 100%;
     padding: var(--space-3);
     background: var(--bg-elevated);
     border-radius: var(--radius-md);
-}
-
-
-.builder-changes-list {
-    margin: 0;
-    padding-left: var(--space-4);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    line-height: var(--leading-loose);
-    color: var(--text-body);
 }
 
 
@@ -2214,6 +2198,60 @@ body {
 .pb-phase-add { gap: 0; }
 
 
+/* ── Lane A ──────────────────────────────────────────────────
+   The header's second group, the two chips it holds, and the way in. */
+
+/* The marks and `+ Add step` sit in the band people already read, between the
+   name of the pipeline and the actions on it. */
+.builder-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+/* The chip's list carries the counts themselves: its second lines are content
+   rather than hints, and `5 steps · 16 phases · 24 nodes` broken over two lines
+   is not a count anybody can read. */
+.builder-tally + .pb-menu-list { width: max-content; }
+
+.builder-tally + .pb-menu-list .pb-menu-note { color: var(--text-body); }
+
+/* Dashed, because it makes something that is not there yet. The outline says
+   "a step goes here" the way the board's own seams do. */
+.builder-action--add {
+    border-style: dashed;
+    color: var(--text-body);
+}
+
+/* Wide, the two quiet actions are words in the row and there is nothing to
+   fold; the `⋯` appears only when the row runs out of width. The trigger takes
+   the `display: none` as well as its wrapper, so it is absent rather than a
+   nought-pixel button somebody's keyboard can still reach. */
+.builder-overflow,
+.builder-overflow .pb-menu-trigger { display: none; }
+
+.builder-overflow .pb-menu-trigger {
+    padding: var(--space-1) var(--space-2);
+    border-color: transparent;
+    line-height: 1;
+}
+
+/* Where the changes chip lands you. A lane already on screen looks like nothing
+   happened without it. */
+.pb-step--found { animation: pb-found 1.2s ease-out; }
+
+@keyframes pb-found {
+    0%, 60% { box-shadow: inset 0 0 0 1px var(--review); }
+    100% { box-shadow: inset 0 0 0 1px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-step--found { animation: none; box-shadow: inset 0 0 0 1px var(--review); }
+}
+
+
 /* ── Narrow panel ────────────────────────────────────────────
    Last on purpose: `@container` adds no specificity, so these have to
    come after the rules they override or source order silently wins. */
@@ -2228,5 +2266,30 @@ body {
         max-height: 50vh;
     }
 
-    .builder-facts { margin-left: 0; flex-basis: 100%; }
+    /* Two rows rather than four wrapped fragments. Row one is what this is and
+       the one thing to do with it; row two is what the pipeline holds and the
+       way to add to it. `Open companion.yml` and `Preview build` are the two
+       nobody needs at this width, so they fold into the `⋯`. */
+    .builder-identity { order: 1; }
+    .builder-facts { order: 2; margin-left: 0; flex-basis: auto; }
+    .builder-tools { order: 3; flex-basis: 100%; }
+
+    /* The switcher's own `aria-label` names it, and the word is what pushes
+       Build onto a row of its own. */
+    .builder-workflow-label { display: none; }
+
+    .builder-facts .builder-action--quiet { display: none; }
+    .builder-overflow { display: block; }
+    .builder-overflow .pb-menu-trigger { display: inline-flex; }
+
+    /* The tally sits well into the second row, so a list hung off the trigger
+       runs past the shell — which hides its overflow, meaning the last inch of
+       the counts is unreachable. At this width it hangs off the band instead:
+       the header is the sticky, positioned ancestor, so dropping the menu's own
+       positioning lets the list open under the whole thing. */
+    .builder-tools .pb-menu { position: static; }
+
+    .builder-tools .pb-menu-list {
+        max-width: calc(100cqw - var(--space-4) * 2);
+    }
 }

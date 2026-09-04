@@ -212,6 +212,16 @@ function App() {
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
+                onNewStep={() => { setNotice(null); setSide({ kind: 'new-step' }); }}
+                // Matched on the property rather than through a selector, since
+                // a step is named by whoever wrote the workflow.
+                onShowChanged={name => {
+                    const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
+                        .find(el => el.dataset.step === name);
+                    lane?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    lane?.classList.add('pb-step--found');
+                    setTimeout(() => lane?.classList.remove('pb-step--found'), 1200);
+                }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
             {line && (

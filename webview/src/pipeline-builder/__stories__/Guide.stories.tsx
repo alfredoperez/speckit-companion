@@ -226,9 +226,10 @@ export const ThePhaseMenu: Story = {
 /**
  * The header chip, expanded.
  *
- * The chip says whether anything differs from the shipped pipeline; opening it
- * says what. There is no prop for the open state — it is what clicking the chip
- * does — so the story clicks it.
+ * Two marks, side by side. The first says whether anything differs from the
+ * shipped pipeline and takes you to the first lane that does; the second says
+ * what the pipeline holds, and opens onto the counts. There is no prop for the
+ * open state — it is what clicking does — so the story clicks it.
  */
 export const WhatChanged: Story = {
     parameters: { capture: { width: 1000, height: 200 } },
@@ -255,7 +256,7 @@ export const WhatChanged: Story = {
         </Panel>
     ),
     play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
-        press(canvasElement, '.builder-chip');
+        press(canvasElement, '.builder-tally');
     },
 };
 

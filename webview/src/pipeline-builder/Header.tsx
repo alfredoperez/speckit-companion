@@ -2,16 +2,16 @@
  * The page-chrome band: what this pipeline is, whether it needs rebuilding, and
  * the one forward action.
  *
- * The divergence chip is the design's collapsed sidebar — it states whether
- * anything differs from the shipped pipeline and expands to say what, rather
- * than holding a permanent rail open for a project that changed nothing.
+ * The divergence chip is a mark that navigates. It used to print the same list
+ * the board already draws, one lane per line, so the panel said everything
+ * twice; now it says how much changed and takes you to the first of it.
  */
 
 import { useState } from 'preact/hooks';
 import { BuildReport, PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
 import { changed } from './changes';
-import { totals } from './counts';
-import { Menu } from './Menu';
+import { PipelineTotals, totals } from './counts';
+import { Menu, MenuOption } from './Menu';
 
 /** Starts a workflow rather than switching to one. A workflow is a `.yml`
     stem, so `#` cannot be the name of a real one. */
@@ -30,6 +30,10 @@ interface Props {
     onSelectWorkflow: (name: string) => void;
     /** Start a new workflow, seeded from the one in force. */
     onNewWorkflow: () => void;
+    /** Append a step to the run. The board's seams pass the step to follow. */
+    onNewStep?: () => void;
+    /** Take the reader to a changed lane. The DOM lookup belongs to the panel. */
+    onShowChanged?: (step: string) => void;
     /** The first-run line has been read. Absent outside the panel. */
     onDismissFirstRun?: () => void;
 }
@@ -72,24 +76,43 @@ function tally(count: number, noun: string): string {
 /**
  * The one fact about this pipeline you cannot get by looking at it.
  *
- * The header used to read `5 steps · 16 phases · 24 nodes · 0 hooks`. Three of
- * those four are on screen, in columns, countable — restating them is chrome.
- * The fourth was the only one worth having and it was WRONG: it counted the
- * project's own hooks and ignored every hook an installed extension registers,
- * so a board visibly carrying four of them said zero.
- *
- * Hooks are the thing you genuinely cannot total by eye — they sit at boundaries
- * scattered down five lanes. So that is what the line says, and it says how many
- * are the project's, because that is the part a reader is deciding about.
+ * Hooks sit at boundaries scattered down five lanes, so they are the thing you
+ * genuinely cannot total by eye. Everything else the panel knows about itself —
+ * steps, phases, nodes, whose hooks these are — was a native `title` on a line
+ * of grey mono text, which is to say it was unfindable. It is a chip that opens
+ * now, and this is what the closed chip says.
  *
  * Counted from the steps the canvas draws, not from `graph.counts`: those two
  * disagreed, and a board showing five hooks was topped by `nothing attached`.
  */
-function hookTally(graph: PipelineGraph): string {
-    const { hooks, stockHooks } = totals(graph);
-    const total = hooks + stockHooks;
-    if (total === 0) { return 'nothing attached'; }
-    return hooks > 0 ? `${tally(total, 'hook')} · ${hooks} yours` : tally(total, 'hook');
+function hookTally(counts: PipelineTotals): string {
+    const total = counts.hooks + counts.stockHooks;
+    return total === 0 ? 'nothing attached' : tally(total, 'hook');
+}
+
+/** What the tally chip opens onto — the counts, each one a line of its own. */
+function tallyOptions(counts: PipelineTotals): MenuOption[] {
+    const options: MenuOption[] = [{
+        id: 'shape',
+        label: `${tally(counts.steps, 'step')} · ${tally(counts.phases, 'phase')} · `
+            + tally(counts.nodes, 'node'),
+    }];
+    if (counts.hooks) {
+        options.push({
+            id: 'yours',
+            label: `${tally(counts.hooks, 'hook')} yours`,
+            note: 'Attached by this project',
+        });
+    }
+    if (counts.stockHooks) {
+        options.push({
+            id: 'extensions',
+            label: `${tally(counts.stockHooks, 'hook')} from extensions`,
+            note: 'Registered by installed spec-kit extensions, which this panel '
+                + 'shows but does not edit',
+        });
+    }
+    return options;
 }
 
 function workflowLabel(name: string): string {
@@ -154,46 +177,17 @@ function reportTone(report: BuildReport): string {
     return report.dryRun ? 'info' : 'done';
 }
 
-function changeSummary(graph: PipelineGraph): string[] {
-    const lines: string[] = [];
-    for (const step of graph.steps) {
-        if (!changed(step)) { continue; }
-        const bits: string[] = [];
-        if (step.changes.removed.length) { bits.push(`−${step.changes.removed.join(', ')}`); }
-        if (step.changes.added.length) { bits.push(`+${step.changes.added.join(', ')}`); }
-        if (step.changes.reordered) { bits.push('reordered'); }
-        if (step.changes.hooks) {
-            bits.push(`${step.changes.hooks} hook${step.changes.hooks === 1 ? '' : 's'}`);
-        }
-        if (step.changes.replaced.length) {
-            bits.push(`your own: ${step.changes.replaced.join(', ')}`);
-        }
-        if (step.changes.phases.length) {
-            bits.push(`phases: ${step.changes.phases.join(', ')}`);
-        }
-        if (step.changes.decisions.length) {
-            bits.push(`routing: ${step.changes.decisions.join(', ')}`);
-        }
-        // Only a section someone pointed elsewhere. Every step that writes a
-        // document has a template, so naming the file listed "template
-        // spec-template.md" as a change on a step whose template nobody had
-        // touched — which is why the derivation this list belongs to ignores
-        // its presence too.
-        if (step.template?.sections.length) {
-            bits.push(`template: ${step.template.sections.join(', ')}`);
-        }
-        if (bits.length) { lines.push(`${step.name}: ${bits.join(' · ')}`); }
-    }
-    return lines;
-}
-
 export function Header(props: Props) {
     const { graph, buildState, busy, report, onBuild, onPreview, onOpenConfig } = props;
     const counts = totals(graph);
-    const [open, setOpen] = useState(false);
     const [showingLog, setShowingLog] = useState(false);
-    const changes = changeSummary(graph);
     const changedSteps = graph.steps.filter(changed).length;
+    const firstChanged = graph.steps.find(changed)?.name ?? '';
+    // On a fresh project a filled, disabled Build was the loudest thing on
+    // screen, over the first-run line that is the actual entry point. It takes
+    // the fill when there is work in it and stays outlined otherwise.
+    const somethingToBuild = changedSteps > 0
+        || buildState === 'stale' || buildState === 'never-built';
     // A report is the newer and more specific statement about the same file, so
     // it replaces the build state rather than stacking under it — a preview that
     // answers "2 of 5 would change" does not also need an amber line saying the
@@ -239,35 +233,44 @@ export function Header(props: Props) {
                             else { props.onSelectWorkflow(id); }
                         }} />
                 </div>
+            </div>
 
-                {/* Nothing changed is a whole fact. Expanding it said "this
-                    project runs the pipeline exactly as it ships" under a line
-                    already saying the same thing, so the chip states it and
-                    stops. */}
+            {/* The band people already read, so the two marks and the way in
+                sit here rather than out at the right edge with the actions. */}
+            <div class="builder-tools">
+                {/* Nothing changed is a whole fact, so it states it and stops.
+                    Something changed is a place on the board, so the chip goes
+                    there — a `›` rather than a `▾`, because it moves you. */}
                 {changedSteps === 0 ? (
                     <span class="builder-chip builder-chip--flat">No changes</span>
                 ) : (
                     <button class="builder-chip builder-chip--customised"
-                        aria-expanded={open}
-                        onClick={() => setOpen(!open)}
+                        title="Go to the first changed step"
+                        onClick={() => props.onShowChanged?.(firstChanged)}
                     >
                         {`Changed · ${changedSteps} step${changedSteps === 1 ? '' : 's'}`}
-                        <span class="builder-chip-caret">{open ? '▴' : '▾'}</span>
+                        <span class="builder-chip-caret" aria-hidden="true">›</span>
                     </button>
                 )}
+
+                <Menu
+                    class="builder-chip builder-tally"
+                    trigger={hookTally(counts)}
+                    label={`What this pipeline holds: ${hookTally(counts)}`}
+                    title="What this pipeline holds"
+                    options={tallyOptions(counts)}
+                    onPick={() => undefined} />
+
+                {/* A run grows at its end, so the way to grow it belongs in the
+                    band that names the run. It was parked past the last lane,
+                    behind a horizontal scroll. */}
+                <button class="builder-action builder-action--add"
+                    onClick={() => props.onNewStep?.()}>
+                    + Add step
+                </button>
             </div>
 
             <div class="builder-facts">
-                <span class="builder-count"
-                    title={`${tally(counts.steps, 'step')}, `
-                        + `${tally(counts.phases, 'phase')}, `
-                        + `${tally(counts.nodes, 'node')}`
-                        + (counts.stockHooks
-                            ? `\n${tally(counts.stockHooks, 'hook')} from installed `
-                              + 'spec-kit extensions, which this panel shows but does not edit'
-                            : '')}>
-                    {hookTally(graph)}
-                </span>
                 {/* Named for what it does, and offered only when there is a file
                     to open — a project running the shipped pipeline has none. */}
                 {graph.configured && (
@@ -282,10 +285,24 @@ export function Header(props: Props) {
                 {/* "Build" — this runs the project's own build and writes the
                     command files. Claude is who reads them afterwards, not who
                     does this, and naming it here promised a step that never ran. */}
-                <button class="builder-action builder-action--primary" disabled={busy}
-                    onClick={onBuild}>
+                <button class={`builder-action${
+                    somethingToBuild ? ' builder-action--primary' : ''}`}
+                    disabled={busy} onClick={onBuild}>
                     {busy ? 'Building…' : 'Build'}
                 </button>
+                {/* Narrow only: the two quiet actions fold in here so row one
+                    keeps the name, the workflow and the forward action. */}
+                <div class="builder-overflow">
+                    <Menu class="builder-action"
+                        trigger="⋯" caret={false} align="right"
+                        label="More pipeline actions" title="More"
+                        options={[
+                            ...(graph.configured
+                                ? [{ id: 'open', label: 'Open companion.yml' }] : []),
+                            { id: 'preview', label: 'Preview build', disabled: busy },
+                        ]}
+                        onPick={id => { if (id === 'open') { onOpenConfig(); } else { onPreview(); } }} />
+                </div>
             </div>
 
             {/* Nothing said that a change here writes a file, so the first thing
@@ -338,16 +355,6 @@ export function Header(props: Props) {
             {graph.warnings.length > 0 && (
                 <div class="builder-notice builder-notice--warning">
                     {graph.warnings.map(warning => <div key={warning}>{warning}</div>)}
-                </div>
-            )}
-
-            {open && (
-                <div class="builder-changes">
-                    {changes.length === 0 ? null : (
-                        <ul class="builder-changes-list">
-                            {changes.map(line => <li key={line}>{line}</li>)}
-                        </ul>
-                    )}
                 </div>
             )}
         </header>
