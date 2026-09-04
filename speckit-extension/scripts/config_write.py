@@ -67,6 +67,21 @@ def _block_end(lines: list, start: int, indent: int, limit: int) -> int:
     return limit
 
 
+def _content_end(lines: list, start: int, end: int) -> int:
+    """`end`, walked back over the blank lines and comments that trail the block.
+
+    `_block_end` steps over blanks and comments to find where the next key
+    begins, so everything between the block's last entry and that key falls
+    inside the span. Replacing that span deleted it — a reorder from the panel
+    quietly ate the hand-written notes in a file whose whole premise is that
+    people read it and review it in a pull request.
+    """
+    at = end
+    while at > start + 1 and _is_blank(lines[at - 1]):
+        at -= 1
+    return at
+
+
 def _render_nodes(nodes: list, indent: str) -> list:
     """A `nodes:` block sequence. One node per line, which is what a diff wants."""
     return [f"{indent}nodes:"] + [f"{indent}{INDENT}- {node}" for node in nodes]
@@ -119,7 +134,8 @@ def set_nodes(text: str, command: str, nodes: list) -> str:
     if nodes_at is None:
         out = lines[:command_at + 1] + block + lines[command_at + 1:]
     else:
-        nodes_end = _block_end(lines, nodes_at, key_indent, command_end)
+        nodes_end = _content_end(
+            lines, nodes_at, _block_end(lines, nodes_at, key_indent, command_end))
         out = lines[:nodes_at] + block + lines[nodes_end:]
     return "\n".join(out) + ("\n" if trailing_newline else "")
 
@@ -497,22 +513,34 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
         source = _preset_source(preset)
         origin_note = f"# Started from the {preset} preset — change anything in it.\n"
     elif seed_from:
-        origin = (os.path.join(directory, f"{seed_from}.yml") if seed_from != "shipped"
-                  else None)
-        if origin is None:
+        # A name, not a path. Joined unchecked, `../../../../etc/hosts` read
+        # outside the project and copied what it found into the workflow.
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", seed_from):
+            raise ConfigWriteError(f"'{seed_from}' cannot be a workflow name")
+        if seed_from == "shipped":
+            # Companion with nothing changed, which is an empty file.
             source = ""
-        elif os.path.isfile(origin):
-            with open(origin, encoding="utf-8") as fh:
-                source = fh.read()
-        else:
+        elif seed_from == "this":
+            # What the project runs today, from its own configuration.
             base = os.path.join(project_root, ".specify", "companion.yml")
             if os.path.isfile(base):
                 with open(base, encoding="utf-8") as fh:
-                    # The selection itself does not travel into the copy.
+                    # The selection itself does not travel into the copy, or the
+                    # new workflow would point at whichever one made it.
                     source = "\n".join(
                         l for l in fh.read().splitlines()
                         if not l.startswith("workflow:")
                     ).strip() + "\n"
+        else:
+            origin = os.path.join(directory, f"{seed_from}.yml")
+            if not os.path.isfile(origin):
+                # Named a workflow that is not there. Falling through to the
+                # project's own configuration produced something that was not
+                # what was asked for, and said nothing about it.
+                raise ConfigWriteError(
+                    f"there is no workflow called '{seed_from}' to start from")
+            with open(origin, encoding="utf-8") as fh:
+                source = fh.read()
 
     os.makedirs(directory, exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:
@@ -743,7 +771,8 @@ def set_phases(text: str, command: str, phases: list, renamed: tuple = None) -> 
     if phases_at is None:
         out = lines[:command_at + 1] + block + lines[command_at + 1:]
     else:
-        phases_end = _block_end(lines, phases_at, key_indent, command_end)
+        phases_end = _content_end(
+            lines, phases_at, _block_end(lines, phases_at, key_indent, command_end))
         out = lines[:phases_at] + block + lines[phases_end:]
     return "\n".join(out) + ("\n" if trailing_newline else "")
 

@@ -236,7 +236,12 @@ export class PipelineBuilderPanel {
         replaceStep: async message => {
             const step = `${message.command}-ours`;
             const own = this.projectNodePath(message.command, step);
-            if (!fs.existsSync(own)) {
+            // Whether this call is what created it, so a refusal can take back
+            // exactly what it left. A seed written and then not referenced is a
+            // file the project never asked for, and it goes on to appear in the
+            // picker as a node of yours.
+            const seeded = !fs.existsSync(own);
+            if (seeded) {
                 // Seeded from what the step says today, because "use theirs
                 // instead" almost always means "adapt from ours".
                 const seed = this.stepInstructions(message.command);
@@ -248,7 +253,13 @@ export class PipelineBuilderPanel {
                     [{ name: `our ${message.command}`, nodes: [step] }],
                     undefined, [step]),
                 'Replacing the step');
-            if (!written) { return; }
+            if (!written) {
+                if (seeded) {
+                    try { fs.rmSync(own); } catch { /* it was never ours to clean */ }
+                    await this.send();
+                }
+                return;
+            }
             await vscode.window.showTextDocument(vscode.Uri.file(own));
         },
 
@@ -486,7 +497,11 @@ export class PipelineBuilderPanel {
         // to what is on disk — the drag or the form undoes itself.
         await this.send();
         if (refused) { this.say(refused); return false; }
-        if (status) { this.sayStatus(status); }
+        // Every write clears the last one's way back, not only a write that
+        // brings its own. Otherwise an Undo offered for a removal stayed armed
+        // through a reorder, and pressing it wrote back the shape from before
+        // the removal — taking the reorder with it.
+        this.sayStatus(status ?? null);
         return true;
     }
 

@@ -535,8 +535,15 @@ function Phase({ phase, actions, controls }: {
     const rename = (event: Event) => {
         const el = event.currentTarget as HTMLElement;
         const next = (el.textContent ?? '').trim();
-        if (next && next !== phase.name) { onRename(phase.name, next); }
-        else { el.textContent = phase.name; }
+        if (!next || next === phase.name) { el.textContent = phase.name; return; }
+        onRename(phase.name, next);
+        // Put the old name back and let the redraw carry the new one, rather
+        // than leaving the typed text standing. A refused write redraws the
+        // graph unchanged, and Preact then sees the same vdom text it rendered
+        // last time and touches nothing — so the board went on showing a phase
+        // name that is not in the configuration, which is the one thing every
+        // other refusal in this panel is careful not to do.
+        el.textContent = phase.name;
     };
 
     /** Put the caret in the name on the board rather than in a second field. */

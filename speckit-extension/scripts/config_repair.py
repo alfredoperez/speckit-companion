@@ -138,7 +138,10 @@ def drop_key(text: str, command: str, key: str) -> str:
         at = cw._find_key(lines, key, start + 1, end, key_indent)
         if at is None:
             return text
-        stop = cw._block_end(lines, at, key_indent, end)
+        # Back over the blanks and comments that trail the block: they belong to
+        # whatever comes next, and a repair that eats a note somebody wrote is
+        # a repair that costs more than the breakage.
+        stop = cw._content_end(lines, at, cw._block_end(lines, at, key_indent, end))
         out = lines[:at] + lines[stop:]
         return "\n".join(out) + ("\n" if trailing else "")
     return text
