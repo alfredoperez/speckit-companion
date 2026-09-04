@@ -890,54 +890,8 @@ body {
    Inspector — a node, read here
    ============================================ */
 
-.pb-inspector {
-    flex-shrink: 0;
-    width: 420px;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-secondary);
-    border-left: 1px solid var(--border);
-    overflow: auto;
-}
-
-.pb-inspector-head {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-2);
-    padding: var(--space-4) var(--space-4) var(--space-3);
-    border-bottom: 1px solid var(--border);
-}
-
-.pb-inspector-title {
-    margin: 0;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.pb-inspector-close {
-    align-self: start;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* A 14px mark in 4px of padding is a 22px target; 24 is the floor. */
-    min-width: 24px;
-    min-height: 24px;
-    padding: var(--space-1);
-    color: var(--text-secondary);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.pb-inspector-close:hover { color: var(--text-primary); }
-
-.pb-inspector-where {
-    grid-column: 1 / -1;
-    margin: 0;
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
+/* The inspector wears the `.pb-side` shell; what is left of it — its width and
+   its rows — is in the Lane C block, after the shell it overrides. */
 
 .pb-inspector-id { font-family: var(--font-mono); }
 
@@ -2212,6 +2166,42 @@ body {
 /* The trigger is a 24px square, so the caret's gap would push the mark
    off-centre inside it. */
 .pb-phase-add { gap: 0; }
+
+
+/* ── Lane C ──────────────────────────────────────────────────
+   After `.pb-side`, whose rules these two override: two single-class
+   selectors are settled by source order. */
+
+/* Head, title, close and where line are the shell's now. What is the
+   inspector's own is its width and its four rows: head, facts, the
+   instructions, the actions — the instructions taking the slack. */
+.pb-inspector {
+    width: 420px;
+    grid-template-rows: auto auto 1fr auto;
+    overflow: auto;
+}
+
+/* Dragging needs a pointer. These two are the Order row's own answer, on the
+   sentence that claims a node is free to move. */
+.pb-order-move {
+    margin-left: var(--space-2);
+    padding: 3px 0;
+    font: inherit;
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.pb-order-move:hover { color: var(--accent); }
+
+.pb-order-move:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
 
 
 /* ── Narrow panel ────────────────────────────────────────────

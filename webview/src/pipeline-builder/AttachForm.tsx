@@ -10,6 +10,7 @@
 import { useState } from 'preact/hooks';
 import { KIND_LABELS } from './hookKinds';
 import { Menu } from './Menu';
+import { SidePanel } from './SidePanel';
 import {
     HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
 } from '../../../src/protocol/pipeline';
@@ -157,17 +158,12 @@ export function AttachForm(props: Props) {
     };
 
     return (
-        <aside class="pb-side" aria-label={editing ? 'Edit hook' : 'Add hook'}>
-            <header class="pb-side-head">
-                <h2 class="pb-side-title">{editing ? 'Edit hook' : 'Add hook'}</h2>
-                <button class="pb-side-close" onClick={onCancel} title="Cancel">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
-                </button>
-                <p class="pb-side-where">in <span class="pb-side-step">{step.name}</span></p>
-            </header>
-
+        <SidePanel
+            label={editing ? 'Edit hook' : 'Add hook'}
+            title={editing ? 'Edit hook' : 'Add hook'}
+            where={<>in <span class="pb-side-step">{step.name}</span></>}
+            onClose={onCancel} closeLabel="Cancel"
+        >
             <form class="pb-form" onSubmit={submit}>
                 <div class="pb-form-fields">
                 {/* First, so the sentence reads "runs before Draft the spec". */}
@@ -274,7 +270,7 @@ export function AttachForm(props: Props) {
                         onClick={onCancel}>Cancel</button>
                 </div>
             </form>
-        </aside>
+        </SidePanel>
     );
 }
 
@@ -323,19 +319,11 @@ export function NewStepForm({
     };
 
     return (
-        <aside class="pb-side" aria-label="New step">
-            <header class="pb-side-head">
-                <h2 class="pb-side-title">New step</h2>
-                <button class="pb-side-close" onClick={onCancel} title="Cancel">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
-                </button>
-                <p class="pb-side-where">
-                    A turn of its own in the run, with its own command.
-                </p>
-            </header>
-
+        <SidePanel
+            label="New step" title="New step"
+            where="A turn of its own in the run, with its own command."
+            onClose={onCancel} closeLabel="Cancel"
+        >
             <form class="pb-form" onSubmit={submit}>
                 <div class="pb-form-fields">
                 <label class="pb-field">
@@ -396,7 +384,7 @@ export function NewStepForm({
                         onClick={onCancel}>Cancel</button>
                 </div>
             </form>
-        </aside>
+        </SidePanel>
     );
 }
 
@@ -443,19 +431,11 @@ export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: Ne
     };
 
     return (
-        <aside class="pb-side" aria-label="New workflow">
-            <header class="pb-side-head">
-                <h2 class="pb-side-title">New workflow</h2>
-                <button class="pb-side-close" onClick={onCancel} title="Cancel">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
-                </button>
-                <p class="pb-side-where">
-                    Pick something close, then change it.
-                </p>
-            </header>
-
+        <SidePanel
+            label="New workflow" title="New workflow"
+            where="Pick something close, then change it."
+            onClose={onCancel} closeLabel="Cancel"
+        >
             <form class="pb-form" onSubmit={submit}>
                 <div class="pb-form-fields">
                 <label class="pb-field">
@@ -499,6 +479,6 @@ export function NewWorkflowForm({ from, taken, presets, onCancel, onCreate }: Ne
                         onClick={onCancel}>Cancel</button>
                 </div>
             </form>
-        </aside>
+        </SidePanel>
     );
 }

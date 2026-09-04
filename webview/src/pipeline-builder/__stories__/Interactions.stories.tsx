@@ -605,13 +605,13 @@ export const ReadAndAct: Story = {
             'making it yours is what saving does, not a step before editing');
         assert(actions.includes('Add hook'), 'and work can be attached');
         // Reading the file is not changing it, so it sits beside the id.
-        assert(Boolean(canvasElement.querySelector('.pb-inspector-head .pb-inspector-open')),
+        assert(Boolean(canvasElement.querySelector('.pb-side-head .pb-inspector-open')),
             'with the editor still one click away, from the header');
     },
 };
 
 export const EverythingElseANodeCanDo: Story = {
-    name: 'Move, remove or give back a node, from one menu',
+    name: 'Move a node from its Order row, remove or give it back from More',
     render: () => {
         const { sent, on } = recorder();
         (EverythingElseANodeCanDo as { sent?: Sent }).sent = sent;
@@ -625,20 +625,29 @@ export const EverythingElseANodeCanDo: Story = {
                     editable="Write the spec the way THIS TEAM writes specs." parts={[]}
                     onClose={noop} onOpenFile={noop} onSave={noop}
                     onRestore={on('restoreNode')} onAttach={noop} onUseVariant={noop}
-                    onRemove={noop} onMove={noop} />
+                    onRemove={noop} onMove={on('moveNode')} />
             </div>
         );
     },
     play: async ({ canvasElement }) => {
         const sent = (EverythingElseANodeCanDo as { sent?: Sent }).sent!;
+        // Dragging needs a pointer, so the row that says a node is free to move
+        // is where moving it is offered.
+        const moves = Array.from(canvasElement.querySelectorAll('.pb-order-move'));
+        assert(moves.map(el => el.textContent).join(' ') === 'Move up Move down',
+            'reordering has a keyboard path, on the row that claims it');
+        (moves[0] as HTMLButtonElement).click();
+        assert(sent[0]?.what === 'moveNode' && sent[0]?.with === 'up',
+            'and pressing one moves the node');
+
         const trigger = canvasElement.querySelector('.pb-more .pb-menu-trigger') as HTMLButtonElement;
         trigger.click();
         await new Promise(resolve => setTimeout(resolve, 0));
 
         const offered = Array.from(canvasElement.querySelectorAll('.pb-more .pb-menu-label'))
             .map(el => el.textContent);
-        assert(offered.includes('Move up') && offered.includes('Move down'),
-            'reordering has a keyboard path, not only a drag');
+        assert(!offered.includes('Move up'),
+            'and More is left to the things that cost something');
         assert(offered.includes('Remove from the run'),
             'and a node can stop running without its file being deleted');
         assert(offered.includes('Use the shipped node'),
@@ -647,6 +656,6 @@ export const EverythingElseANodeCanDo: Story = {
         (Array.from(canvasElement.querySelectorAll('.pb-more .pb-menu-option'))
             .find(el => el.textContent?.startsWith('Use the shipped node')) as HTMLButtonElement)
             .click();
-        assert(sent[0]?.what === 'restoreNode', 'which asks for the revert, and says so');
+        assert(sent.at(-1)?.what === 'restoreNode', 'which asks for the revert, and says so');
     },
 };

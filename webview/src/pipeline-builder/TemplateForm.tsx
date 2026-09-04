@@ -14,6 +14,7 @@
  */
 
 import { Menu } from './Menu';
+import { SidePanel } from './SidePanel';
 import { PipelineFragment, PipelineStep } from '../../../src/protocol/pipeline';
 
 /** How a section goes back to the shipped shape, and what that shape is called. */
@@ -38,20 +39,15 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
     const forStep = fragments.filter(f => !f.for || f.for === step.name);
 
     return (
-        <aside class="pb-side" aria-label="Template">
-            <header class="pb-side-head">
-                <h2 class="pb-side-title">What {step.name} writes</h2>
-                <button class="pb-side-close" onClick={onCancel} title="Close">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 4l8 8M12 4l-8 8" /></svg>
-                </button>
-                <p class="pb-side-where">
-                    <span class="pb-facts-mono">{template.file}</span> · section by section.
-                    Changing one leaves the rest alone.
-                </p>
-            </header>
-
+        <SidePanel
+            label="Template"
+            title={<>What {step.name} writes</>}
+            where={<>
+                <span class="pb-facts-mono">{template.file}</span> · section by section.
+                Changing one leaves the rest alone.
+            </>}
+            onClose={onCancel}
+        >
             <div class="pb-template-rows">
                 {template.sectionsAvailable.map(heading => {
                     const options = forStep.filter(f => f.section === heading);
@@ -64,32 +60,38 @@ export function TemplateForm({ step, fragments, onCancel, onPick }: Props) {
                                 <span class="pb-template-heading">{heading}</span>
                                 {replaced && <span class="pb-yours">yours</span>}
                             </div>
-                            {/* A select had nowhere to put a fragment's summary. */}
-                            <span class="pb-template-pick">
-                                <Menu class="pb-menu-trigger--field"
-                                    trigger={<span class="pb-trigger-text">
-                                        {picked?.name ?? SHIPPED.label}
-                                    </span>}
-                                    label={heading}
-                                    title={`What ${heading} says`}
-                                    disabledTitle={`What ${heading} says`}
-                                    disabled={options.length === 0}
-                                    options={[SHIPPED, ...options.map(fragment => ({
-                                        id: fragment.name,
-                                        label: fragment.name,
-                                        note: fragment.summary,
-                                    }))]}
-                                    onPick={fragment => onPick(heading, fragment)} />
-                            </span>
-                            <span class="pb-template-summary">
-                                {options.length === 0
-                                    ? 'Only the shipped version exists for this section.'
-                                    : picked?.summary ?? SHIPPED.note}
-                            </span>
+                            {/* A dead field read as the working one a row above. */}
+                            {options.length === 0 ? (
+                                <span class="pb-template-summary">
+                                    <span class="pb-facts-mono">{SHIPPED.label}</span>
+                                    {' · nothing else is written for this section.'}
+                                </span>
+                            ) : (
+                                <>
+                                    {/* A select had nowhere to put a fragment's summary. */}
+                                    <span class="pb-template-pick">
+                                        <Menu class="pb-menu-trigger--field"
+                                            trigger={<span class="pb-trigger-text">
+                                                {picked?.name ?? SHIPPED.label}
+                                            </span>}
+                                            label={heading}
+                                            title={`What ${heading} says`}
+                                            options={[SHIPPED, ...options.map(fragment => ({
+                                                id: fragment.name,
+                                                label: fragment.name,
+                                                note: fragment.summary,
+                                            }))]}
+                                            onPick={fragment => onPick(heading, fragment)} />
+                                    </span>
+                                    <span class="pb-template-summary">
+                                        {picked?.summary ?? SHIPPED.note}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     );
                 })}
             </div>
-        </aside>
+        </SidePanel>
     );
 }

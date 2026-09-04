@@ -488,6 +488,33 @@ export const InspectorPinned: Story = {
     ),
 };
 
+// The Order row said a node was free to move and offered no way to move it;
+// the two buttons are the whole keyboard and touch story for ordering.
+export const InspectorOrderRow: Story = {
+    name: 'Inspector · moving a node from the row that says it can move',
+    render: () => (
+        <One><Inspector
+            node={node('draft-spec', 'Draft the spec', {
+                kind: 'author', writes: ['spec.md'],
+            })}
+            step="specify" body="Load `spec-template.md` and write the specification."
+            parts={[]} editable="Load `spec-template.md` and write the specification."
+            {...INSPECT} /></One>
+    ),
+};
+
+export const InspectorHeld: Story = {
+    name: 'Inspector · a node held in place, said in a word',
+    render: () => (
+        <One><Inspector
+            node={node('resolve-dir', 'Resolve the spec folder', {
+                pinned: 'load-living-specs, draft-spec read it',
+            })}
+            step="specify" body="Resolve the feature directory from the branch." parts={[]}
+            editable="Resolve the feature directory from the branch." {...INSPECT} /></One>
+    ),
+};
+
 export const InspectorFrame: Story = {
     name: 'Inspector · a step\'s own instructions',
     render: () => (
@@ -562,6 +589,26 @@ export const TemplateSections: Story = {
     ),
 };
 
+// A section with nothing behind it drew a field that looked exactly like the
+// working one above it, with the reason in the chosen fragment's slot.
+export const TemplateNoAlternatives: Story = {
+    name: 'Template · nothing else written for any section',
+    render: () => (
+        <One><TemplateForm
+            step={step('plan', PLAN.phases, {
+                template: {
+                    file: 'plan-template.md',
+                    sections: [],
+                    sectionsAvailable: [
+                        'Technical Context', 'Constitution Check', 'Project Structure',
+                    ],
+                    chosenBy: {},
+                },
+            })}
+            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
+    ),
+};
+
 export const NewWorkflow: Story = {
     name: 'New workflow',
     render: () => (
@@ -592,5 +639,16 @@ export const NewStep: Story = {
         <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
             taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
             onCancel={noop} onCreate={noop} /></One>
+    ),
+};
+
+// Opened from the seam between two lanes, which is already the answer to
+// "runs after" — so the form does not ask again.
+export const NewStepAfterTasks: Story = {
+    name: 'New step · opened at the seam after tasks',
+    render: () => (
+        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
+            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
+            initialAfter="tasks" onCancel={noop} onCreate={noop} /></One>
     ),
 };
