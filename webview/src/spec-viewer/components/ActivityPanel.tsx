@@ -13,6 +13,7 @@ import { TasksCard } from './cards/TasksCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
+import { INSTALL_BANNER_BODY } from '../../../../src/protocol/installBannerBody';
 
 /**
  * The viewer install banner, rendered INSIDE the Activity panel (#255 — it used
@@ -24,14 +25,17 @@ import { CommentsCard } from './cards/CommentsCard';
  */
 function InstallBanner() {
     if (!navState.value?.showInstallPrompt) return null;
+    // One banner, one source. This used to be a byte-for-byte copy of the
+    // server-rendered markup, kept in step by hand — two files shipping one
+    // nudge, with the same buttons and the same dismissal flag.
     return (
-        <div class="install-banner" id="install-banner" role="region" aria-label="Install spec-kit extension">
-            <span class="install-banner__icon codicon codicon-rocket" aria-hidden="true" />
-            <span class="install-banner__text">Install the spec-kit extension for the leaner <code>/speckit.companion.*</code> pipeline and capture.</span>
-            <button type="button" class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
-            <button type="button" class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
-            <button type="button" class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt" />
-        </div>
+        <div
+            class="install-banner"
+            id="install-banner"
+            role="region"
+            aria-label="Install spec-kit extension"
+            dangerouslySetInnerHTML={{ __html: INSTALL_BANNER_BODY }}
+        />
     );
 }
 

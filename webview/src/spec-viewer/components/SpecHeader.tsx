@@ -53,19 +53,7 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
                 drift
             </span>
         );
-        facts.push(
-            <button
-                key="update"
-                type="button"
-                class="spec-header-update-btn"
-                title="Update the spec to match the changed code, preserving its clarifications"
-                onClick={() => vscode.postMessage({ type: 'livingUpdate' })}
-            >
-                Update
-            </button>
-        );
     }
-
     return facts.length > 0 ? <div class="spec-header-living">{facts}</div> : null;
 }
 
@@ -74,15 +62,21 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
     const rest = meta.match.slice(GLOBS_SHOWN);
 
     return (
-        <>
+        <div class="spec-header-where">
             {meta.match.length > 0 && (
                 <div class="spec-header-covers">
                     <span class="spec-header-covers__label">Covers</span>
                     {/* Keyed by position: authored globs may repeat, so the value is not unique. */}
                     {shown.map((glob, i) => (
-                        <span key={i} class="spec-header-glob" title={glob}>
+                        <button
+                            key={i}
+                            type="button"
+                            class="spec-header-glob"
+                            title="Reveal in Explorer"
+                            onClick={() => vscode.postMessage({ type: 'revealGlob', glob })}
+                        >
                             {glob}
-                        </span>
+                        </button>
                     ))}
                     {rest.length > 0 && (
                         <span
@@ -96,6 +90,9 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                 </div>
             )}
             <div class="spec-header-location">
+                <span class="spec-header-covers__label">
+                    {meta.location === 'colocated' ? 'Lives beside the code' : 'Lives in specs'}
+                </span>
                 <span
                     class="spec-header-path"
                     title={
@@ -107,7 +104,7 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                     {meta.specPath}
                 </span>
             </div>
-        </>
+        </div>
     );
 }
 
@@ -132,13 +129,16 @@ export function SpecHeader() {
     const vs = viewerState.value;
     if (!ns) return null;
 
-    const badgeText = vs ? formatStatusLabel(vs.status) : ns.badgeText;
+    const meta = ns.livingMode ? ns.livingMeta ?? null : null;
+    // A living spec says "living" in its panel title already; the one badge that
+    // carries a fact here is DRAFT, the trust boundary on an adopted spec.
+    const badgeText = meta
+        ? (ns.badgeText === 'DRAFT' ? 'DRAFT' : null)
+        : (vs ? formatStatusLabel(vs.status) : ns.badgeText);
     const statusClass = vs?.status ?? ns.specStatus ?? null;
 
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
-
-    const meta = ns.livingMode ? ns.livingMeta ?? null : null;
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
@@ -149,7 +149,7 @@ export function SpecHeader() {
                             {ns.specContextName}
                         </h1>
                     )}
-                    {(badgeText || ns.branch || ns.createdDate) && (
+                    {(badgeText || ns.branch || ns.createdDate || meta) && (
                         <div class="spec-header-badges">
                             {badgeText && (
                                 <span

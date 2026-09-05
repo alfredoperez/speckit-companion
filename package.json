@@ -102,13 +102,9 @@
       {
         "view": "speckit.views.explorer",
         "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(play) Open a live sample](command:speckit.openSampleSpec)",
-        "when": "speckit.detected && !speckit.constitutionNeedsSetup && (speckit.companion.installed || speckit.companion.installNudgeDismissed)"
+        "when": "speckit.detected && !speckit.constitutionNeedsSetup"
       },
-      {
-        "view": "speckit.views.explorer",
-        "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(play) Open a live sample](command:speckit.openSampleSpec)\n\nSpecKit Companion adds living specs, lifecycle capture, and a fast-path for small changes.\n\n[$(rocket) Install SpecKit Companion](command:speckit.companion.installNudge?%5B%22welcome%22%5D)\n\n[Dismiss](command:speckit.companion.dismissInstallNudge)",
-        "when": "speckit.detected && !speckit.constitutionNeedsSetup && !speckit.companion.installed && !speckit.companion.installNudgeDismissed"
-      },
+      
       {
         "view": "speckit.views.explorer",
         "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
@@ -501,7 +497,7 @@
         "command": "speckit.livingSpecs.sync",
         "title": "Sync living specs from my changes",
         "category": "SpecKit",
-        "icon": "$(sync)"
+        "icon": "$(sparkle)"
       },
       {
         "command": "speckit.livingSpecs.refresh",
@@ -513,7 +509,7 @@
         "command": "speckit.livingSpecs.update",
         "title": "Update to Match Code",
         "category": "SpecKit",
-        "icon": "$(sync)"
+        "icon": "$(sparkle)"
       },
       {
         "command": "speckit.livingSpecs.copyName",
@@ -541,11 +537,6 @@
         "category": "SpecKit Companion"
       },
       {
-        "command": "speckit.companion.dismissInstallNudge",
-        "title": "Dismiss Companion Install Prompt",
-        "category": "SpecKit Companion"
-      },
-      {
         "command": "speckit.companion.buildPipeline",
         "title": "Build Pipeline from companion.yml",
         "category": "SpecKit Companion"
@@ -567,15 +558,15 @@
         "id": "speckit.specs.rowMenu",
         "label": "More Actions…",
         "icon": "$(ellipsis)"
-      },
-      {
-        "id": "speckit.specs.titleMenu",
-        "label": "More Actions…",
-        "icon": "$(ellipsis)"
       }
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "speckit.refresh",
+          "when": "view == speckit.views.explorer",
+          "group": "navigation@0"
+        },
         {
           "command": "speckit.specs.filter",
           "when": "view == speckit.views.explorer",
@@ -587,8 +578,13 @@
           "group": "navigation@2"
         },
         {
-          "submenu": "speckit.specs.titleMenu",
-          "when": "view == speckit.views.explorer",
+          "command": "speckit.specs.collapseAll",
+          "when": "view == speckit.views.explorer && !speckit.specs.allCollapsed",
+          "group": "navigation@3"
+        },
+        {
+          "command": "speckit.specs.expandAll",
+          "when": "view == speckit.views.explorer && speckit.specs.allCollapsed",
           "group": "navigation@3"
         },
         {
@@ -714,11 +710,6 @@
           "group": "4_reveal@2"
         },
         {
-          "command": "speckit.companion.installSpecKitExtension",
-          "when": "view == speckit.views.steering && viewItem == companion-header && !speckit.companion.installed",
-          "group": "inline"
-        },
-        {
           "command": "speckit.steering.refine",
           "when": "view == speckit.views.steering && viewItem == steering-document",
           "group": "inline"
@@ -727,6 +718,11 @@
           "command": "speckit.steering.delete",
           "when": "view == speckit.views.steering && viewItem == steering-document",
           "group": "5_danger@1"
+        },
+        {
+          "command": "speckit.livingSpecs.update",
+          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability-drifted",
+          "group": "inline@1"
         },
         {
           "command": "speckit.livingSpecs.update",
@@ -825,31 +821,17 @@
           "group": "5_danger@1"
         }
       ],
-      "speckit.specs.titleMenu": [
-        {
-          "command": "speckit.specs.collapseAll",
-          "when": "!speckit.specs.allCollapsed",
-          "group": "1_view@1"
-        },
-        {
-          "command": "speckit.specs.expandAll",
-          "when": "speckit.specs.allCollapsed",
-          "group": "1_view@1"
-        },
-        {
-          "command": "speckit.companion.installSpecKitExtension",
-          "when": "(speckit.detected || speckit.cliInstalled) && !speckit.companion.installed",
-          "group": "2_maintenance@1"
-        },
-        {
-          "command": "speckit.upgrade",
-          "when": "speckit.detected || speckit.cliInstalled",
-          "group": "2_maintenance@2"
-        }
-      ],
       "commandPalette": [
         {
           "command": "speckit.create"
+        },
+        {
+          "command": "speckit.upgrade",
+          "when": "speckit.detected || speckit.cliInstalled"
+        },
+        {
+          "command": "speckit.companion.installSpecKitExtension",
+          "when": "(speckit.detected || speckit.cliInstalled) && !speckit.companion.installed"
         },
         {
           "command": "speckit.specify"
@@ -941,10 +923,6 @@
         },
         {
           "command": "speckit.companion.installNudge",
-          "when": "false"
-        },
-        {
-          "command": "speckit.companion.dismissInstallNudge",
           "when": "false"
         }
       ]

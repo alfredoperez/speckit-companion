@@ -51,7 +51,8 @@ function getElements() {
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
-        workflowChoices: document.getElementById('workflowChoices') as HTMLElement,
+        workflowChoices: document.getElementById('workflowChoices') as HTMLSelectElement,
+        workflowPitch: document.getElementById('workflowPitch') as HTMLElement,
         commandButtonsContainer: document.getElementById('commandButtons') as HTMLElement,
         keyboardHints: document.getElementById('keyboardHints') as HTMLElement,
         srStatus: document.getElementById('sr-status') as HTMLElement
@@ -67,8 +68,8 @@ function announce(message: string): void {
 
 // Get selected workflow (the checked choice card's radio)
 function getSelectedWorkflow(): string {
-    const checked = document.querySelector<HTMLInputElement>('input[name="workflow"]:checked');
-    return checked?.value || workflowList[0]?.name || 'speckit';
+    const picker = document.getElementById('workflowChoices') as HTMLSelectElement | null;
+    return picker?.value || workflowList[0]?.name || 'speckit';
 }
 
 // How the current selection was made — computed at submit time.
@@ -315,6 +316,10 @@ function setupEventListeners(): void {
 
     // Submit button
     elements.submitBtn.addEventListener('click', () => {
+        if ((document.getElementById('submitBtn') as HTMLButtonElement | null)?.dataset.installs === 'true') {
+            vscode.postMessage({ type: 'installSpecKitExtension' });
+            return;
+        }
         if (isSubmitting || !canSubmit(elements.textarea.value, MAX_CHARS)) return;
         clearError();
         vscode.postMessage({
@@ -444,77 +449,101 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
             ? defaultWorkflow
             : workflows[0].name;
 
-    // Render one radio card per workflow. Built via DOM APIs (not innerHTML) so
-    // user-authored names/descriptions can't break out of an attribute.
+    // A dropdown, not a stack of cards. Two workflows took ~230px of height to
+    // express one either/or and pushed the Feature Brief below the fold. Built
+    // via DOM APIs (not innerHTML) so user-authored names and descriptions can't
+    // break out of an attribute.
     workflowChoices.replaceChildren();
     for (const wf of workflows) {
-        const card = document.createElement('div');
-        card.className = 'workflow-card';
+        const option = document.createElement('option');
+        option.value = wf.name;
+        // A dropdown row cannot hold a badge, so the not-installed state is said
+        // in the option's own text; the banner below repeats it as a badge.
+        option.textContent = wf.installed === false
+            ? `${wf.displayName} — install to enable`
+            : wf.displayName;
+        option.selected = wf.name === preselectedWorkflow;
+        workflowChoices.appendChild(option);
+    }
+    workflowChoices.addEventListener('change', () => {
+        trialActive = false;
+        renderWorkflowPitch(workflows);
+        updateCommandButtons(getSelectedWorkflow());
+    });
+    renderWorkflowPitch(workflows);
 
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = 'workflow';
-        input.id = `workflow-${wf.name}`;
-        input.value = wf.name;
-        input.checked = wf.name === preselectedWorkflow;
-        input.addEventListener('change', () => {
-            trialActive = false;
-            updateCommandButtons(wf.name);
-        });
-        card.appendChild(input);
+    workflowSelector.style.display = 'flex';
 
-        const label = document.createElement('label');
-        label.className = 'workflow-card-label';
-        label.htmlFor = input.id;
+    // Update command buttons for initial selection
+    updateCommandButtons(getSelectedWorkflow());
+}
 
-        const header = document.createElement('span');
-        header.className = 'workflow-card-header';
-        const name = document.createElement('span');
-        name.className = 'workflow-card-name';
-        name.textContent = wf.displayName;
-        header.appendChild(name);
-        if (wf.installed === false) {
-            const badge = document.createElement('span');
-            badge.className = 'workflow-card-badge';
-            badge.textContent = 'Install to enable';
-            header.appendChild(badge);
-        }
-        label.appendChild(header);
+/**
+ * The banner under the picker.
+ *
+ * Two things can live here. When Companion is NOT installed, its pitch — the
+ * description, the install badge and the one-spec trial — shows whatever is
+ * selected: it is an install nudge, and the moment someone is writing a spec is
+ * the moment it is worth reading. Once Companion is installed there is nothing to
+ * pitch, and the space goes back to the form. Otherwise, a project-defined
+ * workflow shows its own description, because two custom rows with nothing
+ * under them are two indistinguishable rows.
+ */
+function renderWorkflowPitch(workflows: WorkflowDefinition[]): void {
+    const { workflowPitch, workflowChoices } = getElements();
+    workflowPitch.replaceChildren();
 
-        // The description sells the choice, so it renders visibly on the card —
-        // never only as a tooltip.
-        if (wf.description) {
+    const companion = workflows.find(w => w.name === 'companion');
+    const selected = workflows.find(w => w.name === getSelectedWorkflow());
+    const isCustom = (w: WorkflowDefinition) => w.name !== 'speckit' && w.name !== 'companion';
+
+    const body = document.createElement('div');
+    body.className = 'workflow-pitch__body';
+
+    if (companion && companion.installed === false) {
+        const rocket = document.createElement('span');
+        rocket.className = 'codicon codicon-rocket workflow-pitch__glyph';
+        rocket.setAttribute('aria-hidden', 'true');
+        workflowPitch.appendChild(rocket);
+
+        if (companion.description) {
             const description = document.createElement('span');
-            description.className = 'workflow-card-description';
-            description.textContent = wf.description;
-            label.appendChild(description);
+            description.className = 'workflow-pitch__text';
+            description.textContent = companion.description;
+            body.appendChild(description);
         }
+        const badge = document.createElement('span');
+        badge.className = 'workflow-card-badge';
+        badge.textContent = 'Install to enable';
+        body.appendChild(badge);
 
-        // Low-commitment trial: shown on the Companion card whenever the
-        // pre-selected default is something else. Applies Companion to this one
-        // submission only — nothing ever writes the configured default.
-        if (wf.name === 'companion' && preselectedWorkflow !== 'companion') {
+        // Low-commitment trial: selects Companion for this one submission only —
+        // nothing here ever writes the configured default.
+        if (preselectedWorkflow !== 'companion') {
             const trial = document.createElement('button');
             trial.type = 'button';
             trial.className = 'workflow-card-trial';
             trial.textContent = 'Try Companion for this spec';
             trial.addEventListener('click', event => {
                 event.preventDefault();
-                input.checked = true;
+                workflowChoices.value = 'companion';
                 trialActive = true;
-                updateCommandButtons(wf.name);
+                updateCommandButtons('companion');
             });
-            label.appendChild(trial);
+            body.appendChild(trial);
         }
-
-        card.appendChild(label);
-        workflowChoices.appendChild(card);
+    } else if (selected && isCustom(selected) && selected.description) {
+        const description = document.createElement('span');
+        description.className = 'workflow-pitch__text';
+        description.textContent = selected.description;
+        body.appendChild(description);
+    } else {
+        workflowPitch.hidden = true;
+        return;
     }
 
-    workflowSelector.style.display = 'flex';
-
-    // Update command buttons for initial selection
-    updateCommandButtons(getSelectedWorkflow());
+    workflowPitch.appendChild(body);
+    workflowPitch.hidden = false;
 }
 
 function sendCommand(command: string): void {
@@ -536,10 +565,18 @@ function updateCommandButtons(workflowName: string): void {
     const workflow = workflowList.find(wf => wf.name === workflowName);
     const commands = workflow?.specifyCommands || [];
 
-    // The Auto button is shown only for workflows that declare a hands-off
-    // orchestrator (Companion); the normal Create Spec path stays available.
+    // A workflow that is not installed cannot create anything, so the form's
+    // primary action becomes the install — not a Create Spec that would only
+    // downgrade to stock, and not an Auto that has no stock twin at all.
+    const needsInstall = workflow?.installed === false;
     if (autoBtn) {
-        autoBtn.style.display = workflow?.supportsAuto ? '' : 'none';
+        autoBtn.style.display = workflow?.supportsAuto && !needsInstall ? '' : 'none';
+    }
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement | null;
+    if (submitBtn) {
+        submitBtn.textContent = needsInstall ? `Install ${workflow?.displayName ?? 'workflow'}` : 'Create Spec';
+        submitBtn.dataset.installs = needsInstall ? 'true' : '';
+        if (needsInstall) submitBtn.disabled = false;
     }
 
     if (!commandButtonsContainer) return;

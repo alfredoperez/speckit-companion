@@ -174,13 +174,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             const specs = await this.getSpecs();
             if (specs.length === 0) {
-                // Report the welcome "shown" under the SAME gate the viewsWelcome install block renders on: speckit.detected (.specify present) && not-installed && not-dismissed. Otherwise the not-detected empty state (a different welcome block) would over-count the funnel.
-                const root = vscode.workspace.workspaceFolders![0].uri.fsPath;
-                const detected = fs.existsSync(path.join(root, '.specify'));
-                const dismissed = this.context.globalState.get<boolean>(ConfigKeys.globalState.installNudgeDismissed, false);
-                if (detected && !isCompanionInstalled(root) && !dismissed) {
-                    reportInstallPromptShown('welcome');
-                }
+                // No `welcome` prompt is reported here any more: the viewsWelcome
+                // install block this counted was removed, so reporting it would
+                // record a prompt shown on every empty-Specs refresh that nothing
+                // renders and that no click can ever follow — a surface that is
+                // permanently 100% drop-off in the funnel.
                 return [];
             }
 

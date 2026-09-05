@@ -30,6 +30,12 @@ When that key is left unset, the effective default SHALL resolve to the Companio
 - **AND** the pipeline ends at a terminal step that marks the spec complete
 - **AND** that terminal step is marked untimed — it only flips status, so it is excluded from the pipeline's timing-coverage denominator rather than counted as a step that should record a duration
 
+A project's `.specify/companion.yml` does not add a third workflow. It configures the Companion pipeline — the build writes the same `/speckit.companion.*` bodies whether or not that file shapes them — so the pick-surface builder SHALL name the customisation on the Companion entry rather than offer a second entry that would dispatch identical commands. A `workflow: shipped` declaration selects no configuration and counts as not customised.
+
+#### Scenario: the project has a companion.yml that shapes its pipeline
+- **WHEN** a pick surface lists the workflows
+- **THEN** the Companion entry reads as customised by this project, and no extra entry appears
+
 ### Built-in names are reserved at every scope
 
 A custom workflow SHALL NOT be able to claim a built-in workflow's name, including the legacy alias for the stock pipeline, and SHALL NOT be able to claim a name already taken by an earlier custom entry. Shadowing a built-in id would silently redirect the dispatch of every spec that recorded that name.

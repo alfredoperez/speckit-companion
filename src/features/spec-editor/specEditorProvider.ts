@@ -11,6 +11,7 @@ import type {
 } from './types';
 import { buildWorkflowChoices, resolveEffectiveDefaultWorkflow } from '../workflows';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
+import { warnCompanionFallback } from '../specs/dispatchStep';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { resolveDispatchForRoot } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
@@ -101,16 +102,7 @@ export class SpecEditorProvider {
         this.outputChannel.appendLine(
             '[SpecEditor] Companion specify unavailable — spec-kit extension not installed; running stock speckit.specify.'
         );
-        void vscode.window
-            .showWarningMessage(
-                'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — creating this spec with the standard SpecKit flow instead.',
-                'Install spec-kit Extension'
-            )
-            .then(choice => {
-                if (choice === 'Install spec-kit Extension') {
-                    void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
-                }
-            });
+        warnCompanionFallback();
     }
 
     /**
@@ -121,6 +113,13 @@ export class SpecEditorProvider {
      * 'continue' (graceful stock downgrade), or 'cancel' (abort, create nothing).
      */
     private async promptCompanionInstallFirst(): Promise<'install' | 'continue' | 'cancel'> {
+        // Asked once. This is the only nudge that fires because the user asked for
+        // something the extension provides, which is what earns it a modal — but a
+        // modal that reappears after being answered is not asking, it is nagging.
+        if (this.context.globalState.get<boolean>(
+            ConfigKeys.globalState.companionDeclinedAtCreate, false)) {
+            return 'continue';
+        }
         reportInstallPromptShown('createSpec');
         const choice = await vscode.window.showInformationMessage(
             'SpecKit Companion adds living specs, full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.',
@@ -134,6 +133,8 @@ export class SpecEditorProvider {
             return 'install';
         }
         if (choice === 'Use SpecKit Instead') {
+            void this.context.globalState.update(
+                ConfigKeys.globalState.companionDeclinedAtCreate, true);
             return 'continue';
         }
         return 'cancel';
@@ -620,18 +621,15 @@ export class SpecEditorProvider {
 
                 <div class="workflow-row">
                     <div class="workflow-selector" id="workflowSelector" style="display: none;">
-                        <span class="workflow-selector-label" id="workflowChoicesLabel">Workflow</span>
-                        <div class="workflow-choices" id="workflowChoices" role="radiogroup" aria-labelledby="workflowChoicesLabel"></div>
+                        <label class="workflow-selector-label" id="workflowChoicesLabel" for="workflowChoices">Workflow</label>
+                        <select class="workflow-select" id="workflowChoices"></select>
                     </div>
                 </div>
+                <div class="workflow-pitch" id="workflowPitch" hidden></div>
 
                 <div class="editor-container">
                     <label class="editor-label" for="specContent">Feature Brief</label>
                     <p id="helperText" class="sr-only">Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
-                    <details class="writing-tips" id="writingTips">
-                        <summary>Writing tips</summary>
-                        <p>Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
-                    </details>
                     <textarea
                         class="spec-editor-textarea"
                         id="specContent"

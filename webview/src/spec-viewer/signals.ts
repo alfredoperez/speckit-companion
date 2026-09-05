@@ -38,7 +38,17 @@ export const overviewAvailable = computed(() => {
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */
 export const showingOverview = computed(() => {
     if (!overviewAvailable.value) return false;
-    const landing = hasDurableContext(viewerState.value!) ? 'overview' : 'document';
+    // Three sources, most specific first: the reader's own click inside the
+    // viewer, then what the entry point asked for (a tree click on a document is
+    // a request for that document), then the default for a spec opened as a
+    // whole. Without the middle one, every document row in the tree landed on
+    // the Overview, because the default is what any run spec resolves to.
+    // The Overview opens only when the spec itself was opened — clicking its
+    // name. Any document, step or artifact row opens what it names. The old
+    // rule derived a default from recorded activity, and that default was the
+    // Overview for every spec that had ever run, so every document row in the
+    // tree lost to it.
+    const landing = navState.value?.landing ?? 'document';
     return (viewerMode.value ?? landing) === 'overview';
 });
 

@@ -23,11 +23,15 @@ const BUILDER_CHOICES = [
     { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: false, supportsAuto: true, entryCommand: 'speckit.companion.specify' },
 ];
 
-function createProvider(): SpecEditorProvider {
+function createProvider(declinedBefore = false): SpecEditorProvider {
     const context = {
         subscriptions: [],
         extensionUri: vscode.Uri.file('/ext'),
-        globalState: { get: jest.fn().mockReturnValue(false), update: jest.fn() },
+        globalState: {
+            get: jest.fn((key: string, fallback?: unknown) =>
+                key === 'speckit.companionDeclinedAtCreate' ? declinedBefore : fallback ?? false),
+            update: jest.fn(),
+        },
     } as unknown as vscode.ExtensionContext;
     const outputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel;
     return new SpecEditorProvider(context, outputChannel, {} as never, {} as never);
@@ -82,6 +86,26 @@ describe('Create Spec — Companion install nudge', () => {
         }).promptCompanionInstallFirst();
         expect(decision).toBe('continue');
         expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
+    });
+
+    it('remembers Use SpecKit Instead so the modal is asked once, not every time', async () => {
+        (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue('Use SpecKit Instead');
+        const provider = createProvider();
+        await (provider as unknown as {
+            promptCompanionInstallFirst(): Promise<string>;
+        }).promptCompanionInstallFirst();
+        const context = (provider as unknown as { context: vscode.ExtensionContext }).context;
+        expect(context.globalState.update).toHaveBeenCalledWith(
+            'speckit.companionDeclinedAtCreate', true);
+    });
+
+    it('does not raise the modal again once the user has answered it', async () => {
+        const provider = createProvider(true);
+        const decision = await (provider as unknown as {
+            promptCompanionInstallFirst(): Promise<string>;
+        }).promptCompanionInstallFirst();
+        expect(decision).toBe('continue');
+        expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
     });
 
     it('the install-first prompt returns cancel when dismissed', async () => {

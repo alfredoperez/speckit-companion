@@ -25,11 +25,6 @@ export function registerSpecKitExtensionInstallCommands(
             }
             void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
         }),
-        // Dismiss the intrusive empty-state install nudge, remembered across sessions.
-        vscode.commands.registerCommand('speckit.companion.dismissInstallNudge', async () => {
-            await context.globalState.update(ConfigKeys.globalState.installNudgeDismissed, true);
-            await setContextKey(CONTEXT_KEYS.companionInstallNudgeDismissed, true);
-        }),
         vscode.commands.registerCommand('speckit.companion.openReadme', () => {
             openReadmeFallback();
         })

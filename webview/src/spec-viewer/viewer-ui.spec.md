@@ -177,7 +177,7 @@ Once a spec is completed or archived, its comments MUST still be visible — the
 
 ### Overview and documents are one selection axis
 
-The overview MUST be a destination alongside the documents, not a mode layered over them, so selection can never get stuck between the two. Which one is shown on open is decided by the data — a spec carrying durable context lands on the overview, a spec with only a work log lands on its document — until the reader picks, after which their pick wins. The overview MUST mount lazily on first reveal so it never delays the first document render, and MUST NOT be offered at all for a spec with no recorded run or when the reader has turned it off.
+The overview MUST be a destination alongside the documents, not a mode layered over them, so selection can never get stuck between the two. Which one is shown on open is decided by the entry point, not by the data: the Overview only when the spec itself was opened, its document for any document, step or artifact row — a data-derived default resolved to the Overview for every spec that had ever run, and every document row in the tree lost to it. The reader's pick wins after that, and a pick of the Overview is reported to the extension, because a re-render resets the shell and would otherwise undo it. The overview MUST mount lazily on first reveal so it never delays the first document render, and MUST NOT be offered at all for a spec with no recorded run or when the reader has turned it off.
 
 #### Scenario: a spec with only a work log
 - **WHEN** the viewer opens
@@ -188,6 +188,14 @@ The overview MUST be a destination alongside the documents, not a mode layered o
 - **WHEN** the reader picks a document
 - **THEN** the overview deselects
 - **AND** exactly one rail item reads as current
+
+#### Scenario: a document row is opened on a spec that has been run
+- **WHEN** the viewer opens
+- **THEN** it lands on that document
+
+#### Scenario: the spec itself is opened
+- **WHEN** the viewer opens
+- **THEN** it lands on the Overview
 
 ### The overview degrades section by section, and a failure never blanks the page
 
@@ -225,6 +233,18 @@ The header MUST render the title exactly as supplied and MUST NOT re-case it or 
 #### Scenario: a living spec's authored heading is shown
 - **WHEN** the title came from the document's own top-level heading
 - **THEN** the header prints it exactly as authored, because the resolver returned it verbatim
+
+### A living spec's actions sit in the footer bar; its header carries facts only
+
+In living mode the footer MUST render the capability's two actions — update this spec when drifted, otherwise a drift re-check, and beside either an update of every drifted spec — in the same bar every other state uses, with a context line saying whether the code has moved. The header MUST NOT carry buttons: it shows a DRAFT badge only when the document is a draft, the drift marker, coverage, and where the capability applies and where its file lives, each once. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders the markup exported from the protocol layer rather than a copy of it.
+
+#### Scenario: a drifted living spec is open
+- **WHEN** the footer renders
+- **THEN** it offers "Update this spec" and "Update all drifted", and the header shows the drift marker without a button
+
+#### Scenario: a glob longer than the header row
+- **WHEN** it renders
+- **THEN** it wraps rather than ending in an ellipsis
 
 ### Delegated click handling must survive non-element targets and late mounts
 

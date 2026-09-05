@@ -83,8 +83,9 @@ aside.spec-toc {
 }
 
 .spec-toc-toggle[aria-pressed="true"] {
-    color: var(--accent);
-    border-color: var(--accent);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border-color: var(--border-hover);
 }
 
 aside.spec-toc.spec-toc--empty {
@@ -211,6 +212,9 @@ aside.spec-toc.spec-toc--compact {
 
 .spec-toc-link--h3[aria-current="location"] {
     color: var(--text-primary);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+    font-weight: 650;
     border-left-color: var(--accent);
 }
 

@@ -83,6 +83,12 @@ The furthest a step can carry a spec on its own is "implementation finished". Th
 - **THEN** the completion is appended to the log
 - **AND** the spec's status and current step stay where they were
 
+A step the project added carries no canonical status. Recording its start or finish SHALL append the history entry and leave the status where it is, and the reconciler SHALL NOT repair a status it has nothing to repair to.
+
+#### Scenario: a project-added step finishes
+- **WHEN** its completion is recorded
+- **THEN** the entry lands and the status is unchanged
+
 ### Reaching the pipeline's end is a real end state, not a bug
 
 The Companion pipeline finishes by marking the spec complete at its last step — that is the intended behavior and the whole point of the pipeline, and MUST NOT be treated as an error to undo. Separately, the extension's *own* autonomous finish (a watcher or hook observing that the work is done) SHALL stop at "implementation finished" and leave the final closing act to the sanctioned completion path. The distinction is who decided: a pipeline that ran to its terminal step decided; a watcher that merely noticed the tasks are all checked did not.
@@ -152,7 +158,7 @@ Because the writer refuses to overwrite an unparseable record, recovery MUST mov
 
 ### Commands that need the companion piece are gated by family, not by list
 
-Any command belonging to the Companion namespace SHALL be recognized by its shared prefix rather than by an enumerated set, so a newly added member can never slip past the gate. When the companion piece is absent, such a command MUST either downgrade to its stock equivalent or — if it has none — be suppressed entirely with a non-blocking explanation. It MUST NEVER be dispatched in a form the AI cannot resolve.
+Any command belonging to the Companion namespace SHALL be recognized by its shared prefix rather than by an enumerated set, so a newly added member can never slip past the gate. A spliced Companion pipeline no longer matches the shipped sequence, so it is recognised by the same rule: a pipeline whose every step dispatches the reserved family is Companion. When the companion piece is absent, such a command MUST either downgrade to its stock equivalent or — if it has none — be suppressed entirely with a non-blocking explanation. It MUST NEVER be dispatched in a form the AI cannot resolve. The explanation is one sentence owned by the dispatch routine and raised on a session cooldown — once, not once per step of a run, and not once forever.
 
 #### Scenario: a Companion step runs without the companion piece installed
 - **WHEN** the step has a stock equivalent
@@ -172,6 +178,10 @@ The whole sequence — resolve the command the workflow names, fall back and war
 - **AND** each still supplies its own way of running the prompt, so one can keep the terminal it gets back
 
 When a phase or workflow step actually dispatches to a terminal, the dispatch path SHALL fire the shared once-per-session terminal install nudge (owned by the speckit-cli capability) — except on the fell-back path, which already surfaces its own install warning. This is a call-through at dispatch time, not gating logic this capability owns: the nudge's own gate decides whether anything renders, and it can never block the dispatched command.
+
+#### Scenario: a four-step Companion run without the companion piece
+- **WHEN** every step falls back to stock
+- **THEN** the warning is shown once and each fallback is still logged
 
 ### Reading a record is tolerant; writing one is strict
 
@@ -197,6 +207,12 @@ The tree SHALL group specs by their recorded status, and offer filtering and ord
 #### Scenario: "collapse all" is invoked on an already-collapsed tree
 - **WHEN** the command runs
 - **THEN** the tree stays collapsed
+
+The view's title bar SHALL carry, in order: refresh, filter, sort, one collapse-or-expand button showing whichever the tree's state calls for, the pipeline builder where its extension is installed, and new spec — and no overflow menu of its own. The everyday action is one click, the container above already has a `…` a few pixels away, and the two rare maintenance actions the menu held live in the Command Palette. The cap is held by a test.
+
+#### Scenario: the tree is expanded
+- **WHEN** the reader looks at the title bar
+- **THEN** one button offers Collapse All; after it is used, the same slot offers Expand All
 
 ### A workflow that records nothing still shows progress
 
@@ -284,6 +300,12 @@ The living-specs listing SHALL read the project's capability configuration witho
 - `specCommands.ts` — read in part (registration surface, lifecycle/bulk commands, phase dispatch, custom-command runner). The trailing helper section was not read line by line.
 - `livingSpecsExplorerProvider.ts` — not read; its contract is inferred here from `livingSpecsModel.ts` and `livingSpecsCommands.ts`.
 - All files under `__tests__/` were listed but not read.
+
+A drifted row SHALL differ from a healthy one by icon *shape*, not by tint alone, and its tooltip names the repair. The repair — update to match code — SHALL be an inline hover action on the row and remain in the context menu. Refresh, which redraws the tree, and the actions that dispatch an AI run and rewrite spec files SHALL NOT share a glyph. The per-capability drift check resolves a capability from its spec path the same way update does, so a viewer that only knows the path can scope it.
+
+#### Scenario: a capability has drifted
+- **WHEN** the reader hovers its row
+- **THEN** the update action is on the row, and still in the right-click menu
 
 ### The Living Specs view offers a one-pass sync action
 

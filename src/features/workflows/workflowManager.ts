@@ -264,6 +264,25 @@ export interface WorkflowChoice {
  * highest-intent moment can render its install-to-enable state instead of
  * hiding the option.
  */
+/**
+ * Whether `.specify/companion.yml` shapes this project's Companion pipeline. A
+ * project workflow is not a third command family — the build writes the same
+ * `/speckit.companion.*` bodies either way — so it is named on the Companion
+ * entry rather than offered beside it. `workflow: shipped` selects no
+ * configuration and counts as not customised.
+ */
+function projectCustomisesPipeline(root: string | undefined): boolean {
+    if (!root) return false;
+    try {
+        const file = path.join(root, '.specify', 'companion.yml');
+        if (!fs.existsSync(file)) return false;
+        const text = fs.readFileSync(file, 'utf-8');
+        return !/^\s*workflow:\s*["']?shipped["']?\s*$/m.test(text);
+    } catch {
+        return false;
+    }
+}
+
 export function buildWorkflowChoices(
     root: string | undefined,
     provider: AIProviderType,
@@ -282,7 +301,8 @@ export function buildWorkflowChoices(
         },
         {
             name: COMPANION_WORKFLOW.name,
-            displayName: COMPANION_WORKFLOW.displayName ?? COMPANION_WORKFLOW.name,
+            displayName: (COMPANION_WORKFLOW.displayName ?? COMPANION_WORKFLOW.name)
+                + (projectCustomisesPipeline(root) ? ' · customised by this project' : ''),
             description: COMPANION_WORKFLOW.description ?? '',
             installed: isCompanionSelectable(root),
             supportsAuto: true,

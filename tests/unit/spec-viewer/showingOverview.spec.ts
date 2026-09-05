@@ -28,7 +28,16 @@ describe('showingOverview — the viewer owns the landing decision', () => {
         viewerMode.value = null;
     });
 
-    it('lands on the Overview when the spec has durable context', () => {
+    it('lands on the document by default, even when the spec has been run', () => {
+        // The old default resolved to the Overview for any spec with recorded
+        // activity, which is why every document row in the tree opened it.
+        viewerState.value = WITH_DURABLE_CONTEXT;
+
+        expect(showingOverview.value).toBe(false);
+    });
+
+    it('lands on the Overview only when the spec itself was opened', () => {
+        navState.value = { activityPanelEnabled: true, landing: 'overview' } as any;
         viewerState.value = WITH_DURABLE_CONTEXT;
 
         expect(showingOverview.value).toBe(true);
@@ -51,5 +60,32 @@ describe('showingOverview — the viewer owns the landing decision', () => {
         viewerMode.value = 'document';
 
         expect(showingOverview.value).toBe(false);
+    });
+
+    describe('a tree click on a document asks for that document', () => {
+        it('opens the document even on a spec that has been run', () => {
+            // The bug: every document row in the tree landed on the Overview,
+            // because a run spec resolves to the Overview by default and nothing
+            // on the extension-to-webview path could say otherwise.
+            navState.value = { activityPanelEnabled: true, landing: 'document' } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+
+            expect(showingOverview.value).toBe(false);
+        });
+
+        it('the spec row asks for the Overview explicitly', () => {
+            navState.value = { activityPanelEnabled: true, landing: 'overview' } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+
+            expect(showingOverview.value).toBe(true);
+        });
+
+        it('still lets the reader get back to the Overview from inside', () => {
+            navState.value = { activityPanelEnabled: true, landing: 'document' } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+            viewerMode.value = 'overview';
+
+            expect(showingOverview.value).toBe(true);
+        });
     });
 });
