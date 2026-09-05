@@ -92,19 +92,6 @@ const archivedFooter: SerializedFooterAction[] = [
     { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
 ];
 
-// Refine variants: prepend a synthetic refine action to an existing
-// footer. The id 'refine' is recognized by FooterActions.tsx and gets
-// the enhancement (sparkle) variant.
-const REFINE_ACTION: SerializedFooterAction = {
-    id: 'refine',
-    label: '✨ Refine (2)',
-    scope: 'spec',
-    tooltip: 'Submit 2 line comments for refinement',
-};
-
-const withRefine = (footer: SerializedFooterAction[]): SerializedFooterAction[] =>
-    [REFINE_ACTION, ...footer];
-
 function renderFrame(frame: Frame) {
     // The shipped footer floats fixed (Codex shell); pin it back into the
     // story frame so each lifecycle frame stays self-contained.
@@ -210,22 +197,6 @@ export const Specified: Story = {
     }),
 };
 
-export const SpecifiedWithRefine: Story = {
-    name: 'Specified With Refine',
-    render: () => renderFrame({
-        status: 'specified',
-        badgeText: 'SPECIFIED',
-        activeDoc: 'spec',
-        workflowPhase: 'spec',
-        activeStep: 'specify',
-        stepHistory: {
-            specify: { startedAt: iso(700_000), completedAt: iso(120_000) },
-        },
-        footer: withRefine(pauseFooter('Plan')),
-        note: 'User added 2 inline comments on spec.md. The ✨ Refine button surfaces alongside the next-step button.',
-    }),
-};
-
 // ── Planning — plan in flight ──────────────────────────────
 
 export const Planning: Story = {
@@ -261,23 +232,6 @@ export const Planned: Story = {
         },
         footer: pauseFooter('Tasks'),
         note: 'plan.md is done. The user reviews and clicks "Tasks" to dispatch task generation.',
-    }),
-};
-
-export const PlannedWithRefine: Story = {
-    name: 'Planned With Refine',
-    render: () => renderFrame({
-        status: 'planned',
-        badgeText: 'PLANNED',
-        activeDoc: 'plan',
-        workflowPhase: 'plan',
-        activeStep: 'plan',
-        stepHistory: {
-            specify: { startedAt: iso(1_400_000), completedAt: iso(1_200_000) },
-            plan: { startedAt: iso(1_200_000), completedAt: iso(120_000) },
-        },
-        footer: withRefine(pauseFooter('Tasks')),
-        note: 'User added 2 inline comments on plan.md. ✨ Refine + the next-step button.',
     }),
 };
 
@@ -323,24 +277,6 @@ export const TasksCreated: Story = {
         },
         footer: pauseFooter('Implement'),
         note: 'tasks.md is done. Footer focuses on the forward action. Archive / Mark Completed wait until Implemented.',
-    }),
-};
-
-export const TasksCreatedWithRefine: Story = {
-    name: 'Tasks Created With Refine',
-    render: () => renderFrame({
-        status: 'ready-to-implement',
-        badgeText: 'TASKS CREATED',
-        activeDoc: 'tasks',
-        workflowPhase: 'tasks',
-        activeStep: 'tasks',
-        stepHistory: {
-            specify: { startedAt: iso(2_400_000), completedAt: iso(2_200_000) },
-            plan: { startedAt: iso(2_200_000), completedAt: iso(1_800_000) },
-            tasks: { startedAt: iso(1_800_000), completedAt: iso(120_000) },
-        },
-        footer: withRefine(pauseFooter('Implement')),
-        note: 'User added 2 inline comments on tasks.md. ✨ Refine + the forward "Implement" button.',
     }),
 };
 
