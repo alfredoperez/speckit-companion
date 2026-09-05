@@ -310,6 +310,16 @@ body[data-has-spec-context="true"] .meta-branch {
     border-color: var(--vscode-focusBorder);
 }
 
+/* Where the capability applies and where its file is, on one row. Stacked as two
+   uppercase label rows they read as the same fact said twice. */
+.spec-header-where {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 18px;
+    min-width: 0;
+}
+
 /* What the capability claims — the one fact that lives nowhere else in the UI. */
 .spec-header-covers {
     display: flex;

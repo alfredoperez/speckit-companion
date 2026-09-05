@@ -47,7 +47,8 @@ export function generateHtml(
     showInstallPrompt: boolean = false,
     livingMode: boolean = false,
     livingMeta?: LivingHeaderMeta | null,
-    titleFromHeading: boolean = false
+    titleFromHeading: boolean = false,
+    landing?: 'overview' | 'document'
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -108,6 +109,10 @@ export function generateHtml(
         livingMode,
         livingMeta: livingMeta ?? null,
         titleFromHeading,
+        // The first render is the one a tree click lands on, and the shell's own
+        // state does not survive an HTML reassignment — so the entry point's
+        // request has to ride in here, not only on the later navigation update.
+        landing,
     };
 
     return `<!DOCTYPE html>

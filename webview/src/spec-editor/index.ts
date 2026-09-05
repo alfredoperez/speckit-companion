@@ -475,64 +475,67 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
 }
 
 /**
- * What the selected workflow is, as a banner under the picker.
+ * The banner under the picker.
  *
- * A dropdown row cannot hold a badge, a description and a link, so all three moved
- * here rather than being lost with the cards. This renders for EVERY workflow that
- * carries a description — stock SpecKit and user-defined `speckit.customWorkflows`
- * entries have one too, and showing it only for Companion would leave two custom
- * workflows as two indistinguishable rows. The rocket is Companion's own mark,
- * matching the other places that offer it.
+ * Two things can live here. When Companion is NOT installed, its pitch — the
+ * description, the install badge and the one-spec trial — shows whatever is
+ * selected: it is an install nudge, and the moment someone is writing a spec is
+ * the moment it is worth reading. Once Companion is installed there is nothing to
+ * pitch, and the space goes back to the form. Otherwise, a project-defined
+ * workflow shows its own description, because two custom rows with nothing
+ * under them are two indistinguishable rows.
  */
 function renderWorkflowPitch(workflows: WorkflowDefinition[]): void {
-    const { workflowPitch } = getElements();
-    const selected = getSelectedWorkflow();
-    const wf = workflows.find(w => w.name === selected);
+    const { workflowPitch, workflowChoices } = getElements();
     workflowPitch.replaceChildren();
 
-    const isCompanion = wf?.name === 'companion';
-    // Nothing to say only when there is genuinely nothing: no description, nothing
-    // to install, and no trial to offer.
-    if (!wf || (!wf.description && wf.installed !== false && !isCompanion)) {
-        workflowPitch.hidden = true;
-        return;
-    }
-
-    if (isCompanion) {
-        const rocket = document.createElement('span');
-        rocket.className = 'codicon codicon-rocket workflow-pitch__glyph';
-        rocket.setAttribute('aria-hidden', 'true');
-        workflowPitch.appendChild(rocket);
-    }
+    const companion = workflows.find(w => w.name === 'companion');
+    const selected = workflows.find(w => w.name === getSelectedWorkflow());
+    const isCustom = (w: WorkflowDefinition) => w.name !== 'speckit' && w.name !== 'companion';
 
     const body = document.createElement('div');
     body.className = 'workflow-pitch__body';
 
-    if (wf.description) {
-        const description = document.createElement('span');
-        description.className = 'workflow-pitch__text';
-        description.textContent = wf.description;
-        body.appendChild(description);
-    }
-    if (wf.installed === false) {
+    if (companion && companion.installed === false) {
+        const rocket = document.createElement('span');
+        rocket.className = 'codicon codicon-rocket workflow-pitch__glyph';
+        rocket.setAttribute('aria-hidden', 'true');
+        workflowPitch.appendChild(rocket);
+
+        if (companion.description) {
+            const description = document.createElement('span');
+            description.className = 'workflow-pitch__text';
+            description.textContent = companion.description;
+            body.appendChild(description);
+        }
         const badge = document.createElement('span');
         badge.className = 'workflow-card-badge';
         badge.textContent = 'Install to enable';
         body.appendChild(badge);
-    }
-    // Low-commitment trial: applies Companion to this one submission only —
-    // nothing here ever writes the configured default.
-    if (isCompanion && preselectedWorkflow !== 'companion') {
-        const trial = document.createElement('button');
-        trial.type = 'button';
-        trial.className = 'workflow-card-trial';
-        trial.textContent = 'Try Companion for this spec';
-        trial.addEventListener('click', event => {
-            event.preventDefault();
-            trialActive = true;
-            updateCommandButtons('companion');
-        });
-        body.appendChild(trial);
+
+        // Low-commitment trial: selects Companion for this one submission only —
+        // nothing here ever writes the configured default.
+        if (preselectedWorkflow !== 'companion') {
+            const trial = document.createElement('button');
+            trial.type = 'button';
+            trial.className = 'workflow-card-trial';
+            trial.textContent = 'Try Companion for this spec';
+            trial.addEventListener('click', event => {
+                event.preventDefault();
+                workflowChoices.value = 'companion';
+                trialActive = true;
+                updateCommandButtons('companion');
+            });
+            body.appendChild(trial);
+        }
+    } else if (selected && isCustom(selected) && selected.description) {
+        const description = document.createElement('span');
+        description.className = 'workflow-pitch__text';
+        description.textContent = selected.description;
+        body.appendChild(description);
+    } else {
+        workflowPitch.hidden = true;
+        return;
     }
 
     workflowPitch.appendChild(body);

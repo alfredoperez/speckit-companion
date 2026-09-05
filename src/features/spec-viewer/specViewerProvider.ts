@@ -798,6 +798,10 @@ export class SpecViewerProvider {
         derived.stepHistoryByTab,
         this.readActivityPanelEnabled(),
         this.computeShowInstallPrompt(),
+        undefined,     // livingMode — default
+        undefined,     // livingMeta — default
+        undefined,     // titleFromHeading — default
+        instance.state.landing,
       );
 
       this.outputChannel.appendLine(

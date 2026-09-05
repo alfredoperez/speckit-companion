@@ -89,7 +89,7 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
     const rest = meta.match.slice(GLOBS_SHOWN);
 
     return (
-        <>
+        <div class="spec-header-where">
             {meta.match.length > 0 && (
                 <div class="spec-header-covers">
                     <span class="spec-header-covers__label">Covers</span>
@@ -125,7 +125,7 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                     {meta.specPath}
                 </span>
             </div>
-        </>
+        </div>
     );
 }
 

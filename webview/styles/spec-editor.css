@@ -109,23 +109,6 @@
     color: var(--text-primary);
 }
 
-.writing-tips {
-    margin: 0 0 8px;
-    color: var(--text-body);
-    font-size: 0.85em;
-}
-
-.writing-tips summary {
-    width: fit-content;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.writing-tips p {
-    max-width: 68ch;
-    margin: 6px 0 0;
-    line-height: 1.5;
-}
 
 .spec-editor-textarea {
     flex: 1;
