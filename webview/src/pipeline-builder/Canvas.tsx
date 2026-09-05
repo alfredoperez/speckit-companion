@@ -103,6 +103,10 @@ export function withoutNode(step: PipelineStep, nodeId: string):
     return { order: phases.flatMap(p => p.nodes), phases };
 }
 
+/** Mirrors `WORKFLOWS_REL` / `SHIPPED_WORKFLOW` in build-pipeline.py. */
+const WORKFLOWS_REL = '.specify/companion/workflows';
+const SHIPPED_WORKFLOW = 'shipped';
+
 /** That list with `moved` taken out and put back before `target`. */
 function reordered(order: string[], moved: string, target: string): string[] {
     const without = order.filter(id => id !== moved);
@@ -131,10 +135,14 @@ function shellName(line: string): string {
  * A registered command by the part that is not on every one of them.
  *
  * `speckit.git.feature` cut to a lane read `spe…`, which is the prefix every
- * one of them shares; the mark above the row already says which extension.
+ * one of them shares; the mark above the row already says which extension. Only
+ * a namespaced id is cut at a dot — the tail of `scripts/sync.sh` is `sh`, which
+ * names nothing, so anything else is read as a shell line instead.
  */
 function commandTail(command: string): string {
-    return command.split('.').pop() || command;
+    const id = command.trim();
+    if (!/^[\w-]+(\.[\w-]+){2,}$/.test(id)) { return shellName(command); }
+    return id.slice(id.lastIndexOf('.') + 1);
 }
 
 /** A count and its noun, agreeing. */
@@ -226,6 +234,8 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
     step: string;
+    /** The file this project's own hooks are written in, as the group is headed. */
+    yours: HookHome;
 };
 
 /**
@@ -254,15 +264,41 @@ type HookSource = {
     theirs: StockHook[];
 };
 
+/** What heads this project's own hooks: the file holding them, and where it is. */
+type HookHome = { name: string; title: string };
+
+/**
+ * Which file a project's hooks are in, which is not always `companion.yml`.
+ *
+ * A project on a named workflow keeps every hook, phase and reorder in that
+ * workflow's file; `companion.yml` only says which workflow is active. Heading
+ * them `companion.yml` named a file with none of them in it. `shipped` is
+ * Companion unchanged and has no file at all.
+ */
+function hookHome(workflow: string): HookHome {
+    if (workflow === SHIPPED_WORKFLOW) {
+        return {
+            name: 'as shipped',
+            title: 'Companion as it ships, which has no file of its own. '
+                + 'Switch to a workflow, or start one, to change these.',
+        };
+    }
+    const name = workflow ? `${workflow}.yml` : 'companion.yml';
+    const where = workflow ? `${WORKFLOWS_REL}/${name}` : '.specify/companion.yml';
+    return {
+        name,
+        title: `Yours, from ${where}. Click a line to change it or remove it.`,
+    };
+}
+
 /**
  * The hooks at one boundary, split by whoever registered them.
  *
  * Yours first: they are the only ones this panel writes.
  */
-function bySource(ours: PipelineHook[], theirs: StockHook[]): HookSource[] {
+function bySource(ours: PipelineHook[], theirs: StockHook[], yours: HookHome): HookSource[] {
     const groups: HookSource[] = ours.length > 0 ? [{
-        name: 'companion.yml', companion: true, ours, theirs: [],
-        title: 'Yours, from .specify/companion.yml. Click a line to change it or remove it.',
+        name: yours.name, companion: true, ours, theirs: [], title: yours.title,
     }] : [];
     for (const hook of theirs) {
         const name = hook.extension || 'extension';
@@ -297,12 +333,14 @@ function bySource(ours: PipelineHook[], theirs: StockHook[]): HookSource[] {
  * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
  * is named once for the group, and the row is left to say the work.
  */
-function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
+function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yours, onEdit }: {
     before: PipelineHook[];
     after: PipelineHook[];
     stockBefore?: StockHook[];
     stockAfter?: StockHook[];
     anchor: string;
+    /** The file this project's own hooks are in, which heads their group. */
+    yours: HookHome;
     onEdit?: (hook: PipelineHook) => void;
 }) {
     const sides: Array<[string, PipelineHook[], StockHook[]]> = [
@@ -317,7 +355,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
                         <span class="pb-attached-when">{side}</span>
-                        {bySource(ours, theirs).map(source => (
+                        {bySource(ours, theirs, yours).map(source => (
                             <div key={source.name} class="pb-hook-group">
                                 <span class="pb-hook-source" title={source.title}>
                                     {source.companion ? <MossIcon /> : <GithubIcon />}
@@ -346,7 +384,8 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                                         <li key={`theirs-${i}`}>
                                             {/* No kind badge: every one of these is a command. */}
                                             <span class="pb-hook pb-hook--stock"
-                                                title={`${hook.description || hook.command}\n\n`
+                                                title={(hook.description
+                                                    ? `${hook.description}\n\n` : '')
                                                     + hook.command
                                                     + (hook.optional
                                                         ? '\nIt asks before it runs.' : '')
@@ -419,7 +458,7 @@ function Node({ node, actions, stock, seams }: {
                 block under the card made it twice: a phase heading, the card,
                 and then a second BEFORE belonging to the card above it. */}
             <Attached before={before} after={[]} stockBefore={stock?.before}
-                anchor={node.id} onEdit={actions.onEditHook} />
+                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
             <div
                 class={[
                     'pb-node',
@@ -519,7 +558,7 @@ function Node({ node, actions, stock, seams }: {
                 )}
             </div>
             <Attached before={[]} after={after} stockAfter={stock?.after}
-                anchor={node.id} onEdit={actions.onEditHook} />
+                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
             {(seams?.after ?? true) && (
                 <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
             )}
@@ -746,7 +785,7 @@ function Phase({ phase, actions, controls }: {
                 heading contradict the layout. Neither block is indented, which
                 is what separates a phase's from the card-hung ones below. */}
             <Attached before={before} after={[]} anchor={phase.name}
-                onEdit={actions.onEditHook} />
+                yours={actions.yours} onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
                     // An installed extension registers against the step, not a
@@ -766,7 +805,7 @@ function Phase({ phase, actions, controls }: {
                 ))}
             </div>
             <Attached before={[]} after={after} anchor={phase.name}
-                onEdit={actions.onEditHook} />
+                yours={actions.yours} onEdit={actions.onEditHook} />
         </section>
     );
 }
@@ -1087,7 +1126,7 @@ export function Canvas(
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
         onOpenTemplate, onNewStep, selected }: Props,
 ) {
-    const actions = { onOpenNode, selected };
+    const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 

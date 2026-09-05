@@ -182,6 +182,23 @@ export const HooksYoursAndAnExtensions: Story = {
     ),
 };
 
+/**
+ * The heading names the file the hooks are actually in.
+ *
+ * A project on a named workflow keeps all of them in that workflow's file;
+ * `companion.yml` only says which one is active and holds none of them.
+ */
+export const HooksOnANamedWorkflow: Story = {
+    name: 'Hooks · a project on a named workflow',
+    render: () => (
+        <One><Canvas graph={graph([step('implement', IMPLEMENT.phases, {
+            stockHooks: STOCK, changes: { ...NO_CHANGES, hooks: 3 },
+        })], {
+            workflows: { available: ['shipped', 'client-delivery'], active: 'client-delivery' },
+        })} {...CANVAS} /></One>
+    ),
+};
+
 export const HooksLongShellLine: Story = {
     name: 'Hooks · a shell line longer than the lane',
     render: () => (

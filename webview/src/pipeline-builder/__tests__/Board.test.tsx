@@ -244,6 +244,29 @@ describe('everything attached to one anchor sits in one block', () => {
         expect(source.nextElementSibling?.className).toBe('pb-attached-list');
     });
 
+    // A project on a named workflow keeps every hook in that workflow's file;
+    // companion.yml only says which one is active, and holds none of them.
+    it('names the workflow file when the project is on a named workflow', () => {
+        const { host } = canvas({
+            ...hooked(),
+            workflows: { available: ['shipped', 'client'], active: 'client' },
+        });
+        const source = host.querySelector('.pb-hook-source')!;
+        expect(source.querySelector('.pb-hook-source-name')?.textContent).toBe('client.yml');
+        expect(source.getAttribute('title'))
+            .toContain('.specify/companion/workflows/client.yml');
+    });
+
+    it('names no file at all on the pipeline as it ships', () => {
+        const { host } = canvas({
+            ...hooked(),
+            workflows: { available: ['shipped'], active: 'shipped' },
+        });
+        const source = host.querySelector('.pb-hook-source')!;
+        expect(source.querySelector('.pb-hook-source-name')?.textContent).toBe('as shipped');
+        expect(source.getAttribute('title')).toContain('no file of its own');
+    });
+
     // A heading above rows one line tall was a third of the block's height, for
     // a word the purple rule and `before`/`after` were already saying.
     it('carries no HOOKS heading and no connector arms', () => {
@@ -345,6 +368,27 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         }));
         expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
             .toContain('pb-mark--moss');
+    });
+
+    // `description` is optional in extensions.yml, and the row used to fall back
+    // to the command for the summary line and then print the command again.
+    it('does not print the command twice when it carries no description', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [{ ...stock('after'), description: '' }] })],
+        }));
+        const title = host.querySelector('.pb-hook--stock')!.getAttribute('title')!;
+        expect(title.match(/speckit\.git\.commit/g)).toHaveLength(1);
+    });
+
+    // The tail of a path is its file extension, which names nothing.
+    it('leaves a command that is a path alone rather than cutting it to sh', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), command: 'scripts/sync.sh --all' }],
+            })],
+        }));
+        expect(host.querySelector('.pb-hook--stock .pb-hook-name')?.textContent)
+            .toBe('sync.sh --all');
     });
 
     it('names a command by its tail, never by the prefix they all carry', () => {
