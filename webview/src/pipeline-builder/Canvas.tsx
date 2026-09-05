@@ -107,6 +107,9 @@ export function withoutNode(step: PipelineStep, nodeId: string):
 const WORKFLOWS_REL = '.specify/companion/workflows';
 const SHIPPED_WORKFLOW = 'shipped';
 
+/** What build-pipeline.py writes in place of an entry that names no extension. */
+const UNNAMED_EXTENSION = 'an extension';
+
 /** That list with `moved` taken out and put back before `target`. */
 function reordered(order: string[], moved: string, target: string): string[] {
     const without = order.filter(id => id !== moved);
@@ -156,10 +159,12 @@ function commandTail(command: string): string {
  * `command` and `description` are both optional in `extensions.yml` — the
  * reader coerces a missing one to `""` — and the row has nothing else on it
  * since the kind badge went, so an entry with neither used to render blank.
+ * Blank, not just absent: `command` reaches here unstripped, and a row of
+ * spaces is as empty to read as no row at all.
  */
 function stockName(hook: StockHook): string {
-    if (hook.command) { return commandTail(hook.command); }
-    return hook.description || 'no command';
+    if (hook.command.trim()) { return commandTail(hook.command); }
+    return hook.description.trim() || 'no command';
 }
 
 /** A count and its noun, agreeing. */
@@ -366,7 +371,10 @@ function bySource(
             last.theirs.push(hook);
             continue;
         }
-        const name = hook.extension || 'an extension';
+        const name = hook.extension || UNNAMED_EXTENSION;
+        // `the ${name} extension` is right for one that has a name and reads
+        // "the an extension extension" for one that has not.
+        const by = name === UNNAMED_EXTENSION ? name : `the ${name} extension`;
         groups.push({
             // `via git` rather than `git`: Companion registers a spec-kit
             // extension of its own, so the mark alone put two identical marks
@@ -375,7 +383,7 @@ function bySource(
             name: `via ${name}`,
             mark: markFor(hook.extension),
             ours: [], theirs: [hook],
-            title: `Registered by the ${name} extension in .specify/extensions.yml. `
+            title: `Registered by ${by} in .specify/extensions.yml. `
                 + 'It runs here, and is not edited in this panel.',
         });
     }
@@ -457,9 +465,9 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                         <li key={`theirs-${i}`}>
                                             {/* No kind badge: every one of these is a command. */}
                                             <span class="pb-hook pb-hook--stock"
-                                                title={(hook.description
-                                                    ? `${hook.description}\n\n` : '')
-                                                    + (hook.command
+                                                title={(hook.description.trim()
+                                                    ? `${hook.description.trim()}\n\n` : '')
+                                                    + (hook.command.trim()
                                                         || 'This entry names no command to run.')
                                                     + (hook.optional
                                                         ? '\nIt asks before it runs.' : '')

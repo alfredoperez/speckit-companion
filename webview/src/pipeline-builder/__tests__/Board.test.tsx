@@ -506,16 +506,28 @@ describe("hooks another extension registered run in the lane, not beneath it", (
             .toContain('pb-mark--extension');
     });
 
-    // The kind badge used to fill the row, so a commandless entry was blank.
+    // The kind badge used to fill the row, so a commandless entry was blank —
+    // and a blank command reads as empty as a missing one.
     it('says so rather than rendering an empty row for an entry with no command', () => {
+        for (const command of ['', '   ']) {
+            const { host } = canvas(graph({
+                steps: [step({ stockHooks: [{ ...stock('after'), command, description: '' }] })],
+            }));
+            const row = host.querySelector('.pb-hook--stock')!;
+            expect(row.querySelector('.pb-hook-name')?.textContent).toBe('no command');
+            expect(row.getAttribute('title')).toContain('names no command to run');
+        }
+    });
+
+    // build-pipeline.py writes the words "an extension" when an entry names
+    // none, so the sentence around it cannot assume there is a name.
+    it('does not call an unnamed extension "the an extension extension"', () => {
         const { host } = canvas(graph({
-            steps: [step({
-                stockHooks: [{ ...stock('after'), command: '', description: '' }],
-            })],
+            steps: [step({ stockHooks: [{ ...stock('after'), extension: 'an extension' }] })],
         }));
-        const row = host.querySelector('.pb-hook--stock')!;
-        expect(row.querySelector('.pb-hook-name')?.textContent).toBe('no command');
-        expect(row.getAttribute('title')).toContain('names no command to run');
+        const title = host.querySelector('.pb-hook-source')!.getAttribute('title')!;
+        expect(title).toContain('Registered by an extension in');
+        expect(title).not.toContain('extension extension');
     });
 
     // Hue alone is not a cue: it separates these from your own for anyone who
