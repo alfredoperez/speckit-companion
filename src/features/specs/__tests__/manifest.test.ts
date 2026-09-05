@@ -15,7 +15,7 @@ const itemContext: Array<{ command?: string; submenu?: string; when: string; gro
     manifest.contributes.menus['view/item/context'];
 const rowMenu: Array<{ command: string; when?: string; group: string }> =
     manifest.contributes.menus['speckit.specs.rowMenu'];
-const titleMenu: Array<{ command: string; when?: string; group: string }> =
+const titleMenu: Array<{ command: string; when?: string; group: string }> | undefined =
     manifest.contributes.menus['speckit.specs.titleMenu'];
 const submenus: Array<{ id: string; label: string; icon?: string }> = manifest.contributes.submenus;
 const commandPalette: Array<{ command: string; when?: string }> = manifest.contributes.menus.commandPalette;
@@ -95,16 +95,50 @@ describe('sidebar contributions', () => {
         // The cap is the point: a title bar is the one place a command can be
         // added without anyone noticing it got crowded, so every addition is a
         // decision recorded here rather than a line in package.json.
-        it('shows at most five actions, in the target order', () => {
+        it('shows at most six buttons, in the target order', () => {
+            // Collapse All and Expand All are the same button in two states, gated
+            // on opposite when-clauses, so seven declarations render as six buttons.
             const actions = specsTitleActions();
-            expect(actions).toHaveLength(5);
             expect(actions.map(a => a.id)).toEqual([
+                'speckit.refresh',
                 'speckit.specs.filter',
                 'speckit.specs.sort',
-                'speckit.specs.titleMenu',
+                'speckit.specs.collapseAll',
+                'speckit.specs.expandAll',
                 'speckit.companion.openPipelineBuilder',
                 'speckit.create',
             ]);
+            const exclusive = new Set(['speckit.specs.expandAll']);
+            expect(actions.filter(a => !exclusive.has(a.id))).toHaveLength(6);
+        });
+
+        it('never shows Collapse All and Expand All at the same time', () => {
+            const collapse = viewTitle.find(e => e.command === 'speckit.specs.collapseAll')!;
+            const expand = viewTitle.find(e => e.command === 'speckit.specs.expandAll')!;
+            expect(collapse.group).toBe(expand.group);
+            expect(collapse.when).toContain('!speckit.specs.allCollapsed');
+            expect(expand.when).toContain('speckit.specs.allCollapsed');
+            expect(expand.when).not.toContain('!speckit.specs.allCollapsed');
+        });
+
+        it('expanding the tree is one click, with no menu to open first', () => {
+            for (const id of ['speckit.specs.collapseAll', 'speckit.specs.expandAll']) {
+                expect(specsTitleActions().some(a => a.id === id)).toBe(true);
+                // The glyph is what says which action it will perform.
+                expect(commands.find(c => c.command === id)!.icon).toBeTruthy();
+            }
+        });
+
+        it('leaves the view with no overflow menu of its own', () => {
+            // The view container already has one a few pixels away, and this one
+            // existed to hold a single everyday action.
+            expect(viewTitle.some(e => e.submenu === 'speckit.specs.titleMenu')).toBe(false);
+            expect(submenus.some(sm => sm.id === 'speckit.specs.titleMenu')).toBe(false);
+            expect(titleMenu).toBeUndefined();
+        });
+
+        it('gives Specs the Refresh its sibling views have', () => {
+            expect(specsTitleActions()[0].id).toBe('speckit.refresh');
         });
 
         it('shows the pipeline builder only where its extension is installed', () => {
@@ -120,23 +154,20 @@ describe('sidebar contributions', () => {
             expect(groups.every(g => g <= createGroup)).toBe(true);
         });
 
-        it('renders More Actions as an ellipsis submenu, not a command', () => {
-            const entry = viewTitle.find(e => e.submenu === 'speckit.specs.titleMenu')!;
-            expect(entry.command).toBeUndefined();
-            const declared = submenus.find(s => s.id === 'speckit.specs.titleMenu')!;
-            expect(declared.label).toBe('More Actions…');
-            expect(declared.icon).toBe('$(ellipsis)');
-        });
-
         it.each([
             'speckit.specs.filter.clear',
-            'speckit.specs.collapseAll',
-            'speckit.specs.expandAll',
             'speckit.companion.installSpecKitExtension',
             'speckit.upgrade',
         ])('%s left the title bar but is still a contributed command', id => {
             expect(specsTitleActions().some(a => a.id === id)).toBe(false);
             expect(commands.some(c => c.command === id)).toBe(true);
+        });
+
+        it.each([
+            'speckit.upgrade',
+            'speckit.companion.installSpecKitExtension',
+        ])('%s is still reachable, from the command palette', id => {
+            expect(commandPalette.some(e => e.command === id && e.when !== 'false')).toBe(true);
         });
 
         it.each([
@@ -147,37 +178,6 @@ describe('sidebar contributions', () => {
         ])('%s stays reachable from the command palette', id => {
             const hidden = commandPalette.find(e => e.command === id && e.when === 'false');
             expect(hidden).toBeUndefined();
-        });
-    });
-
-    describe('specs title submenu', () => {
-        const TITLE_MENU_GROUPS = [
-            ['speckit.specs.collapseAll', '1_view@1'],
-            ['speckit.specs.expandAll', '1_view@1'],
-            ['speckit.companion.installSpecKitExtension', '2_maintenance@1'],
-            ['speckit.upgrade', '2_maintenance@2'],
-        ] as const;
-
-        it('carries exactly the four More Actions entries', () => {
-            expect(titleMenu.map(e => e.command).sort()).toEqual(
-                TITLE_MENU_GROUPS.map(([command]) => command).slice().sort()
-            );
-        });
-
-        it.each(TITLE_MENU_GROUPS)('%s sits at %s', (command, group) => {
-            expect(titleMenu.find(e => e.command === command)!.group).toBe(group);
-        });
-
-        it.each([
-            ['speckit.specs.collapseAll', '!speckit.specs.allCollapsed'],
-            ['speckit.specs.expandAll', 'speckit.specs.allCollapsed'],
-            [
-                'speckit.companion.installSpecKitExtension',
-                '(speckit.detected || speckit.cliInstalled) && !speckit.companion.installed',
-            ],
-            ['speckit.upgrade', 'speckit.detected || speckit.cliInstalled'],
-        ])('%s is gated on %s', (command, when) => {
-            expect(titleMenu.find(e => e.command === command)!.when).toBe(when);
         });
     });
 
@@ -338,22 +338,16 @@ describe('zero-spec merged welcome — viewsWelcome', () => {
         w => w.view === SPECS_VIEW && w.contents.includes('Create your first spec')
     );
 
-    it('renders exactly one block per zero-spec state — two mutually-exclusive variants', () => {
-        expect(zeroSpecBlocks).toHaveLength(2);
-        for (const block of zeroSpecBlocks) {
-            expect(block.when).toContain('speckit.detected');
-            expect(block.when).toContain('!speckit.constitutionNeedsSetup');
-        }
-        const companionAbsent = zeroSpecBlocks.filter(
-            b =>
-                b.when!.includes('!speckit.companion.installed') &&
-                b.when!.includes('!speckit.companion.installNudgeDismissed')
-        );
-        const companionInstalledOrDismissed = zeroSpecBlocks.filter(b =>
-            b.when!.includes('speckit.companion.installed || speckit.companion.installNudgeDismissed')
-        );
-        expect(companionAbsent).toHaveLength(1);
-        expect(companionInstalledOrDismissed).toHaveLength(1);
+    it('renders one welcome block, not one per Companion state', () => {
+        // The two variants differed only by a Companion install pitch, which the
+        // activity-bar badge and the pinned CTA row already deliver on the same
+        // screen. Three deliveries of one message is what read as pushy.
+        expect(zeroSpecBlocks).toHaveLength(1);
+        const [block] = zeroSpecBlocks;
+        expect(block.when).toContain('speckit.detected');
+        expect(block.when).toContain('!speckit.constitutionNeedsSetup');
+        expect(block.when).not.toContain('speckit.companion.installed');
+        expect(block.when).not.toContain('installNudgeDismissed');
     });
 
     it('pins both welcome actions verbatim in each variant', () => {
@@ -372,14 +366,23 @@ describe('Companion install nudge — viewsWelcome', () => {
     const viewsWelcome: Array<{ view: string; contents: string; when?: string }> =
         manifest.contributes.viewsWelcome;
 
-    it('adds an empty-state install button gated on not-installed and not-dismissed', () => {
+    it('no longer delivers the install pitch a third time in the empty state', () => {
+        // A fresh uninstalled workspace gave five asks in the first minute. The
+        // badge and the pinned CTA row are ambient and stay; this one was the
+        // same message again, in the space the welcome copy needed.
         const block = viewsWelcome.find(
             w => w.view === SPECS_VIEW && w.contents.includes('speckit.companion.installNudge')
         );
-        expect(block).toBeDefined();
-        expect(block!.contents).toContain('command:speckit.companion.dismissInstallNudge');
-        expect(block!.when).toContain('!speckit.companion.installed');
-        expect(block!.when).toContain('!speckit.companion.installNudgeDismissed');
+        expect(block).toBeUndefined();
+    });
+
+    it('keeps the install command, which the pinned CTA row still uses', () => {
+        expect(commands.some(c => c.command === 'speckit.companion.installNudge')).toBe(true);
+    });
+
+    it('drops the dismiss command along with the block that was its only invoker', () => {
+        expect(commands.some(c => c.command === 'speckit.companion.dismissInstallNudge'))
+            .toBe(false);
     });
 });
 

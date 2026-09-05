@@ -49,6 +49,49 @@ export interface StepDispatchDeps<T> {
 }
 
 /**
+ * The one fallback warning, in one place.
+ *
+ * Two surfaces hand-maintained near-identical strings for the same event, and
+ * this one had no per-run guard, so a four-step Companion run without the
+ * extension raised it four times. Exported so Create Spec raises the same
+ * sentence rather than its own paraphrase of it.
+ */
+export const COMPANION_FALLBACK_WARNING =
+    'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.';
+
+const INSTALL_ACTION = 'Install spec-kit Extension';
+
+/**
+ * When this was last said. Whether the spec-kit extension is installed is one
+ * fact about the workspace, not one per spec or per step, so a four-step run
+ * raising it four times was four asks about one fact.
+ *
+ * It is a cooldown rather than a once-ever flag: if the user clicks Install and
+ * the install fails or is cancelled, silence for the rest of the extension host's
+ * life would leave every later dispatch downgrading to stock with no signal.
+ */
+let lastWarnedAt = 0;
+const WARN_COOLDOWN_MS = 10 * 60 * 1000;
+
+/** Test seam: a fresh run starts with a clean slate. */
+export function resetCompanionFallbackWarnings(): void {
+    lastWarnedAt = 0;
+}
+
+export function warnCompanionFallback(): void {
+    const now = Date.now();
+    if (lastWarnedAt !== 0 && now - lastWarnedAt < WARN_COOLDOWN_MS) return;
+    lastWarnedAt = now;
+    void vscode.window
+        .showWarningMessage(COMPANION_FALLBACK_WARNING, INSTALL_ACTION)
+        .then(choice => {
+            if (choice === INSTALL_ACTION) {
+                void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+            }
+        });
+}
+
+/**
  * Resolve the command to dispatch, warning when the companion command is
  * unavailable. Returns null when there is nothing to run — a companion-only
  * step (mark-complete) with no stock twin and no extension installed.
@@ -67,14 +110,7 @@ export function resolveDispatchCommand(
         outputChannel.appendLine(
             `[${logPrefix}] Companion command unavailable — spec-kit extension not installed; ${suffix}.`,
         );
-        void vscode.window.showWarningMessage(
-            'The SpecKit Companion workflow needs the companion spec-kit extension, which is not installed — running the standard SpecKit flow instead.',
-            'Install spec-kit Extension',
-        ).then(choice => {
-            if (choice === 'Install spec-kit Extension') {
-                void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
-            }
-        });
+        warnCompanionFallback();
     }
     return resolution.command;
 }

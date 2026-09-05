@@ -21,7 +21,6 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
-import { maybeShowActivationInstallNudge } from './speckit/activationInstallNudge';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -151,10 +150,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // activated event above. The marker is claimed only after a confirmed send.
     void reportInstalledOnce(context.globalState);
 
-    // Nudge users of a spec-kit project that hasn't installed the Companion
-    // extension yet — a single, dismissible, provider-agnostic prompt (installing
-    // is a terminal command regardless of the AI provider). Never blocks activation.
-    maybeShowActivationInstallNudge(context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    // No activation prompt for the Companion extension. The activity-bar badge and
+    // the pinned CTA row already say it, ambiently and permanently, so a toast on
+    // top delivered the same message a third time before the user had done
+    // anything. The badge and the row remain; see docs/install-nudges.md.
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)
     const configManager = ConfigManager.getInstance();
@@ -308,11 +307,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 steeringExplorer.refresh();
             };
             syncInstallAffordances();
-            // Remember a prior dismissal of the intrusive empty-state install nudge.
-            void setContextKey(
-                CONTEXT_KEYS.companionInstallNudgeDismissed,
-                context.globalState.get<boolean>(ConfigKeys.globalState.installNudgeDismissed, false),
-            );
             // Keep the timing-augmented standard command family materialized — but
             // ONLY when the companion spec-kit extension is installed: the ensure's
             // bundled preset path lives inside `.specify/extensions/companion/`, so

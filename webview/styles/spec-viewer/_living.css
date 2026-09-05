@@ -9,15 +9,18 @@
 /* ── Draft notice ───────────────────────────────────────────────────── */
 /* Added trust boundary at the top of a draft living spec. The authored banner
  * line stays in the flow below; this makes the draft status impossible to miss. */
+/* Present, never louder than the content it qualifies. A spec adopted from code
+ * carries this for most of its life, and a permanent warning is one people learn
+ * to scroll past — including on the specs where it matters. It was a filled,
+ * bordered warning panel: the heaviest thing on the page, and what a reader met
+ * before Purpose. */
 #markdown-content .living-draft-notice {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
   margin: 0 0 var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  background: var(--warning-subtle);
-  border: 1px solid var(--warning);
-  border-radius: var(--radius-md);
+  padding: 0 0 0 var(--space-3);
+  border-left: 2px solid var(--border);
 }
 
 #markdown-content .living-draft-notice__label {
@@ -27,7 +30,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--warning);
+  color: var(--text-secondary);
 }
 
 #markdown-content .living-draft-notice__text {

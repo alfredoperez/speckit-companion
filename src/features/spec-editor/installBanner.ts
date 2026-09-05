@@ -9,13 +9,9 @@
  * dismisses the banner for good (a global-state flag re-checked before rendering).
  */
 
-/** Slim single-row banner: glyph + one line + Install + Learn more + dismiss. */
-const BANNER_BODY = `
-    <span class="install-banner__icon codicon codicon-rocket" aria-hidden="true"></span>
-    <span class="install-banner__text">Install the spec-kit extension for the leaner <code>/speckit.companion.*</code> pipeline and capture.</span>
-    <button type="button" class="install-banner__btn install-banner__btn--primary" data-action="installSpecKitExtension">Install</button>
-    <button type="button" class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
-    <button type="button" class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt"></button>`;
+import { INSTALL_BANNER_BODY } from '../../protocol/installBannerBody';
+
+export { INSTALL_BANNER_BODY };
 
 /**
  * Render the install banner, or an empty string when it must not appear. Pass the
@@ -26,5 +22,5 @@ export function renderInstallBannerHtml(visible: boolean): string {
     if (!visible) {
         return '';
     }
-    return `<div class="install-banner" id="install-banner" role="region" aria-label="Install spec-kit extension">${BANNER_BODY}</div>`;
+    return `<div class="install-banner" id="install-banner" role="region" aria-label="Install spec-kit extension">${INSTALL_BANNER_BODY}</div>`;
 }

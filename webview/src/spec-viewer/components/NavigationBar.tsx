@@ -116,7 +116,10 @@ export function NavigationBar() {
                         type="button"
                         class={`rail-overview${onOverview ? ' current' : ''}`}
                         aria-current={onOverview ? 'page' : undefined}
-                        onClick={() => { viewerMode.value = 'overview'; }}
+                        onClick={() => {
+                            viewerMode.value = 'overview';
+                            vscode.postMessage({ type: 'overviewChosen' });
+                        }}
                     >
                         <span class="codicon codicon-book" aria-hidden="true" />
                         Overview
