@@ -28,15 +28,25 @@ import { hasStepStart } from './historyHelpers';
 
 /**
  * The cross-process write lock the capture scripts also take (#629). The lock is
- * the lock file's existence, created O_CREAT|O_EXCL, holding its owner's token;
- * a waiter reclaims it after `LOCK_WAIT_MS` and records regardless, so a write
- * never hangs. Protocol and rationale: `docs/capture-and-timing.md`.
+ * the lock file's existence, created O_CREAT|O_EXCL and holding `<pid>:<nonce>`.
+ * A waiter reclaims it the moment its owner is provably gone, and otherwise
+ * waits — the ceiling exists only so a write can never hang, never as a guess
+ * that a holder is finished. Protocol and rationale: `docs/capture-and-timing.md`.
  */
-const LOCK_WAIT_MS = 2000;
+const LOCK_CEILING_MS = 30_000;
 const LOCK_POLL_MS = 10;
 
-/** Lock paths this process is already inside, so a nested publish doesn't self-deadlock. */
-const heldLocks = new Set<string>();
+let warnedLockUnavailable = false;
+
+function warnLockUnavailable(target: string, reason: unknown): void {
+    if (warnedLockUnavailable) {
+        return;
+    }
+    warnedLockUnavailable = true;
+    console.warn(
+        `[spec-context] No cross-process write lock for ${target} (${reason}). Writes from the editor and the command line can overwrite each other.`
+    );
+}
 
 /** Python's `Path.resolve()`: symlinks followed as far as the path exists. */
 function realPath(target: string): string {
@@ -72,62 +82,108 @@ export function specContextLockPath(target: string): string {
     return path.join(os.tmpdir(), 'speckit-companion-locks', `${key}.lock`);
 }
 
-/** Returns our token, or null when the write should just proceed unlocked. */
-async function acquireContextLock(target: string): Promise<string | null> {
-    const lock = specContextLockPath(target);
-    if (heldLocks.has(lock)) {
-        return null;
-    }
-    const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
-    const take = async (): Promise<boolean> => {
-        await fs.promises.writeFile(lock, token, { flag: 'wx' });
-        heldLocks.add(lock);
-        return true;
-    };
+/**
+ * Sticky and world-writable, the way `/tmp` itself is: on a shared host the
+ * first user to create the directory must not lock every other user out of
+ * locking. `mkdir`'s mode is masked by the umask, so it is set explicitly; not
+ * owning an existing directory is fine, the chmod simply fails.
+ */
+async function ensureLockDir(target: string, dir: string): Promise<boolean> {
     try {
-        await fs.promises.mkdir(path.dirname(lock), { recursive: true });
-    } catch {
-        return null; // nowhere to put a lock: recording still beats refusing
+        await fs.promises.mkdir(dir, { recursive: true });
+    } catch (err) {
+        warnLockUnavailable(target, `${dir} is not usable: ${(err as Error)?.message ?? err}`);
+        return false;
     }
-    const deadline = Date.now() + LOCK_WAIT_MS;
-    for (;;) {
-        try {
-            await take();
-            return token;
-        } catch (err) {
-            if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') {
-                return null;
-            }
-        }
-        if (Date.now() >= deadline) {
-            break;
-        }
-        await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
-    }
-    console.warn(
-        `[spec-context] Reclaimed a write lock nobody released for ${target} after ${LOCK_WAIT_MS}ms.`
-    );
+    await fs.promises.chmod(dir, 0o1777).catch(() => undefined);
+    return true;
+}
+
+/** The lock file's contents, or null when it cannot be read (gone, or not ours to read). */
+async function readLockOwner(lock: string): Promise<string | null> {
     try {
-        await fs.promises.unlink(lock);
-        await take();
-        return token;
+        return await fs.promises.readFile(lock, 'utf-8');
     } catch {
         return null;
     }
 }
 
-async function releaseContextLock(target: string, token: string | null): Promise<void> {
-    if (!token) {
-        return;
+/**
+ * True only when the token's owner is provably dead. A lock file is not
+ * released by the OS the way an `flock` is, so a crashed writer's lock has to be
+ * recognised — but "still working" and "gone" must never be confused, or the
+ * reclaim becomes the lost write it exists to prevent.
+ */
+function lockOwnerIsGone(owner: string): boolean {
+    const pid = Number(owner.split(':', 1)[0]);
+    if (!Number.isInteger(pid) || pid <= 0) {
+        return false;
     }
-    const lock = specContextLockPath(target);
-    heldLocks.delete(lock);
     try {
-        if ((await fs.promises.readFile(lock, 'utf-8')) === token) {
-            await fs.promises.unlink(lock);
+        process.kill(pid, 0);
+        return false;
+    } catch (err) {
+        return (err as NodeJS.ErrnoException)?.code === 'ESRCH';
+    }
+}
+
+/** Remove the lock, but only while it still carries the token we saw. */
+async function reclaimLock(lock: string, owner: string | null): Promise<void> {
+    try {
+        if (owner !== null && (await readLockOwner(lock)) !== owner) {
+            return;
         }
+        await fs.promises.unlink(lock);
     } catch {
-        /* already gone, or reclaimed by a waiter that outlasted us */
+        /* someone else got there first, or it is not ours to remove */
+    }
+}
+
+/** Returns our token, or null when the write should proceed unlocked. */
+async function acquireContextLock(target: string): Promise<string | null> {
+    const lock = specContextLockPath(target);
+    if (!(await ensureLockDir(target, path.dirname(lock)))) {
+        return null;
+    }
+    const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
+    const ceiling = Date.now() + LOCK_CEILING_MS;
+    let stomped = false;
+    for (;;) {
+        try {
+            await fs.promises.writeFile(lock, token, { flag: 'wx' });
+            return token;
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') {
+                warnLockUnavailable(target, (err as Error)?.message ?? err);
+                return null;
+            }
+        }
+        const owner = await readLockOwner(lock);
+        if (owner !== null && lockOwnerIsGone(owner)) {
+            await reclaimLock(lock, owner);
+            continue;
+        }
+        if (Date.now() < ceiling) {
+            await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
+            continue;
+        }
+        if (stomped) {
+            console.warn(
+                `[spec-context] Still could not take the write lock on ${target}; recording without it.`
+            );
+            return null;
+        }
+        stomped = true;
+        console.warn(
+            `[spec-context] Reclaimed a write lock held past ${LOCK_CEILING_MS}ms on ${target}.`
+        );
+        await reclaimLock(lock, owner);
+    }
+}
+
+async function releaseContextLock(target: string, token: string | null): Promise<void> {
+    if (token) {
+        await reclaimLock(specContextLockPath(target), token);
     }
 }
 
@@ -358,7 +414,7 @@ export async function updateSpecContext(
     // failed predecessor still lets us run.
     const prior = writeChains.get(key) ?? Promise.resolve();
     const result = prior.then(() =>
-        runSpecContextUpdate(specDir, target, mutate, fallback)
+        runSpecContextUpdate(target, mutate, fallback)
     );
     const tail = result.then(
         () => undefined,
@@ -377,14 +433,14 @@ export async function updateSpecContext(
 }
 
 async function runSpecContextUpdate(
-    specDir: string,
     target: string,
     mutate: (ctx: SpecContext) => SpecContext,
     fallback: SpecContext
 ): Promise<SpecContext> {
-    // The lock spans read → mutate → publish, exactly as the capture script's
-    // does, so a script write can't land in the middle and be overwritten by the
-    // copy we read before it (#629). `writeSpecContext` sees we already hold it.
+    // The lock spans read → mutate → publish, as the capture script's does, so a
+    // script write can't land in the middle and be overwritten by the copy read
+    // before it. It publishes directly rather than through `writeSpecContext`,
+    // which would take the same lock again and deadlock behind itself.
     const token = await acquireContextLock(target);
     try {
         let current: SpecContext;
@@ -402,7 +458,7 @@ async function runSpecContextUpdate(
         if (!next.profile && fallback.profile) {
             next.profile = fallback.profile;
         }
-        await writeSpecContext(specDir, next);
+        await publishSpecContext(target, next);
         return next;
     } finally {
         await releaseContextLock(target, token);

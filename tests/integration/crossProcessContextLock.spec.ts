@@ -18,6 +18,7 @@ import * as path from 'path';
 import {
     specContextLockPath,
     updateSpecContext,
+    writeSpecContext,
 } from '../../src/features/specs/specContextWriter';
 import { backfillMinimalContext } from '../../src/features/specs/specContextBackfill';
 import { SpecContext } from '../../src/core/types/specContext';
@@ -177,12 +178,18 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         );
     });
 
-    it('a lock nobody released never blocks a write for good', async () => {
+    it('a lock whose owner died is reclaimed at once', async () => {
         const { specDir } = makeCell();
         const target = path.join(specDir, '.spec-context.json');
-        // A crashed writer's leftover: the lock file exists, its owner is gone.
-        fs.mkdirSync(path.dirname(specContextLockPath(target)), { recursive: true });
-        fs.writeFileSync(specContextLockPath(target), 'someone-who-died', 'utf-8');
+        // A crashed writer's leftover: the lock file is there, its owner is not.
+        const deadPid = Number(
+            execFileSync('python3', ['-c', 'import os;print(os.getpid())'], {
+                encoding: 'utf-8',
+            }).trim()
+        );
+        const lock = specContextLockPath(target);
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        fs.writeFileSync(lock, `${deadPid}:abcdef`, 'utf-8');
 
         const started = Date.now();
         await updateSpecContext(
@@ -191,6 +198,49 @@ describeWithPython('cross-process run-record lock (#629)', () => {
             fallback()
         );
         expect(readRecord(specDir).survived).toBe(true);
-        expect(Date.now() - started).toBeLessThan(20_000);
+        expect(Date.now() - started).toBeLessThan(1000);
+        // Reclaimed and then released, not merely written around.
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('a lock whose owner is still running is waited for, not taken', async () => {
+        const { specDir } = makeCell();
+        const target = path.join(specDir, '.spec-context.json');
+        const lock = specContextLockPath(target);
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        // Owned by a process that is very much alive: this one.
+        fs.writeFileSync(lock, `${process.pid}:stillworking`, 'utf-8');
+
+        const write = updateSpecContext(
+            specDir,
+            ctx => ({ ...ctx, waited: true }) as SpecContext,
+            fallback()
+        );
+        const outcome = await Promise.race([
+            write.then(() => 'wrote'),
+            sleep(2500).then(() => 'still waiting'),
+        ]);
+        expect(outcome).toBe('still waiting');
+
+        fs.unlinkSync(lock);
+        await write;
+        expect(readRecord(specDir).waited).toBe(true);
+    });
+
+    it('two writes issued together in one process do not overlap', async () => {
+        const { specDir } = makeCell();
+        await writeSpecContext(specDir, fallback());
+        // Neither call goes through updateSpecContext's in-process queue — the
+        // viewer and the reset path both publish directly — so the file lock is
+        // the only thing keeping them apart.
+        await Promise.all([
+            writeSpecContext(specDir, { ...fallback(), fromViewer: 1 } as SpecContext),
+            writeSpecContext(specDir, { ...fallback(), fromReset: 2 } as SpecContext),
+        ]);
+        const record = readRecord(specDir);
+        expect({ fromViewer: record.fromViewer, fromReset: record.fromReset }).toEqual({
+            fromViewer: 1,
+            fromReset: 2,
+        });
     });
 });
