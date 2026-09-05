@@ -391,6 +391,21 @@ describe("hooks another extension registered run in the lane, not beneath it", (
             .toBe('sync.sh --all');
     });
 
+    // A dotted filename with no directory is still a filename: it is the tail
+    // that gives it away, not the separators.
+    it('leaves a dotted script filename alone even with no directory on it', () => {
+        const named = (command: string) => {
+            const { host } = canvas(graph({
+                steps: [step({ stockHooks: [{ ...stock('after'), command }] })],
+            }));
+            return host.querySelector('.pb-hook--stock .pb-hook-name')?.textContent;
+        };
+        expect(named('build.deploy.sh')).toBe('build.deploy.sh');
+        expect(named('tools.sync.py')).toBe('tools.sync.py');
+        expect(named('release.notes.js')).toBe('release.notes.js');
+        expect(named('speckit.git.commit')).toBe('commit');
+    });
+
     it('names a command by its tail, never by the prefix they all carry', () => {
         const { host } = canvas(graph({
             steps: [step({
@@ -437,6 +452,33 @@ describe("hooks another extension registered run in the lane, not beneath it", (
 
     // Companion registers a spec-kit extension of its own, so an anchor can
     // carry two Companion-marked groups: one this panel writes, one it does not.
+    // An extension's before-hooks run before every node in the step, so before
+    // every hook of yours hanging off one; its after-hooks run once the step's
+    // own work is reported. The block reads top to bottom, so the halves swap.
+    it('puts an extension ahead of you before, and behind you after', () => {
+        const ourHook = (when: 'before' | 'after') => ({
+            when, type: 'skill' as const, summary: 'create-pr',
+            anchor: 'resolve-dir', index: 0, note: '',
+        });
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [stock('before'), stock('after')],
+                phases: [{
+                    name: 'gather', hooks: [],
+                    nodes: [node({ hooks: [ourHook('before'), ourHook('after')] })],
+                }],
+            })],
+        }));
+        const sides = Array.from(host.querySelectorAll('.pb-attached-side'));
+        const named = (side: Element) => Array.from(
+            side.querySelectorAll('.pb-hook-source-name')).map(el => el.textContent);
+
+        expect(sides[0].querySelector('.pb-attached-when')?.textContent).toBe('before');
+        expect(named(sides[0])).toEqual(['via git', 'companion.yml']);
+        expect(sides[1].querySelector('.pb-attached-when')?.textContent).toBe('after');
+        expect(named(sides[1])).toEqual(['companion.yml', 'via git']);
+    });
+
     it("tells your own file from Companion's extension beside it", () => {
         const { host } = canvas(graph({
             steps: [step({

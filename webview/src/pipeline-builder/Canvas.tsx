@@ -131,18 +131,23 @@ function shellName(line: string): string {
     return [base, ...parts.slice(script + 1)].join(' ');
 }
 
+/** A last segment that is a file extension rather than the name of a command. */
+const SCRIPT_TAIL = /^(sh|bash|zsh|fish|py|js|mjs|cjs|ts|rb|pl|lua|ps1|bat|cmd|exe)$/;
+
 /**
  * A registered command by the part that is not on every one of them.
  *
  * `speckit.git.feature` cut to a lane read `spe…`, which is the prefix every
  * one of them shares; the mark above the row already says which extension. Only
- * a namespaced id is cut at a dot — the tail of `scripts/sync.sh` is `sh`, which
- * names nothing, so anything else is read as a shell line instead.
+ * a namespaced id is cut at a dot: the tail of a script is its extension, and
+ * `sh` names nothing. A path gives itself away, but `build.deploy.sh` does not
+ * — it is the tail that has to be judged, not the separators.
  */
 function commandTail(command: string): string {
     const id = command.trim();
     if (!/^[\w-]+(\.[\w-]+){2,}$/.test(id)) { return shellName(command); }
-    return id.slice(id.lastIndexOf('.') + 1);
+    const tail = id.slice(id.lastIndexOf('.') + 1);
+    return SCRIPT_TAIL.test(tail) ? shellName(command) : tail;
 }
 
 /**
@@ -339,21 +344,25 @@ function hookHome(workflow: string): HookHome {
 }
 
 /**
- * The hooks at one boundary, split by whoever registered them.
+ * The hooks at one boundary, split by whoever registered them, in run order.
  *
- * Yours first: they are the only ones this panel writes.
+ * Which half goes on top is the side's to decide, and it is not the same on
+ * both: a step runs its extensions' before-hooks *now, before any of the work
+ * below* — every node in the step, and so every hook of yours hanging off one —
+ * and their after-hooks once its own work is reported. Yours-first everywhere
+ * drew `npm test` above `git commit` on a boundary that runs the commit first.
  */
-function bySource(ours: PipelineHook[], theirs: StockHook[], yours: HookHome): HookSource[] {
-    const groups: HookSource[] = ours.length > 0 ? [{
-        name: yours.name, mark: 'companion', ours, theirs: [], title: yours.title,
-    }] : [];
+function bySource(
+    ours: PipelineHook[], theirs: StockHook[], yours: HookHome, side: HookWhen,
+): HookSource[] {
+    const groups: HookSource[] = [];
     for (const hook of theirs) {
         const last = groups[groups.length - 1];
         // Only a RUN of one extension becomes a group. Collecting every hook of
         // an extension into one would draw an anchor that interleaves them —
         // git, companion, git — in an order it does not run in, and running top
         // to bottom in the order declared is the whole of the contract.
-        if (last && last.theirs.length > 0 && last.theirs[0].extension === hook.extension) {
+        if (last && last.theirs[0].extension === hook.extension) {
             last.theirs.push(hook);
             continue;
         }
@@ -370,7 +379,11 @@ function bySource(ours: PipelineHook[], theirs: StockHook[], yours: HookHome): H
                 + 'It runs here, and is not edited in this panel.',
         });
     }
-    return groups;
+    if (ours.length === 0) { return groups; }
+    const mine: HookSource = {
+        name: yours.name, mark: 'companion', ours, theirs: [], title: yours.title,
+    };
+    return side === 'before' ? [...groups, mine] : [mine, ...groups];
 }
 
 /**
@@ -403,7 +416,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
     yours: HookHome;
     onEdit?: (hook: PipelineHook) => void;
 }) {
-    const sides: Array<[string, PipelineHook[], StockHook[]]> = [
+    const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
         ['before', before, stockBefore],
         ['after', after, stockAfter],
     ];
@@ -415,7 +428,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
                         <span class="pb-attached-when">{side}</span>
-                        {bySource(ours, theirs, yours).map((source, at) => (
+                        {bySource(ours, theirs, yours, side).map((source, at) => (
                             <div key={`${at}-${source.name}`} class="pb-hook-group">
                                 <span class="pb-hook-source" title={source.title}>
                                     {sourceMark(source.mark)}
