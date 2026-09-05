@@ -31,6 +31,9 @@ const RESERVED_NAMES: ReadonlySet<string> = new Set([
     ...PLACEABLE_AFTER,
     'mark-complete',
     'auto',
+    // Lifecycle names: positional inference would draw a completed mark on a step that never ran.
+    'clarify',
+    'analyze',
 ]);
 
 /** The shape the builder enforces when it creates the directory. */

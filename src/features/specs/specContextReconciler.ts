@@ -42,13 +42,15 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
     // (`from.step === currentStep`).
     if (!(STATUSES as string[]).includes(result.status)) {
         const completed = isStepCompletedInHistory(result.history, result.currentStep);
-        result = {
-            ...result,
-            status: completed
-                ? completedStatusForStep(result.currentStep)
-                : inFlightStatusForStep(result.currentStep),
-        };
-        changed = true;
+        // A step the project added maps to no canonical status, so there is
+        // nothing to repair it to — leave the spec's status alone.
+        const repaired = completed
+            ? completedStatusForStep(result.currentStep)
+            : inFlightStatusForStep(result.currentStep);
+        if (repaired) {
+            result = { ...result, status: repaired };
+            changed = true;
+        }
     }
 
     // Roll back currentStep when it disagrees with `status`.
@@ -77,8 +79,11 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
         result.currentStep !== 'implement' &&
         isStepCompletedInHistory(result.history, result.currentStep)
     ) {
-        result = { ...result, status: completedStatusForStep(result.currentStep) };
-        changed = true;
+        const done = completedStatusForStep(result.currentStep);
+        if (done) {
+            result = { ...result, status: done };
+            changed = true;
+        }
     }
 
     return changed ? result : null;

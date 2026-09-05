@@ -90,14 +90,14 @@ export const STEP_STATUS: Readonly<Record<StepName, { inFlight: Status; complete
     implement: { inFlight: 'implementing', completed: 'implemented' },
 };
 
-/** The status a step carries while it is running. */
-export function inFlightStatusForStep(step: StepName): Status {
-    return STEP_STATUS[step].inFlight;
+/** The status a step carries while it is running, or undefined for a step outside the lifecycle set (a step the project added). */
+export function inFlightStatusForStep(step: StepName): Status | undefined {
+    return STEP_STATUS[step]?.inFlight;
 }
 
-/** The status a step advances to when it finishes. */
-export function completedStatusForStep(step: StepName): Status {
-    return STEP_STATUS[step].completed;
+/** The status a step advances to when it finishes, or undefined for a step outside the lifecycle set. */
+export function completedStatusForStep(step: StepName): Status | undefined {
+    return STEP_STATUS[step]?.completed;
 }
 
 /**

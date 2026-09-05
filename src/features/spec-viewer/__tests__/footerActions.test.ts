@@ -143,3 +143,30 @@ describe("the forward action reaches a project's added step (US3)", () => {
         expect(state.steps['implement']).toBe('completed');
     });
 });
+
+describe('a step placed after implement is dispatchable (US3)', () => {
+    const path2 = require('path');
+    const { getFooterActions } = require('../footerActions');
+    const { resolveCompanionSteps } = require('../../workflows/pipelineResolution');
+    const spliced = resolveCompanionSteps(path2.join(__dirname, '../../../../tests/fixtures/project-steps'));
+    const shipped = resolveCompanionSteps(path2.join(__dirname, '../../../../tests/fixtures/project-steps-empty'));
+
+    const atImplement = () => ({
+        workflow: 'companion', specName: 'x', branch: 'main',
+        currentStep: 'implement', status: 'implementing',
+        history: [
+            { step: 'implement', substep: null, kind: 'start', from: null, by: 'extension', at: '2026-07-21T10:00:00.000Z' },
+        ],
+    }) as unknown as SpecContext;
+
+    const ids = (steps: unknown) =>
+        getFooterActions(atImplement(), 'implement', steps).map((a: { id: string }) => a.id);
+
+    it('offers the forward action on implement when the project placed a step after it', () => {
+        expect(ids(spliced)).toContain('approve');
+    });
+
+    it('still suppresses it on the shipped pipeline, where only mark-complete follows', () => {
+        expect(ids(shipped)).not.toContain('approve');
+    });
+});

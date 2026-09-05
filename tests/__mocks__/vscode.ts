@@ -142,6 +142,10 @@ export function createMockFileSystemWatcher(pattern: any) {
     };
 }
 
+function currentFolders(): any[] | undefined {
+    return (workspace as { workspaceFolders?: any[] }).workspaceFolders;
+}
+
 export const workspace = {
     fs: {
         readDirectory: jest.fn().mockResolvedValue([]),
@@ -153,6 +157,12 @@ export const workspace = {
         delete: jest.fn().mockResolvedValue(undefined),
     },
     workspaceFolders: undefined as any,
+    // Faithful enough for path-owner resolution: the folder whose fsPath prefixes the uri.
+    getWorkspaceFolder: jest.fn((uri: any): any =>
+        currentFolders()?.find(
+            (f: any) => typeof uri?.fsPath === 'string' && uri.fsPath.startsWith(f.uri.fsPath)
+        )
+    ),
     openTextDocument: jest.fn().mockResolvedValue({}),
     findFiles: jest.fn().mockResolvedValue([]),
     createFileSystemWatcher: jest.fn().mockImplementation(createMockFileSystemWatcher),

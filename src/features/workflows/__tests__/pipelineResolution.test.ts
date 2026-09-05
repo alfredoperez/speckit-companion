@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { COMPANION_WORKFLOW, DEFAULT_WORKFLOW } from '../workflowManager';
 import { resolveCompanionSteps, resolveSpecPipeline, shouldRecordStepStart } from '../pipelineResolution';
+import { readProjectSteps } from '../projectSteps';
 
 const FIXTURES = path.join(__dirname, '../../../../tests/fixtures');
 const WITH_STEPS = path.join(FIXTURES, 'project-steps');
@@ -140,5 +141,49 @@ describe('resolveSpecPipeline', () => {
     it('falls back to the shipped default rather than an empty list', async () => {
         const steps = await resolveSpecPipeline(undefined);
         expect(steps).toEqual(DEFAULT_WORKFLOW.steps);
+    });
+});
+
+describe('the writer can record what the gate admits', () => {
+    const { inFlightStatusForStep, completedStatusForStep } = require('../../../core/types/specContext');
+    const { setStepStarted, setStepCompleted } = require('../../specs/specContextWriter');
+    const steps = resolveCompanionSteps(WITH_STEPS);
+
+    const ctx = () => ({
+        workflow: 'companion', specName: 't', branch: 'main',
+        currentStep: 'implement', status: 'implementing', history: [],
+    }) as never;
+
+    it('does not throw for a step outside the lifecycle set', () => {
+        expect(shouldRecordStepStart(steps, 'code-review')).toBe(true);
+        expect(() => inFlightStatusForStep('code-review')).not.toThrow();
+        expect(inFlightStatusForStep('code-review')).toBeUndefined();
+        expect(completedStatusForStep('code-review')).toBeUndefined();
+    });
+
+    it('journals an added step and leaves the spec status alone', () => {
+        const started = setStepStarted(ctx(), 'code-review', 'extension');
+        expect(started.history).toHaveLength(1);
+        expect(started.currentStep).toBe('code-review');
+        expect(started.status).toBe('implementing');
+
+        const done = setStepCompleted(started, 'code-review', 'extension');
+        expect(done.history).toHaveLength(2);
+        expect(done.status).toBe('implementing');
+    });
+
+    it('still journals a user workflow that reuses the lifecycle names', () => {
+        const user = [
+            { name: 'specify', command: 'sdd-spec', file: 'spec.md' },
+            { name: 'plan', command: 'sdd-design', file: 'plan.md' },
+        ];
+        expect(shouldRecordStepStart(user, 'specify')).toBe(true);
+        expect(shouldRecordStepStart(user, 'plan')).toBe(true);
+        expect(shouldRecordStepStart(user, 'discuss')).toBe(false);
+    });
+
+    it('omits a step named after a lifecycle side command, which would draw a phantom mark', () => {
+        expect(resolveCompanionSteps(WITH_STEPS).map(s => s.name)).not.toContain('clarify');
+        expect(readProjectSteps(WITH_STEPS).map(s => s.name)).not.toContain('clarify');
     });
 });

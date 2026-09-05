@@ -13,6 +13,7 @@
 
 import * as vscode from 'vscode';
 import type { WorkflowConfig, WorkflowStepConfig } from './types';
+import { STEP_NAMES, type StepName } from '../../core/types/specContext';
 import {
     COMPANION_WORKFLOW,
     DEFAULT_WORKFLOW,
@@ -23,13 +24,12 @@ import {
 import { resolveWorkflow } from './workflowSelector';
 import { PLACEABLE_AFTER, readProjectSteps } from './projectSteps';
 
-/**
- * Side commands that record a run of their own without ever appearing in a
- * pipeline, so pipeline membership alone would stop journaling them.
- */
-const OFF_PIPELINE_TIMED_STEPS: ReadonlySet<string> = new Set(['clarify', 'analyze']);
-
-function workspaceRoot(): string | undefined {
+/** The spec's own folder decides the root, so a multi-root workspace reads the right project's steps. */
+function projectRoot(specDir?: string): string | undefined {
+    if (specDir) {
+        const owner = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(specDir))?.uri.fsPath;
+        if (owner) return owner;
+    }
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
@@ -59,12 +59,12 @@ export function resolveCompanionSteps(root: string | undefined): WorkflowStepCon
 }
 
 /** A workflow's steps, spliced with the project's own when it is the Companion pipeline. */
-function stepsOf(workflow: WorkflowConfig | undefined): WorkflowStepConfig[] | undefined {
+function stepsOf(workflow: WorkflowConfig | undefined, specDir?: string): WorkflowStepConfig[] | undefined {
     if (!workflow) return undefined;
     const normalized = normalizeWorkflowConfig(workflow);
     if (!normalized.steps || normalized.steps.length === 0) return undefined;
     return normalized.name === COMPANION_WORKFLOW.name
-        ? resolveCompanionSteps(workspaceRoot())
+        ? resolveCompanionSteps(projectRoot(specDir))
         : normalized.steps;
 }
 
@@ -78,11 +78,16 @@ export async function resolveSpecPipeline(
     changeRoot?: string | null,
 ): Promise<WorkflowStepConfig[]> {
     if (specDir) {
+        let recorded: WorkflowStepConfig[] | undefined;
         try {
             const ctx = await getFeatureWorkflow(specDir, changeRoot ?? undefined);
-            const recorded = ctx ? stepsOf(getWorkflow(ctx.workflow)) : undefined;
-            if (recorded) return recorded;
-            const selected = stepsOf(await resolveWorkflow(specDir) ?? undefined);
+            recorded = ctx ? stepsOf(getWorkflow(ctx.workflow), specDir) : undefined;
+        } catch {
+            // An unreadable context file must still reach the effective default below.
+        }
+        if (recorded) return recorded;
+        try {
+            const selected = stepsOf(await resolveWorkflow(specDir) ?? undefined, specDir);
             if (selected) return selected;
         } catch {
             // fall through to the default pipeline
@@ -104,7 +109,9 @@ export function shouldRecordStepStart(
     stepName: string | undefined,
 ): boolean {
     if (!stepName) return false;
-    if (OFF_PIPELINE_TIMED_STEPS.has(stepName)) return true;
+    // A lifecycle name is journaled whatever dispatches it — that is what the
+    // two hardcoded sets did, and a user workflow reusing these names relies on it.
+    if (STEP_NAMES.includes(stepName as StepName)) return true;
     const step = steps.find(s => s.name === stepName);
     return !!step && !step.untimed && step.command.startsWith('speckit.');
 }
