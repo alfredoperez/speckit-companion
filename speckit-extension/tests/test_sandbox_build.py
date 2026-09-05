@@ -1,62 +1,53 @@
 #!/usr/bin/env python3
-"""Building a real project must not change what the assistant is asked to do.
+"""Building an unconfigured project must not change what the assistant is asked to do.
 
-The whole architecture — node boundaries, phases, hooks, decisions, templates —
-is only safe if a project that configured nothing gets exactly the pipeline it
-had before. Everything added is scaffolding: markers a tool reads, and text only
-where a project asked for it.
-
-This builds one of the repository's own sandbox projects and holds the output
-against the shipped bodies. It is the test that would fail if any of this had
-started quietly editing instructions.
+Node boundaries, phases, hooks, decisions and templates are only safe if a
+project that configured nothing gets exactly the shipped pipeline. Everything
+added is scaffolding: markers a tool reads, and text only where a project asked.
 
 Stdlib `unittest` only.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib
 import re
-import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
 EXT = Path(__file__).resolve().parent.parent
 SCRIPTS = EXT / "scripts"
-REPO = EXT.parent
-SANDBOX = REPO / "examples" / "todo-claude"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import _command_parts as cp  # noqa: E402
+from builder_harness import Project  # noqa: E402
 
 assemble = importlib.import_module("assemble-nodes")
 
 MARKER = re.compile(r"<!-- /?speckit-companion:(?:node|phase|hook) [\w-]+ -->")
 
 
-class BuildingASandboxProjectChangesNothing(unittest.TestCase):
+def snapshot(root: Path) -> dict:
+    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in root.rglob("*") if p.is_file()}
+
+
+class BuildingAnUnconfiguredProjectChangesNothing(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if not SANDBOX.is_dir():
-            raise unittest.SkipTest(f"no sandbox project at {SANDBOX}")
-        cls._out = tempfile.TemporaryDirectory()
-        result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "build-pipeline.py"),
-             "--project", str(SANDBOX), "--out", cls._out.name],
-            capture_output=True, text=True,
-        )
-        if result.returncode != 0:
-            raise AssertionError(f"the sandbox build failed:\n{result.stdout}\n{result.stderr}")
-        cls.stdout = result.stdout
+        cls.project = Project()
+        cls.addClassCleanup(cls.project.close)
+        specify = cls.project.root / ".specify"
+        cls.before = snapshot(specify)
+        out = cls.project.root / "out"
+        cls.stdout = cls.project.build_ok("--out", str(out))
+        cls.after = snapshot(specify)
         cls.built = {
-            command: (Path(cls._out.name) / f"speckit.companion.{command}.md").read_text(encoding="utf-8")
+            command: (out / f"speckit.companion.{command}.md").read_text(encoding="utf-8")
             for command in assemble.decomposed_commands()
         }
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._out.cleanup()
 
     def test_an_unconfigured_project_gets_the_shipped_bodies_byte_for_byte(self):
         for command, body in self.built.items():
@@ -65,8 +56,6 @@ class BuildingASandboxProjectChangesNothing(unittest.TestCase):
                 self.assertEqual(body, shipped)
 
     def test_the_instructions_are_untouched_once_the_scaffolding_comes_off(self):
-        # The stronger form of the same claim: even if the markers moved, the
-        # text the assistant reads must equal the frozen golden.
         for command, body in self.built.items():
             with self.subTest(command=command):
                 golden = Path(cp.golden_path(f"commands/speckit.companion.{command}.md"))
@@ -74,8 +63,6 @@ class BuildingASandboxProjectChangesNothing(unittest.TestCase):
                                  golden.read_text(encoding="utf-8"))
 
     def test_the_only_additions_are_comment_markers(self):
-        # Every line the build added must be an HTML comment: invisible when the
-        # body is rendered, and never another thing for the assistant to obey.
         for command, body in self.built.items():
             with self.subTest(command=command):
                 added = set(body.splitlines()) - set(
@@ -84,9 +71,6 @@ class BuildingASandboxProjectChangesNothing(unittest.TestCase):
                     self.assertRegex(line.strip(), MARKER.pattern)
 
     def test_the_scaffolding_stays_a_small_share_of_the_body(self):
-        # It is not free — the markers are characters the model reads — so the
-        # cost is asserted rather than assumed. A jump here means something
-        # started emitting per-line markers.
         for command, body in self.built.items():
             with self.subTest(command=command):
                 marker_chars = sum(len(line) + 1 for line in body.splitlines()
@@ -98,12 +82,26 @@ class BuildingASandboxProjectChangesNothing(unittest.TestCase):
         self.assertIn("classify-size = simple", self.stdout)
         self.assertIn("a run of this pipeline writes", self.stdout)
 
-    def test_nothing_was_written_into_the_sandbox_itself(self):
-        # A build writes to its output directory. Reaching into the project's own
-        # `.specify/` uninvited is how a trial run becomes a change nobody asked
-        # for.
-        self.assertFalse((SANDBOX / ".specify" / "extensions" / "companion" / "commands").exists(),
-                         "the build wrote into the sandbox instead of the output directory")
+    def test_nothing_was_written_into_the_project_itself(self):
+        self.assertEqual(self.before, self.after,
+                         "the build wrote into the project instead of the output directory")
+
+
+class AConfiguredProjectGetsItsHooks(unittest.TestCase):
+    CONFIG = (
+        "commands:\n  implement:\n    hooks:\n      after:\n"
+        "        implement-exec:\n          - { type: prompt, text: \"x\" }\n"
+    )
+
+    def test_a_written_hook_shows_up_as_a_hook_marker(self):
+        project = Project()
+        self.addCleanup(project.close)
+        project.set_config(self.CONFIG)
+        out = project.root / "out"
+        project.build_ok("--out", str(out))
+        body = (out / "speckit.companion.implement.md").read_text(encoding="utf-8")
+        self.assertIn("<!-- speckit-companion:hook after-implement-exec-0 -->\nx\n"
+                      "<!-- /speckit-companion:hook after-implement-exec-0 -->", body)
 
 
 if __name__ == "__main__":
