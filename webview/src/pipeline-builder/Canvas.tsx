@@ -145,6 +145,18 @@ function commandTail(command: string): string {
     return id.slice(id.lastIndexOf('.') + 1);
 }
 
+/**
+ * What a registered hook is called on its row.
+ *
+ * `command` and `description` are both optional in `extensions.yml` — the
+ * reader coerces a missing one to `""` — and the row has nothing else on it
+ * since the kind badge went, so an entry with neither used to render blank.
+ */
+function stockName(hook: StockHook): string {
+    if (hook.command) { return commandTail(hook.command); }
+    return hook.description || 'no command';
+}
+
 /** A count and its noun, agreeing. */
 function count(n: number): string {
     return `${n}${n === 1 ? ' node' : ' nodes'}`;
@@ -212,7 +224,23 @@ function MossIcon() {
     );
 }
 
-/** The mark for a hook a spec-kit extension registered. */
+/**
+ * Somebody else's extension.
+ *
+ * The universal mark for a thing that plugs in, and deliberately nobody's
+ * logo: a third-party extension is not published by GitHub and putting their
+ * mark on it says it is.
+ */
+function ExtensionIcon() {
+    return (
+        <svg class="pb-mark pb-mark--extension" width="13" height="13" viewBox="0 0 16 16"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M5.5 3.5a2.5 2.5 0 0 1 5 0V4h2a.5.5 0 0 1 .5.5v2h-.5a2.5 2.5 0 0 0 0 5h.5v2a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h2v-.5z" />
+        </svg>
+    );
+}
+
+/** The mark for spec-kit's own extension, which is GitHub's. */
 function GithubIcon() {
     return (
         <svg class="pb-mark pb-mark--github" width="13" height="13" viewBox="0 0 16 16"
@@ -253,16 +281,35 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
  * registered them, and are still not edited here.
  */
 
+/** Whose a group's hooks are, which is what picks its mark. */
+type SourceMark = 'companion' | 'github' | 'extension';
+
 /** Where the hooks at one boundary came from, and which of them it carries. */
 type HookSource = {
-    /** The file or the extension, as it is written. */
+    /** The file or the extension, as the heading reads it. */
     name: string;
-    /** Whether it is Companion's, which is what picks the mark. */
-    companion: boolean;
+    mark: SourceMark;
     title: string;
     ours: PipelineHook[];
     theirs: StockHook[];
 };
+
+/**
+ * Whose an extension is.
+ *
+ * `git` is spec-kit's own — its manifest names `github/spec-kit` — so it is the
+ * only one that earns GitHub's mark. Anyone else's extension is not published
+ * by GitHub, and carrying their logo would say it is.
+ */
+function markFor(extension: string): SourceMark {
+    if (extension === 'companion') { return 'companion'; }
+    return extension === 'git' ? 'github' : 'extension';
+}
+
+function sourceMark(mark: SourceMark) {
+    if (mark === 'companion') { return <MossIcon />; }
+    return mark === 'github' ? <GithubIcon /> : <ExtensionIcon />;
+}
 
 /** What heads this project's own hooks: the file holding them, and where it is. */
 type HookHome = { name: string; title: string };
@@ -298,14 +345,27 @@ function hookHome(workflow: string): HookHome {
  */
 function bySource(ours: PipelineHook[], theirs: StockHook[], yours: HookHome): HookSource[] {
     const groups: HookSource[] = ours.length > 0 ? [{
-        name: yours.name, companion: true, ours, theirs: [], title: yours.title,
+        name: yours.name, mark: 'companion', ours, theirs: [], title: yours.title,
     }] : [];
     for (const hook of theirs) {
-        const name = hook.extension || 'extension';
-        const found = groups.find(group => group.name === name);
-        if (found) { found.theirs.push(hook); continue; }
+        const last = groups[groups.length - 1];
+        // Only a RUN of one extension becomes a group. Collecting every hook of
+        // an extension into one would draw an anchor that interleaves them —
+        // git, companion, git — in an order it does not run in, and running top
+        // to bottom in the order declared is the whole of the contract.
+        if (last && last.theirs.length > 0 && last.theirs[0].extension === hook.extension) {
+            last.theirs.push(hook);
+            continue;
+        }
+        const name = hook.extension || 'an extension';
         groups.push({
-            name, companion: name === 'companion', ours: [], theirs: [hook],
+            // `via git` rather than `git`: Companion registers a spec-kit
+            // extension of its own, so the mark alone put two identical marks
+            // side by side on one anchor — one of them editable here and one
+            // not. A name is a file you can open; `via` is a thing that runs.
+            name: `via ${name}`,
+            mark: markFor(hook.extension),
+            ours: [], theirs: [hook],
             title: `Registered by the ${name} extension in .specify/extensions.yml. `
                 + 'It runs here, and is not edited in this panel.',
         });
@@ -355,10 +415,10 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
                         <span class="pb-attached-when">{side}</span>
-                        {bySource(ours, theirs, yours).map(source => (
-                            <div key={source.name} class="pb-hook-group">
+                        {bySource(ours, theirs, yours).map((source, at) => (
+                            <div key={`${at}-${source.name}`} class="pb-hook-group">
                                 <span class="pb-hook-source" title={source.title}>
-                                    {source.companion ? <MossIcon /> : <GithubIcon />}
+                                    {sourceMark(source.mark)}
                                     <span class="pb-hook-source-name">{source.name}</span>
                                 </span>
                                 <ul class="pb-attached-list">
@@ -386,13 +446,14 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                             <span class="pb-hook pb-hook--stock"
                                                 title={(hook.description
                                                     ? `${hook.description}\n\n` : '')
-                                                    + hook.command
+                                                    + (hook.command
+                                                        || 'This entry names no command to run.')
                                                     + (hook.optional
                                                         ? '\nIt asks before it runs.' : '')
                                                     + (hook.conditional
                                                         ? '\nIt does not run every time.' : '')}>
                                                 <span class="pb-hook-name pb-hook-name--ref">
-                                                    {clip(commandTail(hook.command))}
+                                                    {clip(stockName(hook))}
                                                 </span>
                                                 {/* The one fact here with a consequence. */}
                                                 {hook.optional && (

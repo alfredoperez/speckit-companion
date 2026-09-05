@@ -199,6 +199,45 @@ export const HooksOnANamedWorkflow: Story = {
     ),
 };
 
+/**
+ * Three sources at one anchor, in the order the registry declares them.
+ *
+ * `git` is spec-kit's own and carries GitHub's mark; Companion's own extension
+ * carries the mascot but reads `via`, because it runs here and is not edited
+ * here; anybody else's gets the neutral mark. The alternation is drawn as it
+ * runs, so `git` heads two groups rather than being collected into one.
+ */
+export const HooksInterleavedSources: Story = {
+    name: 'Hooks · three extensions alternating at one anchor',
+    render: () => (
+        <One><Canvas graph={graph([step('specify', [
+            phase('wrap-up', [node('handoff', 'Hand off to the next step')]),
+        ], {
+            stockHooks: [
+                {
+                    when: 'after', extension: 'git', command: 'speckit.git.commit',
+                    description: 'Commit the work', optional: true, conditional: false,
+                },
+                {
+                    when: 'after', extension: 'companion',
+                    command: 'speckit.companion.after-specify',
+                    description: 'Record the step', optional: false, conditional: true,
+                },
+                {
+                    when: 'after', extension: 'acme-review',
+                    command: 'acme.review.queue', description: 'Queue a house review',
+                    optional: false, conditional: false,
+                },
+                {
+                    when: 'after', extension: 'git', command: 'speckit.git.validate',
+                    description: 'Check the branch is clean',
+                    optional: false, conditional: false,
+                },
+            ],
+        })])} {...CANVAS} /></One>
+    ),
+};
+
 export const HooksLongShellLine: Story = {
     name: 'Hooks · a shell line longer than the lane',
     render: () => (

@@ -410,8 +410,70 @@ describe("hooks another extension registered run in the lane, not beneath it", (
             steps: [step({ stockHooks: [stock('before'), stock('after')] })],
         }));
         const named = Array.from(host.querySelectorAll('.pb-hook-source-name'));
-        expect(named.map(el => el.textContent)).toEqual(['git', 'git']);
+        expect(named.map(el => el.textContent)).toEqual(['via git', 'via git']);
         expect(host.querySelectorAll('.pb-hook--stock')).toHaveLength(2);
+    });
+
+    // Hooks run top to bottom in the order the registry declares them, so
+    // collecting an extension's into one group draws an order that is not real.
+    it('keeps an interleaved registry in the order it declares', () => {
+        const at = (extension: string, command: string) => ({
+            ...stock('after'), extension, command, optional: false,
+        });
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [
+                    at('git', 'speckit.git.commit'),
+                    at('companion', 'speckit.companion.after-specify'),
+                    at('git', 'speckit.git.validate'),
+                ],
+            })],
+        }));
+        expect(Array.from(host.querySelectorAll('.pb-hook-source-name'))
+            .map(el => el.textContent)).toEqual(['via git', 'via companion', 'via git']);
+        expect(Array.from(host.querySelectorAll('.pb-hook--stock .pb-hook-name'))
+            .map(el => el.textContent)).toEqual(['commit', 'after-specify', 'validate']);
+    });
+
+    // Companion registers a spec-kit extension of its own, so an anchor can
+    // carry two Companion-marked groups: one this panel writes, one it does not.
+    it("tells your own file from Companion's extension beside it", () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), extension: 'companion' }],
+                phases: [{
+                    name: 'gather', hooks: [],
+                    nodes: [node({ hooks: [{
+                        when: 'after', type: 'skill', summary: 'create-pr',
+                        anchor: 'resolve-dir', index: 0, note: '',
+                    }] })],
+                }],
+            })],
+        }));
+        expect(Array.from(host.querySelectorAll('.pb-hook-source-name'))
+            .map(el => el.textContent)).toEqual(['companion.yml', 'via companion']);
+    });
+
+    // A third party's extension is not published by GitHub, and their logo on
+    // it would say it is.
+    it("gives a third party's extension a neutral mark, not GitHub's", () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [{ ...stock('after'), extension: 'acme' }] })],
+        }));
+        expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
+            .toContain('pb-mark--extension');
+    });
+
+    // The kind badge used to fill the row, so a commandless entry was blank.
+    it('says so rather than rendering an empty row for an entry with no command', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), command: '', description: '' }],
+            })],
+        }));
+        const row = host.querySelector('.pb-hook--stock')!;
+        expect(row.querySelector('.pb-hook-name')?.textContent).toBe('no command');
+        expect(row.getAttribute('title')).toContain('names no command to run');
     });
 
     // Hue alone is not a cue: it separates these from your own for anyone who
@@ -431,7 +493,7 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         }));
         const groups = Array.from(host.querySelectorAll('.pb-hook-group'));
         expect(groups.map(el => el.querySelector('.pb-hook-source-name')?.textContent))
-            .toEqual(['companion.yml', 'git']);
+            .toEqual(['companion.yml', 'via git']);
         expect(groups[0].querySelector('.pb-hook--stock')).toBeNull();
         expect(groups[1].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
     });
