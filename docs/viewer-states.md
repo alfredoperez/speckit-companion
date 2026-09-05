@@ -186,16 +186,7 @@
 > `prefers-reduced-motion` rule in `tokens.css` neutralizes the spin).
 > Implemented in `StepTab.tsx` + `webview/styles/spec-viewer/_navigation.css`.
 >
-> **Viewer refresh on completion (#277 Child 3 / #270)**: The open
-> viewer re-derives its state on every `.spec-context.json` write,
-> driven by a watcher over each configured spec directory
-> (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`,
-> wired in `src/features/fileWatchers.ts`). The legacy `.claude` watcher is
-> kept for back-compat. This is why completing a step now stops the
-> spinner and surfaces the next action within a debounce window without
-> switching tabs, and why a newly-created spec (including under
-> `.specify/specs/`) clears the welcome screen and appears in the
-> sidebar without a window reload.
+> **Viewer refresh on completion (#277 Child 3 / #270)**: The open viewer re-derives its state on every `.spec-context.json` write, driven by a watcher over each configured spec directory (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`, wired in `src/features/fileWatchers.ts`). The legacy `.claude` watcher is kept for back-compat. This is why completing a step now stops the spinner and surfaces the next action within a debounce window without switching tabs, and why a newly-created spec (including under `.specify/specs/`) clears the welcome screen and appears in the sidebar without a window reload.
 >
 > **Footer overflow note (future-proofing)**: After this redesign
 > the right-side bar typically holds 1–3 buttons. If more lifecycle

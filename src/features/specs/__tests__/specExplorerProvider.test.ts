@@ -42,11 +42,8 @@ jest.mock('../../workflows', () => ({
     },
 }));
 
-// Mock specContextManager — keep the real deriveSpecName so the readable-name
-// resolver humanizes slugs exactly as it does at runtime.
 jest.mock('../specContextManager', () => ({
     readSpecContextSync: jest.fn().mockReturnValue(undefined),
-    deriveSpecName: jest.requireActual('../specContextManager').deriveSpecName,
 }));
 
 // Companion installed by default so the pinned CTA row is absent for pre-existing tree-shape tests; CTA tests flip this to false.

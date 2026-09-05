@@ -23,7 +23,7 @@ import {
     updateSpecContext,
 } from './specContextWriter';
 import { Status } from '../../core/types/specContext';
-import { deriveSpecName } from './specContextManager';
+import { deriveSpecName } from '../../core/utils/specDisplayName';
 
 let outputChannel: vscode.OutputChannel | undefined;
 

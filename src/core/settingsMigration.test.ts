@@ -8,48 +8,17 @@ import {
     RETIRED_SETTINGS,
 } from './settingsMigration';
 
-type Inspection = {
-    globalValue?: unknown;
-    workspaceValue?: unknown;
-    workspaceFolderValue?: unknown;
-};
+type Inspection = { globalValue?: unknown; workspaceValue?: unknown };
 
-const FOLDER = { uri: vscode.Uri.file('/ws/one'), name: 'one', index: 0 };
-
-/**
- * One config for the resource-less (Global/Workspace) reads and one per folder
- * resource; every scope shares a single `update` spy that also records which
- * folder the write went through. A folder value in `inspections` is visible
- * only through a folder's resource-scoped config.
- */
-function setupConfig(
-    inspections: Record<string, Inspection | undefined>,
-    folders: Array<typeof FOLDER> = [FOLDER],
-) {
+function setupConfig(inspections: Record<string, Inspection | undefined>) {
     const update = jest.fn().mockResolvedValue(undefined);
-    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = folders;
-    const configFor = (resource?: vscode.Uri) => ({
-        inspect: jest.fn((key: string) => {
-            const i = inspections[key];
-            if (!i) return undefined;
-            return resource
-                ? { workspaceFolderValue: i.workspaceFolderValue }
-                : { globalValue: i.globalValue, workspaceValue: i.workspaceValue };
-        }),
-        update: (key: string, value: unknown, target: vscode.ConfigurationTarget) =>
-            update(key, value, target, ...(resource ? [resource.fsPath] : [])),
+    jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+        inspect: jest.fn((key: string) => inspections[key]),
+        update,
         get: jest.fn(),
-    });
-    jest.spyOn(vscode.workspace, 'getConfiguration').mockImplementation(
-        (_section?: string, resource?: unknown) =>
-            configFor(resource as vscode.Uri | undefined) as unknown as vscode.WorkspaceConfiguration,
-    );
+    } as unknown as vscode.WorkspaceConfiguration);
     return { update };
 }
-
-afterEach(() => {
-    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = undefined;
-});
 
 describe('coerceLegacyBoolean', () => {
     it('maps legacy "beta" and "on" strings to true', () => {
@@ -96,7 +65,7 @@ describe('migrateBetaTriStateSettings', () => {
     it('rewrites legacy "on" → true and "off" → false at their set scopes', async () => {
         const { update } = setupConfig({
             'viewer.activityPanel': { workspaceValue: 'on' },
-            'companion.installPrompt': { workspaceFolderValue: 'off' },
+            'companion.installPrompt': { globalValue: 'off' },
         });
 
         await migrateBetaTriStateSettings();
@@ -109,9 +78,26 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.installPrompt',
             false,
-            vscode.ConfigurationTarget.WorkspaceFolder,
-            '/ws/one'
+            vscode.ConfigurationTarget.Global
         );
+    });
+
+    it('never targets the WorkspaceFolder tier VS Code rejects for window-scoped keys', async () => {
+        const { update } = setupConfig({
+            'viewer.activityPanel': { globalValue: 'beta', workspaceValue: 'off' },
+            'companion.installPrompt': { workspaceValue: 'on' },
+            'notifications.phaseCompletion': { globalValue: false },
+            'notifications.stepComplete': {},
+            'companion.workflowBeta': { workspaceValue: 'on' },
+        });
+
+        await migrateBetaTriStateSettings();
+        await mergeNotificationSettings();
+        await removeRetiredSettings();
+
+        const targets = update.mock.calls.map(([, , target]) => target);
+        expect(targets.length).toBeGreaterThan(0);
+        expect(targets).not.toContain(vscode.ConfigurationTarget.WorkspaceFolder);
     });
 
     it('preserves scope: a global override is not relocated to workspace', async () => {
@@ -155,28 +141,6 @@ describe('migrateBetaTriStateSettings', () => {
 
         // Only the three known legacy strings ('off'/'beta'/'on') are migrated;
         // a typo is left for VS Code to flag, not silently rewritten to a boolean.
-        expect(update).not.toHaveBeenCalled();
-    });
-
-    it('writes a folder value through each folder\'s own config in a multi-root workspace', async () => {
-        const two = { uri: vscode.Uri.file('/ws/two'), name: 'two', index: 1 };
-        const { update } = setupConfig(
-            { 'viewer.activityPanel': { workspaceFolderValue: 'beta' } },
-            [FOLDER, two],
-        );
-
-        await migrateBetaTriStateSettings();
-
-        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.WorkspaceFolder, '/ws/one');
-        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.WorkspaceFolder, '/ws/two');
-        expect(update).toHaveBeenCalledTimes(2);
-    });
-
-    it('skips the folder tier when the window has no workspace folders', async () => {
-        const { update } = setupConfig({ 'viewer.activityPanel': { workspaceFolderValue: 'beta' } }, []);
-
-        await migrateBetaTriStateSettings();
-
         expect(update).not.toHaveBeenCalled();
     });
 
@@ -228,7 +192,7 @@ describe('removeRetiredSettings', () => {
         const { update } = setupConfig({
             'companion.speckitCompanionWorkflow': { globalValue: true },
             'companion.workflowBeta': { workspaceValue: 'on' },
-            'companion.resumeBeta': { workspaceFolderValue: 'beta' },
+            'companion.resumeBeta': { workspaceValue: 'beta' },
         });
 
         await expect(removeRetiredSettings()).resolves.toBeUndefined();
@@ -246,8 +210,7 @@ describe('removeRetiredSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.resumeBeta',
             undefined,
-            vscode.ConfigurationTarget.WorkspaceFolder,
-            '/ws/one'
+            vscode.ConfigurationTarget.Workspace
         );
     });
 

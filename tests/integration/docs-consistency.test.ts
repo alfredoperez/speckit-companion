@@ -135,4 +135,23 @@ describe('docs consistency', () => {
       });
     }
   });
+
+  describe('core layering', () => {
+    // Shrinks over time; never grows.
+    const ALLOWLIST = new Set(['src/core/telemetry.ts', 'src/core/utils/terminalUtils.ts']);
+    const UPWARD_IMPORT = /^\s*(?:import|export)\b[^;]*?from\s+['"][^'"]*(?:features|ai-providers)\/[^'"]*['"]/m;
+
+    const walk = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+        const full = path.join(dir, e.name);
+        return e.isDirectory() ? walk(full) : /\.ts$/.test(e.name) && !/\.(test|spec)\.ts$/.test(e.name) ? [full] : [];
+      });
+
+    it('nothing under src/core imports from features/ or ai-providers/ outside the allowlist', () => {
+      const offenders = walk(path.join(REPO_ROOT, 'src/core'))
+        .map((f) => path.relative(REPO_ROOT, f))
+        .filter((rel) => !ALLOWLIST.has(rel) && UPWARD_IMPORT.test(read(rel)));
+      expect(offenders).toEqual([]);
+    });
+  });
 });

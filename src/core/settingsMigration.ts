@@ -66,34 +66,14 @@ export function coerceLegacyBoolean(value: unknown, fallback: boolean): boolean 
     return fallback;
 }
 
-interface ConfigScope {
-    readonly config: vscode.WorkspaceConfiguration;
+/** The two scopes a `speckit.*` value can be set at. Every key is window- or machine-scoped, so VS Code rejects folder-level writes. */
+const SCOPES: ReadonlyArray<{
     readonly target: vscode.ConfigurationTarget;
-    readonly field: 'globalValue' | 'workspaceValue' | 'workspaceFolderValue';
-}
-
-/**
- * The config scopes a value can be explicitly set at, each paired with the
- * configuration that reads and writes it. Global and Workspace share the
- * resource-less config; the WorkspaceFolder tier is one scope per folder, read
- * and written through that folder's resource-scoped config so a multi-root
- * workspace never writes a folder value to an ambiguous folder.
- */
-function configScopes(): ConfigScope[] {
-    const shared = vscode.workspace.getConfiguration('speckit');
-    const scopes: ConfigScope[] = [
-        { config: shared, target: vscode.ConfigurationTarget.Global, field: 'globalValue' },
-        { config: shared, target: vscode.ConfigurationTarget.Workspace, field: 'workspaceValue' },
-    ];
-    for (const folder of vscode.workspace.workspaceFolders ?? []) {
-        scopes.push({
-            config: vscode.workspace.getConfiguration('speckit', folder.uri),
-            target: vscode.ConfigurationTarget.WorkspaceFolder,
-            field: 'workspaceFolderValue',
-        });
-    }
-    return scopes;
-}
+    readonly field: 'globalValue' | 'workspaceValue';
+}> = [
+    { target: vscode.ConfigurationTarget.Global, field: 'globalValue' },
+    { target: vscode.ConfigurationTarget.Workspace, field: 'workspaceValue' },
+];
 
 /**
  * One-time, idempotent migration: for each former tri-state setting, rewrite any
@@ -103,9 +83,9 @@ function configScopes(): ConfigScope[] {
  * isn't relocated.
  */
 export async function migrateBetaTriStateSettings(): Promise<void> {
-    const scopes = configScopes();
+    const config = vscode.workspace.getConfiguration('speckit');
     for (const { key, default: settingDefault } of BETA_BOOLEAN_SETTINGS) {
-        for (const { config, target, field } of scopes) {
+        for (const { target, field } of SCOPES) {
             const persisted = config.inspect(key)?.[field];
             // Only rewrite a KNOWN legacy tri-state string. A boolean is already
             // migrated; undefined means unset at this scope; and an unknown string
@@ -133,7 +113,8 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
  * via per-scope `inspect()`.
  */
 export async function mergeNotificationSettings(): Promise<void> {
-    for (const { config, target, field } of configScopes()) {
+    const config = vscode.workspace.getConfiguration('speckit');
+    for (const { target, field } of SCOPES) {
         const phaseVal = config.inspect('notifications.phaseCompletion')?.[field];
         if (phaseVal === undefined) {
             continue;
@@ -154,9 +135,9 @@ export async function mergeNotificationSettings(): Promise<void> {
  * (VS Code ignores unknown keys) — this just keeps users' settings tidy (FR-004).
  */
 export async function removeRetiredSettings(): Promise<void> {
-    const scopes = configScopes();
+    const config = vscode.workspace.getConfiguration('speckit');
     for (const key of RETIRED_SETTINGS) {
-        for (const { config, target, field } of scopes) {
+        for (const { target, field } of SCOPES) {
             if (config.inspect(key)?.[field] !== undefined) {
                 await config.update(key, undefined, target);
             }

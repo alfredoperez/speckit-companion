@@ -20,7 +20,6 @@ import {
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
 import { deriveSpecName } from '../../core/utils/specDisplayName';
-export { deriveSpecName };
 import {
     HistoryEntry,
     HistoryEntryFrom,
