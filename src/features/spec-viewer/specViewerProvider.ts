@@ -70,8 +70,7 @@ import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "..
 import {
   DEFAULT_WORKFLOW,
   getFeatureWorkflow,
-  getWorkflow,
-  normalizeWorkflowConfig,
+  resolveSpecPipeline,
   resolveWorkflow,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
@@ -200,36 +199,11 @@ export class SpecViewerProvider {
   }
 
   /**
-   * Resolve the footer pipeline for a spec from its own workflow, mirroring the
-   * sidebar (specExplorerProvider.resolveWorkflowSteps). Falls back to the default
-   * pipeline when no workflow is persisted or resolution throws, so the footer
-   * never renders empty.
+   * The spec's pipeline, from the one shared resolution the sidebar also uses,
+   * so no two surfaces can disagree about which steps exist.
    */
   private async resolveWorkflowSteps(specDir?: string): Promise<WorkflowStepConfig[]> {
-    if (specDir) {
-      try {
-        const ctx = await getFeatureWorkflow(specDir, this.computeChangeRoot(specDir));
-        if (ctx) {
-          const wf = getWorkflow(ctx.workflow);
-          if (wf) {
-            const normalized = normalizeWorkflowConfig(wf);
-            if (normalized.steps && normalized.steps.length > 0) {
-              return normalized.steps;
-            }
-          }
-        }
-        const selected = await resolveWorkflow(specDir);
-        if (selected) {
-          const normalized = normalizeWorkflowConfig(selected);
-          if (normalized.steps && normalized.steps.length > 0) {
-            return normalized.steps;
-          }
-        }
-      } catch {
-        // fall through to the default pipeline
-      }
-    }
-    return DEFAULT_WORKFLOW.steps!;
+    return resolveSpecPipeline(specDir, specDir ? this.computeChangeRoot(specDir) : null);
   }
 
   /**

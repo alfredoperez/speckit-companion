@@ -26,6 +26,7 @@ jest.mock('../../../core/utils/notificationUtils', () => ({
 jest.mock('../../workflows', () => ({
     getFeatureWorkflow: jest.fn().mockResolvedValue(undefined),
     getWorkflowCommands: jest.fn().mockReturnValue([]),
+    shouldRecordStepStart: jest.requireActual('../../workflows/pipelineResolution').shouldRecordStepStart,
 }));
 
 // Mock the spec-context reader/writer so review-comment persistence can be
@@ -33,6 +34,7 @@ jest.mock('../../workflows', () => ({
 jest.mock('../../specs/specContextReader', () => ({
     ...jest.requireActual('../../specs/specContextReader'),
     readSpecContext: jest.fn(),
+    readSpecContextSync: jest.fn(),
 }));
 jest.mock('../../specs/specContextWriter', () => ({
     updateSpecContext: jest.fn(),
@@ -564,5 +566,45 @@ describe('messageHandlers - persisted review comments', () => {
 
         expect(deps.executeInTerminal).not.toHaveBeenCalled();
         expect(updateSpecContext).not.toHaveBeenCalled();
+    });
+});
+
+describe("recording a start for a project's added step (US3)", () => {
+    const path = require('path');
+    const { resolveCompanionSteps } = require('../../workflows/pipelineResolution');
+    const { readSpecContextSync } = require('../../specs/specContextReader');
+    const { startStep } = require('../../specs/stepLifecycle');
+    const steps = resolveCompanionSteps(path.join(__dirname, '../../../../tests/fixtures/project-steps'));
+
+    async function approveFrom(currentStep: string, pipeline = steps) {
+        jest.clearAllMocks();
+        (vscode.window.showWarningMessage as jest.Mock).mockResolvedValue(undefined);
+        (readSpecContextSync as jest.Mock).mockReturnValue({
+            workflow: 'companion',
+            currentStep,
+            status: 'active',
+            history: [],
+        });
+        const deps = createMockDeps({ resolveWorkflowSteps: jest.fn().mockResolvedValue(pipeline) });
+        await createMessageHandlers(SPEC_DIR, deps)({ type: 'approve' });
+        return deps;
+    }
+
+    it('writes a start for the added step it dispatches', async () => {
+        await approveFrom('implement');
+        expect(startStep).toHaveBeenCalledWith(SPEC_DIR, 'bench-run', 'extension');
+    });
+
+    it('still refuses a start for the untimed mark-complete step', async () => {
+        await approveFrom('code-review');
+        expect(startStep).not.toHaveBeenCalledWith(SPEC_DIR, 'mark-complete', 'extension');
+    });
+
+    it('still refuses a start for a user-workflow step', async () => {
+        await approveFrom('specify', [
+            { name: 'specify', command: 'to-spec', file: 'spec.md' },
+            { name: 'tickets', command: 'to-tickets', file: 'tickets.md' },
+        ]);
+        expect(startStep).not.toHaveBeenCalledWith(SPEC_DIR, 'tickets', 'extension');
     });
 });

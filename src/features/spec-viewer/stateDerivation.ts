@@ -273,11 +273,14 @@ export { isStepCompleted };
 
 export function deriveStepBadges(
     ctx: SpecContext,
-    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status),
+    workflowSteps?: WorkflowStepConfig[]
 ): Record<string, StepBadgeState> {
     const out: Record<string, StepBadgeState> = {};
-    for (const step of STEP_NAMES) {
-        if (isStepCompleted(step, ctx.currentStep, stepHistory)) {
+    // A project's added step is in the pipeline but not in STEP_NAMES, so its rail mark would stay blank.
+    const names = new Set<string>([...STEP_NAMES, ...(workflowSteps ?? []).map(s => s.name)]);
+    for (const step of names) {
+        if (isStepCompleted(step as StepName, ctx.currentStep, stepHistory)) {
             out[step] = 'completed';
         } else {
             const entry = stepHistory[step];
@@ -357,7 +360,7 @@ export function deriveViewerState(
     return {
         status: ctx.status,
         activeStep,
-        steps: deriveStepBadges(ctx, stepHistory),
+        steps: deriveStepBadges(ctx, stepHistory, workflowSteps),
         pulse: derivePulse(ctx, stepHistory),
         highlights: deriveHighlights(ctx, stepHistory),
         activeSubstep: deriveActiveSubstep(ctx, stepHistory),

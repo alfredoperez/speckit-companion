@@ -174,3 +174,21 @@ The name of the per-spec context file SHALL be declared by the module that reads
 ## Uncovered
 
 _None — every file in both areas was read._
+
+### One resolution produces a spec's pipeline, and it includes the steps the project added
+
+Every surface that describes a spec's pipeline — the viewer rail, the sidebar tree, the footer's next-step label, the dispatch path, and the timing denominator — SHALL obtain its ordered step list from one shared resolution, and no surface SHALL derive its own. For a spec recorded against the Companion pipeline that resolution SHALL be the shipped steps with the project's own steps spliced in, read from the step directories the project already writes; a stock or user-defined pipeline SHALL be returned unchanged. No workflow entry is written into user settings to make a project's step visible, and no copy of a built-in pipeline is created.
+
+A project's step declares where it runs behind one of the shipped four, its label, and the document it produces. It SHALL be placed immediately after the step it names, with the terminal completion step staying last; a step declaring no placement SHALL be omitted from the pipeline and remain launchable by hand. A step directory that is absent, unreadable, malformed, or named the same as a shipped step SHALL be skipped without preventing a spec from opening or stopping the remaining steps being read.
+
+A pipeline carrying a project's step SHALL still be classified built-in, so which steps are done continues to come from the recorded history rather than from a file being present, and the step SHALL record its start, dispatch its own command, and count toward the run's timing phase coverage on the same terms as a shipped step.
+
+#### Scenario: A placed step joins the pipeline
+
+- **WHEN** a project has declared a step that runs behind `implement`, and a Companion spec is opened
+- **THEN** every pipeline surface lists that step after implement and before the terminal completion step, the forward action names and dispatches its own command, and its run counts toward the timing phase coverage
+
+#### Scenario: An unreadable step directory falls back
+
+- **WHEN** the project's step directory is absent, unreadable, or malformed
+- **THEN** the spec opens on the shipped Companion pipeline, with no error surfaced and no settings written

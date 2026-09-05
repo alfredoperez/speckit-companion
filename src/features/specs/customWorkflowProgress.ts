@@ -23,10 +23,16 @@ import { SpecContext, HistoryEntry, StepName, STEP_NAMES } from '../../core/type
 import type { WorkflowStepConfig } from '../workflows/types';
 import { getStepFile, DEFAULT_WORKFLOW, COMPANION_WORKFLOW } from '../workflows/workflowManager';
 
+const COMPANION_COMMAND_PREFIX = 'speckit.companion.';
+
 const BUILTIN_STEP_SEQUENCES: readonly string[][] = [DEFAULT_WORKFLOW, COMPANION_WORKFLOW]
     .map(w => (w.steps ?? []).map(s => `${s.name}\u0000${s.command}`));
 
 function isBuiltinWorkflow(steps: WorkflowStepConfig[]): boolean {
+    // A spliced Companion pipeline no longer matches the shipped sequence, but only it dispatches the reserved companion command family.
+    if (steps.length > 0 && steps.every(s => s.command.startsWith(COMPANION_COMMAND_PREFIX))) {
+        return true;
+    }
     // Names alone would capture a user workflow that mirrors the shipped step
     // names, stranding it; the command it dispatches is what makes it built-in.
     const seen = steps.map(s => `${s.name}\u0000${s.command}`);

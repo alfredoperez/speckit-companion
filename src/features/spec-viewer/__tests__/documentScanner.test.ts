@@ -225,3 +225,41 @@ describe('scanDocuments - action-only steps become pipeline entries', () => {
         );
     });
 });
+
+describe("a project's added step in the rail", () => {
+    const path = require('path');
+    const FIXTURES = path.join(__dirname, '../../../../tests/fixtures');
+    const { resolveCompanionSteps } = require('../../workflows/pipelineResolution');
+    const steps: WorkflowStepConfig[] = resolveCompanionSteps(path.join(FIXTURES, 'project-steps'));
+
+    it('opens the document the step declared it writes (FR-004)', async () => {
+        mockFileExists(`${SPEC_DIR}/review.md`);
+        const docs = await scanDocuments(SPEC_DIR, outputChannel, steps);
+        const review = docs.find(d => d.type === 'code-review');
+        expect(review).toMatchObject({
+            label: 'Code Review',
+            fileName: 'review.md',
+            filePath: `${SPEC_DIR}/review.md`,
+            exists: true,
+            category: 'core',
+        });
+    });
+
+    it('reports a declared document that has not been produced yet as not existing', async () => {
+        const docs = await scanDocuments(SPEC_DIR, outputChannel, steps);
+        const review = docs.find(d => d.type === 'code-review');
+        expect(review?.exists).toBe(false);
+        expect(review?.fileName).toBe('review.md');
+    });
+
+    it('renders a step that writes nothing as action-only, like implement', async () => {
+        const docs = await scanDocuments(SPEC_DIR, outputChannel, steps);
+        expect(docs.find(d => d.type === 'research-check')).toMatchObject({
+            label: 'Research Check',
+            category: 'action',
+            fileName: '',
+            exists: false,
+        });
+        expect(docs.find(d => d.type === 'implement')?.category).toBe('action');
+    });
+});

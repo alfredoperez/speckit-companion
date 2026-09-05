@@ -46,6 +46,9 @@ export {
     pickEffectiveDefaultWorkflow,
 } from './workflowManager';
 
+// Pipeline Resolution — the one place a spec's pipeline is resolved
+export { resolveSpecPipeline, resolveCompanionSteps, shouldRecordStepStart } from './pipelineResolution';
+
 // Workflow Selector
 export { getOrSelectWorkflow, resolveWorkflow } from './workflowSelector';
 
