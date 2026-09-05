@@ -63,9 +63,14 @@ export function toDisplayCase(name: string): string {
     return out.join(' ');
 }
 
-/** Humanize a spec directory slug: "046-cli-install-nudge" → "CLI Install Nudge". */
+/** Humanize a spec directory slug: "046-spec-viewer-header-redesign" → "Spec Viewer Header Redesign". */
 export function deriveSpecName(specDir: string): string {
-    return toDisplayCase(path.basename(specDir).replace(/^\d+[-_]/, ''));
+    const slug = path.basename(specDir);
+    const withoutPrefix = slug.replace(/^\d+[-_]/, '');
+    return withoutPrefix
+        .split(/[-_]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 }
 
 /**
@@ -91,5 +96,5 @@ export function resolveSpecDisplayName(
     if (docHeading) {
         return docHeading;
     }
-    return deriveSpecName(specDir);
+    return toDisplayCase(deriveSpecName(specDir));
 }

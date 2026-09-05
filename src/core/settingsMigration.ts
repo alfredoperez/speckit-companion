@@ -75,6 +75,14 @@ const SCOPES: ReadonlyArray<{
     { target: vscode.ConfigurationTarget.Workspace, field: 'workspaceValue' },
 ];
 
+async function tryUpdate(config: vscode.WorkspaceConfiguration, key: string, value: unknown, target: vscode.ConfigurationTarget): Promise<void> {
+    try {
+        await config.update(key, value, target);
+    } catch (err) {
+        console.warn(`[settings-migration] ${key} write at target ${target} rejected: ${err instanceof Error ? err.message : String(err)}`);
+    }
+}
+
 /**
  * One-time, idempotent migration: for each former tri-state setting, rewrite any
  * persisted *string* value to its boolean equivalent at the same scope it was set.
@@ -85,14 +93,15 @@ const SCOPES: ReadonlyArray<{
 export async function migrateBetaTriStateSettings(): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
     for (const { key, default: settingDefault } of BETA_BOOLEAN_SETTINGS) {
+        const inspected = config.inspect(key);
         for (const { target, field } of SCOPES) {
-            const persisted = config.inspect(key)?.[field];
+            const persisted = inspected?.[field];
             // Only rewrite a KNOWN legacy tri-state string. A boolean is already
             // migrated; undefined means unset at this scope; and an unknown string
             // (typo) is left untouched for VS Code to flag rather than silently
             // coerced. Fall back to the per-setting default (not a hardcoded true).
             if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
-                await config.update(key, coerceLegacyBoolean(persisted, settingDefault), target);
+                await tryUpdate(config, key, coerceLegacyBoolean(persisted, settingDefault), target);
             }
         }
     }
@@ -114,15 +123,17 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
  */
 export async function mergeNotificationSettings(): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
+    const phase = config.inspect('notifications.phaseCompletion');
+    const step = config.inspect('notifications.stepComplete');
     for (const { target, field } of SCOPES) {
-        const phaseVal = config.inspect('notifications.phaseCompletion')?.[field];
+        const phaseVal = phase?.[field];
         if (phaseVal === undefined) {
             continue;
         }
-        const stepVal = config.inspect('notifications.stepComplete')?.[field];
+        const stepVal = step?.[field];
         const merged = phaseVal === false || stepVal === false ? false : true;
         if (merged !== stepVal) {
-            await config.update('notifications.stepComplete', merged, target);
+            await tryUpdate(config, 'notifications.stepComplete', merged, target);
         }
     }
 }
@@ -137,9 +148,10 @@ export async function mergeNotificationSettings(): Promise<void> {
 export async function removeRetiredSettings(): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
     for (const key of RETIRED_SETTINGS) {
+        const inspected = config.inspect(key);
         for (const { target, field } of SCOPES) {
-            if (config.inspect(key)?.[field] !== undefined) {
-                await config.update(key, undefined, target);
+            if (inspected?.[field] !== undefined) {
+                await tryUpdate(config, key, undefined, target);
             }
         }
     }

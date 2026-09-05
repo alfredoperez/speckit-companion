@@ -138,20 +138,17 @@ describe('docs consistency', () => {
 
   describe('core layering', () => {
     // Shrinks over time; never grows.
-    const ALLOWLIST = new Set(['src/core/telemetry.ts', 'src/core/utils/terminalUtils.ts']);
-    const UPWARD_IMPORT = /^\s*(?:import|export)\b[^;]*?from\s+['"][^'"]*(?:features|ai-providers)\/[^'"]*['"]/m;
+    const ALLOWLIST = ['src/core/telemetry.ts', 'src/core/utils/terminalUtils.ts'];
+    const UPWARD_IMPORT = /(?:from\s+|import\(|require\()\s*['"]\.\.?\/(?:[^'"]*\/)?(?:features|ai-providers)(?:\/|['"])/;
 
-    const walk = (dir: string): string[] =>
-      fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-        const full = path.join(dir, e.name);
-        return e.isDirectory() ? walk(full) : /\.ts$/.test(e.name) && !/\.(test|spec)\.ts$/.test(e.name) ? [full] : [];
-      });
-
-    it('nothing under src/core imports from features/ or ai-providers/ outside the allowlist', () => {
-      const offenders = walk(path.join(REPO_ROOT, 'src/core'))
-        .map((f) => path.relative(REPO_ROOT, f))
-        .filter((rel) => !ALLOWLIST.has(rel) && UPWARD_IMPORT.test(read(rel)));
-      expect(offenders).toEqual([]);
+    it('the files under src/core that import features/ or ai-providers/ are exactly the allowlist', () => {
+      const upward = fs
+        .readdirSync(path.join(REPO_ROOT, 'src/core'), { recursive: true, encoding: 'utf8' })
+        .filter((f) => /\.ts$/.test(f) && !/\.(test|spec)\.ts$/.test(f))
+        .map((f) => path.join('src/core', f))
+        .filter((rel) => read(rel).split('\n').some((line) => UPWARD_IMPORT.test(line)))
+        .sort();
+      expect(upward).toEqual([...ALLOWLIST].sort());
     });
   });
 });

@@ -8,7 +8,7 @@ import {
     RETIRED_SETTINGS,
 } from './settingsMigration';
 
-type Inspection = { globalValue?: unknown; workspaceValue?: unknown };
+type Inspection = { globalValue?: unknown; workspaceValue?: unknown; workspaceFolderValue?: unknown };
 
 function setupConfig(inspections: Record<string, Inspection | undefined>) {
     const update = jest.fn().mockResolvedValue(undefined);
@@ -82,22 +82,29 @@ describe('migrateBetaTriStateSettings', () => {
         );
     });
 
-    it('never targets the WorkspaceFolder tier VS Code rejects for window-scoped keys', async () => {
+    it('never writes the WorkspaceFolder tier even when a folder value is reported', async () => {
         const { update } = setupConfig({
-            'viewer.activityPanel': { globalValue: 'beta', workspaceValue: 'off' },
-            'companion.installPrompt': { workspaceValue: 'on' },
-            'notifications.phaseCompletion': { globalValue: false },
-            'notifications.stepComplete': {},
-            'companion.workflowBeta': { workspaceValue: 'on' },
+            'viewer.activityPanel': { globalValue: 'beta', workspaceFolderValue: 'on' },
+            'companion.installPrompt': {},
         });
 
         await migrateBetaTriStateSettings();
-        await mergeNotificationSettings();
-        await removeRetiredSettings();
 
-        const targets = update.mock.calls.map(([, , target]) => target);
-        expect(targets.length).toBeGreaterThan(0);
-        expect(targets).not.toContain(vscode.ConfigurationTarget.WorkspaceFolder);
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.Global);
+    });
+
+    it('keeps migrating the next key after one write is rejected', async () => {
+        const { update } = setupConfig({
+            'viewer.activityPanel': { globalValue: 'beta' },
+            'companion.installPrompt': { globalValue: 'off' },
+        });
+        update.mockRejectedValueOnce(new Error('settings.json parse error'));
+        jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+        await expect(migrateBetaTriStateSettings()).resolves.toBeUndefined();
+
+        expect(update).toHaveBeenCalledWith('companion.installPrompt', false, vscode.ConfigurationTarget.Global);
     });
 
     it('preserves scope: a global override is not relocated to workspace', async () => {
