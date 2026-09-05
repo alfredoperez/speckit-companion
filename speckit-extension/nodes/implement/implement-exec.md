@@ -34,13 +34,17 @@ reads: []
 
 6. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
    ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verified '{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --decision '{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --concern '{"note": "<friction/workaround/residual risk>", "step": "implement"}'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --tests "<path.test.ts::case,other.test.ts>"
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --step-summary '{"summary": "<what shipped in one line>"}'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set last_action="<final breadcrumb, e.g. 'all tasks done — 18/18 tests pass'>"
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
+     "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
+     "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
+     "concerns":   [{"note": "<friction/workaround/residual risk>", "step": "implement"}],
+     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
+     "step_summary": {"summary": "<what shipped in one line>"},
+     "last_action": "<final breadcrumb, e.g. all tasks done — 18/18 tests pass>"
+   }'
    ```
+
+   **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. A volley issued one flag at a time rewrote 617KB to carry 7KB on one measured run — 89x — and every call is a separate round-trip in your context. Emit one `--batch`. Include only the keys you actually have — an empty list is not the same as an absent one, and on a clean run `concerns` is genuinely absent.
    The `--verified` entries are where "did it actually run" is settled, so record the command you ran and its real outcome — `"result": "142/142 pass"` — never a restatement of intent. If a check could not be run, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it: a verification entry for a check that never happened is worse than no entry, because every later reader trusts it.
 
    One `--verified` per real check (tests, build, manual pass — include warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction — on a clean run record none (the empty list is itself the signal). All additive and de-duped; re-runs never duplicate.

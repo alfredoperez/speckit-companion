@@ -217,3 +217,30 @@ class GroundTruthTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DeclaredSkipIsNotRealDrift(unittest.TestCase):
+    """A capability the run deliberately skipped, with a written reason, is `declared`.
+
+    Classifying it `real` — the strongest verdict — made a written-down decision
+    render identically to an oversight at the one place the difference is checked.
+    """
+
+    CAP = {"name": "spec-viewer", "commit": "abc1234",
+           "drifted": [{"file": "src/features/spec-viewer/footerActions.ts"}]}
+
+    def test_a_recorded_skip_downgrades_the_flag_and_carries_its_reason(self):
+        ctx = {"livingSpecs": {"skipped": [
+            {"name": "spec-viewer", "reason": "only swapped its private resolver for the shared one"},
+        ]}}
+        flag = dd.classify(None, self.CAP, ctx)
+        self.assertEqual(flag["class"], dd.CLASS_DECLARED)
+        self.assertIn("only swapped its private resolver", flag["reason"])
+
+    def test_a_skip_for_another_capability_does_not_cover_this_one(self):
+        ctx = {"livingSpecs": {"skipped": [{"name": "specs", "reason": "unrelated"}]}}
+        self.assertNotEqual(dd.classify(None, self.CAP, ctx)["class"], dd.CLASS_DECLARED)
+
+    def test_no_record_at_all_classifies_as_before(self):
+        self.assertNotEqual(dd.classify(None, self.CAP, {})["class"], dd.CLASS_DECLARED)
+        self.assertNotEqual(dd.classify(None, self.CAP, None)["class"], dd.CLASS_DECLARED)

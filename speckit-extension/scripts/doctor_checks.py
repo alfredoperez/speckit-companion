@@ -53,6 +53,16 @@ BURST_MIN_TASKS = 3
 #: symptom this check exists for is a step that has been open for days.
 IN_FLIGHT_GRACE_SECONDS = 30 * 60
 
+#: Floor for the cadence-derived grace, and the multiple of a step's own longest
+#: observed gap it may exceed before an open start reads as abandoned. A flat
+#: 30-minute grace let a step sit open for 8m33s — with the next step unreachable
+#: and the viewer still saying "creating tasks" — and reported `clean`, because
+#: 8m33s is under 30 minutes. A step that has been recording boundaries every
+#: ~70 seconds and then goes quiet for eight minutes is the signal; its own
+#: cadence is the only honest yardstick for that, not a constant.
+CADENCE_GRACE_FLOOR_SECONDS = 5 * 60
+CADENCE_GRACE_MULTIPLE = 4
+
 
 def _no_record(check: str, feature_dir: Path, ctx: dict) -> CheckStatus | None:
     """The shared "there is nothing to read" skip."""
@@ -66,12 +76,70 @@ def _no_record(check: str, feature_dir: Path, ctx: dict) -> CheckStatus | None:
     return None
 
 
+def _step_activity(log: list, step: str) -> list:
+    """Every timestamp this step recorded, in order — its start, substeps and tasks."""
+    out = []
+    for e in log:
+        if e.get("step") != step:
+            continue
+        ts = parse_time(e.get("at"))
+        if ts is not None:
+            out.append(ts)
+    return sorted(out)
+
+
+def _cadence_grace(log: list, step: str) -> tuple:
+    """How long this step may sit quiet, judged by how often it was recording.
+
+    Returns (grace_seconds, last_activity). A step with fewer than two recorded
+    boundaries has no cadence to reason from, so it keeps the flat grace.
+    """
+    stamps = _step_activity(log, step)
+    if len(stamps) < 2:
+        return IN_FLIGHT_GRACE_SECONDS, (stamps[-1] if stamps else None)
+    longest = max((b - a).total_seconds() for a, b in zip(stamps, stamps[1:]))
+    grace = max(CADENCE_GRACE_FLOOR_SECONDS, longest * CADENCE_GRACE_MULTIPLE)
+    return min(grace, IN_FLIGHT_GRACE_SECONDS), stamps[-1]
+
+
+def _thin_boundary_steps(ctx: dict) -> list:
+    """Steps whose recorded substep count is far below what the run's other steps managed.
+
+    A step that logs one boundary for fifteen minutes is not measured, it is
+    labelled. Comparing against the run's own other steps avoids hardcoding how
+    many boundaries a step "should" have, which varies by command and by recipe.
+    """
+    counts = {}
+    for e in log_entries(ctx):
+        step, sub = e.get("step"), e.get("substep")
+        if not isinstance(step, str):
+            continue
+        counts.setdefault(step, set())
+        if isinstance(sub, str) and sub:
+            counts[step].add(sub)
+    sizes = {k: len(v) for k, v in counts.items()}
+    others = [n for n in sizes.values() if n > 0]
+    if len(others) < 3:
+        return []
+    others.sort()
+    median = others[len(others) // 2]
+    if median < 2:
+        return []
+    return sorted(
+        (step, n, median) for step, n in sizes.items()
+        if n < median / 2 and n < median - 1
+    )
+
+
 def _dangling_steps(ctx: dict, now: datetime | None = None) -> list:
     """Step-level starts with no matching complete.
 
     The run's own current step is given a grace period — it may genuinely still
-    be running. Past that, an open start is the symptom: a step that started and
-    never finished, which is what leaves a spec stuck.
+    be running. That grace is derived from the step's own recorded cadence rather
+    than a flat constant, so a step that was journaling every minute and has been
+    silent for eight is named instead of being read as in-flight. Past the grace,
+    an open start is the symptom: a step that started and never finished, which is
+    what leaves a spec stuck.
     """
     log = log_entries(ctx)
     current = ctx.get("currentStep")
@@ -91,9 +159,10 @@ def _dangling_steps(ctx: dict, now: datetime | None = None) -> list:
         if step in completed:
             continue
         if step == current and not terminal:
-            ts = parse_time(at)
-            if ts is None or (now - ts).total_seconds() < IN_FLIGHT_GRACE_SECONDS:
-                continue  # still plausibly running
+            grace, last = _cadence_grace(log, step)
+            ts = last or parse_time(at)
+            if ts is None or (now - ts).total_seconds() < grace:
+                continue  # still plausibly running, by this step's own cadence
         out.append((step, at))
     return sorted(out, key=lambda p: STEP_ORDER.get(p[0], 99))
 
@@ -150,6 +219,16 @@ def check_record(feature_dir: Path, ctx: dict, now: datetime | None = None) -> t
             f"Step `{step}` started and never finished",
             f"start at {at}, no matching complete in history[]",
             {"step": step, "start_at": at},
+        ))
+
+    for step, own, median in _thin_boundary_steps(ctx):
+        findings.append(Finding(
+            "record", "warning",
+            f"Step `{step}` recorded {own} internal "
+            f"{'boundary' if own == 1 else 'boundaries'} where its siblings recorded {median}",
+            "the step's internal shape was never measured, so its span is a single number with "
+            "nothing inside it — anchor its boundaries, or read the per-task journal instead",
+            {"step": step, "boundaries": own, "sibling_median": median},
         ))
 
     tasks_md = feature_dir / "tasks.md"

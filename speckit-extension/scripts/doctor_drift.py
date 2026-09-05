@@ -36,12 +36,13 @@ COMPANION_ARTIFACTS = (
 )
 
 CLASS_REAL = "real"
+CLASS_DECLARED = "declared"
 CLASS_SELF = "self-inflicted"
 CLASS_BASELINE = "suspect-baseline"
 CLASS_UNKNOWN = "unknown"
 
 _SEVERITY = {CLASS_REAL: "warning", CLASS_BASELINE: "warning",
-             CLASS_SELF: "note", CLASS_UNKNOWN: "note"}
+             CLASS_SELF: "note", CLASS_UNKNOWN: "note", CLASS_DECLARED: "note"}
 
 
 def recompute(root) -> dict | None:
@@ -104,7 +105,24 @@ def _renamed_files(root, baseline: str, files: list) -> list:
     return [f for f in files if f in renamed]
 
 
-def classify(root, cap: dict) -> dict:
+def _declared_skip(ctx: dict, name) -> str | None:
+    """The reason a run recorded for deliberately not updating this capability.
+
+    The implement step requires every loaded capability to be accounted for — a
+    delta, or an explicit skip with a reason written onto the spec. Without this
+    lookup that written-down decision renders identically to an oversight, at the
+    one place the difference is checked.
+    """
+    living = (ctx or {}).get("livingSpecs")
+    if not isinstance(living, dict):
+        return None
+    for entry in living.get("skipped") or []:
+        if isinstance(entry, dict) and entry.get("name") == name:
+            return str(entry.get("reason") or "").strip() or "no reason recorded"
+    return None
+
+
+def classify(root, cap: dict, ctx: dict | None = None) -> dict:
     """One DriftFlag: what changed, in which commits, and what kind of flag it is."""
     files = [d["file"] for d in cap.get("drifted") or []]
     baseline = cap.get("commit")
@@ -121,6 +139,12 @@ def classify(root, cap: dict) -> dict:
     if files and all(_is_companion_artifact(f) for f in files):
         flag["class"] = CLASS_SELF
         flag["reason"] = "every changed file is a record the companion writes during a run"
+        return flag
+
+    declared = _declared_skip(ctx, cap.get("name"))
+    if declared is not None:
+        flag["class"] = CLASS_DECLARED
+        flag["reason"] = f"the run recorded a deliberate skip for this capability — {declared}"
         return flag
 
     if not baseline:
@@ -294,7 +318,7 @@ def check_drift(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
     for cap in result.get("capabilities") or []:
         if cap.get("inSync"):
             continue
-        flags.append(classify(root, cap))
+        flags.append(classify(root, cap, ctx))
 
     for skip in result.get("skipped") or []:
         flags.append({

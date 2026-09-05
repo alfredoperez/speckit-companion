@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Fixed
+- **A step closes itself, so a run cannot stall silently.** A step's completion was written only by its after-hook, and a hook is a block of text asking a runtime to dispatch a command — in a terminal session that runtime is the same assistant that just printed it, so "running the hook" and "printing the word Executing" look identical. One run sat with its next step unreachable for eight and a half minutes because of it, and that wait is now permanently part of that step's recorded duration. Every step now closes itself as the last thing it does. The write is idempotent, so when the hook did fire nothing changes.
+- **The end-of-step capture is one call instead of a dozen.** Recording what was verified, decided, and covered issued one command per item, each rewriting the whole context file — on one measured run that was 617KB written to carry 7KB. It is a single batched call now, in specify, plan, tasks and implement alike.
+- **A review gate names the command that continues the run.** It said "approve to move to plan" and left you to work out what to type. It reads the next step out of the workflow and names it.
+- **Plan reads what specify already wrote down.** Specify records the areas it read and what it found there; plan re-read the same code from scratch, which was the single longest stretch of a measured run. It starts from that record now.
+- **The design boundary closes after the last design file, not the first.** Plan's `design` phase was being marked finished before `contracts/` was written, so its recorded time was about a third of the real work.
+
+### Fixed — the health check
+
+- **A step that goes quiet is named instead of assumed to be running.** The check waited a flat thirty minutes before calling a step stuck, so an eight-minute stall reported clean. It now judges a step against its own recorded pace: one that was logging every minute and has said nothing for eight is named.
+- **A living spec you deliberately skipped no longer reads as drift you missed.** Skipping one requires writing down why, and the drift check never read that, so a recorded decision looked exactly like an oversight. Those now report as `declared`, with your reason shown.
+- **A step that recorded almost nothing about itself is reported.** A step logging one boundary for fifteen minutes, where its siblings logged four, is labelled rather than measured. The check says so.
 
 - **The two halves count a finished task the same way.** The GUI counted every checkbox in `tasks.md` while this half counted only lines carrying a task id, so a spec whose task list also held verification notes could look finished to one and unfinished to the other. Both now require the id (`T001`) that every task template emits, and a shared set of cases holds them to it.
 

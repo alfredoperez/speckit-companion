@@ -272,3 +272,65 @@ class ReviewRegressionTests(unittest.TestCase):
             self.assertNotIn("✗", text, "marks fall back to ASCII")
             doctor.safe_print(text + " \u2014 an em-dash the console cannot encode")
         self.assertIn("a problem", buf.getvalue())
+
+
+class OpenStepJudgedByItsOwnCadence(unittest.TestCase):
+    """A step that was recording every minute and has gone quiet for eight is stuck.
+
+    The flat 30-minute grace read exactly that as "still running" and reported
+    RECORD clean, while the spec sat at `status: tasking` with the next step
+    unreachable. The grace now derives from the step's own observed cadence.
+    """
+
+    @staticmethod
+    def _at(minute, second):
+        return f"2026-09-05T14:{minute:02d}:{second:02d}.000Z"
+
+    def _tasks_ctx(self):
+        return {"currentStep": "tasks", "status": "tasking", "history": [
+            {"step": "tasks", "substep": None, "kind": "start", "at": self._at(18, 55)},
+            {"step": "tasks", "substep": "size-budget", "kind": "complete", "at": self._at(20, 9)},
+            {"step": "tasks", "substep": "tasks-doc", "kind": "complete", "at": self._at(21, 15)},
+            {"step": "tasks", "substep": "generate", "kind": "complete", "at": self._at(21, 27)},
+            {"step": "tasks", "substep": "handoff", "kind": "complete", "at": self._at(21, 37)},
+        ]}
+
+    @staticmethod
+    def _now(minute, second):
+        return datetime(2026, 9, 5, 14, minute, second, tzinfo=timezone.utc)
+
+    def test_names_the_step_that_went_quiet(self):
+        dangling = dc._dangling_steps(self._tasks_ctx(), self._now(30, 10))
+        self.assertEqual([s for s, _ in dangling], ["tasks"])
+
+    def test_leaves_a_step_still_working_alone(self):
+        self.assertEqual(dc._dangling_steps(self._tasks_ctx(), self._now(23, 0)), [])
+
+    def test_keeps_the_flat_grace_when_there_is_no_cadence_to_read(self):
+        ctx = {"currentStep": "implement", "status": "implementing", "history": [
+            {"step": "implement", "substep": None, "kind": "start", "at": self._at(0, 0)},
+        ]}
+        self.assertEqual(dc._dangling_steps(ctx, self._now(10, 0)), [])
+        self.assertEqual([s for s, _ in dc._dangling_steps(ctx, self._now(59, 0))], ["implement"])
+
+
+class ThinBoundaryStep(unittest.TestCase):
+    """A step logging one boundary for its whole span is labelled, not measured."""
+
+    def _ctx(self, implement_substeps):
+        history = []
+        for step, subs in (("specify", 4), ("plan", 5), ("tasks", 4)):
+            for i in range(subs):
+                history.append({"step": step, "substep": f"{step}-{i}", "kind": "complete",
+                                "at": "2026-09-05T14:00:00.000Z"})
+        for i in range(implement_substeps):
+            history.append({"step": "implement", "substep": f"impl-{i}", "kind": "complete",
+                            "at": "2026-09-05T14:00:00.000Z"})
+        return {"currentStep": "implement", "status": "completed", "history": history}
+
+    def test_names_a_step_far_below_its_siblings(self):
+        thin = dc._thin_boundary_steps(self._ctx(1))
+        self.assertEqual([s for s, _, _ in thin], ["implement"])
+
+    def test_says_nothing_when_every_step_recorded_a_comparable_shape(self):
+        self.assertEqual(dc._thin_boundary_steps(self._ctx(4)), [])
