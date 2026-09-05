@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **The install is 1.7 MB, not 494 MB.** The extension package had been carrying every video render behind the README GIFs and the landing page, which nothing in the extension ever reads. They stay out of it now, so the download and the install are the size of the extension itself.
 - **A task is a line with an id on it.** Progress, the phase-complete notice and the check that implement has finished all count checkboxes in `tasks.md`, and they counted every checkbox — including the verification notes and prose checklists that sit among the tasks. The spec-kit half never counted those, so the two could disagree about whether a run was done. Both sides now require a task id (`T001`), which both task templates emit, and a shared set of cases holds them to it. A hand-written `tasks.md` whose items carry no id will read as no tasks; give them ids to have them counted.
 
 - **Build now reaches your assistant.** Every customisation the panel made — a hook, a reordered step, a swapped node, a rewritten one — was written into the extension's own copy of the commands, and your assistant reads a separate copy the installer rendered once at install time. So Build reported five commands and changed nothing that would ever run. It refreshes those copies now, and says how many and where.
