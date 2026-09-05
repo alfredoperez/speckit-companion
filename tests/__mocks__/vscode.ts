@@ -279,14 +279,20 @@ export enum StatusBarAlignment {
 /** An ExtensionContext whose globalState is a Map, so tests read back what the code wrote. */
 export const createMockExtensionContext = (seed: Record<string, unknown> = {}) => {
     const store = new Map<string, unknown>(Object.entries(seed));
+    const workspaceStore = new Map<string, unknown>();
     return {
         store,
+        workspaceStore,
         context: {
             extensionPath: '/ext',
             subscriptions: [] as unknown[],
             globalState: {
                 get: (key: string, fallback?: unknown) => (store.has(key) ? store.get(key) : fallback),
                 update: async (key: string, value: unknown) => { store.set(key, value); },
+            },
+            workspaceState: {
+                get: (key: string, fallback?: unknown) => (workspaceStore.has(key) ? workspaceStore.get(key) : fallback),
+                update: async (key: string, value: unknown) => { workspaceStore.set(key, value); },
             },
         },
     };

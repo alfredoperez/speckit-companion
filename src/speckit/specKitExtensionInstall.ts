@@ -134,6 +134,9 @@ export function resolveInstallPrompt(context: vscode.ExtensionContext, workspace
  */
 const execAsync = promisify(exec);
 
+/** The probe is a help text, not work: if the CLI has not answered by now it is hung, and the install must still go out. */
+const FORCE_PROBE_TIMEOUT_MS = 5000;
+
 let forceProbe: Promise<boolean> | undefined;
 
 /**
@@ -143,9 +146,14 @@ let forceProbe: Promise<boolean> | undefined;
  * Probed once per session; an unreadable probe assumes the documented current CLI, which needs the flag.
  */
 export function specifySupportsForce(): Promise<boolean> {
-    forceProbe ??= execAsync('specify extension add --help')
+    forceProbe ??= execAsync('specify extension add --help', { timeout: FORCE_PROBE_TIMEOUT_MS })
         .then(({ stdout, stderr }) => `${stdout}${stderr}`.includes('--force'))
-        .catch(() => true);
+        // A non-zero exit rejects but still carries the CLI's own output, which is the answer; only a probe
+        // that produced nothing at all (timeout, no `specify` on PATH) falls back to the documented current CLI.
+        .catch((error: { stdout?: string; stderr?: string }) => {
+            const output = `${error?.stdout ?? ''}${error?.stderr ?? ''}`;
+            return output ? output.includes('--force') : true;
+        });
     return forceProbe;
 }
 
@@ -198,26 +206,39 @@ export function isSpecKitExtensionInstalled(): boolean {
     return root ? isCompanionInstalled(root) : false;
 }
 
-/** The `installed→expected` pair an update was last dispatched for, so a re-offer of the same pair is recognisable. */
+/** The `installed→expected` pair an update was dispatched for, so a re-offer of the same pair is recognisable. */
 function attemptId(gap: CompanionGap & { state: 'outdated' }): string {
     return `${gap.installed}->${gap.expected}`;
 }
 
-/** Record that an update was dispatched for the gap on screen. Called when the user triggers the install. */
-export async function recordUpdateAttempt(context: vscode.ExtensionContext, gap: CompanionGap): Promise<void> {
-    if (gap.state === 'outdated') {
-        await context.globalState.update(ConfigKeys.globalState.companionUpdateAttempted, attemptId(gap));
-    }
+/** The pair the running session dispatched an update for, still waiting for the files to move. Session-scoped: a dispatch with no outcome is forgotten on reload. */
+let dispatchedFor: string | undefined;
+
+/** Called when the user triggers an install, before the CLI runs. Nothing is remembered across sessions from here. */
+export function noteUpdateDispatched(gap: CompanionGap): void {
+    dispatchedFor = gap.state === 'outdated' ? attemptId(gap) : undefined;
 }
 
 /**
- * True when this exact gap was already updated for and nothing moved — the published extension is not
- * actually newer than what is installed, so the update cannot succeed and no surface should keep asking.
+ * Called when the extension directory has changed on disk — proof the dispatched install actually ran.
+ * If it ran and left the version exactly where it was, the published extension is not newer than what is
+ * installed, so no surface should keep asking for that pair. A failed install writes nothing, never reaches
+ * here, and never silences anything. Remembered per workspace: another project with the same gap still asks.
  */
+export async function noteInstallLanded(context: vscode.ExtensionContext, gap: CompanionGap): Promise<void> {
+    if (gap.state !== 'outdated' || dispatchedFor !== attemptId(gap)) {
+        dispatchedFor = undefined;
+        return;
+    }
+    dispatchedFor = undefined;
+    await context.workspaceState.update(ConfigKeys.globalState.companionUpdateAttempted, attemptId(gap));
+}
+
+/** True when an update for this exact gap already ran in this project and moved nothing. */
 export function updateAlreadyAttempted(context: vscode.ExtensionContext, gap: CompanionGap): boolean {
     return (
         gap.state === 'outdated' &&
-        context.globalState.get<string>(ConfigKeys.globalState.companionUpdateAttempted) === attemptId(gap)
+        context.workspaceState.get<string>(ConfigKeys.globalState.companionUpdateAttempted) === attemptId(gap)
     );
 }
 

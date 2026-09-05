@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { runInstallSpecKitExtension, openReadmeFallback, recordUpdateAttempt } from './specKitExtensionInstall';
+import { runInstallSpecKitExtension, openReadmeFallback, noteUpdateDispatched } from './specKitExtensionInstall';
 import { cachedCompanionGap } from './companionVersionGap';
 import { coerceInstallPromptSurface, reportInstallPromptClicked } from '../core/telemetry';
 import { ConfigKeys } from '../core/constants';
@@ -16,10 +16,10 @@ export function registerSpecKitExtensionInstallCommands(
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.companion.installSpecKitExtension', async () => {
             const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-            // Remembered so a second offer of the same gap — the published extension is not newer after
-            // all — can stop asking instead of running an update that changes nothing.
+            // Noted so that, once the files actually move, a version that did not change can stop the
+            // surfaces asking. A dispatch that never lands records nothing.
             if (root) {
-                await recordUpdateAttempt(context, cachedCompanionGap(root, context.extensionPath));
+                noteUpdateDispatched(cachedCompanionGap(root, context.extensionPath));
             }
             await runInstallSpecKitExtension(root);
         }),

@@ -23,7 +23,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
 import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
 import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
-import { onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
+import { noteInstallLanded, onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -305,7 +305,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 specsTreeView.badge = undefined;
                 return;
             }
-            // One gap resolution per tick feeds every install/update surface; the ensure needs the installed dir.
+            // One gap resolution per tick feeds every install/update surface. Pure UI — no child processes, so
+            // a setting toggle or a dismissed banner can call it too.
             let retry: ReturnType<typeof setTimeout> | undefined;
             const syncCompanionSurfaces = (): CompanionGap => {
                 const { gap, masked } = refreshCompanionGap(root, context.extensionPath);
@@ -315,6 +316,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     retry = setTimeout(() => { syncCompanionSurfaces(); }, 1000);
                     return gap;
                 }
+                clearTimeout(retry);
                 const installed = gap.state !== 'missing';
                 void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
                 specsTreeView.badge = installed
@@ -323,21 +325,29 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (!installed) {
                     reportInstallPromptShown('sidebarBadge');
                 }
-                if (installed) {
-                    void ensureStandardFamily(root, {
-                        log: msg => outputChannel.appendLine(msg),
-                    });
-                }
                 specExplorer.refresh();
                 steeringExplorer.refresh();
                 void specViewer.refreshOpenPanels();
                 updateStatusBar.sync(gap);
                 return gap;
             };
-            maybeShowCompanionUpdateNudge(context, syncCompanionSurfaces());
+            // What the extension landing on disk means: the surfaces change AND the standard command family is
+            // re-materialized (it shells out, and its bundled preset path lives inside the extension dir).
+            const onCompanionFilesChanged = (): CompanionGap => {
+                const gap = syncCompanionSurfaces();
+                if (gap.state !== 'missing') {
+                    void ensureStandardFamily(root, {
+                        log: msg => outputChannel.appendLine(msg),
+                    });
+                }
+                return gap;
+            };
+            maybeShowCompanionUpdateNudge(context, onCompanionFilesChanged());
             // Change events only for the two version files: an install writes hundreds of files under `companion/**`.
             const companionRefresh = trailing(() => {
-                syncCompanionSurfaces();
+                // Reaching here means the extension directory really changed, which is the only evidence the
+                // extension has that a dispatched update ran at all.
+                void noteInstallLanded(context, onCompanionFilesChanged());
                 livingSpecsExplorer.refresh();
             }, 150);
             const extDirWatcher = vscode.workspace.createFileSystemWatcher(

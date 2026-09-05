@@ -10,14 +10,17 @@ import {
     dismissInstallPrompt,
     onDidDismissInstallPrompt,
     runInstallSpecKitExtension,
-    recordUpdateAttempt,
+    noteUpdateDispatched,
+    noteInstallLanded,
     updateAlreadyAttempted,
     __resetForceProbe,
 } from './specKitExtensionInstall';
 
-const execMock = jest.fn((_cmd: string, cb: (e: unknown, r: unknown) => void) =>
-    cb(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' }));
-jest.mock('child_process', () => ({ exec: (...args: unknown[]) => (execMock as unknown as (...a: unknown[]) => void)(...args) }));
+/** `promisify(exec)` calls `exec(cmd, options, cb)`, so the callback is always the last argument. */
+const done = (args: unknown[]) => args[args.length - 1] as (e: unknown, r: unknown) => void;
+const execMock = jest.fn((...args: unknown[]) =>
+    done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' }));
+jest.mock('child_process', () => ({ exec: (...args: unknown[]) => execMock(...args) }));
 
 jest.mock('../features/settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(false),
@@ -134,16 +137,42 @@ describe('specKitExtensionInstall', () => {
         });
     });
 
-    describe('updateAlreadyAttempted', () => {
-        it('stops asking once an update ran against this exact gap and nothing moved', async () => {
+    describe('the attempted-update guard', () => {
+        const gap = { state: 'outdated' as const, installed: '0.20.2', expected: '0.21.0' };
+
+        it('stops asking once an update ran and left the version where it was', async () => {
             const { context } = createMockExtensionContext();
-            const gap = { state: 'outdated' as const, installed: '0.20.2', expected: '0.21.0' };
             expect(updateAlreadyAttempted(context, gap)).toBe(false);
-            await recordUpdateAttempt(context, gap);
+            noteUpdateDispatched(gap);
+            await noteInstallLanded(context, gap);
             expect(updateAlreadyAttempted(context, gap)).toBe(true);
             // A later release, or an update that actually landed, is a different pair and asks again.
             expect(updateAlreadyAttempted(context, { ...gap, expected: '0.22.0' })).toBe(false);
             expect(updateAlreadyAttempted(context, { state: 'current' })).toBe(false);
+        });
+
+        it('stays silent about an update that never landed — a failed install must not silence anything', async () => {
+            const { context } = createMockExtensionContext();
+            noteUpdateDispatched(gap);
+            // No files moved, so `noteInstallLanded` is never reached; the next session asks again.
+            expect(updateAlreadyAttempted(context, gap)).toBe(false);
+        });
+
+        it('forgets the dispatch once the update actually took', async () => {
+            const { context } = createMockExtensionContext();
+            noteUpdateDispatched(gap);
+            await noteInstallLanded(context, { state: 'current' });
+            await noteInstallLanded(context, gap);
+            expect(updateAlreadyAttempted(context, gap)).toBe(false);
+        });
+
+        it('is remembered per project, so another repo with the same gap is still told', async () => {
+            const a = createMockExtensionContext();
+            const b = createMockExtensionContext();
+            noteUpdateDispatched(gap);
+            await noteInstallLanded(a.context, gap);
+            expect(updateAlreadyAttempted(a.context, gap)).toBe(true);
+            expect(updateAlreadyAttempted(b.context, gap)).toBe(false);
         });
     });
 
@@ -170,8 +199,8 @@ describe('specKitExtensionInstall', () => {
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
             __resetForceProbe();
-            execMock.mockImplementation((_cmd: string, cb: (e: unknown, r: unknown) => void) =>
-                cb(null, { stdout: 'Usage: specify extension add [OPTIONS] SOURCE\n  --from TEXT\n', stderr: '' }));
+            execMock.mockImplementation((...args: unknown[]) =>
+                done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS] SOURCE\n  --from TEXT\n', stderr: '' }));
             await runInstallSpecKitExtension('/work/project');
             expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand());
             __resetForceProbe();
