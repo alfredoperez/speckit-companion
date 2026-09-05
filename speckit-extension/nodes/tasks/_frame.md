@@ -8,6 +8,10 @@ description: "Companion tasks — user-story phased task list"
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part step-start -->
+
+<!-- /speckit-companion:part step-start -->
+
 <!-- speckit-companion:part speckit-hooks -->
 
 <!-- /speckit-companion:part speckit-hooks -->

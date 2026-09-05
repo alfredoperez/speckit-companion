@@ -248,7 +248,7 @@ The completion step (both the implement-time close and the terminal `mark-comple
 
 ### Step boundaries are extension-stamped in order on every dispatch path
 
-Each pipeline step's start SHALL be recorded by a script call at the top of the step's own command body, and plan/tasks completions SHALL be recorded by their after-step hook commands — both `by: extension`, start before complete. The AI SHALL self-close only clarify and analyze at step level; a step whose boundaries the extension stamps must never receive an AI step-level complete, because the idempotent completion append lets the first writer win.
+Each pipeline step's start SHALL be recorded by a script call placed **above the step's extension-hooks fence**, so that hooks and every node run inside the window the step later reports; a stamp sitting partway down the body leaves that work attributed to no step at all. The instruction SHALL be single-sourced as one shared command part fenced into each step frame, never copied per command, so the four bodies cannot drift. A step that mints its own feature directory SHALL stamp the instant that directory exists and before any other work, since it has nothing to stamp against earlier. Plan/tasks completions SHALL be recorded by their after-step hook commands — both `by: extension`, start before complete. The AI SHALL self-close only clarify and analyze at step level; a step whose boundaries the extension stamps must never receive an AI step-level complete, because the idempotent completion append lets the first writer win.
 
 #### Scenario: plan runs on any dispatcher
 - **WHEN** the plan command body begins its work
@@ -258,6 +258,10 @@ Each pipeline step's start SHALL be recorded by a script call at the top of the 
 #### Scenario: a step's hook never fires
 - **WHEN** the after-step hook is skipped (missing or unparseable extensions registry)
 - **THEN** the next step's extension start still closes the span and the duration stays trusted
+
+#### Scenario: the extension already seeded this step's start
+- **WHEN** the command body's own stamp runs after a dispatcher already recorded the step's start
+- **THEN** no second start entry is appended and the earlier timestamp stands
 
 ### Task finishes are folded into the shared record one at a time, as they land
 

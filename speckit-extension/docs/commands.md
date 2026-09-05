@@ -41,8 +41,9 @@ python3 .specify/extensions/companion/scripts/doctor.py --chat                  
 | `bleed` | Where one step did the next step's work — plan content in the spec, a task checklist in the plan, implementation code in the task list, one task list in two documents, source committed before implement, a pre-implement step that outlasted implement |
 | `drift` | Recomputed drift with its work shown — capability, files, commits — each flag classified `real`, `self-inflicted`, `suspect-baseline`, or `unknown`; plus any recorded claim the recomputation contradicts |
 | `completion` | Why a spec did not land as `completed`: refused (with the writer's reason), reported success but never arrived, landed with the display disagreeing, or never attempted |
+| `verification` | Whether implement closed having actually run anything — a step that recorded no executed check shipped code nothing was run against. Reports "no record" rather than a problem on a spec that never reached implement |
 | `template` | Whether `tasks.md` kept its generated shape — user-story phases containing waves, join lines and checkpoints intact |
-| `trace` | What the self-trace recorded: capture calls that failed and why, call counts, payload sizes, per-file rewrite counts, and calls that resolved to no spec at all |
+| `trace` | What the self-trace recorded: capture calls that failed and why, call counts, payload sizes, per-file rewrite counts, and calls that resolved to no spec at all. Reads the unrecorded-calls marker before deciding a spec has no trace evidence, so a run that could not write its trace at all still reports what it lost |
 | `chat` | *(`--chat` only)* From the session transcript: work tried and failed, retried, or stopped; claims the recomputation contradicts; and waste — narration, repeated commands, repeated rewrites |
 
 ### The self-trace

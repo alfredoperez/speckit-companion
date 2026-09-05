@@ -157,5 +157,46 @@ class TheNamespaceIsSeparateFromParts(unittest.TestCase):
         self.assertEqual(cp.canonical(marked), "body\n")
 
 
+class EveryStepStampsItsStartFirst(unittest.TestCase):
+    """A step's recorded window has to contain the work it claims.
+
+    The stamp used to sit inside a content node, so the extension hooks — and in
+    plan, the first node too — ran outside the window the step later reported. On
+    the measured run in #622 half the elapsed clock belonged to no step at all.
+    """
+
+    STEPS = ("specify", "plan", "tasks", "implement")
+
+    def _frame(self, command):
+        return (EXT / "nodes" / command / "_frame.md").read_text(encoding="utf-8")
+
+    def test_every_step_frame_carries_the_step_start_part(self):
+        for command in self.STEPS:
+            with self.subTest(command=command):
+                self.assertIn("speckit-companion:part step-start", self._frame(command),
+                              "this step never stamps its own start")
+
+    def test_the_stamp_sits_above_the_hooks_fence(self):
+        # A `before_plan` git commit is not the plan step's work, and on a dirty
+        # repo it is not fast either. The window opens before anything runs for it.
+        for command in self.STEPS:
+            with self.subTest(command=command):
+                body = self._frame(command)
+                self.assertLess(body.index("speckit-companion:part step-start"),
+                                body.index("speckit-companion:part speckit-hooks"),
+                                "the hooks run inside the step's window, not before it")
+
+    def test_the_part_text_is_identical_across_every_command(self):
+        bodies = {c: assemble.assemble_command(c) for c in self.STEPS}
+        regions = {}
+        for command, body in bodies.items():
+            m = re.search(r"<!-- speckit-companion:part step-start -->\n(.*?)"
+                          r"<!-- /speckit-companion:part step-start -->", body, re.S)
+            self.assertIsNotNone(m, f"{command} has no filled step-start region")
+            regions[command] = m.group(1)
+        self.assertEqual(len(set(regions.values())), 1,
+                         "four copies that can drift is what the parity gate exists to catch")
+
+
 if __name__ == "__main__":
     unittest.main()

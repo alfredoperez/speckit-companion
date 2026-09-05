@@ -229,7 +229,7 @@ The spec-driven run itself, in the order you'd use them.
 
 | Command | What it does |
 |---------|--------------|
-| `/speckit.companion.doctor` | Report on a spec's run health — unfinished steps, unjournaled tasks, batched journaling, step bleed, drift you can actually judge, and why completion did not land. Read-only, never halts, and works on specs created before it existed. `--chat` adds a session-transcript audit; `--json` for tooling |
+| `/speckit.companion.doctor` | Report on a spec's run health — unfinished steps, unjournaled tasks, batched journaling, step bleed, drift you can actually judge, a step that closed having verified nothing, and why completion did not land. Read-only, never halts, and works on specs created before it existed. `--chat` adds a session-transcript audit; `--json` for tooling |
 
 ### Living specs
 

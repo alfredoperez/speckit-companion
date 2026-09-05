@@ -8,6 +8,10 @@ description: "Companion specify — spec.md with prioritized user stories"
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part step-start -->
+
+<!-- /speckit-companion:part step-start -->
+
 <!-- speckit-companion:part speckit-hooks -->
 
 <!-- /speckit-companion:part speckit-hooks -->

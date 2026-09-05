@@ -19,9 +19,6 @@ reads: []
    ```
    **Never write into a directory that already contains a `spec.md`** — that is a stale pointer to a prior spec, not this feature.
 
-   Create `<feature_directory>/`, then point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}` — that exact key is what the later capture calls resolve the spec through when they run without `--feature-dir`, so any other key silently drops those writes. Then record the **specify START** so the step's duration begins now (the script stamps the real clock — do not hand-write this):
-   ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specifying --kind start --by extension
-   ```
+   Create `<feature_directory>/`, then point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}` — that exact key is what the later capture calls resolve the spec through when they run without `--feature-dir`, so any other key silently drops those writes. Then stamp the **specify START** as the step-start instruction above directs — the directory now exists, so this is the moment it says to run it, before any other work.
 
    If the branch already exists, check it out rather than creating a second one, and say so. If the working tree has uncommitted changes that would be carried onto a new branch, stop and say what they are — silently moving someone's work to a branch they did not ask for is worse than not branching.

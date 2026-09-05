@@ -8,6 +8,30 @@ description: "Companion plan — implementation plan with research & design arti
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part step-start -->
+## Record this step's start — before anything else runs
+
+A step's recorded window has to contain the work it claims. Stamping the start partway down the body means the extension hooks, and any node above the stamp, ran outside the window the step later reports — on one measured run half the elapsed clock belonged to no step at all. So this is the first instruction in the command, ahead of the hooks.
+
+Let `<step>` be this command's phase and `<status>` its in-progress status: `specify`/`specifying`, `plan`/`planning`, `tasks`/`tasking`, `implement`/`implementing`.
+
+**Which feature directory this step stamps against decides when it stamps.**
+
+- **A step that mints its own feature directory** — any fresh-spec entry point, `specify` and `auto` among them — has nothing to stamp against yet. `.specify/feature.json` is this step's *output*: it still points at the **previous** spec, so stamping now would write this run's status onto finished work. Resolve the directory first, then stamp the instant it exists and before any other work in the step.
+- **Every other step** reads the feature directory it was given — from the invocation, or from `.specify/feature.json`, which by then points at this spec. Stamp immediately, before the extension hooks and before any node.
+
+In both cases the call is the same:
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
+```
+
+Two things keep this honest:
+
+- **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
+- **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
+<!-- /speckit-companion:part step-start -->
+
 <!-- speckit-companion:part speckit-hooks -->
 ## Pre-Execution Checks — stock spec-kit extension hooks
 
@@ -89,11 +113,7 @@ Produce an implementation plan and its design artifacts in phases: load context 
 This budget governs every step that follows. Where a later step would produce something the budget skips, omit it — do not produce it and then delete it.
 <!-- /speckit-companion:node size-budget -->
 <!-- speckit-companion:node gather-context -->
-1. Read `.specify/feature.json` for the feature directory, then record the **plan START** so the step's duration begins now (the script stamps the real clock; do not hand-write plan timing):
-   ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan --status planning --kind start --by extension
-   ```
-   Load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present — the inputs the plan must satisfy. **Read what `specify` already recorded before opening a file.** `specify` writes what it read onto `.spec-context.json` under `context` — the code areas it looked at, and the constraints it found there. Read those entries first and treat them as the map: they name where the feature attaches, so you open the files they point at rather than rediscovering them. On one measured run this step was the longest section of the whole run at 2m47s, re-reading the area `specify` had already read and already described. The entries carry locations, not content, so you will still open the files that matter — but you should be filling gaps in a map you were handed, not drawing it again. If no `context` entries were recorded, investigate from scratch as below.
+1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present — the inputs the plan must satisfy. **Read what `specify` already recorded before opening a file.** `specify` writes what it read onto `.spec-context.json` under `context` — the code areas it looked at, and the constraints it found there. Read those entries first and treat them as the map: they name where the feature attaches, so you open the files they point at rather than rediscovering them. On one measured run this step was the longest section of the whole run at 2m47s, re-reading the area `specify` had already read and already described. The entries carry locations, not content, so you will still open the files that matter — but you should be filling gaps in a map you were handed, not drawing it again. If no `context` entries were recorded, investigate from scratch as below.
 
 Then **investigate the codebase** to understand where this feature attaches: the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch. Read inline by default. **The exception worth parallelizing:** a *large or unfamiliar* codebase with several **independent areas** to map — there, reading is genuinely heavy (each area means opening many files), so when your host has subagents, dispatch one read-only subagent per area in a single message, each returning a **distilled finding** (the pattern to copy, the concrete file paths, the conventions to match) rather than a dump of file contents. That is the case where a separate worker pays for its startup. For a small or familiar codebase, just read the areas yourself in turn — identical result, less overhead. Collect the findings as the research basis for the plan.
 

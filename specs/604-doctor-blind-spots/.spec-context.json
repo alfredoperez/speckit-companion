@@ -1,0 +1,643 @@
+{
+  "workflow": "companion",
+  "telemetryInstanceId": "8bacaec6-22cc-40c2-8ed8-8ab342778a3c",
+  "specName": "Doctor Blind Spots",
+  "branch": "604-doctor-blind-spots",
+  "selectedAt": "2026-09-05T16:27:11.316Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T16:27:11.316Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:31:44.258Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T16:43:15.597Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:46:52.665Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:47:41.276Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:48:13.843Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T16:49:36.195Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:51:15.107Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:51:31.720Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T16:53:33.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:54:18.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:54:24.133Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:54:51.054Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:55:22.067Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:58:10.631Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:58:16.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:58:22.198Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:58:53.193Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:59:13.673Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T16:59:51.271Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:00:05.978Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:00:06.061Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:00:06.145Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:00:06.230Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:01:59.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:01:59.361Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:01:59.454Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:01:59.541Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:01:59.626Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:04:12.426Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:04:43.952Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:04:59.280Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T17:07:34.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T17:07:34.395Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "capture-runtime"
+    ],
+    "synced": [
+      "capture-runtime",
+      "companion-commands"
+    ]
+  },
+  "last_action": "review fixes applied - 1202 pass",
+  "coverage": {
+    "FR-001": {
+      "title": "The health check MUST read the unrecorded-calls marker before deciding a spec has no trace evidence.",
+      "tasks": "T003",
+      "tests": "test_doctor.py::TraceLostWithoutTraceFile::test_marker_without_a_trace_file_is_reported_as_a_problem"
+    },
+    "FR-002": {
+      "title": "Unrecorded calls with no trace file MUST be reported at problem severity, naming a reason verbatim.",
+      "tasks": "T001,T003",
+      "tests": "test_doctor.py::TraceLostWithoutTraceFile::test_marker_without_a_trace_file_is_reported_as_a_problem"
+    },
+    "FR-003": {
+      "title": "No marker and no trace file MUST still report the trace check as skipped, wording unchanged.",
+      "tasks": "T002,T003",
+      "tests": "test_doctor.py::TraceLostWithoutTraceFile::test_no_marker_and_no_trace_still_skips_with_the_existing_wording,test_an_empty_marker_is_indistinguishable_from_an_absent_one"
+    },
+    "FR-004": {
+      "title": "The health check MUST report an implement step that completed with no verification recorded.",
+      "tasks": "T004,T005,T007",
+      "tests": "test_doctor.py::VerificationCheck::test_implement_closed_with_nothing_verified_is_a_problem,test_one_recorded_verification_is_enough"
+    },
+    "FR-005": {
+      "title": "The verification check MUST report no-record, not a problem, for a spec that never reached implement.",
+      "tasks": "T004,T005",
+      "tests": "test_doctor.py::VerificationCheck::test_a_spec_that_never_reached_implement_reports_no_record"
+    },
+    "FR-006": {
+      "title": "A step start MUST be recorded before the assistant performs any of that step work.",
+      "tasks": "T008,T010,T011,T012,T013,T014,T015,T016,T017,T018,T019",
+      "tests": "test_node_boundaries.py::EveryStepStampsItsStartFirst::test_every_step_frame_carries_the_step_start_part,test_the_stamp_sits_above_the_hooks_fence"
+    },
+    "FR-007": {
+      "title": "Recording a step start twice MUST NOT produce a second entry; the earlier timestamp wins.",
+      "tasks": "T009",
+      "tests": "test_context.py::TheEarliestStartWins::test_a_second_start_for_the_same_step_appends_nothing"
+    },
+    "FR-008": {
+      "title": "Every new check MUST degrade silently on a spec with no relevant record.",
+      "tasks": "T002,T004,T005,T007",
+      "tests": "test_doctor.py::VerificationCheck::test_a_malformed_verified_list_degrades_to_the_finding_never_a_crash,test_an_empty_history_takes_the_shared_no_record_skip"
+    },
+    "FR-009": {
+      "title": "Each behaviour MUST have an executable test that fails if the behaviour regresses.",
+      "tasks": "T001,T002,T004,T008,T009,T023",
+      "tests": "test_doctor.py,test_node_boundaries.py,test_context.py"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Preventing hand-edited task checkboxes (already detected; prevention is a larger change for no added visibility)",
+    "Catching task records naming files never created (blocked on the artifact manifest in #624)",
+    "Re-fixing anything already closed by #623, #628, #630 or #650"
+  ],
+  "context": [
+    "living spec: capture-runtime (trace evidence + lower-bound counting contract)",
+    "living spec: companion-commands (step boundary stamping in command bodies)",
+    "area: speckit-extension/scripts/doctor_checks.py — check_trace early return, _lost_entries",
+    "area: speckit-extension/nodes/implement/implement-exec.md — where the implement start is stamped",
+    "constraint: nine of the fourteen mechanisms in #622 verified already fixed on main; excluded from scope",
+    "constraint: history is append-only, so past batched journals cannot be repaired retroactively",
+    "constraint: no check may fail the host command — degrade to no-record",
+    "area: speckit-extension/presets/_parts/ — where the new step-start part lives; four _frame.md files fence it",
+    "area: speckit-extension/scripts/doctor.py — CHECKS tuple and run_check wiring for the new check",
+    "constraint: editing the four step frames invalidates tests/golden/commands, which must be regenerated",
+    "constraint: check-shape-parity requires a shared rule to live in presets/_parts, not inlined per command",
+    "finding: the extension dispatch seed (src/ai-providers/promptPreamble.ts:280) already carries the dispatch timestamp, so the extension path is already honest; the gap is terminal and self-advance dispatch"
+  ],
+  "intent": "Close the three health-check blind spots still reproducing from #622 — an unreachable evidence marker, an unread verification record, and a step start stamped after the work.",
+  "decisions": [
+    {
+      "decision": "Read .trace-lost before check_trace returns its skip",
+      "why": "the marker exists precisely for the case where the trace file could not be written, which is the case the early return currently swallows; _lost_entries already handles both paths and degrades to []",
+      "rejected": "a separate lost check with its own status row, which would print a second skipped row on every healthy spec"
+    },
+    {
+      "decision": "Add check_verification as its own registered check between completion and template",
+      "why": "FR-005 wants no-record as a status, and only a registered check produces a CheckStatus skip; folding it into check_record forces a finding-or-nothing shape the spec rejects",
+      "rejected": "judging every step, which would fire on plan and tasks where no execution is expected"
+    },
+    {
+      "decision": "Hoist the step-start stamp into a shared step-start part fenced above speckit-hooks in all four step frames",
+      "why": "the stamp sits inside a content node today, so pre-hooks and (for plan) size-budget run outside the window the step later claims; only a part at the top of the frame is first on the terminal and self-advance paths, not just the extension dispatch path",
+      "rejected": "inlining the stamp into each frame, which is the forked shared rule check-shape-parity assertion (a) exists to catch"
+    },
+    {
+      "decision": "Cover FR-007 with a test and change no code",
+      "why": "_has_step_start already matches a prior start anywhere in the log and history[] is append-only, so the earliest start already wins; the hoist makes that guard load-bearing so it earns a regression test",
+      "rejected": "adding an explicit earliest-wins comparison, a second mechanism enforcing the same invariant"
+    },
+    {
+      "decision": "The step-start part covers both a known feature directory and a step that mints its own",
+      "why": "specify and auto resolve the feature directory inside their first node, so at frame time there is nothing to stamp against; one part text has to be correct for all of them and stay byte-identical for the parity gate",
+      "rejected": "fencing the part only into plan/tasks/implement, which would leave specify stamping late and the part text asymmetric"
+    },
+    {
+      "decision": "auto/_frame.md got the step-start fence too",
+      "why": "auto/resolve-dir.md now defers to the part, so without the fence in auto the reference pointed at nothing",
+      "rejected": "leaving auto stamping inline, which reintroduces the duplicate the hoist removes"
+    },
+    {
+      "decision": "The lost finding was extracted to _lost_finding and reused",
+      "why": "the marker is now reported from two branches of check_trace; two copies of the same finding text is what drifts",
+      "rejected": "duplicating the Finding construction in the early-return branch"
+    },
+    {
+      "decision": "check_verification judges verified[] as empty-or-not and never reads entry contents",
+      "why": "FR-005 wants no-record as a status, and interpreting what an entry claims is the drift check job",
+      "rejected": "folding the finding into check_completion, which has no status of its own to report no-record with"
+    },
+    {
+      "decision": "The shared .trace-lost fallback write now names its spec, and _lost_entries returns only attributable lines",
+      "why": "the review found that hoisting the marker read made one spec unwritable-directory failure report as a problem on every trace-less spec in the repo, since the shared file carries no spec identity; tagging at the write is the root-cause fix rather than suppressing the read",
+      "rejected": "excluding the shared marker entirely on the no-trace path, which would have silently dropped the exact scenario US1 exists for"
+    },
+    {
+      "decision": "The step-start part leads with the mint-your-own-directory rule instead of treating it as the exception",
+      "why": "the review found the usual-case branch would have specify and auto stamp against .specify/feature.json while it still points at the PREVIOUS spec, rewriting a prior spec status when that spec sat at currentStep specify",
+      "rejected": "keeping the shorter two-branch wording, which read correctly only if you already knew which steps mint their own directory"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Planned three wirings: read the trace-lost marker before the trace skip, add a verification check for an implement step that closed having proven nothing, and hoist the step-start stamp into a shared command part so a step window contains its own work.",
+      "key_finding": "None of the three needs a new mechanism. .trace-lost, verified[] and the duplicate-start guard all ship today; what is missing is a reader in two places and a placement change in the third."
+    },
+    "tasks": {
+      "summary": "23 tasks across 6 phases: empty Setup/Foundational, one phase per user story (trace marker read, verification check, step-start hoist), Polish with docs and one validation run."
+    },
+    "implement": {
+      "summary": "Three doctor blind spots wired up: the trace check reads the unrecorded-calls marker before its early return, a new verification check names an implement step that closed having run nothing, and the step-start stamp moved into a shared part above every step hooks fence."
+    }
+  },
+  "approach": "Wire up three readers that already have their data. Move the .trace-lost read above check_trace's early return; add a verification check that reports an implement step which completed with an empty verified[]; hoist the step-start stamp out of the content nodes into a shared step-start part fenced at the top of every step frame, ahead of the extension hooks. FR-007 is already satisfied by the existing duplicate-start guard and needs only a regression test.",
+  "currentTask": "T023",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Failing test: marker with entries and no trace file must report one problem finding naming the reason verbatim",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Failing test: no marker and no trace still skips with the existing wording; empty marker reads as absent",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "check_trace reads the .trace-lost marker before its early return, so a run with no trace file still reports unrecorded calls; lost finding extracted to _lost_finding and reused",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Six failing tests for check_verification: closed-with-nothing, one-entry-passes, malformed degrades, never-reached-implement skips, empty history, registration",
+      "files": [
+        "speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added check_verification: _no_record guard, then a step-level implement complete scan, then judges verified[] non-empty; a non-list counts as empty rather than raising",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "No change needed: nothing in the suite asserts the check count or the full CHECKS list, so adding an entry broke no report-shape assertion"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Registered verification in CHECKS between completion and template, dispatched through run_check so a raised exception stays contained",
+      "files": [
+        "speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Failing tests: every step frame carries the step-start part, it sits above the hooks fence, and the filled region is identical across all four commands",
+      "files": [
+        "speckit-extension/tests/test_node_boundaries.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Regression guard for FR-007: a second step-level start appends nothing and the earlier timestamp stands; passed on first run, confirming _has_step_start already holds the invariant the hoist depends on",
+      "files": [
+        "speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Wrote the shared step-start part: step-agnostic, covers both the known-feature-dir case and a fresh-spec entry point that mints its own, and states the append-only duplicate-start guarantee",
+      "files": [
+        "speckit-extension/presets/_parts/step-start.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Fenced the step-start part above the speckit-hooks fence in the specify frame",
+      "files": [
+        "speckit-extension/nodes/specify/_frame.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Fenced the step-start part above the speckit-hooks fence in the plan frame",
+      "files": [
+        "speckit-extension/nodes/plan/_frame.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Fenced the step-start part above the speckit-hooks fence in the tasks frame",
+      "files": [
+        "speckit-extension/nodes/tasks/_frame.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Fenced the step-start part above the speckit-hooks fence in the implement frame",
+      "files": [
+        "speckit-extension/nodes/implement/_frame.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Dropped the duplicated start stamp from the plan gather node; it now refers to the frame's step-start part",
+      "files": [
+        "speckit-extension/nodes/plan/gather-context.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Dropped the duplicated start stamp from the tasks node; it now refers to the frame's step-start part",
+      "files": [
+        "speckit-extension/nodes/tasks/tasks-doc.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Dropped the duplicated start stamp from the implement node; it now refers to the frame's step-start part",
+      "files": [
+        "speckit-extension/nodes/implement/implement-exec.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Both specify resolve nodes now stamp via the step-start part at the moment the directory exists; the fast-path folds in finalize.md keep their explicit plan/tasks starts",
+      "files": [
+        "speckit-extension/nodes/specify/resolve-dir.md",
+        "speckit-extension/nodes/specify/resolve-dir-git.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Auto resolve node cleaned, and auto's frame given the step-start fence so its reference to the part is not dangling",
+      "files": [
+        "speckit-extension/nodes/auto/resolve-dir.md",
+        "speckit-extension/nodes/auto/_frame.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Rebuilt bodies from parts, reassembled the node commands and re-blessed the 14 goldens; all node/parity/phases/replacement tests green again",
+      "files": [
+        "speckit-extension/tests/golden/commands/",
+        "speckit-extension/commands/",
+        "speckit-extension/presets/companion-standard/commands/"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Documented the new verification check as a row in the doctor check table, noted the trace check now reads the marker first, and updated the doctor's README one-liner",
+      "files": [
+        "speckit-extension/docs/commands.md",
+        "speckit-extension/README.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Three user-facing release notes under Unreleased in the health-check section: the marker read, the unverified step, and the honest step window",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Ran the full suite, the shape-parity gate, both assembly --check gates and the doctor: 1199 pass, 0 new problems, 2 pre-existing local-only sandbox reds documented as a concern"
+    }
+  },
+  "verified": [
+    {
+      "what": "spec-kit extension test suite",
+      "command": "python3 -m pytest speckit-extension/tests/ -q",
+      "result": "1199 passed, 8 skipped, 2 failed",
+      "warnings": [
+        "the 2 failures are tests/test_sandbox_build.py, red on origin/main before this branch: examples/todo-claude/.specify/companion.yml is gitignored local sandbox state carrying a hooks demo, so a test asserting an *unconfigured* project builds byte-identical bodies cannot hold on this machine; CI never sees the file"
+      ]
+    },
+    {
+      "what": "doctor + node/parity suites specifically",
+      "command": "python3 -m pytest speckit-extension/tests/test_doctor.py test_node_boundaries.py test_context.py -q",
+      "result": "all green; 44 doctor tests pass including the 9 added here"
+    },
+    {
+      "what": "command shape-parity gate",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK - 14 bodies match parts, golden, and carry the timing fence"
+    },
+    {
+      "what": "part/body assembly is idempotent",
+      "command": "python3 speckit-extension/scripts/build-commands.py --check && python3 speckit-extension/scripts/assemble-nodes.py --check",
+      "result": "no drift; 8 bodies checked from parts, node commands match golden"
+    },
+    {
+      "what": "SC-004 zero new findings on a clean run",
+      "command": "python3 speckit-extension/scripts/doctor.py",
+      "result": "0 problems; VERIFICATION appears and correctly skips with no implement close yet"
+    },
+    {
+      "what": "code review at high effort, all 4 findings fixed and re-run",
+      "command": "/code-review high, then python3 -m pytest speckit-extension/tests/ -q",
+      "result": "1202 passed; only the 2 pre-existing local-only sandbox failures remain"
+    },
+    {
+      "what": "cross-spec bleed regression",
+      "command": "pytest tests/test_doctor.py -q",
+      "result": "47 pass; a sibling spec fallback line no longer flips a trace-less spec to a problem"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "tests/test_sandbox_build.py has 2 failures that predate this branch and are local-only: examples/todo-claude/.specify/companion.yml is gitignored, so this machine builds a *configured* sandbox against a test asserting an unconfigured one. Left untouched deliberately - it is not a code defect, not reproducible in CI, and deleting local sandbox state would be destructive.",
+      "step": "implement"
+    },
+    {
+      "note": "The working tree arrived with workflow: \"shipped\" written into .specify/companion.yml, which selects no configuration and silently disabled this repo own pipeline hooks. Reverted to the committed file. Designed behaviour, but it is invisible - this is the territory of #653.",
+      "step": "implement"
+    },
+    {
+      "note": "The timing win is real for plan/tasks/implement but partial for specify: a fresh-spec entry point cannot stamp before the directory it mints exists, so the before_specify branch hook still runs outside the window. SC-003 should be measured on a full run before it is called met.",
+      "step": "implement"
+    },
+    {
+      "note": "The new verification check fires on 11 of 96 existing specs, including the pinned fixture specs/_03_demo-living, which genuinely did close implement with nothing verified. True positives, and no test pins the doctor verdict on that fixture, so it was left as-is.",
+      "step": "implement"
+    }
+  ]
+}

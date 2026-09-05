@@ -8,6 +8,10 @@ description: "Companion plan — implementation plan with research & design arti
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part step-start -->
+
+<!-- /speckit-companion:part step-start -->
+
 <!-- speckit-companion:part speckit-hooks -->
 
 <!-- /speckit-companion:part speckit-hooks -->
