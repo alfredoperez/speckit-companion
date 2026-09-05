@@ -137,29 +137,34 @@ const execAsync = promisify(exec);
 /** The probe is a help text, not work: if the CLI has not answered by now it is hung, and the install must still go out. */
 const FORCE_PROBE_TIMEOUT_MS = 5000;
 
-let forceProbe: Promise<boolean> | undefined;
+let forceSupported: boolean | undefined;
 
 /**
  * Does this machine's `specify extension add` accept `--force`? An older CLI errors out on the flag
  * ("No such option '--force'", issue #420), and that is the cohort every out-of-date surface targets, so
  * asking before using it is the difference between an update and a hard error nothing recovers from.
- * Probed once per session; an unreadable probe assumes the documented current CLI, which needs the flag.
+ *
+ * Only the CLI answering counts. A probe that never reached it — `specify` absent from the extension host's
+ * PATH (which is not the terminal's), a hang killed at the timeout, no `extension` subcommand at all — is not
+ * an answer: this click assumes the documented current CLI, and the next one asks again rather than carrying
+ * a guess for the rest of the session.
  */
-export function specifySupportsForce(): Promise<boolean> {
-    forceProbe ??= execAsync('specify extension add --help', { timeout: FORCE_PROBE_TIMEOUT_MS })
-        .then(({ stdout, stderr }) => `${stdout}${stderr}`.includes('--force'))
-        // A non-zero exit rejects but still carries the CLI's own output, which is the answer; only a probe
-        // that produced nothing at all (timeout, no `specify` on PATH) falls back to the documented current CLI.
-        .catch((error: { stdout?: string; stderr?: string }) => {
-            const output = `${error?.stdout ?? ''}${error?.stderr ?? ''}`;
-            return output ? output.includes('--force') : true;
-        });
-    return forceProbe;
+export async function specifySupportsForce(): Promise<boolean> {
+    if (forceSupported !== undefined) {
+        return forceSupported;
+    }
+    try {
+        const { stdout, stderr } = await execAsync('specify extension add --help', { timeout: FORCE_PROBE_TIMEOUT_MS });
+        forceSupported = `${stdout}${stderr}`.includes('--force');
+        return forceSupported;
+    } catch {
+        return true;
+    }
 }
 
 /** Forget the probe result. Test-only — never called in production. */
 export function __resetForceProbe(): void {
-    forceProbe = undefined;
+    forceSupported = undefined;
 }
 
 export function readInstallPromptEnabled(): boolean {

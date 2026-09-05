@@ -308,13 +308,15 @@ export async function activate(context: vscode.ExtensionContext) {
             // One gap resolution per tick feeds every install/update surface. Pure UI — no child processes, so
             // a setting toggle or a dismissed banner can call it too.
             let retry: ReturnType<typeof setTimeout> | undefined;
-            const syncCompanionSurfaces = (): CompanionGap => {
+            // `undefined` means the tick told us nothing: mid-`--force` the extension dir is briefly gone, and
+            // acting on that would flip the badge, shell out at the CLI mid-copy, or record an update as landed
+            // before anything had. Every caller waits for the next tick instead.
+            const syncCompanionSurfaces = (): CompanionGap | undefined => {
                 const { gap, masked } = refreshCompanionGap(root, context.extensionPath);
                 if (masked) {
-                    // Mid-`--force` the extension dir is briefly gone. Change nothing; re-check when the copy lands.
                     clearTimeout(retry);
                     retry = setTimeout(() => { syncCompanionSurfaces(); }, 1000);
-                    return gap;
+                    return undefined;
                 }
                 clearTimeout(retry);
                 const installed = gap.state !== 'missing';
@@ -333,21 +335,27 @@ export async function activate(context: vscode.ExtensionContext) {
             };
             // What the extension landing on disk means: the surfaces change AND the standard command family is
             // re-materialized (it shells out, and its bundled preset path lives inside the extension dir).
-            const onCompanionFilesChanged = (): CompanionGap => {
+            const onCompanionFilesChanged = (): CompanionGap | undefined => {
                 const gap = syncCompanionSurfaces();
-                if (gap.state !== 'missing') {
+                if (gap && gap.state !== 'missing') {
                     void ensureStandardFamily(root, {
                         log: msg => outputChannel.appendLine(msg),
                     });
                 }
                 return gap;
             };
-            maybeShowCompanionUpdateNudge(context, onCompanionFilesChanged());
+            const activationGap = onCompanionFilesChanged();
+            if (activationGap) {
+                maybeShowCompanionUpdateNudge(context, activationGap);
+            }
             // Change events only for the two version files: an install writes hundreds of files under `companion/**`.
             const companionRefresh = trailing(() => {
-                // Reaching here means the extension directory really changed, which is the only evidence the
-                // extension has that a dispatched update ran at all.
-                void noteInstallLanded(context, onCompanionFilesChanged());
+                // A settled, unmasked tick after the directory changed is the only evidence the extension has
+                // that a dispatched update ran and what it left behind.
+                const gap = onCompanionFilesChanged();
+                if (gap) {
+                    void noteInstallLanded(context, gap);
+                }
                 livingSpecsExplorer.refresh();
             }, 150);
             const extDirWatcher = vscode.workspace.createFileSystemWatcher(

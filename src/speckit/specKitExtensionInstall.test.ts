@@ -194,6 +194,25 @@ describe('specKitExtensionInstall', () => {
             expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
         });
 
+        it('keeps --force when the probe cannot reach the CLI, and does not remember that as an answer', async () => {
+            const sendText = jest.fn();
+            (vscode.window.createTerminal as jest.Mock)
+                .mockReturnValueOnce({ show: jest.fn(), sendText })
+                .mockReturnValueOnce({ show: jest.fn(), sendText });
+            (isCompanionInstalled as jest.Mock).mockReturnValue(true);
+            __resetForceProbe();
+            const probesBefore = execMock.mock.calls.length;
+            execMock.mockImplementationOnce((...args: unknown[]) =>
+                done(args)(Object.assign(new Error('command not found: specify'), { stderr: 'command not found' }), null));
+            await runInstallSpecKitExtension('/work/project');
+            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+            // The next click asks again rather than carrying a guess for the session.
+            await runInstallSpecKitExtension('/work/project');
+            expect(execMock.mock.calls.length - probesBefore).toBe(2);
+            __resetForceProbe();
+            (isCompanionInstalled as jest.Mock).mockReturnValue(false);
+        });
+
         it('leaves --force off on a CLI whose `extension add` has no such option (issue #420)', async () => {
             const sendText = jest.fn();
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
