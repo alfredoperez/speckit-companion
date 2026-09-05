@@ -159,6 +159,11 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
     },
     livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
+    livingCheckDrift: (_msg, dir, deps) => handleLivingCheckDrift(dir, deps),
+    overviewChosen: async (_msg, dir, deps) => {
+      const instance = deps.getInstance(dir);
+      if (instance) instance.state.landing = undefined;
+    },
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps),
@@ -707,17 +712,40 @@ async function handleOpenFile(
  * (the single source of truth the header already renders from) and hands off to
  * the sidebar's Update command so both surfaces build the same prompt.
  */
+/** The workspace-relative path of the capability spec this panel is showing. */
+function livingCapabilitySpecPath(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): string | undefined {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const anchor = deps.getInstance(specDirectory)?.state.livingSourcePath;
+  if (!root || !anchor) return undefined;
+  const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
+  if (!specTier) return undefined;
+  return path.relative(root, specTier.filePath).replace(/\\/g, "/");
+}
+
 async function handleLivingUpdate(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-  const anchor = deps.getInstance(specDirectory)?.state.livingSourcePath;
-  if (!root || !anchor) return;
-  const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
-  if (!specTier) return;
-  const capabilitySpecPath = path.relative(root, specTier.filePath).replace(/\\/g, "/");
+  const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
+  if (!capabilitySpecPath) return;
   await vscode.commands.executeCommand("speckit.livingSpecs.update", { capabilitySpecPath });
+}
+
+/**
+ * Re-check this capability against the code. The Update action only exists once
+ * drift has been found, which left the header with nothing to do in the state a
+ * reader is in most of the time.
+ */
+async function handleLivingCheckDrift(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
+  if (!capabilitySpecPath) return;
+  await vscode.commands.executeCommand("speckit.livingSpecs.drift", { capabilitySpecPath });
 }
 
 /**

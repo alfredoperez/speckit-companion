@@ -38,7 +38,13 @@ export const overviewAvailable = computed(() => {
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */
 export const showingOverview = computed(() => {
     if (!overviewAvailable.value) return false;
-    const landing = hasDurableContext(viewerState.value!) ? 'overview' : 'document';
+    // Three sources, most specific first: the reader's own click inside the
+    // viewer, then what the entry point asked for (a tree click on a document is
+    // a request for that document), then the default for a spec opened as a
+    // whole. Without the middle one, every document row in the tree landed on
+    // the Overview, because the default is what any run spec resolves to.
+    const asked = navState.value?.landing;
+    const landing = asked ?? (hasDurableContext(viewerState.value!) ? 'overview' : 'document');
     return (viewerMode.value ?? landing) === 'overview';
 });
 

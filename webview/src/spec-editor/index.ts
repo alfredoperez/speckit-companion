@@ -51,7 +51,8 @@ function getElements() {
         cancelBtn: document.getElementById('cancelBtn') as HTMLButtonElement,
         attachImageBtn: document.getElementById('attachImageBtn') as HTMLButtonElement,
         workflowSelector: document.getElementById('workflowSelector') as HTMLElement,
-        workflowChoices: document.getElementById('workflowChoices') as HTMLElement,
+        workflowChoices: document.getElementById('workflowChoices') as HTMLSelectElement,
+        workflowPitch: document.getElementById('workflowPitch') as HTMLElement,
         commandButtonsContainer: document.getElementById('commandButtons') as HTMLElement,
         keyboardHints: document.getElementById('keyboardHints') as HTMLElement,
         srStatus: document.getElementById('sr-status') as HTMLElement
@@ -67,8 +68,8 @@ function announce(message: string): void {
 
 // Get selected workflow (the checked choice card's radio)
 function getSelectedWorkflow(): string {
-    const checked = document.querySelector<HTMLInputElement>('input[name="workflow"]:checked');
-    return checked?.value || workflowList[0]?.name || 'speckit';
+    const picker = document.getElementById('workflowChoices') as HTMLSelectElement | null;
+    return picker?.value || workflowList[0]?.name || 'speckit';
 }
 
 // How the current selection was made — computed at submit time.
@@ -444,77 +445,98 @@ function initWorkflows(workflows: WorkflowDefinition[], defaultWorkflow?: string
             ? defaultWorkflow
             : workflows[0].name;
 
-    // Render one radio card per workflow. Built via DOM APIs (not innerHTML) so
-    // user-authored names/descriptions can't break out of an attribute.
+    // A dropdown, not a stack of cards. Two workflows took ~230px of height to
+    // express one either/or and pushed the Feature Brief below the fold. Built
+    // via DOM APIs (not innerHTML) so user-authored names and descriptions can't
+    // break out of an attribute.
     workflowChoices.replaceChildren();
     for (const wf of workflows) {
-        const card = document.createElement('div');
-        card.className = 'workflow-card';
-
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = 'workflow';
-        input.id = `workflow-${wf.name}`;
-        input.value = wf.name;
-        input.checked = wf.name === preselectedWorkflow;
-        input.addEventListener('change', () => {
-            trialActive = false;
-            updateCommandButtons(wf.name);
-        });
-        card.appendChild(input);
-
-        const label = document.createElement('label');
-        label.className = 'workflow-card-label';
-        label.htmlFor = input.id;
-
-        const header = document.createElement('span');
-        header.className = 'workflow-card-header';
-        const name = document.createElement('span');
-        name.className = 'workflow-card-name';
-        name.textContent = wf.displayName;
-        header.appendChild(name);
-        if (wf.installed === false) {
-            const badge = document.createElement('span');
-            badge.className = 'workflow-card-badge';
-            badge.textContent = 'Install to enable';
-            header.appendChild(badge);
-        }
-        label.appendChild(header);
-
-        // The description sells the choice, so it renders visibly on the card —
-        // never only as a tooltip.
-        if (wf.description) {
-            const description = document.createElement('span');
-            description.className = 'workflow-card-description';
-            description.textContent = wf.description;
-            label.appendChild(description);
-        }
-
-        // Low-commitment trial: shown on the Companion card whenever the
-        // pre-selected default is something else. Applies Companion to this one
-        // submission only — nothing ever writes the configured default.
-        if (wf.name === 'companion' && preselectedWorkflow !== 'companion') {
-            const trial = document.createElement('button');
-            trial.type = 'button';
-            trial.className = 'workflow-card-trial';
-            trial.textContent = 'Try Companion for this spec';
-            trial.addEventListener('click', event => {
-                event.preventDefault();
-                input.checked = true;
-                trialActive = true;
-                updateCommandButtons(wf.name);
-            });
-            label.appendChild(trial);
-        }
-
-        card.appendChild(label);
-        workflowChoices.appendChild(card);
+        const option = document.createElement('option');
+        option.value = wf.name;
+        // A dropdown row cannot hold a badge, so the not-installed state is said
+        // in the option's own text; the banner below repeats it as a badge.
+        option.textContent = wf.installed === false
+            ? `${wf.displayName} — install to enable`
+            : wf.displayName;
+        option.selected = wf.name === preselectedWorkflow;
+        workflowChoices.appendChild(option);
     }
+    workflowChoices.addEventListener('change', () => {
+        trialActive = false;
+        renderWorkflowPitch(workflows);
+        updateCommandButtons(getSelectedWorkflow());
+    });
+    renderWorkflowPitch(workflows);
 
     workflowSelector.style.display = 'flex';
 
     // Update command buttons for initial selection
     updateCommandButtons(getSelectedWorkflow());
+}
+
+/**
+ * What the selected workflow is, as a banner under the picker.
+ *
+ * A dropdown row cannot hold a badge, a description and a link, so all three moved
+ * here rather than being lost with the cards. This renders for EVERY workflow that
+ * carries a description — stock SpecKit and user-defined `speckit.customWorkflows`
+ * entries have one too, and showing it only for Companion would leave two custom
+ * workflows as two indistinguishable rows. The rocket is Companion's own mark,
+ * matching the other places that offer it.
+ */
+function renderWorkflowPitch(workflows: WorkflowDefinition[]): void {
+    const { workflowPitch } = getElements();
+    const selected = getSelectedWorkflow();
+    const wf = workflows.find(w => w.name === selected);
+    workflowPitch.replaceChildren();
+
+    const isCompanion = wf?.name === 'companion';
+    // Nothing to say only when there is genuinely nothing: no description, nothing
+    // to install, and no trial to offer.
+    if (!wf || (!wf.description && wf.installed !== false && !isCompanion)) {
+        workflowPitch.hidden = true;
+        return;
+    }
+
+    if (isCompanion) {
+        const rocket = document.createElement('span');
+        rocket.className = 'codicon codicon-rocket workflow-pitch__glyph';
+        rocket.setAttribute('aria-hidden', 'true');
+        workflowPitch.appendChild(rocket);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'workflow-pitch__body';
+
+    if (wf.description) {
+        const description = document.createElement('span');
+        description.className = 'workflow-pitch__text';
+        description.textContent = wf.description;
+        body.appendChild(description);
+    }
+    if (wf.installed === false) {
+        const badge = document.createElement('span');
+        badge.className = 'workflow-card-badge';
+        badge.textContent = 'Install to enable';
+        body.appendChild(badge);
+    }
+    // Low-commitment trial: applies Companion to this one submission only —
+    // nothing here ever writes the configured default.
+    if (isCompanion && preselectedWorkflow !== 'companion') {
+        const trial = document.createElement('button');
+        trial.type = 'button';
+        trial.className = 'workflow-card-trial';
+        trial.textContent = 'Try Companion for this spec';
+        trial.addEventListener('click', event => {
+            event.preventDefault();
+            trialActive = true;
+            updateCommandButtons('companion');
+        });
+        body.appendChild(trial);
+    }
+
+    workflowPitch.appendChild(body);
+    workflowPitch.hidden = false;
 }
 
 function sendCommand(command: string): void {

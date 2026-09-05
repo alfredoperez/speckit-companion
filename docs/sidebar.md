@@ -35,7 +35,7 @@ Specs are grouped into three collapsible sections based on their status (stored 
 
 A group with zero specs is omitted entirely.
 
-**Individual spec rows start collapsed**, including active ones. A workspace with hundreds of completed specs therefore opens to a short, readable list rather than a flood of document rows. Use **Expand All** (from More Actions, or the Command Palette) to open every row for the session.
+**Individual spec rows start collapsed**, including active ones. A workspace with hundreds of completed specs therefore opens to a short, readable list rather than a flood of document rows. Use **Expand All** in the title bar to open every row for the session.
 
 **Each row shows a readable name, not the raw directory slug.** A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names". The name is resolved by preference: the recorded name (`specName` in `.spec-context.json`), then the spec document's own heading where one exists, then a humanized version of the slug (leading number dropped, dashes and underscores replaced with spaces, words capitalized). This is presentation only — the slug stays the stable identifier, so filtering, sorting, duplicate-name disambiguation, and opening a spec all key off the slug and are unchanged. The viewer header resolves the name the same way, so the sidebar and the header always agree on what a spec is called.
 
@@ -49,21 +49,22 @@ Clicking a **document** row still opens that document, exactly as before.
 
 ## Title toolbar
 
-The Specs title bar shows **at most five actions**, always in this order:
+The Specs title bar shows **at most six buttons**, always in this order:
 
-1. **Filter…** (`$(filter)`)
-2. **Sort…** (`$(sort-precedence)`)
-3. **More Actions…** (`$(ellipsis)`)
-4. **Open Pipeline Builder** (`$(circuit-board)`) — only when the spec-kit extension is installed, since it holds the pipeline the panel draws
-5. **New Spec** (`$(plus)`) — the trailing, rightmost primary action
+1. **Refresh Specs** (`$(refresh)`) — the same first action Steering and Living Specs have
+2. **Filter…** (`$(filter)`)
+3. **Sort…** (`$(sort-precedence)`)
+4. **Collapse All** (`$(collapse-all)`) or **Expand All** (`$(expand-all)`) — one button in two states, showing whichever the tree's current state calls for
+5. **Open Pipeline Builder** (`$(circuit-board)`) — only when the spec-kit extension is installed, since it holds the pipeline the panel draws
+6. **New Spec** (`$(plus)`) — the trailing, rightmost primary action
 
-The cap is enforced by a test, so a fifth entry is a decision someone made rather than a line nobody noticed.
+The cap is enforced by a test, so a seventh entry is a decision someone made rather than a line nobody noticed.
 
-Everything that used to crowd the toolbar now lives behind **More Actions**, which is a **native VS Code menu** — it drops open directly under the `…` button, and VS Code owns its rendering, hover, keyboard navigation, and theming. Its entries are gated by the same conditions the old title buttons used:
+**There is no `…` menu on this view.** It existed to hold a single everyday action — expanding or collapsing the tree — which is now a one-click icon like it is in every other VS Code tree. The view container at the top of the sidebar already has its own `…` a few pixels away, so two of them sat side by side with nothing to tell them apart.
+
+The two rare maintenance actions the menu held are still there, in the Command Palette:
 
 ```text
-Collapse All / Expand All        whichever the tree's current state calls for
-─────────────────────────────
 Install Companion Extension      when spec-kit is available and the companion isn't installed
 Upgrade…                         when spec-kit is detected or its CLI is installed
 ```
@@ -92,7 +93,7 @@ Ties fall back to numeric prefix then name so output is deterministic. The chose
 
 ## Maintenance actions
 
-The spec-kit upgrade commands are consolidated behind a single **Upgrade…** entry in the More Actions menu. Choosing it opens a picker with three options. **Upgrade All** and **Upgrade Project** resolve the `--ai` agent from your configured `speckit.aiProvider` (see [`docs/how-it-works.md`](how-it-works.md)) and re-scaffold with `specify init --here --force`; **Upgrade CLI** only upgrades the globally installed spec-kit CLI.
+The spec-kit upgrade commands are consolidated behind a single **Upgrade…** entry in the Command Palette. Choosing it opens a picker with three options. **Upgrade All** and **Upgrade Project** resolve the `--ai` agent from your configured `speckit.aiProvider` (see [`docs/how-it-works.md`](how-it-works.md)) and re-scaffold with `specify init --here --force`; **Upgrade CLI** only upgrades the globally installed spec-kit CLI.
 
 - **Upgrade All** (`speckit.upgradeAll`) — upgrades the spec-kit CLI, then re-scaffolds the project. The "just do it" choice.
 - **Upgrade Project** (`speckit.upgradeProject`) — re-runs `specify init` in place to refresh this workspace's scaffolding only.

@@ -70,7 +70,8 @@ export const ConfigKeys = {
         lastUpdateCheck: 'speckit.lastUpdateCheck',
         initSuggestionDismissed: 'speckit.initSuggestionDismissed',
         installBannerDismissed: 'speckit.installBannerDismissed',
-        installNudgeDismissed: 'speckit.installNudgeDismissed',
+        /** The user chose stock SpecKit at the Create-Spec modal. Asked once, then honoured. */
+        companionDeclinedAtCreate: 'speckit.companionDeclinedAtCreate',
         installedEventSent: 'speckit.installedEventSent',
     },
     workspaceState: {

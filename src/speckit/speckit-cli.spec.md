@@ -85,14 +85,14 @@ The prompt to install the companion CLI extension SHALL be shown when the prompt
 - **WHEN** the gate is evaluated with the extension absent
 - **THEN** nothing is shown — no banner and no fallback warning
 
-### Activation carries a once-per-session install prompt
+### Activation shows no install prompt
 
-When the extension activates in a workspace that already uses spec-kit and the companion CLI extension is absent, it SHALL show a single non-blocking install prompt tagged to the `activation` surface. Its gate is the conjunction: spec-kit is detected in the workspace, the companion extension is not installed, the shared install-nudge dismissal is unset, the install-prompt preference is on, and it has not already shown this session. The prompt is deliberately provider-agnostic: installing the extension is a terminal command that works the same regardless of which assistant dispatches spec-kit commands, so an editor-chat user gets the discovery just as a terminal-CLI user does. It reuses the shared install command and the same `installNudgeDismissed` flag as the other nudge surfaces — no parallel dismissal. It MUST NEVER block or fail activation: any failure while deciding or presenting it is swallowed so activation always proceeds, and the session slot and telemetry `shown` are recorded under the same gate the prompt renders on.
+Activation SHALL NOT show an install prompt for the companion extension. The activity-bar badge and the pinned CTA row in the Specs tree already carry that message, ambiently and permanently, so a toast on top delivered the same thing a third time before the user had done anything. Discovery stays provider-agnostic through those two surfaces, which no preference or dismissal turns off — deliberately, since neither interrupts.
 
 #### Scenario: activation runs in a spec-kit project without the extension
-- **WHEN** activation runs, spec-kit is detected, the extension is absent, and the prompt has not shown this session
-- **THEN** one install prompt is shown, tagged `activation`, offering Install or "Don't show again"
-- **AND** nothing more is shown for the rest of the session
+- **WHEN** activation runs, spec-kit is detected and the extension is absent
+- **THEN** no prompt, toast, or modal is shown
+- **AND** the badge and the pinned CTA row are the only surfaces that mention it
 
 #### Scenario: the preference is off, the nudge was dismissed, or the extension is present
 - **WHEN** any leg of the gate fails

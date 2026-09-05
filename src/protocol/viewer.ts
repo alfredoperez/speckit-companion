@@ -163,6 +163,13 @@ export interface SpecViewerState {
     /** Currently displayed document type */
     currentDocument: DocumentType;
 
+    /**
+     * What the entry point asked to land on. Clicking a document row in the tree
+     * is a request for that document; opening the spec itself is not, and leaves
+     * this unset so the viewer's own rule decides.
+     */
+    landing?: 'overview' | 'document';
+
     /** List of all available documents in this spec */
     availableDocuments: SpecDocument[];
 
@@ -286,6 +293,12 @@ export interface NavState {
     docTypeLabel?: string | null;
     /** Whether the Activity toggle is shown (from `speckit.viewer.activityPanel` setting). */
     activityPanelEnabled?: boolean;
+    /**
+     * The landing the entry point asked for, when it asked. Set to `'document'`
+     * by a tree click on a specific document; absent when the spec was opened as
+     * a whole, which is the case the viewer's own landing rule is for.
+     */
+    landing?: 'overview' | 'document';
     /** Whether to render the install banner inside the Activity panel (viewer only). */
     showInstallPrompt?: boolean;
     /** Run-recovery affordance for a quiet in-flight run (issue #418). */
@@ -449,6 +462,16 @@ export type ViewerToExtensionMessage =
     // Living-spec drift → fold the changed code back into the spec
     | {
           type: 'livingUpdate';
+      }
+    // Re-check this capability against the code — the header's action when nothing has drifted
+    | {
+          type: 'livingCheckDrift';
+      }
+    // The reader chose the Overview inside the viewer, so the entry point's
+    // document request is spent. Sent because a content refresh reassigns the
+    // panel HTML and the webview's own mode does not survive that.
+    | {
+          type: 'overviewChosen';
       }
     // File reference click
     | {
