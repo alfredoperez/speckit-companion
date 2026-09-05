@@ -8,6 +8,18 @@ import {
     RETIRED_SETTINGS,
 } from './settingsMigration';
 
+type Inspection = { globalValue?: unknown; workspaceValue?: unknown; workspaceFolderValue?: unknown };
+
+function setupConfig(inspections: Record<string, Inspection | undefined>) {
+    const update = jest.fn().mockResolvedValue(undefined);
+    jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+        inspect: jest.fn((key: string) => inspections[key]),
+        update,
+        get: jest.fn(),
+    } as unknown as vscode.WorkspaceConfiguration);
+    return { update };
+}
+
 describe('coerceLegacyBoolean', () => {
     it('maps legacy "beta" and "on" strings to true', () => {
         expect(coerceLegacyBoolean('beta', false)).toBe(true);
@@ -32,23 +44,6 @@ describe('coerceLegacyBoolean', () => {
 });
 
 describe('migrateBetaTriStateSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('rewrites a legacy "beta" string to true at the global scope', async () => {
@@ -70,7 +65,7 @@ describe('migrateBetaTriStateSettings', () => {
     it('rewrites legacy "on" → true and "off" → false at their set scopes', async () => {
         const { update } = setupConfig({
             'viewer.activityPanel': { workspaceValue: 'on' },
-            'companion.installPrompt': { workspaceFolderValue: 'off' },
+            'companion.installPrompt': { globalValue: 'off' },
         });
 
         await migrateBetaTriStateSettings();
@@ -83,7 +78,35 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.installPrompt',
             false,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.Global
+        );
+    });
+
+    it('never writes the WorkspaceFolder tier even when a folder value is reported', async () => {
+        const { update } = setupConfig({
+            'viewer.activityPanel': { globalValue: 'beta', workspaceFolderValue: 'on' },
+            'companion.installPrompt': {},
+        });
+
+        await migrateBetaTriStateSettings();
+
+        expect(update).toHaveBeenCalledTimes(1);
+        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.Global);
+    });
+
+    it('keeps migrating the next key after one write is rejected', async () => {
+        const { update } = setupConfig({
+            'viewer.activityPanel': { globalValue: 'beta' },
+            'companion.installPrompt': { globalValue: 'off' },
+        });
+        update.mockRejectedValueOnce(new Error('settings.json parse error'));
+        const logger = { appendLine: jest.fn() };
+
+        await expect(migrateBetaTriStateSettings(logger)).resolves.toBeUndefined();
+
+        expect(update).toHaveBeenCalledWith('companion.installPrompt', false, vscode.ConfigurationTarget.Global);
+        expect(logger.appendLine).toHaveBeenCalledWith(
+            expect.stringContaining('speckit.viewer.activityPanel not written at User scope'),
         );
     });
 
@@ -140,23 +163,6 @@ describe('migrateBetaTriStateSettings', () => {
 });
 
 describe('removeRetiredSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection | undefined>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('lists the retired toggles, the former Companion-workflow gate keys, and the merged-away phase-completion toggle', () => {
@@ -196,7 +202,7 @@ describe('removeRetiredSettings', () => {
         const { update } = setupConfig({
             'companion.speckitCompanionWorkflow': { globalValue: true },
             'companion.workflowBeta': { workspaceValue: 'on' },
-            'companion.resumeBeta': { workspaceFolderValue: 'beta' },
+            'companion.resumeBeta': { workspaceValue: 'beta' },
         });
 
         await expect(removeRetiredSettings()).resolves.toBeUndefined();
@@ -214,7 +220,7 @@ describe('removeRetiredSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.resumeBeta',
             undefined,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.Workspace
         );
     });
 
@@ -237,23 +243,6 @@ describe('removeRetiredSettings', () => {
 });
 
 describe('mergeNotificationSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection | undefined>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('turns stepComplete off at the scope where phaseCompletion was false', async () => {

@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { setupFileWatchers } from '../../../src/core/fileWatchers';
+import { setupFileWatchers } from '../../../src/features/fileWatchers';
 import { getFileWatcherPatterns } from '../../../src/core/specDirectoryResolver';
 
 const flushPromises = () => new Promise(resolve => setImmediate(resolve));

@@ -287,7 +287,7 @@ sequenceDiagram
 
 ### 3. File Watcher System
 
-**File:** `src/core/fileWatchers.ts`
+**File:** `src/features/fileWatchers.ts`
 
 Watches multiple patterns with debouncing (1 second):
 

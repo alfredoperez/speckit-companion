@@ -1,30 +1,30 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { SpecExplorerProvider } from '../features/specs/specExplorerProvider';
-import { SteeringExplorerProvider } from '../features/steering/steeringExplorerProvider';
-import { SpecViewerProvider } from '../features/spec-viewer/specViewerProvider';
+import { SpecExplorerProvider } from './specs/specExplorerProvider';
+import { SteeringExplorerProvider } from './steering/steeringExplorerProvider';
+import { SpecViewerProvider } from './spec-viewer/specViewerProvider';
 import {
     parseTasksFile,
     detectNewlyCompletedPhases,
     extractSpecNameFromPath,
     initializeCache,
 } from '../speckit/taskProgressService';
-import { NotificationUtils } from './utils/notificationUtils';
-import { getFileWatcherPatterns } from './specDirectoryResolver';
-import { readSpecContextSync } from '../features/specs/specContextReader';
-import { completeStep } from '../features/specs/stepLifecycle';
-import { shouldCloseImplement } from '../features/specs/implementCloseGuard';
-import { detectExternalTransition, transitionCache } from '../features/specs/transitionLogger';
-import { FEATURE_CONTEXT_FILE } from '../features/workflows/types';
-import type { TransitionEntry } from '../features/workflows/types';
+import { NotificationUtils } from '../core/utils/notificationUtils';
+import { getFileWatcherPatterns } from '../core/specDirectoryResolver';
+import { readSpecContextSync } from './specs/specContextReader';
+import { completeStep } from './specs/stepLifecycle';
+import { shouldCloseImplement } from './specs/implementCloseGuard';
+import { detectExternalTransition, transitionCache } from './specs/transitionLogger';
+import { FEATURE_CONTEXT_FILE } from './workflows/types';
+import type { TransitionEntry } from './workflows/types';
 import {
     getSpecTelemetryContext,
     reportSpecCreated,
     sendTelemetryEvent,
     workflowTelemetryId,
     SPEC_COMPLETED_EVENT,
-} from './telemetry';
+} from '../core/telemetry';
 import { getConfiguredProviderType } from '../ai-providers/aiProvider';
 
 /**

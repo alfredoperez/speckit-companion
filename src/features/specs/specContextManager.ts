@@ -19,6 +19,7 @@ import {
     TransitionEntry,
 } from '../workflows/types';
 import { SpecStatuses } from '../../core/constants';
+import { deriveSpecName } from '../../core/utils/specDisplayName';
 import {
     HistoryEntry,
     HistoryEntryFrom,
@@ -162,19 +163,6 @@ export async function updateSpecContext(
             history: [],
         }),
     );
-}
-
-/**
- * Derive a human-readable spec name from a directory slug.
- * E.g., "046-spec-viewer-header-redesign" → "Spec Viewer Header Redesign"
- */
-export function deriveSpecName(specDir: string): string {
-    const slug = path.basename(specDir);
-    const withoutPrefix = slug.replace(/^\d+[-_]/, '');
-    return withoutPrefix
-        .split(/[-_]/)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
 }
 
 /**
