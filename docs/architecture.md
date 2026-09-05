@@ -53,11 +53,13 @@ Shared helpers live alongside the providers: `promptBuilder.ts` assembles the ca
 
 ### `src/core/`
 
-Cross-cutting infrastructure. Watches the filesystem (`src/core/fileWatchers.ts`, 1-second debounce on `.claude/` changes), resolves the user's spec directory list (`src/core/specDirectoryResolver.ts`), and exposes the canonical constants table (`src/core/constants.ts`) and the `.spec-context.json` contract (`src/core/types/specContext.ts`). Sub-directories `core/errors/`, `core/managers/`, `core/providers/` hold base classes (`src/core/providers/BaseTreeDataProvider.ts` is the parent for all sidebar providers); `core/utils/` holds the small-helper grab-bag (config reading, file opening, sanitization, terminal helpers).
+Cross-cutting infrastructure that features build on; nothing in `core/` should import from `features/` (the one remaining exception is `src/core/telemetry.ts`, which reads and backfills a spec's telemetry id through the spec-context reader/writer). Resolves the user's spec directory list (`src/core/specDirectoryResolver.ts`), migrates retired settings at activation (`src/core/settingsMigration.ts`, per-folder for the WorkspaceFolder tier), and exposes the canonical constants table (`src/core/constants.ts`) and the `.spec-context.json` contract (`src/core/types/specContext.ts`). Sub-directories `core/errors/`, `core/managers/`, `core/providers/` hold base classes (`src/core/providers/BaseTreeDataProvider.ts` is the parent for all sidebar providers); `core/utils/` holds the small-helper grab-bag (config reading, file opening, sanitization, terminal helpers, and the spec display-name derivation in `src/core/utils/specDisplayName.ts`).
 
 ### `src/features/`
 
 Each subdirectory is one user-facing capability, structured around a *manager* (owns file I/O and business logic) and a *provider* (owns the VS Code API surface — tree view, webview, custom editor). Commands are registered per feature.
+
+`src/features/fileWatchers.ts` sits at the top of this layer because it orchestrates across it: it watches the filesystem (1-second debounce on `.claude/` changes, `tasks.md` and `.spec-context.json` watchers over every configured spec directory) and fans changes out to the specs, steering and spec-viewer providers, the step lifecycle and the transition logger. `extension.ts` wires it after those providers exist.
 
 The two most active features:
 

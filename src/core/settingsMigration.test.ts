@@ -8,6 +8,49 @@ import {
     RETIRED_SETTINGS,
 } from './settingsMigration';
 
+type Inspection = {
+    globalValue?: unknown;
+    workspaceValue?: unknown;
+    workspaceFolderValue?: unknown;
+};
+
+const FOLDER = { uri: vscode.Uri.file('/ws/one'), name: 'one', index: 0 };
+
+/**
+ * One config for the resource-less (Global/Workspace) reads and one per folder
+ * resource; every scope shares a single `update` spy that also records which
+ * folder the write went through. A folder value in `inspections` is visible
+ * only through a folder's resource-scoped config.
+ */
+function setupConfig(
+    inspections: Record<string, Inspection | undefined>,
+    folders: Array<typeof FOLDER> = [FOLDER],
+) {
+    const update = jest.fn().mockResolvedValue(undefined);
+    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = folders;
+    const configFor = (resource?: vscode.Uri) => ({
+        inspect: jest.fn((key: string) => {
+            const i = inspections[key];
+            if (!i) return undefined;
+            return resource
+                ? { workspaceFolderValue: i.workspaceFolderValue }
+                : { globalValue: i.globalValue, workspaceValue: i.workspaceValue };
+        }),
+        update: (key: string, value: unknown, target: vscode.ConfigurationTarget) =>
+            update(key, value, target, ...(resource ? [resource.fsPath] : [])),
+        get: jest.fn(),
+    });
+    jest.spyOn(vscode.workspace, 'getConfiguration').mockImplementation(
+        (_section?: string, resource?: unknown) =>
+            configFor(resource as vscode.Uri | undefined) as unknown as vscode.WorkspaceConfiguration,
+    );
+    return { update };
+}
+
+afterEach(() => {
+    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = undefined;
+});
+
 describe('coerceLegacyBoolean', () => {
     it('maps legacy "beta" and "on" strings to true', () => {
         expect(coerceLegacyBoolean('beta', false)).toBe(true);
@@ -32,23 +75,6 @@ describe('coerceLegacyBoolean', () => {
 });
 
 describe('migrateBetaTriStateSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('rewrites a legacy "beta" string to true at the global scope', async () => {
@@ -83,7 +109,8 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.installPrompt',
             false,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
+            '/ws/one'
         );
     });
 
@@ -131,6 +158,28 @@ describe('migrateBetaTriStateSettings', () => {
         expect(update).not.toHaveBeenCalled();
     });
 
+    it('writes a folder value through each folder\'s own config in a multi-root workspace', async () => {
+        const two = { uri: vscode.Uri.file('/ws/two'), name: 'two', index: 1 };
+        const { update } = setupConfig(
+            { 'viewer.activityPanel': { workspaceFolderValue: 'beta' } },
+            [FOLDER, two],
+        );
+
+        await migrateBetaTriStateSettings();
+
+        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.WorkspaceFolder, '/ws/one');
+        expect(update).toHaveBeenCalledWith('viewer.activityPanel', true, vscode.ConfigurationTarget.WorkspaceFolder, '/ws/two');
+        expect(update).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips the folder tier when the window has no workspace folders', async () => {
+        const { update } = setupConfig({ 'viewer.activityPanel': { workspaceFolderValue: 'beta' } }, []);
+
+        await migrateBetaTriStateSettings();
+
+        expect(update).not.toHaveBeenCalled();
+    });
+
     it('covers the remaining tri-state settings (turboWorkflowPicker retired)', () => {
         expect(BETA_BOOLEAN_SETTINGS.map(s => s.key)).toEqual([
             'viewer.activityPanel',
@@ -140,23 +189,6 @@ describe('migrateBetaTriStateSettings', () => {
 });
 
 describe('removeRetiredSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection | undefined>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('lists the retired toggles, the former Companion-workflow gate keys, and the merged-away phase-completion toggle', () => {
@@ -214,7 +246,8 @@ describe('removeRetiredSettings', () => {
         expect(update).toHaveBeenCalledWith(
             'companion.resumeBeta',
             undefined,
-            vscode.ConfigurationTarget.WorkspaceFolder
+            vscode.ConfigurationTarget.WorkspaceFolder,
+            '/ws/one'
         );
     });
 
@@ -237,23 +270,6 @@ describe('removeRetiredSettings', () => {
 });
 
 describe('mergeNotificationSettings', () => {
-    type Inspection = {
-        globalValue?: unknown;
-        workspaceValue?: unknown;
-        workspaceFolderValue?: unknown;
-    };
-
-    function setupConfig(inspections: Record<string, Inspection | undefined>) {
-        const update = jest.fn().mockResolvedValue(undefined);
-        const inspect = jest.fn((key: string) => inspections[key]);
-        jest.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
-            inspect,
-            update,
-            get: jest.fn(),
-        } as unknown as vscode.WorkspaceConfiguration);
-        return { update, inspect };
-    }
-
     afterEach(() => jest.restoreAllMocks());
 
     it('turns stepComplete off at the scope where phaseCompletion was false', async () => {

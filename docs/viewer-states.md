@@ -190,7 +190,7 @@
 > viewer re-derives its state on every `.spec-context.json` write,
 > driven by a watcher over each configured spec directory
 > (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`,
-> wired in `src/core/fileWatchers.ts`). The legacy `.claude` watcher is
+> wired in `src/features/fileWatchers.ts`). The legacy `.claude` watcher is
 > kept for back-compat. This is why completing a step now stops the
 > spinner and surfaces the next action within a debounce window without
 > switching tabs, and why a newly-created spec (including under

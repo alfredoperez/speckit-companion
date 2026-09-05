@@ -1,4 +1,4 @@
-import { deriveSpecName } from '../../features/specs/specContextManager';
+import * as path from 'path';
 
 const ACRONYMS: Record<string, string> = {
     cli: 'CLI',
@@ -61,6 +61,19 @@ export function toDisplayCase(name: string): string {
         out.push(caseWord(words[i]));
     }
     return out.join(' ');
+}
+
+/**
+ * Derive a human-readable spec name from a directory slug.
+ * E.g., "046-spec-viewer-header-redesign" → "Spec Viewer Header Redesign"
+ */
+export function deriveSpecName(specDir: string): string {
+    const slug = path.basename(specDir);
+    const withoutPrefix = slug.replace(/^\d+[-_]/, '');
+    return withoutPrefix
+        .split(/[-_]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 }
 
 /**

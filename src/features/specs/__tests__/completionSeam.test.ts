@@ -35,7 +35,7 @@ jest.mock('../specContextReader', () => ({
 jest.mock('../stepLifecycle', () => ({ completeStep: jest.fn() }));
 jest.mock('../implementCloseGuard', () => ({ shouldCloseImplement: jest.fn().mockReturnValue(false) }));
 
-import { handleSpecContextChange } from '../../../core/fileWatchers';
+import { handleSpecContextChange } from '../../fileWatchers';
 import { transitionCache } from '../transitionLogger';
 import { sendTelemetryEvent, reportSpecCreated } from '../../../core/telemetry';
 

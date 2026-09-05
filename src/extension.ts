@@ -24,7 +24,8 @@ import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCom
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
-import { Views, setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './core';
+import { Views } from './core';
+import { setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './features/fileWatchers';
 import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';

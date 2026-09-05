@@ -87,8 +87,12 @@ describe('removeRetiredSettings clears the former Companion-workflow gate (migra
             'companion.resumeBeta': { folder: 'beta' },
         });
         getConfigSpy.mockReturnValue(config);
+        (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = [
+            { uri: vscode.Uri.file('/ws'), name: 'ws', index: 0 },
+        ];
 
         await removeRetiredSettings();
+        (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = undefined;
 
         expect(store['companion.workflowBeta'].workspace).toBeUndefined();
         expect(store['companion.resumeBeta'].folder).toBeUndefined();
