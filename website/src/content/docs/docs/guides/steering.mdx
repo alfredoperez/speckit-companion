@@ -6,6 +6,8 @@ sidebar:
   order: 4
 ---
 
+By the end of this page you'll know which files the Steering view lists for your provider, which of them the extension will write for you, and why none of them is read when a step is dispatched.
+
 A spec says what to build this time. A **steering document** says how this project builds anything: its conventions, its architecture, its testing habits. It's a standing instruction rather than a per-run one, and it applies to work that hasn't been specified yet.
 
 Your AI provider already has a place for those. Claude Code reads `CLAUDE.md`, Codex and OpenCode read `AGENTS.md`, and the others each have their own filename. The [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) lists every path.
@@ -17,6 +19,9 @@ The Steering view doesn't invent a new format and doesn't add a layer. It gather
 ```text
 Steering
   Companion
+    Configuration
+    Commands
+    Templates
   <your configured provider>
     Project
       <the provider's project rule file, or the action that creates it>
@@ -68,20 +73,18 @@ What the view does own is a small set of authoring actions, and every one of the
 
 When a rule file doesn't exist yet, the create action sits inside that scope's group and names your provider's real filename, so you get "Create project-level GEMINI.md" rather than a hard-coded `CLAUDE.md`.
 
-The destructive actions stay narrow on purpose. Refine and Delete are offered only on the steering documents the extension generated. Provider-owned and Spec Kit-owned files can be opened and revealed from the tree, never deleted from it. The view is deliberately not a file manager for other people's configuration.
+The destructive actions stay narrow on purpose. Refine and Delete are offered on the documents under Steering Docs and on the files under References, which share the same row type. Provider-owned and Spec Kit-owned files can be opened and revealed from the tree, never deleted from it. The view is deliberately not a file manager for other people's configuration.
 
 ## The Companion node
 
-When the Companion Spec Kit extension is installed, a Companion node sits first in the tree and answers two questions: where its configuration lives, and which commands it provides.
+When the Companion Spec Kit extension is installed, a Companion node sits first in the tree and answers three questions: where its configuration lives, which commands it provides, and which templates it ships.
 
-Configuration opens `.specify/companion.yml` directly, which is the file [Pick a pipeline](/docs/guides/pick-a-pipeline) describes attaching your own work through. Commands lists the whole `/speckit.companion.*` set, read live from the installed extension's manifest, so a command added in a later release shows up without a new release of the VS Code half.
+Configuration opens `.specify/companion.yml` directly, which is the file [Custom commands and hooks](/docs/guides/customize) describes attaching your own work through. Commands lists the whole `/speckit.companion.*` set, read live from the installed extension's manifest, so a command added in a later release shows up without a new release of the VS Code half. Templates lists the markdown templates in the installed extension's templates folder, and the node is omitted when there are none.
 
 ## Steering support isn't universal
 
-Not every provider has a place to point at. With IDE Chat selected there's no steering, no agents, no hooks, and no MCP, because there's no provider-owned configuration to browse. MCP is the Model Context Protocol, the standard some assistants use to connect to external tools; a provider without it has no MCP section here.
-
-Hooks are the other uneven one: they exist on some providers and not others.
+Not every provider has a place to point at. With IDE Chat selected there's no rule file, no steering directory, no agents and no skills, because there's no provider-owned configuration to browse. Other providers fill in whichever of those they have, so the Agents and Skills groups appear only where the provider keeps such files.
 
 ## Next
 
-Which sections you get depends entirely on which provider you picked, so the [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) is the page to read next. It lists every provider's rule file, steering directory, and which of agents, skills, hooks and MCP it supports.
+Which sections you get depends entirely on which provider you picked, so the [provider matrix](https://github.com/alfredoperez/speckit-companion/blob/main/docs/providers.md) is the page to read next. It lists every provider's rule file, steering directory, agents folder, and where its hooks and MCP servers are configured. MCP is the Model Context Protocol, the standard some assistants use to connect to external tools.
