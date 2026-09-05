@@ -496,3 +496,165 @@ class VerificationCheck(unittest.TestCase):
 
     def test_the_check_is_registered_so_the_report_actually_runs_it(self):
         self.assertIn("verification", doctor.CHECKS)
+
+
+class ArtifactManifestCheck(unittest.TestCase):
+    """A step that closed without the file it declared it would write says so.
+
+    Every author node already declared its output in `writes:`, and the build
+    collects those into `commands/.manifest.json`. Nothing compared that against
+    the disk, so a step that quietly stopped writing its document closed exactly
+    like one that wrote it. Reported, never blocking — and every way of not
+    knowing has to read as "no record", or a report nobody trusts is a report
+    nobody reads.
+    """
+
+    SPECIFY = {"commands": {"specify": [
+        {"artifact": "spec.md", "node": "draft-spec", "conditional": False},
+        {"artifact": "checklists/requirements.md", "node": "quality-checklist",
+         "conditional": False},
+    ]}}
+
+    @contextlib.contextmanager
+    def _run(self, manifest, files=("spec.md",), ctx=None):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            spec.joinpath(".spec-context.json").write_text(
+                json.dumps(ctx if ctx is not None else self._closed()), encoding="utf-8")
+            for name in files:
+                target = spec / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("x", encoding="utf-8")
+            path = Path(tmp) / ".manifest.json"
+            if manifest is not None:
+                path.write_text(manifest if isinstance(manifest, str) else json.dumps(manifest),
+                                encoding="utf-8")
+            yield spec, path
+
+    def _closed(self, step="specify"):
+        return {"currentStep": step, "status": "specified", "history": [
+            {"step": step, "substep": None, "kind": "start",
+             "by": "extension", "at": "2026-09-05T11:00:00Z"},
+            {"step": step, "substep": None, "kind": "complete",
+             "by": "extension", "at": "2026-09-05T11:30:00Z"}]}
+
+    def test_a_step_that_closed_without_its_declared_file_is_reported(self):
+        with self._run(self.SPECIFY) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].severity, "warning", "reported, never blocking")
+        self.assertIn("checklists/requirements.md", findings[0].title)
+        self.assertEqual(findings[0].evidence["node"], "quality-checklist",
+                         "an artifact nobody can attribute is a report nobody can act on")
+
+    def test_a_step_that_produced_everything_it_declared_is_clean(self):
+        with self._run(self.SPECIFY,
+                       files=("spec.md", "checklists/requirements.md")) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(findings, [])
+
+    def test_a_step_that_never_closed_is_not_judged(self):
+        ctx = {"currentStep": "specify", "history": [
+            {"step": "specify", "substep": None, "kind": "start",
+             "by": "extension", "at": "2026-09-05T11:00:00Z"}]}
+        with self._run(self.SPECIFY, ctx=ctx) as (spec, path):
+            status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
+        self.assertEqual(status.state, "skipped", "an open step has not promised anything yet")
+        self.assertEqual(findings, [])
+
+    def test_a_legacy_from_to_entry_still_counts_as_the_step_closing(self):
+        ctx = {"currentStep": "specify", "history": [
+            {"step": "specify", "substep": None,
+             "from": {"step": "specify", "substep": None},
+             "to": {"step": "specify", "substep": None},
+             "by": "ai", "at": "2026-09-05T11:30:00Z"}]}
+        with self._run(self.SPECIFY, ctx=ctx) as (spec, path):
+            status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
+        self.assertEqual(status.state, "ran", "the already-on-disk runs are the point")
+        self.assertEqual(len(findings), 1)
+
+    # ---- every way of not knowing reads as "no record" ---------------------- #
+
+    def test_a_missing_manifest_is_no_record(self):
+        with self._run(None) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "skipped")
+        self.assertIn("manifest", status.reason)
+        self.assertEqual(findings, [])
+
+    def test_an_unparseable_manifest_is_no_record_not_a_crash(self):
+        with self._run("{ not json") as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+    def test_a_manifest_of_the_wrong_shape_is_no_record(self):
+        for bad in ([], {"commands": []}, {"commands": "specify"}, {}, "null"):
+            with self._run(bad) as (spec, path):
+                status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+            self.assertEqual(status.state, "skipped", f"{bad!r} is judged as no record")
+            self.assertEqual(findings, [])
+
+    def test_a_step_declaring_no_artifact_is_no_record(self):
+        with self._run({"commands": {"specify": []}}) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+    def test_a_step_the_manifest_does_not_mention_is_no_record(self):
+        ctx = self._closed(step="plan")
+        with self._run(self.SPECIFY, ctx=ctx) as (spec, path):
+            status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+    def test_a_run_that_produced_none_of_it_predates_this_pipeline(self):
+        # A stock spec-kit run, or one older than the node that writes the file.
+        # Reporting every artifact of a pipeline it never executed is the manifest
+        # crying wolf on a spec that never made the promise.
+        with self._run(self.SPECIFY, files=()) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+    def test_a_may_write_artifact_the_budget_folded_away_is_not_a_finding(self):
+        manifest = {"commands": {"specify": [
+            {"artifact": "spec.md", "node": "draft-spec", "conditional": False},
+            {"artifact": "research.md", "node": "side-files", "conditional": True},
+        ]}}
+        with self._run(manifest) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(findings, [], "a size budget doing its job is not a defect")
+
+    def test_a_spec_with_no_record_at_all_takes_the_shared_skip(self):
+        for ctx in ({}, {"currentStep": "specify", "history": []}):
+            with self._run(self.SPECIFY, ctx=ctx) as (spec, path):
+                status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
+            self.assertEqual(status.state, "skipped")
+            self.assertEqual(findings, [])
+
+    def test_a_directory_artifact_counts_as_produced_when_the_directory_exists(self):
+        manifest = {"commands": {"plan": [
+            {"artifact": "plan.md", "node": "plan-doc", "conditional": False},
+            {"artifact": "contracts/", "node": "side-files", "conditional": False},
+        ]}}
+        ctx = self._closed(step="plan")
+        with self._run(manifest, files=("plan.md", "contracts/api.md"), ctx=ctx) as (spec, path):
+            status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(findings, [], "a declared directory is produced when it is there")
+
+    def test_the_shipped_manifest_is_where_the_doctor_looks_for_it(self):
+        # The build writes it beside the command bodies; both the source tree and
+        # an installed extension put scripts/ next to commands/. A moved file is a
+        # check that silently skips forever.
+        self.assertTrue(dc.MANIFEST_PATH.is_file(), f"{dc.MANIFEST_PATH} is not there")
+        self.assertIsNotNone(dc._declared_artifacts())
+
+    def test_the_check_is_registered_so_the_report_actually_runs_it(self):
+        self.assertIn("artifact", doctor.CHECKS)

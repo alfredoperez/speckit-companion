@@ -70,7 +70,7 @@ provides:
       description: "Companion auto — run the whole pipeline hands-off (specify → plan → tasks → implement → mark-complete), no pauses"
     - name: speckit.companion.doctor
       file: commands/speckit.companion.doctor.md
-      description: "Report on a spec's run health — unfinished steps, unjournaled tasks, step bleed, drift you can judge, a step that closed having verified nothing, and why completion did not land (read-only, retroactive, never halts)"
+      description: "Report on a spec's run health — unfinished steps, unjournaled tasks, step bleed, drift you can judge, a step that closed having verified nothing, a step that closed without the file it promised, and why completion did not land (read-only, retroactive, never halts)"
     - name: speckit.companion.living-adopt
       file: commands/speckit.companion.living-adopt.md
       description: "Brownfield adoption wizard — draft living specs for the code areas you name, central or colocated, and register them (opt-in, surface-first, [DRAFT])"
