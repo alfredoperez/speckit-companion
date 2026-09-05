@@ -174,7 +174,7 @@ export const HooksOnAPhase: Story = {
 };
 
 export const HooksYoursAndAnExtensions: Story = {
-    name: 'Hooks · yours beside an extension\'s',
+    name: 'Hooks · grouped under the mark of whoever registered them',
     render: () => (
         <One><Canvas graph={graph([step('implement', IMPLEMENT.phases, {
             stockHooks: STOCK, changes: { ...NO_CHANGES, hooks: 3 },

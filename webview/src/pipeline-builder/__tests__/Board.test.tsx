@@ -227,7 +227,21 @@ describe('everything attached to one anchor sits in one block', () => {
         const { host } = canvas(hooked());
         const side = host.querySelector('.pb-attached-side')!;
         expect(side.firstElementChild?.className).toBe('pb-attached-when');
-        expect(side.lastElementChild?.className).toBe('pb-attached-list');
+        expect(side.lastElementChild?.className).toBe('pb-hook-group');
+    });
+
+    it("leads your own group with Companion's mark", () => {
+        const { host } = canvas(hooked());
+        expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
+            .toContain('pb-mark--moss');
+    });
+
+    it('heads your own rows with the file they are written in', () => {
+        const { host } = canvas(hooked());
+        const source = host.querySelector('.pb-hook-source')!;
+        expect(source.querySelector('.pb-hook-source-name')?.textContent)
+            .toBe('companion.yml');
+        expect(source.nextElementSibling?.className).toBe('pb-attached-list');
     });
 
     // A heading above rows one line tall was a third of the block's height, for
@@ -308,22 +322,57 @@ describe("hooks another extension registered run in the lane, not beneath it", (
         expect(host.querySelector('.pb-stock')).toBeNull();
         const chips = Array.from(host.querySelectorAll('.pb-hook--stock'));
         expect(chips).toHaveLength(2);
-        expect(chips[0].textContent).toContain('speckit.git.commit');
+        expect(chips[0].textContent).toContain('commit');
     });
 
-    // The extension's name was printed on every one of these. The hue already
-    // says whose it is, and it was the most repeated word on the board.
-    it('does not repeat whose it is on every row', () => {
+    // `speckit.git.feature` cut to a lane read `spe…`, which is the part every
+    // one of them shares.
+    it("leads a spec-kit extension's group with the GitHub mark", () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('after')] })],
         }));
-        expect(host.querySelector('.pb-hook-from')).toBeNull();
-        expect(host.querySelector('.pb-hook--stock')!.getAttribute('title')).toContain('git');
+        expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
+            .toContain('pb-mark--github');
+    });
+
+    // Companion registers a spec-kit extension of its own, and it is Companion's
+    // whichever file it arrives through.
+    it("leaves Companion's own extension under Companion's mark", () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), extension: 'companion' }],
+            })],
+        }));
+        expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
+            .toContain('pb-mark--moss');
+    });
+
+    it('names a command by its tail, never by the prefix they all carry', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                stockHooks: [{ ...stock('after'), command: 'speckit.companion.after-specify' }],
+            })],
+        }));
+        const name = host.querySelector('.pb-hook--stock .pb-hook-name')!;
+        expect(name.textContent).toBe('after-specify');
+        expect(host.querySelector('.pb-hook--stock')!.getAttribute('title'))
+            .toContain('speckit.companion.after-specify');
+    });
+
+    // The extension's name was printed on every one of these, at the tail of the
+    // row, so identity was the last thing read on every line.
+    it('names the extension once above its rows, not on each of them', () => {
+        const { host } = canvas(graph({
+            steps: [step({ stockHooks: [stock('before'), stock('after')] })],
+        }));
+        const named = Array.from(host.querySelectorAll('.pb-hook-source-name'));
+        expect(named.map(el => el.textContent)).toEqual(['git', 'git']);
+        expect(host.querySelectorAll('.pb-hook--stock')).toHaveLength(2);
     });
 
     // Hue alone is not a cue: it separates these from your own for anyone who
     // can see the difference, and for nobody else.
-    it('marks the minority with a word, and leaves your own unmarked', () => {
+    it('splits the two sources into their own groups, yours first', () => {
         const { host } = canvas(graph({
             steps: [step({
                 stockHooks: [stock('after')],
@@ -336,12 +385,11 @@ describe("hooks another extension registered run in the lane, not beneath it", (
                 }],
             })],
         }));
-        // Named, not just marked: "ext" said only "not yours", and left "then
-        // whose?" to a tooltip.
-        const marked = Array.from(host.querySelectorAll('.pb-hook-ext'));
-        expect(marked).toHaveLength(1);
-        expect(marked[0].textContent).toBe('git');
-        expect(marked[0].closest('.pb-hook')?.className).toContain('pb-hook--stock');
+        const groups = Array.from(host.querySelectorAll('.pb-hook-group'));
+        expect(groups.map(el => el.querySelector('.pb-hook-source-name')?.textContent))
+            .toEqual(['companion.yml', 'git']);
+        expect(groups[0].querySelector('.pb-hook--stock')).toBeNull();
+        expect(groups[1].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
     });
 
     // A hook that stops and asks is the one fact on the row with a consequence.
@@ -370,7 +418,9 @@ describe("hooks another extension registered run in the lane, not beneath it", (
             steps: [step({ stockHooks: [stock('after')] })],
         }));
         const chip = host.querySelector('.pb-hook--stock')!;
-        expect(chip.getAttribute('title')).toContain('not edited in this panel');
+        expect(host.querySelector('.pb-hook-source')!.getAttribute('title'))
+            .toContain('not edited in this panel');
+        expect(chip.getAttribute('title')).toContain('Commit the work');
         expect(chip.tagName).toBe('SPAN');
     });
 

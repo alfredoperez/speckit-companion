@@ -127,6 +127,16 @@ function shellName(line: string): string {
     return [base, ...parts.slice(script + 1)].join(' ');
 }
 
+/**
+ * A registered command by the part that is not on every one of them.
+ *
+ * `speckit.git.feature` cut to a lane read `spe…`, which is the prefix every
+ * one of them shares; the mark above the row already says which extension.
+ */
+function commandTail(command: string): string {
+    return command.split('.').pop() || command;
+}
+
 /** A count and its noun, agreeing. */
 function count(n: number): string {
     return `${n}${n === 1 ? ' node' : ' nodes'}`;
@@ -177,6 +187,33 @@ function TrashIcon() {
     );
 }
 
+/**
+ * SpecKit Companion's mark — the mascot with everything that dies at row size
+ * thrown away. The eyes are holes, so the row's own ground shows through them.
+ */
+function MossIcon() {
+    return (
+        <svg class="pb-mark pb-mark--moss" width="14" height="14" viewBox="0 0 24 24"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path fill-rule="evenodd" d="M12 21.95Q9.67 23.23 8.4 20.89Q5.75 20.71 5.95 18.06Q3.82 16.48 5.42 14.35Q4.48 11.87 6.97 10.95Q7.53 8.35 10.13 8.92Q12 7.04 13.87 8.92Q16.47 8.35 17.03 10.95Q19.52 11.87 18.58 14.35Q20.18 16.48 18.05 18.06Q18.25 20.71 15.6 20.89Q14.33 23.23 12 21.95ZM7.5 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0ZM13.1 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z" />
+            <path d="M12 7.7V4.9" stroke="currentColor" stroke-width="1.9"
+                stroke-linecap="round" />
+            <path d="M12 5.2C11.2 2.3 8.8 0.8 5.7 1.4C5.3 4.5 8.2 6.1 12 5.2Z" />
+            <path d="M12 5.2C12.8 2.3 15.2 0.8 18.3 1.4C18.7 4.5 15.8 6.1 12 5.2Z" />
+        </svg>
+    );
+}
+
+/** The mark for a hook a spec-kit extension registered. */
+function GithubIcon() {
+    return (
+        <svg class="pb-mark pb-mark--github" width="13" height="13" viewBox="0 0 16 16"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38c0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15c0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2c0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+    );
+}
+
 // ── Nodes ───────────────────────────────────────────────
 
 type NodeActions = Pick<Props, 'onOpenNode'> & {
@@ -192,12 +229,6 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
 };
 
 /**
- * One side's hooks, headed by what they run against.
- *
- * "before draft-spec" said once, then the actions beneath it — rather than
- * repeating the side and the anchor on every chip.
- */
-/**
  * Every place a hook can attach, whether or not one does.
  *
  * An empty anchor used to render nothing, so the only way to learn that work
@@ -207,10 +238,45 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
  * lane, which read as an unexplained list rather than as part of the run.
  *
  * So every anchor is drawn. A filled one carries its hooks; an empty one is a
- * dotted slot that adds one. Hooks from an installed extension appear as chips
- * in the same place and the same shape as your own, marked as somebody else's
- * and not editable here.
+ * dotted slot that adds one. Hooks an installed extension registered appear in
+ * the same place and the same shape as your own, under the mark of whoever
+ * registered them, and are still not edited here.
  */
+
+/** Where the hooks at one boundary came from, and which of them it carries. */
+type HookSource = {
+    /** The file or the extension, as it is written. */
+    name: string;
+    /** Whether it is Companion's, which is what picks the mark. */
+    companion: boolean;
+    title: string;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+};
+
+/**
+ * The hooks at one boundary, split by whoever registered them.
+ *
+ * Yours first: they are the only ones this panel writes.
+ */
+function bySource(ours: PipelineHook[], theirs: StockHook[]): HookSource[] {
+    const groups: HookSource[] = ours.length > 0 ? [{
+        name: 'companion.yml', companion: true, ours, theirs: [],
+        title: 'Yours, from .specify/companion.yml. Click a line to change it or remove it.',
+    }] : [];
+    for (const hook of theirs) {
+        const name = hook.extension || 'extension';
+        const found = groups.find(group => group.name === name);
+        if (found) { found.theirs.push(hook); continue; }
+        groups.push({
+            name, companion: name === 'companion', ours: [], theirs: [hook],
+            title: `Registered by the ${name} extension in .specify/extensions.yml. `
+                + 'It runs here, and is not edited in this panel.',
+        });
+    }
+    return groups;
+}
+
 /**
  * Everything attached to one anchor, in one block.
  *
@@ -224,11 +290,12 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
  * words, and one line per hook — the block under "Mark the spec complete" was
  * about five times the height of the card it hangs from.
  *
- * The side's word heads its list rather than sitting in a column beside it: a
- * 3.6rem gutter cost every row on a 300px lane the width that decides whether
- * `doctor.py --chat` fits. A row is the kind as a badge and then the name, in
- * the panel's reading colour; the whole of a long instruction is read by
- * opening the hook in the side column.
+ * Under each side the hooks are grouped by whoever registered them, headed by
+ * that source's mark and its name. Whose a hook was used to be a word at the
+ * tail of the row, so identity was the last thing read on a line whose first
+ * word was `Command` — the mechanism — and whose only other text was
+ * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
+ * is named once for the group, and the row is left to say the work.
  */
 function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
     before: PipelineHook[];
@@ -250,69 +317,54 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
                         <span class="pb-attached-when">{side}</span>
-                        <ul class="pb-attached-list">
-                            {ours.map((hook, i) => (
-                                <li key={`ours-${i}`}>
-                                    <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
-                                        onClick={() => onEdit?.(hook)}>
-                                        {/* The kind as a badge in the same
-                                            neutral register the `gate` word
-                                            uses. Four hues for four kinds
-                                            would have been a fifth meaning
-                                            for colour on a board that already
-                                            has four. */}
-                                        <span class="pb-hook-kind">
-                                            {KIND_LABELS[hook.type]}
-                                        </span>
-                                        <span class={hook.type === 'prompt'
-                                            ? 'pb-hook-name'
-                                            : 'pb-hook-name pb-hook-name--ref'}>
-                                            {clip(hook.type === 'command'
-                                                ? shellName(hook.summary) : hook.summary)}
-                                        </span>
-                                    </button>
-                                </li>
-                            ))}
-                            {theirs.map((hook, i) => (
-                                <li key={`theirs-${i}`}>
-                                    {/* Another extension's. Not editable here, but
-                                        readable — refusing the click told you
-                                        nothing about what it does. */}
-                                    <span class="pb-hook pb-hook--stock"
-                                        title={`${hook.description || hook.command}\n\n`
-                                            + `Registered by the ${hook.extension} extension. `
-                                            + 'It runs here, and is not edited in this panel.'
-                                            + (hook.optional ? '\nIt asks before it runs.' : '')
-                                            + (hook.conditional ? '\nIt does not run every time.' : '')}>
-                                        <span class="pb-hook-kind">
-                                            {KIND_LABELS.command}
-                                        </span>
-                                        <span class="pb-hook-name pb-hook-name--ref">
-                                            {clip(hook.command)}
-                                        </span>
-                                        {/* Whose it is, named rather than
-                                            marked. `ext` said only "not yours",
-                                            which leaves "then whose?" to a
-                                            tooltip — the thing this board is
-                                            trying to stop doing. Only the
-                                            minority carry it: a badge on every
-                                            row is the noise a one-line row is
-                                            removing. */}
-                                        {/* A hook that stops and asks is the one
-                                            fact here with a consequence, so it
-                                            stays a word. Every other mark this
-                                            round took out of a tooltip; this one
-                                            must not go back in. */}
-                                        {hook.optional && (
-                                            <span class="pb-hook-asks">asks first</span>
-                                        )}
-                                        <span class="pb-hook-ext">
-                                            {clip(hook.extension, 14)}
-                                        </span>
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
+                        {bySource(ours, theirs).map(source => (
+                            <div key={source.name} class="pb-hook-group">
+                                <span class="pb-hook-source" title={source.title}>
+                                    {source.companion ? <MossIcon /> : <GithubIcon />}
+                                    <span class="pb-hook-source-name">{source.name}</span>
+                                </span>
+                                <ul class="pb-attached-list">
+                                    {source.ours.map((hook, i) => (
+                                        <li key={`ours-${i}`}>
+                                            <button class="pb-hook"
+                                                title={`${hook.summary}\n\nClick to edit`}
+                                                onClick={() => onEdit?.(hook)}>
+                                                {/* Which of the four it is: the value alone does not say. */}
+                                                <span class="pb-hook-kind">
+                                                    {KIND_LABELS[hook.type]}
+                                                </span>
+                                                <span class={hook.type === 'prompt'
+                                                    ? 'pb-hook-name'
+                                                    : 'pb-hook-name pb-hook-name--ref'}>
+                                                    {clip(hook.type === 'command'
+                                                        ? shellName(hook.summary) : hook.summary)}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                    {source.theirs.map((hook, i) => (
+                                        <li key={`theirs-${i}`}>
+                                            {/* No kind badge: every one of these is a command. */}
+                                            <span class="pb-hook pb-hook--stock"
+                                                title={`${hook.description || hook.command}\n\n`
+                                                    + hook.command
+                                                    + (hook.optional
+                                                        ? '\nIt asks before it runs.' : '')
+                                                    + (hook.conditional
+                                                        ? '\nIt does not run every time.' : '')}>
+                                                <span class="pb-hook-name pb-hook-name--ref">
+                                                    {clip(commandTail(hook.command))}
+                                                </span>
+                                                {/* The one fact here with a consequence. */}
+                                                {hook.optional && (
+                                                    <span class="pb-hook-asks">asks first</span>
+                                                )}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
                     </div>
                 )
             ))}

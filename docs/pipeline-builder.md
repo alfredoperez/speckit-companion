@@ -75,9 +75,9 @@ The `+` on every phase rule is the one control the board never hides. A row that
 
 Attaching your own work is the commonest change, and it is the one that needs no files. Work can attach at any boundary: before or after a node, a phase, or a whole step.
 
-![A node with hooks attached, one line each, grouped under before and after](screenshots/generated/builder-hooks.png)
+![A node with hooks attached, grouped under before and after and under the mark of whoever registered them](screenshots/generated/builder-hooks.png)
 
-Everything attached to one anchor sits in one block, headed by the side it runs on, one line per hook: what kind it is, then its name. Hooks that an installed spec-kit extension registers sit in the same place and the same shape, with the extension named at the end of the row. Those run too. This panel shows them and does not edit them; one marked `asks first` will not run without being asked.
+Everything attached to one anchor sits in one block, headed by the side it runs on. Under that, the hooks are grouped by whoever registered them, and each group leads with that source's mark: yours under the Companion mascot and the file they are written in, `companion.yml`; the ones an installed spec-kit extension registers under the GitHub mark and the extension's name. A row is then left to say the work — for yours, what kind it is and then its name; for an extension's, the command's own name rather than the `speckit.` prefix every one of them carries, with the whole of it on the tooltip. Extension hooks run too. This panel shows them and does not edit them; one marked `asks first` will not run without being asked.
 
 **Add hook** from any phase's `+` menu, from the **Add hook** button in a node's panel, or from the dotted slot between two nodes.
 

@@ -1406,12 +1406,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     .pb-slot, .pb-slot-label { transition: none; }
 }
 
-/* Whose it is, in a word — the only thing separating a stock hook from one of
-   yours was a hue. Pushed to the end of the row and never truncated: it is
-   already cut to 14 characters where it is written, and `git` shortened to
-   `g…` names nobody. What made the tail expensive was the second chip beside
-   it, which has gone. */
-
 /* A hook that stops and asks before it runs. The one fact on this row with a
    consequence, so it is a word on the row rather than a line in a tooltip. */
 .pb-hook-asks {
@@ -1424,18 +1418,40 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     border-radius: var(--radius-sm);
 }
 
-.pb-hook-ext {
-    flex-shrink: 0;
-    margin-left: auto;
-    padding: 0 4px;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    white-space: nowrap;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+/* Whose these are, said once above them instead of as a word at the tail of
+   every row. A trailing badge put identity last on a line whose leading word
+   was the mechanism; the mark is read before any of it. */
+.pb-hook-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
+
+.pb-hook-source {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding-left: var(--space-1);
+    min-width: 0;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-mark { flex-shrink: 0; }
+
+.pb-hook-source-name {
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The rows sit under the mark that names them. Eight pixels, not sixteen: a
+   lane is 300px and every one of them comes off the row's own text. */
+.pb-hook-group > .pb-attached-list { padding-left: var(--space-2); }
 
 
 /* ============================================
@@ -1673,9 +1689,9 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 /* Somebody else's, in the same block and the same shape as yours. A fill and a
    dimming both said "not yours" — the first is now nothing's, and the second
-   took the row's own words below the contrast every other line keeps. The `ext`
-   tail at the end of the row says it, in a word, on the minority that need it.
-   All that is left is that it cannot be opened. */
+   took the row's own words below the contrast every other line keeps. The mark
+   over the group says whose it is. All that is left is that it cannot be
+   opened. */
 .pb-hook--stock { cursor: default; }
 
 /* ============================================
