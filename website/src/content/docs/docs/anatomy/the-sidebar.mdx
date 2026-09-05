@@ -1,6 +1,6 @@
 ---
 title: The SpecKit sidebar
-description: What each of the four SpecKit views holds, and what every icon, count and hover action on a spec row means.
+description: What each of the four SpecKit views holds, and what every icon, count and hover action on a row means.
 sidebar:
   label: Sidebar
   order: 3
@@ -8,15 +8,15 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-The SpecKit icon in the activity bar opens a container with four views: Specs, Living Specs, Steering, and Settings & Feedback.
+By the end of this page you'll be able to read every icon, count and description line in the SpecKit sidebar, and know which view each action lives in. The SpecKit icon in the activity bar opens a container with four views: Specs, Living Specs, Steering, and Settings & Feedback.
 
 <MediaSlot
   feature="specs-sidebar"
   still="sidebar-triptych.png"
-  caption="Three of the four views, and the division of labour between them: your work, the standing instructions around it, and the specs that outlive any one change."
+  caption="Three of the four views. Specs tracks your work, Steering lists the files your provider and Spec Kit already read (the extension itself never reads them when it dispatches a step), and Living Specs lists the capability specs that outlive any one change."
 />
 
-Only two of them show on a fresh install with just the VS Code extension. Living Specs appears once the Companion Spec Kit extension is installed, and Settings & Feedback is hidden until you turn it on. So a first run usually looks like Specs and Steering, and that's correct, not a broken install.
+Only two of them show on a fresh install with only the VS Code extension. Living Specs appears once the Companion Spec Kit extension is installed, and Settings & Feedback is hidden until you turn it on. So a first run usually looks like Specs and Steering, and that's correct, not a broken install.
 
 The whole sidebar is a native VS Code tree, so the editor owns row height, indentation, keyboard navigation, and theming. You can reorder the views yourself: the order here is the default, not a lock.
 
@@ -36,7 +36,7 @@ Which group a spec lands in is read straight from the run record next to it. The
 
 An in-flight spec's row shows the active task and how long ago it last moved, in the form `T004 · 22h ago`. The relative time is measured from the most recent history entry, not from when the step started, so it answers "when did anything last happen here".
 
-Hover the row and a tooltip repeats the same three facts in full words: the slug, the status, and the last activity.
+That task label appears only after an implement task has finished; a spec that hasn't reached implement shows the relative time alone. Hover the row and a tooltip repeats the facts in full words: the display name, the status, the last activity, and a line saying so when a step is running.
 
 ### What each icon means
 
@@ -70,7 +70,7 @@ Read "complete" narrowly. It's a presence heuristic, not a judgement about the w
 
 ### The toolbar
 
-The Specs title bar shows four actions in a fixed order: Filter, Sort, More Actions, and New Spec as the trailing primary. The filter fuzzy-matches on both the slug and the recorded spec name, and submitting an empty value clears it. Everything else, including collapse and expand and the Spec Kit upgrade entries, lives behind More Actions.
+The Specs title bar shows up to five actions in a fixed order: Filter, Sort, More Actions, Open Pipeline Builder, and New Spec as the trailing primary. Pipeline Builder is a panel that draws the Companion pipeline as a graph of nodes and lets you edit it, so the button appears only when the Companion Spec Kit extension is installed. The filter fuzzy-matches on both the slug and the recorded spec name, and submitting an empty value clears it. Everything else, including collapse and expand, the Spec Kit upgrade entries, and Install Companion Extension, lives behind More Actions.
 
 ### Acting on several specs at once
 
@@ -78,13 +78,13 @@ Select several specs with shift-click or cmd-click and you can mark, archive, or
 
 Those two facts combine in a way worth knowing before you use them: an active filter narrows what a bulk action touches, because "visible" is what the filter left.
 
-### Resume, on hover
+### The Resume action
 
 An active or tasks-done row shows a Resume action on hover, but only when the Companion Spec Kit extension is installed. There's no stock equivalent.
 
 Resume reads the run record, works out where the spec stopped, and dispatches one command to your assistant. If the run stopped inside implement, it names the next unchecked task and continues from there instead of restarting the step. It sends text. It doesn't run the workflow, and it gets nothing back.
 
-### The one badge the sidebar sets
+### The install badge
 
 When the Companion Spec Kit extension isn't installed, the Specs view carries a single-dot badge tooltipped "Install SpecKit Companion", and VS Code aggregates that dot onto the activity bar icon, so it's visible even with the view collapsed. A pinned first row offers the same install in words. Both go away the moment the extension is present, with no reload.
 
@@ -99,7 +99,7 @@ A **capability** is a piece of behavior your codebase keeps having, rather than 
   caption="A capability spec reads in the same viewer a feature spec does. What changes is the header: globs instead of a branch, and a coverage count instead of a status."
 />
 
-The view appears only when the Companion Spec Kit extension is installed, and it starts collapsed.
+The view appears only when the Companion Spec Kit extension is installed, and it starts collapsed. Whether it lists anything is a second gate: a `living-specs.yml` at the repo root with `enabled: true`. Without that file, or with `enabled: false`, the view shows a single "Living Specs are off" row whose tooltip says what to set; a registry that won't parse shows "Can't read living-specs.yml" with the error instead.
 
 It's a directory tree rather than a flat list, so its shape mirrors where the capability specs actually live: a spec at `src/features/specs/specs.spec.md` shows up as a leaf under `src`, then `features`. Below the capabilities sits an **Orphans** group holding spec files no capability claims, omitted entirely when there are none.
 
@@ -109,17 +109,17 @@ Each capability row carries two numbers the extension works out for itself, with
 
 **Drift** means source files matching that capability changed since its living spec was last committed. When they have, the row's icon turns the warning color. The lookup is bounded by a timeout, so a slow repository renders the row as it would otherwise rather than stalling the tree.
 
-The title bar carries Refresh, Adopt Code Area, and Sync. The whole view is gated on a `living-specs.yml` at the repo root with `enabled: true`. The [living specs guide](/docs/guides/living-specs) covers the registry and the commands.
+The title bar carries Refresh, Adopt Code Area, and Sync. Right-click a capability row for its own menu: Check for Drift, Check Requirement Coverage, Copy Name, Copy Path, Copy Relative Path, and Delete, plus Update to Match Code on a row that has drifted. The [living specs guide](/docs/guides/living-specs) covers the registry and the commands.
 
 ## Steering
 
 A **steering document** is a standing instruction, not a per-run one. A spec says what to build this time; a steering document says how this project builds anything.
 
-The view gathers what your AI provider already reads, plus Spec Kit's own project files, into one tree next to your specs. It doesn't invent a format, and nothing in it is read by the extension when it dispatches a step. The [steering guide](/docs/guides/steering) has the tree shape, the authoring actions, and the provider boundary.
+The view gathers what your AI provider already reads, plus Spec Kit's own project files, into one tree next to your specs. When the Companion Spec Kit extension is installed a Companion node sits first, with its Configuration file, its Commands, and its Templates when the install ships any. It doesn't invent a format, and nothing in it is read by the extension when it dispatches a step. The [steering guide](/docs/guides/steering) has the tree shape, the authoring actions, and the provider boundary.
 
 ## Settings & Feedback
 
-Four rows and nothing else: Open Settings, Report a Bug, Request a Feature, and Rate on Marketplace. It's hidden by default; turn on `speckit.views.settings.visible` to get it. `speckit.views.steering.visible` is the matching switch for Steering, which is on out of the box.
+Five rows and nothing else: Pipeline Builder, Open Settings, Report a Bug, Request a Feature, and Rate on Marketplace. It's hidden by default; turn on `speckit.views.settings.visible` to get it. `speckit.views.steering.visible` is the matching switch for Steering, which is on out of the box.
 
 ## What the sidebar won't tell you
 
