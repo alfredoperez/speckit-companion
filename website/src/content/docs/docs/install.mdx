@@ -86,7 +86,7 @@ Installing from source is a global change to your `uv` tools, not a project-loca
 
 <GuidedStep n={3} title="Add the Companion Spec Kit extension">
 
-This is the half that rides your runs. It writes the run record next to each spec, and the VS Code extension reads that file.
+This is the half that rides your runs. It writes the run record, a `.spec-context.json` file that logs what each step did, next to each spec, and the VS Code extension reads that file.
 
 Run it from your project root. Copy the command whole: the short catalog form isn't supported, because the extension isn't listed in Spec Kit's catalog.
 
@@ -122,13 +122,13 @@ Two commands and two things on screen.
 
 <div slot="result">
 
-`companion` is in the list, at the version you just installed.
+`companion` is in the list, at the version you installed.
 
 Your assistant offers the `/speckit.companion.*` commands alongside the stock `/speckit.*` ones. Both families stay installed; adding one never removes the other.
 
 A **Living Specs** view has joined the sidebar.
 
-The Specs view's install dot is gone, and the Companion workflow in **Create New Spec** no longer carries the **Install to enable** label. Both clear the moment the extension is present, with no reload.
+The Specs view's install dot is gone, and the Companion workflow in **SpecKit: New Spec** no longer carries the **Install to enable** label. Both clear the moment the extension is present, with no reload.
 
 </div>
 
@@ -138,7 +138,9 @@ The Specs view's install dot is gone, and the Companion workflow in **Create New
 
 Re-run the exact same command from step 3. The `companion-latest/companion.zip` URL is a rolling asset that always serves the newest build, and `--force` refreshes an existing install in place. There's no version string to edit and no new URL to find.
 
-Inside the editor there's a path to the same thing: the Specs view's **More Actions** menu, then **Upgrade…**, then **Update spec-kit Extension**. It runs the same command in a terminal for you.
+Inside the editor there are two paths to the same result. The Specs view's **More Actions** menu has an **Install Companion Extension** entry, and its **Upgrade…** submenu has **Update spec-kit Extension**. Either runs `specify extension add companion --from <URL>` in a terminal for you. That command carries no `--force`: `extension add` already installs or updates against the same target, so the in-editor path leaves the flag off.
+
+The extension also nudges you toward this install on its own: a toast on activation when the project has a `.specify` folder but no Companion, a pinned row at the top of the Specs view, and a one-click prompt when you pick the Companion workflow without it. Set `speckit.companion.installPrompt` to `false` to turn all of them off, or choose **Don't show again** on the toast.
 
 ## When something didn't take
 
