@@ -8,16 +8,16 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-A **workflow** is the ordered set of steps a spec goes through, and the command that gets dispatched at each one. "Pipeline" is the same thing said conversationally.
+By the end of this page you'll have picked one of the two shipped workflows for your next spec, set it as the default if you want, and seen what it takes to define one of your own. A **workflow** is the ordered set of steps a spec goes through, and the command that gets dispatched at each one. "Pipeline" is the same thing said conversationally.
 
 It's chosen once, when the spec is created, and recorded on the spec. From then on, every surface reads that recording: the rail in the viewer lists that workflow's documents, the sidebar lists the same documents, and the footer's forward button dispatches that workflow's command for the step you're on. So this is a decision you make per spec, not a global mode you switch between.
 
 <MediaSlot
   feature="own-workflow"
-  caption="Choosing here is the last easy moment. Afterwards the spec carries this choice, and every rail, document list and dispatch is derived from it."
+  caption="The workflow is recorded on the spec when it is created, and every rail, document list and dispatch afterwards is derived from that recording."
 />
 
-Open **SpecKit: Create New Spec**. The **Workflow** choice is the whole decision, and it comes pre-selected.
+Open **SpecKit: New Spec**. The **Workflow** choice in the Create New Spec panel is the whole decision, and it comes pre-selected.
 
 ## The two that ship
 
@@ -40,19 +40,19 @@ Two things differ, and the extra step is only the visible one.
 }
 ```
 
-`"speckit"` or `"companion"`. The setting decides which workflow **Create New Spec** pre-selects, and nothing else. It doesn't restrict what you can pick, and it has no effect on specs that already exist.
+`"speckit"` or `"companion"`. The setting decides which workflow the Create New Spec panel pre-selects, and nothing else. It doesn't restrict what you can pick, and it has no effect on specs that already exist.
 
-Leave it unset and installing the Companion Spec Kit extension is enough to make Companion the pre-selected one. An explicit value at any scope always wins, including an explicit `"speckit"`.
+The setting's declared default is `"speckit"`, but the picker only honors a value you set yourself. Leave it unset and installing the Companion Spec Kit extension is enough to make Companion the pre-selected one. An explicit value at any scope always wins, including an explicit `"speckit"`.
 
 ## When the Companion Spec Kit extension is missing
 
-Companion still appears in **Create New Spec**, marked **Install to enable**, instead of being hidden. You can see what you don't have.
+Companion still appears in the Create New Spec panel, marked **Install to enable**, instead of being hidden. You can see what you don't have.
 
 Dispatch a Companion step anyway and the four pipeline commands downgrade to their stock twins, with a one-click install prompt. Commands that have no stock twin, mark-complete among them, are suppressed rather than dispatched into a void.
 
 ## The Auto button
 
-**Create New Spec** carries an **Auto** button. It dispatches `/speckit.companion.auto`, which runs specify through mark-complete without pauses. It needs the Companion Spec Kit extension, and without it the button aborts with a message.
+The Create New Spec panel carries an **Auto** button when the selected workflow supports it, which the Companion workflow does. It dispatches `/speckit.companion.auto`, which runs specify through mark-complete without pauses. It needs the Companion Spec Kit extension, and without it the button aborts with a message.
 
 Auto is one command handed to your assistant, which then follows it. The extension isn't stepping through the workflow itself, which is why there's no progress bar for it and no way to pause it from the editor.
 
@@ -82,21 +82,23 @@ That's the smallest valid one. Every property in it does a job:
 | Property | What it does |
 | --- | --- |
 | `name` | The workflow's identifier, lowercase and hyphenated. It's what gets recorded on a spec. |
-| `displayName` | What **Create New Spec** shows in the picker. |
+| `displayName` | What the Create New Spec panel shows in the picker. |
 | `steps[].name` | The step's identifier, used to match history entries and sub-documents to it. |
 | `steps[].label` | What the rail and the footer call this step. Defaults to the capitalized name. |
 | `steps[].command` | The slash command dispatched for this step, written without the leading slash. A slash is added at dispatch, and one you include is stripped. |
 | `steps[].file` | The document this step produces, which is what the rail opens. Defaults to `{name}.md`. |
 | `steps[].actionOnly` | Set when the step produces no document. It gets no rail entry at all, and its actions live in the footer. Implement is the usual case. |
 
-Custom workflows are validated, deduplicated, and offered in **Create New Spec** next to the two built-ins. The sidebar and the viewer then build their document lists and step rails from whatever your workflow declares, which is the payoff: a workflow whose steps are named Design and Review renders as Design and Review, not as a translation into someone else's vocabulary.
+Custom workflows are validated, deduplicated, and offered in the Create New Spec panel next to the two built-ins. The sidebar and the viewer then build their document lists and step rails from whatever your workflow declares, which is the payoff: a workflow whose steps are named Design and Review renders as Design and Review, not as a translation into someone else's vocabulary.
 
 <MediaSlot
   feature="make-it-yours"
-  caption="A workflow you defined is not a second-class one. It's recorded on the spec and drives the rail exactly the way a built-in does."
+  caption="Three steps of a custom workflow shown over the commands they dispatch: your own command for Research, the stock ones for Specify and Implement."
 />
 
-A step can carry more than the seven properties above: an explicit list of sub-files, a subdirectory to scan for children, a per-step model or reasoning effort when your provider is Claude Code, and a list of providers the whole workflow is limited to. Those are all optional, and the settings schema in VS Code will complete them for you.
+A step can carry more than the seven properties above: `subFiles`, an explicit list of sub-documents; `subDir`, a subdirectory to scan for children; `includeRelatedDocs`, which groups the folder's unassigned markdown under this step; and `model` and `effort`, a per-step model or reasoning effort when your provider is Claude Code.
+
+The workflow itself takes three more. `supportedAiProviders` limits the whole workflow to the providers you list, hiding it from the picker otherwise. `commands` adds buttons next to a step's actions, each with a `name`, a `command` and the `step` it belongs to. `steering` names reference folders the workflow reads that aren't specs; they appear under the Steering view and are kept out of spec detection. All of these are optional, and the settings schema in VS Code will complete them for you.
 
 ## Next
 
