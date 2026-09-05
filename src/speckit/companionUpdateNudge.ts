@@ -36,13 +36,15 @@ export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, 
         if (!show || gap.state !== 'outdated') {
             return;
         }
+        // Marked seen as soon as it is on screen: a toast with buttons stays pending until the user answers or
+        // closes it, so waiting for a choice means a user who just keeps working sees it again every activation.
+        void context.globalState.update(ConfigKeys.globalState.companionUpdateNotifiedFor, gap.expected);
         const shown = vscode.window.showInformationMessage(
             `${updateBannerText(gap.installed, gap.expected)} Update the spec-kit extension to get the matching commands.`,
             'Update',
             'Skip this version'
         );
         void shown.then(choice => {
-            void context.globalState.update(ConfigKeys.globalState.companionUpdateNotifiedFor, gap.expected);
             if (choice === 'Update') {
                 void vscode.commands.executeCommand(INSTALL_COMMAND);
             } else if (choice === 'Skip this version') {
@@ -61,6 +63,8 @@ export function companionUpdateStatusBarText(gap: CompanionGap): string | null {
 
 /** A warning status-bar item that is visible only while the installed spec-kit half is behind; click runs the update. */
 export function createCompanionUpdateStatusBar(context: vscode.ExtensionContext): { sync: (gap: CompanionGap) => void } {
+    const skipped = (): string | undefined =>
+        context.globalState.get<string>(ConfigKeys.globalState.companionUpdateSkippedVersion);
     const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
     item.command = INSTALL_COMMAND;
     item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -68,7 +72,7 @@ export function createCompanionUpdateStatusBar(context: vscode.ExtensionContext)
     return {
         sync: (gap: CompanionGap): void => {
             const text = companionUpdateStatusBarText(gap);
-            if (!text || gap.state !== 'outdated' || !readInstallPromptEnabled()) {
+            if (!text || gap.state !== 'outdated' || !readInstallPromptEnabled() || skipped() === gap.expected) {
                 item.hide();
                 return;
             }

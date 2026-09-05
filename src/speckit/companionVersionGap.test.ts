@@ -8,6 +8,7 @@ import {
     readBundledCompanionVersion,
     readInstalledCompanionVersion,
     resolveCompanionGap,
+    cachedCompanionGap,
 } from './companionVersionGap';
 
 describe('companionVersionGap', () => {
@@ -50,6 +51,22 @@ describe('companionVersionGap', () => {
         it('reads an unknown version on either side as current, never as out of date', () => {
             expect(computeCompanionGap(true, undefined, '0.21.0')).toEqual({ state: 'current' });
             expect(computeCompanionGap(true, '0.20.2', undefined)).toEqual({ state: 'current' });
+        });
+    });
+
+    describe('the cached gap', () => {
+        it('re-resolves when the workspace changes instead of serving the previous folder answer', () => {
+            const a = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-gap-a-'));
+            const b = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-gap-b-'));
+            try {
+                fs.mkdirSync(path.join(b, '.specify/extensions/companion'), { recursive: true });
+                expect(cachedCompanionGap(a, a).state).toBe('missing');
+                expect(cachedCompanionGap(b, b).state).toBe('current');
+                expect(cachedCompanionGap(a, a).state).toBe('missing');
+            } finally {
+                fs.rmSync(a, { recursive: true, force: true });
+                fs.rmSync(b, { recursive: true, force: true });
+            }
         });
     });
 

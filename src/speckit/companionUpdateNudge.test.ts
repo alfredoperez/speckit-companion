@@ -46,7 +46,7 @@ describe('companion update nudge', () => {
     });
 
     describe('maybeShowCompanionUpdateNudge', () => {
-        it('shows once per expected version, marks it seen only after the user answers, then remembers a skip', async () => {
+        it('shows once per expected version, marks it seen the moment it appears, then remembers a skip', async () => {
             const show = vscode.window.showInformationMessage as jest.Mock;
             show.mockResolvedValue('Skip this version');
             const { context, store } = makeContext();
@@ -55,9 +55,8 @@ describe('companion update nudge', () => {
             expect(show).toHaveBeenCalledTimes(1);
             expect(show.mock.calls[0][0]).toContain('0.20.2');
             expect(show.mock.calls[0][0]).toContain('0.21.0');
-            expect(store.has('speckit.companionUpdateNotifiedFor')).toBe(false);
-            await Promise.resolve();
             expect(store.get('speckit.companionUpdateNotifiedFor')).toBe('0.21.0');
+            await Promise.resolve();
             expect(store.get('speckit.companionUpdateSkippedVersion')).toBe('0.21.0');
 
             maybeShowCompanionUpdateNudge(context, outdated);
@@ -71,7 +70,7 @@ describe('companion update nudge', () => {
             expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
         });
 
-        it('closing the toast without choosing counts as seen but leaves the banner alone', async () => {
+        it('an ignored toast counts as seen but leaves the banner and the status bar alone', async () => {
             (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue(undefined);
             const { context, store } = makeContext();
             maybeShowCompanionUpdateNudge(context, outdated);
@@ -95,8 +94,8 @@ describe('companion update nudge', () => {
             expect(companionUpdateStatusBarText({ state: 'current' })).toBeNull();
         });
 
-        it('shows on a gap, hides once the versions match, and stays hidden when opted out', () => {
-            const { context } = makeContext();
+        it('shows on a gap, hides once the versions match, and stays hidden when opted out or skipped', () => {
+            const { context, store } = makeContext();
             const bar = createCompanionUpdateStatusBar(context);
             const item = (vscode.window.createStatusBarItem as jest.Mock).mock.results[0].value;
             expect(item.command).toBe('speckit.companion.installSpecKitExtension');
@@ -114,6 +113,12 @@ describe('companion update nudge', () => {
             bar.sync(outdated);
             expect(item.show).toHaveBeenCalledTimes(1);
             expect(item.hide).toHaveBeenCalledTimes(2);
+
+            (readInstallPromptEnabled as jest.Mock).mockReturnValue(true);
+            store.set('speckit.companionUpdateSkippedVersion', '0.21.0');
+            bar.sync(outdated);
+            expect(item.show).toHaveBeenCalledTimes(1);
+            expect(item.hide).toHaveBeenCalledTimes(3);
         });
     });
 });

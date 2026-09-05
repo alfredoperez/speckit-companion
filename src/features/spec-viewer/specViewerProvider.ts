@@ -302,6 +302,17 @@ export class SpecViewerProvider {
     return this.panels.get(specDirectory);
   }
 
+  /** Re-post state to every open panel. Used when something outside a spec changes what a panel renders (install/update banner). */
+  public async refreshOpenPanels(): Promise<void> {
+    const dirs: string[] = [];
+    this.panels.forEach((instance, dir) => {
+      if (!instance.state.living) dirs.push(dir);
+    });
+    for (const dir of dirs) {
+      await this.refreshContextIfDisplaying(path.join(dir, SPEC_CONTEXT_FILENAME));
+    }
+  }
+
   /**
    * Refresh content if currently displaying the specified file
    */

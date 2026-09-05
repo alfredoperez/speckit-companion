@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
-import { cachedCompanionGap, type CompanionGap } from './companionVersionGap';
+import { cachedCompanionGap, readInstalledCompanionVersion, type CompanionGap } from './companionVersionGap';
 import type { InstallPrompt } from '../protocol/viewer';
 
 export type { InstallPrompt };
@@ -89,8 +89,9 @@ export function shouldShowInstallPrompt(enabled: boolean, gap: CompanionGap): In
 }
 
 /** The install banner has one permanent flag; the update banner is dismissed per expected version so the next release asks again. */
-function dismissalFor(prompt: InstallPrompt): { key: string; value: string | boolean } {
-    return prompt.kind === 'update'
+function dismissalFor(prompt: InstallPrompt | undefined): { key: string; value: string | boolean } {
+    // A version-skewed webview can post a bare message; treat it as the install banner rather than throwing into the host log.
+    return prompt?.kind === 'update'
         ? { key: ConfigKeys.globalState.companionUpdateSkippedVersion, value: prompt.expected }
         : { key: ConfigKeys.globalState.installBannerDismissed, value: true };
 }
@@ -101,7 +102,7 @@ export function isInstallPromptDismissed(globalState: vscode.Memento, prompt: In
 }
 
 /** Persist the dismissal of the prompt the user closed, as the banner reported it. */
-export async function dismissInstallPrompt(context: vscode.ExtensionContext, prompt: InstallPrompt): Promise<void> {
+export async function dismissInstallPrompt(context: vscode.ExtensionContext, prompt: InstallPrompt | undefined): Promise<void> {
     const { key, value } = dismissalFor(prompt);
     await context.globalState.update(key, value);
 }
@@ -131,6 +132,18 @@ export function readInstallPromptEnabled(): boolean {
  * `specify extension add` might be missing), then runs the idempotent install. The
  * terminal is shown so the user sees progress and any prompts without leaving the editor.
  */
+let installDeadline = 0;
+
+/** True while a dispatched install is plausibly still copying files, so a momentary empty extension dir is not read as "uninstalled". */
+export function isInstallInFlight(): boolean {
+    return Date.now() < installDeadline;
+}
+
+/** Called once a refresh sees the extension present again. */
+export function clearInstallInFlight(): void {
+    installDeadline = 0;
+}
+
 export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // Set the working directory via the terminal options' `cwd` rather than emitting a
     // `cd "${workspaceRoot}"` command. A workspace path containing `"`, `` ` ``, `$`, or
@@ -146,7 +159,11 @@ export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // default, so a leading `#` would be executed and error ("command not found: #")
     // instead of being treated as a comment. echo is portable across bash/zsh.
     terminal.sendText(`echo "Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}"`);
-    terminal.sendText(buildInstallCommand({ force: workspaceRoot ? isCompanionInstalled(workspaceRoot) : false }));
+    // `extension add` refuses when the spec-kit registry lists the extension, which can outlive the directory
+    // (a deleted dir, a dropped `--dev` symlink, a half-finished install), so either signal means force.
+    const alreadyThere = !!workspaceRoot && (isCompanionInstalled(workspaceRoot) || readInstalledCompanionVersion(workspaceRoot) !== undefined);
+    installDeadline = Date.now() + 60_000;
+    terminal.sendText(buildInstallCommand({ force: alreadyThere }));
 }
 
 /** Workspace root of the first open folder, or undefined. */

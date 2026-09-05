@@ -9,12 +9,19 @@ import {
     isInstallPromptDismissed,
     dismissInstallPrompt,
     runInstallSpecKitExtension,
+    isInstallInFlight,
+    clearInstallInFlight,
 } from './specKitExtensionInstall';
 
 jest.mock('../features/settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(false),
 }));
+jest.mock('./companionVersionGap', () => ({
+    ...jest.requireActual('./companionVersionGap'),
+    readInstalledCompanionVersion: jest.fn().mockReturnValue(undefined),
+}));
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+import { readInstalledCompanionVersion } from './companionVersionGap';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
@@ -94,6 +101,12 @@ describe('specKitExtensionInstall', () => {
     });
 
     describe('dismissInstallPrompt', () => {
+        it('falls back to the install flag when a version-skewed webview sends no prompt', async () => {
+            const { context, store } = createMockExtensionContext();
+            await dismissInstallPrompt(context, undefined);
+            expect(store.get('speckit.installBannerDismissed')).toBe(true);
+        });
+
         it('writes the flag for the prompt the user closed, with no disk read', async () => {
             const { context, store } = createMockExtensionContext();
             await dismissInstallPrompt(context, { kind: 'update', installed: '0.20.2', expected: '0.21.0' });
@@ -111,6 +124,25 @@ describe('specKitExtensionInstall', () => {
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
             runInstallSpecKitExtension('/work/project');
             expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+        });
+
+        it('adds --force when only the spec-kit registry still lists it, since that is what the CLI refuses on', () => {
+            const sendText = jest.fn();
+            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            (isCompanionInstalled as jest.Mock).mockReturnValueOnce(false);
+            (readInstalledCompanionVersion as jest.Mock).mockReturnValueOnce('0.20.2');
+            runInstallSpecKitExtension('/work/project');
+            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+        });
+
+        it('reports an install in flight so a mid-install empty directory is not read as uninstalled', () => {
+            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText: jest.fn() });
+            clearInstallInFlight();
+            expect(isInstallInFlight()).toBe(false);
+            runInstallSpecKitExtension('/work/project');
+            expect(isInstallInFlight()).toBe(true);
+            clearInstallInFlight();
+            expect(isInstallInFlight()).toBe(false);
         });
 
         it('opens a terminal scoped to the workspace via cwd, echoes the prereq, then runs the install', () => {

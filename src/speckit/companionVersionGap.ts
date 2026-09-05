@@ -88,15 +88,20 @@ export function resolveCompanionGap(workspaceRoot: string, extensionPath: string
     );
 }
 
-let lastGap: CompanionGap | undefined;
+let lastGap: { key: string; gap: CompanionGap } | undefined;
 
-/** Resolve from disk and remember the answer; activation and the extension-dir watcher call this once per tick. */
+const gapKey = (workspaceRoot: string, extensionPath: string): string => `${workspaceRoot}\u0000${extensionPath}`;
+
+/** Resolve from disk and remember the answer; activation, the watchers and a workspace-folder change call this once per tick. */
 export function refreshCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
-    lastGap = resolveCompanionGap(workspaceRoot, extensionPath);
-    return lastGap;
+    const gap = resolveCompanionGap(workspaceRoot, extensionPath);
+    lastGap = { key: gapKey(workspaceRoot, extensionPath), gap };
+    return gap;
 }
 
-/** The gap the last refresh saw, resolving once if nothing has refreshed yet. */
+/** The gap the last refresh saw for this workspace, resolving from disk when it was for another one (or none yet). */
 export function cachedCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
-    return lastGap ?? refreshCompanionGap(workspaceRoot, extensionPath);
+    return lastGap?.key === gapKey(workspaceRoot, extensionPath)
+        ? lastGap.gap
+        : refreshCompanionGap(workspaceRoot, extensionPath);
 }

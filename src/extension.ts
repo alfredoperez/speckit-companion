@@ -23,6 +23,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
 import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
 import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
+import { clearInstallInFlight, isInstallInFlight } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -289,13 +290,30 @@ export async function activate(context: vscode.ExtensionContext) {
     // fresh checkout and recovers a project a prior swap left stranded, and it
     // never removes a command set. No-ops when already present.
     {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (root) {
+        // The status bar outlives any one folder; the watchers and the surfaces below are rewired when the
+        // workspace gains or loses one, so a folder added to an empty window is not stuck on activation's answer.
+        const updateStatusBar = createCompanionUpdateStatusBar(context);
+        let wiring: vscode.Disposable[] = [];
+        const wireCompanionSurfaces = (): void => {
+            wiring.forEach(d => d.dispose());
+            wiring = [];
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!root) {
+                updateStatusBar.sync({ state: 'missing' });
+                return;
+            }
             // One gap resolution per tick feeds every install/update surface; the ensure needs the installed dir.
-            const updateStatusBar = createCompanionUpdateStatusBar(context);
             const syncCompanionSurfaces = (): CompanionGap => {
                 const gap = refreshCompanionGap(root, context.extensionPath);
                 const installed = gap.state !== 'missing';
+                if (installed) {
+                    clearInstallInFlight();
+                } else if (isInstallInFlight()) {
+                    // `--force` deletes the extension dir before it copies the new one. Flipping the badge and the
+                    // context key on that gap would hide gated views and burn the badge's once-per-session funnel event.
+                    setTimeout(() => { syncCompanionSurfaces(); }, 1000);
+                    return gap;
+                }
                 void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
                 specsTreeView.badge = installed
                     ? undefined
@@ -310,6 +328,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
                 specExplorer.refresh();
                 steeringExplorer.refresh();
+                void specViewer.refreshOpenPanels();
                 updateStatusBar.sync(gap);
                 return gap;
             };
@@ -332,9 +351,17 @@ export async function activate(context: vscode.ExtensionContext) {
                 watcher.onDidCreate(companionRefresh.call);
                 watcher.onDidChange(companionRefresh.call);
                 watcher.onDidDelete(companionRefresh.call);
-                context.subscriptions.push(watcher);
+                wiring.push(watcher);
             }
-            context.subscriptions.push(companionRefresh);
+            // Turning the prompt off must clear the status-bar warning without waiting for a file to change.
+            wiring.push(
+                vscode.workspace.onDidChangeConfiguration(e => {
+                    if (e.affectsConfiguration('speckit.companion.installPrompt')) {
+                        syncCompanionSurfaces();
+                    }
+                }),
+                companionRefresh,
+            );
 
             // Refresh the Living Specs view when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
@@ -347,8 +374,13 @@ export async function activate(context: vscode.ExtensionContext) {
             livingSpecsWatcher.onDidCreate(refreshLivingSpecs.call);
             livingSpecsWatcher.onDidChange(refreshLivingSpecs.call);
             livingSpecsWatcher.onDidDelete(refreshLivingSpecs.call);
-            context.subscriptions.push(livingSpecsWatcher, refreshLivingSpecs);
-        }
+            wiring.push(livingSpecsWatcher, refreshLivingSpecs);
+        };
+        wireCompanionSurfaces();
+        context.subscriptions.push(
+            vscode.workspace.onDidChangeWorkspaceFolders(() => wireCompanionSurfaces()),
+            { dispose: () => wiring.forEach(d => d.dispose()) },
+        );
     }
 }
 
