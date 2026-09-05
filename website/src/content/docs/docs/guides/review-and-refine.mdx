@@ -8,14 +8,14 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-Open a spec in the viewer and hover any line. A comment button appears on it. Click it, type, and the card pins directly beneath the line it annotates.
+By the end of this page you'll have commented on a spec line by line, seen those comments land in the spec's own folder, and handed the pending ones to your AI as one edit request. Open a spec in the viewer and hover any line. A comment button appears on it. Click it, type, and the card pins directly beneath the line it annotates.
 
 <MediaSlot
   feature="inline-comments"
-  caption="A comment sits with the sentence it's about, which is the difference between review that gets acted on and a list of notes somebody has to reconcile against the document later."
+  caption="Each comment is pinned under the line it annotates, and the card records whether it is still pending or has been sent."
 />
 
-The composer reads what kind of line you're on: user story, task, section, acceptance scenario or paragraph. Each offers a matching quick action. Those are suggestion phrasings that fill in the comment text. They don't edit anything themselves.
+The composer reads what kind of line you're on: user story, task, section, acceptance scenario or paragraph. Each offers a matching quick action. Most are suggestion phrasings that fill in the comment text without editing anything. The exception is a task line, which also offers **Toggle**: that one flips the task's checkbox in place.
 
 ## What you can comment on
 
@@ -31,7 +31,7 @@ A card starts collapsed, showing your text and whether it's **Pending** or **App
 
 | Action | When it's offered |
 | --- | --- |
-| **Refine** | While the comment is still pending |
+| **Refine** | While the comment is still pending. It sends every pending comment on the document, not only this one |
 | **Edit** | Any time the spec is active |
 | **Delete** | Any time the spec is active |
 
@@ -47,24 +47,24 @@ Adding a comment writes it straight into the spec's run record, `.spec-context.j
 
 **Nothing is duplicated by a reload.** Reopen the tab and every stored comment for that document is re-anchored onto the freshly rendered page. Re-rendering twice doesn't give you two copies of the same card.
 
-Re-anchoring is best effort, and it helps to know how. A comment stays with its block of text, not with an exact source line number. If the spec is edited underneath it and that block no longer matches anything inline, the comment isn't lost. It stays in the Activity list under Run log.
+Re-anchoring is best effort, and it helps to know how. A comment stays with its block of text, not with an exact source line number. If the spec is edited underneath it and that block no longer matches anything inline, the comment isn't lost. Every comment is also listed, with its status, in the Activity list under Run log, and an unanchored one is still there.
 
 The record is ordinary JSON in the spec folder. Commit it and the review travels with the branch, which is what makes this different from comments in a chat window.
 
 ## Refine
 
-The **Refine** button is hidden while nothing is pending, and reads "Refine (N)" once you have N pending comments on the document you're looking at. Each pending card also carries its own Refine action.
+The **Refine** button is hidden while nothing is pending, and reads "✨ Refine (N)" once you have N pending comments on the document you're looking at. Each pending card also carries a Refine action, and it does the same thing as the footer button: every pending comment on the document goes, not only the card you pressed it on.
 
 <MediaSlot
   feature="review"
-  caption="Refine's whole job is to turn scattered notes into one instruction with enough context attached that the assistant doesn't have to guess which line you meant."
+  caption="Refine collects the pending comments on the document into one prompt, each with its line, its section heading and the source text it was written against."
 />
 
 Refine builds one prompt, and three things about its scope are worth knowing before you press it.
 
 **It's the current document only.** Pending comments on the document you're looking at, not your whole review. Comments on the plan don't ride along when you refine the spec.
 
-**Each comment carries its context.** Every one becomes a bullet naming the line and its section heading, quoting the source block, and then your comment. So the assistant gets the text you were looking at, not just a line number.
+**Each comment carries its context.** Every one becomes a bullet naming the line and its section heading, quoting the source block, and then your comment. So the assistant gets the text you were looking at, not only a line number.
 
 **It asks for an edit, not a rewrite.** The prompt tells the AI to edit that one file in place, not to regenerate it from a template and not to run any setup script.
 
@@ -84,7 +84,7 @@ When a spec's status is completed or archived, its comment cards still render wi
 
 **A comment didn't save.** The write is skipped and logged when the run record is missing or unreadable. The viewer creates that file on first open, so normally it's there; if it isn't, the spec folder is the place to look.
 
-**A comment vanished from the page after an edit.** It's in the Activity list under Run log. Re-anchoring gave up on placing it inline because the block it was attached to no longer matches anything in the document.
+**A comment vanished from the page after an edit.** It's still in the Activity list under Run log. Re-anchoring gave up on placing it inline because the block it was attached to no longer matches anything in the document.
 
 ## Next
 
