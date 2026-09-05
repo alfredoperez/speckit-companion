@@ -18,7 +18,7 @@ export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=
     because the extension is not listed in the Spec Kit catalog. */}
 export const COMPANION_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
 
-SpecKit Companion is two halves that meet in one file. Five steps take you from an empty workspace to a finished spec you can read, assuming you already have an editor and a `specify` CLI that carries the `extension` subsystem. If you don't, or if either install misbehaves, [Install](/docs/install) has the prerequisites and the troubleshooting.
+By the end of this page you'll have both halves of SpecKit Companion installed, one spec created and run through its workflow, and a run record you can read in the Overview. It assumes you already have an editor and a `specify` CLI that carries the `extension` subsystem. If you don't, or if either install misbehaves, [Install](/docs/install) has the prerequisites and the troubleshooting.
 
 <GuidedStep n={1} title="Install the VS Code extension">
 
@@ -50,7 +50,7 @@ A SpecKit icon in the activity bar, with an empty **Specs** view behind it. It's
 
 <GuidedStep n={2} title="Add the Companion Spec Kit extension">
 
-The half that rides your runs. It writes a run record, `.spec-context.json`, next to each spec, and the VS Code extension reads that file.
+The half that rides your runs. It writes a run record, a `.spec-context.json` file logging what each step did, next to each spec, and the VS Code extension reads that file.
 
 It needs Spec Kit 0.9.5 or newer, and it needs a `specify` build that actually has `specify extension`. The stock PyPI package doesn't, which is the one failure worth reading [Install](/docs/install) for before you paste this.
 
@@ -74,7 +74,7 @@ The same command updates it later, because `companion-latest` always serves the 
 
 <GuidedStep n={3} title="Create your first spec">
 
-Click the SpecKit icon, then the `+` button in the Specs view. **Create New Spec** lists every workflow with its description. Describe what you want to build and let it run.
+Click the SpecKit icon, then the `+` button in the Specs view, or run **SpecKit: New Spec** from the command palette. The Create New Spec panel lists every workflow with its description. Describe what you want to build and let it run.
 
 <div slot="result">
 
@@ -85,8 +85,8 @@ A new spec under **Active**, named from what you typed, with the workflow record
 <MediaSlot
   slot="media"
   feature="specs-sidebar"
-  alt="The Specs sidebar: Active, Completed and Archived groups each with a count, one spec expanded to show its spec, plan and tasks documents with their own state marks, and the Living Specs and Steering views below."
-  caption="One spec is enough to see the shape the sidebar will keep: lifecycle groups on the outside, per-document state on the inside, and no separate index to keep in sync."
+  alt="The Specs sidebar: Active and Completed groups each with a count, one spec expanded to show its Specification, Plan and Tasks documents with their own state marks, and the Living Specs and Steering views below."
+  caption="The shape the sidebar keeps from the first spec on: lifecycle groups on the outside, per-document state on the inside, all read from the run record rather than a separate index."
 />
 
 </GuidedStep>
@@ -99,18 +99,18 @@ It records the current step complete, records the next one starting, refreshes t
 
 There often isn't a forward button, and that's a real state rather than a fault: [the spec viewer anatomy](/docs/anatomy/anatomy-of-the-spec-viewer) lists the five situations where forward motion disappears.
 
-**Create New Spec** also has an **Auto** button, which dispatches `/speckit.companion.auto` and runs specify through mark-complete without pauses.
+The Create New Spec panel also shows an **Auto** button for workflows that support it, which is the Companion workflow. It dispatches `/speckit.companion.auto` and runs specify through mark-complete without pauses.
 
 <div slot="result">
 
-While a step runs, the forward buttons drop and the footer reads "Step running, actions unlock when it settles". During implement the step tab shows a live percentage counted from checked boxes in `tasks.md`. When every task is checked, the extension's own file watcher closes the step, without waiting on a hook or a terminal.
+While a step runs, the forward buttons drop and the footer reads "Step running, actions unlock when it settles". During implement the step tab shows a live percentage counted from checked boxes in `tasks.md`. When every task is checked, the extension's own file watcher closes the step, without waiting on a hook or a terminal. Closing the spec itself is a separate action: Mark Completed in the footer, or the Companion workflow's own mark-complete step.
 
 </div>
 
 <MediaSlot
   slot="media"
   feature="run-in-flight"
-  caption="A run in progress reads as progress. The steps that haven't happened stay empty rather than pretending to be pending work."
+  caption="A spec after its first step: Specification carries a check, Plan and Tasks stay hollow because their documents don't exist yet, and the header reports how many phases have timing so far."
 />
 
 </GuidedStep>
@@ -121,9 +121,9 @@ Switch to **Overview**, the second view inside the spec viewer. It exists only f
 
 <div slot="result">
 
-The run's intent, its approach, the area it worked in, and how the change was sized. Under that, the expectations fence, the decisions with what each one rejected, and a coverage table counted as "N/M traced".
+The run's intent, its approach, the area it worked in, and how the change was sized. Under that, the expectations (the constraints the run had to honor and the non-goals it declared), the decisions with what each one rejected, and a coverage table that maps each requirement to the tasks that delivered it and the tests that exercise it, counted as "N/M traced".
 
-Timing is reported only where both ends of a phase were recorded. A phase that can't be measured cleanly is listed with no number, and the header reads "Timing coverage: N of M phases".
+A Run overview strip sits inside the Intent region, one entry per phase. Timing is reported only where both ends of a phase were recorded. A phase that can't be measured cleanly is listed with no number, and the strip's head reads "Timing coverage: N of M phases". When no phase was measured at all it reads "Timing not recorded".
 
 </div>
 
@@ -131,7 +131,7 @@ Timing is reported only where both ends of a phase were recorded. A phase that c
   slot="media"
   feature="overview"
   alt="The Overview read top to bottom: the run's intent, a per-phase timing strip, the approach, working area and size, the expectations fence, each verified check beside the command it ran, the decisions with what they rejected, and the requirement-to-test coverage table."
-  caption="This is the page a future session reads instead of re-deriving your reasoning from the diff. It's why the run record is worth committing."
+  caption="Every region on this page is read from the run record next to the spec. Commit that file and the page travels with the branch."
 />
 
 </GuidedStep>
@@ -142,8 +142,8 @@ It hands your assistant the command text, then reads whatever lands on disk. It 
 
 The Overview's verifications are a recorded report: the check, the command the assistant says it ran, and the outcome it reported. Nothing re-executes. One thing gets re-checked, and only for existence: a coverage test reference that looks like a file path is checked to see whether that file is there.
 
-Everything is plain files in your repo, both committable, with no extension-owned database. Install just the VS Code extension and the viewer, review comments and Specs sidebar still work. Living Specs, the Resume button and the Companion workflow are what the second half adds.
+Everything is plain files in your repo, both committable, with no extension-owned database. Install only the VS Code extension and the viewer, review comments and Specs sidebar still work. Living Specs, the Resume button and the Companion workflow are what the second half adds.
 
 ## Next
 
-Two directions from here. [Anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) names every part of the surface you just used. [Pick a pipeline](/docs/guides/pick-a-pipeline) is the one decision worth making before your second spec.
+Two directions from here. [Anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) names every part of the surface you used above. [Pick a pipeline](/docs/guides/pick-a-pipeline) is the one decision worth making before your second spec.

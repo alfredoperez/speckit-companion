@@ -6,6 +6,8 @@ sidebar:
   order: 5
 ---
 
+By the end of this page you'll have a slash command of your own in the viewer's quick pick, and a `companion.yml` that attaches work to a Companion command, reorders its nodes, or swaps the whole pipeline, without forking anything.
+
 Two different customizations get confused with each other, so they're worth separating before either one makes sense.
 
 A **custom command** is a slash command of your own that the extension can dispatch. It's yours, it's listed in a quick pick, and you run it when you want to. It lives in VS Code settings.
@@ -33,7 +35,7 @@ Everything in `speckit.customCommands` appears in the **SpecKit: Run Custom Comm
 }
 ```
 
-A bare string is the short form: `"review"` becomes `/speckit.review`. The object form gives you the rest.
+A bare string is the short form: `"review"` becomes `/speckit.review`, and it appears in the quick pick only. The object form gives you the rest, and it's the only form that also reaches the viewer's footer.
 
 | Property | What it does |
 | --- | --- |
@@ -47,11 +49,11 @@ A bare string is the short form: `"review"` becomes `/speckit.review`. The objec
 
 Write `${specDir}` anywhere in the command and it's substituted with the spec's directory. With `requiresSpecDir` set and no `${specDir}` anywhere in the string, the directory is appended to the end instead.
 
-**Where they show up in the viewer.** In a collapsed **Other actions** menu in the footer, scoped to the tab or step you assigned them to. It's a menu, not a toolbar, and it renders only when the spec is still active, isn't at its closure gate, and the list isn't empty. If you defined a command and can't find it, one of those three is the reason.
+**Where they show up in the viewer.** In a collapsed **Other actions** menu in the footer, scoped to the tab or step you assigned them to. It's a menu, not a toolbar, and it renders only when the spec is still active, isn't at its closure gate (the footer is offering Mark Completed or Reactivate), and the list isn't empty. If you defined a command and can't find it, one of those three is the reason, or it's a bare string.
 
 ## Node hooks
 
-`.specify/companion.yml` attaches your own work before or after any named node inside a Companion command, without forking the command.
+`.specify/companion.yml` attaches your own work before or after any named node inside a Companion command, without forking the command. The file is deltas only: it changes the commands you name and nothing else.
 
 ```yaml
 commands:
@@ -78,6 +80,19 @@ Add `background: true` to any hook and it starts without the run waiting for it,
 
 The file changes only the commands you name. Everything else keeps its shipped definition, and with no file at all every command runs exactly as it ships.
 
+## The rest of companion.yml
+
+Hooks are the most common entry, but the same file carries four more keys.
+
+| Key | What it does |
+| --- | --- |
+| `commands.<name>.nodes` | A recipe: replaces the command's node order with the list you give, so you can drop a node or add one of your own. Dropping a node that a kept node still reads from is refused at load time. |
+| `commands.<name>.phases` | Renames and regroups the command's phases, each with its own `nodes` list. It replaces the shipped grouping whole, and a phase name becomes a hook anchor. |
+| `workflow` | Names a file under `.specify/companion/workflows/` that replaces this whole configuration, so a project can keep several pipelines and switch between them. The reserved name `shipped` selects none. |
+| `debug` | Read by the build-time renderers only. On an installed project it does nothing. |
+
+A node file at `.specify/companion/nodes/<command>/<node id>.md` replaces the shipped node of that id, and `_frame.md` in the same folder replaces the step's preamble. The Pipeline Builder, opened from the Specs sidebar's toolbar, draws the pipeline these settings resolve to and can write hooks and node edits back into this file for you.
+
 ## What executing this actually means
 
 Nothing runs `companion.yml` for you. There is no engine.
@@ -99,4 +114,4 @@ A file that can't be parsed contributes nothing at all, rather than contributing
 
 ## Next
 
-Custom commands show up in the footer's **Other actions** menu, so [anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) is where to see the surface you just added to. If you're customizing because the built-in workflows don't fit, [Pick a pipeline](/docs/guides/pick-a-pipeline) has the option of defining your own outright.
+Custom commands show up in the footer's **Other actions** menu, so [anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) is where to see the surface they land on. If you're customizing because the built-in workflows don't fit, [Pick a pipeline](/docs/guides/pick-a-pipeline) has the option of defining your own outright.

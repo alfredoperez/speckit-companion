@@ -8,7 +8,7 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-The Overview is one of two views inside the spec viewer. Three things have to be true for it to appear: the spec is a regular feature spec rather than a living spec, its run record has something in it, and you haven't turned the view off with `speckit.viewer.activityPanel`, which ships on.
+By the end of this page you'll know what each region of the Overview is reading from, and which regions a thin page is missing. The Overview is one of two views inside the spec viewer. Three things have to be true for it to appear: the spec is a regular feature spec rather than a living spec, its run record has something in it, and you haven't turned the view off with `speckit.viewer.activityPanel`, which ships on.
 
 It's a reading surface, not a control panel. Nothing on it runs, re-runs, or re-checks the work. It's what your run wrote down, laid out in the order a future session needs it.
 
@@ -17,7 +17,7 @@ Read the whole page once before reading any region closely, because the shape te
 <MediaSlot
   feature="overview"
   still="overview-annotated.png"
-  caption="Every region on this page came out of one file next to the spec. That's the trade the Overview makes: it shows nothing it can't attribute, which is why a thin page is information rather than a bug."
+  caption="Every region on this page came out of one file next to the spec. A region with nothing recorded in it doesn't render, so a thin page means a thin record."
 />
 
 A page with two regions on it isn't a broken Overview. It's a run that recorded two regions.
@@ -26,8 +26,7 @@ A page with two regions on it isn't a broken Overview. It's a run that recorded 
 
 | Region | What it carries |
 | --- | --- |
-| Intent | The run's stated intent, its approach, the area it worked in, how the change was sized |
-| Run timing | One entry per phase, each with an elapsed time or nothing |
+| Intent | The run's stated intent, its approach, the area it worked in, how the change was sized, and a Run overview strip with one entry per phase |
 | Expectations | Constraints on one side, declared non-goals on the other |
 | Verified | Each check, the command the assistant reported running, the outcome it reported |
 | Decisions | The choice, why, and what was rejected |
@@ -36,7 +35,7 @@ A page with two regions on it isn't a broken Overview. It's a run that recorded 
 
 A region with nothing recorded in it doesn't render at all. A spec that recorded nothing shows a single line, "No activity recorded yet", rather than an empty frame.
 
-If the Companion Spec Kit extension isn't installed, a banner sits above everything else offering to install it, with a dismiss control. That banner is the reason a page might be thin: without the second half, most of what the Overview reads never gets written.
+If the Companion Spec Kit extension isn't installed, a banner sits above everything else offering to install it, with a dismiss control. Dismiss it once and it stays gone; setting `speckit.companion.installPrompt` to `false` suppresses it too. That banner is the reason a page might be thin: without the second half, most of what the Overview reads never gets written.
 
 ## Every section head carries a count
 
@@ -50,19 +49,19 @@ Skim the counts first. They tell you which region deserves the close read.
 
 This is the only region that answers "why does this spec exist?". Everything under it is evidence for the sentence at the top.
 
-Alongside the intent sit the approach, the working area, and a sizing line reading something like `Sized simple: 6 files, 8 tasks projected`. If the run loaded any living specs before drafting, they're listed here too, as links into the capability specs it read.
+Alongside the intent sit the approach, the working area, and a sizing line reading something like `Sized simple: 6 files, 8 tasks projected`. If the run loaded any living specs before drafting (a living spec is the durable spec for one capability of the codebase, kept next to the code), they're listed here too, as links into the capability specs it read.
 
 Read it first, then read down. If the intent doesn't match what you expected to find, stop there rather than auditing the coverage table of a run that was aiming somewhere else.
 
-## Run timing
+## Run overview
 
-A strip of phases sits under the intent, one entry each, with a summary at its head.
+A strip of phases sits inside the Intent region, under the intent sentence, one entry each, with the kicker "Run overview" and a summary at its head.
 
-A phase shows an elapsed time only when both ends of its span were recorded. Otherwise the phase is listed with no number, and the head reads "Timing coverage: N of M phases" instead of a total. The run only reports "X elapsed" when specify, plan, tasks and implement all measured cleanly and in order.
+A phase shows an elapsed time only when both ends of its span were recorded. Otherwise the phase is listed with no number, and the head reads "Timing coverage: N of M phases" instead of a total. When nothing was measured at all it reads "Timing not recorded". The run only reports "X elapsed" when specify, plan, tasks and implement all measured cleanly and in order.
 
 A blank duration isn't a bug or a zero. It's the page declining to guess at a span it can't stand behind.
 
-Two other markings show up here. A phase can read "folded into Plan", meaning the run collapsed it into an earlier phase rather than running it separately, so there's no span to report. And a phase still running has no end yet, so the viewer re-reads the record on every write and the running phase carries a timer that ticks each second.
+Two other markings show up here. A phase can read "folded into Plan", meaning the run collapsed it into an earlier phase rather than running it separately, so there's no span to report. And a phase still running has no end yet, so it's marked in flight with no duration; the viewer re-reads the record on every write, and the elapsed timer for a running step lives on the rail tab, not here.
 
 Where the timestamps come from decides how far to trust them. Step boundaries and per-task finishes are written by a script the command runs. The clarify and analyze closes, and the plan and tasks substep boundaries, are reported by the assistant at second precision. Both are recorded honestly; only the first is measured.
 
@@ -90,14 +89,16 @@ The last region is a table, and it's the one that most often carries bad news. R
 
 <MediaSlot
   feature="coverage"
-  caption="Untraced requirements sort to the top, so the table opens on its own gaps. A coverage section you have to scroll to find the problem in isn't reporting, it's filing."
+  caption="Untraced requirements sort to the top, so the first rows are the gaps rather than the rows that are fine."
 />
 
 Coverage is built up across three steps of the run: the requirement comes out of the spec, the tasks that delivered it out of implement, the tests out of what the run recorded.
 
-Each row lands in one of three states, not two. It has tests, it has none, or it names tests that aren't on disk. That third state used to render exactly like a real one, which is worse than no test at all, because it reads as coverage that exists. A row whose named file isn't there now reads "N tests not found".
+Each row lands in one of three states, not two. It has tests, it has none, or it names tests that aren't on disk. That third state used to render exactly like a real one, which is worse than no test at all, because it reads as coverage that exists. The evidence label takes one of four forms: "N tests", "No test linked", "N tests not found" when every named file is missing, or "K of N found" when only some are.
 
 That check is existence only. Nothing runs the test, and nothing checks it passes.
+
+The table shows six rows and folds the rest behind "Show all N requirements". Because untraced rows sort first, the six you see are the ones most likely to need attention.
 
 When requirements were recorded but none of them is traced, the table still renders and says so rather than hiding. Zero traced requirements is the most useful thing this page can tell you, and hiding it while the count two inches above still reads `0/7 traced` would report the problem and conceal the explanation at the same time.
 

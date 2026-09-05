@@ -8,11 +8,11 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-The spec viewer opens your spec markdown as a page instead of a file. Same bytes on disk, rendered against the structure Spec Kit already writes into them.
+By the end of this page you'll be able to name every part of the spec viewer and say what each one is reading from. The viewer opens your spec markdown as a page instead of a file. Same bytes on disk, rendered against the structure Spec Kit already writes into them.
 
 <MediaSlot
   feature="spec-viewer"
-  caption="Nothing here is a second copy of your spec. Everything the page adds is a reading of markdown that was already on disk, which is why editing the file in a text editor still works."
+  caption="Everything the page adds is a reading of markdown already on disk, which is why editing the file in a text editor still works."
 />
 
 ## The header
@@ -21,7 +21,13 @@ The header leads with the spec's recorded name, then a status badge, the branch,
 
 Two statuses get a friendlier visible label than the value stored on disk: `tasking` reads as **Creating Tasks**, and `ready-to-implement` reads as **Tasks Created**. The stored values are unchanged, so a tool reading the file sees the canonical keys.
 
-A living spec's header carries different facts, because a capability isn't a run: requirement and scenario counts, the globs the capability claims, where its spec lives, and an `N/M covered` count. That count appears only when the capability has a coverage file beside its spec. No file means no number, which reads the same as zero coverage without being it. [Living specs](/docs/guides/living-specs) covers what those files are.
+Under the title sits a run strip: a row of facts the badge and the rail don't already say. It shows tasks done out of total, requirements traced, concerns, checks, elapsed time (or `Timing N/M phases` while the record is partial), and a link to the pull request when one was recorded. Facts drop off from the least important end as the window narrows, and the strip doesn't render at all when there's nothing to say.
+
+A living spec's header carries different facts, because a capability isn't a run: requirement and scenario counts, the globs the capability claims, where its spec lives, and an `N/M covered` count. That count appears only when the capability has a coverage file beside its spec. No file means no number, which reads the same as zero coverage without being it. When source files matching the capability changed since its spec was last committed, the header adds a drift chip and an **Update** button that asks your assistant to bring the spec back in line with the code. [Living specs](/docs/guides/living-specs) covers what those files are.
+
+## The outline
+
+On the right of the page, an "On this page" outline lists the document's headings and tracks the one you're reading. It shows second-level headings by default; a **Subsections** toggle adds the third level, and the choice holds across document switches for that viewer session. When the page gets too narrow for a side column the outline folds into a disclosure above the document with the same links.
 
 ## The pipeline rail
 
@@ -29,7 +35,7 @@ The rail lists the documents of whichever workflow the spec recorded when it was
 
 <MediaSlot
   feature="workflow-documents"
-  caption="The rail is built from the workflow the spec recorded, not from a fixed list. That's what lets a custom workflow show its own documents under its own names."
+  caption="The built-in Plan step with its Research and Data Model sub-documents nested under it. The rail is built from the workflow the spec recorded, so a custom workflow lists its own documents the same way."
 />
 
 **Steps that produce a document get an entry. Steps that only do something don't.** Implement, Mark Complete, and any custom step marked action-only never appear in the rail, because there'd be nothing to open. Their actions live in the footer instead. This is the single most common "where did my step go" question, and the answer is that it was never a document.
@@ -46,42 +52,42 @@ The rail lists the documents of whichever workflow the spec recorded when it was
 | Current | The document you're looking at right now. |
 | Done | Its document exists, or the run recorded the step complete and the document is there to back that up. A check mark sits in the badge. |
 | In flight | The step is running. A spinning glyph replaces the check mark, and a timer counts the step's elapsed time. |
-| Locked | Disabled, under one narrow condition only. |
+| Locked | Disabled while a step ahead of it is running. |
 
 Current means the tab you're reading, which is not necessarily the step the run is on. Open an earlier document while implement is running and that document is Current; the header badge and the footer keep reporting the spec's real state. Clicking a tab never rewrites where the run thinks it is.
 
-Locked is the one worth being exact about. A tab is disabled only when three things are true at once: a step is currently running, the tab sits after that step in the rail, and its own document doesn't exist yet. That's the entire rule.
+Locked is the one worth being exact about. A tab is disabled only when four things are true at once: a step is currently running, the tab sits after that step in the rail, it isn't the tab you're already viewing, and its own document doesn't exist yet. That's the entire rule.
 
-The rail does not enforce sequential approval. Any step whose document exists stays freely clickable, including steps you already went past and steps ahead of where the run stopped.
+Separately from locking, a tab whose document isn't on disk can't be clicked, because there's nothing to open. The first tab is the exception, so a brand-new spec always has somewhere to land. The rail does not enforce sequential approval: any step whose document exists stays freely clickable, including steps you already went past and steps ahead of where the run stopped.
 
-### Implement counts itself
+### The implement percentage
 
-During implement, a step tab carries a live percentage next to the spinning glyph, counted straight from the checked boxes in `tasks.md`. So it advances as the work lands, rather than waiting for a hook to report in. Because implement produces no document of its own, the percentage renders on the last document tab, which is Tasks in both built-in workflows.
+During implement, a step tab carries a live percentage next to the spinning glyph, counted straight from the checked boxes in `tasks.md`. So it advances as the work lands, rather than waiting for a hook to report in. The percentage renders on the implement entry when the workflow gives implement a rail entry of its own. When it doesn't, which is the case for both built-in workflows because implement produces no document, it renders on the last document tab, which is Tasks.
 
 The same file watcher closes the step: when every task in `tasks.md` is checked and implement is underway, the extension records the close itself, without a hook firing or a terminal reporting back.
 
 <MediaSlot
   feature="step-rail"
-  caption="Every step that has produced its document carries a check. The one you are reading is highlighted, which is how the rail answers where am I without you counting."
+  caption="Every step that has produced its document carries a check, and the one you are reading is highlighted."
 />
 
-### When a document trails what it came from
+### The stale banner
 
 A document generated before the document above it changed gets a banner over it, saying it may be stale and naming why, with a **Regenerate** action in the banner. It's a warning, not a lock. The document stays readable and every other action stays available.
 
-### When the run record can't be read at all
+### The reset prompt for a broken run record
 
-A run record that's syntactically broken, from a truncated write, a hand edit, or merge-conflict markers, can't be parsed, so the viewer falls back to a plain read-only render of the spec and raises a notification naming the parse error and the file. That notification offers **Reset context**, which moves the broken file aside to a timestamped backup and writes a fresh skeleton in its place. The original bytes are never overwritten, so lifecycle history can be salvaged by hand. Dismissing the notification leaves the file untouched and reopening the spec offers the reset again.
+A run record that's syntactically broken, from a truncated write, a hand edit, or merge-conflict markers, can't be parsed, so the viewer falls back to a plain read-only render of the spec and raises a notification naming the parse error and the file. That notification offers **Reset context**, which moves the broken file aside to a timestamped backup and writes a fresh skeleton in its place. The original bytes are never overwritten, so lifecycle history can be salvaged by hand. The check runs only when a spec is first opened in a viewer tab; switching documents inside an open tab never re-triggers it, so a transient read failure mid-write can't wipe real history. Dismissing the notification leaves the file untouched, and opening the spec again offers the reset again.
 
 ## Requirements render as rows
 
-A bullet written the way Spec Kit writes them, `- **FR-001** The system must ...`, renders as the labeled row in the picture at the top. The prefix in front of the number decides which visual family the row belongs to, so FR, NFR and SC rows read as distinct without anyone tagging them by hand. A bullet that doesn't match that shape stays an ordinary bullet.
+A bullet written the way Spec Kit writes them, `- **FR-001** The system must ...`, renders as the labeled row in the picture at the top. The match is any prefix of two to five capital letters, a hyphen and a number, so FR, NFR and SC rows all qualify, and so does a prefix of your own. The prefix decides which visual family the row belongs to, so the families read as distinct without anyone tagging them by hand. A bullet that doesn't match that shape stays an ordinary bullet.
 
-## Acceptance scenarios stay sentences
+## How acceptance scenarios render
 
 An `**Acceptance Scenarios**:` section followed by a numbered list becomes an ordered list where Given, When and Then are emphasized in place.
 
-That's the whole transformation, and the restraint is the point. Each scenario stays one flowing sentence. It isn't split into a Given/When/Then table and it isn't stacked into three lines. A scenario that wrapped across several lines in the source is joined back into one first, so the sentence survives however it was typed.
+That's the whole transformation. Each scenario stays one flowing sentence. It isn't split into a Given/When/Then table and it isn't stacked into three lines. A scenario that wrapped across several lines in the source is joined back into one first, so the sentence survives however it was typed.
 
 ## Task phases and task lines
 
@@ -109,24 +115,25 @@ The footer renders from a catalog of five entries: Archive, Reactivate, Mark Com
 
 Approve is the internal name and you'll rarely see the word. At most one of the five is forward motion, and it's labeled with the next step's own name, so the button reads **Plan** or **Tasks**, with a context line above it reading `Next: Plan`. The label falls back to Approve only when the workflow definition is missing. Whatever it says, it records completion for the current step, records the start of the next one, refreshes the viewer, and dispatches that step's configured command to your AI provider.
 
-### There often isn't a forward button
+### When no forward button shows
 
-Five real states show no forward action at all:
+Six real states show no forward action at all:
 
 - the implement step, where closure belongs to Mark Completed instead
 - when the tab you're viewing isn't the spec's current step
 - when a later step is already ahead in the recorded history
 - when the step never started
 - while the current step is in flight
+- once the spec is implemented, completed or archived, where the footer reads "Run complete" or "Archived, read-only" instead
 
-The last is the one you'll meet most often. While the step runs, the forward-motion buttons are dropped and the context line reads "Step running, actions unlock when it settles". The closure actions, archive, complete, reactivate and refine, are unaffected.
+The in-flight one is the one you'll meet most often. While the step runs, the forward-motion buttons are dropped and the context line reads "Step running, actions unlock when it settles". The closure actions, archive, complete, reactivate and refine, are unaffected.
 
 ### Other actions
 
 A custom command is a slash command you defined yourself in settings, so that the viewer can dispatch it the same way it dispatches a workflow step. [Pick a pipeline](/docs/guides/pick-a-pipeline) has the shape of one.
 
-Yours appear in a collapsed **Other actions** menu in the footer, scoped to the tab or step you assign them to. It's a menu rather than a toolbar, and it renders only when the spec is still active, isn't at its closure gate, and the list isn't empty. The same commands are reachable from a **Run SpecKit Custom Command** quick pick.
+Yours appear in a collapsed **Other actions** menu in the footer, scoped to the tab or step you assign them to. It's a menu rather than a toolbar, and it renders only when the spec is still active, isn't at its closure gate (the point where the footer is offering Mark Completed or Reactivate), and the list isn't empty. Only the object form of a custom command reaches the footer; a bare string shows up in the quick pick and nowhere else. The same commands are reachable from a **Run SpecKit Custom Command** quick pick.
 
 ## Next
 
-The rail's other destination is the Overview, the record a finished run leaves behind. [Anatomy of the Overview](/docs/anatomy/anatomy-of-the-overview) takes that page apart the same way this one takes the viewer apart. To act on what you just read rather than only read it, [Review and refine](/docs/guides/review-and-refine) is the next guide.
+The rail's other destination is the Overview, the record a finished run leaves behind. [Anatomy of the Overview](/docs/anatomy/anatomy-of-the-overview) takes that page apart the same way this one takes the viewer apart. To act on what you read rather than only read it, [Review and refine](/docs/guides/review-and-refine) is the next guide.
