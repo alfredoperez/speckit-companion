@@ -4,7 +4,7 @@
   "branch": "597-activation-funnel",
   "selectedAt": "2026-08-25T21:51:30.521Z",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -435,6 +435,29 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-08-25T23:38:49.305Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T15:41:15.307Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T15:41:15.394Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T15:41:15.504Z"
     }
   ],
   "livingSpecs": {
@@ -448,7 +471,7 @@
     ],
     "skipped": []
   },
-  "last_action": "PR #598 open for review — 45/47 tasks done; T037/T038 need a PostHog login",
+  "last_action": "closed out 2026-09-05 — PR #598 merged 2026-08-26; 47/47 tasks closed, T038 unrun (see concern)",
   "coverage": {
     "FR-001": {
       "title": "Zero-spec sidebar shows one merged welcome (value line, create, open sample)",
@@ -748,7 +771,7 @@
       "summary": "Shipped the activation funnel: one merged zero-spec welcome with a bundled live sample, a descriptive Create Spec workflow choice on one shared builder with a one-spec Companion trial, the five funnel events with a single watcher-owned completion seam, plus the run-in-flight and make-it-yours clips, a Copilot carousel, and a benefit-led listing."
     }
   },
-  "currentTask": "T047",
+  "currentTask": "T038",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -1082,6 +1105,17 @@
       "files": [
         "tests + build (whole repo)"
       ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Built the five-stage activation funnel in PostHog and removed the retired profile/turbo tile; the recipe is documented in docs/telemetry.md and the dashboard (577114/2035008) carries 12 tiles with a weekly Monday email",
+      "files": [
+        "docs/telemetry.md"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "NOT RUN — closed unverified. The specify-vs-plan parity check needs a PostHog login this session does not have, and no parity result is recorded in docs/telemetry.md. Closed so the spec can land three weeks after its PR merged; recorded as a concern rather than ticked silently"
     }
   },
   "concerns": [
@@ -1095,6 +1129,10 @@
     },
     {
       "note": "Ran the drift check before committing, which hid two drifted capabilities the commit then exposed: ai-providers (the creation preamble now seeds the correlation id) and spec-viewer (its dispatch stopped attaching the retired profile dimension). Both are folded now. The check is only meaningful AFTER the spec and its source are committed together.",
+      "step": "implement"
+    },
+    {
+      "note": "T038 (specify-vs-plan parity check against fresh PostHog data, recorded beside the funnel recipe) was closed WITHOUT being run — it needs a PostHog login. docs/telemetry.md carries the funnel recipe but no parity result. If that number ever matters, it is still owed.",
       "step": "implement"
     }
   ],

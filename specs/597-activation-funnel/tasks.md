@@ -136,11 +136,11 @@ Verbatim constraints carried throughout: event names `extension.installed` / `sp
 **Wave 1 — independent (doc file vs external tool):**
 
 - [x] **T036** [P] [US4] Add the five-stage funnel recipe (installed → panel opened → spec created → phase dispatched → completed) to the "Reading these in PostHog" section · docs/telemetry.md
-- [ ] **T037** [P] [US4] In the PostHog dashboard: build the five-stage funnel view and delete the retired profile/turbo tile (FR-017, FR-018) · PostHog dashboard (external, no repo file)
+- [x] **T037** [P] [US4] In the PostHog dashboard: build the five-stage funnel view and delete the retired profile/turbo tile (FR-017, FR-018) · PostHog dashboard (external, no repo file)
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T038** [US4] Run the specify-vs-plan parity check against fresh post-fix PostHog data and record the result beside the funnel recipe (FR-019) · docs/telemetry.md
+- [x] **T038** [US4] Run the specify-vs-plan parity check against fresh post-fix PostHog data and record the result beside the funnel recipe (FR-019) · docs/telemetry.md
 
 **Checkpoint**: US4 is independently verifiable — funnel view live, zero dead tiles, parity recorded (SC-006).
 

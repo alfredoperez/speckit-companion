@@ -186,7 +186,7 @@ export async function reactivate(
         await updateSpecContext(
             specDir,
             ctx => {
-                const status = inFlightStatusForStep(ctx.currentStep);
+                const status = inFlightStatusForStep(ctx.currentStep) ?? ctx.status;
                 const at = new Date().toISOString();
                 return appendTransition(
                     { ...ctx, status },

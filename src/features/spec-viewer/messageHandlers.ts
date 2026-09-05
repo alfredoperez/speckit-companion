@@ -43,6 +43,7 @@ import {
 } from "../specs/stepLifecycle";
 import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
+import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
 import { livingTierDocuments } from "./livingDocs";
 import {
@@ -323,25 +324,12 @@ async function handleRegenerate(
     : undefined;
 
   if (stepDef && targetStepName) {
-    if (isLifecycleStep(targetStepName)) {
+    if (shouldRecordStepStart(steps, targetStepName)) {
       await startStep(specDirectory, targetStepName, "extension");
     }
     await deps.updateContent(specDirectory, instance.state.currentDocument);
     await executeStepInTerminal(stepDef, specDirectory, deps);
   }
-}
-
-const LIFECYCLE_STEP_NAMES: ReadonlySet<string> = new Set([
-  "specify",
-  "clarify",
-  "plan",
-  "tasks",
-  "analyze",
-  "implement",
-]);
-
-function isLifecycleStep(name: string): boolean {
-  return LIFECYCLE_STEP_NAMES.has(name);
 }
 
 /**
@@ -384,7 +372,7 @@ async function handleApprove(
   }
 
   const targetStep = ctx?.currentStep;
-  if (targetStep && isLifecycleStep(targetStep)) {
+  if (targetStep && shouldRecordStepStart(steps, targetStep)) {
     const alreadyComplete = lastEntryIsCompletionFor(
       ctx?.history ?? [],
       targetStep,
@@ -396,7 +384,7 @@ async function handleApprove(
 
   const nextStep = nextWorkflowStep(steps, currentName);
   if (nextStep) {
-    if (isLifecycleStep(nextStep.name)) {
+    if (shouldRecordStepStart(steps, nextStep.name)) {
       await startStep(specDirectory, nextStep.name as StepName, "extension");
     }
     await deps.updateContent(specDirectory, instance.state.currentDocument);

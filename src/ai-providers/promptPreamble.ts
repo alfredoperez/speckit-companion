@@ -293,7 +293,7 @@ export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: s
     const substepsLine = substepsList.length === 0
         ? `Canonical substeps for ${step}: none — single-pass step.`
         : `Canonical substeps for ${step}: ${substepsList.join(', ')}. For each substep boundary append a SINGLE finish entry { step, substep: "<name>", kind: "complete", by: "ai", at } the moment it ends (fresh \`date -u\`) — one per substep, never two sharing a timestamp, never a separate start. The delta between finishes is each substep's duration.`;
-    const completedStatus = completedStatusForStep(step);
+    const completedStatus = completedStatusForStep(step) ?? 'implemented';
     const donePhrase = DONE_PHRASE_BY_STEP[step];
     const capture = captureBlock(step, specDir, writerPath);
     return [

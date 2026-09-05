@@ -3,12 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
-    getFeatureWorkflow,
-    resolveWorkflow,
-    getWorkflow,
-    normalizeWorkflowConfig,
+    resolveSpecPipeline,
     getStepFile,
-    DEFAULT_WORKFLOW,
     WorkflowStepConfig,
     FeatureWorkflowContext,
     SpecStatus,
@@ -477,36 +473,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     /**
-     * Resolve workflow steps for a feature directory.
-     * Returns the steps array from the feature's workflow, falling back to the default.
-     * When no workflow is persisted, auto-selects and persists the default.
+     * The spec's pipeline, from the one shared resolution the viewer also uses,
+     * so the tree and the rail can never disagree about which steps exist.
      */
     private async resolveWorkflowSteps(featureDir: string): Promise<WorkflowStepConfig[]> {
-        try {
-            const ctx = await getFeatureWorkflow(featureDir);
-            if (ctx) {
-                const wf = getWorkflow(ctx.workflow);
-                if (wf) {
-                    const normalized = normalizeWorkflowConfig(wf);
-                    if (normalized.steps && normalized.steps.length > 0) {
-                        return normalized.steps;
-                    }
-                }
-            }
-        } catch {
-            // fall through
-        }
-
-        // No persisted workflow — resolve default without writing to disk
-        const selected = await resolveWorkflow(featureDir);
-        if (selected) {
-            const normalized = normalizeWorkflowConfig(selected);
-            if (normalized.steps && normalized.steps.length > 0) {
-                return normalized.steps;
-            }
-        }
-
-        return DEFAULT_WORKFLOW.steps!;
+        return resolveSpecPipeline(featureDir);
     }
 
     /**

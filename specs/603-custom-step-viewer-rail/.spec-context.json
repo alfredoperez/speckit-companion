@@ -1,0 +1,782 @@
+{
+  "workflow": "companion",
+  "specName": "Custom Step Viewer Rail",
+  "branch": "603-custom-step-viewer-rail",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T14:07:07.614Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:08:48.556Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:09:08.436Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:10:13.055Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:10:25.134Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:10:38.097Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T14:10:53.334Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T14:12:52.392Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:15:39.817Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:16:13.680Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:16:45.304Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:17:06.576Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T14:17:59.372Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T14:18:55.704Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:20:09.523Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:21:15.302Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:21:27.788Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "handoff",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:21:37.949Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T14:30:10.919Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T14:34:19.596Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:37:06.967Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:37:07.053Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:37:56.654Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:37:56.742Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:40:22.221Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:40:22.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:15.273Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:15.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:15.468Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:15.563Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:15.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:55.308Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:43:55.398Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:42.887Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:42.983Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:43.080Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:43.169Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:51.797Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:47:51.880Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:48:25.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:48:25.594Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:48:25.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:49:18.318Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-05T14:49:18.434Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-05T14:49:18.553Z"
+    }
+  ],
+  "telemetryInstanceId": "a7eae63b-96f9-44ef-abe8-fb36ae1b506a",
+  "selectedAt": "2026-09-05T14:06:23.549Z",
+  "livingSpecs": {
+    "loaded": [
+      "spec-viewer",
+      "workflows",
+      "specs"
+    ],
+    "skipped": [
+      {
+        "name": "spec-viewer",
+        "reason": "read for how the rail and timing consume a pipeline; the viewer only swapped its private resolver for the shared one, so no viewer requirement changed"
+      },
+      {
+        "name": "specs",
+        "reason": "read for the sidebar's step list and the lifecycle-step guards; both now call the shared resolution, which is a workflows requirement, not a new specs one"
+      }
+    ],
+    "synced": [
+      "workflows"
+    ]
+  },
+  "last_action": "all 23 tasks done — 163 suites / 2652 tests pass, tsc clean",
+  "coverage": {
+    "FR-001": {
+      "title": "The viewer and the sidebar MUST draw the Companion pipeline as the project actually runs it, including any step the project added.",
+      "tasks": [
+        "T004",
+        "T007",
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts::places a step after the step it names",
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::draws the project's placed steps in the rail"
+      ]
+    },
+    "FR-002": {
+      "title": "An added step MUST be declared only in the step directory; no workflow entry is written into user settings.",
+      "tasks": [
+        "T001",
+        "T022"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts::writes nothing to the settings key this feature must not touch"
+      ]
+    },
+    "FR-003": {
+      "title": "An added step MUST appear at the position it declares, and be omitted when it declares none.",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts::omits an unplaced step and one naming a step outside the shipped four"
+      ]
+    },
+    "FR-004": {
+      "title": "An added step declaring a document MUST offer it from the rail; one declaring none renders action-only.",
+      "tasks": [
+        "T012",
+        "T013"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/documentScanner.test.ts::opens the document the step declared it writes",
+        "src/features/spec-viewer/__tests__/documentScanner.test.ts::renders a step that writes nothing as action-only"
+      ]
+    },
+    "FR-005": {
+      "title": "The viewer's forward action MUST offer and dispatch an added step when it is next.",
+      "tasks": [
+        "T014",
+        "T016",
+        "T017"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/footerActions.test.ts::names the added step when it is next",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts::writes a start for the added step it dispatches"
+      ]
+    },
+    "FR-006": {
+      "title": "Every surface describing a spec's pipeline MUST derive it from one shared resolution.",
+      "tasks": [
+        "T004",
+        "T006",
+        "T010",
+        "T011",
+        "T019"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts::splices the project steps into a Companion spec"
+      ]
+    },
+    "FR-007": {
+      "title": "An unreadable, malformed or absent step directory MUST fall back to the shipped pipeline and never block a spec opening.",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/projectSteps.test.ts::reads a malformed order file as unplaced rather than throwing",
+        "src/features/workflows/__tests__/projectSteps.test.ts::returns nothing for a root with no step directory"
+      ]
+    },
+    "FR-008": {
+      "title": "A spec recorded against stock SpecKit MUST be unaffected by the project's Companion steps.",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts::leaves a stock SpecKit spec untouched"
+      ]
+    },
+    "FR-009": {
+      "title": "Recorded history MUST remain the source of which steps are done; no file-presence inference is introduced.",
+      "tasks": [
+        "T008",
+        "T009",
+        "T015"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts::never synthesizes progress from file presence for it"
+      ]
+    },
+    "FR-010": {
+      "title": "An added step MUST count toward the run's timing phase coverage like a shipped step.",
+      "tasks": [
+        "T018",
+        "T019"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::counts the added steps toward the timing denominator",
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts::reports partial coverage for an added step that never recorded"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 11,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: workflows (capabilities/workflows/spec.md)",
+    "living spec: spec-viewer (src/features/spec-viewer/spec-viewer.spec.md)",
+    "living spec: specs",
+    "area: src/features/workflows/workflowManager.ts — COMPANION_WORKFLOW is a fixed 5-step list",
+    "area: src/features/spec-viewer/specViewerProvider.ts + specExplorerProvider.ts resolve steps via getWorkflow/resolveWorkflow",
+    "area: speckit-extension/scripts/pipeline-graph.py already exposes name/after/inSequence/own/artifacts per step",
+    "constraint: built-in workflow names are reserved; a custom workflow may not shadow them",
+    "constraint: one shared builder produces every pick-surface workflow list",
+    "constraint: viewer state derives from recorded run history, not file presence"
+  ],
+  "intent": "Make the spec viewer draw the Companion pipeline a project actually runs, so a step added from the builder appears in the rail with its own tab and forward action.",
+  "expectations": [
+    "Do not write a speckit.customWorkflows entry to make an added step visible",
+    "Do not copy the Companion pipeline into a user-defined workflow",
+    "Do not change how the builder writes a step directory",
+    "Placing a step behind another added step is out of scope",
+    "Do not introduce file-presence as evidence a step completed"
+  ],
+  "approach": "Read the project's own step directories in TypeScript and splice the placed ones into the Companion pipeline at one shared resolver, so the rail, sidebar, footer and timing all draw the pipeline the project actually runs. COMPANION_WORKFLOW stays the shipped literal; the splice happens above it. Three existing guards that key on a fixed step list are widened so an added step is journaled and never falls back to file-presence progression.",
+  "decisions": [
+    {
+      "decision": "Read .specify/companion/nodes/*/ directly with fs in TypeScript",
+      "why": "The rail resolves on every spec open and every sidebar row; spawning python3 there would put a process launch behind each refresh and would fail to draw on a machine without Python, which FR-007 forbids. The viewer needs three fields per step, not the whole graph.",
+      "rejected": "Shell out to pipeline-graph.py and reuse its steps[].after / inSequence / artifacts"
+    },
+    {
+      "decision": "Splice above COMPANION_WORKFLOW rather than mutating it",
+      "why": "It is read as a module constant by buildWorkflowChoices, customWorkflowProgress and the viewer tests; mutating it would make all of those workspace-dependent and break SC-003.",
+      "rejected": "Rebuild COMPANION_WORKFLOW from the workspace at activation"
+    },
+    {
+      "decision": "No cache on the directory read",
+      "why": "The common case is one readdir that ENOENTs; a cache would need a watcher and a disposal lifecycle to save unmeasured work.",
+      "rejected": "Cache per workspace root invalidated by the existing .specify watcher — held in reserve if the sidebar gets slow"
+    },
+    {
+      "decision": "Detect a built-in pipeline by its command family (speckit.companion.*)",
+      "why": "A spliced Companion pipeline no longer matches the literal signature, so customWorkflowProgress would switch it to file-presence progression — exactly what FR-009 rules out. The command family is what actually distinguishes a pipeline that captures.",
+      "rejected": "Compare the sequence with project steps removed, or add an explicit isBuiltin flag to WorkflowConfig"
+    },
+    {
+      "decision": "Derive the lifecycle-step predicate from the resolved pipeline",
+      "why": "The two hardcoded sets answer a name question when the real one is whether the step records anything; a name-based set would leave an added step with a completion that never began.",
+      "rejected": "Add each project step name to both sets at read time"
+    },
+    {
+      "decision": "Recognise a built-in pipeline by its command family (every step dispatching speckit.companion.*) in addition to the exact shipped sequence",
+      "why": "A spliced Companion pipeline no longer matches the shipped sequence, and the companion name is reserved so no user workflow can claim that prefix",
+      "rejected": "Rebuilding the expected sequence per workspace, which would have re-read the step directory inside the classifier"
+    },
+    {
+      "decision": "shouldRecordStepStart gates on pipeline membership, not untimed, and a speckit. command prefix, with clarify and analyze kept as off-pipeline exceptions",
+      "why": "Pipeline membership alone would have stopped journaling clarify and analyze, which are side commands in no pipeline; the command prefix is what keeps a user-workflow step from recording",
+      "rejected": "Pure pipeline membership as the contract described, which silently dropped the two side commands"
+    },
+    {
+      "decision": "Badge every step in the resolved pipeline, not only the lifecycle names",
+      "why": "deriveStepBadges iterated the fixed STEP_NAMES set, so an added step drew a blank rail mark even once the resolver placed it",
+      "rejected": "Leaving the badge map alone, which would have shipped a visible step with no state"
+    },
+    {
+      "decision": "Resolve the pipeline once at the top of executeWorkflowStep and use it for progress, per-step model/effort and terminal tracking",
+      "why": "Those three all read the un-spliced normalized.steps, so an added step would have been drawn but not progressed",
+      "rejected": "Swapping only the three LIFECYCLE_STEPS checks the task named"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan, research, data model and contract written: read the project step directory in TS, splice into Companion at one shared resolver, widen three guards that key on a fixed step list.",
+      "key_finding": "Splicing the Companion pipeline trips two existing guards nobody would look for — customWorkflowProgress would reclassify it as user-defined and start inferring completion from files on disk (violating FR-009), and the two hardcoded lifecycle-step sets would refuse to write a start for the added step."
+    },
+    "tasks": {
+      "summary": "23 tasks across 6 phases: Foundational (reader + one shared resolver, 3 waves), four story phases (rail, document tab, forward walk, timing), Polish."
+    },
+    "implement": {
+      "summary": "The spec viewer, the sidebar, the forward action and the run timing now all draw the Companion pipeline the project actually runs, including any step the project added."
+    }
+  },
+  "currentTask": "T023",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added ProjectStep and readProjectSteps: scans .specify/companion/nodes/*/, reads label from _frame.md description, placement from _order.yml after:, writes from the first node declaring it; skips reserved names, bad names and a missing _order.yml without throwing",
+      "files": [
+        "src/features/workflows/projectSteps.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added project-step fixtures: placed after implement and after specify, unplaced, malformed _order.yml, a shipped-name collision, a bad name, and two on the same after",
+      "files": [
+        "tests/fixtures/project-steps/",
+        "tests/fixtures/project-steps-empty/"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Unit-tested the reader against the fixtures: label fallback, writes pickup, directory-name ordering, and every skip rule returning the remaining steps instead of throwing",
+      "files": [
+        "src/features/workflows/__tests__/projectSteps.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added the shared resolver: resolveCompanionSteps splices placed project steps into COMPANION_WORKFLOW without mutating it, resolveSpecPipeline applies the splice only for Companion, shouldRecordStepStart replaces the hardcoded lifecycle sets",
+      "files": [
+        "src/features/workflows/pipelineResolution.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Unit-tested the resolver: shipped list unchanged with no project steps, placement after implement and after specify, unplaced and bad-after omitted, stable directory-name order for two on the same after, stock pipeline untouched, COMPANION_WORKFLOW never mutated",
+      "files": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Exported resolveSpecPipeline, resolveCompanionSteps, shouldRecordStepStart and the reader from the workflows barrel",
+      "files": [
+        "src/features/workflows/index.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Added viewer tests that the rail draws the project's placed steps in run order and stays identical with none added",
+      "files": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added a customWorkflowProgress test that a spliced Companion pipeline is still built-in and never synthesizes progress from file presence",
+      "files": [
+        "src/features/specs/__tests__/customWorkflowProgress.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Widened isBuiltinWorkflow: a pipeline whose every step dispatches speckit.companion.* is built-in, so a spliced pipeline keeps history-driven progression",
+      "files": [
+        "src/features/specs/customWorkflowProgress.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Deleted the viewer's private resolveWorkflowSteps and routed it through the shared resolveSpecPipeline",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/__tests__/showSpec.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Deleted the sidebar's private resolveWorkflowSteps and routed it through the shared resolveSpecPipeline",
+      "files": [
+        "src/features/specs/specExplorerProvider.ts",
+        "src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added documentScanner tests: an added step's declared document opens, an unproduced one reports not existing, and a step writing nothing renders action-only",
+      "files": [
+        "src/features/spec-viewer/__tests__/documentScanner.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "No change needed: the document lookup already runs scanDocuments over the resolved pipeline and keys off each step's file, so an added step's document opens once the resolver supplies it — verified by T012",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Added footer tests that the forward action names and dispatches the added step, offers the one after it, reads a recorded run as completed, and shows not-started on a spec recorded before the step existed; badged the added steps in deriveStepBadges so their rail marks are not blank",
+      "files": [
+        "src/features/spec-viewer/__tests__/footerActions.test.ts",
+        "src/features/spec-viewer/stateDerivation.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added messageHandlers tests that approve writes a start for the added step, still refuses one for mark-complete, and still refuses one for a user-workflow step",
+      "files": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Replaced LIFECYCLE_STEP_NAMES with shouldRecordStepStart against the resolved pipeline at the viewer's regenerate and approve paths",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Replaced the LIFECYCLE_STEPS set with shouldRecordStepStart at all three call sites and resolved the spec's pipeline once per dispatch, so progress, per-step model/effort and terminal tracking all see the added step",
+      "files": [
+        "src/features/specs/specCommands.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Added timing tests: the denominator counts the added steps and an unrecorded one yields partial coverage with no invented duration; written next to the denominator in stateDerivation.test.ts rather than phaseCalculation.test.ts, which does not own it",
+      "files": [
+        "src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "No change needed: the phase denominator already derives from the workflowSteps passed into deriveViewerState, so it counts the added step the moment the resolver supplies it — verified by T018",
+      "files": [
+        "src/features/spec-viewer/stateDerivation.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Documented the behaviour: the rail draws the project's placed steps, placement comes from _order.yml after:, an unplaced step stays hand-launched, and nothing is written to speckit.customWorkflows",
+      "files": [
+        "docs/viewer-states.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Added the user-facing Unreleased entry: a step you add to the pipeline now appears in the spec viewer",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Added the SC-005 assertion that resolving the pipeline never updates settings; written into the resolver's own suite",
+      "files": [
+        "src/features/workflows/__tests__/pipelineResolution.test.ts"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Ran the full suite and both builds: 163 suites / 2652 tests pass, tsc clean; the 31 webpack errors are pre-existing on main (verified by stashing)"
+    }
+  },
+  "verified": [
+    {
+      "what": "full unit suite",
+      "command": "npm test",
+      "result": "163 suites / 2652 tests pass",
+      "warnings": [
+        "jest reports a worker not exiting gracefully; pre-existing on main, unrelated to this change"
+      ]
+    },
+    {
+      "what": "extension typecheck",
+      "command": "npm run compile",
+      "result": "tsc clean"
+    },
+    {
+      "what": "webview bundle",
+      "command": "npm run compile-web",
+      "result": "31 errors, all pre-existing",
+      "warnings": [
+        "confirmed by stashing the change and rebuilding: the same 31 errors appear on main"
+      ]
+    },
+    {
+      "what": "the .specify watcher already refreshes on an added step",
+      "command": "grep -n specifyWatcher src/core/fileWatchers.ts",
+      "result": "**/.specify/**/* watcher exists at fileWatchers.ts:300, so a new step directory fires a refresh with no new watcher"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Two tasks needed no code: the document lookup (T013) and the timing denominator (T019) already read the resolved pipeline, so both were closed as verified-by-test rather than edited. The plan over-estimated what was hardcoded.",
+      "step": "implement"
+    },
+    {
+      "note": "Two gaps the tasks did not name turned up while wiring: deriveStepBadges iterated the fixed lifecycle set so an added step drew a blank rail mark, and executeWorkflowStep progressed against the un-spliced step list. Both fixed here.",
+      "step": "implement"
+    },
+    {
+      "note": "npm run compile-web reports 31 pre-existing TypeScript errors in the webview bundle on main. Unrelated to this change but it means the webview bundle is not a clean gate for anyone working here.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 12 task finishes were journaled in 3 batches (largest 5 tasks in 0.4s), so per-task durations are not trustworthy though the summaries are; 1 capture call exited without an outcome; 2 tool calls failed during the run (test-mock debugging, retried successfully). All self-inflicted, history is append-only, no issue opened.",
+      "step": "implement"
+    }
+  ]
+}

@@ -9,6 +9,8 @@ import {
 import type { SpecContext, HistoryEntry, StepName } from '../../../core/types/specContext';
 import type { WorkflowStepConfig } from '../../workflows/types';
 import { COMPANION_WORKFLOW, normalizeWorkflowConfig } from '../../workflows/workflowManager';
+import { resolveCompanionSteps } from '../../workflows/pipelineResolution';
+import * as path from 'path';
 
 // Stub footerActions — these tests exercise derivation, not footer logic.
 // (vscode itself is mocked globally via jest.config moduleNameMapper, so
@@ -267,6 +269,68 @@ describe('deriveViewerState', () => {
             expect(markComplete?.untimed).toBe(true);
             const timed = norm.steps!.filter(s => !s.untimed).map(s => s.name);
             expect(timed).toEqual(['specify', 'plan', 'tasks', 'implement']);
+        });
+    });
+
+    describe("a project's added step in the pipeline", () => {
+        const FIXTURES = path.join(__dirname, '../../../../tests/fixtures');
+        const WITH_STEPS = path.join(FIXTURES, 'project-steps');
+        const EMPTY = path.join(FIXTURES, 'project-steps-empty');
+        const extPair = (step: string, start: string, end: string): HistoryEntry[] => ([
+            { step, substep: null, kind: 'start', from: { step: null, substep: null }, by: 'extension', at: start },
+            { step, substep: null, kind: 'complete', from: { step: null, substep: null }, by: 'extension', at: end },
+        ] as HistoryEntry[]);
+
+        it('draws the project\'s placed steps in the rail, in run order', () => {
+            const steps = resolveCompanionSteps(WITH_STEPS);
+            expect(steps.map(s => s.name)).toEqual([
+                'specify', 'research-check', 'plan', 'tasks', 'implement',
+                'bench-run', 'code-review', 'mark-complete',
+            ]);
+        });
+
+        it('leaves a workspace with no added steps identical to today (SC-003)', () => {
+            expect(resolveCompanionSteps(EMPTY)).toEqual(COMPANION_WORKFLOW.steps);
+        });
+
+        it('counts the added steps toward the timing denominator (FR-010)', () => {
+            const steps = resolveCompanionSteps(WITH_STEPS);
+            const run = makeContext({
+                currentStep: 'implement',
+                status: 'completed',
+                history: [
+                    ...extPair('specify', '2026-07-21T10:00:00.000Z', '2026-07-21T10:02:00.000Z'),
+                    ...extPair('research-check', '2026-07-21T10:02:00.100Z', '2026-07-21T10:03:00.000Z'),
+                    ...extPair('plan', '2026-07-21T10:03:00.100Z', '2026-07-21T10:04:00.000Z'),
+                    ...extPair('tasks', '2026-07-21T10:04:00.100Z', '2026-07-21T10:05:00.000Z'),
+                    ...extPair('implement', '2026-07-21T10:05:00.100Z', '2026-07-21T10:12:00.000Z'),
+                    ...extPair('bench-run', '2026-07-21T10:12:00.100Z', '2026-07-21T10:13:00.000Z'),
+                    ...extPair('code-review', '2026-07-21T10:13:00.100Z', '2026-07-21T10:14:00.000Z'),
+                ],
+            });
+            const timing = deriveViewerState(run, 'implement' as StepName, steps).timing;
+            expect(timing.expectedPhases).toBe(7);   // the shipped four plus three added, mark-complete untimed
+            expect(timing.measuredPhases).toBe(7);
+            expect(timing.complete).toBe(true);
+        });
+
+        it('reports partial coverage for an added step that never recorded, with no invented duration', () => {
+            const steps = resolveCompanionSteps(WITH_STEPS);
+            const run = makeContext({
+                currentStep: 'implement',
+                status: 'implemented',
+                history: [
+                    ...extPair('specify', '2026-07-21T10:00:00.000Z', '2026-07-21T10:02:00.000Z'),
+                    ...extPair('plan', '2026-07-21T10:03:00.100Z', '2026-07-21T10:04:00.000Z'),
+                    ...extPair('tasks', '2026-07-21T10:04:00.100Z', '2026-07-21T10:05:00.000Z'),
+                    ...extPair('implement', '2026-07-21T10:05:00.100Z', '2026-07-21T10:12:00.000Z'),
+                ],
+            });
+            const state = deriveViewerState(run, 'implement' as StepName, steps);
+            expect(state.timing.expectedPhases).toBe(7);
+            expect(state.timing.measuredPhases).toBe(4);
+            expect(state.timing.complete).toBe(false);
+            expect(state.stepHistory['research-check']).toBeUndefined();
         });
     });
 

@@ -153,10 +153,12 @@ export function setStepStarted(
     at: string = new Date().toISOString(),
     dedupe = true
 ): SpecContext {
+    // A step the project added carries no lifecycle status, so the spec keeps
+    // the one it has; the history entry is still what records the step ran.
     const advanced: SpecContext = {
         ...ctx,
         currentStep: step,
-        status: inFlightStatusForStep(step),
+        status: inFlightStatusForStep(step) ?? ctx.status,
     };
     // Idempotent per (step, substep=null) like the Python writer: skip a redundant start but still realign currentStep/status; forceStatus opts out via dedupe=false to re-stamp a recovery boundary.
     if (dedupe && hasStepStart(ctx.history, step, null)) {
@@ -176,7 +178,7 @@ export function setStepCompleted(
     return appendHistory(
         {
             ...ctx,
-            status: completedStatusForStep(step),
+            status: completedStatusForStep(step) ?? ctx.status,
         },
         entry
     );

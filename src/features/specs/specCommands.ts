@@ -12,7 +12,8 @@ import {
     getOrSelectWorkflow,
     resolveStepCommand,
     executeCheckpointsForTrigger,
-    normalizeWorkflowConfig,
+    resolveSpecPipeline,
+    shouldRecordStepStart,
     WorkflowStep,
     WorkflowConfig,
 } from '../workflows';
@@ -38,15 +39,6 @@ function toWorkspaceRelative(absOrRel: string): string {
     const rel = path.relative(ws, absOrRel);
     return rel && !rel.startsWith('..') ? rel : absOrRel;
 }
-
-const LIFECYCLE_STEPS: ReadonlySet<string> = new Set([
-    'specify',
-    'plan',
-    'tasks',
-    'implement',
-    'clarify',
-    'analyze',
-]);
 
 // Statuses the force-status picker offers; the transient `tasking` and the out-of-band `draft`/`archived` are excluded.
 const FORCE_STATUS_CHOICES: Status[] = [
@@ -647,7 +639,8 @@ function registerPhaseCommands(
                 if (refinementContext) {
                     prompt += refinementContext;
                 }
-                if (LIFECYCLE_STEPS.has(cmd.name)) {
+                const cmdPipeline = await resolveSpecPipeline(targetDir);
+                if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     await startStep(targetDir, cmd.name as StepName, 'extension');
                 }
                 const wrapped = buildPrompt({
@@ -656,7 +649,7 @@ function registerPhaseCommands(
                     specDir: toWorkspaceRelative(targetDir),
                 });
                 const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`);
-                if (LIFECYCLE_STEPS.has(cmd.name)) {
+                if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
                 }
             })
@@ -694,15 +687,16 @@ async function executeWorkflowStep(
 
     outputChannel.appendLine(`[SpecKit] Using workflow: ${workflow.displayName || workflow.name}`);
 
+    // The spec's pipeline as every surface draws it, so a project's added step runs like a shipped one.
+    const pipelineSteps = await resolveSpecPipeline(targetDir);
+
     // Update step progress in .spec-context.json. Awaited (not fire-and-forget)
     // so it fully settles before any later lifecycle write for this spec —
     // `updateSpecContext` also serializes per file, but awaiting here keeps the
     // single start-write ordered ahead of dispatch. A write failure must not
     // block dispatch (R002), so the error is logged, not thrown.
-    const normalized = normalizeWorkflowConfig(workflow);
-    const workflowStepNames = (normalized.steps || []).map(s => s.name);
     try {
-        await updateStepProgress(targetDir, step, workflowStepNames);
+        await updateStepProgress(targetDir, step, pipelineSteps.map(s => s.name));
     } catch (err) {
         outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
     }
@@ -717,7 +711,7 @@ async function executeWorkflowStep(
     }
 
     // Per-step model/effort (Claude Code only; other providers ignore it).
-    const stepConfig = normalized.steps?.find(s => s.name === step);
+    const stepConfig = pipelineSteps.find(s => s.name === step);
     const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
         ? { model: stepConfig.model, effort: stepConfig.effort }
         : undefined;
@@ -745,7 +739,7 @@ async function executeWorkflowStep(
     if (!terminal) {
         return;
     }
-    if (LIFECYCLE_STEPS.has(step)) {
+    if (shouldRecordStepStart(pipelineSteps, step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }
 

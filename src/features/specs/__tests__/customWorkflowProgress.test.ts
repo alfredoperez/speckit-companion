@@ -11,6 +11,7 @@ import { FooterActionIds } from '../../../core/constants';
 import type { SpecContext, StepName } from '../../../core/types/specContext';
 import type { WorkflowStepConfig } from '../../workflows/types';
 import { COMPANION_WORKFLOW, DEFAULT_WORKFLOW } from '../../workflows/workflowManager';
+import { resolveCompanionSteps } from '../../workflows/pipelineResolution';
 
 // Ticket-based custom workflow: spec → tickets → implement(actionOnly),
 // with the non-lifecycle step name "tickets".
@@ -306,5 +307,32 @@ describe('a claimed subDir is pruned to its whole subtree', () => {
         fs.mkdirSync(path.join(dir, 'checklists', 'archive'), { recursive: true });
         fs.writeFileSync(path.join(dir, 'checklists', 'archive', 'old.md'), '# old');
         expect(stepHasOutput(dir, CHECKLIST_STEPS[1], CHECKLIST_STEPS)).toBe(false);
+    });
+});
+
+describe("a Companion pipeline carrying the project's added step", () => {
+    const FIXTURES = path.join(__dirname, '../../../../tests/fixtures');
+    const spliced = resolveCompanionSteps(path.join(FIXTURES, 'project-steps'));
+
+    it('is still classified built-in, so progression stays history-driven (FR-009)', () => {
+        expect(spliced.map(s => s.name)).toContain('code-review');
+        expect(isCustomWorkflow(spliced)).toBe(false);
+    });
+
+    it('never synthesizes progress from file presence for it', () => {
+        const ctx = {
+            workflow: 'companion',
+            specName: 'test',
+            branch: 'main',
+            currentStep: 'specify' as StepName,
+            status: 'active',
+            history: [],
+        } as unknown as SpecContext;
+        // Every step's output claimed to exist — a custom workflow would jump ahead.
+        expect(synthesizeCustomProgress(ctx, spliced, () => true)).toBe(ctx);
+    });
+
+    it('still classifies a user workflow that merely reuses the step names as custom', () => {
+        expect(isCustomWorkflow(TICKET_WORKFLOW_STEPS)).toBe(true);
     });
 });

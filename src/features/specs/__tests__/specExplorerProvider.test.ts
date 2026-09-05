@@ -28,6 +28,11 @@ jest.mock('../../workflows', () => ({
     getWorkflow: jest.fn().mockReturnValue(null),
     normalizeWorkflowConfig: jest.fn(),
     getStepFile: jest.fn((step: any) => step.file || `${step.name}.md`),
+    resolveSpecPipeline: jest.fn().mockResolvedValue([
+        { name: 'specify', label: 'Specify', file: 'spec.md' },
+        { name: 'plan', label: 'Plan', file: 'plan.md' },
+        { name: 'tasks', label: 'Tasks', file: 'tasks.md' },
+    ]),
     DEFAULT_WORKFLOW: {
         steps: [
             { name: 'specify', label: 'Specify', file: 'spec.md' },

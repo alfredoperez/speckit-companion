@@ -91,6 +91,15 @@ function stepOrder(
     return workflowSteps.map(s => s.name);
 }
 
+/** A next step that actually dispatches work — the terminal `mark-complete` is `untimed` and does not count. */
+function hasDispatchableNext(
+    workflowSteps: WorkflowStepConfig[] | undefined,
+    step: StepName
+): boolean {
+    const next = nextWorkflowStep(workflowSteps, step);
+    return !!next && !next.untimed;
+}
+
 function shouldShowApprove(
     ctx: SpecContext,
     step: StepName,
@@ -102,8 +111,9 @@ function shouldShowApprove(
     // Implement step closure is owned by `Mark Completed` (gated on
     // `isSpecDone(ctx)`). Approve here would surface a duplicate
     // "Complete" button the moment every task box gets ticked, before
-    // status actually flips to `implemented`.
-    if (step === 'implement') return false;
+    // status actually flips to `implemented` — unless the project placed a
+    // real step after implement, which is a forward action and not a duplicate.
+    if (step === 'implement' && !hasDispatchableNext(workflowSteps, step)) return false;
     // Approve must target the spec's actual current step. When the user
     // navigates backward via the stepper, dispatching the next step from
     // a past tab would re-run already-completed phases.
