@@ -250,7 +250,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'installSpecKitExtension':
-                reportInstallPromptClicked('createSpec');
+                reportInstallPromptClicked(message.prompt?.kind === 'update' ? 'createSpecUpdate' : 'createSpec');
                 void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
                 break;
 
@@ -577,8 +577,8 @@ export class SpecEditorProvider {
         // behind this build — installed, current projects see nothing (zero-regression).
         // Visibility is the unit-tested gate; the markup is shared with the Activity panel.
         const installPrompt = resolveInstallPrompt(this.context);
-        if (installPrompt?.kind === 'install') {
-            reportInstallPromptShown('createSpec');
+        if (installPrompt) {
+            reportInstallPromptShown(installPrompt.kind === 'update' ? 'createSpecUpdate' : 'createSpec');
         }
         const installBanner = renderInstallBannerHtml(installPrompt);
 

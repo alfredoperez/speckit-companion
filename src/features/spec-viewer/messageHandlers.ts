@@ -196,8 +196,8 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       if (fn) await fn(dir, deps);
       else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
     },
-    installSpecKitExtension: async (_msg, dir, deps) => {
-      reportInstallPromptClicked('activity');
+    installSpecKitExtension: async (msg, dir, deps) => {
+      reportInstallPromptClicked(msg.prompt?.kind === 'update' ? 'activityUpdate' : 'activity');
       await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
       await handleRefresh(dir, deps);
     },

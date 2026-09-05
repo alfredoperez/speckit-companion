@@ -59,11 +59,11 @@ There are **two** installs, and they're independent:
 # 1. github-source spec-kit CLI (required: stock PyPI specify-cli lacks `extension`)
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
 
-# 2. the companion spec-kit extension (installs/updates)
+# 2. the companion spec-kit extension (add --force when updating an existing install)
 specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip
 ```
 
-> The `companion-latest/companion.zip` URL is a stable rolling asset. It always serves the newest build, so the same command installs **and** updates. Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion`.
+> The `companion-latest/companion.zip` URL is a stable rolling asset, always serving the newest build. To update later, run the same command with `--force` — `extension add` refuses to overwrite an install without it. Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion`.
 
 **Update it later** from the Specs view **Upgrade…** menu, *Update spec-kit Extension* (runs the same install command).
 

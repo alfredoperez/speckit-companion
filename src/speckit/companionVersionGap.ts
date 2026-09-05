@@ -88,14 +88,37 @@ export function resolveCompanionGap(workspaceRoot: string, extensionPath: string
     );
 }
 
+let installDeadline = 0;
+
+/** Called when an install is dispatched: for the next minute an empty extension dir is a `--force` reinstall mid-copy, not an uninstall. */
+export function markInstallInFlight(): void {
+    installDeadline = Date.now() + 60_000;
+}
+
+/** True while a dispatched install is plausibly still copying files. */
+export function isInstallInFlight(): boolean {
+    return Date.now() < installDeadline;
+}
+
+/** Called once a refresh sees the extension present again. */
+export function clearInstallInFlight(): void {
+    installDeadline = 0;
+}
+
 let lastGap: { key: string; gap: CompanionGap } | undefined;
 
 const gapKey = (workspaceRoot: string, extensionPath: string): string => `${workspaceRoot}\u0000${extensionPath}`;
 
 /** Resolve from disk and remember the answer; activation, the watchers and a workspace-folder change call this once per tick. */
 export function refreshCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
+    const key = gapKey(workspaceRoot, extensionPath);
     const gap = resolveCompanionGap(workspaceRoot, extensionPath);
-    lastGap = { key: gapKey(workspaceRoot, extensionPath), gap };
+    // `--force` deletes the extension dir before it copies the new one. Caching that gap would show every
+    // banner the install pitch mid-update, so the last known answer stands until the copy lands.
+    if (gap.state === 'missing' && isInstallInFlight() && lastGap?.key === key) {
+        return lastGap.gap;
+    }
+    lastGap = { key, gap };
     return gap;
 }
 

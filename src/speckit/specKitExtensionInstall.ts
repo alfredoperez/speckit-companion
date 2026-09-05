@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
-import { cachedCompanionGap, readInstalledCompanionVersion, type CompanionGap } from './companionVersionGap';
+import { cachedCompanionGap, markInstallInFlight, readInstalledCompanionVersion, type CompanionGap } from './companionVersionGap';
 import type { InstallPrompt } from '../protocol/viewer';
 
 export type { InstallPrompt };
@@ -101,10 +101,16 @@ export function isInstallPromptDismissed(globalState: vscode.Memento, prompt: In
     return globalState.get<unknown>(key) === value;
 }
 
-/** Persist the dismissal of the prompt the user closed, as the banner reported it. */
+const dismissed = new vscode.EventEmitter<void>();
+
+/** Fires when a prompt is silenced, so the ambient surfaces (status bar, badge) re-sync without waiting for a file to change. */
+export const onDidDismissInstallPrompt = dismissed.event;
+
+/** Persist the dismissal of the prompt the user closed, as the banner reported it. The one write path for every dismissal. */
 export async function dismissInstallPrompt(context: vscode.ExtensionContext, prompt: InstallPrompt | undefined): Promise<void> {
     const { key, value } = dismissalFor(prompt);
     await context.globalState.update(key, value);
+    dismissed.fire();
 }
 
 /** The prompt a banner surface renders right now — setting, on-disk versions and dismissal all resolved — or `null` for nothing. */
@@ -132,18 +138,6 @@ export function readInstallPromptEnabled(): boolean {
  * `specify extension add` might be missing), then runs the idempotent install. The
  * terminal is shown so the user sees progress and any prompts without leaving the editor.
  */
-let installDeadline = 0;
-
-/** True while a dispatched install is plausibly still copying files, so a momentary empty extension dir is not read as "uninstalled". */
-export function isInstallInFlight(): boolean {
-    return Date.now() < installDeadline;
-}
-
-/** Called once a refresh sees the extension present again. */
-export function clearInstallInFlight(): void {
-    installDeadline = 0;
-}
-
 export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // Set the working directory via the terminal options' `cwd` rather than emitting a
     // `cd "${workspaceRoot}"` command. A workspace path containing `"`, `` ` ``, `$`, or
@@ -162,7 +156,7 @@ export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // `extension add` refuses when the spec-kit registry lists the extension, which can outlive the directory
     // (a deleted dir, a dropped `--dev` symlink, a half-finished install), so either signal means force.
     const alreadyThere = !!workspaceRoot && (isCompanionInstalled(workspaceRoot) || readInstalledCompanionVersion(workspaceRoot) !== undefined);
-    installDeadline = Date.now() + 60_000;
+    markInstallInFlight();
     terminal.sendText(buildInstallCommand({ force: alreadyThere }));
 }
 

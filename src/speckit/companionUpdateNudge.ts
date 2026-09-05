@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { updateBannerText } from '../protocol/viewer';
 import type { CompanionGap } from './companionVersionGap';
-import { readInstallPromptEnabled } from './specKitExtensionInstall';
+import { dismissInstallPrompt, readInstallPromptEnabled } from './specKitExtensionInstall';
 
 const INSTALL_COMMAND = 'speckit.companion.installSpecKitExtension';
 
@@ -48,7 +48,7 @@ export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, 
             if (choice === 'Update') {
                 void vscode.commands.executeCommand(INSTALL_COMMAND);
             } else if (choice === 'Skip this version') {
-                void context.globalState.update(ConfigKeys.globalState.companionUpdateSkippedVersion, gap.expected);
+                void dismissInstallPrompt(context, { kind: 'update', installed: gap.installed, expected: gap.expected });
             }
         });
     } catch {

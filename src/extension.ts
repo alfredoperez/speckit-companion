@@ -22,8 +22,8 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
 import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
-import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
-import { clearInstallInFlight, isInstallInFlight } from './speckit/specKitExtensionInstall';
+import { clearInstallInFlight, isInstallInFlight, refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
+import { onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -303,15 +303,17 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
             // One gap resolution per tick feeds every install/update surface; the ensure needs the installed dir.
+            let retry: ReturnType<typeof setTimeout> | undefined;
             const syncCompanionSurfaces = (): CompanionGap => {
                 const gap = refreshCompanionGap(root, context.extensionPath);
                 const installed = gap.state !== 'missing';
                 if (installed) {
                     clearInstallInFlight();
                 } else if (isInstallInFlight()) {
-                    // `--force` deletes the extension dir before it copies the new one. Flipping the badge and the
-                    // context key on that gap would hide gated views and burn the badge's once-per-session funnel event.
-                    setTimeout(() => { syncCompanionSurfaces(); }, 1000);
+                    // A first install has no previous answer to fall back on, so wait for the copy rather than
+                    // flipping the badge and the context key — that would hide gated views and burn the funnel event.
+                    clearTimeout(retry);
+                    retry = setTimeout(() => { syncCompanionSurfaces(); }, 1000);
                     return gap;
                 }
                 void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
@@ -360,7 +362,10 @@ export async function activate(context: vscode.ExtensionContext) {
                         syncCompanionSurfaces();
                     }
                 }),
+                // Skipping a version or closing a banner must clear the status-bar warning at once.
+                onDidDismissInstallPrompt(() => syncCompanionSurfaces()),
                 companionRefresh,
+                { dispose: () => clearTimeout(retry) },
             );
 
             // Refresh the Living Specs view when the living-specs config or the

@@ -19,6 +19,7 @@ export function renderInstallBannerHtml(prompt: InstallPrompt | null): string {
     if (!prompt) {
         return '';
     }
-    const { className, ariaLabel, body } = installBannerFrame(prompt);
-    return `<div class="${className}" id="install-banner" role="region" aria-label="${ariaLabel}">${body}</div>`;
+    const { className, ariaLabel, body, data } = installBannerFrame(prompt);
+    const attrs = Object.entries(data).map(([name, value]) => ` ${name}="${value}"`).join('');
+    return `<div class="${className}" id="install-banner" role="region" aria-label="${ariaLabel}"${attrs}>${body}</div>`;
 }

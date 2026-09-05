@@ -9,9 +9,10 @@ import type { CompanionGap } from './companionVersionGap';
 
 jest.mock('./specKitExtensionInstall', () => ({
     readInstallPromptEnabled: jest.fn().mockReturnValue(true),
+    dismissInstallPrompt: jest.fn(),
 }));
 
-import { readInstallPromptEnabled } from './specKitExtensionInstall';
+import { dismissInstallPrompt, readInstallPromptEnabled } from './specKitExtensionInstall';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
@@ -57,7 +58,8 @@ describe('companion update nudge', () => {
             expect(show.mock.calls[0][0]).toContain('0.21.0');
             expect(store.get('speckit.companionUpdateNotifiedFor')).toBe('0.21.0');
             await Promise.resolve();
-            expect(store.get('speckit.companionUpdateSkippedVersion')).toBe('0.21.0');
+            // Skip goes through the one dismissal writer, so the status bar re-syncs with the banner.
+            expect(dismissInstallPrompt).toHaveBeenCalledWith(context, { kind: 'update', installed: '0.20.2', expected: '0.21.0' });
 
             maybeShowCompanionUpdateNudge(context, outdated);
             expect(show).toHaveBeenCalledTimes(1);
@@ -76,7 +78,7 @@ describe('companion update nudge', () => {
             maybeShowCompanionUpdateNudge(context, outdated);
             await Promise.resolve();
             expect(store.get('speckit.companionUpdateNotifiedFor')).toBe('0.21.0');
-            expect(store.has('speckit.companionUpdateSkippedVersion')).toBe(false);
+            expect(dismissInstallPrompt).not.toHaveBeenCalled();
         });
 
         it('shows nothing for a current install or when the install prompt is turned off', () => {

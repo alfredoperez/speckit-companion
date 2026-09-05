@@ -8,9 +8,8 @@ import {
     shouldShowInstallPrompt,
     isInstallPromptDismissed,
     dismissInstallPrompt,
+    onDidDismissInstallPrompt,
     runInstallSpecKitExtension,
-    isInstallInFlight,
-    clearInstallInFlight,
 } from './specKitExtensionInstall';
 
 jest.mock('../features/settings/companionPresetReconciler', () => ({
@@ -20,8 +19,10 @@ jest.mock('./companionVersionGap', () => ({
     ...jest.requireActual('./companionVersionGap'),
     readInstalledCompanionVersion: jest.fn().mockReturnValue(undefined),
 }));
+import { clearInstallInFlight, isInstallInFlight } from './companionVersionGap';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { readInstalledCompanionVersion } from './companionVersionGap';
+
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
@@ -101,6 +102,15 @@ describe('specKitExtensionInstall', () => {
     });
 
     describe('dismissInstallPrompt', () => {
+        it('announces the dismissal so the status bar re-syncs without waiting for a file change', async () => {
+            const { context } = createMockExtensionContext();
+            const heard: unknown[] = [];
+            const sub = onDidDismissInstallPrompt(() => heard.push(true));
+            await dismissInstallPrompt(context, { kind: 'update', installed: '0.20.2', expected: '0.21.0' });
+            sub.dispose();
+            expect(heard).toHaveLength(1);
+        });
+
         it('falls back to the install flag when a version-skewed webview sends no prompt', async () => {
             const { context, store } = createMockExtensionContext();
             await dismissInstallPrompt(context, undefined);

@@ -9,6 +9,9 @@ import {
     readInstalledCompanionVersion,
     resolveCompanionGap,
     cachedCompanionGap,
+    refreshCompanionGap,
+    markInstallInFlight,
+    clearInstallInFlight,
 } from './companionVersionGap';
 
 describe('companionVersionGap', () => {
@@ -66,6 +69,25 @@ describe('companionVersionGap', () => {
             } finally {
                 fs.rmSync(a, { recursive: true, force: true });
                 fs.rmSync(b, { recursive: true, force: true });
+            }
+        });
+    });
+
+    describe('an install in flight', () => {
+        it('keeps the last known gap while --force has the extension dir deleted', () => {
+            const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-gap-flight-'));
+            try {
+                const ext = path.join(dir, '.specify/extensions/companion');
+                fs.mkdirSync(ext, { recursive: true });
+                expect(refreshCompanionGap(dir, dir).state).toBe('current');
+                fs.rmSync(ext, { recursive: true, force: true });
+                markInstallInFlight();
+                expect(refreshCompanionGap(dir, dir).state).toBe('current');
+                clearInstallInFlight();
+                expect(refreshCompanionGap(dir, dir).state).toBe('missing');
+            } finally {
+                clearInstallInFlight();
+                fs.rmSync(dir, { recursive: true, force: true });
             }
         });
     });

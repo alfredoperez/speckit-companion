@@ -510,6 +510,8 @@ export type ViewerToExtensionMessage =
     // Install banner actions (shown only when the spec-kit extension is missing)
     | {
           type: 'installSpecKitExtension';
+          /** The banner that was clicked, so the click is attributed to the install or the update prompt. */
+          prompt?: InstallPrompt;
       }
     | {
           type: 'openReadme';

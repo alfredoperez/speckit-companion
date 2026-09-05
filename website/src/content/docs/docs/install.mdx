@@ -138,7 +138,7 @@ The Specs view's install dot is gone, and the Companion workflow in **SpecKit: N
 
 Re-run the exact same command from step 3. The `companion-latest/companion.zip` URL is a rolling asset that always serves the newest build, and `--force` refreshes an existing install in place. There's no version string to edit and no new URL to find.
 
-Inside the editor there are two paths to the same result. The Specs view's **More Actions** menu has an **Install Companion Extension** entry, and its **Upgrade…** submenu has **Update spec-kit Extension**. Either runs `specify extension add companion --from <URL>` in a terminal for you. That command carries no `--force`: `extension add` already installs or updates against the same target, so the in-editor path leaves the flag off.
+Inside the editor there are two paths to the same result. The Specs view's **More Actions** menu has an **Install Companion Extension** entry, and its **Upgrade…** submenu has **Update spec-kit Extension**. Either runs `specify extension add companion --from <URL>` in a terminal for you, adding `--force` when the extension is already there — `extension add` refuses to overwrite an existing install without it.
 
 The extension also nudges you toward this install on its own: a toast on activation when the project has a `.specify` folder but no Companion, a pinned row at the top of the Specs view, and a one-click prompt when you pick the Companion workflow without it. Set `speckit.companion.installPrompt` to `false` to turn all of them off, or choose **Don't show again** on the toast.
 

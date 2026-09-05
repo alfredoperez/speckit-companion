@@ -193,7 +193,7 @@ export type SpecEditorToExtensionMessage =
     | { type: 'removeImage'; imageId: string }
     | { type: 'ready' }
     | { type: 'cancel' }
-    | { type: 'installSpecKitExtension' }
+    | { type: 'installSpecKitExtension'; prompt?: InstallPrompt }
     | { type: 'openReadme' }
     | { type: 'dismissInstallBanner'; prompt: InstallPrompt };
 

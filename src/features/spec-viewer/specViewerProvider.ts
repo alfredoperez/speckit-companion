@@ -180,8 +180,8 @@ export class SpecViewerProvider {
       return null;
     }
     const prompt = resolveInstallPrompt(this.context);
-    if (prompt?.kind === 'install') {
-      reportInstallPromptShown('activity');
+    if (prompt) {
+      reportInstallPromptShown(prompt.kind === 'update' ? 'activityUpdate' : 'activity');
     }
     return prompt;
   }

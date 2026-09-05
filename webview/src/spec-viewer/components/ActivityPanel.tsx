@@ -26,13 +26,14 @@ import { installBannerFrame } from '../../../../src/protocol/installBannerBody';
 function InstallBanner() {
     const prompt = navState.value?.installPrompt;
     if (!prompt) return null;
-    const { className, ariaLabel, body } = installBannerFrame(prompt);
+    const { className, ariaLabel, body, data } = installBannerFrame(prompt);
     return (
         <div
             class={className}
             id="install-banner"
             role="region"
             aria-label={ariaLabel}
+            {...data}
             dangerouslySetInnerHTML={{ __html: body }}
         />
     );
