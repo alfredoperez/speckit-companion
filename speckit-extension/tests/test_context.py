@@ -1811,5 +1811,34 @@ class SpecRelativeBranchTests(unittest.TestCase):
         self.assertEqual(_ctx(same)["branch"], "caller-branch")
 
 
+class TheEarliestStartWins(unittest.TestCase):
+    """FR-007 — stamping a step's start twice records it once.
+
+    The stamp now fires from the command frame on every dispatch path, so it can
+    land after the extension has already seeded one. History is append-only, so
+    the guard has to refuse the second rather than reconcile it: the first start
+    is the honest edge of the step's window.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.spec = Path(self._tmp.name) / "specs" / "001-x"
+        self.spec.mkdir(parents=True)
+
+    def _starts(self):
+        ctx = json.loads((self.spec / ".spec-context.json").read_text(encoding="utf-8"))
+        return [e for e in ctx["history"]
+                if e.get("step") == "plan" and e.get("substep") is None
+                and e.get("kind") == "start"]
+
+    def test_a_second_start_for_the_same_step_appends_nothing(self):
+        wc.update_context(self.spec, "plan", "planning", "extension", kind="start")
+        first = self._starts()[0]["at"]
+        wc.update_context(self.spec, "plan", "planning", "ai", kind="start")
+        starts = self._starts()
+        self.assertEqual(len(starts), 1, "a duplicate start would double the step's window")
+        self.assertEqual(starts[0]["at"], first, "the earlier timestamp stands")
+
 if __name__ == "__main__":
     unittest.main()

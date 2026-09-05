@@ -334,3 +334,165 @@ class ThinBoundaryStep(unittest.TestCase):
 
     def test_says_nothing_when_every_step_recorded_a_comparable_shape(self):
         self.assertEqual(dc._thin_boundary_steps(self._ctx(4)), [])
+
+
+class TraceLostWithoutTraceFile(unittest.TestCase):
+    """A run that could not write its trace at all still left evidence.
+
+    The marker exists precisely for the case where appending to the trace failed,
+    and the commonest cause of that is a directory the run could not write into —
+    which is the same cause that means no trace file exists to read. A check that
+    returns "nothing captured yet" before consulting the marker can never report
+    the one failure the marker was built to carry.
+    """
+
+    @contextlib.contextmanager
+    def _spec(self, marker_text=None, with_trace=False):
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            if marker_text is not None:
+                (spec / run_trace.LOST_NAME).write_text(marker_text, encoding="utf-8")
+            if with_trace:
+                run_trace.record("write-context", "capture", True, ms=1, feature_dir=spec)
+            yield spec
+
+    def test_marker_without_a_trace_file_is_reported_as_a_problem(self):
+        with self._spec("write-context --step plan: [Errno 13] Permission denied\n") as spec:
+            status, findings = dc.check_trace(spec, {})
+        self.assertEqual(status.state, "ran",
+                         "a marker is trace evidence, so the check ran rather than skipped")
+        lost = [f for f in findings if f.severity == "problem"]
+        self.assertEqual(len(lost), 1, "exactly one finding for the unrecorded calls")
+        self.assertIn("Permission denied", lost[0].detail,
+                      "the marker's own reason is named verbatim")
+
+    def test_no_marker_and_no_trace_still_skips_with_the_existing_wording(self):
+        with self._spec() as spec:
+            status, findings = dc.check_trace(spec, {})
+        self.assertEqual(status.state, "skipped")
+        self.assertIn("nothing has been captured", status.reason)
+        self.assertEqual(findings, [])
+
+    def test_a_sibling_specs_failure_is_not_reported_against_this_spec(self):
+        # The shared marker is one spec's last resort and every spec's neighbour.
+        # Merging it into each spec's verdict would turn one real problem into a
+        # false alarm on every spec in the repo that never traced anything.
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            specs = Path(tmp) / "specs"
+            (specs / "001-broken").mkdir(parents=True)
+            quiet = specs / "002-quiet"
+            quiet.mkdir()
+            run_trace._note_trace_failure(specs / "001-broken", OSError("Permission denied"))
+            shared = specs / run_trace.LOST_NAME
+            if not shared.is_file():  # the broken spec's own dir was writable here
+                shared.write_text("2026-01-01 spec=001-broken OSError: Permission denied\n",
+                                  encoding="utf-8")
+            self.assertEqual(dc._lost_entries(quiet), [],
+                             "a sibling's line is not this spec's evidence")
+            status, findings = dc.check_trace(quiet, {})
+            self.assertEqual(status.state, "skipped",
+                             "a spec that never traced anything still reports skipped")
+
+    def test_a_shared_marker_line_tagged_with_this_spec_is_this_spec_s(self):
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            specs = Path(tmp) / "specs"
+            spec = specs / "001-x"
+            spec.mkdir(parents=True)
+            (specs / run_trace.LOST_NAME).write_text(
+                "2026-01-01 spec=001-x OSError: Permission denied\n"
+                "2026-01-01 spec=002-other OSError: Permission denied\n", encoding="utf-8")
+            entries = dc._lost_entries(spec)
+            self.assertEqual(len(entries), 1, "only this spec's tagged line counts")
+            self.assertIn("spec=001-x", entries[0])
+
+    def test_an_empty_marker_is_indistinguishable_from_an_absent_one(self):
+        with self._spec("   \n\n") as spec:
+            status, findings = dc.check_trace(spec, {})
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+
+class VerificationCheck(unittest.TestCase):
+    """A step that closed having executed nothing says so.
+
+    The requirement to run the project's own checks is prompt text, and prompt
+    text has no observer. `verified[]` is already written by the capture runtime;
+    until something reads it, a run can write code, check off a task named "add a
+    test", and close with nothing having been proven to work.
+    """
+
+    @contextlib.contextmanager
+    def _spec(self, ctx):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            (spec / ".spec-context.json").write_text(json.dumps(ctx), encoding="utf-8")
+            yield spec
+
+    def _closed(self, **extra):
+        ctx = {"currentStep": "implement", "status": "completed", "history": [
+            {"step": "implement", "substep": None, "kind": "start",
+             "by": "extension", "at": "2026-09-05T11:00:00Z"},
+            {"step": "implement", "substep": None, "kind": "complete",
+             "by": "ai", "at": "2026-09-05T11:30:00Z"}]}
+        ctx.update(extra)
+        return ctx
+
+    def test_implement_closed_with_nothing_verified_is_a_problem(self):
+        with self._spec(self._closed()) as spec:
+            status, findings = dc.check_verification(spec, self._closed())
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(len(findings), 1, "exactly one finding names the unverified step")
+        self.assertEqual(findings[0].severity, "problem")
+
+    def test_one_recorded_verification_is_enough(self):
+        ctx = self._closed(verified=[{"what": "test suite", "result": "38/38 pass"}])
+        with self._spec(ctx) as spec:
+            status, findings = dc.check_verification(spec, ctx)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual(findings, [])
+
+    def test_a_malformed_verified_list_degrades_to_the_finding_never_a_crash(self):
+        for bad in (None, [], "ran the tests", {"what": "x"}):
+            ctx = self._closed(verified=bad)
+            with self._spec(ctx) as spec:
+                status, findings = dc.check_verification(spec, ctx)
+            self.assertEqual(status.state, "ran", f"{bad!r} is judged, not crashed on")
+            self.assertEqual(len(findings), 1, f"{bad!r} counts as nothing verified")
+
+    def test_a_spec_that_never_reached_implement_reports_no_record(self):
+        ctx = {"currentStep": "plan", "status": "planned", "history": [
+            {"step": "plan", "substep": None, "kind": "complete",
+             "by": "ai", "at": "2026-09-05T11:00:00Z"}]}
+        with self._spec(ctx) as spec:
+            status, findings = dc.check_verification(spec, ctx)
+        self.assertEqual(status.state, "skipped", "no record is not a problem")
+        self.assertEqual(findings, [])
+
+    def test_an_empty_history_takes_the_shared_no_record_skip(self):
+        ctx = {"currentStep": "implement", "history": []}
+        with self._spec(ctx) as spec:
+            status, findings = dc.check_verification(spec, ctx)
+        self.assertEqual(status.state, "skipped")
+        self.assertEqual(findings, [])
+
+    def test_a_legacy_from_to_entry_counts_as_implement_closing(self):
+        # These are the already-on-disk runs the report exists for. Reading `kind`
+        # raw instead of through _entry_kind skips every one of them silently.
+        ctx = {"currentStep": "implement", "status": "completed", "history": [
+            {"step": "implement", "substep": None,
+             "from": {"step": "implement", "substep": None},
+             "to": {"step": "implement", "substep": None},
+             "by": "ai", "at": "2026-09-05T11:30:00Z"}]}
+        with self._spec(ctx) as spec:
+            status, findings = dc.check_verification(spec, ctx)
+        self.assertEqual(status.state, "ran", "a legacy completion is still a completion")
+        self.assertEqual(len(findings), 1)
+
+    def test_the_check_is_registered_so_the_report_actually_runs_it(self):
+        self.assertIn("verification", doctor.CHECKS)

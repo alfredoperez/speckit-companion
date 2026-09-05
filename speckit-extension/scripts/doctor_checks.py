@@ -462,6 +462,45 @@ def _tasks_all_checked(feature_dir: Path) -> bool:
     return bool(all_ids) and len(all_ids) == len(done)
 
 
+def check_verification(feature_dir: Path, ctx: dict) -> tuple:
+    """Did the run prove anything before implement closed?
+
+    Running the project's own checks is prompt text, and prompt text has no
+    observer. `verified[]` is already written whenever a run records a check it
+    executed, so a completed implement with an empty list is a run that shipped
+    code nothing was ever run against. Judged only as empty-or-not: interpreting
+    entry contents is drift's job, not this check's.
+    """
+    skip = _no_record("verification", feature_dir, ctx)
+    if skip is not None:
+        return skip, []
+
+    # Through _entry_kind/_is_step_level, not a raw `kind` read: the legacy
+    # from/to entry shape is a completion too, and the specs that carry it are
+    # exactly the already-on-disk runs this report exists for.
+    closed = any(e.get("step") == "implement" and _is_step_level(e)
+                 and _entry_kind(e) == "complete"
+                 for e in log_entries(ctx))
+    if not closed:
+        return CheckStatus(
+            "verification", "skipped",
+            "implement has not closed — nothing to judge until a step claims it finished",
+        ), []
+
+    verified = ctx.get("verified")
+    if isinstance(verified, list) and verified:
+        return CheckStatus("verification", "ran"), []
+
+    return CheckStatus("verification", "ran"), [Finding(
+        "verification", "problem",
+        "implement closed with nothing verified",
+        "the step recorded no check it actually executed, so nothing it built was proven to "
+        "work — record what you ran with `write-context.py --verified`, and if the checks "
+        "genuinely could not run, record that as a concern instead",
+        {"verified": 0},
+    )]
+
+
 #: The generated task-list shape: one phase per user story, waves inside each
 #: phase, join lines between waves, a checkpoint at the end. Implement executes
 #: that list — it never restructures it, so a later rewrite is a defect.
@@ -544,16 +583,37 @@ def _lost_entries(feature_dir: Path) -> list:
         import run_trace as rt
     except ImportError:
         return []
+    own = Path(feature_dir) / rt.LOST_NAME
+    name = Path(feature_dir).name
     out = []
-    for path in (Path(feature_dir) / rt.LOST_NAME,
-                 Path(feature_dir).parent / rt.LOST_NAME):
+    for path in (own, Path(feature_dir).parent / rt.LOST_NAME):
         try:
-            if path.is_file():
-                out += [ln.strip() for ln in path.read_text(encoding="utf-8").splitlines()
-                        if ln.strip()]
+            if not path.is_file():
+                continue
+            lines = [ln.strip() for ln in path.read_text(encoding="utf-8").splitlines()
+                     if ln.strip()]
         except OSError:
             continue
+        if path == own:
+            out += lines
+            continue
+        # The shared file holds every spec's fallback writes. Only the lines this
+        # spec put there are evidence about this spec; an untagged line predates
+        # the tag and belongs to nobody, which is not the same as belonging to
+        # everybody. Claiming those here is how one spec's failure would be
+        # reported as a problem on every spec that never traced anything.
+        out += [ln for ln in lines if f" spec={name} " in f"{ln} "]
     return out
+
+
+def _lost_finding(lost: list) -> Finding:
+    return Finding(
+        "trace", "problem",
+        f"{plural(len(lost), 'call')} succeeded but could not be recorded in the trace",
+        "the run performed work the trace does not contain, so every count below is a "
+        "lower bound — most often an unwritable spec directory: " + lost[0],
+        {"lost": lost[:5]},
+    )
 
 
 #: A write that did not land because a guard correctly refused it. The commonest
@@ -583,10 +643,18 @@ def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
 
     read = run_trace.read(feature_dir)
     unattributed = _unattributed_failures(feature_dir, ctx or {})
+    # The marker is read before the early return on purpose. Its whole reason to
+    # exist is a run that could not write into the spec directory — which is the
+    # same run that has no trace file to read, so deciding "nothing captured yet"
+    # first is what made this evidence permanently unreachable.
+    lost = _lost_entries(feature_dir)
 
     if read is None:
-        if unattributed:
-            return CheckStatus("trace", "ran"), [_unattributed_finding(unattributed)]
+        if lost or unattributed:
+            findings = [_lost_finding(lost)] if lost else []
+            if unattributed:
+                findings.append(_unattributed_finding(unattributed))
+            return CheckStatus("trace", "ran"), findings
         return CheckStatus(
             "trace", "skipped",
             f"no {run_trace.TRACE_NAME} — this spec ran before run tracing, or nothing has "
@@ -629,15 +697,8 @@ def check_trace(feature_dir: Path, ctx: dict | None = None) -> tuple:
         ))
 
     qualifier = "" if read.exact else " (at least — earlier entries rolled off)"
-    lost = _lost_entries(feature_dir)
     if lost:
-        findings.append(Finding(
-            "trace", "problem",
-            f"{plural(len(lost), 'call')} succeeded but could not be recorded in the trace",
-            "the run performed work the trace does not contain, so every count below is a "
-            "lower bound — most often an unwritable spec directory: " + lost[0],
-            {"lost": lost[:5]},
-        ))
+        findings.append(_lost_finding(lost))
 
     findings.append(Finding(
         "trace", "note",

@@ -8,6 +8,10 @@ description: "Companion implement — execute tasks.md in dependency order, then
 $ARGUMENTS
 ```
 
+<!-- speckit-companion:part step-start -->
+
+<!-- /speckit-companion:part step-start -->
+
 <!-- speckit-companion:part speckit-hooks -->
 
 <!-- /speckit-companion:part speckit-hooks -->

@@ -481,3 +481,28 @@ Every configuration this runtime reads is either understood completely or not us
 #### Scenario: the reader stops before the last line
 - **WHEN** parsing ends with part of the file unread, whatever the cause
 - **THEN** the file is reported as malformed rather than returning what was understood so far
+
+### The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence
+
+A run that cannot write into its spec directory can still complete captures while the trace line recording them fails to append. That run leaves a marker and no trace file. The check SHALL read the marker first, so the single failure mode that produces no trace at all is reportable rather than indistinguishable from a spec that has simply captured nothing yet.
+
+#### Scenario: the trace file was never created
+- **WHEN** the health check runs on a spec with unrecorded-call entries and no trace file
+- **THEN** it reports those calls at problem severity, naming at least one reason verbatim
+- **AND** it does not report the trace check as skipped
+
+#### Scenario: neither a marker nor a trace exists
+- **WHEN** the health check runs on a spec with no marker and no trace file
+- **THEN** it reports the trace check as skipped with its existing wording, and emits no finding
+
+### The health check MUST report an implement step that closed having executed nothing
+
+Running the project's own checks is an instruction with no observer, so a run can write code, check off a task naming a test, and close having proven nothing. The check SHALL judge whether the run recorded any verification it actually executed before implement closed, treating an absent, empty, or malformed list alike as nothing verified.
+
+#### Scenario: implement closed with an empty verification list
+- **WHEN** the health check runs on a spec whose implement step recorded a step-level completion and no verification
+- **THEN** it emits exactly one problem finding naming that the step closed with nothing verified
+
+#### Scenario: the spec never reached implement
+- **WHEN** the health check runs on a spec with no implement completion recorded
+- **THEN** the check reports itself as having no record, never as a problem

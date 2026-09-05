@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Fixed — the health check
 
+- **A run that could not write its trace at all still reports what it lost.** When the spec directory cannot be written to, some captures still land but the trace file recording them never gets created — and the check read the missing trace first and reported "nothing captured yet". It now reads the unrecorded-calls marker before deciding, so the one failure that leaves no trace at all is the one it can finally name.
+- **A step that closed having run nothing is named.** Running your project's own checks was an instruction with nothing watching it, so a run could write code, tick off a task called "add a test", and finish with nothing ever executed. The report now names an implement step that recorded no check it actually ran. A spec that never reached implement reports no record, not a problem.
+- **A step's recorded time contains the work it claims.** The clock started partway into each step, so the extension hooks and the first slice of work sat outside the window the step later reported — on one measured run half the elapsed time belonged to no step at all. Every step now stamps its start before anything runs on its behalf.
+
 - **A step that goes quiet is named instead of assumed to be running.** The check waited a flat thirty minutes before calling a step stuck, so an eight-minute stall reported clean. It now judges a step against its own recorded pace: one that was logging every minute and has said nothing for eight is named.
 - **A living spec you deliberately skipped no longer reads as drift you missed.** Skipping one requires writing down why, and the drift check never read that, so a recorded decision looked exactly like an oversight. Those now report as `declared`, with your reason shown.
 - **A step that recorded almost nothing about itself is reported.** A step logging one boundary for fifteen minutes, where its siblings logged four, is labelled rather than measured. The check says so.

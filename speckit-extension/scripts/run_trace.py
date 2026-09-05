@@ -211,11 +211,16 @@ def _note_trace_failure(feature_dir, exc: Exception) -> None:
         stamp = _now_iso()
     except Exception:  # noqa: BLE001 — a timestamp is nice, evidence is the point
         stamp = "unknown-time"
-    for target in (Path(feature_dir) / LOST_NAME,
-                   Path(feature_dir).parent / LOST_NAME):
+    # The shared file is one spec's last resort, but it is every spec's neighbour.
+    # A line there with no spec on it cannot be told apart from a sibling's failure,
+    # and a reader that merges it into each spec's verdict turns one real problem
+    # into a false alarm on every spec in the repo. So the fallback names its spec.
+    own = Path(feature_dir) / LOST_NAME
+    for target in (own, Path(feature_dir).parent / LOST_NAME):
+        tag = "" if target == own else f" spec={Path(feature_dir).name}"
         try:
             with target.open("a", encoding="utf-8") as fh:
-                fh.write(f"{stamp} {type(exc).__name__}: {exc}\n")
+                fh.write(f"{stamp}{tag} {type(exc).__name__}: {exc}\n")
             return
         except Exception:  # noqa: BLE001 — nowhere writable; stderr was the last resort
             continue
