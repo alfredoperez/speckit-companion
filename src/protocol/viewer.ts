@@ -467,6 +467,15 @@ export type ViewerToExtensionMessage =
     | {
           type: 'livingCheckDrift';
       }
+    // Update every drifted living spec from the current changes — the footer's second action
+    | {
+          type: 'livingSyncAll';
+      }
+    // A Covers glob was clicked: reveal its folder in the Explorer
+    | {
+          type: 'revealGlob';
+          glob: string;
+      }
     // The reader chose the Overview inside the viewer, so the entry point's
     // document request is spent. Sent because a content refresh reassigns the
     // panel HTML and the webview's own mode does not survive that.

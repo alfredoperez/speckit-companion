@@ -316,6 +316,10 @@ function setupEventListeners(): void {
 
     // Submit button
     elements.submitBtn.addEventListener('click', () => {
+        if ((document.getElementById('submitBtn') as HTMLButtonElement | null)?.dataset.installs === 'true') {
+            vscode.postMessage({ type: 'installSpecKitExtension' });
+            return;
+        }
         if (isSubmitting || !canSubmit(elements.textarea.value, MAX_CHARS)) return;
         clearError();
         vscode.postMessage({
@@ -561,10 +565,18 @@ function updateCommandButtons(workflowName: string): void {
     const workflow = workflowList.find(wf => wf.name === workflowName);
     const commands = workflow?.specifyCommands || [];
 
-    // The Auto button is shown only for workflows that declare a hands-off
-    // orchestrator (Companion); the normal Create Spec path stays available.
+    // A workflow that is not installed cannot create anything, so the form's
+    // primary action becomes the install — not a Create Spec that would only
+    // downgrade to stock, and not an Auto that has no stock twin at all.
+    const needsInstall = workflow?.installed === false;
     if (autoBtn) {
-        autoBtn.style.display = workflow?.supportsAuto ? '' : 'none';
+        autoBtn.style.display = workflow?.supportsAuto && !needsInstall ? '' : 'none';
+    }
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement | null;
+    if (submitBtn) {
+        submitBtn.textContent = needsInstall ? `Install ${workflow?.displayName ?? 'workflow'}` : 'Create Spec';
+        submitBtn.dataset.installs = needsInstall ? 'true' : '';
+        if (needsInstall) submitBtn.disabled = false;
     }
 
     if (!commandButtonsContainer) return;

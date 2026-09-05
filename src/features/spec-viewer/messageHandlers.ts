@@ -3,6 +3,7 @@
  * Handles messages from the webview
  */
 
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { formatCommandForProvider, getConfiguredProviderType } from "../../ai-providers/aiProvider";
@@ -160,6 +161,22 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     },
     livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
     livingCheckDrift: (_msg, dir, deps) => handleLivingCheckDrift(dir, deps),
+    livingSyncAll: async () => {
+      await vscode.commands.executeCommand("speckit.livingSpecs.sync");
+    },
+    revealGlob: async (msg) => {
+      const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!root) return;
+      // The static prefix of the glob is a real path; the rest is a pattern.
+      const prefix = String(msg.glob ?? "").split(/[*?{[]/)[0].replace(/\/+$/, "");
+      const target = path.resolve(root, prefix || ".");
+      if (!target.startsWith(root)) return;
+      if (fs.existsSync(target)) {
+        await vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(target));
+      } else {
+        await vscode.commands.executeCommand("workbench.action.findInFiles", { filesToInclude: msg.glob });
+      }
+    },
     overviewChosen: async (_msg, dir, deps) => {
       const instance = deps.getInstance(dir);
       if (instance) instance.state.landing = undefined;

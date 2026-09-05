@@ -272,6 +272,12 @@ body[data-has-spec-context="true"] .meta-branch {
     color: var(--text-muted);
 }
 
+/* No badge before it (a living spec that is not a draft): no separator either. */
+.spec-header-badges > .spec-header-living:first-child::before {
+    content: none;
+    margin-right: 0;
+}
+
 .spec-header-fact--drift {
     color: var(--vscode-list-warningForeground, var(--text-body));
     font-weight: 600;
@@ -336,24 +342,36 @@ body[data-has-spec-context="true"] .meta-branch {
     letter-spacing: 0.04em;
 }
 
+/* A glob is a place in the repo, so it is a button that reveals it. Full
+   text, wrapping — a path cut to "workflow-edito…" is a path you cannot read. */
 .spec-header-glob {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     padding: 2px 6px;
     background: var(--bg-elevated);
-    border: none;
+    border: 1px solid transparent;
     border-radius: var(--radius-sm);
     color: var(--text-body);
+    cursor: pointer;
     min-width: 0;
-    max-width: 30ch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
+    text-align: left;
+}
+
+.spec-header-glob:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.spec-header-glob:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 1px;
 }
 
 .spec-header-glob--more {
     color: var(--text-secondary);
     font-family: inherit;
+    cursor: default;
 }
 
 /* Where the spec file lives — a path the reader uses to find the file, so it

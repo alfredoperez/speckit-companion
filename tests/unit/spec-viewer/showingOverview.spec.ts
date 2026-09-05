@@ -28,7 +28,16 @@ describe('showingOverview — the viewer owns the landing decision', () => {
         viewerMode.value = null;
     });
 
-    it('lands on the Overview when the spec has durable context', () => {
+    it('lands on the document by default, even when the spec has been run', () => {
+        // The old default resolved to the Overview for any spec with recorded
+        // activity, which is why every document row in the tree opened it.
+        viewerState.value = WITH_DURABLE_CONTEXT;
+
+        expect(showingOverview.value).toBe(false);
+    });
+
+    it('lands on the Overview only when the spec itself was opened', () => {
+        navState.value = { activityPanelEnabled: true, landing: 'overview' } as any;
         viewerState.value = WITH_DURABLE_CONTEXT;
 
         expect(showingOverview.value).toBe(true);
@@ -64,8 +73,8 @@ describe('showingOverview — the viewer owns the landing decision', () => {
             expect(showingOverview.value).toBe(false);
         });
 
-        it('leaves the spec row landing on the Overview, as before', () => {
-            navState.value = { activityPanelEnabled: true } as any;
+        it('the spec row asks for the Overview explicitly', () => {
+            navState.value = { activityPanelEnabled: true, landing: 'overview' } as any;
             viewerState.value = WITH_DURABLE_CONTEXT;
 
             expect(showingOverview.value).toBe(true);

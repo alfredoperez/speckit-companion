@@ -272,12 +272,12 @@ export class SpecViewerProvider {
     reportSpecOpened(specDirectory);
     const existing = this.panels.get(specDirectory);
     if (existing) {
-      existing.state.landing = undefined;
+      existing.state.landing = 'overview';
       await this.updateContent(specDirectory, existing.state.currentDocument);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
     }
-    await this.createPanel(specDirectory, undefined);
+    await this.createPanel(specDirectory, undefined, undefined, 'overview');
   }
 
   /**
