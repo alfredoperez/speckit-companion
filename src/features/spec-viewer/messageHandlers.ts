@@ -196,10 +196,10 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       if (fn) await fn(dir, deps);
       else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
     },
-    installSpecKitExtension: async (msg, dir, deps) => {
+    installSpecKitExtension: async (msg, _dir, _deps) => {
       reportInstallPromptClicked(msg.prompt?.kind === 'update' ? 'activityUpdate' : 'activity');
+      // The install runs in a terminal; the banner changes when the files land, which the watcher reports.
       await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
-      await handleRefresh(dir, deps);
     },
     openReadme: async (_msg, _dir, _deps) => {
       await vscode.commands.executeCommand('speckit.companion.openReadme');

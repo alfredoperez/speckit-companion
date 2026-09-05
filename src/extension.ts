@@ -22,7 +22,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
 import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
-import { clearInstallInFlight, isInstallInFlight, refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
+import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
 import { onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
@@ -299,23 +299,23 @@ export async function activate(context: vscode.ExtensionContext) {
             wiring = [];
             const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             if (!root) {
+                // No project to install into: the closed folder's answer must not outlive it.
                 updateStatusBar.sync({ state: 'missing' });
+                void setContextKey(CONTEXT_KEYS.companionInstalled, false);
+                specsTreeView.badge = undefined;
                 return;
             }
             // One gap resolution per tick feeds every install/update surface; the ensure needs the installed dir.
             let retry: ReturnType<typeof setTimeout> | undefined;
             const syncCompanionSurfaces = (): CompanionGap => {
-                const gap = refreshCompanionGap(root, context.extensionPath);
-                const installed = gap.state !== 'missing';
-                if (installed) {
-                    clearInstallInFlight();
-                } else if (isInstallInFlight()) {
-                    // A first install has no previous answer to fall back on, so wait for the copy rather than
-                    // flipping the badge and the context key — that would hide gated views and burn the funnel event.
+                const { gap, masked } = refreshCompanionGap(root, context.extensionPath);
+                if (masked) {
+                    // Mid-`--force` the extension dir is briefly gone. Change nothing; re-check when the copy lands.
                     clearTimeout(retry);
                     retry = setTimeout(() => { syncCompanionSurfaces(); }, 1000);
                     return gap;
                 }
+                const installed = gap.state !== 'missing';
                 void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
                 specsTreeView.badge = installed
                     ? undefined
@@ -351,10 +351,11 @@ export async function activate(context: vscode.ExtensionContext) {
             );
             for (const watcher of [extDirWatcher, extVersionWatcher]) {
                 watcher.onDidCreate(companionRefresh.call);
-                watcher.onDidChange(companionRefresh.call);
                 watcher.onDidDelete(companionRefresh.call);
                 wiring.push(watcher);
             }
+            // Only the version watcher reports changes; `extDirWatcher` is created with change events ignored.
+            extVersionWatcher.onDidChange(companionRefresh.call);
             // Turning the prompt off must clear the status-bar warning without waiting for a file to change.
             wiring.push(
                 vscode.workspace.onDidChangeConfiguration(e => {

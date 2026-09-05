@@ -42,16 +42,15 @@ export function parseRegistryVersion(text: string): string | undefined {
     }
 }
 
-let bundled: { extensionPath: string; version: string } | undefined;
+let bundled: { extensionPath: string; version: string | undefined } | undefined;
 
-/** The version this build of the VS Code extension ships, read once per process from its own bundled manifest. */
+/** The version this build of the VS Code extension ships, read once per process from its own bundled manifest. An unreadable manifest is remembered too. */
 export function readBundledCompanionVersion(extensionPath: string): string | undefined {
     if (bundled?.extensionPath !== extensionPath) {
         const text = readText(path.join(extensionPath, BUNDLED_MANIFEST_REL));
-        const version = text === undefined ? undefined : parseManifestVersion(text);
-        bundled = version ? { extensionPath, version } : undefined;
+        bundled = { extensionPath, version: text === undefined ? undefined : parseManifestVersion(text) };
     }
-    return bundled?.version;
+    return bundled.version;
 }
 
 /** The version installed in the workspace: the installed manifest first (a `--dev` link keeps it current), the spec-kit registry as fallback. */
@@ -109,22 +108,31 @@ let lastGap: { key: string; gap: CompanionGap } | undefined;
 
 const gapKey = (workspaceRoot: string, extensionPath: string): string => `${workspaceRoot}\u0000${extensionPath}`;
 
-/** Resolve from disk and remember the answer; activation, the watchers and a workspace-folder change call this once per tick. */
-export function refreshCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
+/**
+ * Resolve from disk and remember the answer; activation, the watchers and a workspace-folder change call
+ * this once per tick. `masked` says the extension really is absent right now but an install is mid-copy, so
+ * the caller must not act on it: `--force` deletes the extension dir before writing the new one, and a
+ * caller that believed that gap would hide gated views and repaint every banner with the install pitch.
+ */
+export function refreshCompanionGap(
+    workspaceRoot: string,
+    extensionPath: string
+): { gap: CompanionGap; masked: boolean } {
     const key = gapKey(workspaceRoot, extensionPath);
     const gap = resolveCompanionGap(workspaceRoot, extensionPath);
-    // `--force` deletes the extension dir before it copies the new one. Caching that gap would show every
-    // banner the install pitch mid-update, so the last known answer stands until the copy lands.
-    if (gap.state === 'missing' && isInstallInFlight() && lastGap?.key === key) {
-        return lastGap.gap;
+    if (gap.state === 'missing' && isInstallInFlight()) {
+        return { gap: lastGap?.key === key ? lastGap.gap : gap, masked: true };
+    }
+    if (gap.state !== 'missing') {
+        clearInstallInFlight();
     }
     lastGap = { key, gap };
-    return gap;
+    return { gap, masked: false };
 }
 
 /** The gap the last refresh saw for this workspace, resolving from disk when it was for another one (or none yet). */
 export function cachedCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
     return lastGap?.key === gapKey(workspaceRoot, extensionPath)
         ? lastGap.gap
-        : refreshCompanionGap(workspaceRoot, extensionPath);
+        : refreshCompanionGap(workspaceRoot, extensionPath).gap;
 }

@@ -12,6 +12,7 @@ import {
     refreshCompanionGap,
     markInstallInFlight,
     clearInstallInFlight,
+    isInstallInFlight,
 } from './companionVersionGap';
 
 describe('companionVersionGap', () => {
@@ -74,17 +75,27 @@ describe('companionVersionGap', () => {
     });
 
     describe('an install in flight', () => {
-        it('keeps the last known gap while --force has the extension dir deleted', () => {
+        it('masks the delete-then-create of a --force reinstall, so nothing downstream sees uninstalled', () => {
             const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'companion-gap-flight-'));
+            const ext = path.join(dir, '.specify/extensions/companion');
             try {
-                const ext = path.join(dir, '.specify/extensions/companion');
                 fs.mkdirSync(ext, { recursive: true });
-                expect(refreshCompanionGap(dir, dir).state).toBe('current');
-                fs.rmSync(ext, { recursive: true, force: true });
+                expect(refreshCompanionGap(dir, dir)).toEqual({ gap: { state: 'current' }, masked: false });
+
                 markInstallInFlight();
-                expect(refreshCompanionGap(dir, dir).state).toBe('current');
-                clearInstallInFlight();
-                expect(refreshCompanionGap(dir, dir).state).toBe('missing');
+                fs.rmSync(ext, { recursive: true, force: true });
+                // Every tick between the delete and the copy is masked, and the answer stays the installed one.
+                for (let i = 0; i < 3; i++) {
+                    expect(refreshCompanionGap(dir, dir)).toEqual({ gap: { state: 'current' }, masked: true });
+                }
+
+                fs.mkdirSync(ext, { recursive: true });
+                expect(refreshCompanionGap(dir, dir)).toEqual({ gap: { state: 'current' }, masked: false });
+                // Seeing the extension back is what ends the window — a masked tick must never end it.
+                expect(isInstallInFlight()).toBe(false);
+
+                fs.rmSync(ext, { recursive: true, force: true });
+                expect(refreshCompanionGap(dir, dir)).toEqual({ gap: { state: 'missing' }, masked: false });
             } finally {
                 clearInstallInFlight();
                 fs.rmSync(dir, { recursive: true, force: true });
@@ -121,8 +132,10 @@ describe('companionVersionGap', () => {
         });
 
         it('resolves the three states from real files', () => {
-            expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'missing' });
+            // The bundled manifest ships inside the .vsix and never changes at runtime, so it is read once
+            // per install path — write it before the first resolve or the memoized miss stands.
             write('speckit-extension/extension.yml', 'extension:\n  version: "0.21.0"\n');
+            expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'missing' });
             write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.20.2"\n');
             expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'outdated', installed: '0.20.2', expected: '0.21.0' });
             write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
