@@ -61,6 +61,12 @@ Every derived quantity — a step's start and end, whether a step is complete, w
 - **WHEN** it is written
 - **THEN** it calls the shared query rather than re-reading the log itself
 
+The step-to-status pairing is the same rule. Every place that needs the status a step runs at, or settles at, SHALL read it from the shared contract. Four separate hand-written copies of that mapping existed, and one of them settled the implement step at `completed` — skipping the user's Mark Completed gate for any spec that happened to be repaired through it.
+
+#### Scenario: a record is repaired because its status is unreadable
+- **WHEN** the reconciler derives a replacement status for a finished implement step
+- **THEN** it derives `implemented`, leaving the spec's closure to the user
+
 ### Status moves forward and never regresses out of a terminal state
 
 Status transitions SHALL be forward-only. A re-run, a double-fired hook, or a late-arriving write for an earlier step MUST record its event honestly in the log while leaving status and current step alone if the spec has already moved past that step. A spec that has reached a terminal state MUST NOT be dragged backwards by any subsequent write.
@@ -158,6 +164,13 @@ Any command belonging to the Companion namespace SHALL be recognized by its shar
 - **THEN** nothing is dispatched at all
 - **AND** the user is told why
 
+The whole sequence — resolve the command the workflow names, fall back and warn, report the dispatch, format for the provider, wrap in the lifecycle preamble, run — SHALL live in one routine every dispatching surface calls, passing in only how to run the finished prompt. Each surface used to carry its own copy of all six steps, identical apart from a log prefix, so a fix to any one of them reached exactly one caller.
+
+#### Scenario: two surfaces run the same step
+- **WHEN** the sidebar and the viewer each dispatch it
+- **THEN** both produce the same command, the same fallback behavior, and the same reported event
+- **AND** each still supplies its own way of running the prompt, so one can keep the terminal it gets back
+
 When a phase or workflow step actually dispatches to a terminal, the dispatch path SHALL fire the shared once-per-session terminal install nudge (owned by the speckit-cli capability) — except on the fell-back path, which already surfaces its own install warning. This is a call-through at dispatch time, not gating logic this capability owns: the nudge's own gate decides whether anything renders, and it can never block the dispatched command.
 
 ### Reading a record is tolerant; writing one is strict
@@ -224,6 +237,34 @@ Deleting a spec or changing many specs' status at once SHALL confirm first, then
 #### Scenario: revealing a spec folder that has been deleted outside the editor
 - **WHEN** the reveal action runs
 - **THEN** the user gets an explicit "does not exist" error instead of a silent no-op
+
+### A built pipeline reports when it is older than what it was built from
+
+Turning the configuration into the command bodies the assistant reads is a build, so the built output SHALL be reported as out of date whenever anything it was built from is newer — the configuration file, a node, a workflow, a fragment, or a template. Comparing against the configuration file alone reports "current" in exactly the case the editor makes easiest: editing a node writes a file that is not `companion.yml`. Nothing about a run looks wrong when the two disagree; the file says one thing and the assistant is handed another.
+
+#### Scenario: a node is edited and nothing is rebuilt
+- **WHEN** the build state is read
+- **THEN** it reports the build as stale, naming that the inputs are newer
+
+### A build is previewable, and its log is kept rather than summarized
+
+Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes, and SHALL keep the full output in the log rather than reducing it to a notification — a build's output is the change it is about to make, which does not fit in a toast. The log SHALL take the screen only when the build failed, and a build that hangs SHALL be abandoned rather than left running.
+
+#### Scenario: a build succeeds
+- **WHEN** it finishes
+- **THEN** the full output is in the log and the editor is not stolen to say so
+
+#### Scenario: a build fails
+- **WHEN** it reports an error
+- **THEN** the log is surfaced with the whole output
+
+### The pipeline structure shown is the one a build would produce
+
+The structure the pipeline builder draws SHALL be derived by the same half of the product that performs the build, from the same configuration, rather than re-derived on the editor side. A second derivation of the same structure drifts from the first within a release, and the drawing then describes a pipeline that would not be built.
+
+#### Scenario: the builder renders a pipeline
+- **WHEN** its structure is resolved
+- **THEN** it comes from the build's own derivation, so what is drawn is what a build would produce
 
 ### Living-spec listings are read-only, bounded, and honest about what they could not compute
 

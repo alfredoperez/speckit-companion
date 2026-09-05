@@ -143,6 +143,12 @@ Re-running or advancing a step MUST resolve its target from the spec's recorded 
 - **THEN** nothing is dispatched
 - **AND** the reader is told what is missing and offered a way to install it
 
+The resolution, the fallback warning, the usage event, and the prompt assembly SHALL be performed by one shared dispatch routine rather than re-implemented per surface, so every place that can start a step behaves identically when the companion pipeline is missing.
+
+#### Scenario: a second surface gains a way to run a step
+- **WHEN** it dispatches
+- **THEN** it goes through the same routine and inherits the same fallback, warning, and reporting
+
 #### Scenario: a step is dispatched from the viewer
 - **WHEN** the dispatch is reported for usage measurement
 - **THEN** it carries only the provider, the phase coerced to its allow-list, and the spec's correlation identifier when one exists
@@ -246,12 +252,24 @@ When a run loaded living specs, the viewer MUST surface them in the run log as c
 
 ### The webview shell is generated under a locked-down policy
 
-Each render MUST emit its own content-security policy with a freshly generated per-render nonce, restrict resource loading to the extension's own assets plus the explicitly named script sources, and escape every value interpolated into the shell — including values placed inside HTML attributes, which need stricter escaping than element content. Regenerating the shell is also what resets the webview's in-memory selection, so any navigation meant to preserve that selection MUST go through a message instead.
+Each render MUST emit its own content-security policy with a freshly generated per-render nonce, restrict resource loading to the extension's own assets plus the explicitly named script sources, and escape every value interpolated into the shell. Element-content escaping is not attribute-safe, so a document body carried through an HTML attribute SHALL be base64-encoded and decoded by the webview rather than escaped — the helper that does it is named for the encoding it performs, not for escaping, because a name that says "escape" invites its use where no escaping is happening. Regenerating the shell is also what resets the webview's in-memory selection, so any navigation meant to preserve that selection MUST go through a message instead.
 
 #### Scenario: a pipeline entry is selected
 - **WHEN** the reader picks a document from the pipeline rail
 - **THEN** only the content is swapped by message
 - **AND** the shell is not regenerated, so the reader's current view is preserved
+
+#### Scenario: a document containing markup is rendered into the shell
+- **WHEN** the raw document is placed in the attribute the webview reads it from
+- **THEN** it is base64-encoded, so no character in it can terminate the attribute
+
+### The viewer's message contract is declared once, for both sides
+
+The set of messages the panel and its webview exchange, and the document types they name, SHALL live in one shared protocol module both sides import, not be restated in the extension-side types file. The two ends cannot then hold different ideas of what a message is, and a variant added on one side is visible to the other by construction.
+
+#### Scenario: a message variant is added
+- **WHEN** the protocol gains a new message type
+- **THEN** both the panel and the webview see the same declaration without either restating it
 
 ## Uncovered
 

@@ -114,6 +114,14 @@ A check answering "is the companion available here?" SHALL test for the presence
 - **THEN** it reports not-installed
 - **AND** UI that would dispatch the companion command family stays hidden
 
+### The overview view is the flat list of the extension's non-spec entry points
+
+The overview tree SHALL present a single flat level of always-available actions — no children, no nesting — each carrying the command it dispatches so it works as one click. Anything the user reaches outside a spec (the pipeline builder, settings, bug reporting) belongs here rather than being hidden behind a spec selection.
+
+#### Scenario: the overview view is expanded
+- **WHEN** the tree is asked for the children of any of its items
+- **THEN** it returns nothing, because every entry is a leaf that runs a command
+
 ### Permission mode has exactly one resolver
 
 The permission mode that governs how a dispatched assistant session is launched SHALL be read through one shared helper used by every provider, rather than being re-derived per call site. This area no longer holds an implementation — it is a retired seam whose behavior moved to the provider layer — and it must not grow a second one. [inferred: the module itself is now only a note recording where the behavior went; the single-resolver contract is read from that note, not from code here.]

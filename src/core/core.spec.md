@@ -72,6 +72,15 @@ Status values and step names SHALL form one lifecycle where each non-terminal st
 - **WHEN** the status is one of the in-progress forms
 - **THEN** the extension reports that step as active rather than settled
 
+The pairing of a step with the status it carries while running and the status it settles at SHALL have exactly one declaration per language runtime, and the two declarations SHALL be held together by a test that reads both. Every other place that needs the pairing — the extension, the prompt preamble, the Python writers — reads it from there rather than restating it. A hand-copied version of this map is the drift that cannot be seen by reading either file alone.
+
+#### Scenario: the two runtimes disagree about where a step lands
+- **WHEN** one side's map settles a step at a different status than the other's
+- **THEN** the test comparing them fails, naming the step
+- **AND** finishing the implement step settles at `implemented`, never at `completed`, because closing the spec is the user's explicit action
+
+A separate, narrower list SHALL name the steps a default pipeline dispatches and measures — specify, plan, tasks, implement — as the fallback for a project whose workflow does not define its own. Optional steps are not expected to be timed, so they are absent from it; it describes the default path, not the set of steps a pipeline may contain.
+
 ### A duration is only shown when the extension itself stamped both ends
 
 A span SHALL be reported as trustworthy only when both of its boundaries were stamped by the extension's own clock. Timestamps journaled by the assistant or a CLI order events correctly but record when the write ran, not when the work happened, so a duration computed from them is fiction and MUST NOT be displayed as elapsed time.
@@ -216,6 +225,22 @@ A readable display name SHALL be resolved by preference — a recorded name firs
 - **THEN** the shared caser title-cases the name while preserving the acronym's canonical form
 - **AND** a living-spec heading is left exactly as authored
 
+### One message dispatcher serves both ends of the webview protocol
+
+The exhaustive message dispatcher SHALL be free of editor-host imports so the webview bundle compiles it too. Both ends of a protocol then route messages through the same primitive, and adding a message variant fails the build on both sides rather than silently doing nothing on one of them. Handlers MAY be synchronous; the dispatch they produce is always awaitable.
+
+#### Scenario: a new message variant is added to a protocol
+- **WHEN** only one side gains a handler for it
+- **THEN** the build fails on the side that is missing it
+
+### Retired surfaces leave nothing behind in core
+
+When a feature is removed, its command identifiers, custom-editor identifiers, message types, and helper modules SHALL be deleted from core rather than left as unreferenced declarations. Core is the shared vocabulary, so a leftover entry there advertises a surface that no longer exists.
+
+#### Scenario: the custom workflow editor is removed
+- **WHEN** the feature's commands, its editor type, its webview message contract, and its retry-based file opener are no longer used
+- **THEN** none of them remain declared in core
+
 ### Shared primitives absorb host and shell differences
 
 Terminal readiness, temp-file staging, path translation for cross-environment shells, shell-family detection, and task-checkbox parsing SHALL live in core and be the only implementations. Callers MUST NOT re-derive them. Waiting for a shell MUST have a timeout fallback so a host that never reports readiness still dispatches.
@@ -223,6 +248,16 @@ Terminal readiness, temp-file staging, path translation for cross-environment sh
 #### Scenario: a checkbox appears inside a code block
 - **WHEN** task counts are computed for a document
 - **THEN** checkboxes inside fenced blocks or inline code are not counted as work
+
+A task is a list item bearing a task id. The parser SHALL accept any of the markdown bullet characters and SHALL ignore a checkbox line carrying no id, because verification notes and prose checklists sit beside real tasks in a task document — counting them inflates the denominator here while the spec-kit side ignores them, and the two halves then disagree about whether implement finished. Both parsers SHALL be pinned to one shared fixture of the lines they must agree on, read by both test suites.
+
+#### Scenario: a task document mixes tasks with verification notes
+- **WHEN** task counts are computed for a document containing both `- [x] **T001** …` and `- [x] \`npm run compile\` green`
+- **THEN** only the line carrying a task id is counted
+
+#### Scenario: the two parsers drift apart
+- **WHEN** one side's grammar starts accepting or rejecting a line the other does not
+- **THEN** the shared fixture makes one of the two suites fail
 
 #### Scenario: shell integration never signals ready
 - **WHEN** the readiness wait exceeds its timeout

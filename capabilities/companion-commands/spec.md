@@ -123,6 +123,27 @@ The Companion pipeline ends at a dedicated completion command; the stock pipelin
 - **WHEN** the terminal step runs against an unfinished spec
 - **THEN** it refuses and reports, without failing the host
 
+"The work validates" SHALL mean the project's own checks ran and passed, not that the result was read against the spec. A spec MUST NOT be marked complete over a failing suite the run introduced: the failure is fixed, or the spec is left at the implemented status with the reason stated. Where the checks genuinely could not be run, that SHALL be recorded as a concern before completing, so the record says "finished, unverified" rather than implying "finished, verified". Completing on red is how a run that looks finished ships broken code, and the completed status is the one signal a reader trusts without opening anything.
+
+A verification entry SHALL record the command that ran and its real outcome, never a restatement of intent, and a check that could not be run SHALL produce a concern and no verification entry at all — an entry for a check that never happened is worse than no entry, because every later reader trusts it.
+
+#### Scenario: a test the run authored fails
+- **WHEN** the implement step reaches its end
+- **THEN** the failure is fixed before completion, or the spec stays at implemented with the reason stated
+
+#### Scenario: the project has no runnable test script
+- **WHEN** the run cannot execute its checks
+- **THEN** it says so in the summary and records a concern
+- **AND** it records no verification entry for the check it did not run
+
+### The feature pointer is written under the exact key the capture calls read
+
+The pointer file the first step writes SHALL name the feature directory under the one key the later capture calls resolve through when they run without an explicit feature directory. Any other key is silently dropped: the writes go nowhere and the run records nothing, with no error anywhere to notice.
+
+#### Scenario: a later step runs without an explicit feature directory
+- **WHEN** it resolves the spec through the pointer file
+- **THEN** it finds the directory the first step wrote
+
 ### Living-spec commands are opt-in, non-halting, and honest about what they did not examine
 
 The commands that adopt, move, report drift on, and report coverage for living specs SHALL act only when the project has opted in, SHALL never fail the run, and — for the reporting pair — SHALL make no edits. Their output MUST state both what was examined and what was skipped with a reason, so a clean marker can never be read as a verdict on the whole configuration. A finding is a signal a surrounding workflow may act on; these commands do not gate.
@@ -147,6 +168,18 @@ Because a body is generated, a project customizing it would be overwritten. Inst
 - **WHEN** the configuration is merged
 - **THEN** it warns and skips rather than failing or silently ignoring
 
+An assembled body SHALL carry an explicit marker at each node's start and end, and a coarser marker around each phase — a named group of consecutive nodes in the same order — so an attachment lands at a known point rather than being placed by guessing at surrounding prose, and so a project has somewhere coarser than a single node to attach to. A step's node order SHALL declare its phases over exactly those same node ids, in that same order, with the flat order remaining the authority on sequence.
+
+Each node SHALL carry a human-readable name for the panel, and a step's declaration SHALL name the nodes it ships but does not run by default, along with which default node each of them stands in for — so swapping the spec draft for a delta draft or a bugfix draft is a pick rather than a rewrite. A node whose output the size budget may fold away SHALL declare that output as one it *may* write, not one it must, so a folded run is not reported as an incomplete one.
+
+#### Scenario: a project attaches work to a phase
+- **WHEN** the command reaches that phase's first node
+- **THEN** the attachment runs there, without the project naming an individual node
+
+#### Scenario: a run folds the design side files into the plan
+- **WHEN** the run is checked against what it should have produced
+- **THEN** the folded documents are not counted as missing
+
 ### Commands direct capable providers to parallelize, while bookkeeping stays serialized
 
 Where a provider can spawn workers, the bodies SHALL make concurrency the expected strategy rather than an optional optimization, and SHALL express independence structurally — waves of tasks that share no files or dependencies, with explicit join points — rather than relying on the agent to infer it from inline markers. Concurrency MUST NOT extend to the shared record: prose that fans work out MUST name who serializes the write, because "journal each as it finishes" under concurrent workers reads as a race. Hosts without workers run sequentially and produce identical artifacts.
@@ -166,6 +199,22 @@ Node bodies are concatenated, so numbering is a property of the *assembled* comm
 #### Scenario: a node adds a step mid-command
 - **WHEN** the assembled body is reviewed
 - **THEN** the step numbering runs continuously with no repeated number
+
+### A step's branch points are declared as data beside its node order
+
+Where a step's node makes a routing decision, that decision SHALL be declared alongside the step's node order: which node decides, the verdicts it can reach, the steps each verdict folds away, and the notice each verdict prints. Stated only as prose — in the routing part, the workflow file, and the classifier's own instructions — the routing was changeable in none of them and drawable from none of them.
+
+#### Scenario: a step declares its routing
+- **WHEN** the pipeline is built or drawn
+- **THEN** both read the same declaration rather than re-reading the prose
+
+### The command inventory records what each command's run must produce
+
+Alongside the command list, the shipped inventory SHALL record, per command, the artifacts a run is expected to produce and which node produces each — derived from the same node order the bodies were assembled from, and marking the ones a fold may legitimately skip. Without it, a step that quietly stopped writing its document is indistinguishable from one that wrote it.
+
+#### Scenario: a run is checked against what it claimed
+- **WHEN** the expected artifacts are read
+- **THEN** they describe the pipeline that was actually assembled
 
 ## Uncovered
 

@@ -130,6 +130,13 @@ Any parse or read failure while assembling a section SHALL yield an empty result
 - **THEN** no group entries are produced
 - **AND** the rest of the tree renders normally
 
+Configuration the tree can parse but the runtime cannot SHALL be treated the same as unparseable. The YAML library used here accepts anchors, block scalars and tab indentation that the runtime reader rejects and replaces with the shipped defaults, so reading the file more permissively than the thing that acts on it would list groups from a configuration that is never going to be applied.
+
+#### Scenario: the configuration uses YAML the runtime cannot read
+- **WHEN** the file parses locally but contains a construct the runtime reader rejects
+- **THEN** no group entries are produced
+- **AND** the tree does not advertise settings the runtime will ignore
+
 ### A file the view creates lands where the view watches and reads
 
 Every location the view resolves for a user-scope file SHALL be derived from the operating system's reported home directory, so the folder written to when creating a file, the folder watched for changes, and the folder read when listing are always the same. Deriving any one of them from an environment variable instead lets them disagree — an unset variable yields a path relative to the editor's working directory, and the created file becomes invisible to the view that just created it.

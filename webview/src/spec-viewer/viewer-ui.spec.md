@@ -21,6 +21,14 @@ The webview MUST behave as a single long-lived page. Navigation between document
 - **WHEN** the overview is re-selected
 - **THEN** it appears immediately because the document pane was hidden rather than unmounted
 
+### The step order and the document vocabulary have one declaration
+
+The canonical order of pipeline steps and the document types the protocol names SHALL be imported from the shared contract, never restated in a component. The step order had been copied into three places, so adding a step meant finding all three, and a missed copy renders a step out of order or not at all.
+
+#### Scenario: a step is added to the canonical order
+- **WHEN** the shared contract changes
+- **THEN** every surface that orders steps picks it up with no edit of its own
+
 ### The webview never decides the run's state — it renders the state it is given
 
 Status, which step is running, which actions exist, and their labels MUST come from the state the extension sends. The webview SHALL NOT re-derive any of them from documents, file presence, or progress numbers. Its own local derivations are limited to presentation: which of the given facts to show, in what order, and how to word them.
@@ -43,6 +51,16 @@ Each state message MUST be treated as complete and applied wholesale. The webvie
 - **WHEN** a state message is the first thing the webview receives
 - **THEN** it renders from that state alone
 - **AND** nothing waits for a content message that may not come
+
+Incoming messages SHALL be routed through a handler map the compiler checks for completeness, using the same dispatcher the extension side routes with, rather than a hand-written switch. A switch silently ignores a variant nobody handled; a checked map fails the build until someone does. Applying a state snapshot to the signals and to the renderer's flags SHALL likewise be one routine every variant calls, because a renderer flag left behind by one message paints the next render in a stale mode.
+
+#### Scenario: the protocol gains a message variant
+- **WHEN** the webview has no handler for it
+- **THEN** the webview build fails rather than the message being dropped at runtime
+
+#### Scenario: two variants both carry a state snapshot
+- **WHEN** either arrives
+- **THEN** the same routine applies it, so neither can update the signals while leaving a renderer flag stale
 
 ### One derivation decides whether a step is running
 
@@ -229,6 +247,15 @@ Readable content MUST use the body and primary text tokens; the secondary and mu
 - **WHEN** a step is in flight
 - **THEN** the in-flight indicator renders without animation
 
+### Tolerance for an old on-disk shape lives at the one conversion point
+
+Where a spec written by an older version persisted a different shape for a field, the widened type SHALL be declared only on the function that converts it, not on the contract every consumer reads. Consumers all take the current shape; putting the legacy form in the shared type would make every reader handle a case only the converter ever sees.
+
+#### Scenario: a spec persisted its substeps in the older keyed form
+- **WHEN** the viewer reads it
+- **THEN** the converter accepts that shape and emits the current one
+- **AND** no consumer downstream of the converter branches on which shape it was
+
 ### Run timing is a summary the extension provides, not a duration the webview sums
 
 Elapsed time and per-phase coverage MUST be read from the timing summary the extension sends, never recomputed in the webview from per-step activity timestamps. The webview SHALL NOT sum step spans, cap idle gaps, or otherwise derive a working-time figure of its own; it renders the summary's completion flag, its elapsed figure, and its measured-of-expected phase count as given. A run that has not settled surfaces phase coverage — "N of M phases" — not a fabricated wall-clock total; only a summary that reports itself complete surfaces a start, an elapsed figure, and an end.
@@ -362,3 +389,10 @@ The stories and fixtures that produce the project's documentation imagery MUST c
 - **WHEN** a capture story stages a state for imagery
 - **THEN** it drives the real components with fixture data
 - **AND** it does not re-implement the surface it is capturing
+
+A scene several captures share SHALL be exported once and composed by each of them, and the shared building blocks SHALL be excluded from the published story list so they appear as imagery sources rather than as stories in their own right. A second copy of a shared scene drifts from the first, and the two captures then disagree about what the product looks like.
+
+#### Scenario: two captures need the same staged document
+- **WHEN** a still and a clip both frame it
+- **THEN** both compose the one exported scene
+- **AND** that scene is not itself listed as a story

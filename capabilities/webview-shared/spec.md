@@ -4,9 +4,11 @@
 
 ## Purpose
 
-The common foundation every SpecKit Companion webview is built on: it turns spec markdown into an interactive, line-addressable document, supplies the reusable interaction primitives, and carries the correctness contracts — escaping, contrast, accessibility, cleanup — that each consuming webview would otherwise get subtly wrong on its own. Without it, every webview reinvents markdown rendering and its own escaping, and the invariants that keep untrusted spec content from injecting into the sandbox would hold in one place and fail in the next.
+The common foundation every SpecKit Companion webview is built on: the reusable Preact components and interaction hooks, and the correctness contracts — escaping, contrast, accessibility, cleanup — that each consuming webview would otherwise get subtly wrong on its own. Markdown rendering itself is no longer here: the standalone markdown, render and imperative-UI modules were duplicates of what the viewer already had, and they have been deleted rather than kept as a second implementation. What remains shared is what more than one webview genuinely uses.
 
 ## Requirements
+
+> The rendering, classification, and overlay requirements below are the contracts a consuming webview must satisfy. Their implementations live in the viewer, not in this shared area — the standalone copies here were removed.
 
 ### Rendered documents stay addressable back to their source lines
 
@@ -66,6 +68,13 @@ Consumers MUST send extension-bound messages through the shared dispatcher rathe
 - **WHEN** it must notify the extension
 - **THEN** it dispatches a typed message through the shared channel
 - **AND** the host bridge handle does not appear inline in the component
+
+The shared dispatcher SHALL be generic over the protocol it sends, defaulting to the spec viewer's. A dispatcher pinned to one webview's message union is not shareable: a second webview could only adopt it by widening the first one's union, which is how a shared primitive becomes a coupling.
+
+#### Scenario: a second webview adopts the shared dispatcher
+- **WHEN** it sends messages from its own protocol
+- **THEN** they type-check against that protocol
+- **AND** the spec viewer's message union is unchanged
 
 ### Destructive and automatic actions are reversible before they commit
 

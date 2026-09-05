@@ -140,19 +140,36 @@ A workflow MAY declare checkpoints bound to pipeline events. Each SHALL prompt f
 - **WHEN** more checkpoints remain for the same trigger
 - **THEN** the user chooses to retry, skip to the next, or cancel the remaining sequence
 
-### The editor panel's pipeline stepper follows the spec's own recorded workflow
+### There is one document panel, not a second custom editor
 
-The document panel SHALL derive its phase stepper, document tabs, and next-document decision from the workflow the spec actually recorded, so that any pipeline — including one whose steps go beyond the common set, and one that ends in a terminal step — is representable in the panel exactly as it runs. A panel that could only render a fixed shape would hide the steps that distinguish a pipeline from the stock one, and would misrepresent every custom workflow.
+The custom workflow-editor panel — its own registered editor type, its command family, its HTML generator, its action handlers, and its separate parser for deriving a spec's phase from disk — has been removed. Rendering a spec's documents and its pipeline stepper is the spec viewer's job alone. Two panels reading the same spec is two derivations of the same facts, and the second one drifted.
 
-#### Scenario: a document is opened that matches a pipeline step's output file
-- **WHEN** the panel renders
-- **THEN** the phase, the completed phases, and the tab set derive from the recorded workflow's step order and the files present on disk
-- **AND** files that are not step outputs surface as related documents rather than as phases, their display names capitalizing each word and turning both dashes and underscores into spaces
+#### Scenario: a spec document is opened
+- **WHEN** the reader opens a spec, plan, or task document
+- **THEN** it renders in the spec viewer
+- **AND** no separate workflow-editor panel is registered to claim it
 
-#### Scenario: a spec is on a workflow whose pipeline ends in a terminal step
-- **WHEN** the panel renders that spec's document
-- **THEN** the stepper includes that terminal step alongside the earlier ones
-- **AND** the next-document decision accounts for it rather than ending the pipeline early
+### Shipped presets are starting points, not fixed shapes
+
+The extension SHALL ship named presets a user can start a new workflow from, each declaring only what it changes — the node list and phase grouping for a command, or the template sections a command emits — and each carrying a plain-language summary of who it is for. A preset SHALL be editable afterwards, node by node and section by section; picking one MUST NOT lock any of its choices.
+
+#### Scenario: a new workflow is created from a preset
+- **WHEN** the user picks a preset in the pipeline panel
+- **THEN** the new workflow starts from that preset's nodes, phases, and template sections
+- **AND** every one of them can still be changed afterwards
+
+### A routing switch matches the verdict the classifier actually emits
+
+Any branch keyed on a classifier's output SHALL use the vocabulary that classifier emits, not the vocabulary of the threshold it is named after. A key that names the bar rather than the verdict matches nothing, and the failure is silent: every run simply takes the default branch, so a fast path can appear to exist while never once being entered.
+
+#### Scenario: a small change is classified
+- **WHEN** the classifier returns its simple-size verdict
+- **THEN** the workflow's switch matches that branch and runs the folded path
+- **AND** the folded path still runs plan and tasks, without their review-gate pauses — fewer stops, not fewer artifacts
+
+### The spec-context file name is declared once
+
+The name of the per-spec context file SHALL be declared by the module that reads it and re-exported everywhere else it is needed, rather than restated as a second literal.
 
 ## Uncovered
 

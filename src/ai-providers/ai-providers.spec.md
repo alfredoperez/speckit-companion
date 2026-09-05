@@ -76,6 +76,15 @@ The extension prepends spec-context bookkeeping to the prompt, delimited by mark
 - **WHEN** the prompt carries a preamble and the CLI supports appending to its system prompt
 - **THEN** the preamble is staged separately and passed through that channel so it neither pollutes scrollback nor interferes with slash-command resolution
 
+### The preamble's schema block is generated from the canonical contract, never retyped
+
+The JSON Schema for `.spec-context.json` that every preamble embeds SHALL take each of its vocabularies — the step names, the status values, and the authors a history entry may be attributed to — from the same declarations the extension itself writes against, rather than from literals copied into the preamble. The status a step ends at SHALL likewise be read from the single canonical map. A hand-copied block had been telling the assistant that a history entry's author accepts four values while the schema and the writers accept five.
+
+#### Scenario: a vocabulary gains a value
+- **WHEN** a new status, step, or history-entry author is added to the canonical contract
+- **THEN** the embedded schema in every rendered preamble lists it without any edit to the preamble
+- **AND** what the assistant is told and what the extension accepts cannot disagree
+
 ### The creation preamble seeds every fact the new spec's record must be born with
 
 A spec's record does not exist when its creation is dispatched, so the only way a fact known at dispatch time reaches that record is for the creation preamble to instruct the assistant to write it. The preamble therefore seeds both the workflow the run will follow and the correlation identifier the dispatching surface minted for it, and a seeded field SHALL be emitted only when the dispatcher supplied it, so a surface with nothing to seed produces the same instruction as before.
@@ -174,3 +183,8 @@ The implement preamble SHALL instruct that per-task journaling is performed by t
 #### Scenario: a companion command is dispatched
 - **WHEN** the slim preamble is rendered
 - **THEN** it defers step closure to the body-and-hook model and never asks the AI to self-close plan or tasks
+
+#### Scenario: the same step is dispatched without companion installed
+- **WHEN** specify, plan, or tasks is dispatched in stock mode, where no command body or hook stamps the boundary
+- **THEN** the preamble instructs the AI to write that step's completion itself
+- **AND** the step reaches its finished status instead of sticking at its in-flight one

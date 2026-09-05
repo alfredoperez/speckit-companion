@@ -100,6 +100,12 @@ Anything computed from the journal — most visibly the task checklist's checkbo
 - **THEN** it records only its finish
 - **AND** the checkbox is flipped later by the single derivation pass
 
+The task grammar SHALL match the extension's, cover every bullet character, ignore a checkbox inside a fenced block or a code span, and require a task id. Both halves decide the same question — whether every task is done — from opposite sides of the product, so they SHALL be pinned to one shared fixture read by both test suites. A checkbox shown inside a fence is documentation of the syntax; counting it here reported a task list finished while the viewer, which has always skipped fences, still showed tasks left.
+
+#### Scenario: a task document shows example syntax inside a fence
+- **WHEN** the two halves each count its tasks
+- **THEN** both skip the fenced example and reach the same count
+
 ### An unresolvable pointer is named, not passed over
 
 Resolution is best-effort and MUST NOT raise, but failing in silence is how a stale or misspelled pointer becomes an audit of the wrong spec — or of nothing at all — that still reports clean. Where the active-spec pointer exists and cannot be used, the runtime SHALL say which file, and whether it is stale or carries no key it recognises, then continue trying the remaining ways of finding the spec rather than stopping.
@@ -206,6 +212,109 @@ Where a capability is deliberately left out of one build, attempting it MUST rep
 #### Scenario: a module is loaded by file path instead of imported
 - **WHEN** the archive gate derives the shipping closure
 - **THEN** the dynamically loaded module is not discovered and the archive is incomplete
+
+### The configuration is the source of truth and the command bodies are built from it
+
+A project's `companion.yml` SHALL be turned into the command bodies the assistant reads by an explicit build. Resolving a project's node order and hooks without anything rendering them is the failure this closes: a project could declare a different order or attach a hook, and get the shipped pipeline anyway, with nothing about the run looking wrong. A build SHALL resolve each command's node order, check that every kept node's inputs are still produced, resolve its hooks, assemble the bodies with node boundaries, splice the hooks in at those boundaries, write the bodies and the manifest, and state what changed. It SHALL read the extension's own sources without editing them.
+
+#### Scenario: a project reorders a command's nodes and builds
+- **WHEN** the build runs
+- **THEN** the command body the assistant reads carries the project's order
+
+### A build is all-or-nothing
+
+Nothing SHALL be written until every command has assembled. A build that cannot complete SHALL leave the previous pipeline exactly as it was, because a half-written pipeline is a run that fails somewhere in the middle with no way to tell which half is which.
+
+#### Scenario: one command fails to assemble
+- **WHEN** the build stops
+- **THEN** no command body on disk has changed
+
+### A built body reaches the assistant only once it is carried out to the agent's own copy
+
+A build writes the extension's copy of a command body, and nothing dispatches that copy — the assistant loads the emission the installer wrote into that agent's own directory. The build SHALL therefore carry each body out to those copies, or the build is real and reaches nothing: a project could reorder its nodes, build, be told five commands were built, and watch the assistant keep running the pipeline as it was installed. Because an agent's emission differs from the body only in its frontmatter, the carry SHALL replace the body beneath a header it leaves untouched, and SHALL rewrite a file only when that file's current body carries the node markers an assembled body has — a pointer file with no body at all would be corrupted by splicing one in.
+
+#### Scenario: a build finishes
+- **WHEN** the emissions are synced
+- **THEN** each agent's own copy carries the new body under its unchanged frontmatter
+- **AND** a pointer file with no body is left alone
+
+### A hook is rendered at the node boundary it names
+
+Hooks SHALL be rendered into the assembled body at the node boundary markers, so attaching one is an insertion at a known point rather than a guess about surrounding prose. Four kinds SHALL be supported: a shell line to run, an instruction to follow, another node's body spliced in whole, and the name of a skill the project already has. A skill hook SHALL name the skill rather than copy its text, because copying forks instructions the project already wrote.
+
+#### Scenario: a project attaches a hook after a node
+- **WHEN** the command body is assembled
+- **THEN** the hook's text appears at that node's boundary, in the order the configuration declares
+
+### A build states what each run must produce, derived from the order it assembled
+
+Each author node already declares the document it writes; a build SHALL derive a manifest of those declarations from the same node order it assembled, never from a hand-kept list. Without it a build cannot say what it is about to produce, and a step that quietly stopped writing its document looks exactly like one that wrote it.
+
+#### Scenario: the node order changes
+- **WHEN** the build runs
+- **THEN** the manifest describes the pipeline that was assembled, not a different one
+
+### The pipeline's decision points are data, not prose in three places
+
+The one branch in the pipeline — the classifier's verdict deciding whether a change keeps the full path or folds toward implement — SHALL be declared as data naming which node decides, the verdicts it can reach, and what each verdict does: which steps it folds away, and the notice it prints. A project SHALL be able to override where a verdict routes, and the build SHALL state the routing it resolved and note in the body when the project changed it. Written as prose in the routing part, the workflow file and the classifier's instructions, the routing was expressible in none of them and changeable in none of them.
+
+#### Scenario: a project changes where a verdict routes
+- **WHEN** the build resolves the routing
+- **THEN** it applies the project's route and says in the body that the project changed it
+
+### A template is customized by section, and the stock copy is never edited
+
+A step SHALL relate to its template in one of three ways: produce the document from the template as it is, replace one named section of it, or write something the template does not describe. A section SHALL be addressed by its heading, because a template is already a sequence of headings and both people and models navigate it that way — so a template a project edited by hand keeps working and there is no new marker syntax. Stock templates SHALL NOT be edited in place: the build writes a resolved copy into the project's built output, so an upgrade that changes a stock template does not silently discard what the project asked for.
+
+#### Scenario: a project replaces one section of the spec template
+- **WHEN** the build resolves templates
+- **THEN** a resolved copy carries the replacement and the stock template on disk is unchanged
+
+### Writing one key back into the configuration preserves everything else byte for byte
+
+Writing a value back into `companion.yml` SHALL be a surgical text edit — replace or insert the lines for that one key — and SHALL NOT round-trip the file through a YAML emitter. The configuration is a file people read and review, and re-emitting it reformats the comments, blank lines, and quoting somebody chose on purpose.
+
+#### Scenario: the panel writes a command's node order
+- **WHEN** the file is written back
+- **THEN** every line outside that key is unchanged, comments and spacing included
+
+### A configuration too broken to read is repairable from the panel that reads it
+
+Because the builder refuses an edit that would break the configuration, what it writes is always valid — but a file edited by hand, written by an older build, or left broken by a version with no guard yet still lands the panel on its error state. Recovery SHALL therefore be offered as the panel's own named actions rather than as "open the YAML file", which is the editing the panel exists to replace. Each repair SHALL be a small, named retreat toward what ships, they SHALL be ordered narrowest first, and each SHALL state what it will cost, because a recovery that silently discards an afternoon's work is worse than the broken pipeline.
+
+#### Scenario: a phase is left empty by dragging its last node out
+- **WHEN** repairs are offered
+- **THEN** dropping that empty phase is offered first, and every other edit is kept
+
+### The pipeline's structure is emitted here and drawn elsewhere
+
+The structure the builder draws — the steps, the phases, the nodes, where the hooks land, what the decision routes to, and how each differs from the shipped default — SHALL be derived here from the project's own configuration and emitted for the editor to read. Deriving it a second time on the editor side would be a second source that drifts within a release, and what is drawn would stop being what a build would produce.
+
+#### Scenario: the builder renders a project's pipeline
+- **WHEN** the structure is resolved
+- **THEN** it reflects the project's configuration, not the shipped defaults with the project's changes imagined on top
+
+### A step a project declared is a real step; only a typo is refused
+
+The guard on step names exists to catch a MISSPELLED step, which would otherwise default to the first step and journal a junk completion against the wrong one. It SHALL NOT refuse a step that exists: a project that has written a step's node directory has declared a real step, and refusing to journal it leaves the run with no record of a phase that genuinely happened. Both the extension's own step directories and the project's SHALL be consulted, and the project SHALL be located even when the call carries no feature directory — the hook form of a step-start carries none, and deriving the project from that argument alone journaled a project step's finish while refusing its start, producing a history that ends in a completion that never began.
+
+Ordering SHALL NOT be applied to a step outside the canonical order: the canonical order says nothing about where it belongs, and ranking it against the last canonical step refuses exactly the case people add one for — a review or verification that runs after the work. A spec that has genuinely shipped stays closed to everything.
+
+#### Scenario: a project journals its own step
+- **WHEN** the start arrives through the hook form, with no feature directory
+- **THEN** the project's step directory is still found and the start is recorded
+
+#### Scenario: a step name is misspelled
+- **WHEN** the write is attempted
+- **THEN** it is refused by name rather than defaulting to another step
+
+### The write lock is released once, after the publish, on whichever path ran
+
+A context write SHALL hold its lock until the publish has succeeded or failed, on every code path including the fallback one. A release attached to the first attempt let the fallback path publish unlocked, which is precisely the window the lock exists to close.
+
+#### Scenario: the preferred writer is unavailable and the fallback path runs
+- **WHEN** the fallback publishes the file
+- **THEN** the lock is still held, and is released once afterwards
 
 ## Uncovered
 
