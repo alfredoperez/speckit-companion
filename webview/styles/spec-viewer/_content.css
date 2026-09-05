@@ -297,6 +297,19 @@ body[data-has-spec-context="true"] .meta-branch {
     outline-offset: 1px;
 }
 
+/* The healthy-state action. Present so the header always has something to do,
+   quiet so it never competes with Update, which is the one that matters. */
+.spec-header-update-btn--quiet {
+    color: var(--text-body);
+    background: transparent;
+    border: 1px solid var(--border);
+}
+
+.spec-header-update-btn--quiet:hover {
+    background: var(--bg-elevated);
+    border-color: var(--vscode-focusBorder);
+}
+
 /* What the capability claims — the one fact that lives nowhere else in the UI. */
 .spec-header-covers {
     display: flex;
@@ -316,9 +329,9 @@ body[data-has-spec-context="true"] .meta-branch {
 .spec-header-glob {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    padding: 2px 8px;
+    padding: 2px 6px;
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: var(--radius-sm);
     color: var(--text-body);
     min-width: 0;
@@ -337,6 +350,8 @@ body[data-has-spec-context="true"] .meta-branch {
    takes the body token; size and mono face carry the hierarchy instead. */
 .spec-header-location {
     display: flex;
+    align-items: center;
+    gap: 6px;
     min-width: 0;
 }
 

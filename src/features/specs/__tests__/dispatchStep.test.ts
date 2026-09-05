@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { dispatchStep } from '../dispatchStep';
+import { dispatchStep, resetCompanionFallbackWarnings } from '../dispatchStep';
 import { resolveDispatchWithFallback } from '../profileDispatch';
 import { sendTelemetryEvent } from '../../../core/telemetry';
 import { buildPrompt } from '../../../ai-providers/promptBuilder';
@@ -94,6 +94,7 @@ describe('dispatchStep', () => {
     });
 
     it('warns and offers the install when it falls back to the stock command', async () => {
+        resetCompanionFallbackWarnings();
         resolved.mockReturnValue({ command: 'speckit.plan', fellBack: true });
         const d = deps();
 
@@ -107,6 +108,23 @@ describe('dispatchStep', () => {
             'Install spec-kit Extension',
         );
         expect(d.run).toHaveBeenCalled();
+    });
+
+    it('says the extension is missing once, not once per step of a run', async () => {
+        // A four-step Companion run without the extension raised this four times.
+        // Whether the extension is installed is one fact about the workspace.
+        resetCompanionFallbackWarnings();
+        resolved.mockReturnValue({ command: 'speckit.plan', fellBack: true });
+
+        for (const step of ['specify', 'plan', 'tasks', 'implement']) {
+            await dispatchStep({ ...request, step }, deps());
+        }
+
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledTimes(1);
+        // The log still records every fallback — that is a record, not an interruption.
+        expect(outputChannel.appendLine).toHaveBeenCalledWith(
+            expect.stringContaining('Companion command unavailable'),
+        );
     });
 
     it('dispatches nothing when a companion-only step has no stock twin', async () => {

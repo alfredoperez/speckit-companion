@@ -338,6 +338,56 @@
     font-weight: 600;
 }
 
+/* The picker: a native select. The card stack it replaces spent ~230px of height
+   on one either/or and pushed the Feature Brief below the fold. */
+.workflow-select {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.9em;
+    color: var(--vscode-dropdown-foreground, var(--text-primary));
+    background: var(--vscode-dropdown-background, var(--bg-elevated));
+    border: 1px solid var(--vscode-dropdown-border, var(--border));
+    border-radius: var(--radius-sm);
+}
+
+.workflow-select:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+/* The pitch a dropdown row cannot carry: the description, the install badge and
+   the one-spec trial. Rocket-led, matching the other places offering Companion. */
+.workflow-pitch {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 8px 10px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+}
+
+.workflow-pitch__glyph {
+    color: var(--vscode-charts-yellow, var(--warning));
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+.workflow-pitch__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.workflow-pitch__text {
+    color: var(--text-body);
+    font-size: 0.9em;
+}
+
 /* Radio-card group: one card per offerable workflow, description always visible. */
 .workflow-choices {
     display: flex;
@@ -430,13 +480,20 @@
 
 .spec-editor-actions {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 12px;
     padding-top: 16px;
 }
 
+/* The hints line is not a button and must not be stretched with them. */
+.spec-editor-actions .keyboard-hints {
+    display: flex;
+    align-items: center;
+}
+
 .spec-editor-actions button {
     padding: 6px 14px;
+    white-space: nowrap;
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.9em;
@@ -456,7 +513,7 @@
 }
 
 .spec-editor-actions .btn-primary {
-    padding: 8px 24px;
+    padding: 6px 24px;
     background-color: var(--vscode-button-background, var(--accent));
     color: var(--vscode-button-foreground, white);
 }
@@ -639,9 +696,20 @@
         order: 3;
     }
 
+    /* All three, not two: stretching Cancel and Create while Auto kept its
+       natural width is what made one row of three different sizes. */
     .spec-editor-actions .btn-cancel,
+    .spec-editor-actions .btn-secondary,
     .spec-editor-actions .btn-primary {
-        flex: 1;
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    /* The primary's 24px side padding against a flex basis left too little room
+       for "Create Spec" on one line, and the wrap is what made it taller than
+       its neighbours. */
+    .spec-editor-actions .btn-primary {
+        padding: 6px 12px;
     }
 
     /* Stack the workflow row so it doesn't overflow horizontally at narrow widths. */

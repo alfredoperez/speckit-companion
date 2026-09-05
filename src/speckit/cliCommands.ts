@@ -49,7 +49,7 @@ export function registerCliCommands(
                     },
                     {
                         label: '$(cloud-download) Update spec-kit Extension',
-                        description: 'Install or force-update the companion spec-kit extension (Turbo + Capture)',
+                        description: 'Install or force-update the companion spec-kit extension',
                         commandId: 'speckit.companion.installSpecKitExtension',
                     },
                 ],

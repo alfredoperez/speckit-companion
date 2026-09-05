@@ -254,13 +254,14 @@ export class SpecViewerProvider {
 
     if (existingInstance) {
       // Update existing panel and reveal
+      existingInstance.state.landing = 'document';
       await this.updateContent(specDirectory, documentType);
       existingInstance.panel.reveal(vscode.ViewColumn.One);
       return;
     }
 
     // Create new panel for this spec
-    await this.createPanel(specDirectory, documentType);
+    await this.createPanel(specDirectory, documentType, undefined, 'document');
   }
 
   /**
@@ -271,6 +272,7 @@ export class SpecViewerProvider {
     reportSpecOpened(specDirectory);
     const existing = this.panels.get(specDirectory);
     if (existing) {
+      existing.state.landing = undefined;
       await this.updateContent(specDirectory, existing.state.currentDocument);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -453,6 +455,7 @@ export class SpecViewerProvider {
     specDirectory: string,
     documentType: DocumentType | undefined,
     living?: { living: true; sourcePath: string },
+    landing?: 'overview' | 'document',
   ): Promise<void> {
     const specName = living
       ? livingCapabilityName(living.sourcePath)
@@ -479,6 +482,7 @@ export class SpecViewerProvider {
       living: !!living,
       livingSourcePath: living?.sourcePath,
       currentDocument: documentType ?? CORE_DOCUMENTS.SPEC,
+      landing,
       availableDocuments: [],
       lastUpdated: Date.now(),
       phases: [],
@@ -1126,6 +1130,10 @@ export class SpecViewerProvider {
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
       runRecovery: derived.runRecovery,
       activityPanelEnabled: this.readActivityPanelEnabled(),
+      // Re-sent on every update like showInstallPrompt: the webview replaces the
+      // whole navState, so omitting this would drop a tree click's explicit
+      // document request on the first content refresh after it opened.
+      landing: instance.state.landing,
       // Must be re-sent on every update: the webview replaces the whole navState
       // object, so omitting this would make the relocated Activity-panel banner
       // (#255) vanish on the first content/spec-context refresh after load.

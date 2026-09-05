@@ -227,10 +227,14 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (health?.drifted) {
             suffixes.push('drift');
             tooltipLines.push("Source files changed since the living spec's last commit");
+            tooltipLines.push('Update to Match Code brings the spec back in line — the button on this row runs it');
         }
         item.description = suffixes.length > 0 ? suffixes.join(' · ') : undefined;
         if (health?.drifted) {
-            item.iconPath = new vscode.ThemeIcon('symbol-namespace', new vscode.ThemeColor('list.warningForeground'));
+            // A different shape, not the same shape tinted: colour alone is not a
+            // difference a reader can scan for, and it is nothing at all to someone
+            // who cannot distinguish it.
+            item.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'));
         } else if (cap.exists) {
             item.iconPath = new vscode.ThemeIcon('symbol-namespace');
         } else {

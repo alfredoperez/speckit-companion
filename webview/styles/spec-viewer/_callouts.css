@@ -50,6 +50,7 @@
 .callout-important  { --callout-c: var(--warning); --callout-bg: var(--warning-subtle); }
 .callout-critical   { --callout-c: var(--error);   --callout-bg: var(--error-subtle); }
 
+
 /* ============================================
    Template Instructions (collapsed HTML comments)
    ============================================ */

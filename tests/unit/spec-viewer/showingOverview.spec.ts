@@ -52,4 +52,31 @@ describe('showingOverview — the viewer owns the landing decision', () => {
 
         expect(showingOverview.value).toBe(false);
     });
+
+    describe('a tree click on a document asks for that document', () => {
+        it('opens the document even on a spec that has been run', () => {
+            // The bug: every document row in the tree landed on the Overview,
+            // because a run spec resolves to the Overview by default and nothing
+            // on the extension-to-webview path could say otherwise.
+            navState.value = { activityPanelEnabled: true, landing: 'document' } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+
+            expect(showingOverview.value).toBe(false);
+        });
+
+        it('leaves the spec row landing on the Overview, as before', () => {
+            navState.value = { activityPanelEnabled: true } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+
+            expect(showingOverview.value).toBe(true);
+        });
+
+        it('still lets the reader get back to the Overview from inside', () => {
+            navState.value = { activityPanelEnabled: true, landing: 'document' } as any;
+            viewerState.value = WITH_DURABLE_CONTEXT;
+            viewerMode.value = 'overview';
+
+            expect(showingOverview.value).toBe(true);
+        });
+    });
 });

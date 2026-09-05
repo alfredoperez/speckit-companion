@@ -211,14 +211,14 @@ function CreateSpecPanel() {
 }
 
 export const ActivationToast: Story = {
-    name: '1 · Activation notification',
+    name: '1 · Activation notification (removed)',
     render: () => (
         <Page>
             <Row
-                where="Notification toast, bottom-right, on window open"
-                source="src/speckit/activationInstallNudge.ts:78"
-                trigger="Activation of any workspace with a .specify/ dir and no companion extension"
-                dismiss="“Don't show again” writes speckit.installNudgeDismissed (global, permanent). Otherwise once per window session — every new window shows it again."
+                where="Was: a notification toast, bottom-right, on window open"
+                source="Removed — the badge and the pinned CTA row already carry this"
+                trigger="Nothing. This no longer fires."
+                dismiss="N/A"
                 mock
             >
                 <Toast
@@ -281,14 +281,14 @@ export const PinnedCtaRow: Story = {
 };
 
 export const WelcomeView: Story = {
-    name: '4 · viewsWelcome install block',
+    name: '4 · viewsWelcome install block (removed)',
     render: () => (
         <Page>
             <Row
-                where="Specs view welcome content, shown when no spec exists yet"
-                source="package.json:110 (viewsWelcome)"
-                trigger="speckit.detected && !constitutionNeedsSetup && !companion.installed && !installNudgeDismissed"
-                dismiss="Its own [Dismiss] link — the same global installNudgeDismissed flag the activation toast writes. Mutually exclusive with the pinned CTA row: that one needs specs to exist, this one needs none."
+                where="Was: the Specs view welcome content, when no spec exists yet"
+                source="Removed — one welcome block now, with no Companion pitch in it"
+                trigger="Nothing. The welcome copy stayed; the install pitch left."
+                dismiss="N/A"
                 mock
             >
                 <SpecsWelcome />
@@ -553,24 +553,10 @@ export const FreshWorkspaceAllAtOnce: Story = {
             </Row>
 
             <Row
-                where="Seconds later — the activation toast"
-                source="src/speckit/activationInstallNudge.ts:78"
-                trigger="Activation with .specify/ present"
-                dismiss="“Don't show again”, else every window"
-                mock
-            >
-                <Toast
-                    kind="info"
-                    message="This project uses spec-kit. Install the SpecKit Companion extension to unlock live status, resumability, the complexity fast path, and living specs 🌱."
-                    actions={['Install', "Don't show again"]}
-                />
-            </Row>
-
-            <Row
-                where="Same moment — opening the Specs view"
-                source="package.json:110 (no specs yet) or specExplorerProvider.ts:133 (specs exist)"
-                trigger="Companion missing and not dismissed"
-                dismiss="[Dismiss] link, or never for the pinned row"
+                where="Opening the Specs view — the pinned CTA row"
+                source="specExplorerProvider.ts:133 (specs exist)"
+                trigger="Companion missing"
+                dismiss="Never — ambient by design"
                 mock
             >
                 <SpecsWelcome />
@@ -586,7 +572,7 @@ export const FreshWorkspaceAllAtOnce: Story = {
             </Row>
 
             <Row
-                where="First submit — a blocking modal, pitch number five"
+                where="First submit — a blocking modal, asked once and then remembered"
                 source="src/features/spec-editor/specEditorProvider.ts:125"
                 trigger="Submitting with the Companion workflow selected"
                 dismiss="Never permanently — every submit"

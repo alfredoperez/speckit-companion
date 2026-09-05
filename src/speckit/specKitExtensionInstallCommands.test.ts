@@ -61,14 +61,12 @@ describe('companion install-nudge commands', () => {
         expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
     });
 
-    it('dismissInstallNudge persists globalState and sets the context key', async () => {
-        const { handlers, globalStateStore } = registerAndCapture();
-        await handlers.get('speckit.companion.dismissInstallNudge')!();
-        expect(globalStateStore.get('speckit.installNudgeDismissed')).toBe(true);
-        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-            'setContext',
-            'speckit.companion.installNudgeDismissed',
-            true
-        );
+    it('registers no dismiss command, because nothing is left for it to turn off', () => {
+        // Its only invoker was the viewsWelcome [Dismiss] link. The two nudges that
+        // remain — the activity-bar badge and the pinned CTA row — are ambient by
+        // design and never read the flag, so a dismiss that turned nothing off was
+        // worse than none.
+        const { handlers } = registerAndCapture();
+        expect(handlers.has('speckit.companion.dismissInstallNudge')).toBe(false);
     });
 });

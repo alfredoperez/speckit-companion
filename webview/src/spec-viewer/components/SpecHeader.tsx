@@ -53,7 +53,12 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
                 drift
             </span>
         );
-        facts.push(
+    }
+    // There is always one thing to do here. The header used to carry an action
+    // only once drift had been found, so it was at its emptiest in the state a
+    // reader is in most of the time.
+    facts.push(
+        meta.drifted ? (
             <button
                 key="update"
                 type="button"
@@ -63,8 +68,18 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
             >
                 Update
             </button>
-        );
-    }
+        ) : (
+            <button
+                key="check-drift"
+                type="button"
+                class="spec-header-update-btn spec-header-update-btn--quiet"
+                title="Re-check this capability's source files against the spec"
+                onClick={() => vscode.postMessage({ type: 'livingCheckDrift' })}
+            >
+                Check for drift
+            </button>
+        )
+    );
 
     return facts.length > 0 ? <div class="spec-header-living">{facts}</div> : null;
 }
@@ -96,6 +111,9 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
                 </div>
             )}
             <div class="spec-header-location">
+                <span class="spec-header-covers__label">
+                    {meta.location === 'colocated' ? 'Lives beside the code' : 'Lives in specs'}
+                </span>
                 <span
                     class="spec-header-path"
                     title={

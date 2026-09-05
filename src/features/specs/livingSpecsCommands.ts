@@ -97,8 +97,14 @@ export function registerLivingSpecsCommands(
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.livingSpecs.drift', async (item?: LivingSpecNode) => {
             reportLivingSpecDrift();
-            outputChannel.appendLine(`[SpecKit] Living-spec drift check for: ${capabilityName(item) || '(all capabilities)'}`);
-            await dispatchScoped('living-drift', 'SpecKit - Living-Spec Drift', item);
+            const root = workspaceRoot();
+            let scoped = item;
+            if (!item?.capability && root && item?.capabilitySpecPath) {
+                const cap = resolveCapabilityBySpecPath(root, item.capabilitySpecPath);
+                if (cap) scoped = { ...item, capability: cap };
+            }
+            outputChannel.appendLine(`[SpecKit] Living-spec drift check for: ${capabilityName(scoped) || '(all capabilities)'}`);
+            await dispatchScoped('living-drift', 'SpecKit - Living-Spec Drift', scoped);
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.coverage', async (item?: LivingSpecNode) => {
             outputChannel.appendLine(`[SpecKit] Coverage check for: ${capabilityName(item) || '(all capabilities)'}`);
