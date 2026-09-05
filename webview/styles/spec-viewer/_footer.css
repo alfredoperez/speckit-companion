@@ -163,16 +163,6 @@
     background: var(--bg-inset);
 }
 
-/* Pinned at higher specificity: Refine rendered as light text on the accent
-   fill in at least one theme, which is unreadable, and no rule in this
-   stylesheet asks for that. Whatever paints it, the ink stays readable. */
-.actions .actions-right button.enhancement,
-.actions .actions-right button.enhancement:hover {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    border-color: var(--border-hover);
-}
-
 /* Disabled state for all footer buttons (e.g. while a step is running) */
 .actions button:disabled,
 .actions button[disabled] {

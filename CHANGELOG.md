@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **The Refine and Add Comment buttons are readable again.** Both were drawn with white text on the accent fill — about 1.5:1 against the dark theme's mint, so `✨ Refine (2)` and the comment editor's submit all but vanished. Refine now uses the same surface treatment as the other secondary actions beside it, and Add Comment takes the ink colour the accent fill is meant to carry. Both read clearly in the light and dark viewer themes.
 - **The install is 1.7 MB, not 494 MB.** The extension package had been carrying every video render behind the README GIFs and the landing page, which nothing in the extension ever reads. They stay out of it now, so the download and the install are the size of the extension itself.
 - **Clicking a document in the Specs tree opens that document.** Every document row — Research, Data Model, Requirements — opened the Overview instead, on any spec that had been run at least once. The deepest, most specific rows in the tree were the ones that did the least. Clicking the spec itself still lands where it did, and getting back to the Overview is still one click from inside the viewer.
 - **The Living Specs fix for drift is on the row.** A drifted capability said `drift` and stopped there; the action that repairs it existed only in the right-click menu, so hovering the row showed nothing. It is now a button on the row itself.

@@ -180,7 +180,7 @@
 .editor-add {
     background: var(--accent);
     border: none;
-    color: white;
+    color: var(--accent-ink);
 }
 
 .editor-add:hover {

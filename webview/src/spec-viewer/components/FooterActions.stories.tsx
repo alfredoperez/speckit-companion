@@ -12,9 +12,11 @@
  * annotations.
  */
 
+import { useLayoutEffect } from 'preact/hooks';
 import type { Meta, StoryObj } from '@storybook/preact';
-import { navState, viewerState } from '../signals';
-import type { ViewerState } from '../types';
+import { updateRefineButton } from '../editor';
+import { navState, pendingRefinements, viewerState } from '../signals';
+import type { Refinement, ViewerState } from '../types';
 import { FooterActions } from './FooterActions';
 import { mockNavState } from './__stories__/mockData';
 
@@ -80,14 +82,26 @@ const finalApprovalFooter: FooterEntry[] = [
     { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
 ];
 
-const REFINE_ACTION: FooterEntry = {
-    id: 'refine',
-    label: '✨ Refine (2)',
-    scope: 'spec',
-    tooltip: 'Submit 2 line comments for refinement',
-};
+// `✨ Refine (n)` is not a catalogue action: `updateRefineButton()` appends it into `.actions-right` when comments are pending.
+const pendingComment = (lineNum: number): Refinement => ({
+    id: `r${lineNum}`,
+    lineNum,
+    lineContent: `Line ${lineNum}`,
+    comment: 'Tighten this up',
+    lineType: 'paragraph',
+    status: 'pending',
+});
 
-const withRefine = (footer: FooterEntry[]): FooterEntry[] => [REFINE_ACTION, ...footer];
+function FooterWithRefine({ status }: { status: string }) {
+    useLayoutEffect(() => {
+        pendingRefinements.value = [pendingComment(12), pendingComment(28)];
+        updateRefineButton();
+        return () => {
+            pendingRefinements.value = [];
+        };
+    }, []);
+    return <FooterActions initialSpecStatus={status} />;
+}
 
 // ── Pause-stage catalog stories (one per canonical pause status) ────────────
 
@@ -104,8 +118,8 @@ export const SpecifiedWithRefine: Story = {
     name: 'Specified With Refine',
     render: () => {
         navState.value = mockNavState({ specStatus: 'specified' });
-        viewerState.value = baseViewerState('specified', 'specify', withRefine(pauseFooter('Plan')));
-        return <FooterActions initialSpecStatus="specified" />;
+        viewerState.value = baseViewerState('specified', 'specify', pauseFooter('Plan'));
+        return <FooterWithRefine status="specified" />;
     },
 };
 
@@ -122,8 +136,8 @@ export const PlannedWithRefine: Story = {
     name: 'Planned With Refine',
     render: () => {
         navState.value = mockNavState({ specStatus: 'planned' });
-        viewerState.value = baseViewerState('planned', 'plan', withRefine(pauseFooter('Tasks')));
-        return <FooterActions initialSpecStatus="planned" />;
+        viewerState.value = baseViewerState('planned', 'plan', pauseFooter('Tasks'));
+        return <FooterWithRefine status="planned" />;
     },
 };
 
@@ -140,8 +154,8 @@ export const TasksCreatedWithRefine: Story = {
     name: 'Tasks Created With Refine',
     render: () => {
         navState.value = mockNavState({ specStatus: 'ready-to-implement' });
-        viewerState.value = baseViewerState('ready-to-implement', 'tasks', withRefine(pauseFooter('Implement')));
-        return <FooterActions initialSpecStatus="ready-to-implement" />;
+        viewerState.value = baseViewerState('ready-to-implement', 'tasks', pauseFooter('Implement'));
+        return <FooterWithRefine status="ready-to-implement" />;
     },
 };
 

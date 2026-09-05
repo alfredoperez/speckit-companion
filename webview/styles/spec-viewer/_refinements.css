@@ -168,32 +168,3 @@
     border-color: var(--error);
     color: var(--error);
 }
-
-/* ============================================
-   Refine Submit Button (Footer)
-   ============================================ */
-
-.refine-submit-btn {
-    display: none;
-    padding: 8px 20px;
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius-sm);
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    align-items: center;
-    gap: 6px;
-}
-
-.refine-submit-btn:hover {
-    background: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--accent-glow);
-}
-
-.refine-submit-btn:active {
-    transform: translateY(0);
-}
