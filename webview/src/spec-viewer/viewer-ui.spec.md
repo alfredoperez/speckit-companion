@@ -267,6 +267,16 @@ Readable content MUST use the body and primary text tokens; the secondary and mu
 - **WHEN** a step is in flight
 - **THEN** the in-flight indicator renders without animation
 
+A button that fills itself with the accent colour SHALL take the accent's own ink token; a hardcoded white is unreadable on the accent in the default dark theme, which is mint. This holds for a button assembled imperatively as much as for one rendered from the shared variant map — a control built outside that map still has to meet the contrast floor, and three shipped at 1.54:1 before anyone measured.
+
+#### Scenario: a control is built imperatively rather than through the shared button
+- **WHEN** it renders
+- **THEN** it carries the same class the variant map would have given it, so one rule paints both
+
+#### Scenario: a story stands in for a control the product builds another way
+- **WHEN** the story renders a synthetic stand-in rather than the real control
+- **THEN** the baseline is not evidence, and the story mounts what production mounts instead
+
 ### Tolerance for an old on-disk shape lives at the one conversion point
 
 Where a spec written by an older version persisted a different shape for a field, the widened type SHALL be declared only on the function that converts it, not on the contract every consumer reads. Consumers all take the current shape; putting the legacy form in the shared type would make every reader handle a case only the converter ever sees.
