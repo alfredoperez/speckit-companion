@@ -108,6 +108,8 @@ design/**
 storybook-static/**
 **/*.stories.tsx
 assets/mascot/**
+# Clip compositions, renders and site cards. Docs/README sources only; nothing at runtime reads them.
+media/**
 assets/social/**
 AGENTS.md
 package-lock.json

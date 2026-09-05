@@ -108,3 +108,41 @@ describe('the pipeline builder ships with what it reads', () => {
         expect(source).toContain("'speckit-extension', 'scripts', 'build-pipeline.py'");
     });
 });
+
+/**
+ * The other direction: what must NOT ship. Three times a whole tree landed in
+ * the package before anyone looked — `__screenshots__/**`, `website/**`, and
+ * 494 MB of `media/**` renders — because every guard here asserts what must be
+ * present and nothing asserted what must be absent. `vsce ls` would be the
+ * direct check, but it runs the full webpack build, so this holds the same
+ * property from the ignore list: a new top-level tree is either known to ship
+ * or has an explicit exclusion, and a tree that is neither fails the build
+ * until someone decides.
+ */
+const SHIPS_AT_TOP_LEVEL = new Set(['assets', 'capabilities', 'dist', 'speckit-extension', 'webview']);
+
+const excludedTrees = new Set(
+    ignore
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#') && !line.startsWith('!'))
+        .filter(line => /^[^*/]+\/\*\*$/.test(line))
+        .map(line => line.slice(0, -3)),
+);
+
+describe('every top-level tree is either known to ship or explicitly kept out', () => {
+    const topLevelDirs = fs
+        .readdirSync(repoRoot, { withFileTypes: true })
+        .filter(d => d.isDirectory() && !d.name.startsWith('.') && d.name !== 'node_modules')
+        .map(d => d.name);
+
+    it.each(topLevelDirs)('%s', dir => {
+        expect(SHIPS_AT_TOP_LEVEL.has(dir) || excludedTrees.has(dir)).toBe(true);
+    });
+
+    it('keeps the documentation trees out', () => {
+        for (const tree of ['media', 'docs', 'website', 'examples', 'specs', 'design']) {
+            expect(excludedTrees.has(tree)).toBe(true);
+        }
+    });
+});
