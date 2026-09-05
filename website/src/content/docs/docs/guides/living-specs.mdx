@@ -8,13 +8,15 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
+By the end of this page you'll have a registry that turns living specs on, know where each capability's spec and its two sibling files go, and know which of the five commands computes an answer and which asks your assistant for one.
+
 A feature spec describes one change. It's written, it's implemented, and after that it's a record of something that happened rather than a description of what the code does now. Read a folder of them a year later and you have an archaeology problem: the current behavior is the sum of thirty specs, minus the parts later specs undid.
 
 A **living spec** describes a capability instead: a piece of behavior your codebase keeps having. It's registered once, it lives next to the code it describes, and it's updated by the runs that change that code rather than replaced by them.
 
 <MediaSlot
   feature="living-specs-explained"
-  caption="The same requirements, filed by what they describe rather than by when they were written. That's the whole move, and it's why a shipped feature spec can be archived without losing anything."
+  caption="The two layouts side by side: a colocated spec sitting in the source directory it describes, and a central capabilities folder holding one spec per capability, each row carrying its coverage count or a drift flag."
 />
 
 The trade is that a feature spec is finished when the feature ships, and a living spec never is. Everything below is about who keeps it current, because the answer is not "it happens automatically".
@@ -37,10 +39,12 @@ capabilities:
 | Key | What it does |
 | --- | --- |
 | `enabled` | The opt-in switch. With no registry, or with this unset, every living-specs command behaves as if the feature weren't there. |
-| `exempt` | Globs that never count as drift, repo-wide. Config files, tests, and generated directories are the usual entries. |
+| `exempt` | Globs that never count as drift, repo-wide. Leave it out and the default is `*.config.*`, `*.test.*` and `**/migrations/**`. |
 | `name` | The capability's identifier. It's also the folder name when the spec location is derived rather than given. |
 | `match` | The globs whose files belong to this capability. A file belongs if it matches one of these and none of the capability's own `exclude` globs. |
 | `spec` | Where this capability's spec lives. Optional, and the next section is about what happens when you leave it out. |
+
+An older layout is still read: a `livingSpecs:` block inside `.specify/companion.yml` with the same keys. If both exist, `living-specs.yml` wins and the old block is reported as stale.
 
 ## Where the spec lives
 
@@ -50,7 +54,9 @@ Two layouts, and the registry picks between them by whether you wrote a `spec:` 
 
 **Central.** Leave `spec:` out and the location is derived: `capabilities/<name>/spec.md`. This suits a capability whose code is spread across several directories with no obvious home.
 
-You can mix both in one registry, and the sidebar's Living Specs tree mirrors whichever you chose, so a colocated spec appears nested under its source directories.
+You can mix both in one registry, and the sidebar's Living Specs tree mirrors whichever you chose, so a colocated spec appears nested under its source directories. `/speckit.companion.living-move` moves a capability from one layout to the other later, so the first choice isn't final.
+
+Each spec has two sibling files, derived from its name. For a colocated `<stem>.spec.md` they are `<stem>.arch.md` and `<stem>.coverage.md` in the same directory. For a central `capabilities/<name>/spec.md` they are `spec.arch.md` and `spec.coverage.md` beside it. The architecture file is free-form notes about how the capability is built. The coverage file maps requirements to the tests that exercise them, and it's what the coverage count on a sidebar row and in the viewer header is read from. Neither is generated; you create them at those paths yourself.
 
 Two more rules decide which capability a given file belongs to.
 
@@ -62,16 +68,17 @@ Any spec file in the tree that no capability claims shows up under **Orphans** i
 
 ## The commands
 
-All four are named `/speckit.companion.living-<verb>`, and all four come from the Companion Spec Kit extension. Install only the VS Code extension and neither they nor the Living Specs view exist.
+All five are named `/speckit.companion.living-<verb>`, and all five come from the Companion Spec Kit extension. Install only the VS Code extension and neither they nor the Living Specs view exist.
 
 | Command | What it does |
 | --- | --- |
 | `/speckit.companion.living-adopt` | Drafts a spec for one code area you name, then a script registers the capability. The drafting is assistant work, read from the code's surface, and every draft is marked as a starting point. |
 | `/speckit.companion.living-sync` | Rewrites the affected specs from your current changes. Also assistant work. "Update, don't regenerate" is an instruction in the command, not something a script enforces. |
-| `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. |
-| `/speckit.companion.living-coverage` | Reads each capability's coverage file and reports what it finds. |
+| `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. Committed history only by default; `--working` counts uncommitted edits and untracked files as drift too. |
+| `/speckit.companion.living-coverage` | Reads each capability's coverage file and reports what it finds. `--capability <name>` limits it to one. |
+| `/speckit.companion.living-move` | Moves a capability's spec and its sibling files between the colocated and central layouts and rewrites the registry to match, after showing you the paths and pausing for confirmation. |
 
-The split down the middle of that table matters. Drift and coverage are backed by scripts that compute the answer, so they're deterministic and repeatable. Adopt and sync are prompts your assistant follows, so their quality is your assistant's quality.
+The split in that table matters. Drift, coverage and move are backed by scripts that compute the answer, so they're deterministic and repeatable. Adopt and sync are prompts your assistant follows, so their quality is your assistant's quality.
 
 ## How a run folds back
 
@@ -100,7 +107,7 @@ Drift and coverage never gate anything. Both are read-only reports that always e
 
 A capability whose spec isn't committed yet, or a CI checkout without enough history, is skipped with the reason named and counted. The all-clear line is reserved for a run where every capability was actually examined.
 
-Two more files are recognized but never generated. The resolver derives an architecture sibling and a coverage sibling for every capability's spec, and living-coverage reads the coverage one. Nothing writes either of them. They're paths you author yourself, which is why a capability with no coverage file shows no coverage number, and why that looks exactly like zero coverage on screen.
+The architecture and coverage siblings are recognized but never generated. Nothing writes either of them, which is why a capability with no coverage file shows no coverage number, and why that looks exactly like zero coverage on screen.
 
 ## Next
 
