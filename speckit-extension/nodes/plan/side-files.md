@@ -16,12 +16,16 @@ reads: [plan-doc]
    - `<feature_directory>/contracts/` — the interface the feature exposes (API / CLI / schema, or a UI contract listing routes and the identifiers a consumer/test codes against). **Copy every identifier from the spec's Verbatim Constraints exactly — never rename, recase, pluralize, or invent an identifier the spec already pinned; those exact strings *are* the contract.** Skip the directory only when the feature exposes no interface at all.
    After the documents return, re-check the Constitution Check against the final design.
 
+   **`design` closes after `contracts/`, not after the last document you happened to write.** Phase 1 is one numbered step producing several artifacts, so the boundary has no natural end and gets stamped at whichever file felt last — on one measured run `design` recorded 21s for about 56s of work because `contracts/` was written after the boundary was closed. Record the `design` substep finish only once every Phase 1 artifact this size budget keeps is on disk.
+
 6. **Capture the plan's reasoning** so the *why* survives the session (best-effort; JSON when you can produce it, bare text when not; skip silently if `python3` is unavailable):
    ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan --batch '{
+     "decisions": [{"decision": "<what you chose>", "why": "<why>", "rejected": "<the alternative not taken>"}],
+     "step_summary": {"summary": "<one-line rollup>", "key_finding": "<the most load-bearing thing you learned>"}
+   }'
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set approach="<2-3 sentence how-summary>"
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --decision '{"decision": "<what you chose>", "why": "<why>", "rejected": "<the alternative not taken>"}'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan --step-summary '{"summary": "<one-line rollup>", "key_finding": "<the most load-bearing thing you learned>"}'
    ```
-   Record one `--decision` per genuine choice from Phase 0 (repeat the flag or the call); skip trivia. These are additive and de-duped — re-running them never duplicates.
+   Record one `decisions` entry per genuine choice from Phase 0; skip trivia. These are additive and de-duped — re-running them never duplicates. **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. A volley issued one flag at a time rewrote 617KB to carry 7KB on one measured run — 89x — and every call is a separate round-trip in your context. Emit one `--batch`.
 
 **Output**: `<feature_directory>/plan.md` plus `research.md`, `data-model.md`, and `contracts/` when applicable.

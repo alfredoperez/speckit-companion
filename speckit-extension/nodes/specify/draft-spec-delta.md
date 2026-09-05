@@ -22,9 +22,16 @@ reads: [resolve-dir]
    - **Assumptions** — the informed defaults you chose for anything left open.
    - **Verbatim Constraints** *(include only when the request pins exact, must-match values)* — a `data-testid`, a route, an endpoint, a CLI flag, an env var, a config key, exact UI copy, a column name: record it **verbatim, in backticks, exactly as written**. Do **not** paraphrase, normalize casing, or pluralize; downstream steps MUST use these exact strings.
 
-**Log the requirements as they're born.** The moment the requirements are written, record each one — added and modified alike — one call per requirement, its one-line text as the title (best-effort; skip silently if `python3` is unavailable):
+**Log the requirements as they're born.** The moment the requirements are written, record them all — added and modified alike — in one call, each with its one-line text as the title (best-effort; skip silently if `python3` is unavailable):
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --title "<the requirement's one-line text>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --batch '{
+  "coverage": [
+    {"req": "FR-001", "title": "<the requirement's one-line text>"},
+    {"req": "FR-002", "title": "<…>"}
+  ]
+}'
 ```
+
+**One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. A volley issued one flag at a time rewrote 617KB to carry 7KB on one measured run — 89x — and every call is a separate round-trip in your context. Emit one `--batch`.
 
 3. Keep it business-readable, and keep it a delta. If a section would restate behaviour this change does not touch, cut it — except **Unchanged, and must stay that way**, which exists precisely to state what is not moving. If nothing behavioural changes at all (a refactor, tooling, a docs pass), say so plainly in **Why** and leave the requirement sections empty rather than inventing a requirement to fill them.

@@ -13,6 +13,9 @@ commands:
         # `complete` is the node that marks the spec completed, so this is the last
         # moment the run is still open — the right place to look at what it did.
         complete:
+          # Implement's only shipped boundary sits at the very end, so the step reads as one
+          # block. This closes `execute` before the wrap-up nodes run, giving it two.
+          - { type: node, ref: debug-timing }
           - { type: command, run: "python3 .specify/extensions/companion/scripts/doctor.py --chat || true" }
           - { type: prompt, text: "Read the doctor report above and act on it by this rule. FIX IN THIS RUN only what is this run's own unfinished bookkeeping — tasks completed but never journaled, a living-spec delta not yet folded. Those are yours and they are cheap. DO NOT fix anything else here: drift, template violations, step bleed, and capture failures are separate work, and folding them into the tail of an unrelated spec produces a diff nobody can review. Some findings cannot be fixed at all — history is append-only, so a journal written in one burst stays that way. For everything you are not fixing, record one concern on the spec naming what the doctor found. Then, only if there are problem-severity findings that are not self-inflicted, open ONE GitHub issue for the run with the doctor's own output as the body — one issue per run, never one per finding. If every finding is clean or self-inflicted, say so and open nothing." }
         implement-exec:

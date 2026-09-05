@@ -23,9 +23,16 @@ reads: [resolve-dir]
    - **Success Criteria › Measurable Outcomes** *(mandatory)* — measurable `SC-001…` outcomes. For a fix these are usually "the reproduction no longer reproduces" plus the unchanged behaviours still holding.
    - **Verbatim Constraints** *(include only when the report pins exact values)* — an error string, a route, a column name: **verbatim, in backticks, exactly as written**.
 
-**Log the requirements as they're born.** Record each Expected and Unchanged statement as a requirement, one call each, its one-line text as the title (best-effort; skip silently if `python3` is unavailable):
+**Log the requirements as they're born.** Record every Expected and Unchanged statement as a requirement in one call, each with its one-line text as the title (best-effort; skip silently if `python3` is unavailable):
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --title "<the statement's one-line text>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --batch '{
+  "coverage": [
+    {"req": "FR-001", "title": "<the statement's one-line text>"},
+    {"req": "FR-002", "title": "<…>"}
+  ]
+}'
 ```
+
+**One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. A volley issued one flag at a time rewrote 617KB to carry 7KB on one measured run — 89x — and every call is a separate round-trip in your context. Emit one `--batch`.
 
 3. Keep every statement observable. "Handles errors correctly" is not a contract; "WHEN the upload is cancelled mid-flight THEN the system SHALL leave no partial row" is. Each Unchanged statement should be something a test could hold, because the later steps will be asked to prove exactly these.

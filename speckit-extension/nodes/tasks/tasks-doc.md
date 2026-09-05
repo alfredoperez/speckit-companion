@@ -30,10 +30,17 @@ reads: []
 
 5. End with a **Dependencies & Execution Order** section: the phase dependencies (Setup → Foundational → stories → Polish) and a one-line restatement of each phase's waves (which wave blocks which). Each task names the concrete file it creates or edits.
 
-6. **Capture the requirement→task map** so "which tasks cover FR-X?" is answerable from the context file (best-effort; one call per requirement; skip silently if `python3` is unavailable — the implement step fills each requirement's tests later). Carry each requirement's one-line text via `--title` so the requirement is captured as readable content, not just an id:
+6. **Capture the requirement→task map** so "which tasks cover FR-X?" is answerable from the context file (best-effort; skip silently if `python3` is unavailable — the implement step fills each requirement's tests later). Carry each requirement's one-line text as its `title` so the requirement is captured as readable content, not just an id:
    ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --coverage-req FR-001 --title "<the requirement's one-line text>" --tasks "T001,T004"
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --step-summary '{"summary": "<task count + phase shape in one line>"}'
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --batch '{
+     "coverage": [
+       {"req": "FR-001", "title": "<the requirement one-line text>", "tasks": "T001,T004"},
+       {"req": "FR-002", "title": "<…>", "tasks": "T005"}
+     ],
+     "step_summary": {"summary": "<task count + phase shape in one line>"}
+   }'
    ```
+
+   **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. A volley issued one flag at a time rewrote 617KB to carry 7KB on one measured run — 89x — and every call is a separate round-trip in your context. Emit one `--batch`.
 
 **Output**: `<feature_directory>/tasks.md` organized by user story into dependency-ordered phases, each phase laid out as explicit waves with join points.
