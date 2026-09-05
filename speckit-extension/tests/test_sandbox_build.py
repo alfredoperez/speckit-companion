@@ -6,9 +6,13 @@ is only safe if a project that configured nothing gets exactly the pipeline it
 had before. Everything added is scaffolding: markers a tool reads, and text only
 where a project asked for it.
 
-This builds one of the repository's own sandbox projects and holds the output
-against the shipped bodies. It is the test that would fail if any of this had
-started quietly editing instructions.
+This builds a copy of one of the repository's own sandbox projects and holds
+the output against the shipped bodies. It is the test that would fail if any of
+this had started quietly editing instructions.
+
+The copy leaves out the sandbox's gitignored `.specify/companion.yml` and the
+other install artifacts, so the project under test is unconfigured by
+construction rather than by whatever a developer last tried there.
 
 Stdlib `unittest` only.
 """
@@ -16,6 +20,7 @@ from __future__ import annotations
 
 import importlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -34,29 +39,47 @@ assemble = importlib.import_module("assemble-nodes")
 
 MARKER = re.compile(r"<!-- /?speckit-companion:(?:node|phase|hook) [\w-]+ -->")
 
+#: Gitignored in the sandbox: local experiments and install output the build reads.
+LOCAL_ONLY = shutil.ignore_patterns("companion.yml", "extensions.yml", "extensions", "presets")
+
+
+def copy_sandbox(into: Path, config: str = "") -> Path:
+    """A fresh copy of the sandbox's `.specify/` holding exactly the given config."""
+    project = into / "project"
+    shutil.copytree(SANDBOX / ".specify", project / ".specify", ignore=LOCAL_ONLY)
+    if config:
+        (project / ".specify" / "companion.yml").write_text(config, encoding="utf-8")
+    return project
+
+
+def build(project: Path, out: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS / "build-pipeline.py"),
+         "--project", str(project), "--out", str(out)],
+        capture_output=True, text=True,
+    )
+
 
 class BuildingASandboxProjectChangesNothing(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not SANDBOX.is_dir():
             raise unittest.SkipTest(f"no sandbox project at {SANDBOX}")
-        cls._out = tempfile.TemporaryDirectory()
-        result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "build-pipeline.py"),
-             "--project", str(SANDBOX), "--out", cls._out.name],
-            capture_output=True, text=True,
-        )
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.project = copy_sandbox(Path(cls._tmp.name))
+        out = Path(cls._tmp.name) / "out"
+        result = build(cls.project, out)
         if result.returncode != 0:
             raise AssertionError(f"the sandbox build failed:\n{result.stdout}\n{result.stderr}")
         cls.stdout = result.stdout
         cls.built = {
-            command: (Path(cls._out.name) / f"speckit.companion.{command}.md").read_text(encoding="utf-8")
+            command: (out / f"speckit.companion.{command}.md").read_text(encoding="utf-8")
             for command in assemble.decomposed_commands()
         }
 
     @classmethod
     def tearDownClass(cls):
-        cls._out.cleanup()
+        cls._tmp.cleanup()
 
     def test_an_unconfigured_project_gets_the_shipped_bodies_byte_for_byte(self):
         for command, body in self.built.items():
@@ -102,8 +125,28 @@ class BuildingASandboxProjectChangesNothing(unittest.TestCase):
         # A build writes to its output directory. Reaching into the project's own
         # `.specify/` uninvited is how a trial run becomes a change nobody asked
         # for.
-        self.assertFalse((SANDBOX / ".specify" / "extensions" / "companion" / "commands").exists(),
+        self.assertFalse((self.project / ".specify" / "extensions" / "companion" / "commands").exists(),
                          "the build wrote into the sandbox instead of the output directory")
+
+
+class AConfiguredSandboxGetsItsHooks(unittest.TestCase):
+    # The same project with one hook written into it: the marker lands and the
+    # body stops being the shipped one. The config under test is written here,
+    # so this holds whatever a developer left in the real sandbox.
+    CONFIG = (
+        "commands:\n  implement:\n    hooks:\n      after:\n"
+        "        implement-exec:\n          - { type: prompt, text: \"x\" }\n"
+    )
+
+    def test_a_written_hook_shows_up_as_a_hook_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = copy_sandbox(Path(tmp), self.CONFIG)
+            result = build(project, Path(tmp) / "out")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            body = (Path(tmp) / "out" / "speckit.companion.implement.md").read_text(encoding="utf-8")
+        shipped = (EXT / "commands" / "speckit.companion.implement.md").read_text(encoding="utf-8")
+        self.assertIn("<!-- speckit-companion:hook after-implement-exec", body)
+        self.assertNotEqual(body, shipped)
 
 
 if __name__ == "__main__":
