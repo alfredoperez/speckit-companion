@@ -68,6 +68,16 @@ Because Create Spec is the highest-intent install moment, an ordinary (non-Auto,
 - **THEN** nothing runs, because it has no stock equivalent
 - **AND** the panel surfaces the reason rather than appearing to start
 
+The install-first modal is asked once. Choosing "use SpecKit instead" SHALL be remembered in global state, and the modal SHALL NOT be raised again for that user — it fires because the user asked for something the extension provides, which is what earns it a modal, and a modal that reappears after being answered is nagging rather than asking. The fallback warning SHALL be one sentence owned by the shared dispatch routine, raised through it from Create Spec and from every pipeline step alike, on a session cooldown rather than once per step or once forever: whether the extension is installed is one fact about the workspace, and a permanent mute would hide a failed install for the rest of the session. The install banner's markup SHALL be single-sourced under the protocol layer, so the Create-Spec panel and the viewer's Activity panel render one banner rather than two hand-kept copies of it.
+
+#### Scenario: the user has already chosen SpecKit at the modal
+- **WHEN** they submit another Companion pick without the companion piece
+- **THEN** the stock downgrade proceeds without the modal
+
+#### Scenario: a four-step Companion run without the companion piece
+- **WHEN** each step falls back to stock
+- **THEN** the warning is shown once, and the log records every fallback
+
 ### Attachments live outside the workspace unless a provider's sandbox forces otherwise
 
 Stored attachments SHALL default to extension-owned storage outside the user's repository, falling back to a system temporary location when that storage is not writable. Only when the active provider sandboxes its reads to the project root are the attachments copied *into* the workspace, and then only into a cache directory that ignores itself from version control on first use. If that copy cannot be made, the original references stand rather than the submission failing.

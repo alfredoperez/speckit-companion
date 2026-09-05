@@ -22,6 +22,16 @@ Opening any document of a spec MUST resolve to that spec's own panel. A second o
 - **THEN** its pending work and its per-spec notification state are discarded
 - **AND** reopening the spec starts from a clean panel
 
+The entry point's landing request rides with the panel. Opening a document asks to land on that document; opening the spec as a whole asks to land on the Overview. The request MUST be carried on the first render — the webview's own state does not survive the panel HTML being regenerated — and re-sent on every state update, and the reader's later choice of the Overview inside the viewer SHALL clear it, so a content refresh cannot bounce them back.
+
+#### Scenario: a document row is opened on a spec that has been run
+- **WHEN** the panel renders
+- **THEN** it lands on that document, not the Overview
+
+#### Scenario: the reader chooses the Overview, then a file in the spec changes
+- **WHEN** the panel re-renders
+- **THEN** it stays on the Overview
+
 ### Viewer state is derived from the spec's recorded run, not from files on disk
 
 Everything the reader sees about *where the spec stands* — the status badge, which step is running, which steps are done, and which actions the footer offers — MUST be derived from the spec's recorded context. The presence or absence of a document file SHALL NOT be read as evidence that a step completed. File existence remains meaningful only for what it actually proves: whether a document can be opened, and whether a step tab has something behind it.
@@ -114,6 +124,12 @@ The set of actions offered at the bottom of the viewer MUST be computed as a fun
 #### Scenario: the reader is looking at an earlier step's document
 - **WHEN** a completed earlier step's document is displayed
 - **THEN** the forward action still reflects the spec's true stage, not the tab being viewed
+
+Which steps exist SHALL come from the one shared pipeline resolution the sidebar also uses, so a step the project added is a real step here: a dispatchable step placed after implement is the forward action, not a duplicate of completion, and whether a step's start is recorded is decided by that resolution rather than a fixed list of lifecycle names.
+
+#### Scenario: the project placed a real step after implement
+- **WHEN** implement has settled
+- **THEN** the forward action targets that step rather than disappearing
 
 ### Reading a spec must never damage its record
 
@@ -219,7 +235,7 @@ When a step's recorded completion appears, the viewer SHOULD tell the reader, wi
 
 ### A living spec is presented as a capability, not a run
 
-A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. A document that declares itself a draft SHALL be badged as one rather than presented as settled. The one action the panel MAY offer is a capability-maintenance affordance — an Update control that folds code changes back into the spec — which resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs update command so it builds the same prompt the sidebar's Update-drifted action does.
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, and there is always one: update this spec when it has drifted, otherwise a drift re-check, and beside either an update of every drifted spec. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
 
 #### Scenario: the architecture tier is selected
 - **WHEN** a non-spec tier is displayed
@@ -227,15 +243,22 @@ A living-spec panel MUST drop the workflow machinery entirely — no run state, 
 - **AND** no workflow status or forward action appears
 
 #### Scenario: the reader asks to update a drifted living spec
-- **WHEN** the reader triggers Update from a living-spec panel
+- **WHEN** the reader triggers the update from the footer bar
 - **THEN** the capability's spec-tier path is resolved from the panel's source anchor, not from the tab on screen
 - **AND** the request is routed through the same living-specs update command the sidebar uses, so both entry points fold back identically
+
+#### Scenario: the capability has not drifted
+- **WHEN** the panel renders
+- **THEN** the footer offers a drift re-check and the update of every drifted spec, so the bar is never empty
+
+#### Scenario: a covers glob is activated
+- **WHEN** the reader clicks it
+- **THEN** the glob's static prefix is confined to the workspace and revealed in the Explorer; a prefix that is not a real path falls back to a find-in-files scoped to the glob
 
 #### Scenario: the document carries a draft banner near its top
 - **WHEN** the spec declares itself a draft
 - **THEN** the header badges it as a draft
 - **AND** the in-document banner is left intact
-
 ### Living specs surfaced in the run log are compact chips that hand off to their own viewer
 
 When a run loaded living specs, the viewer MUST surface them in the run log as compact, clickable chips rather than dumping each capability's purpose and requirements inline — the full content belongs in the Living Specs viewer, not the run strip. A capability earns a clickable chip only when its spec resolves to a file that exists within the workspace root; a capability that cannot be resolved or falls outside the root stays present but unavailable, and any unexpected failure leaves the names-only list untouched. Clicking a chip MUST open that capability in the viewer's living mode, confining the supplied path within the root before it reaches the filesystem.

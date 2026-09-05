@@ -81,6 +81,13 @@ The pairing of a step with the status it carries while running and the status it
 
 A separate, narrower list SHALL name the steps a default pipeline dispatches and measures — specify, plan, tasks, implement — as the fallback for a project whose workflow does not define its own. Optional steps are not expected to be timed, so they are absent from it; it describes the default path, not the set of steps a pipeline may contain.
 
+A step the project added to its pipeline is a real step with no canonical status. The pairing lookups SHALL answer "no status" for it rather than throw, and every writer that would advance the status on such a step SHALL keep the status the spec already has while still appending the history entry — the entry is what records that the step ran. A repair pass that would re-derive the status from the step likewise leaves it alone when there is nothing to derive it to.
+
+#### Scenario: a project-added step starts or finishes
+- **WHEN** the writer records its boundary
+- **THEN** the history entry is appended
+- **AND** the spec's status is unchanged, because the step maps to none
+
 ### A duration is only shown when the extension itself stamped both ends
 
 A span SHALL be reported as trustworthy only when both of its boundaries were stamped by the extension's own clock. Timestamps journaled by the assistant or a CLI order events correctly but record when the write ran, not when the work happened, so a duration computed from them is fiction and MUST NOT be displayed as elapsed time.
@@ -211,6 +218,13 @@ VS Code context keys SHALL be written through a single wrapper that accepts only
 #### Scenario: the extension activates
 - **WHEN** startup runs
 - **THEN** every catalogued key is reset to its default
+
+A key whose last writer or reader is removed SHALL leave the catalogue in the same change, so the reset list and the key list never carry a name nothing sets or reads. The install-nudge dismissal key was retired this way when the two surfaces that read it were removed.
+
+#### Scenario: the last surface reading a key is removed
+- **WHEN** that change lands
+- **THEN** the key is gone from the catalogue and from the activation reset
+- **AND** no `when` clause in the manifest still names it
 
 ### A spec's display name resolves by preference without changing its identity
 

@@ -100,6 +100,13 @@ Seeding the identifier is what lets the events for one spec be joined: a surface
 - **WHEN** the preamble is built
 - **THEN** it omits the identifier field entirely rather than writing an empty one
 
+The settled status the preamble names for a step is read from the shared step→status map. A step the project added sits outside that map and has no settled status of its own, so for such a step the preamble SHALL name `implemented` — the status the pipeline settles at — rather than emit nothing and leave the record unable to close.
+
+#### Scenario: the dispatched step is one the project added
+- **WHEN** the preamble seeds the settled status for a step outside the lifecycle set
+- **THEN** it names `implemented`
+- **AND** the instruction is otherwise identical to one built for a shipped step
+
 ### Command names are rewritten to whatever the target actually registered
 
 The canonical dotted command form SHALL be translated to the form the target assistant resolves — some tools register these commands with dots, others as dash-named skills. The translation MUST be driven by per-target configuration and MUST be overridable by an explicit user setting. It MUST apply to the command verb only, never to its argument, and MUST leave non-SpecKit commands untouched.

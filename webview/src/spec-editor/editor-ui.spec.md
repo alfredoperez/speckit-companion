@@ -76,7 +76,7 @@ The editor MUST reject unsupported image formats and oversized files locally, wi
 
 ### The chosen workflow determines which submission affordances exist
 
-Submission affordances MUST be derived from the selected workflow's own declaration rather than hard-coded. A workflow that declares a hands-off orchestrator gets the hands-off affordance; a workflow that declares named entry commands gets a button per command; a workspace with only one workflow hides the chooser entirely instead of showing a one-item control. Adding a workflow must not require editing this surface. A workflow declaration MAY also carry an `installed` flag (the Companion entry sets it from whether the spec-kit extension is present) so the surface can present a not-installed workflow as install-to-enable; the install-first decision itself is made extension-side, so this is an inbound flag the editor renders rather than logic it owns.
+Submission affordances MUST be derived from the selected workflow's own declaration rather than hard-coded. A workflow that declares a hands-off orchestrator gets the hands-off affordance; a workflow that declares named entry commands gets a button per command; a workspace with only one workflow hides the chooser entirely instead of showing a one-item control. Adding a workflow must not require editing this surface. A workflow declaration MAY also carry an `installed` flag (the Companion entry sets it from whether the spec-kit extension is present). When the selected workflow is not installed, the surface MUST turn the primary affordance into the install action and withhold the hands-off one — a not-installed workflow cannot create anything, so offering Create would only downgrade to stock and offering Auto would offer a thing with no stock twin. The install-first decision itself is made extension-side; this is an inbound flag the editor renders rather than logic it owns.
 
 #### Scenario: the selected workflow has no hands-off mode
 - **WHEN** the user picks such a workflow
@@ -87,22 +87,31 @@ Submission affordances MUST be derived from the selected workflow's own declarat
 - **WHEN** the workspace offers no alternative
 - **THEN** the chooser is hidden and that workflow's affordances are applied directly
 
+#### Scenario: the selected workflow is not installed
+- **WHEN** the user picks it
+- **THEN** the primary button reads as the install, the hands-off affordance is hidden
+- **AND** activating it posts the install request rather than a submission
+
 ### The workflow choice sells itself: descriptions visible, state on the card, a low-commitment trial
 
-The workflow chooser MUST render each offerable workflow as a selectable card showing its display name and its description *visibly* — never only in a tooltip or one-at-a-time — because the choice is where a workflow's value has to be communicated. A not-installed workflow renders its install-to-enable state on the card rather than mangling its name. When the pre-selected default is not Companion, the Companion card MUST carry a one-click trial affordance that selects Companion for the current submission only; nothing in this surface ever reads or writes the configured default workflow. Every submission reports the selected workflow together with *how* it was selected — the untouched pre-selection, an ordinary change, or the trial — so adoption of the trial is measurable.
+The workflow chooser MUST be a native select — one row, the selected workflow's name readable without opening it — so the description box the reader came to fill in is above the fold. A stack of cards spent the height of one either/or pushing that box off screen. What a dropdown row cannot hold moves to a banner directly under it. The Companion pitch (its description, the install-to-enable badge and the one-spec trial) is an install nudge, so it SHALL render whenever Companion is not installed, whatever is selected, and SHALL NOT render once Companion is installed. A project-defined workflow SHALL show its own description in the same banner when selected, so two custom rows are never two indistinguishable rows. A not-installed workflow states that in its option text rather than mangling its name. The trial affordance selects Companion for the current submission only; nothing in this surface ever reads or writes the configured default workflow. Every submission reports the selected workflow together with *how* it was selected — the untouched pre-selection, an ordinary change, or the trial — so adoption of the trial is measurable.
 
-#### Scenario: the chooser renders with several workflows
-- **WHEN** the cards appear
-- **THEN** every card's description is readable without any interaction, and the selected card is visually distinct
+#### Scenario: the form opens
+- **WHEN** it renders
+- **THEN** the description box is visible without scrolling, and the chosen workflow is readable in the closed select
 
-#### Scenario: the user takes the trial
-- **WHEN** they activate the trial affordance and submit
-- **THEN** the submission carries Companion with the trial marker, and the configured default workflow is unchanged
+#### Scenario: Companion is not installed
+- **WHEN** any workflow is selected
+- **THEN** the Companion banner shows with its badge and, when Companion is not the default, its trial
+- **AND** taking the trial selects Companion in the picker and submits with the trial marker, leaving the configured default unchanged
 
-#### Scenario: the user changes selection after taking the trial
-- **WHEN** they pick a different card manually
-- **THEN** the trial marker clears and the submission reports the manual choice honestly
+#### Scenario: Companion is installed
+- **WHEN** it is selected
+- **THEN** no banner shows — there is nothing to pitch
 
+#### Scenario: a project-defined workflow is selected
+- **WHEN** it carries a description
+- **THEN** the banner shows that description, without the Companion glyph
 ### A submission in flight locks the surface and announces itself
 
 While the extension is working, the editor MUST prevent a second submission from any path, mark the content region busy for assistive technology, and announce the state change in a live region. Announcements MUST also cover attachment add/remove, since those are otherwise silent visual-only changes. Busy state belongs on the content region — not on the transient overlay that appears during the wait.
