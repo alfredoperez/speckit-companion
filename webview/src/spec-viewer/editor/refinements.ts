@@ -221,7 +221,7 @@ export function updateRefineButton(): void {
         if (actionsRight) {
             btn = document.createElement('button');
             btn.id = 'refine-submit-btn';
-            btn.className = 'refine-submit-btn';
+            btn.className = 'enhancement';
             btn.addEventListener('click', submitAllRefinements);
             actionsRight.appendChild(btn);
         }
