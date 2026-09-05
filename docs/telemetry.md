@@ -32,7 +32,7 @@ All anonymous:
 | How the workflow was chosen in Create Spec (`spec.created` `chosenAs`) | `default` (untouched pre-selection) / `picked` / `trial` (the *Try Companion for this spec* affordance) |
 | What observed the spec's creation (`spec.created` `source`) | `form` (Create Spec) / `watcher` (a terminal-created spec first seen by the file watcher) |
 | Whether the companion spec-kit extension is installed | `true` / `false`, reported once per session |
-| Whether an install prompt was shown or its Install button clicked | `shown` / `clicked`, per surface (Create Spec, Activity, sidebar, and the on-open `activation` prompt). The out-of-date variant reports on its own surfaces, `createSpecUpdate` and `activityUpdate`, so update adoption reads separately from first install |
+| Whether an install prompt was shown or its Install button clicked | `shown` / `clicked`, per surface (Create Spec, Activity, sidebar, and the on-open `activation` prompt). The out-of-date variant reports on its own surfaces — `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate` — so update adoption reads separately from first install |
 | The specs panel became visible (`panel.opened`) | a bare event, once per session — repeated visibility toggles never re-count |
 | The welcome's live sample was opened (`sample.opened`) | a bare event, once per session; the seeded sample never counts as a created spec |
 | A spec was opened in the viewer | a bare event, once per spec per session |
@@ -83,7 +83,7 @@ The shown → clicked conversion is a native funnel, no query needed. **Insights
 2. Step 2: `companion.installPrompt` with a filter `action = clicked`
 3. *Break down by* `surface`
 
-The result reads directly as the conversion rate per surface (Create Spec, Activity, sidebar, welcome, terminal, activation). `createSpecUpdate` and `activityUpdate` are the same two banner slots showing the out-of-date variant instead of the install pitch — read them as their own funnel, not as part of first install.
+The result reads directly as the conversion rate per surface (Create Spec, Activity, sidebar, welcome, terminal, activation). `createSpecUpdate` and `activityUpdate` are the same two banner slots showing the out-of-date variant instead of the install pitch; `statusBarUpdate` and `activationUpdate` are the out-of-date status-bar item and the once-per-version notification. Read the four as their own funnel, not as part of first install — every one of them reports both `shown` and `clicked`.
 
 ### HogQL samples
 

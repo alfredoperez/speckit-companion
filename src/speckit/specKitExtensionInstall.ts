@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
@@ -116,6 +118,9 @@ export async function dismissInstallPrompt(context: vscode.ExtensionContext, pro
 /** The prompt a banner surface renders right now — setting, on-disk versions and dismissal all resolved — or `null` for nothing. */
 export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot = firstWorkspaceRoot()): InstallPrompt | null {
     const gap = workspaceRoot ? cachedCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
+    if (updateAlreadyAttempted(context, gap)) {
+        return null;
+    }
     const prompt = shouldShowInstallPrompt(readInstallPromptEnabled(), gap);
     return prompt && !isInstallPromptDismissed(context.globalState, prompt) ? prompt : null;
 }
@@ -127,6 +132,28 @@ export function resolveInstallPrompt(context: vscode.ExtensionContext, workspace
  * who doesn't have it yet. The read tolerates a legacy tri-state string until
  * migration rewrites it. Whether the banner actually shows is `resolveInstallPrompt`.
  */
+const execAsync = promisify(exec);
+
+let forceProbe: Promise<boolean> | undefined;
+
+/**
+ * Does this machine's `specify extension add` accept `--force`? An older CLI errors out on the flag
+ * ("No such option '--force'", issue #420), and that is the cohort every out-of-date surface targets, so
+ * asking before using it is the difference between an update and a hard error nothing recovers from.
+ * Probed once per session; an unreadable probe assumes the documented current CLI, which needs the flag.
+ */
+export function specifySupportsForce(): Promise<boolean> {
+    forceProbe ??= execAsync('specify extension add --help')
+        .then(({ stdout, stderr }) => `${stdout}${stderr}`.includes('--force'))
+        .catch(() => true);
+    return forceProbe;
+}
+
+/** Forget the probe result. Test-only — never called in production. */
+export function __resetForceProbe(): void {
+    forceProbe = undefined;
+}
+
 export function readInstallPromptEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');
     return coerceLegacyBoolean(config.get<unknown>('companion.installPrompt', true), true);
@@ -138,7 +165,7 @@ export function readInstallPromptEnabled(): boolean {
  * `specify extension add` might be missing), then runs the idempotent install. The
  * terminal is shown so the user sees progress and any prompts without leaving the editor.
  */
-export function runInstallSpecKitExtension(workspaceRoot?: string): void {
+export async function runInstallSpecKitExtension(workspaceRoot?: string): Promise<void> {
     // Set the working directory via the terminal options' `cwd` rather than emitting a
     // `cd "${workspaceRoot}"` command. A workspace path containing `"`, `` ` ``, `$`, or
     // `\` could otherwise break out of the quoting and inject shell — VS Code handles the
@@ -157,7 +184,7 @@ export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // (a deleted dir, a dropped `--dev` symlink, a half-finished install), so either signal means force.
     const alreadyThere = !!workspaceRoot && (isCompanionInstalled(workspaceRoot) || readInstalledCompanionVersion(workspaceRoot) !== undefined);
     markInstallInFlight();
-    terminal.sendText(buildInstallCommand({ force: alreadyThere }));
+    terminal.sendText(buildInstallCommand({ force: alreadyThere && (await specifySupportsForce()) }));
 }
 
 /** Workspace root of the first open folder, or undefined. */
@@ -169,6 +196,29 @@ function firstWorkspaceRoot(): string | undefined {
 export function isSpecKitExtensionInstalled(): boolean {
     const root = firstWorkspaceRoot();
     return root ? isCompanionInstalled(root) : false;
+}
+
+/** The `installed→expected` pair an update was last dispatched for, so a re-offer of the same pair is recognisable. */
+function attemptId(gap: CompanionGap & { state: 'outdated' }): string {
+    return `${gap.installed}->${gap.expected}`;
+}
+
+/** Record that an update was dispatched for the gap on screen. Called when the user triggers the install. */
+export async function recordUpdateAttempt(context: vscode.ExtensionContext, gap: CompanionGap): Promise<void> {
+    if (gap.state === 'outdated') {
+        await context.globalState.update(ConfigKeys.globalState.companionUpdateAttempted, attemptId(gap));
+    }
+}
+
+/**
+ * True when this exact gap was already updated for and nothing moved — the published extension is not
+ * actually newer than what is installed, so the update cannot succeed and no surface should keep asking.
+ */
+export function updateAlreadyAttempted(context: vscode.ExtensionContext, gap: CompanionGap): boolean {
+    return (
+        gap.state === 'outdated' &&
+        context.globalState.get<string>(ConfigKeys.globalState.companionUpdateAttempted) === attemptId(gap)
+    );
 }
 
 /** Open the README fallback link in the browser. */

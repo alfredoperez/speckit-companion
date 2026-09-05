@@ -10,7 +10,14 @@ import {
     dismissInstallPrompt,
     onDidDismissInstallPrompt,
     runInstallSpecKitExtension,
+    recordUpdateAttempt,
+    updateAlreadyAttempted,
+    __resetForceProbe,
 } from './specKitExtensionInstall';
+
+const execMock = jest.fn((_cmd: string, cb: (e: unknown, r: unknown) => void) =>
+    cb(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' }));
+jest.mock('child_process', () => ({ exec: (...args: unknown[]) => (execMock as unknown as (...a: unknown[]) => void)(...args) }));
 
 jest.mock('../features/settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(false),
@@ -127,40 +134,65 @@ describe('specKitExtensionInstall', () => {
         });
     });
 
+    describe('updateAlreadyAttempted', () => {
+        it('stops asking once an update ran against this exact gap and nothing moved', async () => {
+            const { context } = createMockExtensionContext();
+            const gap = { state: 'outdated' as const, installed: '0.20.2', expected: '0.21.0' };
+            expect(updateAlreadyAttempted(context, gap)).toBe(false);
+            await recordUpdateAttempt(context, gap);
+            expect(updateAlreadyAttempted(context, gap)).toBe(true);
+            // A later release, or an update that actually landed, is a different pair and asks again.
+            expect(updateAlreadyAttempted(context, { ...gap, expected: '0.22.0' })).toBe(false);
+            expect(updateAlreadyAttempted(context, { state: 'current' })).toBe(false);
+        });
+    });
+
     describe('runInstallSpecKitExtension', () => {
-        it('adds --force when the extension is already installed, so Update can overwrite it', () => {
+        it('adds --force when the extension is already installed, so Update can overwrite it', async () => {
             const sendText = jest.fn();
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
-            runInstallSpecKitExtension('/work/project');
+            await runInstallSpecKitExtension('/work/project');
             expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
         });
 
-        it('adds --force when only the spec-kit registry still lists it, since that is what the CLI refuses on', () => {
+        it('adds --force when only the spec-kit registry still lists it, since that is what the CLI refuses on', async () => {
             const sendText = jest.fn();
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(false);
             (readInstalledCompanionVersion as jest.Mock).mockReturnValueOnce('0.20.2');
-            runInstallSpecKitExtension('/work/project');
+            await runInstallSpecKitExtension('/work/project');
             expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
         });
 
-        it('reports an install in flight so a mid-install empty directory is not read as uninstalled', () => {
+        it('leaves --force off on a CLI whose `extension add` has no such option (issue #420)', async () => {
+            const sendText = jest.fn();
+            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
+            __resetForceProbe();
+            execMock.mockImplementation((_cmd: string, cb: (e: unknown, r: unknown) => void) =>
+                cb(null, { stdout: 'Usage: specify extension add [OPTIONS] SOURCE\n  --from TEXT\n', stderr: '' }));
+            await runInstallSpecKitExtension('/work/project');
+            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand());
+            __resetForceProbe();
+        });
+
+        it('reports an install in flight so a mid-install empty directory is not read as uninstalled', async () => {
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText: jest.fn() });
             clearInstallInFlight();
             expect(isInstallInFlight()).toBe(false);
-            runInstallSpecKitExtension('/work/project');
+            await runInstallSpecKitExtension('/work/project');
             expect(isInstallInFlight()).toBe(true);
             clearInstallInFlight();
             expect(isInstallInFlight()).toBe(false);
         });
 
-        it('opens a terminal scoped to the workspace via cwd, echoes the prereq, then runs the install', () => {
+        it('opens a terminal scoped to the workspace via cwd, echoes the prereq, then runs the install', async () => {
             const sendText = jest.fn();
             const show = jest.fn();
             (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show, sendText });
 
-            runInstallSpecKitExtension('/work/project');
+            await runInstallSpecKitExtension('/work/project');
 
             expect(show).toHaveBeenCalled();
             // The workspace root is passed as the terminal's structured `cwd`, never
@@ -178,12 +210,12 @@ describe('specKitExtensionInstall', () => {
             expect(sent).toContain(buildInstallCommand());
         });
 
-        it('omits cwd (no cd) when no workspace root is given', () => {
+        it('omits cwd (no cd) when no workspace root is given', async () => {
             const sendText = jest.fn();
             const createTerminal = vscode.window.createTerminal as jest.Mock;
             createTerminal.mockReturnValueOnce({ show: jest.fn(), sendText });
 
-            runInstallSpecKitExtension(undefined);
+            await runInstallSpecKitExtension(undefined);
 
             const calls = createTerminal.mock.calls;
             const options = calls[calls.length - 1][0];

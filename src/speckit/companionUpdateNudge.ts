@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { updateBannerText } from '../protocol/viewer';
 import type { CompanionGap } from './companionVersionGap';
-import { dismissInstallPrompt, readInstallPromptEnabled } from './specKitExtensionInstall';
+import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
+import { reportInstallPromptShown } from '../core/telemetry';
 
-const INSTALL_COMMAND = 'speckit.companion.installSpecKitExtension';
+/** The surface-tagged install trigger, so a conversion from the toast or the status bar is counted like a banner's. */
+const INSTALL_COMMAND = 'speckit.companion.installNudge';
 
 /** Inputs to the notification decision, pre-resolved so the predicate stays pure. */
 export interface CompanionUpdateNudgeGateInput {
@@ -27,7 +29,7 @@ export function shouldShowCompanionUpdateNudge(input: CompanionUpdateNudgeGateIn
 /** On activation, tell the user once per version that the installed spec-kit half is behind. Never throws. */
 export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, gap: CompanionGap): void {
     try {
-        const show = shouldShowCompanionUpdateNudge({
+        const show = !updateAlreadyAttempted(context, gap) && shouldShowCompanionUpdateNudge({
             enabled: readInstallPromptEnabled(),
             gap,
             notifiedFor: context.globalState.get<string>(ConfigKeys.globalState.companionUpdateNotifiedFor),
@@ -39,6 +41,7 @@ export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, 
         // Marked seen as soon as it is on screen: a toast with buttons stays pending until the user answers or
         // closes it, so waiting for a choice means a user who just keeps working sees it again every activation.
         void context.globalState.update(ConfigKeys.globalState.companionUpdateNotifiedFor, gap.expected);
+        reportInstallPromptShown('activationUpdate');
         const shown = vscode.window.showInformationMessage(
             `${updateBannerText(gap.installed, gap.expected)} Update the spec-kit extension to get the matching commands.`,
             'Update',
@@ -46,7 +49,7 @@ export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, 
         );
         void shown.then(choice => {
             if (choice === 'Update') {
-                void vscode.commands.executeCommand(INSTALL_COMMAND);
+                void vscode.commands.executeCommand(INSTALL_COMMAND, 'activationUpdate');
             } else if (choice === 'Skip this version') {
                 void dismissInstallPrompt(context, { kind: 'update', installed: gap.installed, expected: gap.expected });
             }
@@ -66,16 +69,23 @@ export function createCompanionUpdateStatusBar(context: vscode.ExtensionContext)
     const skipped = (): string | undefined =>
         context.globalState.get<string>(ConfigKeys.globalState.companionUpdateSkippedVersion);
     const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-    item.command = INSTALL_COMMAND;
+    item.command = { command: INSTALL_COMMAND, title: 'Update spec-kit Extension', arguments: ['statusBarUpdate'] };
     item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     context.subscriptions.push(item);
     return {
         sync: (gap: CompanionGap): void => {
             const text = companionUpdateStatusBarText(gap);
-            if (!text || gap.state !== 'outdated' || !readInstallPromptEnabled() || skipped() === gap.expected) {
+            if (
+                !text ||
+                gap.state !== 'outdated' ||
+                !readInstallPromptEnabled() ||
+                skipped() === gap.expected ||
+                updateAlreadyAttempted(context, gap)
+            ) {
                 item.hide();
                 return;
             }
+            reportInstallPromptShown('statusBarUpdate');
             item.text = text;
             item.tooltip = `${updateBannerText(gap.installed, gap.expected)} Click to update the spec-kit extension.`;
             item.show();

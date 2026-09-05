@@ -21,13 +21,24 @@ export const INSTALL_BANNER_BODY = `
     <button type="button" class="install-banner__btn install-banner__btn--link" data-action="openReadme">Learn more</button>
     <button type="button" class="install-banner__dismiss codicon codicon-close" data-action="dismissInstallBanner" aria-label="Dismiss install prompt"></button>`;
 
+/**
+ * A version is only ever `major.minor.patch` here. Re-asserted at the point of interpolation rather than
+ * trusted from the resolver a module away: this markup goes through `innerHTML`, where a quote in an
+ * attribute value breaks out, and a prompt can arrive back from a webview via {@link promptFromDataset}.
+ */
+function safeVersion(value: string): string {
+    return /^\d+\.\d+\.\d+$/.test(value) ? value : '';
+}
+
 /** The out-of-date sentence, shared by every surface so they all say the same thing. */
 export function updateBannerText(installed: string, expected: string): string {
-    return `SpecKit commands are ${installed}, this extension expects ${expected}.`;
+    return `SpecKit commands are ${safeVersion(installed)}, this extension expects ${safeVersion(expected)}.`;
 }
 
 /** The update variant: one line naming both versions, Update, ×. */
-export function updateBannerBody(installed: string, expected: string): string {
+export function updateBannerBody(rawInstalled: string, rawExpected: string): string {
+    const installed = safeVersion(rawInstalled);
+    const expected = safeVersion(rawExpected);
     return `
     <span class="install-banner__icon codicon codicon-arrow-circle-up" aria-hidden="true"></span>
     <span class="install-banner__text">${updateBannerText(installed, expected)}</span>
@@ -39,7 +50,6 @@ export function updateBannerBody(installed: string, expected: string): string {
  * Everything the wrappers need for one prompt: the outer element's classes, label and
  * `data-*`, plus the body. The prompt rides on the root so a click reports the banner the
  * user actually saw — the extension's own view of the gap may have moved on since it rendered.
- * Versions are semver-validated upstream, so they are safe in attributes.
  */
 export function installBannerFrame(prompt: InstallPrompt): {
     className: string;
@@ -52,7 +62,7 @@ export function installBannerFrame(prompt: InstallPrompt): {
               className: 'install-banner install-banner--update',
               ariaLabel: 'Update spec-kit extension',
               body: updateBannerBody(prompt.installed, prompt.expected),
-              data: { 'data-kind': 'update', 'data-installed': prompt.installed, 'data-expected': prompt.expected },
+              data: { 'data-kind': 'update', 'data-installed': safeVersion(prompt.installed), 'data-expected': safeVersion(prompt.expected) },
           }
         : {
               className: 'install-banner',

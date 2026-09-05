@@ -243,6 +243,8 @@ const INSTALL_PROMPT_SURFACES = [
     'activity',
     'createSpecUpdate',
     'activityUpdate',
+    'statusBarUpdate',
+    'activationUpdate',
     'sidebarBadge',
     'pinnedRow',
     'welcome',

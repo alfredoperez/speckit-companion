@@ -74,6 +74,7 @@ export const ConfigKeys = {
         companionDeclinedAtCreate: 'speckit.companionDeclinedAtCreate',
         companionUpdateSkippedVersion: 'speckit.companionUpdateSkippedVersion',
         companionUpdateNotifiedFor: 'speckit.companionUpdateNotifiedFor',
+        companionUpdateAttempted: 'speckit.companionUpdateAttempted',
         installedEventSent: 'speckit.installedEventSent',
     },
     workspaceState: {

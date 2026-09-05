@@ -10,9 +10,10 @@ import type { CompanionGap } from './companionVersionGap';
 jest.mock('./specKitExtensionInstall', () => ({
     readInstallPromptEnabled: jest.fn().mockReturnValue(true),
     dismissInstallPrompt: jest.fn(),
+    updateAlreadyAttempted: jest.fn().mockReturnValue(false),
 }));
 
-import { dismissInstallPrompt, readInstallPromptEnabled } from './specKitExtensionInstall';
+import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
@@ -29,6 +30,7 @@ describe('companion update nudge', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (readInstallPromptEnabled as jest.Mock).mockReturnValue(true);
+        (updateAlreadyAttempted as jest.Mock).mockReturnValue(false);
     });
 
     describe('shouldShowCompanionUpdateNudge', () => {
@@ -69,7 +71,7 @@ describe('companion update nudge', () => {
             (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue('Update');
             maybeShowCompanionUpdateNudge(makeContext().context, outdated);
             await Promise.resolve();
-            expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installSpecKitExtension');
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installNudge', 'activationUpdate');
         });
 
         it('an ignored toast counts as seen but leaves the banner and the status bar alone', async () => {
@@ -81,9 +83,12 @@ describe('companion update nudge', () => {
             expect(dismissInstallPrompt).not.toHaveBeenCalled();
         });
 
-        it('shows nothing for a current install or when the install prompt is turned off', () => {
+        it('shows nothing for a current install, an opted-out prompt, or a gap an update already ran against', () => {
             maybeShowCompanionUpdateNudge(makeContext().context, { state: 'current' });
             (readInstallPromptEnabled as jest.Mock).mockReturnValue(false);
+            maybeShowCompanionUpdateNudge(makeContext().context, outdated);
+            (readInstallPromptEnabled as jest.Mock).mockReturnValue(true);
+            (updateAlreadyAttempted as jest.Mock).mockReturnValue(true);
             maybeShowCompanionUpdateNudge(makeContext().context, outdated);
             expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
         });
@@ -100,7 +105,10 @@ describe('companion update nudge', () => {
             const { context, store } = makeContext();
             const bar = createCompanionUpdateStatusBar(context);
             const item = (vscode.window.createStatusBarItem as jest.Mock).mock.results[0].value;
-            expect(item.command).toBe('speckit.companion.installSpecKitExtension');
+            expect(item.command).toEqual(expect.objectContaining({
+                command: 'speckit.companion.installNudge',
+                arguments: ['statusBarUpdate'],
+            }));
             expect(item.backgroundColor.id).toBe('statusBarItem.warningBackground');
 
             bar.sync(outdated);
@@ -121,6 +129,12 @@ describe('companion update nudge', () => {
             bar.sync(outdated);
             expect(item.show).toHaveBeenCalledTimes(1);
             expect(item.hide).toHaveBeenCalledTimes(3);
+
+            store.delete('speckit.companionUpdateSkippedVersion');
+            (updateAlreadyAttempted as jest.Mock).mockReturnValue(true);
+            bar.sync(outdated);
+            expect(item.show).toHaveBeenCalledTimes(1);
+            expect(item.hide).toHaveBeenCalledTimes(4);
         });
     });
 });

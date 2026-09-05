@@ -15,7 +15,9 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 
 The VS Code extension bundles a copy of `speckit-extension/extension.yml` and compares it against the version installed in the user's project to say "your spec-kit commands are out of date". `/publish-both` packages the `.vsix` in Phase 1 and bumps `extension.yml` in Phase 2, so a run that releases spec-kit X+1 ships a `.vsix` whose bundled manifest still reads X — users on X are told they are current until the next VS Code release. It never reports the reverse (nobody is told to update when they are already current), so the failure is silence, not a false alarm.
 
-The fix is one line of ordering: bump `speckit-extension/extension.yml` **before** the VS Code package step, so the `.vsix` carries the version being released. Not changed here — the release flow is out of scope for the change that added the out-of-date check.
+The reverse skew is worse. If the `.vsix` bundles a manifest **ahead** of what `companion-latest/companion.zip` actually serves — a VS Code release that ships a bumped spec-kit manifest whose zip has not been published — every user is told they are behind, the update reinstalls the same version, and nothing clears. The extension defends itself: an update dispatched for a given `installed → expected` pair is remembered, and the same pair offered again stops every surface asking. That turns a permanent nag into one wasted click, but the release still has to be fixed.
+
+The fix for both directions is one line of ordering: bump `speckit-extension/extension.yml` **and publish its zip** before the VS Code package step, so the `.vsix` carries exactly the version the rolling asset serves. Not changed here — the release flow is out of scope for the change that added the out-of-date check.
 
 ## Process
 
