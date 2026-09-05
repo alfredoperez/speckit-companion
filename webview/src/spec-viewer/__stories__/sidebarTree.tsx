@@ -150,6 +150,13 @@ export interface SidebarPane {
      * floating in the middle of the frame.
      */
     fill?: boolean;
+    /**
+     * The view's title-bar actions, as codicon names in `contributes.menus`
+     * order. VS Code only paints these on the view the pointer or focus is on,
+     * so give them to the one pane a frame is about and leave its neighbours
+     * bare — that is what the real sidebar looks like.
+     */
+    actions?: string[];
 }
 
 const TONE_VAR: Record<IconTone, string> = {
@@ -241,6 +248,26 @@ const SIDEBAR_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));
+}
+/* Named pane-actions, not actions: the viewer stylesheet this catalog loads
+   owns that name and pins it to the viewport's bottom-right, which parked the
+   whole title bar outside the capture box. (No backticks in this block.) */
+.sk-sidebar .pane-header .pane-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding-right: 4px;
+    color: var(--vscode-icon-foreground);
+}
+.sk-sidebar .pane-header .pane-actions .pane-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    line-height: 16px;
 }
 .sk-sidebar .pane-body {
     flex: 1 1 auto;
@@ -433,6 +460,13 @@ function Pane({ pane }: { pane: SidebarPane }) {
                     class={`twisty-container codicon ${collapsed ? 'codicon-chevron-right' : 'codicon-chevron-down'}`}
                 />
                 <h3 class="title">{pane.title}</h3>
+                {pane.actions?.length ? (
+                    <div class="pane-actions">
+                        {pane.actions.map((icon) => (
+                            <div class={`pane-action codicon codicon-${icon}`} key={icon} />
+                        ))}
+                    </div>
+                ) : null}
             </div>
             {collapsed ? null : (
                 <div class="pane-body">
