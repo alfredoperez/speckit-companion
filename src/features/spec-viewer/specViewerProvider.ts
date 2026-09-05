@@ -60,8 +60,7 @@ import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
-import { isCompanionInstalled } from "../settings/companionPresetReconciler";
-import { shouldShowInstallPrompt, readInstallPromptEnabled } from "../../speckit/specKitExtensionInstall";
+import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
 import { enrichLivingSpecs } from "./livingSpecsContent";
@@ -174,28 +173,17 @@ export class SpecViewerProvider {
     return coerceLegacyBoolean(raw, true);
   }
 
-  /**
-   * Whether to show the install banner in the Activity panel: the install-prompt
-   * mode isn't `off` AND the companion spec-kit extension is missing. Installed
-   * projects return `false` — no banner, no regression.
-   */
-  private computeShowInstallPrompt(): boolean {
-    if (this.context.globalState.get<boolean>(ConfigKeys.globalState.installBannerDismissed, false)) {
-      return false;
-    }
+  /** The banner the Activity panel shows: install, update, or none. Installed, current projects get none. */
+  private computeInstallPrompt(): InstallPrompt | null {
     // The banner renders inside the Activity panel — with it off there is no surface, so don't report a "shown".
     if (!this.readActivityPanelEnabled()) {
-      return false;
+      return null;
     }
-    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    const visible = shouldShowInstallPrompt(
-      readInstallPromptEnabled(),
-      root ? isCompanionInstalled(root) : false
-    );
-    if (visible) {
+    const prompt = resolveInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    if (prompt?.kind === 'install') {
       reportInstallPromptShown('activity');
     }
-    return visible;
+    return prompt;
   }
 
   /**
@@ -626,7 +614,7 @@ export class SpecViewerProvider {
       null,          // currentStep
       {},            // stepHistory
       false,         // activity panel off — no run to narrate
-      false,         // no install prompt
+      null,          // no install prompt
       true,          // livingMode
       meta,
       heading !== null,
@@ -797,7 +785,7 @@ export class SpecViewerProvider {
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
         this.readActivityPanelEnabled(),
-        this.computeShowInstallPrompt(),
+        this.computeInstallPrompt(),
         undefined,     // livingMode — default
         undefined,     // livingMeta — default
         undefined,     // titleFromHeading — default
@@ -1141,7 +1129,7 @@ export class SpecViewerProvider {
       // Must be re-sent on every update: the webview replaces the whole navState
       // object, so omitting this would make the relocated Activity-panel banner
       // (#255) vanish on the first content/spec-context refresh after load.
-      showInstallPrompt: this.computeShowInstallPrompt(),
+      installPrompt: this.computeInstallPrompt(),
     };
 
     // Derive ViewerState from the canonical .spec-context.json — the footer's

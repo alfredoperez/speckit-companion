@@ -15,6 +15,7 @@ import {
     LivingHeaderMeta
 } from '../types';
 import { escapeHtml, encodeBase64Utf8, generateNonce } from '../utils';
+import type { InstallPrompt } from '../../../protocol/viewer';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
 
@@ -44,7 +45,7 @@ export function generateHtml(
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
     activityPanelEnabled: boolean = true,
-    showInstallPrompt: boolean = false,
+    installPrompt: InstallPrompt | null = null,
     livingMode: boolean = false,
     livingMeta?: LivingHeaderMeta | null,
     titleFromHeading: boolean = false,
@@ -67,7 +68,7 @@ export function generateHtml(
     // prompt isn't `off`). In the viewer the banner now renders INSIDE the Preact
     // Activity panel (#255) — we pass the visibility via `initialNavState` rather
     // than injecting markup above #app-root. Visibility is decided by the provider
-    // via `shouldShowInstallPrompt`.
+    // via `resolveInstallPrompt`.
 
     // Generate content or empty state
     const contentHtml = content
@@ -105,7 +106,7 @@ export function generateHtml(
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelEnabled,
-        showInstallPrompt,
+        installPrompt,
         livingMode,
         livingMeta: livingMeta ?? null,
         titleFromHeading,

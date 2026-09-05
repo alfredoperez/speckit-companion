@@ -6,6 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { dismissInstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { formatCommandForProvider, getConfiguredProviderType } from "../../ai-providers/aiProvider";
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId, reportInstallPromptClicked } from "../../core/telemetry";
 import {
@@ -203,7 +204,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       await vscode.commands.executeCommand('speckit.companion.openReadme');
     },
     dismissInstallBanner: async (_msg, dir, deps) => {
-      await deps.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+      await dismissInstallPrompt(deps.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
       await handleRefresh(dir, deps);
     },
   };

@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
+import { ConfigKeys } from '../core/constants';
+import { resolveCompanionGap, type CompanionGap } from './companionVersionGap';
+import type { InstallPrompt } from '../protocol/viewer';
+
+export type { InstallPrompt };
 
 /**
  * One-click install / update of the Companion **spec-kit CLI extension**.
@@ -68,16 +73,47 @@ export function buildInstallCommand(): string {
 }
 
 /**
- * Pure gate for whether an install prompt (banner / affordance) should be shown:
- * the prompt is enabled AND the extension is missing. Installed projects and an
- * explicit opt-out (`enabled === false`) always return `false` — no banner, no
- * warning (zero-regression acceptance).
+ * Pure gate for which install prompt (banner / affordance) a surface shows: the
+ * prompt must be enabled, then a missing extension asks to install and an
+ * out-of-date one asks to update. Current installs and an explicit opt-out
+ * (`enabled === false`) always return `null` — no banner, no warning.
  */
-export function shouldShowInstallPrompt(
-    enabled: boolean,
-    installed: boolean
-): boolean {
-    return enabled && !installed;
+export function shouldShowInstallPrompt(enabled: boolean, gap: CompanionGap): InstallPrompt | null {
+    if (!enabled) {
+        return null;
+    }
+    if (gap.state === 'missing') {
+        return { kind: 'install' };
+    }
+    if (gap.state === 'outdated') {
+        return { kind: 'update', installed: gap.installed, expected: gap.expected };
+    }
+    return null;
+}
+
+/** The install banner has one permanent dismissal; the update banner is dismissed per expected version so the next release asks again. */
+export function isInstallPromptDismissed(globalState: vscode.Memento, prompt: InstallPrompt): boolean {
+    if (prompt.kind === 'update') {
+        return globalState.get<string>(ConfigKeys.globalState.companionUpdateSkippedVersion) === prompt.expected;
+    }
+    return globalState.get<boolean>(ConfigKeys.globalState.installBannerDismissed, false);
+}
+
+/** Persist the dismissal of whichever prompt the workspace currently shows. */
+export async function dismissInstallPrompt(context: vscode.ExtensionContext, workspaceRoot: string | undefined): Promise<void> {
+    const gap = workspaceRoot ? resolveCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
+    if (gap.state === 'outdated') {
+        await context.globalState.update(ConfigKeys.globalState.companionUpdateSkippedVersion, gap.expected);
+        return;
+    }
+    await context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+}
+
+/** The prompt a banner surface renders right now — setting, on-disk versions and dismissal all resolved — or `null` for nothing. */
+export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot: string | undefined): InstallPrompt | null {
+    const gap = workspaceRoot ? resolveCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
+    const prompt = shouldShowInstallPrompt(readInstallPromptEnabled(), gap);
+    return prompt && !isInstallPromptDismissed(context.globalState, prompt) ? prompt : null;
 }
 
 /**
@@ -85,7 +121,7 @@ export function shouldShowInstallPrompt(
  * `speckit.companion.installPrompt` preference (default `true`). The extension is
  * what powers the Companion workflow, so the prompt to install it reaches everyone
  * who doesn't have it yet. The read tolerates a legacy tri-state string until
- * migration rewrites it. Whether the banner actually shows is `shouldShowInstallPrompt(readInstallPromptEnabled(), installed)`.
+ * migration rewrites it. Whether the banner actually shows is `resolveInstallPrompt`.
  */
 export function readInstallPromptEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('speckit');

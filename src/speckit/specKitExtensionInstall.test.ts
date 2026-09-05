@@ -6,6 +6,7 @@ import {
     CLI_PREREQ_COMMAND,
     buildInstallCommand,
     shouldShowInstallPrompt,
+    isInstallPromptDismissed,
     runInstallSpecKitExtension,
 } from './specKitExtensionInstall';
 
@@ -43,17 +44,41 @@ describe('specKitExtensionInstall', () => {
     });
 
     describe('shouldShowInstallPrompt', () => {
-        it('shows when missing and the prompt is enabled', () => {
-            expect(shouldShowInstallPrompt(true, false)).toBe(true);
+        it('asks to install when missing and the prompt is enabled', () => {
+            expect(shouldShowInstallPrompt(true, { state: 'missing' })).toEqual({ kind: 'install' });
         });
 
-        it('never shows when installed — zero regression for existing users', () => {
-            expect(shouldShowInstallPrompt(true, true)).toBe(false);
-            expect(shouldShowInstallPrompt(false, true)).toBe(false);
+        it('asks to update, naming both versions, when the install is behind this build', () => {
+            expect(shouldShowInstallPrompt(true, { state: 'outdated', installed: '0.20.2', expected: '0.21.0' }))
+                .toEqual({ kind: 'update', installed: '0.20.2', expected: '0.21.0' });
         });
 
-        it('never shows when disabled — explicit opt-out', () => {
-            expect(shouldShowInstallPrompt(false, false)).toBe(false);
+        it('never shows when current — zero regression for existing users', () => {
+            expect(shouldShowInstallPrompt(true, { state: 'current' })).toBeNull();
+            expect(shouldShowInstallPrompt(false, { state: 'current' })).toBeNull();
+        });
+
+        it('never shows when disabled — explicit opt-out covers both variants', () => {
+            expect(shouldShowInstallPrompt(false, { state: 'missing' })).toBeNull();
+            expect(shouldShowInstallPrompt(false, { state: 'outdated', installed: '0.20.2', expected: '0.21.0' })).toBeNull();
+        });
+    });
+
+    describe('isInstallPromptDismissed', () => {
+        const memento = (values: Record<string, unknown>) => ({
+            get: (key: string, fallback?: unknown) => (key in values ? values[key] : fallback),
+        }) as unknown as vscode.Memento;
+
+        it('the install banner honours its permanent flag', () => {
+            expect(isInstallPromptDismissed(memento({ 'speckit.installBannerDismissed': true }), { kind: 'install' })).toBe(true);
+            expect(isInstallPromptDismissed(memento({}), { kind: 'install' })).toBe(false);
+        });
+
+        it('the update banner is dismissed per expected version, so a later release asks again', () => {
+            const update = { kind: 'update' as const, installed: '0.20.2', expected: '0.21.0' };
+            expect(isInstallPromptDismissed(memento({ 'speckit.companionUpdateSkippedVersion': '0.21.0' }), update)).toBe(true);
+            expect(isInstallPromptDismissed(memento({ 'speckit.companionUpdateSkippedVersion': '0.20.5' }), update)).toBe(false);
+            expect(isInstallPromptDismissed(memento({ 'speckit.installBannerDismissed': true }), update)).toBe(false);
         });
     });
 

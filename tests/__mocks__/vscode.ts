@@ -271,8 +271,24 @@ export function createMockTreeView() {
     return treeView;
 }
 
+export enum StatusBarAlignment {
+    Left = 1,
+    Right = 2,
+}
+
+export const createMockStatusBarItem = () => ({
+    text: '',
+    tooltip: undefined as unknown,
+    command: undefined as unknown,
+    backgroundColor: undefined as unknown,
+    show: jest.fn(),
+    hide: jest.fn(),
+    dispose: jest.fn(),
+});
+
 export const window = {
     createWebviewPanel: jest.fn().mockImplementation(createMockWebviewPanel),
+    createStatusBarItem: jest.fn().mockImplementation(createMockStatusBarItem),
     createTreeView: jest.fn().mockImplementation(createMockTreeView),
     showInformationMessage: jest.fn(),
     showErrorMessage: jest.fn(),

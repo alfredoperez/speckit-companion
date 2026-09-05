@@ -86,7 +86,7 @@ describe('generateHtml — shell structure', () => {
             'content', 'empty',
             [coreDoc('spec', true)], 'spec', 'my-feature', [], 0,
             'active', [], undefined, null, null, null, null, null, null, null, null,
-            undefined, true, false, true,
+            undefined, true, null, true,
             {
                 capabilityName: 'todos',
                 specPath: 'capabilities/todos/spec.md',

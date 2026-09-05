@@ -1,5 +1,12 @@
 import type { ReviewCommentDoc } from '../core/types/specContext';
 
+/** Which banner a surface shows: the install pitch, or the out-of-date update naming both versions. */
+export type InstallPrompt =
+    | { kind: 'install' }
+    | { kind: 'update'; installed: string; expected: string };
+
+export { updateBannerText } from './installBannerBody';
+
 /**
  * The spec viewer's wire contract: everything the extension and the webview
  * both have to agree on — the document vocabulary, the payload shapes, and the
@@ -299,8 +306,8 @@ export interface NavState {
      * a whole, which is the case the viewer's own landing rule is for.
      */
     landing?: 'overview' | 'document';
-    /** Whether to render the install banner inside the Activity panel (viewer only). */
-    showInstallPrompt?: boolean;
+    /** Which banner the Activity panel renders (viewer only): install, update, or none. */
+    installPrompt?: InstallPrompt | null;
     /** Run-recovery affordance for a quiet in-flight run (issue #418). */
     runRecovery?: { show: boolean; mode: 'stalled' | 'stale'; message: string; minutesQuiet: number };
 }

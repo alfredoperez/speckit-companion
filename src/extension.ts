@@ -21,6 +21,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
+import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -307,6 +308,10 @@ export async function activate(context: vscode.ExtensionContext) {
                 steeringExplorer.refresh();
             };
             syncInstallAffordances();
+            // Say when the installed spec-kit half is behind the version this build ships.
+            const updateStatusBar = createCompanionUpdateStatusBar(context);
+            updateStatusBar.sync(root);
+            maybeShowCompanionUpdateNudge(context, root);
             // Keep the timing-augmented standard command family materialized — but
             // ONLY when the companion spec-kit extension is installed: the ensure's
             // bundled preset path lives inside `.specify/extensions/companion/`, so
@@ -322,18 +327,20 @@ export async function activate(context: vscode.ExtensionContext) {
             };
             ensureStandardWhenInstalled();
             // Refresh the install context key (and rerun the standard-family ensure)
-            // whenever the companion extension dir is created or removed (the
-            // one-click install lands it on disk), so both flip without a reload.
+            // whenever the companion extension dir or the spec-kit registry changes
+            // (the one-click install or update lands it on disk), so all flip without a reload.
             const extWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '.specify/extensions/companion/**')
+                new vscode.RelativePattern(root, '.specify/extensions/{.registry,companion/**}')
             );
             const refresh = (): void => {
                 void refreshCompanionInstalledContext(root);
                 ensureStandardWhenInstalled();
                 syncInstallAffordances();
+                updateStatusBar.sync(root);
                 livingSpecsExplorer.refresh();
             };
             extWatcher.onDidCreate(refresh);
+            extWatcher.onDidChange(refresh);
             extWatcher.onDidDelete(refresh);
             context.subscriptions.push(extWatcher);
 

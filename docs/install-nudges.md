@@ -1,12 +1,12 @@
 # Install nudges
 
-Every place the VS Code extension asks you to install the companion spec-kit extension, in one list, with an honest read on whether it is too much.
+Every place the VS Code extension asks you to install the companion spec-kit extension, in one list, with an honest read on whether it is too much. The three out-of-date surfaces at the end are their siblings: same slots, same install command, shown only when the extension is installed but behind the version this build ships.
 
 To look at them: `SB_PORT=6031 npm run storybook`, then **Install nudges → Every surface**. Each story draws one surface and captions it with its source line; the last story stacks the ones a fresh, uninstalled workspace actually meets.
 
 ## The inventory
 
-Eleven surfaces. Nine can fire; two are passive entries. Three were removed — the activation toast (#1), the welcome-block pitch (#4) and the dead Steering icon (#15) — and the two fallback warnings (#9, #10) became one.
+Eleven surfaces. Nine can fire; two are passive entries. Three were removed — the activation toast (#1), the welcome-block pitch (#4) and the dead Steering icon (#15) — and the two fallback warnings (#9, #10) became one. Three more, listed after them, fire only when the installed extension is out of date.
 
 | # | Surface | Copy | Trigger | Dismissal | Recurs |
 |---|---------|------|---------|-----------|--------|
@@ -24,6 +24,14 @@ Eleven surfaces. Nine can fire; two are passive entries. Three were removed — 
 | 13 | Command palette entry | "Install Companion Extension" | `(detected \|\| cliInstalled) && !installed`. The Specs "…" overflow menu that used to hold it is gone; the entry moved to the palette | N/A — user-initiated | Passive |
 | 14 | Upgrade… quick pick entry (`src/speckit/cliCommands.ts`) | "Update spec-kit Extension — Install or force-update the companion spec-kit extension" | User runs Upgrade…. Listed whether installed or not | N/A — user-initiated | Passive |
 | ~~15~~ | ~~Steering inline install icon~~ | **Removed.** It could never render: the `when` needed `!companion.installed`, but the header node is only built when `isCompanionInstalled()` is true | — | — | Never |
+
+Out of date, not missing. The extension compares the version bundled in its own install (`speckit-extension/extension.yml` ships inside the `.vsix`) against the one in `.specify/extensions/.registry` (or the installed manifest), locally and with no network call. An unreadable version on either side reads as current: nothing here ever fires on a guess. A workspace with no extension at all keeps the install surfaces above and never sees these.
+
+| # | Surface | Copy | Trigger | Dismissal | Recurs |
+|---|---------|------|---------|-----------|--------|
+| 16 | Status-bar item (`src/speckit/companionUpdateNudge.ts`) | Warning background, `$(arrow-circle-up) SpecKit commands out of date`; click runs the update | Installed and behind the bundled version | **None.** Disappears when the versions match; re-checked by the same watcher that flips `speckit.companion.installed` | Always on screen while the gap exists |
+| 17 | Update banner — Create Spec + Activity panel (`src/features/spec-editor/installBanner.ts`, `ActivityPanel.tsx`) | "SpecKit commands are 0.20.2, this extension expects 0.21.0." + **Update** / × | Installed and behind, `installPrompt` on, not dismissed for this expected version. Takes the install banner's slot: one or the other, never both | × → `speckit.companionUpdateSkippedVersion` = the expected version, so the next release asks again | Every panel open, until dismissed or updated |
+| 18 | Activation notification (`src/speckit/companionUpdateNudge.ts`) | Same sentence + "Update the spec-kit extension to get the matching commands." + **Update** / **Skip this version** | Opening a workspace that is installed and behind, the first time for that expected version (`speckit.companionUpdateNotifiedFor`) | **Skip this version** → the same `speckit.companionUpdateSkippedVersion` the banner × writes | Once per expected version |
 
 Three dismissal mechanisms with no relationship to each other:
 

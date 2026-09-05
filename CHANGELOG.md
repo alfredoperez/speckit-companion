@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **It tells you when your spec-kit commands are behind.** The VS Code extension updates itself from the Marketplace; the spec-kit extension it pairs with is installed per project and never does, so the two drifted with nothing to say so. Now a **SpecKit commands out of date** item appears in the status bar the moment the commands installed in your project are older than the ones this release expects, the install banner in Create Spec and the Activity panel names both versions with a single **Update** button, and a notification tells you once per version with **Skip this version** to silence it. Every one of them runs the same one-click `specify extension add` update and disappears as soon as the versions match. The comparison is local, so it works offline and never guesses when a version can't be read. A project without the spec-kit extension keeps the existing install prompt.
+
 ### Changed
 
 - **Expanding the spec tree is one click.** The Specs title bar had a `…` menu whose only everyday entry was Collapse All, so opening the tree cost two clicks and a menu you had to read. It is a normal icon now, showing whichever action the tree's state calls for, and the view no longer has an overflow menu of its own — the sidebar had two `…` buttons a few pixels apart with nothing to tell them apart. Install Companion Extension and Upgrade… moved to the Command Palette. Specs also gains the **Refresh** its two sibling views already had.

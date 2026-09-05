@@ -51,6 +51,8 @@ There are **two** installs, and they're independent:
 
 **One-click from inside the editor.** When the spec-kit extension is missing, a slim single-line **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click **Install** and the extension runs the install in an integrated terminal, no copy-paste. The banner has an **×** to dismiss it for good: once dismissed it stays hidden in every project and after a reload. (Already have it installed? You'll never see the banner.)
 
+**Out of date.** The spec-kit extension never updates itself. When the version installed in your project is behind the one this VS Code extension was built with, a **SpecKit commands out of date** item appears in the status bar, the same banner slot says which two versions disagree with an **Update** button, and a notification tells you once per version (with **Skip this version** to silence it). All of them run the same `specify extension add` command; the status-bar item disappears as soon as the versions match. The check is local, comparing the manifest bundled in the extension against `.specify/extensions/.registry`, so it never needs the network and never guesses when a version can't be read.
+
 **Manual install.** You need a **github-source** spec-kit CLI first; the stock PyPI `specify-cli` does **not** ship the `extension` subcommand:
 
 ```bash

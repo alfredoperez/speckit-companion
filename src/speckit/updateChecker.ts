@@ -3,6 +3,23 @@ import { ConfigKeys } from '../core/constants';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import type { GitHubRelease } from '../core/types/config';
 
+/** True when `latest` is a higher `major.minor.patch` than `current`. */
+export function isNewerVersion(current: string, latest: string): boolean {
+    const currentParts = current.split('.').map(Number);
+    const latestParts = latest.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+        const currentPart = currentParts[i] || 0;
+        const latestPart = latestParts[i] || 0;
+        if (latestPart > currentPart) {
+            return true;
+        }
+        if (latestPart < currentPart) {
+            return false;
+        }
+    }
+    return false;
+}
+
 export class UpdateChecker {
     private static readonly SKIP_VERSION_KEY = ConfigKeys.globalState.skipVersion;
     private static readonly LAST_CHECK_KEY = ConfigKeys.globalState.lastUpdateCheck;
@@ -42,7 +59,7 @@ export class UpdateChecker {
             const skipVersion = this.context.globalState.get<string>(UpdateChecker.SKIP_VERSION_KEY);
             
             // Check if there's a new version that hasn't been skipped
-            if (this.isNewerVersion(currentVersion, latestVersion) && latestVersion !== skipVersion) {
+            if (isNewerVersion(currentVersion, latestVersion) && latestVersion !== skipVersion) {
                 this.showUpdateNotification(currentVersion, latestVersion);
             }
             
@@ -104,7 +121,7 @@ export class UpdateChecker {
                 continue;
             }
             const version = release.tag_name.replace(/^v/, '');
-            if (!latest || this.isNewerVersion(latestVersion, version)) {
+            if (!latest || isNewerVersion(latestVersion, version)) {
                 latest = release;
                 latestVersion = version;
             }
@@ -139,28 +156,6 @@ export class UpdateChecker {
                 );
             }
         });
-    }
-    
-    /**
-     * Compare version strings
-     */
-    private isNewerVersion(current: string, latest: string): boolean {
-        const currentParts = current.split('.').map(Number);
-        const latestParts = latest.split('.').map(Number);
-        
-        for (let i = 0; i < 3; i++) {
-            const currentPart = currentParts[i] || 0;
-            const latestPart = latestParts[i] || 0;
-            
-            if (latestPart > currentPart) {
-                return true;
-            }
-            if (latestPart < currentPart) {
-                return false;
-            }
-        }
-        
-        return false;
     }
     
     /**

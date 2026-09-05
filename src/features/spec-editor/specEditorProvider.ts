@@ -15,7 +15,7 @@ import { warnCompanionFallback } from '../specs/dispatchStep';
 import { buildSpecifyCreationPreamble } from '../../ai-providers/promptBuilder';
 import { resolveDispatchForRoot } from '../specs/profileDispatch';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { shouldShowInstallPrompt, readInstallPromptEnabled } from '../../speckit/specKitExtensionInstall';
+import { resolveInstallPrompt, dismissInstallPrompt } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
 import { reportSpecCreated, sendTelemetryEvent, workflowTelemetryId, reportInstallPromptShown, reportInstallPromptClicked } from '../../core/telemetry';
@@ -259,7 +259,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'dismissInstallBanner':
-                await this.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+                await dismissInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
                 break;
         }
     }
@@ -573,24 +573,14 @@ export class SpecEditorProvider {
 
         const nonce = generateNonce();
 
-        // Install banner: shown only when the prompt is enabled AND the spec-kit
-        // extension is missing — installed projects see nothing (zero-regression).
+        // Install banner: install when the spec-kit extension is missing, update when it is
+        // behind this build — installed, current projects see nothing (zero-regression).
         // Visibility is the unit-tested gate; the markup is shared with the Activity panel.
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        const bannerDismissed = this.context.globalState.get<boolean>(
-            ConfigKeys.globalState.installBannerDismissed,
-            false
-        );
-        const installBannerVisible =
-            !bannerDismissed &&
-            shouldShowInstallPrompt(
-                readInstallPromptEnabled(),
-                workspaceRoot ? isCompanionInstalled(workspaceRoot) : false
-            );
-        if (installBannerVisible) {
+        const installPrompt = resolveInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        if (installPrompt?.kind === 'install') {
             reportInstallPromptShown('createSpec');
         }
-        const installBanner = renderInstallBannerHtml(installBannerVisible);
+        const installBanner = renderInstallBannerHtml(installPrompt);
 
         return `<!DOCTYPE html>
 <html lang="en">
