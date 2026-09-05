@@ -152,6 +152,16 @@ Configuration keys change shape across releases, so a reader SHALL be correct fo
 - **THEN** at every scope where the retired toggle was explicitly set, the merged value is the either-false-wins combination of the two explicit values at that scope, written only where it differs from the current value
 - **AND** a broad `false` propagates down while a narrower explicit `true` at a more specific scope is preserved, and scopes where the retired toggle was unset are left untouched
 
+Migrations run at the scopes a setting can actually be set at, and no further: every key this product contributes is window- or machine-scoped, so a folder-level pass reads nothing and a folder-level write is rejected outright. A test asserts that scope declaration, so a future resource-scoped key fails there rather than silently making the migration wrong for it. A write the host refuses SHALL be logged where the user can see it and the migration SHALL continue — one unwritable file must not leave the remaining keys unmigrated.
+
+#### Scenario: one scope's write is rejected
+- **WHEN** a settings file cannot be written
+- **THEN** the failure is reported through the extension's own output, and every other key and scope is still migrated
+
+#### Scenario: a key is contributed at resource scope
+- **WHEN** the manifest declares one
+- **THEN** the scope test fails, because the migration's two-tier shape no longer covers it
+
 ### Telemetry carries shapes, never content
 
 Every telemetry payload SHALL contain only enum-like values, booleans, versions, counts, and a random per-spec identifier. User-authored text — prompt content, file paths, spec names, custom workflow and step names — MUST never be sent. Any value read from disk or settings that could be free text MUST be coerced to a known allow-list before reporting, with anything unrecognized reduced to a neutral placeholder.

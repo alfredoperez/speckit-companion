@@ -67,6 +67,12 @@ The step-to-status pairing is the same rule. Every place that needs the status a
 - **WHEN** the reconciler derives a replacement status for a finished implement step
 - **THEN** it derives `implemented`, leaving the spec's closure to the user
 
+A helper that more than one layer needs SHALL live in the layer that owns it rather than being re-exported from where it used to live. A compatibility re-export leaves the same function reachable by two paths, so the next reader adds a caller against whichever they found first and the retired path never dies.
+
+#### Scenario: a shared helper moves to a lower layer
+- **WHEN** the move lands
+- **THEN** its old module no longer re-exports it, and every caller names the new home
+
 ### Status moves forward and never regresses out of a terminal state
 
 Status transitions SHALL be forward-only. A re-run, a double-fired hook, or a late-arriving write for an earlier step MUST record its event honestly in the log while leaving status and current step alone if the spec has already moved past that step. A spec that has reached a terminal state MUST NOT be dragged backwards by any subsequent write.
