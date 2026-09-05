@@ -29,12 +29,17 @@ import { hasStepStart } from './historyHelpers';
 /**
  * The cross-process write lock the capture scripts also take (#629). The lock is
  * the lock file's existence, created O_CREAT|O_EXCL and holding `<pid>:<nonce>`.
- * A waiter reclaims it the moment its owner is provably gone, and otherwise
- * waits — the ceiling exists only so a write can never hang, never as a guess
- * that a holder is finished. Protocol and rationale: `docs/capture-and-timing.md`.
+ * A waiter reclaims it only from a holder that is provably gone or has stopped
+ * touching it; a working holder is waited for however long it works. Protocol
+ * and rationale: `docs/capture-and-timing.md`.
  */
-const LOCK_CEILING_MS = 30_000;
 const LOCK_POLL_MS = 10;
+/** A holder touches its lock this often, so "old" means abandoned, not busy. */
+const LOCK_REFRESH_MS = 5_000;
+/** Untouched for this long: nobody is coming back for it. */
+const LOCK_ABANDONED_MS = 30_000;
+/** The last bound. Only a holder that keeps touching a lock it never releases reaches it. */
+const LOCK_MAX_WAIT_MS = 60_000;
 
 let warnedLockUnavailable = false;
 
@@ -139,6 +144,47 @@ async function reclaimLock(lock: string, owner: string | null): Promise<void> {
     }
 }
 
+/** True when nothing has touched the lock for longer than a working holder would leave it. */
+async function lockIsAbandoned(lock: string): Promise<boolean> {
+    try {
+        const { mtimeMs } = await fs.promises.stat(lock);
+        return Date.now() - mtimeMs >= LOCK_ABANDONED_MS;
+    } catch {
+        return false;
+    }
+}
+
+const refreshTimers = new Map<string, NodeJS.Timeout>();
+
+/**
+ * Touch the lock while we hold it, so age means abandoned rather than busy —
+ * a holder this process cannot see as alive (another pid namespace) is then
+ * still never reclaimed out from under its work. The timer is unref'd so it
+ * cannot hold the host open, and stops the moment the lock stops being ours.
+ */
+function startLockRefresh(lock: string, token: string): void {
+    const timer = setInterval(() => {
+        void (async () => {
+            if ((await readLockOwner(lock)) !== token) {
+                stopLockRefresh(lock);
+                return;
+            }
+            const now = new Date();
+            await fs.promises.utimes(lock, now, now).catch(() => stopLockRefresh(lock));
+        })();
+    }, LOCK_REFRESH_MS);
+    timer.unref?.();
+    refreshTimers.set(lock, timer);
+}
+
+function stopLockRefresh(lock: string): void {
+    const timer = refreshTimers.get(lock);
+    if (timer) {
+        clearInterval(timer);
+        refreshTimers.delete(lock);
+    }
+}
+
 /** Returns our token, or null when the write should proceed unlocked. */
 async function acquireContextLock(target: string): Promise<string | null> {
     const lock = specContextLockPath(target);
@@ -146,11 +192,11 @@ async function acquireContextLock(target: string): Promise<string | null> {
         return null;
     }
     const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
-    const ceiling = Date.now() + LOCK_CEILING_MS;
-    let stomped = false;
+    const giveUpAt = Date.now() + LOCK_MAX_WAIT_MS;
     for (;;) {
         try {
             await fs.promises.writeFile(lock, token, { flag: 'wx' });
+            startLockRefresh(lock, token);
             return token;
         } catch (err) {
             if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') {
@@ -163,27 +209,28 @@ async function acquireContextLock(target: string): Promise<string | null> {
             await reclaimLock(lock, owner);
             continue;
         }
-        if (Date.now() < ceiling) {
-            await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
+        if (await lockIsAbandoned(lock)) {
+            console.warn(
+                `[spec-context] Reclaimed a write lock untouched for ${LOCK_ABANDONED_MS}ms on ${target}.`
+            );
+            await reclaimLock(lock, owner);
             continue;
         }
-        if (stomped) {
+        if (Date.now() >= giveUpAt) {
             console.warn(
-                `[spec-context] Still could not take the write lock on ${target}; recording without it.`
+                `[spec-context] Waited ${LOCK_MAX_WAIT_MS}ms for the write lock on ${target}; recording without it.`
             );
             return null;
         }
-        stomped = true;
-        console.warn(
-            `[spec-context] Reclaimed a write lock held past ${LOCK_CEILING_MS}ms on ${target}.`
-        );
-        await reclaimLock(lock, owner);
+        await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
     }
 }
 
 async function releaseContextLock(target: string, token: string | null): Promise<void> {
     if (token) {
-        await reclaimLock(specContextLockPath(target), token);
+        const lock = specContextLockPath(target);
+        stopLockRefresh(lock);
+        await reclaimLock(lock, token);
     }
 }
 

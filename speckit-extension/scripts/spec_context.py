@@ -347,13 +347,18 @@ _WRITE_LOCK_ENABLED = False
 #: the append-log, then re-reads); releasing on the first publish would drop the
 #: lock in the middle of the very sequence it is guarding.
 _HELD_LOCKS: dict = {}
-#: The ceiling on waiting for a live holder — not a guess that it has finished.
-#: A holder that dies is recognised and reclaimed immediately (`_owner_is_gone`);
-#: this exists only so nothing can wait forever, including on a platform where
-#: liveness cannot be asked.
-_LOCK_CEILING_S = 30.0
 _LOCK_POLL_S = 0.01
+#: A holder touches its lock this often, so "old" means abandoned, not busy.
+_LOCK_REFRESH_S = 5.0
+#: Untouched for this long: nobody is coming back for it.
+_LOCK_ABANDONED_S = 30.0
+#: The last bound. Only a holder that keeps touching a lock it never releases
+#: reaches it, and even then the write is recorded rather than refused.
+_LOCK_MAX_WAIT_S = 60.0
 _WARNED_NO_LOCK = False
+#: Stop flags for the per-target refresh threads, so a heartbeat cannot outlive
+#: the hold it is keeping alive.
+_REFRESH_STOPS: dict = {}
 
 
 def enable_write_lock() -> None:
@@ -446,15 +451,58 @@ def _read_lock_owner(lock: Path) -> str | None:
         return None
 
 
+def _lock_is_abandoned(lock: Path) -> bool:
+    """True when nothing has touched the lock for longer than a working holder
+    would leave it — the difference between a crashed writer and a slow one."""
+    import time
+
+    try:
+        return (time.time() - lock.stat().st_mtime) >= _LOCK_ABANDONED_S
+    except OSError:
+        return False
+
+
+def _start_refresh(target: Path, lock: Path, token: str) -> None:
+    """Touch the lock while we hold it, so age means abandoned rather than busy.
+
+    A capture that genuinely takes a while — a big fold, a slow materialize — is
+    then never reclaimed out from under its work, including by a waiter that
+    cannot see its process at all (a different pid namespace sharing one temp
+    dir). The thread is a daemon and stops as soon as the lock stops being ours,
+    so it cannot outlive the hold.
+    """
+    import threading
+
+    stop = threading.Event()
+
+    def beat() -> None:
+        while not stop.wait(_LOCK_REFRESH_S):
+            if _read_lock_owner(lock) != token:
+                return
+            try:
+                os.utime(lock, None)
+            except OSError:
+                return
+
+    threading.Thread(target=beat, daemon=True).start()
+    _REFRESH_STOPS[str(target)] = stop
+
+
+def _stop_refresh(target: Path) -> None:
+    stop = _REFRESH_STOPS.pop(str(target), None)
+    if stop is not None:
+        stop.set()
+
+
 def _acquire_lock(target: Path) -> None:
     """Take the cross-process write lock for `target`, or carry on without it.
 
     The lock is the lock file's existence, created O_CREAT|O_EXCL and holding
     `<pid>:<nonce>` — the one primitive the extension can take too, since Node
     has no `flock` without a native module, and a lock only one of the two
-    writers can take is not a lock (#629). A holder that has died is reclaimed at
-    once; a live one is waited for, up to `_LOCK_CEILING_S`, which exists only so
-    a capture can never hang.
+    writers can take is not a lock (#629). A holder that has died, or has stopped
+    touching its lock, is reclaimed; one that is still working is waited for
+    however long it works, up to `_LOCK_MAX_WAIT_S` so a capture can never hang.
     """
     if not _WRITE_LOCK_ENABLED or str(target) in _HELD_LOCKS:
         return
@@ -468,8 +516,7 @@ def _acquire_lock(target: Path) -> None:
         _warn_no_lock(target, exc)
         return
     token = f"{os.getpid()}:{secrets.token_hex(8)}"
-    ceiling = time.monotonic() + _LOCK_CEILING_S
-    stomped = False
+    give_up_at = time.monotonic() + _LOCK_MAX_WAIT_S
     while True:
         try:
             fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
@@ -482,6 +529,7 @@ def _acquire_lock(target: Path) -> None:
             with os.fdopen(fd, "w") as fh:
                 fh.write(token)
             _HELD_LOCKS[str(target)] = token
+            _start_refresh(target, lock, token)
             # Released when this process exits, never on the first publish: one
             # operation reads and publishes more than once.
             atexit.register(_release_lock, target)
@@ -491,23 +539,22 @@ def _acquire_lock(target: Path) -> None:
         if owner is not None and _owner_is_gone(owner):
             _reclaim_lock(lock, owner)
             continue
-        if time.monotonic() < ceiling:
-            time.sleep(_LOCK_POLL_S)
-            continue
-        if stomped:
+        if _lock_is_abandoned(lock):
             print(
-                f"[companion] Still could not take the write lock on {target}; "
-                f"recording without it.",
+                f"[companion] Reclaimed a write lock untouched for "
+                f"{_LOCK_ABANDONED_S}s on {target}.",
+                file=sys.stderr,
+            )
+            _reclaim_lock(lock, owner)
+            continue
+        if time.monotonic() >= give_up_at:
+            print(
+                f"[companion] Waited {_LOCK_MAX_WAIT_S}s for the write lock on "
+                f"{target}; recording without it.",
                 file=sys.stderr,
             )
             return
-        stomped = True
-        print(
-            f"[companion] Reclaimed a write lock held past {_LOCK_CEILING_S}s "
-            f"on {target}.",
-            file=sys.stderr,
-        )
-        _reclaim_lock(lock, owner)
+        time.sleep(_LOCK_POLL_S)
 
 
 def _release_lock(target: Path) -> None:
@@ -517,6 +564,7 @@ def _release_lock(target: Path) -> None:
     token = _HELD_LOCKS.pop(str(target), None)
     if token is None:
         return
+    _stop_refresh(target)
     try:
         _reclaim_lock(_lock_path(target), token)
     except OSError:

@@ -227,6 +227,69 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         expect(readRecord(specDir).waited).toBe(true);
     });
 
+    it('a lock nobody has touched since before the ceiling is reclaimed', async () => {
+        const { specDir } = makeCell();
+        const target = path.join(specDir, '.spec-context.json');
+        const lock = specContextLockPath(target);
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        // Owner still resolves as alive — the pid check cannot help here, which
+        // is the whole point. What settles it is that nothing has touched the
+        // lock in far longer than a working holder would leave it.
+        fs.writeFileSync(lock, `${process.pid}:wentaway`, 'utf-8');
+        const longAgo = new Date(Date.now() - 120_000);
+        fs.utimesSync(lock, longAgo, longAgo);
+
+        const started = Date.now();
+        await updateSpecContext(
+            specDir,
+            ctx => ({ ...ctx, reclaimed: true }) as SpecContext,
+            fallback()
+        );
+        expect(readRecord(specDir).reclaimed).toBe(true);
+        expect(Date.now() - started).toBeLessThan(1000);
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('a lock being kept touched is never reclaimed, however old the hold gets', async () => {
+        const { specDir } = makeCell();
+        const target = path.join(specDir, '.spec-context.json');
+        const lock = specContextLockPath(target);
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        fs.writeFileSync(lock, `${process.pid}:stillworking`, 'utf-8');
+        // A second short of abandoned when the wait starts. Left alone it goes
+        // stale and is reclaimed inside a second; the holder's heartbeat is the
+        // only thing that keeps it alive across the wait below.
+        const nearlyStale = new Date(Date.now() - 29_000);
+        fs.utimesSync(lock, nearlyStale, nearlyStale);
+        const heartbeat = setInterval(() => {
+            const now = new Date();
+            try {
+                fs.utimesSync(lock, now, now);
+            } catch {
+                /* released */
+            }
+        }, 100);
+        heartbeat.unref?.();
+
+        const write = updateSpecContext(
+            specDir,
+            ctx => ({ ...ctx, waited: true }) as SpecContext,
+            fallback()
+        );
+        try {
+            const outcome = await Promise.race([
+                write.then(() => 'wrote'),
+                sleep(2500).then(() => 'still waiting'),
+            ]);
+            expect(outcome).toBe('still waiting');
+        } finally {
+            clearInterval(heartbeat);
+            fs.rmSync(lock, { force: true });
+        }
+        await write;
+        expect(readRecord(specDir).waited).toBe(true);
+    });
+
     it('two writes issued together in one process do not overlap', async () => {
         const { specDir } = makeCell();
         await writeSpecContext(specDir, fallback());
