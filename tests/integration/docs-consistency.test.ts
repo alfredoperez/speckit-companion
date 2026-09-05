@@ -58,6 +58,20 @@ describe('docs consistency', () => {
       expect(hasNumeric || hasWord).toBe(true);
     });
 
+    it('every speckit.* setting is window- or machine-scoped, so the migration needs no folder tier', () => {
+      const pkg = JSON.parse(read('package.json'));
+      const cfg = pkg.contributes.configuration;
+      const properties: Record<string, { scope?: string }> = Array.isArray(cfg)
+        ? Object.assign({}, ...cfg.map((c: { properties?: object }) => c.properties ?? {}))
+        : (cfg.properties ?? {});
+      const resourceScoped = Object.entries(properties)
+        .filter(([, v]) => v.scope !== 'window' && v.scope !== 'machine')
+        .map(([k]) => k);
+      // src/core/settingsMigration.ts writes Global and Workspace only; VS Code
+      // rejects a folder write for a window- or machine-scoped key.
+      expect(resourceScoped).toEqual([]);
+    });
+
     it('every enum id has a corresponding *Provider.ts or named integration file', () => {
       // Map enum ids to expected source files. "ide-chat" → ideChatProvider; "claude-vscode" → claudePanelProvider.
       const idToFile: Record<string, string> = {
@@ -144,9 +158,9 @@ describe('docs consistency', () => {
     it('the files under src/core that import features/ or ai-providers/ are exactly the allowlist', () => {
       const upward = fs
         .readdirSync(path.join(REPO_ROOT, 'src/core'), { recursive: true, encoding: 'utf8' })
-        .filter((f) => /\.ts$/.test(f) && !/\.(test|spec)\.ts$/.test(f))
-        .map((f) => path.join('src/core', f))
-        .filter((rel) => read(rel).split('\n').some((line) => UPWARD_IMPORT.test(line)))
+        .map((f) => `src/core/${f.split(path.sep).join('/')}`)
+        .filter((f) => /\.ts$/.test(f) && !/\.(test|spec)\.ts$/.test(f) && !f.includes('/__tests__/'))
+        .filter((rel) => UPWARD_IMPORT.test(read(rel)))
         .sort();
       expect(upward).toEqual([...ALLOWLIST].sort());
     });

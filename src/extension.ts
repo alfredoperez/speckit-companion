@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // `'off'` → false. Readers still coerce defensively, so an un-migrated scope or
     // an in-flight read is safe regardless.
     try {
-        await migrateBetaTriStateSettings();
+        await migrateBetaTriStateSettings(outputChannel);
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Beta-settings migration skipped: ${detail}`);
@@ -127,7 +127,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // notifications.stepComplete before the retired-key cleanup below removes it,
     // so an off preference survives. Idempotent and scope-preserving.
     try {
-        await mergeNotificationSettings();
+        await mergeNotificationSettings(outputChannel);
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Notification-settings merge skipped: ${detail}`);
@@ -139,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // tolerates them either way; this just keeps users' settings tidy. Wrapped so a
     // bad stored value can never fail activation (the provider-rename lesson).
     try {
-        await removeRetiredSettings();
+        await removeRetiredSettings(outputChannel);
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[Extension] Retired-settings cleanup skipped: ${detail}`);

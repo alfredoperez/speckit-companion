@@ -100,11 +100,14 @@ describe('migrateBetaTriStateSettings', () => {
             'companion.installPrompt': { globalValue: 'off' },
         });
         update.mockRejectedValueOnce(new Error('settings.json parse error'));
-        jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const logger = { appendLine: jest.fn() };
 
-        await expect(migrateBetaTriStateSettings()).resolves.toBeUndefined();
+        await expect(migrateBetaTriStateSettings(logger)).resolves.toBeUndefined();
 
         expect(update).toHaveBeenCalledWith('companion.installPrompt', false, vscode.ConfigurationTarget.Global);
+        expect(logger.appendLine).toHaveBeenCalledWith(
+            expect.stringContaining('speckit.viewer.activityPanel not written at User scope'),
+        );
     });
 
     it('preserves scope: a global override is not relocated to workspace', async () => {

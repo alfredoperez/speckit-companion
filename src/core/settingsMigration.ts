@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 /**
- * Migration + defensive coercion for the three former tri-state beta settings
+ * Migration + defensive coercion for the former tri-state beta settings
  * (#259). These were `'off' | 'beta' | 'on'` string enums where `beta` and `on`
  * behaved identically (they differed only by a redundant in-UI badge). They are
  * now plain booleans. This module:
@@ -66,20 +66,34 @@ export function coerceLegacyBoolean(value: unknown, fallback: boolean): boolean 
     return fallback;
 }
 
-/** The two scopes a `speckit.*` value can be set at. Every key is window- or machine-scoped, so VS Code rejects folder-level writes. */
+/** Optional sink for a rejected write; omitted, the failure is silent (matches the contextKeys logger contract). */
+export interface MigrationLogger {
+    appendLine(message: string): void;
+}
+
+/** The two scopes a `speckit.*` value can be set at; the folder tier is absent by manifest scope (asserted in tests/integration/docs-consistency.test.ts). */
 const SCOPES: ReadonlyArray<{
     readonly target: vscode.ConfigurationTarget;
     readonly field: 'globalValue' | 'workspaceValue';
+    readonly name: string;
 }> = [
-    { target: vscode.ConfigurationTarget.Global, field: 'globalValue' },
-    { target: vscode.ConfigurationTarget.Workspace, field: 'workspaceValue' },
+    { target: vscode.ConfigurationTarget.Global, field: 'globalValue', name: 'User' },
+    { target: vscode.ConfigurationTarget.Workspace, field: 'workspaceValue', name: 'Workspace' },
 ];
 
-async function tryUpdate(config: vscode.WorkspaceConfiguration, key: string, value: unknown, target: vscode.ConfigurationTarget): Promise<void> {
+/** Write one value, logging and continuing if the scope rejects it, so one bad key can't skip the rest. */
+async function tryUpdate(
+    config: vscode.WorkspaceConfiguration,
+    key: string,
+    value: unknown,
+    scope: { target: vscode.ConfigurationTarget; name: string },
+    logger?: MigrationLogger,
+): Promise<void> {
     try {
-        await config.update(key, value, target);
+        await config.update(key, value, scope.target);
     } catch (err) {
-        console.warn(`[settings-migration] ${key} write at target ${target} rejected: ${err instanceof Error ? err.message : String(err)}`);
+        const detail = err instanceof Error ? err.message : String(err);
+        logger?.appendLine(`[Settings migration] speckit.${key} not written at ${scope.name} scope: ${detail}`);
     }
 }
 
@@ -90,18 +104,18 @@ async function tryUpdate(config: vscode.WorkspaceConfiguration, key: string, val
  * Scope is preserved via per-scope `inspect()` so a global vs. workspace override
  * isn't relocated.
  */
-export async function migrateBetaTriStateSettings(): Promise<void> {
+export async function migrateBetaTriStateSettings(logger?: MigrationLogger): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
     for (const { key, default: settingDefault } of BETA_BOOLEAN_SETTINGS) {
         const inspected = config.inspect(key);
-        for (const { target, field } of SCOPES) {
-            const persisted = inspected?.[field];
+        for (const scope of SCOPES) {
+            const persisted = inspected?.[scope.field];
             // Only rewrite a KNOWN legacy tri-state string. A boolean is already
             // migrated; undefined means unset at this scope; and an unknown string
             // (typo) is left untouched for VS Code to flag rather than silently
             // coerced. Fall back to the per-setting default (not a hardcoded true).
             if (persisted === 'off' || persisted === 'beta' || persisted === 'on') {
-                await tryUpdate(config, key, coerceLegacyBoolean(persisted, settingDefault), target);
+                await tryUpdate(config, key, coerceLegacyBoolean(persisted, settingDefault), scope, logger);
             }
         }
     }
@@ -121,19 +135,19 @@ export async function migrateBetaTriStateSettings(): Promise<void> {
  * Scopes where `phaseCompletion` is unset are left untouched. Scope is preserved
  * via per-scope `inspect()`.
  */
-export async function mergeNotificationSettings(): Promise<void> {
+export async function mergeNotificationSettings(logger?: MigrationLogger): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
     const phase = config.inspect('notifications.phaseCompletion');
     const step = config.inspect('notifications.stepComplete');
-    for (const { target, field } of SCOPES) {
-        const phaseVal = phase?.[field];
+    for (const scope of SCOPES) {
+        const phaseVal = phase?.[scope.field];
         if (phaseVal === undefined) {
             continue;
         }
-        const stepVal = step?.[field];
+        const stepVal = step?.[scope.field];
         const merged = phaseVal === false || stepVal === false ? false : true;
         if (merged !== stepVal) {
-            await tryUpdate(config, 'notifications.stepComplete', merged, target);
+            await tryUpdate(config, 'notifications.stepComplete', merged, scope, logger);
         }
     }
 }
@@ -145,13 +159,13 @@ export async function mergeNotificationSettings(): Promise<void> {
  * re-running is a no-op. Activation tolerates these keys whether or not this runs
  * (VS Code ignores unknown keys) — this just keeps users' settings tidy (FR-004).
  */
-export async function removeRetiredSettings(): Promise<void> {
+export async function removeRetiredSettings(logger?: MigrationLogger): Promise<void> {
     const config = vscode.workspace.getConfiguration('speckit');
     for (const key of RETIRED_SETTINGS) {
         const inspected = config.inspect(key);
-        for (const { target, field } of SCOPES) {
-            if (inspected?.[field] !== undefined) {
-                await tryUpdate(config, key, undefined, target);
+        for (const scope of SCOPES) {
+            if (inspected?.[scope.field] !== undefined) {
+                await tryUpdate(config, key, undefined, scope, logger);
             }
         }
     }
