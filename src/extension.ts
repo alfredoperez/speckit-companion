@@ -22,6 +22,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
 import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
+import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -290,59 +291,50 @@ export async function activate(context: vscode.ExtensionContext) {
     {
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (root) {
-            // Drive the sidebar install affordance: the install icon shows when
-            // the spec-kit extension is NOT installed. Refreshed by the watcher
-            // below when the extension dir appears/disappears (e.g. after the
-            // one-click install terminal completes).
-            void refreshCompanionInstalledContext(root);
-            // Badge the Specs view when the spec-kit extension is missing and refresh the Specs + Steering trees; the watcher below reruns this so it flips without a reload.
-            const syncInstallAffordances = (): void => {
-                const installed = isCompanionInstalled(root);
+            // One gap resolution per tick feeds every install/update surface; the ensure needs the installed dir.
+            const updateStatusBar = createCompanionUpdateStatusBar(context);
+            const syncCompanionSurfaces = (): CompanionGap => {
+                const gap = refreshCompanionGap(root, context.extensionPath);
+                const installed = gap.state !== 'missing';
+                void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
                 specsTreeView.badge = installed
                     ? undefined
                     : { value: 1, tooltip: 'Install SpecKit Companion' };
                 if (!installed) {
                     reportInstallPromptShown('sidebarBadge');
                 }
-                specExplorer.refresh();
-                steeringExplorer.refresh();
-            };
-            syncInstallAffordances();
-            // Say when the installed spec-kit half is behind the version this build ships.
-            const updateStatusBar = createCompanionUpdateStatusBar(context);
-            updateStatusBar.sync(root);
-            maybeShowCompanionUpdateNudge(context, root);
-            // Keep the timing-augmented standard command family materialized — but
-            // ONLY when the companion spec-kit extension is installed: the ensure's
-            // bundled preset path lives inside `.specify/extensions/companion/`, so
-            // running it without the extension just fails + logs on every activation.
-            // The watcher below reruns it once the extension dir appears (one-click
-            // install), so it doesn't wait for a reload.
-            const ensureStandardWhenInstalled = (): void => {
-                if (isCompanionInstalled(root)) {
+                if (installed) {
                     void ensureStandardFamily(root, {
                         log: msg => outputChannel.appendLine(msg),
                     });
                 }
+                specExplorer.refresh();
+                steeringExplorer.refresh();
+                updateStatusBar.sync(gap);
+                return gap;
             };
-            ensureStandardWhenInstalled();
-            // Refresh the install context key (and rerun the standard-family ensure)
-            // whenever the companion extension dir or the spec-kit registry changes
-            // (the one-click install or update lands it on disk), so all flip without a reload.
-            const extWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '.specify/extensions/{.registry,companion/**}')
-            );
-            const refresh = (): void => {
-                void refreshCompanionInstalledContext(root);
-                ensureStandardWhenInstalled();
-                syncInstallAffordances();
-                updateStatusBar.sync(root);
+            maybeShowCompanionUpdateNudge(context, syncCompanionSurfaces());
+            // Change events only for the two version files: an install writes hundreds of files under `companion/**`.
+            const companionRefresh = trailing(() => {
+                syncCompanionSurfaces();
                 livingSpecsExplorer.refresh();
-            };
-            extWatcher.onDidCreate(refresh);
-            extWatcher.onDidChange(refresh);
-            extWatcher.onDidDelete(refresh);
-            context.subscriptions.push(extWatcher);
+            }, 150);
+            const extDirWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/extensions/companion/**'),
+                false,
+                true,
+                false
+            );
+            const extVersionWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/extensions/{.registry,companion/extension.yml}')
+            );
+            for (const watcher of [extDirWatcher, extVersionWatcher]) {
+                watcher.onDidCreate(companionRefresh.call);
+                watcher.onDidChange(companionRefresh.call);
+                watcher.onDidDelete(companionRefresh.call);
+                context.subscriptions.push(watcher);
+            }
+            context.subscriptions.push(companionRefresh);
 
             // Refresh the Living Specs view when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
@@ -351,35 +343,31 @@ export async function activate(context: vscode.ExtensionContext) {
             );
             // Debounce: a rapid save sequence across the watched glob would
             // otherwise re-run the full `**/*.spec.md` scan per event.
-            let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-            const refreshLivingSpecs = (): void => {
-                if (refreshTimer) {
-                    clearTimeout(refreshTimer);
-                }
-                refreshTimer = setTimeout(() => livingSpecsExplorer.refresh(), 150);
-            };
-            livingSpecsWatcher.onDidCreate(refreshLivingSpecs);
-            livingSpecsWatcher.onDidChange(refreshLivingSpecs);
-            livingSpecsWatcher.onDidDelete(refreshLivingSpecs);
-            context.subscriptions.push(livingSpecsWatcher, {
-                dispose: () => {
-                    if (refreshTimer) {
-                        clearTimeout(refreshTimer);
-                    }
-                },
-            });
+            const refreshLivingSpecs = trailing(() => livingSpecsExplorer.refresh(), 150);
+            livingSpecsWatcher.onDidCreate(refreshLivingSpecs.call);
+            livingSpecsWatcher.onDidChange(refreshLivingSpecs.call);
+            livingSpecsWatcher.onDidDelete(refreshLivingSpecs.call);
+            context.subscriptions.push(livingSpecsWatcher, refreshLivingSpecs);
         }
     }
 }
 
-/**
- * Mirror "is the companion spec-kit extension installed?" into the
- * `speckit.companion.installed` context key. The sidebar install affordance's
- * `when` clause reads `!speckit.companion.installed`, so this gate must be kept
- * current as the extension dir appears/disappears on disk.
- */
-async function refreshCompanionInstalledContext(root: string): Promise<void> {
-    await setContextKey(CONTEXT_KEYS.companionInstalled, isCompanionInstalled(root));
+/** Trailing-edge debounce: a burst of calls runs `fn` once, `ms` after the last one. */
+function trailing(fn: () => void, ms: number): { call: () => void; dispose: () => void } {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return {
+        call: () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(fn, ms);
+        },
+        dispose: () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        },
+    };
 }
 
 /**

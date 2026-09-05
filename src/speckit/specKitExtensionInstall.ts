@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
-import { resolveCompanionGap, type CompanionGap } from './companionVersionGap';
+import { cachedCompanionGap, type CompanionGap } from './companionVersionGap';
 import type { InstallPrompt } from '../protocol/viewer';
 
 export type { InstallPrompt };
@@ -57,19 +57,16 @@ export const README_FALLBACK_URL =
     'https://github.com/alfredoperez/speckit-companion#install-the-spec-kit-extension';
 
 /**
- * Build the `specify extension add` command for the install/update action. Uses the
- * by-name form once the catalog lists it (see {@link USE_BY_NAME_INSTALL}); the
- * release URL form until then.
+ * Build the `specify extension add` command. Uses the by-name form once the catalog
+ * lists it (see {@link USE_BY_NAME_INSTALL}); the release URL form until then.
  *
- * No `--force`: the spec-kit CLI's `extension add` does not accept that flag and
- * errors out with "No such option '--force'" (issue #420). `extension add` is already
- * an install-or-update against the same target, so the flag was never needed here.
+ * `extension add` refuses to overwrite an installed extension, so an update passes
+ * `--force`. A fresh install must not: an older CLI rejected the flag outright
+ * (issue #420), and a missing extension has nothing to overwrite.
  */
-export function buildInstallCommand(): string {
-    if (USE_BY_NAME_INSTALL) {
-        return `specify extension add ${BY_NAME_INSTALL}`;
-    }
-    return `specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL}`;
+export function buildInstallCommand({ force = false }: { force?: boolean } = {}): string {
+    const target = USE_BY_NAME_INSTALL ? BY_NAME_INSTALL : `${BY_NAME_INSTALL} --from ${RELEASE_URL}`;
+    return `specify extension add ${target}${force ? ' --force' : ''}`;
 }
 
 /**
@@ -91,27 +88,27 @@ export function shouldShowInstallPrompt(enabled: boolean, gap: CompanionGap): In
     return null;
 }
 
-/** The install banner has one permanent dismissal; the update banner is dismissed per expected version so the next release asks again. */
-export function isInstallPromptDismissed(globalState: vscode.Memento, prompt: InstallPrompt): boolean {
-    if (prompt.kind === 'update') {
-        return globalState.get<string>(ConfigKeys.globalState.companionUpdateSkippedVersion) === prompt.expected;
-    }
-    return globalState.get<boolean>(ConfigKeys.globalState.installBannerDismissed, false);
+/** The install banner has one permanent flag; the update banner is dismissed per expected version so the next release asks again. */
+function dismissalFor(prompt: InstallPrompt): { key: string; value: string | boolean } {
+    return prompt.kind === 'update'
+        ? { key: ConfigKeys.globalState.companionUpdateSkippedVersion, value: prompt.expected }
+        : { key: ConfigKeys.globalState.installBannerDismissed, value: true };
 }
 
-/** Persist the dismissal of whichever prompt the workspace currently shows. */
-export async function dismissInstallPrompt(context: vscode.ExtensionContext, workspaceRoot: string | undefined): Promise<void> {
-    const gap = workspaceRoot ? resolveCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
-    if (gap.state === 'outdated') {
-        await context.globalState.update(ConfigKeys.globalState.companionUpdateSkippedVersion, gap.expected);
-        return;
-    }
-    await context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+export function isInstallPromptDismissed(globalState: vscode.Memento, prompt: InstallPrompt): boolean {
+    const { key, value } = dismissalFor(prompt);
+    return globalState.get<unknown>(key) === value;
+}
+
+/** Persist the dismissal of the prompt the user closed, as the banner reported it. */
+export async function dismissInstallPrompt(context: vscode.ExtensionContext, prompt: InstallPrompt): Promise<void> {
+    const { key, value } = dismissalFor(prompt);
+    await context.globalState.update(key, value);
 }
 
 /** The prompt a banner surface renders right now — setting, on-disk versions and dismissal all resolved — or `null` for nothing. */
-export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot: string | undefined): InstallPrompt | null {
-    const gap = workspaceRoot ? resolveCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
+export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot = firstWorkspaceRoot()): InstallPrompt | null {
+    const gap = workspaceRoot ? cachedCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
     const prompt = shouldShowInstallPrompt(readInstallPromptEnabled(), gap);
     return prompt && !isInstallPromptDismissed(context.globalState, prompt) ? prompt : null;
 }
@@ -149,7 +146,7 @@ export function runInstallSpecKitExtension(workspaceRoot?: string): void {
     // default, so a leading `#` would be executed and error ("command not found: #")
     // instead of being treated as a comment. echo is portable across bash/zsh.
     terminal.sendText(`echo "Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}"`);
-    terminal.sendText(buildInstallCommand());
+    terminal.sendText(buildInstallCommand({ force: workspaceRoot ? isCompanionInstalled(workspaceRoot) : false }));
 }
 
 /** Workspace root of the first open folder, or undefined. */

@@ -51,7 +51,7 @@ export interface ProjectStep {
     writes: string;
 }
 
-function readText(file: string): string | undefined {
+export function readText(file: string): string | undefined {
     try {
         return fs.readFileSync(file, 'utf8');
     } catch {

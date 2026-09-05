@@ -1,7 +1,8 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+import { readCompanionManifest } from '../features/steering/companionSteering';
+import { readText } from '../features/workflows/projectSteps';
 import { isNewerVersion } from './updateChecker';
 
 /** Is the companion spec-kit extension missing, behind the version this build ships, or current? */
@@ -11,7 +12,6 @@ export type CompanionGap =
     | { state: 'outdated'; installed: string; expected: string };
 
 const REGISTRY_REL = '.specify/extensions/.registry';
-const INSTALLED_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
 const BUNDLED_MANIFEST_REL = path.join('speckit-extension', 'extension.yml');
 const SEMVER = /^\d+\.\d+\.\d+$/;
 
@@ -19,11 +19,14 @@ function asSemver(value: unknown): string | undefined {
     return typeof value === 'string' && SEMVER.test(value) ? value : undefined;
 }
 
+function manifestVersion(parsed: unknown): string | undefined {
+    return asSemver((parsed as { extension?: { version?: unknown } } | undefined)?.extension?.version);
+}
+
 /** `extension.version` from an `extension.yml` body; `undefined` when absent, malformed, or not `major.minor.patch`. */
 export function parseManifestVersion(text: string): string | undefined {
     try {
-        const parsed = yaml.load(text) as { extension?: { version?: unknown } } | undefined;
-        return asSemver(parsed?.extension?.version);
+        return manifestVersion(yaml.load(text));
     } catch {
         return undefined;
     }
@@ -39,29 +42,26 @@ export function parseRegistryVersion(text: string): string | undefined {
     }
 }
 
-function readText(file: string): string | undefined {
-    try {
-        return fs.readFileSync(file, 'utf8');
-    } catch {
-        return undefined;
-    }
-}
+let bundled: { extensionPath: string; version: string } | undefined;
 
-/** The version this build of the VS Code extension ships, read from its own bundled manifest. */
+/** The version this build of the VS Code extension ships, read once per process from its own bundled manifest. */
 export function readBundledCompanionVersion(extensionPath: string): string | undefined {
-    const text = readText(path.join(extensionPath, BUNDLED_MANIFEST_REL));
-    return text === undefined ? undefined : parseManifestVersion(text);
+    if (bundled?.extensionPath !== extensionPath) {
+        const text = readText(path.join(extensionPath, BUNDLED_MANIFEST_REL));
+        const version = text === undefined ? undefined : parseManifestVersion(text);
+        bundled = version ? { extensionPath, version } : undefined;
+    }
+    return bundled?.version;
 }
 
-/** The version installed in the workspace: the spec-kit registry first, the installed manifest as fallback. */
+/** The version installed in the workspace: the installed manifest first (a `--dev` link keeps it current), the spec-kit registry as fallback. */
 export function readInstalledCompanionVersion(workspaceRoot: string): string | undefined {
-    const registry = readText(path.join(workspaceRoot, REGISTRY_REL));
-    const fromRegistry = registry === undefined ? undefined : parseRegistryVersion(registry);
-    if (fromRegistry) {
-        return fromRegistry;
+    const fromManifest = manifestVersion(readCompanionManifest(workspaceRoot));
+    if (fromManifest) {
+        return fromManifest;
     }
-    const manifest = readText(path.join(workspaceRoot, INSTALLED_MANIFEST_REL));
-    return manifest === undefined ? undefined : parseManifestVersion(manifest);
+    const registry = readText(path.join(workspaceRoot, REGISTRY_REL));
+    return registry === undefined ? undefined : parseRegistryVersion(registry);
 }
 
 /** Pure three-state decision. An unreadable version on either side reads as `current`, never as out of date. */
@@ -86,4 +86,17 @@ export function resolveCompanionGap(workspaceRoot: string, extensionPath: string
         readInstalledCompanionVersion(workspaceRoot),
         readBundledCompanionVersion(extensionPath)
     );
+}
+
+let lastGap: CompanionGap | undefined;
+
+/** Resolve from disk and remember the answer; activation and the extension-dir watcher call this once per tick. */
+export function refreshCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
+    lastGap = resolveCompanionGap(workspaceRoot, extensionPath);
+    return lastGap;
+}
+
+/** The gap the last refresh saw, resolving once if nothing has refreshed yet. */
+export function cachedCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
+    return lastGap ?? refreshCompanionGap(workspaceRoot, extensionPath);
 }

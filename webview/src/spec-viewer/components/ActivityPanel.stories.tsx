@@ -213,6 +213,17 @@ export const InstallBannerSlim: Story = {
     },
 };
 
+// ── 6b. Update banner — installed but behind this build ────────
+
+export const UpdateBannerShown: Story = {
+    name: 'Update banner — out of date',
+    render: () => {
+        navState.value = baseNav({ installPrompt: { kind: 'update', installed: '0.20.2', expected: '0.21.0' } });
+        viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
+        return <ActivityPanel />;
+    },
+};
+
 // ── 7. Install banner — dismissed (hidden) ─────────────────────
 // The user dismissed the banner, so `installPrompt` is null and
 // the banner is absent — only the empty activity state shows.

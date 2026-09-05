@@ -179,7 +179,7 @@ export class SpecViewerProvider {
     if (!this.readActivityPanelEnabled()) {
       return null;
     }
-    const prompt = resolveInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    const prompt = resolveInstallPrompt(this.context);
     if (prompt?.kind === 'install') {
       reportInstallPromptShown('activity');
     }
@@ -1122,7 +1122,7 @@ export class SpecViewerProvider {
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),
       runRecovery: derived.runRecovery,
       activityPanelEnabled: this.readActivityPanelEnabled(),
-      // Re-sent on every update like showInstallPrompt: the webview replaces the
+      // Re-sent on every update like installPrompt: the webview replaces the
       // whole navState, so omitting this would drop a tree click's explicit
       // document request on the first content refresh after it opened.
       landing: instance.state.landing,

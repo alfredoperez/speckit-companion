@@ -74,11 +74,11 @@ describe('companionVersionGap', () => {
             expect(readBundledCompanionVersion(path.join(dir, 'nowhere'))).toBeUndefined();
         });
 
-        it('prefers the registry and falls back to the installed manifest', () => {
-            write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.20.0"\n');
-            expect(readInstalledCompanionVersion(dir)).toBe('0.20.0');
+        it('prefers the installed manifest (a --dev link keeps it current) and falls back to the registry', () => {
             write('.specify/extensions/.registry', '{"extensions":{"companion":{"version":"0.20.2"}}}');
             expect(readInstalledCompanionVersion(dir)).toBe('0.20.2');
+            write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
+            expect(readInstalledCompanionVersion(dir)).toBe('0.21.0');
         });
 
         it('resolves the three states from real files', () => {
@@ -86,7 +86,7 @@ describe('companionVersionGap', () => {
             write('speckit-extension/extension.yml', 'extension:\n  version: "0.21.0"\n');
             write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.20.2"\n');
             expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'outdated', installed: '0.20.2', expected: '0.21.0' });
-            write('.specify/extensions/.registry', '{"extensions":{"companion":{"version":"0.21.0"}}}');
+            write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
             expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'current' });
         });
     });

@@ -4,7 +4,7 @@ import * as yaml from 'js-yaml';
 import { unsupportedForRuntime } from '../specs/livingSpecsModel';
 
 const COMPANION_CONFIG_REL = '.specify/companion.yml';
-const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
+export const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';
 
 export interface CompanionCommand {
     name: string;
@@ -40,14 +40,20 @@ export function readCompanionConfigGroups(workspaceRoot: string): string[] {
     }
 }
 
+/** The installed extension manifest, parsed; `undefined` when absent or malformed. */
+export function readCompanionManifest(workspaceRoot: string): Record<string, unknown> | undefined {
+    try {
+        const parsed = yaml.load(fs.readFileSync(path.join(workspaceRoot, COMPANION_MANIFEST_REL), 'utf8'));
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 /** `provides.commands` from the installed extension manifest; `[]` when absent or malformed. */
 export function readCompanionCommands(workspaceRoot: string): CompanionCommand[] {
-    const file = path.join(workspaceRoot, COMPANION_MANIFEST_REL);
     try {
-        const parsed = yaml.load(fs.readFileSync(file, 'utf8')) as
-            | { provides?: { commands?: unknown } }
-            | undefined;
-        const commands = parsed?.provides?.commands;
+        const commands = (readCompanionManifest(workspaceRoot) as { provides?: { commands?: unknown } } | undefined)?.provides?.commands;
         if (!Array.isArray(commands)) {
             return [];
         }

@@ -276,6 +276,22 @@ export enum StatusBarAlignment {
     Right = 2,
 }
 
+/** An ExtensionContext whose globalState is a Map, so tests read back what the code wrote. */
+export const createMockExtensionContext = (seed: Record<string, unknown> = {}) => {
+    const store = new Map<string, unknown>(Object.entries(seed));
+    return {
+        store,
+        context: {
+            extensionPath: '/ext',
+            subscriptions: [] as unknown[],
+            globalState: {
+                get: (key: string, fallback?: unknown) => (store.has(key) ? store.get(key) : fallback),
+                update: async (key: string, value: unknown) => { store.set(key, value); },
+            },
+        },
+    };
+};
+
 export const createMockStatusBarItem = () => ({
     text: '',
     tooltip: undefined as unknown,

@@ -516,4 +516,6 @@ export type ViewerToExtensionMessage =
       }
     | {
           type: 'dismissInstallBanner';
+          /** The banner that was closed, so the right dismissal flag is written even if the gap has since changed. */
+          prompt: InstallPrompt;
       };

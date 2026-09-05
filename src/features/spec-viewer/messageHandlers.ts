@@ -203,8 +203,8 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     openReadme: async (_msg, _dir, _deps) => {
       await vscode.commands.executeCommand('speckit.companion.openReadme');
     },
-    dismissInstallBanner: async (_msg, dir, deps) => {
-      await dismissInstallPrompt(deps.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+    dismissInstallBanner: async (msg, dir, deps) => {
+      await dismissInstallPrompt(deps.context, msg.prompt);
       await handleRefresh(dir, deps);
     },
   };

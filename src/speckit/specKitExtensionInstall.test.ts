@@ -7,8 +7,17 @@ import {
     buildInstallCommand,
     shouldShowInstallPrompt,
     isInstallPromptDismissed,
+    dismissInstallPrompt,
     runInstallSpecKitExtension,
 } from './specKitExtensionInstall';
+
+jest.mock('../features/settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn().mockReturnValue(false),
+}));
+import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+const { createMockExtensionContext } = vscode as unknown as {
+    createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
+};
 
 describe('specKitExtensionInstall', () => {
     describe('buildInstallCommand', () => {
@@ -21,8 +30,10 @@ describe('specKitExtensionInstall', () => {
             expect(cmd).toContain('--from https://github.com/alfredoperez/speckit-companion/releases/');
         });
 
-        it('does not pass --force to `extension add` (spec-kit CLI rejects it — issue #420)', () => {
+        it('passes --force only for an update: a fresh install keeps the #420-safe form', () => {
             expect(buildInstallCommand()).not.toContain('--force');
+            expect(buildInstallCommand({ force: false })).not.toContain('--force');
+            expect(buildInstallCommand({ force: true })).toBe(`specify extension add ${BY_NAME_INSTALL} --from ${RELEASE_URL} --force`);
         });
 
         it('exposes the github-source CLI prereq (stock PyPI lacks `extension`)', () => {
@@ -82,7 +93,26 @@ describe('specKitExtensionInstall', () => {
         });
     });
 
+    describe('dismissInstallPrompt', () => {
+        it('writes the flag for the prompt the user closed, with no disk read', async () => {
+            const { context, store } = createMockExtensionContext();
+            await dismissInstallPrompt(context, { kind: 'update', installed: '0.20.2', expected: '0.21.0' });
+            expect(store.get('speckit.companionUpdateSkippedVersion')).toBe('0.21.0');
+            expect(store.has('speckit.installBannerDismissed')).toBe(false);
+            await dismissInstallPrompt(context, { kind: 'install' });
+            expect(store.get('speckit.installBannerDismissed')).toBe(true);
+        });
+    });
+
     describe('runInstallSpecKitExtension', () => {
+        it('adds --force when the extension is already installed, so Update can overwrite it', () => {
+            const sendText = jest.fn();
+            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
+            runInstallSpecKitExtension('/work/project');
+            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+        });
+
         it('opens a terminal scoped to the workspace via cwd, echoes the prereq, then runs the install', () => {
             const sendText = jest.fn();
             const show = jest.fn();

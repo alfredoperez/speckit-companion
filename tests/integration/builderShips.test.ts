@@ -47,6 +47,7 @@ describe('the pipeline builder ships with what it reads', () => {
 
     it('packs the node sources a build assembles from', () => {
         expect(shipped.has('speckit-extension/nodes/**')).toBe(true);
+        expect(shipped.has('speckit-extension/extension.yml')).toBe(true);
         expect(shipped.has('speckit-extension/presets/_parts/**')).toBe(true);
     });
 

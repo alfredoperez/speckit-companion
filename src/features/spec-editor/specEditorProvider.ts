@@ -259,7 +259,7 @@ export class SpecEditorProvider {
                 break;
 
             case 'dismissInstallBanner':
-                await dismissInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+                await dismissInstallPrompt(this.context, message.prompt);
                 break;
         }
     }
@@ -576,7 +576,7 @@ export class SpecEditorProvider {
         // Install banner: install when the spec-kit extension is missing, update when it is
         // behind this build — installed, current projects see nothing (zero-regression).
         // Visibility is the unit-tested gate; the markup is shared with the Activity panel.
-        const installPrompt = resolveInstallPrompt(this.context, vscode.workspace.workspaceFolders?.[0]?.uri.fsPath);
+        const installPrompt = resolveInstallPrompt(this.context);
         if (installPrompt?.kind === 'install') {
             reportInstallPromptShown('createSpec');
         }

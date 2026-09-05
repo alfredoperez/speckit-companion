@@ -160,6 +160,11 @@ export function generateHtml(
         // document rather than binding to the element at load time — an
         // element-bound listener would no-op against a not-yet-mounted banner.
         (function () {
+            function dismissedPrompt(el) {
+                return el.getAttribute('data-kind') === 'update'
+                    ? { kind: 'update', installed: el.getAttribute('data-installed') || '', expected: el.getAttribute('data-expected') || '' }
+                    : { kind: 'install' };
+            }
             document.addEventListener('click', function (e) {
                 if (!(e.target instanceof Element)) { return; }
                 const el = e.target.closest('#install-banner [data-action]');
@@ -170,7 +175,7 @@ export function generateHtml(
                 } else if (action === 'openReadme') {
                     vscode.postMessage({ type: 'openReadme' });
                 } else if (action === 'dismissInstallBanner') {
-                    vscode.postMessage({ type: 'dismissInstallBanner' });
+                    vscode.postMessage({ type: 'dismissInstallBanner', prompt: dismissedPrompt(el) });
                 }
             });
         })();
