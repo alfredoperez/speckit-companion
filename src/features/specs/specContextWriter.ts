@@ -11,7 +11,9 @@
  * `history[]` on every render. See ViewerState.stepHistory.
  */
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     completedStatusForStep,
@@ -24,12 +26,125 @@ import {
 import { SPEC_CONTEXT_FILENAME, normalizeSpecContext } from './specContextReader';
 import { hasStepStart } from './historyHelpers';
 
+/**
+ * The cross-process write lock the capture scripts also take (#629). The lock is
+ * the lock file's existence, created O_CREAT|O_EXCL, holding its owner's token;
+ * a waiter reclaims it after `LOCK_WAIT_MS` and records regardless, so a write
+ * never hangs. Protocol and rationale: `docs/capture-and-timing.md`.
+ */
+const LOCK_WAIT_MS = 2000;
+const LOCK_POLL_MS = 10;
+
+/** Lock paths this process is already inside, so a nested publish doesn't self-deadlock. */
+const heldLocks = new Set<string>();
+
+/** Python's `Path.resolve()`: symlinks followed as far as the path exists. */
+function realPath(target: string): string {
+    const abs = path.resolve(target);
+    const trailing: string[] = [];
+    let head = abs;
+    for (;;) {
+        try {
+            return path.join(fs.realpathSync(head), ...trailing);
+        } catch {
+            const parent = path.dirname(head);
+            if (parent === head) {
+                return abs;
+            }
+            trailing.unshift(path.basename(head));
+            head = parent;
+        }
+    }
+}
+
+/**
+ * Where the lock for one `.spec-context.json` lives — deliberately in the temp
+ * directory, never beside the record, which is the user's file. Must stay
+ * identical to `spec_context._lock_path`; `crossProcessContextLock.spec.ts`
+ * pins the two against each other.
+ */
+export function specContextLockPath(target: string): string {
+    const key = crypto
+        .createHash('sha256')
+        .update(realPath(target), 'utf8')
+        .digest('hex')
+        .slice(0, 32);
+    return path.join(os.tmpdir(), 'speckit-companion-locks', `${key}.lock`);
+}
+
+/** Returns our token, or null when the write should just proceed unlocked. */
+async function acquireContextLock(target: string): Promise<string | null> {
+    const lock = specContextLockPath(target);
+    if (heldLocks.has(lock)) {
+        return null;
+    }
+    const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
+    const take = async (): Promise<boolean> => {
+        await fs.promises.writeFile(lock, token, { flag: 'wx' });
+        heldLocks.add(lock);
+        return true;
+    };
+    try {
+        await fs.promises.mkdir(path.dirname(lock), { recursive: true });
+    } catch {
+        return null; // nowhere to put a lock: recording still beats refusing
+    }
+    const deadline = Date.now() + LOCK_WAIT_MS;
+    for (;;) {
+        try {
+            await take();
+            return token;
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') {
+                return null;
+            }
+        }
+        if (Date.now() >= deadline) {
+            break;
+        }
+        await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
+    }
+    console.warn(
+        `[spec-context] Reclaimed a write lock nobody released for ${target} after ${LOCK_WAIT_MS}ms.`
+    );
+    try {
+        await fs.promises.unlink(lock);
+        await take();
+        return token;
+    } catch {
+        return null;
+    }
+}
+
+async function releaseContextLock(target: string, token: string | null): Promise<void> {
+    if (!token) {
+        return;
+    }
+    const lock = specContextLockPath(target);
+    heldLocks.delete(lock);
+    try {
+        if ((await fs.promises.readFile(lock, 'utf-8')) === token) {
+            await fs.promises.unlink(lock);
+        }
+    } catch {
+        /* already gone, or reclaimed by a waiter that outlasted us */
+    }
+}
+
 export async function writeSpecContext(
     specDir: string,
     ctx: SpecContext
 ): Promise<void> {
     const target = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    const token = await acquireContextLock(target);
+    try {
+        await publishSpecContext(target, ctx);
+    } finally {
+        await releaseContextLock(target, token);
+    }
+}
 
+async function publishSpecContext(target: string, ctx: SpecContext): Promise<void> {
     // Read existing for unknown-field preservation + append-only enforcement.
     //
     // Belt-and-suspenders: distinguish "file genuinely missing" (ENOENT on
@@ -267,21 +382,29 @@ async function runSpecContextUpdate(
     mutate: (ctx: SpecContext) => SpecContext,
     fallback: SpecContext
 ): Promise<SpecContext> {
-    let current: SpecContext;
+    // The lock spans read → mutate → publish, exactly as the capture script's
+    // does, so a script write can't land in the middle and be overwritten by the
+    // copy we read before it (#629). `writeSpecContext` sees we already hold it.
+    const token = await acquireContextLock(target);
     try {
-        const raw = await fs.promises.readFile(target, 'utf-8');
-        current = normalizeSpecContext(JSON.parse(raw));
-    } catch {
-        current = fallback;
+        let current: SpecContext;
+        try {
+            const raw = await fs.promises.readFile(target, 'utf-8');
+            current = normalizeSpecContext(JSON.parse(raw));
+        } catch {
+            current = fallback;
+        }
+        const next = mutate(current);
+        // Back-fill the per-spec profile pin when the context never recorded one (the
+        // spec-kit capture script creates the file without a profile). Seed it from the
+        // project default carried by the fallback so the spec keeps a single shape
+        // through the pipeline; an existing pin is never overwritten.
+        if (!next.profile && fallback.profile) {
+            next.profile = fallback.profile;
+        }
+        await writeSpecContext(specDir, next);
+        return next;
+    } finally {
+        await releaseContextLock(target, token);
     }
-    const next = mutate(current);
-    // Back-fill the per-spec profile pin when the context never recorded one (the
-    // spec-kit capture script creates the file without a profile). Seed it from the
-    // project default carried by the fallback so the spec keeps a single shape
-    // through the pipeline; an existing pin is never overwritten.
-    if (!next.profile && fallback.profile) {
-        next.profile = fallback.profile;
-    }
-    await writeSpecContext(specDir, next);
-    return next;
 }

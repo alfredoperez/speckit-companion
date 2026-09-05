@@ -341,8 +341,13 @@ def _is_more_advanced(ctx: dict, step: str) -> bool:
 #: Readers (the health check, the fold reader) never set this, so they are never
 #: blocked and never block a writer.
 _WRITE_LOCK_ENABLED = False
-#: One held lock per target path, opened on read and released on publish.
+#: One held lock per target path, taken on read and released on publish.
 _HELD_LOCKS: dict = {}
+#: How long a writer waits for a lock before deciding its holder is gone. Long
+#: enough that real contention always queues (a write is milliseconds), short
+#: enough that a crashed holder never wedges a run.
+_LOCK_WAIT_S = 2.0
+_LOCK_POLL_S = 0.01
 
 
 def enable_write_lock() -> None:
@@ -359,6 +364,9 @@ def _lock_path(target: Path) -> Path:
     puzzled over. It also cannot be the context file itself — publishing renames
     over it, so a later writer would lock a different inode than the one already
     held. A stable per-path file in the system temp directory is neither.
+
+    Mirrored by `specContextLockPath` in the extension's `specContextWriter.ts`;
+    `tests/integration/crossProcessContextLock.spec.ts` pins the two together.
     """
     import hashlib
     import tempfile
@@ -370,37 +378,70 @@ def _lock_path(target: Path) -> Path:
 
 
 def _acquire_lock(target: Path) -> None:
+    """Take the cross-process write lock for `target`, or carry on without it.
+
+    The lock is the lock file's existence, created O_CREAT|O_EXCL and holding its
+    owner's token — the one primitive the extension can take too, since Node has
+    no `flock` without a native module, and a lock only one of the two writers can
+    take is not a lock (#629). A waiter reclaims a lock nobody released after
+    `_LOCK_WAIT_S` and records regardless: waiting forever is worse than racing.
+    """
     if not _WRITE_LOCK_ENABLED or str(target) in _HELD_LOCKS:
         return
     try:
         import atexit
-        import fcntl
+        import secrets
+        import time
 
-        fh = open(_lock_path(target), "w")
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        _HELD_LOCKS[str(target)] = fh
-        # A writer that resolves to "nothing to do" returns without publishing,
-        # so the release has a second home at process exit.
-        atexit.register(_release_lock, target)
+        lock = _lock_path(target)
+        token = f"{os.getpid()}:{secrets.token_hex(8)}"
+
+        def take() -> bool:
+            try:
+                fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            except FileExistsError:
+                return False
+            with os.fdopen(fd, "w") as fh:
+                fh.write(token)
+            _HELD_LOCKS[str(target)] = token
+            # A writer that resolves to "nothing to do" returns without
+            # publishing, so the release has a second home at process exit.
+            atexit.register(_release_lock, target)
+            return True
+
+        deadline = time.monotonic() + _LOCK_WAIT_S
+        while not take():
+            if time.monotonic() >= deadline:
+                print(
+                    f"[companion] Reclaimed a write lock nobody released for "
+                    f"{target} after {_LOCK_WAIT_S}s.",
+                    file=sys.stderr,
+                )
+                try:
+                    lock.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                take()
+                return
+            time.sleep(_LOCK_POLL_S)
     except Exception:  # noqa: BLE001 — locking is best-effort, never fatal
-        # No fcntl, an unwritable temp dir, a filesystem without locking: fall
+        # An unwritable temp dir, a filesystem that won't hold the file: fall
         # back to the previous behaviour rather than refusing to record anything.
         pass
 
 
 def _release_lock(target: Path) -> None:
-    fh = _HELD_LOCKS.pop(str(target), None)
-    if fh is None:
+    """Drop the lock, but only while it still carries our token — a lock a
+    waiter reclaimed now belongs to that waiter, and deleting it would hand the
+    record to two writers at once."""
+    token = _HELD_LOCKS.pop(str(target), None)
+    if token is None:
         return
     try:
-        import fcntl
-
-        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
-    except Exception:  # noqa: BLE001
-        pass
-    try:
-        fh.close()
-    except OSError:
+        lock = _lock_path(target)
+        if lock.read_text(encoding="utf-8") == token:
+            lock.unlink(missing_ok=True)
+    except (OSError, UnicodeDecodeError):
         pass
 
 

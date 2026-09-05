@@ -74,6 +74,19 @@ The extension-side write path (`updateSpecContext`) does a read-modify-write of 
 
 This is ordering only — no schema change, and the finish-only / append-only timing model is unchanged.
 
+## The write lock — one primitive, both writers (#620, #629)
+
+`.spec-context.json` has **two** writers, and both do a read-modify-write of the whole document: the extension (`specContextWriter.ts`) and the capture scripts (`spec_context.py`). Serializing each writer against *itself* is not enough — #620 fixed the script-versus-script case and #629 the pairing it left open, where an extension write landing between a script's read and its publish (or the reverse) was silently discarded. The observed symptom was a run's `currentStep` flipping backward from a finished state, with a perfectly valid document and nothing logged anywhere.
+
+Both sides now queue on **one** lock, and the protocol is deliberately simple enough for both languages to implement identically:
+
+- **The lock is a file's existence**, created with `O_CREAT|O_EXCL` and holding its owner's token. Not `flock` — Node has no `flock` without a native module, and a lock only one of the two writers can take is not a lock.
+- **Same path, same key, both sides.** `<system temp>/speckit-companion-locks/<sha256 of the record's resolved path, first 32 hex chars>.lock`. Deliberately not beside the record: a spec directory is the user's, and a stray lock file there would be committed and shipped. `spec_context._lock_path` and `specContextLockPath` must stay byte-identical — `tests/integration/crossProcessContextLock.spec.ts` asserts that against both real implementations, so they cannot drift apart.
+- **Held across the whole read-modify-write**, from the read that loads the record to the rename that publishes it — that span is the bug, not the write.
+- **Bounded, never blocking.** A waiter polls for 2 seconds, then decides the holder crashed or wedged, reclaims the file, and records anyway. A capture that waits forever is worse than one that races. The reclaim prints one line to stderr (`Reclaimed a write lock nobody released …`), phrased so the run tracer does not read it as a declined call.
+- **Release checks the token** before removing the file, so a lock some waiter already reclaimed is never deleted out from under its new owner.
+- **Readers never take it.** The health check, the fold reader, and the viewer read the record unlocked and are never blocked by a writer; an uncontended write pays one extra create and one unlink.
+
 ## Fixed — living-specs loop closes reliably (2026-07-22, #535 + #536)
 
 The living-specs write-back loop had two prompt-judged holes that let it silently not close. #535: the pre-draft load asked the AI to decide "is this project configured?" before recording anything — a misjudged "not configured" skipped the whole load, so nothing was recorded and completion had nothing to write back. #536: completion's instruction let the assistant author zero deltas and still be compliant ("skip the ones you merely read"), so a spec that loaded three capabilities could finish having folded none, indistinguishable from correctly having nothing to fold.
