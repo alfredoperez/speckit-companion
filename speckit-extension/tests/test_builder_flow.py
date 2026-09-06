@@ -771,6 +771,25 @@ class TheCatalogIsWhatThisProjectHas(unittest.TestCase):
         self.assertIn("speckit.companion.after-specify", ids)
         self.assertNotIn("speckit.git.commit", ids)
 
+    def test_one_malformed_key_costs_only_itself(self):
+        # Guarding the whole loop made the result depend on where in the file
+        # the bad key sat, and made the picker disagree with the board.
+        for placement in ("first", "middle", "last"):
+            with self.subTest(bad=placement):
+                good_a = ("  before_specify:\n  - extension: a\n"
+                          "    command: GOOD.first\n")
+                good_b = ("  after_plan:\n  - extension: b\n"
+                          "    command: GOOD.second\n")
+                bad = "  before_tasks: 5\n"
+                order = {"first": bad + good_a + good_b,
+                         "middle": good_a + bad + good_b,
+                         "last": good_a + good_b + bad}[placement]
+                (self.project.root / ".specify" / "extensions.yml").write_text(
+                    "hooks:\n" + order, encoding="utf-8")
+                ids = self._ids()
+                self.assertIn("GOOD.first", ids)
+                self.assertIn("GOOD.second", ids)
+
     def test_every_entry_carries_an_id_and_a_label(self):
         (self.project.root / ".specify" / "extensions.yml").write_text(
             GIT_REGISTRY, encoding="utf-8")

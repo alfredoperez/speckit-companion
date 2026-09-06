@@ -68,7 +68,19 @@ export function step(
 export const CHOICES: PipelineChoices = {
     skills: ['create-pr', 'code-review', 'verify-code-review', 'speckit-companion-doctor'],
     nodes: ['debug-timing', 'house-review', 'timing'],
-    commands: [],
+    // What a stock install's registries actually carry, so the guide capture
+    // shows the picker rather than an empty one.
+    commands: [
+        { id: 'speckit.git.initialize', label: 'speckit.git.initialize',
+          note: 'Sets up the git repository', usually: 'before constitution', from: 'git' },
+        { id: 'speckit.git.feature', label: 'speckit.git.feature',
+          note: 'Creates the feature branch', usually: 'before specify', from: 'git' },
+        { id: 'speckit.git.commit', label: 'speckit.git.commit',
+          note: 'Commits outstanding changes, with a prompt first', from: 'git' },
+        { id: 'speckit.companion.after-implement', label: 'speckit.companion.after-implement',
+          note: 'Per-task journaling on implement', usually: 'after implement',
+          from: 'companion' },
+    ],
     fragments: [
         { name: 'outcomes', section: 'User Scenarios & Testing', for: 'specify',
           summary: 'Observable outcomes instead of prioritized user stories.' },

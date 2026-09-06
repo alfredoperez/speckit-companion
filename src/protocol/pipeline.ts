@@ -262,8 +262,15 @@ export interface OfferedEntry {
 export interface PipelineChoices {
     skills: string[];
     nodes: string[];
-    /** Hook commands this project's registries carry, so attaching one is a choice. */
-    commands: OfferedEntry[];
+    /**
+     * Hook commands this project's registries carry, so attaching one is a choice.
+     *
+     * Optional because the emitter is the project's installed spec-kit extension,
+     * versioned separately from this one: a graph from an older install arrives
+     * without it, and a reader that assumed otherwise would crash on exactly the
+     * version skew this repository has been bitten by before.
+     */
+    commands?: OfferedEntry[];
     /** Shipped alternatives a template section can be pointed at. */
     fragments: PipelineFragment[];
     /** Shipped configurations a new workflow can start from. */

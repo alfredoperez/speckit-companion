@@ -52,9 +52,12 @@ async function offered(host: HTMLElement): Promise<{ label: string; note: string
 }
 
 describe('the second selector reacts to the first (#646)', () => {
-    it('offers this project\'s commands for the command kind', async () => {
+    it('offers this project\'s commands under Instruction, where they can run', async () => {
+        // Not under Command: that kind renders a bash fence, and a spec-kit
+        // command is dispatched, not shelled. Offered there it would have
+        // written a hook that runs nothing.
         const host = form({ commands: COMMANDS });
-        kind(host, 'Command');
+        kind(host, 'Instruction');
         await flush();
         const rows = await offered(host);
         expect(rows.map(r => r.label)).toEqual(
@@ -63,7 +66,7 @@ describe('the second selector reacts to the first (#646)', () => {
 
     it('says what each one does, where it goes and who registered it', async () => {
         const host = form({ commands: COMMANDS });
-        kind(host, 'Command');
+        kind(host, 'Instruction');
         await flush();
         const rows = await offered(host);
         expect(rows[0].note).toContain('Commits outstanding changes');
@@ -80,24 +83,24 @@ describe('the second selector reacts to the first (#646)', () => {
 
     it('does not carry a choice across a kind change', async () => {
         const host = form({ skills: ['create-pr'], commands: COMMANDS });
-        kind(host, 'Command');
+        kind(host, 'Instruction');
         await flush();
         (host.querySelector('.pb-pick-open') as HTMLButtonElement).click();
         await flush();
         (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
         await flush();
-        expect((host.querySelector('.pb-input--mono') as HTMLInputElement).value)
-            .toBe('speckit.git.commit');
+        expect((host.querySelector('.pb-input--area') as HTMLTextAreaElement).value)
+            .toContain('speckit.git.commit');
 
         kind(host, 'Skill');
         await flush();
         expect((host.querySelector('.pb-input--mono') as HTMLInputElement).value).toBe('');
     });
 
-    it('attaches the entry\'s own identifier, exactly as typing it would', async () => {
+    it('writes an instruction that asks for the command, which is what runs it', async () => {
         const attached: Attachment[] = [];
         const host = form({ commands: COMMANDS }, a => attached.push(a));
-        kind(host, 'Command');
+        kind(host, 'Instruction');
         await flush();
         (host.querySelector('.pb-pick-open') as HTMLButtonElement).click();
         await flush();
@@ -105,11 +108,28 @@ describe('the second selector reacts to the first (#646)', () => {
         await flush();
         (host.querySelector('.pb-action--primary') as HTMLButtonElement).click();
         expect(attached).toHaveLength(1);
-        expect(attached[0].value).toBe('speckit.companion.after-implement');
-        expect(attached[0].hookType).toBe('command');
+        expect(attached[0].hookType).toBe('prompt');
+        expect(attached[0].value).toBe('Run `/speckit.companion.after-implement` now.');
     });
 
-    it('still takes a name typed by hand', async () => {
+    it('leaves what it wrote editable, because it is only a sentence', async () => {
+        const attached: Attachment[] = [];
+        const host = form({ commands: COMMANDS }, a => attached.push(a));
+        kind(host, 'Instruction');
+        await flush();
+        (host.querySelector('.pb-pick-open') as HTMLButtonElement).click();
+        await flush();
+        (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
+        await flush();
+        const area = host.querySelector('.pb-input--area') as HTMLTextAreaElement;
+        area.value = 'Run `/speckit.git.commit` now, but only if the tests are green.';
+        area.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+        (host.querySelector('.pb-action--primary') as HTMLButtonElement).click();
+        expect(attached[0].value).toContain('only if the tests are green');
+    });
+
+    it('still takes a name typed by hand for a kind that has one', async () => {
         const attached: Attachment[] = [];
         const host = form({ commands: COMMANDS }, a => attached.push(a));
         kind(host, 'Command');
@@ -120,6 +140,16 @@ describe('the second selector reacts to the first (#646)', () => {
         await flush();
         (host.querySelector('.pb-action--primary') as HTMLButtonElement).click();
         expect(attached[0].value).toBe('npm run lint-spec');
+        expect(attached[0].hookType).toBe('command');
+    });
+
+    it('keeps type-to-filter for the kinds that had it', async () => {
+        const host = form({ skills: ['create-pr', 'verify-code-review'] });
+        kind(host, 'Skill');
+        await flush();
+        expect(Array.from(host.querySelectorAll('datalist option'))
+            .map(el => el.getAttribute('value')))
+            .toEqual(['create-pr', 'verify-code-review']);
     });
 
     it('says the list is empty rather than showing an empty control', async () => {
@@ -131,11 +161,22 @@ describe('the second selector reacts to the first (#646)', () => {
             .toContain('Nothing installed to choose from');
     });
 
-    it('shows no picker for an instruction, whose value is prose', async () => {
+    it('offers no command list under the shell-command kind', async () => {
+        // A `command` hook renders as a bash fence, so offering a spec-kit
+        // command there would write a hook that runs nothing.
+        const host = form({ commands: COMMANDS });
+        kind(host, 'Command');
+        await flush();
+        expect(host.querySelector('.pb-pick-open')).toBeNull();
+    });
+
+    it('opens the list toward the panel, not off its edge', async () => {
         const host = form({ commands: COMMANDS });
         kind(host, 'Instruction');
         await flush();
-        expect(host.querySelector('.pb-pick-open')).toBeNull();
-        expect(host.querySelector('.pb-input--area')).not.toBeNull();
+        (host.querySelector('.pb-pick-open') as HTMLButtonElement).click();
+        await flush();
+        expect(host.querySelector('.pb-menu-list')?.className)
+            .toContain('pb-menu-list--right');
     });
 });

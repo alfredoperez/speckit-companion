@@ -116,7 +116,13 @@ def stock_hooks(project_root: str, command: str) -> list:
 
     out = []
     for when in cc.WHENS:
-        for entry in hooks.get(f"{when}_{command}") or []:
+        entries = hooks.get(f"{when}_{command}")
+        # A key holding a scalar is not a list of hooks. Iterating it raised
+        # straight out of here and took the whole board down for a registry
+        # nobody could have hand-checked.
+        if not isinstance(entries, (list, tuple)):
+            continue
+        for entry in entries:
             if not isinstance(entry, dict):
                 continue
             # Absent `enabled` means enabled, matching the command bodies.
@@ -182,23 +188,32 @@ def available_hook_commands(project_root: str) -> list:
         seen[command] = entry
         out.append(entry)
 
+    hooks = None
     try:
         path = os.path.join(project_root, EXTENSIONS_REL)
         if os.path.isfile(path):
             with open(path, encoding="utf-8") as fh:
                 registry = cc.load_yaml(fh.read()) or {}
             hooks = registry.get("hooks")
-            if isinstance(hooks, dict):
-                for key, entries in hooks.items():
-                    for entry in entries or []:
-                        if not isinstance(entry, dict):
-                            continue
-                        if entry.get("enabled") is False:
-                            continue
-                        add(entry.get("command"), entry.get("description"),
-                            entry.get("extension"), str(key))
     except (ValueError, SystemExit, OSError, AttributeError, TypeError):
-        pass  # a registry nobody can read offers nothing, and fails nothing
+        hooks = None  # a registry nobody can read offers nothing, and fails nothing
+
+    if isinstance(hooks, dict):
+        for key, entries in hooks.items():
+            # Per key, so one malformed value costs its own key and not every
+            # command declared after it. Guarding the whole loop instead made
+            # the result depend on where in the file the bad key sat, and made
+            # the picker disagree with the board drawn beside it.
+            try:
+                for entry in entries or []:
+                    if not isinstance(entry, dict):
+                        continue
+                    if entry.get("enabled") is False:
+                        continue
+                    add(entry.get("command"), entry.get("description"),
+                        entry.get("extension"), str(key))
+            except (ValueError, SystemExit, OSError, AttributeError, TypeError):
+                continue
 
     try:
         with open(os.path.join(EXT, "extension.yml"), encoding="utf-8") as fh:

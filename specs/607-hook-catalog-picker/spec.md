@@ -78,7 +78,9 @@ An offered command carries where it normally attaches, so someone who does not k
 - **FR-008**: A command registered for more than one step MUST be offered once.
 - **FR-009**: An unreadable or absent registry MUST leave the form working, offering whatever else could be read.
 - **FR-010**: A kind with nothing to offer MUST say so rather than present an empty control.
-- **FR-011**: The instruction kind MUST NOT show a second selector, because its value is prose.
+- **FR-011**: The offered commands MUST attach as something that actually dispatches them. A hook whose value is rendered as a shell line MUST NOT be offered a command the shell cannot run.
+- **FR-014**: An offered entry MUST leave what it wrote editable, so a picked command can be qualified rather than only accepted.
+- **FR-015**: A kind whose offerings the user may want to filter by typing MUST keep that, alongside the list.
 - **FR-012**: An offered command SHOULD say where it usually attaches, and MUST omit that rather than guess when the source does not say.
 - **FR-013**: Everything the form does today MUST keep working: editing a hook in place, moving it to another boundary, and the note field.
 
