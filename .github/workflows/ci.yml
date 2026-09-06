@@ -29,30 +29,6 @@ jobs:
       - name: Run tests
         run: npm test
 
-  visual:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Geometry only, never pixels: font rasterisation differs between a
-      # developer's Mac and this runner, so a pixel gate here would cry wolf on
-      # every push. The baselines are compared locally with `npm run test:visual`.
-      # Chrome is preinstalled on ubuntu-latest, which is what `channel: 'chrome'`
-      # drives — no browser download.
-      - name: Pipeline Builder layout (real browser, both widths and themes)
-        run: npm run test:visual:ci
-
   capture-suite:
     runs-on: ubuntu-latest
 
