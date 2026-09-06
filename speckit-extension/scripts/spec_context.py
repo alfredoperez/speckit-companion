@@ -341,8 +341,24 @@ def _is_more_advanced(ctx: dict, step: str) -> bool:
 #: Readers (the health check, the fold reader) never set this, so they are never
 #: blocked and never block a writer.
 _WRITE_LOCK_ENABLED = False
-#: One held lock per target path, opened on read and released on publish.
+#: One held lock per target path, taken on the first read and released when the
+#: process exits. A writer script is one short-lived run of one operation, and a
+#: single operation reads and publishes several times (mark-complete materializes
+#: the append-log, then re-reads); releasing on the first publish would drop the
+#: lock in the middle of the very sequence it is guarding.
 _HELD_LOCKS: dict = {}
+_LOCK_POLL_S = 0.01
+#: A holder touches its lock this often, so "old" means abandoned, not busy.
+_LOCK_REFRESH_S = 5.0
+#: Untouched for this long: nobody is coming back for it.
+_LOCK_ABANDONED_S = 30.0
+#: The last bound. Only a holder that keeps touching a lock it never releases
+#: reaches it, and even then the write is recorded rather than refused.
+_LOCK_MAX_WAIT_S = 60.0
+_WARNED_NO_LOCK = False
+#: Stop flags for the per-target refresh threads, so a heartbeat cannot outlive
+#: the hold it is keeping alive.
+_REFRESH_STOPS: dict = {}
 
 
 def enable_write_lock() -> None:
@@ -359,6 +375,9 @@ def _lock_path(target: Path) -> Path:
     puzzled over. It also cannot be the context file itself — publishing renames
     over it, so a later writer would lock a different inode than the one already
     held. A stable per-path file in the system temp directory is neither.
+
+    Mirrored by `specContextLockPath` in the extension's `specContextWriter.ts`;
+    `tests/integration/crossProcessContextLock.spec.ts` pins the two together.
     """
     import hashlib
     import tempfile
@@ -366,40 +385,188 @@ def _lock_path(target: Path) -> Path:
     key = hashlib.sha256(str(target.resolve()).encode("utf-8")).hexdigest()[:32]
     root = Path(tempfile.gettempdir()) / "speckit-companion-locks"
     root.mkdir(parents=True, exist_ok=True)
+    # Sticky and world-writable, the way /tmp itself is: on a shared host the
+    # first user to create this must not lock every other user out of locking.
+    # mkdir's mode is masked by the umask, so it is set explicitly; not owning an
+    # existing directory is fine, the chmod simply fails.
+    try:
+        root.chmod(0o1777)
+    except OSError:
+        pass
     return root / f"{key}.lock"
 
 
+def _warn_no_lock(target: Path, reason: object) -> None:
+    """Say once that this process is writing without the lock. Silence here is
+    how a shared host runs unprotected forever with nothing to show for it."""
+    global _WARNED_NO_LOCK
+    if _WARNED_NO_LOCK:
+        return
+    _WARNED_NO_LOCK = True
+    print(
+        f"[companion] No cross-process write lock for {target} ({reason}). "
+        f"Writes from the editor and the command line can overwrite each other.",
+        file=sys.stderr,
+    )
+
+
+def _owner_is_gone(owner: str) -> bool:
+    """True only when the token's owner is provably dead.
+
+    A lock file is not released by the OS the way an `flock` is, so a crashed
+    writer's lock has to be recognised — but "still working" and "gone" must
+    never be confused, or the reclaim becomes the lost write it exists to
+    prevent. On Windows there is no way to ask (`os.kill` there TERMINATES for
+    any signal but the console ones), so nothing is ever claimed gone and the
+    ceiling is the only bound.
+    """
+    if os.name != "posix":
+        return False
+    head = owner.split(":", 1)[0]
+    if not head.isdigit():
+        return False
+    try:
+        os.kill(int(head), 0)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False
+    return False
+
+
+def _reclaim_lock(lock: Path, owner: str | None) -> None:
+    """Remove the lock, but only while it still carries the token we saw."""
+    try:
+        if owner is not None and _read_lock_owner(lock) != owner:
+            return
+        lock.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def _read_lock_owner(lock: Path) -> str | None:
+    try:
+        return lock.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def _lock_is_abandoned(lock: Path) -> bool:
+    """True when nothing has touched the lock for longer than a working holder
+    would leave it — the difference between a crashed writer and a slow one."""
+    import time
+
+    try:
+        return (time.time() - lock.stat().st_mtime) >= _LOCK_ABANDONED_S
+    except OSError:
+        return False
+
+
+def _start_refresh(target: Path, lock: Path, token: str) -> None:
+    """Touch the lock while we hold it, so age means abandoned rather than busy.
+
+    A capture that genuinely takes a while — a big fold, a slow materialize — is
+    then never reclaimed out from under its work, including by a waiter that
+    cannot see its process at all (a different pid namespace sharing one temp
+    dir). The thread is a daemon and stops as soon as the lock stops being ours,
+    so it cannot outlive the hold.
+    """
+    import threading
+
+    stop = threading.Event()
+
+    def beat() -> None:
+        while not stop.wait(_LOCK_REFRESH_S):
+            if _read_lock_owner(lock) != token:
+                return
+            try:
+                os.utime(lock, None)
+            except OSError:
+                return
+
+    threading.Thread(target=beat, daemon=True).start()
+    _REFRESH_STOPS[str(target)] = stop
+
+
+def _stop_refresh(target: Path) -> None:
+    stop = _REFRESH_STOPS.pop(str(target), None)
+    if stop is not None:
+        stop.set()
+
+
 def _acquire_lock(target: Path) -> None:
+    """Take the cross-process write lock for `target`, or carry on without it.
+
+    The lock is the lock file's existence, created O_CREAT|O_EXCL and holding
+    `<pid>:<nonce>` — the one primitive the extension can take too, since Node
+    has no `flock` without a native module, and a lock only one of the two
+    writers can take is not a lock (#629). A holder that has died, or has stopped
+    touching its lock, is reclaimed; one that is still working is waited for
+    however long it works, up to `_LOCK_MAX_WAIT_S` so a capture can never hang.
+    """
     if not _WRITE_LOCK_ENABLED or str(target) in _HELD_LOCKS:
         return
-    try:
-        import atexit
-        import fcntl
+    import atexit
+    import secrets
+    import time
 
-        fh = open(_lock_path(target), "w")
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        _HELD_LOCKS[str(target)] = fh
-        # A writer that resolves to "nothing to do" returns without publishing,
-        # so the release has a second home at process exit.
-        atexit.register(_release_lock, target)
-    except Exception:  # noqa: BLE001 — locking is best-effort, never fatal
-        # No fcntl, an unwritable temp dir, a filesystem without locking: fall
-        # back to the previous behaviour rather than refusing to record anything.
-        pass
+    try:
+        lock = _lock_path(target)
+    except OSError as exc:  # unwritable temp dir: record rather than refuse
+        _warn_no_lock(target, exc)
+        return
+    token = f"{os.getpid()}:{secrets.token_hex(8)}"
+    give_up_at = time.monotonic() + _LOCK_MAX_WAIT_S
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        except FileExistsError:
+            pass
+        except OSError as exc:
+            _warn_no_lock(target, exc)
+            return
+        else:
+            with os.fdopen(fd, "w") as fh:
+                fh.write(token)
+            _HELD_LOCKS[str(target)] = token
+            _start_refresh(target, lock, token)
+            # Released when this process exits, never on the first publish: one
+            # operation reads and publishes more than once.
+            atexit.register(_release_lock, target)
+            return
+
+        owner = _read_lock_owner(lock)
+        if owner is not None and _owner_is_gone(owner):
+            _reclaim_lock(lock, owner)
+            continue
+        if _lock_is_abandoned(lock):
+            print(
+                f"[companion] Reclaimed a write lock untouched for "
+                f"{_LOCK_ABANDONED_S}s on {target}.",
+                file=sys.stderr,
+            )
+            _reclaim_lock(lock, owner)
+            continue
+        if time.monotonic() >= give_up_at:
+            print(
+                f"[companion] Waited {_LOCK_MAX_WAIT_S}s for the write lock on "
+                f"{target}; recording without it.",
+                file=sys.stderr,
+            )
+            return
+        time.sleep(_LOCK_POLL_S)
 
 
 def _release_lock(target: Path) -> None:
-    fh = _HELD_LOCKS.pop(str(target), None)
-    if fh is None:
+    """Drop the lock, but only while it still carries our token — a lock a
+    waiter reclaimed now belongs to that waiter, and deleting it would hand the
+    record to two writers at once."""
+    token = _HELD_LOCKS.pop(str(target), None)
+    if token is None:
         return
+    _stop_refresh(target)
     try:
-        import fcntl
-
-        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
-    except Exception:  # noqa: BLE001
-        pass
-    try:
-        fh.close()
+        _reclaim_lock(_lock_path(target), token)
     except OSError:
         pass
 
@@ -407,8 +574,9 @@ def _release_lock(target: Path) -> None:
 def read_ctx(target: Path) -> dict:
     """Read the existing context, tolerating absence or corruption.
 
-    When this process is a writer, the read also takes the lock and holds it
-    until the matching publish, so the whole read-modify-write is one turn.
+    When this process is a writer, the first read takes the lock and the process
+    holds it until it exits, so its whole operation — however many reads and
+    publishes that is — is one turn against any other writer.
     """
     _acquire_lock(target)
     if target.is_file():
@@ -485,32 +653,31 @@ def atomic_write(target: Path, ctx: dict) -> None:
     concurrent writers truncate each other's temp and publish half a document,
     which the reader then swallows as `{}`), a flush to disk before the rename,
     and no debris when the write fails.
+
+    Publishing does NOT drop the write lock: one operation reads and publishes
+    several times (mark-complete folds the append-log, then re-reads and writes
+    again), so releasing here would open the middle of the sequence the lock
+    exists to close. The hold ends when the writer process exits.
     """
     _guard_append_only(target, ctx)
     try:
-        try:
-            import companion_config as cc
+        import companion_config as cc
 
-            cc.atomic_write_text(str(target),
-                                 json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
-            return
-        except ImportError:
-            pass
-        tmp = target.with_suffix(target.suffix + ".tmp")
+        cc.atomic_write_text(str(target),
+                             json.dumps(ctx, indent=2, ensure_ascii=False) + "\n")
+        return
+    except ImportError:
+        pass
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp, target)
+    except OSError:
         try:
-            tmp.write_text(json.dumps(ctx, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-            os.replace(tmp, target)
+            tmp.unlink(missing_ok=True)  # don't litter on a failed write
         except OSError:
-            try:
-                tmp.unlink(missing_ok=True)  # don't litter on a failed write
-            except OSError:
-                pass
-            raise
-    finally:
-        # One release, after the publish or its failure, on whichever path ran.
-        # Releasing in a finally attached to the first try let the fallback path
-        # publish unlocked, which is the window the lock exists to close.
-        _release_lock(target)
+            pass
+        raise
 
 
 def canonical_log(ctx: dict) -> list:

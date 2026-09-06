@@ -11,7 +11,9 @@
  * `history[]` on every render. See ViewerState.stepHistory.
  */
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     completedStatusForStep,
@@ -24,12 +26,228 @@ import {
 import { SPEC_CONTEXT_FILENAME, normalizeSpecContext } from './specContextReader';
 import { hasStepStart } from './historyHelpers';
 
+/**
+ * The cross-process write lock the capture scripts also take (#629). The lock is
+ * the lock file's existence, created O_CREAT|O_EXCL and holding `<pid>:<nonce>`.
+ * A waiter reclaims it only from a holder that is provably gone or has stopped
+ * touching it; a working holder is waited for however long it works. Protocol
+ * and rationale: `docs/capture-and-timing.md`.
+ */
+const LOCK_POLL_MS = 10;
+/** A holder touches its lock this often, so "old" means abandoned, not busy. */
+const LOCK_REFRESH_MS = 5_000;
+/** Untouched for this long: nobody is coming back for it. */
+const LOCK_ABANDONED_MS = 30_000;
+/** The last bound. Only a holder that keeps touching a lock it never releases reaches it. */
+const LOCK_MAX_WAIT_MS = 60_000;
+
+let warnedLockUnavailable = false;
+
+function warnLockUnavailable(target: string, reason: unknown): void {
+    if (warnedLockUnavailable) {
+        return;
+    }
+    warnedLockUnavailable = true;
+    console.warn(
+        `[spec-context] No cross-process write lock for ${target} (${reason}). Writes from the editor and the command line can overwrite each other.`
+    );
+}
+
+/** Python's `Path.resolve()`: symlinks followed as far as the path exists. */
+function realPath(target: string): string {
+    const abs = path.resolve(target);
+    const trailing: string[] = [];
+    let head = abs;
+    for (;;) {
+        try {
+            return path.join(fs.realpathSync(head), ...trailing);
+        } catch {
+            const parent = path.dirname(head);
+            if (parent === head) {
+                return abs;
+            }
+            trailing.unshift(path.basename(head));
+            head = parent;
+        }
+    }
+}
+
+/**
+ * Where the lock for one `.spec-context.json` lives — deliberately in the temp
+ * directory, never beside the record, which is the user's file. Must stay
+ * identical to `spec_context._lock_path`; `crossProcessContextLock.spec.ts`
+ * pins the two against each other.
+ */
+export function specContextLockPath(target: string): string {
+    const key = crypto
+        .createHash('sha256')
+        .update(realPath(target), 'utf8')
+        .digest('hex')
+        .slice(0, 32);
+    return path.join(os.tmpdir(), 'speckit-companion-locks', `${key}.lock`);
+}
+
+/**
+ * Sticky and world-writable, the way `/tmp` itself is: on a shared host the
+ * first user to create the directory must not lock every other user out of
+ * locking. `mkdir`'s mode is masked by the umask, so it is set explicitly; not
+ * owning an existing directory is fine, the chmod simply fails.
+ */
+async function ensureLockDir(target: string, dir: string): Promise<boolean> {
+    try {
+        await fs.promises.mkdir(dir, { recursive: true });
+    } catch (err) {
+        warnLockUnavailable(target, `${dir} is not usable: ${(err as Error)?.message ?? err}`);
+        return false;
+    }
+    await fs.promises.chmod(dir, 0o1777).catch(() => undefined);
+    return true;
+}
+
+/** The lock file's contents, or null when it cannot be read (gone, or not ours to read). */
+async function readLockOwner(lock: string): Promise<string | null> {
+    try {
+        return await fs.promises.readFile(lock, 'utf-8');
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * True only when the token's owner is provably dead. A lock file is not
+ * released by the OS the way an `flock` is, so a crashed writer's lock has to be
+ * recognised — but "still working" and "gone" must never be confused, or the
+ * reclaim becomes the lost write it exists to prevent.
+ */
+function lockOwnerIsGone(owner: string): boolean {
+    const pid = Number(owner.split(':', 1)[0]);
+    if (!Number.isInteger(pid) || pid <= 0) {
+        return false;
+    }
+    try {
+        process.kill(pid, 0);
+        return false;
+    } catch (err) {
+        return (err as NodeJS.ErrnoException)?.code === 'ESRCH';
+    }
+}
+
+/** Remove the lock, but only while it still carries the token we saw. */
+async function reclaimLock(lock: string, owner: string | null): Promise<void> {
+    try {
+        if (owner !== null && (await readLockOwner(lock)) !== owner) {
+            return;
+        }
+        await fs.promises.unlink(lock);
+    } catch {
+        /* someone else got there first, or it is not ours to remove */
+    }
+}
+
+/** True when nothing has touched the lock for longer than a working holder would leave it. */
+async function lockIsAbandoned(lock: string): Promise<boolean> {
+    try {
+        const { mtimeMs } = await fs.promises.stat(lock);
+        return Date.now() - mtimeMs >= LOCK_ABANDONED_MS;
+    } catch {
+        return false;
+    }
+}
+
+const refreshTimers = new Map<string, NodeJS.Timeout>();
+
+/**
+ * Touch the lock while we hold it, so age means abandoned rather than busy —
+ * a holder this process cannot see as alive (another pid namespace) is then
+ * still never reclaimed out from under its work. The timer is unref'd so it
+ * cannot hold the host open, and stops the moment the lock stops being ours.
+ */
+function startLockRefresh(lock: string, token: string): void {
+    const timer = setInterval(() => {
+        void (async () => {
+            if ((await readLockOwner(lock)) !== token) {
+                stopLockRefresh(lock);
+                return;
+            }
+            const now = new Date();
+            await fs.promises.utimes(lock, now, now).catch(() => stopLockRefresh(lock));
+        })();
+    }, LOCK_REFRESH_MS);
+    timer.unref?.();
+    refreshTimers.set(lock, timer);
+}
+
+function stopLockRefresh(lock: string): void {
+    const timer = refreshTimers.get(lock);
+    if (timer) {
+        clearInterval(timer);
+        refreshTimers.delete(lock);
+    }
+}
+
+/** Returns our token, or null when the write should proceed unlocked. */
+async function acquireContextLock(target: string): Promise<string | null> {
+    const lock = specContextLockPath(target);
+    if (!(await ensureLockDir(target, path.dirname(lock)))) {
+        return null;
+    }
+    const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
+    const giveUpAt = Date.now() + LOCK_MAX_WAIT_MS;
+    for (;;) {
+        try {
+            await fs.promises.writeFile(lock, token, { flag: 'wx' });
+            startLockRefresh(lock, token);
+            return token;
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException)?.code !== 'EEXIST') {
+                warnLockUnavailable(target, (err as Error)?.message ?? err);
+                return null;
+            }
+        }
+        const owner = await readLockOwner(lock);
+        if (owner !== null && lockOwnerIsGone(owner)) {
+            await reclaimLock(lock, owner);
+            continue;
+        }
+        if (await lockIsAbandoned(lock)) {
+            console.warn(
+                `[spec-context] Reclaimed a write lock untouched for ${LOCK_ABANDONED_MS}ms on ${target}.`
+            );
+            await reclaimLock(lock, owner);
+            continue;
+        }
+        if (Date.now() >= giveUpAt) {
+            console.warn(
+                `[spec-context] Waited ${LOCK_MAX_WAIT_MS}ms for the write lock on ${target}; recording without it.`
+            );
+            return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
+    }
+}
+
+async function releaseContextLock(target: string, token: string | null): Promise<void> {
+    if (token) {
+        const lock = specContextLockPath(target);
+        stopLockRefresh(lock);
+        await reclaimLock(lock, token);
+    }
+}
+
 export async function writeSpecContext(
     specDir: string,
     ctx: SpecContext
 ): Promise<void> {
     const target = path.join(specDir, SPEC_CONTEXT_FILENAME);
+    const token = await acquireContextLock(target);
+    try {
+        await publishSpecContext(target, ctx);
+    } finally {
+        await releaseContextLock(target, token);
+    }
+}
 
+async function publishSpecContext(target: string, ctx: SpecContext): Promise<void> {
     // Read existing for unknown-field preservation + append-only enforcement.
     //
     // Belt-and-suspenders: distinguish "file genuinely missing" (ENOENT on
@@ -243,7 +461,7 @@ export async function updateSpecContext(
     // failed predecessor still lets us run.
     const prior = writeChains.get(key) ?? Promise.resolve();
     const result = prior.then(() =>
-        runSpecContextUpdate(specDir, target, mutate, fallback)
+        runSpecContextUpdate(target, mutate, fallback)
     );
     const tail = result.then(
         () => undefined,
@@ -262,26 +480,34 @@ export async function updateSpecContext(
 }
 
 async function runSpecContextUpdate(
-    specDir: string,
     target: string,
     mutate: (ctx: SpecContext) => SpecContext,
     fallback: SpecContext
 ): Promise<SpecContext> {
-    let current: SpecContext;
+    // The lock spans read → mutate → publish, as the capture script's does, so a
+    // script write can't land in the middle and be overwritten by the copy read
+    // before it. It publishes directly rather than through `writeSpecContext`,
+    // which would take the same lock again and deadlock behind itself.
+    const token = await acquireContextLock(target);
     try {
-        const raw = await fs.promises.readFile(target, 'utf-8');
-        current = normalizeSpecContext(JSON.parse(raw));
-    } catch {
-        current = fallback;
+        let current: SpecContext;
+        try {
+            const raw = await fs.promises.readFile(target, 'utf-8');
+            current = normalizeSpecContext(JSON.parse(raw));
+        } catch {
+            current = fallback;
+        }
+        const next = mutate(current);
+        // Back-fill the per-spec profile pin when the context never recorded one (the
+        // spec-kit capture script creates the file without a profile). Seed it from the
+        // project default carried by the fallback so the spec keeps a single shape
+        // through the pipeline; an existing pin is never overwritten.
+        if (!next.profile && fallback.profile) {
+            next.profile = fallback.profile;
+        }
+        await publishSpecContext(target, next);
+        return next;
+    } finally {
+        await releaseContextLock(target, token);
     }
-    const next = mutate(current);
-    // Back-fill the per-spec profile pin when the context never recorded one (the
-    // spec-kit capture script creates the file without a profile). Seed it from the
-    // project default carried by the fallback so the spec keeps a single shape
-    // through the pipeline; an existing pin is never overwritten.
-    if (!next.profile && fallback.profile) {
-        next.profile = fallback.profile;
-    }
-    await writeSpecContext(specDir, next);
-    return next;
 }
