@@ -709,14 +709,16 @@ export const F3MenuOpenTasks: Story = {
 //   G2  the same form with the custom workflow picked
 //   G3  the spec that pick produced, its step rail built from that workflow
 //
-// The three cards are what `buildWorkflowChoices` produces: every workflow
-// with its description, the two built-ins plus whatever `speckit.customWorkflows`
-// declares. "Discuss First" is the custom one, carried over verbatim from the
-// existing SpecEditor/CreateSpec MultiWorkflowChoice story so the catalog and
-// the clip describe the same fixture.
+// The three dropdown rows are what `buildWorkflowChoices` produces: the two
+// built-ins plus whatever `speckit.customWorkflows` declares. "Discuss First"
+// is the custom one, carried over verbatim from the existing
+// SpecEditor/CreateSpec MultiWorkflowChoice story so the catalog and the clip
+// describe the same fixture. Picking it puts its description in the banner
+// under the picker, which is where a description lives now that the row cannot
+// carry one.
 //
-// The Companion card's description is NOT the shipping string. See the file
-// header: the shipping one carries a benchmark number the claim ledger bans.
+// The Companion description is NOT the shipping string. See the file header:
+// the shipping one carries a benchmark number the claim ledger bans.
 
 const CLIP_WORKFLOWS: MockWorkflowChoice[] = [
     {

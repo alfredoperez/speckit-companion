@@ -510,15 +510,13 @@
         "docsStill": null,
         "extraStills": []
       },
-      "unnormalized": [
-        "media/feature-clips/own-workflow/renders/own-workflow_2026-08-28_09-35-34.mp4"
-      ],
+      "unnormalized": [],
       "alt": {
-        "media/web/own-workflow-poster.png": "Picking a pipeline in Create New Spec: every workflow listed with its description, the two that ship in the box, picking the one you defined, and the step rail built from the workflow the spec recorded",
-        "media/web/own-workflow-x16x9.png": "Picking a pipeline in Create New Spec: every workflow listed with its description, the two that ship in the box, picking the one you defined, and the step rail built from the workflow the spec recorded"
+        "media/web/own-workflow-poster.png": "Create New Spec with its workflow picker set to SpecKit, above the Feature Brief field",
+        "media/web/own-workflow-x16x9.png": "Create New Spec with its workflow picker set to SpecKit, above the Feature Brief field"
       },
       "referencedBy": {},
-      "notes": "All three shots are captured UI, nothing is drawn. Discuss First is the workflow defined in settings; the two built-ins beside it are stock SpecKit and SpecKit Companion."
+      "notes": "All three shots are captured UI, nothing is drawn. Discuss First is the workflow defined in settings. The picker is a native select, so only the chosen workflow is on screen and the clip shows the pick happening rather than the three side by side."
     },
     {
       "id": "workflow-documents",

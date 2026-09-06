@@ -4,7 +4,9 @@ The clip for the pick-a-pipeline guide: a workflow you defined in `speckit.custo
 
 ## Why it exists
 
-The customization story is usually told in settings JSON, which shows the input and never the payoff. This composition shows the payoff twice: the custom workflow standing in the same list as stock SpecKit and SpecKit Companion, each with its own description, and then the created spec's pipeline rail leading with the Discussion step that only the custom workflow declares. Nothing here is drawn: all three shots are real captured UI.
+The customization story is usually told in settings JSON, which shows the input and never the payoff. This composition shows the payoff twice: your own workflow picked in the same control the two built-ins live in, carrying the description you wrote for it, and then the created spec's pipeline rail leading with the Discussion step that only that workflow declares. Nothing here is drawn: all three shots are real captured UI.
+
+**The picker is a native `<select>`, so only the chosen workflow is ever on screen.** The earlier cut of this clip framed a stack of radio cards and could show all three workflows at once; the shipped form cannot, and a native dropdown's open list is OS chrome with no DOM to capture. So the pick itself carries the beat that the side-by-side shot used to: the dissolve to the picked state runs under the marker while it settles, and the row is seen changing from SpecKit to Discuss First rather than the two being compared.
 
 ## Source captures
 
@@ -12,8 +14,8 @@ Three captures share one capture space (1224 x 776 CSS px at DPR 2, so 2448 x 15
 
 | Shot | File | State on screen |
 |---|---|---|
-| sh0 | `ow-choice.png` | Create New Spec with three workflows listed: SpecKit, SpecKit Companion, and Discuss First. SpecKit is selected. |
-| sh1 | `ow-picked.png` | The same dialog with Discuss First selected. |
+| sh0 | `ow-choice.png` | Create New Spec with the workflow picker reading SpecKit, the default. No banner under it: both built-ins are installed and stock SpecKit has nothing extra to say. |
+| sh1 | `ow-picked.png` | The same form with Discuss First picked, and the banner under the picker carrying that workflow's own description. |
 | sh2 | `ow-rail.png` | The created spec in the viewer. The pipeline rail reads Discussion, Specification, Plan, Tasks, with Discussion and Specification both closed. |
 
 Discuss First is the custom workflow: it is the only one of the three whose rail starts with a Discussion step, which is what makes the last beat legible.
@@ -24,15 +26,15 @@ Discuss First is the custom workflow: it is the only one of the three whose rail
 
 | t | Region | Label |
 |---|---|---|
-| 3 | workflow list, label and all three cards | Chosen at creation, then every step follows it |
-| 6.3 | the two built-in workflow cards | Both are there before you configure anything |
-| 9.5 | all three workflow cards | The third one came from your settings file |
+| 3 | workflow row, label and picker | Chosen at creation, then every step follows it |
+| 6.3 | the picker itself, now reading Discuss First | The one your settings file named, in the same list |
+| 9.5 | the banner under the picker | Its description comes along with it |
 | 12.9 | pipeline rail on the created spec | Your own phase becomes a step of the run |
 | 16.9 | rest | — |
 
-The first three beats hold one camera and move only the marker, because the dialog's cards run nearly the full width of the capture and there is no honest punch-in left to make. Beat 3 widens back out to hold all three cards rather than ringing the picked one, so the selected border is seen moving from the first card to the third instead of disappearing under the marker. Beat 4 is the only camera move: a 1.7x push onto the rail, clamped so the frame never sees past the capture edge.
+The first three beats hold one camera and move only the marker. The 800 px form column caps the fit at 1.43x and the vertical clamp pins the frame to the top of the capture, so the title, the picker, the banner space beneath it and the Feature Brief label are all in one shot and there is no honest punch-in left to make. Beat 4 is the only camera move: a 1.7x push onto the rail, clamped so the frame never sees past the capture edge.
 
-Cuts: the pick dissolves over 0.3 s at t=7.4, right under the marker handoff, so the selection border moves rather than pops. The created spec dissolves in over 0.7 s at t=10.6 and lands just as the marker settles on the rail. The last dissolve, 0.9 s at t=14.8, returns to frame zero's shot while the camera pulls back to rest, so the loop closes.
+Cuts: the pick dissolves over 0.4 s at t=6.4, while beat 2's marker is still settling, so the picker is read as Discuss First by the time that caption lands. The created spec dissolves in over 0.7 s at t=12.7 and lands just as the marker settles on the rail. The last dissolve, 0.9 s at t=16.9, returns to frame zero's shot while the camera pulls back to rest, so the loop closes.
 
 ## Render
 
@@ -48,7 +50,7 @@ ffmpeg -i <render>.mp4 -i pal.png -lavfi "fps=14,scale=960:-1:flags=lanczos[x];[
 gifsicle -O3 --lossy=30 --loop raw.gif -o docs/screenshots/generated/own-workflow.gif
 ```
 
-- Frame zero is the Create New Spec dialog at rest with the workflow list in view, which is the pose a reader sees before the clip starts.
-- Loop verified: frame 0 and frame 497 are the same rest pose. Mean absolute difference 0.22 per channel out of 255, PSNR 49.6 dB, 1272 of 2.1 M pixels differing by more than 8, all of them on text edges. That is H.264 quantization noise, not motion.
-- Render: 498 frames, 16.6 s, 2.4 MB at 1836 x 1164, 30 fps.
+- Frame zero is the Create New Spec form at rest with the workflow picker in view, which is the pose a reader sees before the clip starts.
+- Loop verified: frame 0 and frame 560 are the same rest pose. Mean absolute difference 0.12 per channel out of 255, PSNR 52.9 dB, 431 of 2.1 M pixels differing by more than 8, all of them on text edges. That is H.264 quantization noise, not motion.
+- Render: 561 frames, 18.7 s, 2.6 MB at 1836 x 1164, 30 fps.
 - `hyperframes check`: 0 errors, 0 warnings, 0 layout issues across 9 samples.

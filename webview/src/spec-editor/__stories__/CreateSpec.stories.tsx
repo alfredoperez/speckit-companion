@@ -20,7 +20,8 @@ const meta: Meta = {
                     'The Auto button (hands-off pipeline) is invoked here — the spec viewer never opens at status=draft. ' +
                     'Auto shows only when a workflow with a hands-off orchestrator (SpecKit Companion) is selected; ' +
                     'with stock SpecKit only Create Spec appears. ' +
-                    'The title and subtitle explain the task, the workflow selector sits on its own right-aligned row above the field, ' +
+                    'The title and subtitle explain the task, the workflow picker is a native select on its own row above the field, ' +
+                    'a banner under it carries whatever the dropdown row cannot (the Companion pitch while Companion is missing, or a custom workflow’s description), ' +
                     'and the empty field carries all the guidance in its placeholder — including that a Jira or GitHub link on its own is enough.',
             },
         },
@@ -84,7 +85,7 @@ export const StockWorkflow: Story = {
 };
 
 export const MultiWorkflowChoice: Story = {
-    name: 'Multi-Workflow Choice (descriptions on cards)',
+    name: 'Multi-Workflow Choice (custom description in the banner)',
     render: () => (
         <CreateSpecMock
             initialContent="Add a quiet-footer mode to the spec viewer."
@@ -93,7 +94,7 @@ export const MultiWorkflowChoice: Story = {
                 { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: true },
                 { name: 'discuss-first', displayName: 'Discuss First', description: 'Talk the shape through before any document is written.', installed: true },
             ]}
-            selectedWorkflow="companion"
+            selectedWorkflow="discuss-first"
         />
     ),
 };
@@ -112,13 +113,16 @@ export const CompanionNotInstalled: Story = {
     ),
 };
 
-export const TrialAffordance: Story = {
-    name: 'Trial (Try Companion for this spec)',
+export const CompanionSelectedNotInstalled: Story = {
+    name: 'Companion Selected but Missing (primary becomes Install)',
     render: () => (
         <CreateSpecMock
             initialContent="Add a quiet-footer mode to the spec viewer."
-            showAuto={false}
-            showTrial
+            workflows={[
+                { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true },
+                { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: false },
+            ]}
+            selectedWorkflow="companion"
         />
     ),
 };
