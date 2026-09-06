@@ -48,6 +48,8 @@ export interface PipelineHook {
     index: number;
     /** The extra line a skill hook may carry. */
     note: string;
+    /** Written by this project and not running, because `shipped` is in force. */
+    parked?: boolean;
 }
 
 /** An alternative for one node's slot: same place in the run, different words. */
@@ -211,10 +213,23 @@ export interface PipelineStep {
 
 /** The named configurations this project can switch between. */
 export interface PipelineWorkflows {
-    /** Every workflow, `shipped` first — that one is always offered and has no file. */
+    /**
+     * Every workflow this project can run. `""` is its own `companion.yml`,
+     * offered whenever that file exists so a switch to `shipped` can be undone;
+     * `shipped` is always offered and has no file.
+     */
     available: string[];
     /** Which one `companion.yml` selects. Empty means companion.yml itself. */
     active: string;
+    /**
+     * The configuration `shipped` is bypassing. Absent when nothing is parked.
+     *
+     * No count of what is drawn: the webview derives that from the board, and a
+     * second number from a second source is how the header came to say one
+     * thing while the tally beside it said another. What only the resolver
+     * knows is what could not be placed at all, and what it warned about.
+     */
+    parked?: { file: string; unplaceable: number; warnings: string[] } | null;
 }
 
 /** A whole configuration Companion ships as a starting point for a new workflow. */

@@ -384,7 +384,7 @@ def check_workflow(project_root: str, name: str) -> None:
     panel said "now running 'bugfx'", and from then on every build and every
     draw of the board failed on a configuration that pointed at nothing.
     """
-    if name.strip() == "shipped":
+    if name.strip() in ("", "shipped"):
         return
     path = os.path.join(project_root, ".specify", "companion", "workflows",
                         f"{name.strip()}.yml")
@@ -405,15 +405,28 @@ def set_workflow(text: str, name: str) -> str:
     Switching workflows is one key, at the top of the file, because that is what
     a person reviewing the diff needs to see: which way of working this project
     is on. The rest of `companion.yml` is left exactly as it is.
-    """
-    if not name.strip():
-        raise ConfigWriteError("a workflow needs a name")
 
+    An empty name takes the key back out. Absent means `companion.yml` itself,
+    so a project that parked its configuration behind `workflow: shipped` gets
+    it back by removing one line — nothing it wrote is touched either way.
+    """
     lines = text.splitlines()
     trailing_newline = text.endswith("\n") or not text
-    line = f"workflow: {_quote(name.strip())}"
-
     at = _find_key(lines, "workflow", 0, len(lines), 0)
+
+    if not name.strip():
+        if at is None:
+            return text
+        # The one line, and the blank line it was inserted with. Not the span
+        # `_block_end` would give: that steps over comments, so a note written
+        # under the selection would go out with it.
+        stop = at + 1
+        if stop < len(lines) and not lines[stop].strip():
+            stop += 1
+        out = lines[:at] + lines[stop:]
+        return "\n".join(out) + ("\n" if trailing_newline and out else "")
+
+    line = f"workflow: {_quote(name.strip())}"
     if at is not None:
         out = lines[:at] + [line] + lines[_block_end(lines, at, 0, len(lines)):]
         return "\n".join(out) + ("\n" if trailing_newline else "")
@@ -1037,7 +1050,8 @@ def config_path(project_root: str) -> str:
     if active == build.SHIPPED_WORKFLOW:
         raise ConfigWriteError(
             "this project is on \"As it ships\", which is Companion unchanged and "
-            "cannot be edited — switch to a workflow, or create one, first")
+            "cannot be edited — go back to this project's own pipeline, switch to "
+            "a workflow, or create one")
     return os.path.join(project_root, build.WORKFLOWS_REL, f"{active}.yml")
 
 
@@ -1065,7 +1079,8 @@ def main() -> int:
                     help="replace the hook at this index under --when/--anchor")
     ap.add_argument("--remove-index", type=int,
                     help="remove the hook at this index under --when/--anchor")
-    ap.add_argument("--workflow", help="switch to this workflow")
+    ap.add_argument("--workflow",
+                    help="switch to this workflow; empty switches back to companion.yml")
     ap.add_argument("--new-workflow", help="create this workflow and switch to it")
     ap.add_argument("--seed-from", default="",
                     help="workflow to copy when creating one, or preset:<name>")
@@ -1097,7 +1112,7 @@ def main() -> int:
 
         # The selection lives in companion.yml; everything else lives in
         # whichever file that selection points at.
-        path = (selection_path if (args.workflow or args.new_workflow)
+        path = (selection_path if (args.workflow is not None or args.new_workflow)
                 else config_path(project))
         if args.new_workflow:
             created = new_workflow(project, args.new_workflow, args.seed_from)
@@ -1105,10 +1120,12 @@ def main() -> int:
             print(f"[config] created {os.path.relpath(created, project)} and switched to it")
             return 0
 
-        if args.workflow:
+        if args.workflow is not None:
             check_workflow(project, args.workflow)
             save_config(path, set_workflow(read_config(path), args.workflow))
-            print(f"[config] now running '{args.workflow}'")
+            print("[config] now running "
+                  + (f"'{args.workflow}'" if args.workflow.strip()
+                     else "this project's own companion.yml"))
             return 0
 
         if args.remove_index is not None:

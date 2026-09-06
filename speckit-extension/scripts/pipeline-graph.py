@@ -188,6 +188,10 @@ def _shipped_name(command: str, node_id: str) -> str:
 def _hook(entry: dict) -> dict:
     hook = entry["hook"]
     return {
+        # Written by this project and not running: `workflow: shipped` bypasses
+        # the configuration rather than removing it, so the hook is drawn where
+        # it would attach instead of vanishing with nothing to say it had.
+        "parked": bool(entry.get("parked")),
         "when": entry["when"],
         "type": hook.get("type"),
         # Where this hook lives in the configuration, so the panel can edit or
@@ -236,19 +240,53 @@ def _sequence(commands: list) -> list:
     return ranked + [c for c in loose if c not in placed]
 
 
+#: Warnings from resolving the bypassed configuration. A running config surfaces
+#: its warnings; a parked one used to eat them, so a typo'd anchor vanished.
+_PARKED_WARNINGS: list = []
+
+
+def _parked_hooks(project_root: str) -> dict:
+    """The project's own hooks, by command, while `shipped` is bypassing them.
+
+    Resolved before the live plan, because planning sets the phase grouping in
+    force and the parked configuration may group its steps differently.
+    """
+    parked = build._read_yaml(
+        os.path.join(project_root, build.CONFIG_REL), build.CONFIG_REL)
+    parked.pop("workflow", None)
+    if not parked:
+        return {}
+    try:
+        plan, warnings = build.plan_build(parked)
+        _PARKED_WARNINGS.clear()
+        _PARKED_WARNINGS.extend(warnings or [])
+    except Exception:
+        # Any failure, not only a refusal. A file that parses as YAML but is the
+        # wrong shape raises an ordinary exception, and letting that out took the
+        # whole board down for the one project most likely to hit it: the one
+        # that picked the shipped pipeline BECAUSE its own config was broken.
+        return {}
+    return {command: entry["hooks"] for command, entry in plan.items()}
+
+
 def build_graph(project_root: str) -> dict:
     use_project_nodes(project_root)
     build.use_project_hook_nodes(project_root)
     config = build.load_config(project_root)
+    active = build.active_workflow(project_root)
+    parked = (_parked_hooks(project_root)
+              if active == build.SHIPPED_WORKFLOW else {})
     plan, warnings = build.plan_build(config)
     templates = build.plan_templates(config, project_root)
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
 
     own_steps = set(project_commands())
     steps = []
+    drawn_parked = 0
     for command in _sequence(decomposed_commands()):
         entry = plan[command]
-        hooks = entry["hooks"]
+        hooks = entry["hooks"] + [
+            dict(h, parked=True) for h in parked.get(command, [])]
         phases = entry.get("phases") or []
 
         pinned = assemble.movability(command, entry["order"])
@@ -278,6 +316,11 @@ def build_graph(project_root: str) -> dict:
 
         order = entry["order"]
         template = templates.get(command)
+        step_parked = [h for h in hooks if h.get("parked") and (
+            h["anchor"] == command
+            or any(h["anchor"] == p["name"] for p in drawn_phases)
+            or any(h["anchor"] == n for p in phases for n in p["nodes"]))]
+        drawn_parked += len(step_parked)
         steps.append({
             "name": command,
             # Stock spec-kit's own extension hooks, which a Companion run fires
@@ -333,7 +376,7 @@ def build_graph(project_root: str) -> dict:
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],
                 "reordered": order != default and not set(order) ^ set(default),
-                "hooks": len(hooks),
+                "hooks": len(entry["hooks"]),
                 "decisions": entry.get("decisionsChanged") or [],
                 "replaced": entry.get("replaced") or [],
                 "phases": entry.get("phasesChanged") or [],
@@ -350,6 +393,11 @@ def build_graph(project_root: str) -> dict:
         for s in steps
     )
     workflows = build.available_workflows(project_root)
+    # The project's own configuration is a choice like any other, so switching
+    # to `shipped` can be undone from the same picker that made it. Without this
+    # a project with no named workflows had no way back at all.
+    own = ([""] if os.path.isfile(os.path.join(project_root, build.CONFIG_REL))
+           else [])
     choices = {
         "skills": build.available_skills(project_root),
         "nodes": build.available_hook_nodes(project_root),
@@ -361,14 +409,26 @@ def build_graph(project_root: str) -> dict:
         # question is "which of these is closest?" rather than a blank file.
         "presets": build.available_presets(),
     }
-    active = build.active_workflow(project_root)
     return {
         "steps": steps,
         "workflows": {
             # `shipped` is always offered and is never a file: it is Companion
             # with nothing changed, which is the thing you compare against.
-            "available": [build.SHIPPED_WORKFLOW] + workflows,
+            "available": own + [build.SHIPPED_WORKFLOW] + workflows,
             "active": active,
+            # How much of this project is switched off right now, so the panel
+            # can say it rather than draw a pipeline that looks untouched.
+            # No count here: the webview derives what is parked from the board
+            # it draws, and a second number from a second source is how the
+            # header came to say one thing while the tally beside it said
+            # another. What only this side knows is what could not be placed at
+            # all — a hook anchored to something the shipped shape does not
+            # have, and a warning the parked resolve raised.
+            "parked": {
+                "file": build.CONFIG_REL.replace(os.sep, "/"),
+                "unplaceable": max(sum(len(v) for v in parked.values()) - drawn_parked, 0),
+                "warnings": list(_PARKED_WARNINGS),
+            } if parked else None,
         },
         # What a hook can be pointed at in this project, so the form offers
         # names instead of asking you to remember them.
@@ -414,6 +474,20 @@ def main() -> int:
         # The ways out travel with it: an error the panel can only print leaves
         # someone editing YAML by hand, which is the thing this panel replaces.
         print(json.dumps({"error": str(err), "repairs": _repairs(args.project)}))
+        return 0
+    except Exception as err:  # noqa: BLE001
+        # Not a refusal but a crash: a file that parses as YAML and is the wrong
+        # shape underneath. `str(err)` on one of those is a Python sentence
+        # nobody can act on, so the file is named and the shape is described
+        # instead. Catching only the refusal left the panel showing a traceback
+        # with no way out but hand editing, which is what this panel replaces.
+        print(json.dumps({
+            "error": f"{build.CONFIG_REL} is valid YAML but not shaped the way "
+                     f"the builder reads it ({err.__class__.__name__}: {err}). "
+                     "The commonest cause is a block written as a list where a "
+                     "map of names was expected.",
+            "repairs": _repairs(args.project),
+        }))
         return 0
     print(json.dumps(graph, indent=2))
     return 0

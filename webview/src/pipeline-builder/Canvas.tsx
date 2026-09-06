@@ -335,9 +335,10 @@ type HookHome = { name: string; title: string };
 function hookHome(workflow: string): HookHome {
     if (workflow === SHIPPED_WORKFLOW) {
         return {
-            name: 'as shipped',
-            title: 'Companion as it ships, which has no file of its own. '
-                + 'Switch to a workflow, or start one, to change these.',
+            name: 'companion.yml · parked',
+            title: 'This project runs the pipeline as it ships, so nothing in '
+                + '.specify/companion.yml is running. It is still there — switch back to '
+                + 'This project in the header to run it again.',
         };
     }
     const name = workflow ? `${workflow}.yml` : 'companion.yml';
@@ -394,6 +395,19 @@ function bySource(
     return side === 'before' ? [...groups, mine] : [mine, ...groups];
 }
 
+/** One hook of this project's, as a line: which of the four it is, then its value. */
+function HookLine({ hook }: { hook: PipelineHook }) {
+    return (
+        <>
+            <span class="pb-hook-kind">{KIND_LABELS[hook.type]}</span>
+            <span class={hook.type === 'prompt'
+                ? 'pb-hook-name' : 'pb-hook-name pb-hook-name--ref'}>
+                {clip(hook.type === 'command' ? shellName(hook.summary) : hook.summary)}
+            </span>
+        </>
+    );
+}
+
 /**
  * Everything attached to one anchor, in one block.
  *
@@ -445,20 +459,26 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                 <ul class="pb-attached-list">
                                     {source.ours.map((hook, i) => (
                                         <li key={`ours-${i}`}>
-                                            <button class="pb-hook"
-                                                title={`${hook.summary}\n\nClick to edit`}
-                                                onClick={() => onEdit?.(hook)}>
-                                                {/* Which of the four it is: the value alone does not say. */}
-                                                <span class="pb-hook-kind">
-                                                    {KIND_LABELS[hook.type]}
+                                            {hook.parked ? (
+                                                // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
+                                                <span class="pb-hook pb-hook--parked"
+                                                    title={`${hook.summary}\n\nParked — this `
+                                                        + 'project runs the pipeline as it '
+                                                        + 'ships, so this does not run.'}>
+                                                    <HookLine hook={hook} />
+                                                    <span class="pb-hook-parked">parked</span>
+                                                    <span class="sr-only">
+                                                        {`${hook.summary} — parked, not running `
+                                                            + 'while the pipeline is the shipped one'}
+                                                    </span>
                                                 </span>
-                                                <span class={hook.type === 'prompt'
-                                                    ? 'pb-hook-name'
-                                                    : 'pb-hook-name pb-hook-name--ref'}>
-                                                    {clip(hook.type === 'command'
-                                                        ? shellName(hook.summary) : hook.summary)}
-                                                </span>
-                                            </button>
+                                            ) : (
+                                                <button class="pb-hook"
+                                                    title={`${hook.summary}\n\nClick to edit`}
+                                                    onClick={() => onEdit?.(hook)}>
+                                                    <HookLine hook={hook} />
+                                                </button>
+                                            )}
                                         </li>
                                     ))}
                                     {source.theirs.map((hook, i) => (

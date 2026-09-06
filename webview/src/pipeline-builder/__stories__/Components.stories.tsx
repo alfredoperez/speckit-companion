@@ -199,6 +199,33 @@ export const HooksOnANamedWorkflow: Story = {
     ),
 };
 
+/** The pipeline as it ships, with this project's own hooks parked in place. */
+const PARKED = {
+    workflows: {
+        available: ['', 'shipped'], active: 'shipped',
+        parked: { file: '.specify/companion.yml', unplaceable: 0, warnings: [] },
+    },
+};
+
+/**
+ * What this project wrote, drawn where it would attach, and not running.
+ *
+ * `workflow: shipped` bypasses `companion.yml` rather than emptying it, so the
+ * hooks stay on the board — dashed, struck through, and carrying the word,
+ * because a shade of grey in a column of greys is not a state anyone can read.
+ */
+export const HooksParked: Story = {
+    name: 'Hooks · parked while the pipeline runs as it ships',
+    render: () => (
+        <One><Canvas graph={graph([step('implement', IMPLEMENT.phases.map(p => ({
+            ...p,
+            nodes: p.nodes.map(n => ({
+                ...n, hooks: n.hooks.map(h => ({ ...h, parked: true })),
+            })),
+        })), { changes: { ...NO_CHANGES } })], PARKED)} {...CANVAS} /></One>
+    ),
+};
+
 /**
  * Three sources at one anchor, in the order the registry declares them.
  *
@@ -466,6 +493,17 @@ export const HeaderWorkflows: Story = {
             graph={graph([SPECIFY], {
                 workflows: { available: ['shipped', 'bugfix', 'client'], active: 'bugfix' },
             })}
+            buildState="current" busy={false} {...HEAD} /></One>
+    ),
+};
+
+/** Which of the two is running, said in the band rather than left to be inferred. */
+export const HeaderAsShipped: Story = {
+    name: 'Header · running as it ships, with the project parked',
+    render: () => (
+        <One><Header
+            graph={graph([step('specify', SPECIFY.phases, { changes: { ...NO_CHANGES } })],
+                { ...PARKED, configured: false, customised: false })}
             buildState="current" busy={false} {...HEAD} /></One>
     ),
 };

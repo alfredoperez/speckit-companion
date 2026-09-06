@@ -850,8 +850,8 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     cursor: pointer;
 }
 
-/* Not on another extension's: it is read here, never opened. */
-.pb-hook:not(.pb-hook--stock):hover { background: var(--bg-hover); }
+/* Not on another extension's, and not on a parked one: neither opens. */
+.pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):hover { background: var(--bg-hover); }
 
 /* The name, and only the name: the row used to repeat the kind as a lowercase
    word beside the badge that now says it. */
@@ -865,6 +865,24 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-hook-name--ref { font-family: var(--font-mono); }
+
+/* Shape and words, never a dimming: one more grey among greys reads as nothing. */
+.pb-hook--parked {
+    cursor: default;
+    border: 1px dashed var(--border);
+}
+
+.pb-hook--parked .pb-hook-name { text-decoration: line-through; }
+
+.pb-hook-parked {
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-body);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
 
 /* ---- The decision ---- */
 
@@ -2501,4 +2519,17 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     .builder-tools .pb-menu-list {
         max-width: calc(100cqw - var(--space-4) * 2);
     }
+}
+
+/* The whole of a clipped name, for a reader the clip and the tooltip both miss. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }

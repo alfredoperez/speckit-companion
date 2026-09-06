@@ -90,7 +90,10 @@ function tally(count: number, noun: string): string {
  */
 function hookTally(counts: PipelineTotals): string {
     const total = counts.hooks + counts.stockHooks;
-    return total === 0 ? 'no hooks' : tally(total, 'hook');
+    if (total > 0) { return tally(total, 'hook'); }
+    // Parked hooks are drawn and do not run, so "no hooks" over a board holding
+    // ten of them is the same contradiction this tally was written to end.
+    return counts.parked ? 'no hooks running' : 'no hooks';
 }
 
 /**
@@ -113,6 +116,15 @@ function tallyOptions(counts: PipelineTotals): MenuOption[] {
             disabled: true,
             label: `${tally(counts.hooks, 'hook')} yours`,
             note: 'Attached by this project',
+        });
+    }
+    if (counts.parked) {
+        options.push({
+            id: 'parked',
+            disabled: true,
+            label: `${tally(counts.parked, 'hook')} parked`,
+            note: 'Written by this project, kept, and not running while the pipeline '
+                + 'is the shipped one',
         });
     }
     if (counts.stockHooks) {
@@ -207,7 +219,11 @@ export function Header(props: Props) {
     // file and no configuration at all, so keying on the configuration alone
     // let the panel say "Changed · 1 step" and, one line below, that this is
     // the pipeline as it ships.
-    const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0;
+    // What this project wrote and is not running.
+    const onShipped = graph.workflows.active === 'shipped';
+    const parked = onShipped ? graph.workflows.parked : null;
+    const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0
+        && !onShipped;
 
     const workflows = [
         ...graph.workflows.available.map(name => ({
@@ -216,6 +232,7 @@ export function Header(props: Props) {
             // Which one is running was a bold row before; a Menu says it in words.
             note: [
                 name === 'shipped' ? 'Companion with nothing changed' : '',
+                name === '' ? 'Whatever .specify/companion.yml says' : '',
                 name === graph.workflows.active ? 'In force' : '',
             ].filter(Boolean).join(' · ') || undefined,
         })),
@@ -288,7 +305,7 @@ export function Header(props: Props) {
             <div class="builder-facts">
                 {/* Named for what it does, and offered only when there is a file
                     to open — a project running the shipped pipeline has none. */}
-                {graph.configured && (
+                {(graph.configured || onShipped) && (
                     <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
                         Open companion.yml
                     </button>
@@ -321,7 +338,7 @@ export function Header(props: Props) {
                         label="More pipeline actions" title="More"
                         options={[
                             { id: 'step', label: 'Add step' },
-                            ...(graph.configured
+                            ...(graph.configured || onShipped
                                 ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                             { id: 'preview', label: 'Preview build', disabled: busy },
                         ]}
@@ -332,6 +349,46 @@ export function Header(props: Props) {
                         }} />
                 </div>
             </div>
+
+            {/* Running the pipeline as it ships is a choice, and while it is on,
+                everything this project wrote is switched off. Both halves of
+                that have to be on the page: what is running, and the one click
+                back. */}
+            {onShipped && (
+                <div class="builder-notice builder-notice--warning" role="status">
+                    <StatusIcon tone="warning" />
+                    <span>
+                        Running the pipeline <strong>as it ships</strong>. Nothing in{' '}
+                        <code class="builder-notice-file">
+                            {parked?.file ?? '.specify/companion.yml'}
+                        </code>{' '}
+                        {/* One number, from the board the reader is looking at.
+                            Taking it from the resolver instead let the notice
+                            say one thing while the tally beside it said another. */}
+                        is running.{counts.parked
+                            ? ` ${tally(counts.parked, 'hook')} of yours ${counts.parked === 1
+                                ? 'is' : 'are'} parked on the board, kept exactly as written.`
+                            : ''}
+                        {parked?.unplaceable
+                            ? ` ${tally(parked.unplaceable, 'hook')} ${parked.unplaceable === 1
+                                ? 'attaches' : 'attach'} to something the shipped pipeline does`
+                                + ' not have, so there is nowhere to draw it.'
+                            : ''}
+                        {parked?.warnings?.length
+                            ? ` ${parked.warnings.length === 1 ? 'One hook' : 'Some hooks'} could`
+                                + ' not be resolved at all: ' + parked.warnings.join('; ')
+                            : ''}
+                    </span>
+                    {/* The way back is the point of the notice, so it is offered
+                        whenever the shipped pipeline is in force — not only when
+                        something resolved as parked. A config the builder could
+                        not read is the case that most needs it. */}
+                    <button class="builder-link"
+                        onClick={() => props.onSelectWorkflow('')}>
+                        Use this project&rsquo;s pipeline
+                    </button>
+                </div>
+            )}
 
             {/* Nothing said that a change here writes a file, so the first thing
                 a project sees is what the board is and what Build does with it.
