@@ -34,11 +34,15 @@ _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Require
 #: ordinary prose shape; refusing a whole capability over one is not a check, it
 #: is a formatting preference with teeth.
 _BULLET = r"^\s*(?:[-*+]|\d+[.)])\s*"
-_WHEN_RE = re.compile(_BULLET + r"\*{1,2}(WHEN|GIVEN)\*{1,2}", re.IGNORECASE)
+#: The emphasis is optional for the same reason the bullet shape is. A scenario
+#: written `- WHEN x` states its condition as plainly as `- **WHEN** x` does, and
+#: reading it as "this scenario has no condition" is both false and, at error
+#: severity, enough to refuse the fold that would have written it.
+_WHEN_RE = re.compile(_BULLET + r"\*{0,2}(WHEN|GIVEN)\*{0,2}\b", re.IGNORECASE)
 # `AND` continues whichever half came before it, so it is never evidence of an
 # outcome. Counting it as one is how a scenario with a condition and no result
 # passes a check written to catch exactly that.
-_THEN_RE = re.compile(_BULLET + r"\*{1,2}THEN\*{1,2}", re.IGNORECASE)
+_THEN_RE = re.compile(_BULLET + r"\*{0,2}THEN\*{0,2}\b", re.IGNORECASE)
 
 #: Severity decides one thing: whether a fold stops. Nothing else reads it.
 ERROR = "error"

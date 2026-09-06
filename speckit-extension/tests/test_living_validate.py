@@ -188,12 +188,22 @@ class ScenarioBulletsAreMarkdown(unittest.TestCase):
                      ["1. **WHEN** a", "2. **THEN** b"],
                      ["1) **WHEN** a", "2) **THEN** b"],
                      ["  - **WHEN** a", "  - **THEN** b"],
-                     ["- *WHEN* a", "- *THEN* b"]):
+                     ["- *WHEN* a", "- *THEN* b"],
+                     ["- WHEN a", "- THEN b"],
+                     ["- GIVEN a", "- THEN b"],
+                     ["1. WHEN a", "2. THEN b"],
+                     ["- when a", "- then b"]):
             with self.subTest(bullets=pair):
                 self.assertEqual(self._halves(pair), [])
 
     def test_a_missing_half_is_still_caught(self):
         self.assertEqual(self._halves(["+ **WHEN** a"]), ["scenario-missing-half"])
+        self.assertEqual(self._halves(["+ WHEN a"]), ["scenario-missing-half"])
+        self.assertEqual(self._halves(["- THEN b"]), ["scenario-missing-half"])
+
+    def test_a_word_that_merely_starts_with_a_keyword_is_not_one(self):
+        self.assertEqual(self._halves(["- Whenever a", "- Thence b"]),
+                         ["scenario-missing-half"])
 
 
 class TheMarkerCheckIsSkippedWhereItIsNotWanted(unittest.TestCase):
