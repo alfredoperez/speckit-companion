@@ -112,7 +112,7 @@ It checks every registered living spec, and the delta sections of every active f
 | Code | Severity | Raised when |
 |---|---|---|
 | `requirement-without-scenario` | warning | A requirement states a rule and never says how anyone would know it held. |
-| `scenario-missing-half` | error | A scenario has a condition and no outcome, or an outcome and no condition. |
+| `scenario-missing-half` | error | A scenario has a condition and no outcome, or an outcome and no condition. The keywords are recognised with or without emphasis, so `- WHEN …` counts exactly as `- **WHEN** …` does. |
 | `duplicate-requirement` | error | Two requirements in one capability share a heading, which is the key fold-back and coverage both join on. |
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
 | `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
