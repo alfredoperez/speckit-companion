@@ -112,8 +112,11 @@ _ANY_MARKER = re.compile(r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w -]
                          re.MULTILINE)
 
 
-#: The opening marker of any node or phase, and the name it carries.
-_BOUNDARY_NAME = re.compile(r"<!-- speckit-companion:(node|phase) ([\w -]+) -->")
+#: The opening marker of any node or phase, and the name it carries. Whatever
+#: name the wrapper wrote, character for character — a pattern for the name
+#: would drop the hooks of any phase someone called `caps/auth`.
+_BOUNDARY_NAME = re.compile(
+    r"^[ \t]*<!-- speckit-companion:(node|phase) (.+?) -->[ \t]*$", re.MULTILINE)
 
 
 def step_boundaries(body: str) -> tuple:

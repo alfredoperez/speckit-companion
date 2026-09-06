@@ -265,6 +265,7 @@ class AnAmbiguousAnchorIsDrawnOnce(unittest.TestCase):
         self.assertEqual(self.chips(specify), [])
         self.assertTrue(any("no-such-place" in w for w in graph["warnings"]), graph["warnings"])
 
+
 class ABrokenConfigurationStillDraws(unittest.TestCase):
     def test_the_error_arrives_as_data_not_as_a_crash(self):
         # A broken configuration is exactly when someone opens the builder. A
