@@ -1,33 +1,31 @@
 ---
-allowed-tools: Bash(node examples/todo-claude/bench/run-all.mjs:*), AskUserQuestion
-description: Clean + arm the 2 bench variant folders for one size, ready to run in VS Code
+allowed-tools: Bash(node ../speckit-bench/run-all.mjs:*), AskUserQuestion
+description: Reset and arm the three bench cells for one size
 ---
 
 ## Your task
 
-Arm the two per-variant sandbox folders for one feature size so you can run each through the real SpecKit Companion extension in VS Code. The two folders **are** the run folders — no copies.
+Arm the three cells for one feature size so each can be run through the real SpecKit Companion extension. The cells **are** the run folders — there are no copies.
 
 ### 1. Resolve the size
 
-From `$ARGUMENTS` — `easy` | `medium` | `hard`. If missing, ask with **AskUserQuestion** (one question). Don't guess.
+From `$ARGUMENTS` — `easy` | `medium` | `hard` | `oversized`. If missing, ask with **AskUserQuestion** (one question). Don't guess.
 
-### 2. Arm the folders
+### 2. Arm the cells
 
 ```bash
-node examples/todo-claude/bench/run-all.mjs prep --size <size>
+node ../speckit-bench/run-all.mjs prep --sizes <size>
 ```
 
-This resets each of `examples/bench-sandboxes/todo-{speckit,companion}/` to pristine (restores `src/` + `index.html` from the canonical app, clears `specs/`), writes a `.run-meta.json` marker, **prints the paste-able prompt**, and **opens both folders in VS Code** (`code -n` per folder; pass `--no-open` to skip). If a folder is missing, it tells you to run `/bench-sync` first.
+This resets each cell to its git baseline, writes the run marker **into the harness** (never into the cell — the marker names the arm), and prints the paste-able prompt. It does not open editor windows; pass `--open` if you want one per cell.
 
 ### 3. Hand off
 
-The script already printed the prompt and opened the windows. Relay the prompt block to the user as well, then tell them:
+Relay the prompt block to the user, then tell them:
 
-- Two VS Code windows just opened (set the Companion provider to Claude in each). If fewer than two opened, the `code` CLI is missing — open the rest by hand.
-- Run **specify → plan → tasks → implement** in each, through the extension.
-  - `speckit` — plain upstream spec-kit, no companion, NO lifecycle capture. Stock `/speckit.*`. You'll see **no progress tracking** (the point — it's blind).
-  - `companion` — the SpecKit Companion pipeline (`/speckit.companion.*`) with capture on, so the GUI tracks progress/timing.
-- They can run both in parallel (isolated folders) or one at a time.
-- When both are done, run **`/bench-capture <size>`**.
+- The three cells for this size are `conduit-<size>-a`, `-b` and `-c` under `~/dev/projects/`. Which letter is which arm is deliberately not visible from inside a cell; `node ../speckit-bench/run-all.mjs --dry-run` prints the mapping.
+- Run **specify → plan → tasks → implement** in each, through the extension. The stock arm shows no progress tracking — that is the point, it is the blind control.
+- The three can run at the same time; the cells are isolated.
+- When all three are done, run **`/bench-capture <size>`**.
 
-Do **not** drive the pipelines yourself — the user runs them in VS Code. Your job ends after prep prints the instructions.
+Do **not** drive the pipelines yourself — the user runs them. Your job ends after prep prints the instructions.

@@ -25,7 +25,7 @@ import { join, relative } from 'node:path'
 
 import { join as pjoin } from 'node:path'
 
-import { REPO_ROOT, runCaptureEval } from '../lib.mjs'
+import { REPO_ROOT, runCaptureEval } from './ls-helpers.mjs'
 import {
   EVIDENCE_DIR,
   bakeLs1Repo,

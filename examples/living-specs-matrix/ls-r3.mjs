@@ -16,7 +16,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node
 import { join, dirname, relative } from 'node:path'
 import { spawnSync, execFileSync } from 'node:child_process'
 
-import { REPO_ROOT, gitInitCell, gitCommitCellBaseline } from '../lib.mjs'
+import { REPO_ROOT, gitInitCell, gitCommitCellBaseline } from './ls-helpers.mjs'
 import {
   SANDBOX_ROOT,
   EVIDENCE_DIR,

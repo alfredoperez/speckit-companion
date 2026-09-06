@@ -1,33 +1,44 @@
 ---
-allowed-tools: Bash(node examples/todo-claude/bench/run-all.mjs:*), Bash(node examples/todo-claude/bench/sync-templates.mjs:*), Bash(date:*), Bash(git -C examples/bench-sandboxes:*), Agent, Workflow, AskUserQuestion
-description: Agent-driven bench round for one size — drive the 2 variant folders + judge + capture, hands-off
+allowed-tools: Bash(node ../speckit-bench/run-all.mjs:*), Bash(node ../speckit-bench/sync-templates.mjs:*), Bash(date:*), Bash(git -C:*), Agent, Workflow, AskUserQuestion
+description: Agent-driven bench round for one size — drive the three cells, judge, capture
 ---
 
 ## Your task
 
-The **automated** version of the manual `/bench-prep` → run-in-VS-Code → `/bench-capture` loop, for **one size** at a time (the two folders hold one feature at a time). Drives both variant folders via subagents instead of a human in VS Code.
+The automated version of `/bench-prep` → run it → `/bench-capture`, for one size. Driver agents work the cells instead of a person.
 
-Size from `$ARGUMENTS` (`easy`/`medium`/`hard`). Variants: `speckit`, `companion`.
+Size from `$ARGUMENTS` (`easy`/`medium`/`hard`/`oversized`).
 
-> Faithful dispatch: the driver must mimic the GUI, NOT follow raw command bodies. The bench is a trustworthy **relative** comparator (stock vs companion) with capture overhead isolated — it does **not** reproduce a human's absolute GUI wall-clock (agents are faster). See `bench/README.md`.
+> Faithful dispatch: a driver mimics the GUI, it does not follow raw command bodies. The bench is a trustworthy **relative** comparator with capture overhead isolated; it does not reproduce a human's absolute wall clock.
 
-### 1. Ensure folders exist
-`node examples/todo-claude/bench/run-all.mjs --dry-run` — if any folder is MISSING, run `/bench-sync` (or `node examples/todo-claude/bench/sync-templates.mjs`).
+### 1. Check the cells
+
+`node ../speckit-bench/run-all.mjs --dry-run` — if any cell is missing, run `/bench-sync`. Note the three versions it prints; they belong in the final report.
 
 ### 2. Prep
-`node examples/todo-claude/bench/run-all.mjs prep --size <size>` — resets the two folders to pristine + writes their `.run-meta.json`.
 
-### 3. Drive the 2 folders (Workflow, parallel)
-One driver agent per folder (`parallel` of 2). Each works only in its folder `examples/bench-sandboxes/todo-<variant>/`, stamps `startedAt`/`finishedAt` into `.run-meta.json` (via `date -u`), and runs **specify→plan→tasks→implement** the GUI-faithful way (see `bench/driver.mjs`):
-- For EACH step, prepend the **same** GUI preamble both modes get — `buildStepPreamble(step, specDir)` from `bench/driver.mjs` (imports the real renderer from `dist/ai-providers/promptPreamble.js`, so no drift) — then dispatch the step's command.
-  - **speckit** → stock `/speckit.*` command bodies. **No capture script** (stock is blind by design); the preamble's context-update instructions are the only tracking.
-  - **companion** → `/speckit.companion.*` command bodies **+ capture** via `node <repo>/examples/todo-claude/bench/cap.mjs <step> <action>`, run with cwd = the cell. It takes TWO arguments — `specify complete`, `plan start`, `task <TaskID>` — and hits its usage error when given a bare step.
-- After dispatching each step, **wait for it to settle** before advancing — `waitForSettle(cellDir, step)` polls `.spec-context.json` until the step's completed-form status **or any later one** appears (don't fire the next step synchronously). It returns `folded: true` when the status overshot, which happens for two shipped reasons: the fast path folds specify/plan/tasks onto `ready-to-implement`, and mark-complete takes implement to `completed`. **A folded step is already done — do not re-dispatch it, and never steer the size verdict to make steps settle one at a time.** Right-sizing is the feature under measurement; a driver that disables it produces numbers that look valid and are not.
-- Accumulate the time spent in capture into `.run-meta.json` `captureOverheadSec` so the report can isolate it from work time.
-Feature prompt = `bench/prompts/<size>.md` (between the `---` rules); implement the Required affordances exactly. Hard rules: no git, no `npm build`/`test`.
+`node ../speckit-bench/run-all.mjs prep --sizes <size>` — resets the cells and writes their run markers into the harness.
+
+### 3. Drive the three cells (Workflow, parallel)
+
+One driver per cell (`parallel` of 3). Each works only in `~/dev/projects/conduit-<size>-<letter>`, stamps `startedAt`/`finishedAt` into `../speckit-bench/runs-meta/conduit-<size>-<letter>.json` (via `date -u`), and runs **specify → plan → tasks → implement** the GUI-faithful way (see `../speckit-bench/driver.mjs`):
+
+- For EACH step, prepend the **same** GUI preamble every arm gets — `buildStepPreamble(step, specDir)` from `driver.mjs`, which imports the real renderer from `dist/ai-providers/promptPreamble.js` so it cannot drift — then dispatch the step's command.
+  - **stock arm** → stock `/speckit.*` command bodies. No capture script; stock is blind by design.
+  - **Companion arms** → `/speckit.companion.*` command bodies **plus** capture via `node ../speckit-bench/cap.mjs <step> <action>`, run with cwd = the cell. It takes two arguments — `specify complete`, `plan start`, `task <TaskID>` — and errors on a bare step.
+- After dispatching a step, **wait for it to settle** — `waitForSettle(cellDir, step)` polls `.spec-context.json` until the step's completed status **or any later one** appears. It returns `folded: true` when the status overshot, which happens for two shipped reasons: the fast path folds specify/plan/tasks onto `ready-to-implement`, and mark-complete takes implement to `completed`. **A folded step is already done — never re-dispatch it, and never steer the size verdict to make steps settle one at a time.** Right-sizing is the feature under measurement; a driver that disables it produces numbers that look valid and are not.
+- Accumulate time spent in capture into `captureOverheadSec` in the run marker, so the report can isolate it from work time.
+
+The feature prompt is `../speckit-bench/prompts/conduit/<size>.md`, the text between the `---` rules. Hard rules for a driver: no git commands, no build, no test — those are the harness's job at capture time.
+
+**Tell a driver its letter, never its arm.** A driver that knows it is "the Companion arm" is no longer measuring anything.
 
 ### 4. Judge + capture
-Spawn an independent rubric judge per folder (writes `quality` into each `.run-meta.json`) **and** one cross-solution comparative reviewer (writes `bench/reviews/<size>.md`), then `node examples/todo-claude/bench/run-all.mjs capture --size <size>` — measures + folds the rubric + computes the Overall composite + appends rows to `stats.jsonl`/`history.jsonl` + regenerates the 2-column `REPORT.md` (including the capture-overhead line) + resets the folders.
+
+Spawn a rubric judge per cell and one cross-solution comparative reviewer (steps 3 and 4 of `/bench-capture`), then:
+
+`node ../speckit-bench/run-all.mjs capture --sizes <size>`
 
 ### 5. Report
-Print the size's 2-column table (including the Overall rows). To cover all sizes, repeat for the other two.
+
+Print the size's three-column table with the Overall rows and the version line. Repeat for the other sizes to cover the matrix.

@@ -1,32 +1,35 @@
 ---
-allowed-tools: Bash(node examples/todo-claude/bench/sync-templates.mjs:*), Bash(specify:*), Bash(cd examples/todo-claude:*)
-description: Pull latest spec-kit + speckit-companion into the bench sandbox and re-bake the 2 variant folders
+allowed-tools: Bash(node ../speckit-bench/sync-templates.mjs:*), Bash(node ../speckit-bench/run-all.mjs:*), Bash(specify:*), Bash(uv tool:*), Bash(npm run compile:*)
+description: Install the latest spec-kit + Companion extension and bake the bench cells
 ---
 
 ## Your task
 
-Refresh the bench so a round tests **current** code, then (re)bake the two per-variant sandbox folders. Run this when `speckit-extension/` changes, when you bump the `specify` CLI, or on a fresh machine.
+Bake the bench cells so a round measures **current** tooling. The harness lives in the sibling [`speckit-bench`](https://github.com/alfredoperez/speckit-bench) repo; the app it measures lives in [`conduit`](https://github.com/alfredoperez/conduit). Nothing it writes lands in this repo.
 
-### 1. Latest speckit-companion (reliable)
+### 1. Compile the extension first
 
-The `companion` folder installs the companion spec-kit extension from the local `speckit-extension/` via `--dev`, so re-baking always picks up your latest source. This is the load-bearing step:
-
-```bash
-node examples/todo-claude/bench/sync-templates.mjs
-```
-
-This clones the canonical `examples/todo-claude` into `examples/bench-sandboxes/todo-{speckit,companion}/`, git-inits each, and arms each variant (strip companion for `speckit`; install the companion extension for `companion`). ~15s (APFS reflink).
-
-### 2. Latest spec-kit (best-effort)
-
-The stock `/speckit.*` commands the sandbox uses come from the canonical `examples/todo-claude/.specify` + `.claude/commands` (checked-in fixtures). To bump them to the latest upstream spec-kit, re-emit them in the canonical sandbox **before** step 1, then re-run step 1:
+The driver dispatches the same per-step preamble the GUI does, imported from `dist/ai-providers/promptPreamble.js`. Build it:
 
 ```bash
-cd examples/todo-claude && specify init --here --ai claude --force
+npm run compile
 ```
 
-If `specify init` isn't available or you don't want to bump upstream, **skip this** — the committed fixtures are a fine pinned baseline. Only the app's `src/` must never be touched; `specify init` only rewrites `.specify/` + `.claude/commands`.
+### 2. Bake
+
+```bash
+node ../speckit-bench/sync-templates.mjs --sizes easy,medium,hard,oversized
+```
+
+Defaults are `--speckit latest --ext latest`, which is what a measured round wants:
+
+- `--speckit latest` installs the spec-kit CLI from GitHub source (`uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force`) — the only build that carries `specify extension`. `--speckit keep` leaves whatever is installed.
+- `--ext latest` installs the Companion spec-kit extension from the rolling `companion-latest` release asset. `--ext code` installs from this checkout's `speckit-extension/` with `--dev` (use it to measure unreleased work). `--ext <tag>` pins an archived release.
+
+The bake reflinks the app clone per cell (instant, `node_modules` included — no dependency install), runs `specify init`, arms each cell for its arm, tags a git baseline, and **fails loudly if any cell file mentions the bench**. It records the spec-kit CLI version, the spec-kit extension version and the Companion version into `cells.json`, and every result row carries all three.
+
+If the app clone is missing, the script prints the one-time clone command. Run it once per laptop.
 
 ### 3. Report
 
-Print which variants were baked and confirm `specify extension list` (run in the companion folder) shows the companion version installed. Note whether the spec-kit fixtures were refreshed or left pinned.
+Print the three versions the bake recorded and confirm the cell count. Say which arm each letter carries only if the user asks — the letters are opaque on purpose, and `node ../speckit-bench/run-all.mjs --dry-run` prints the table when it is wanted.

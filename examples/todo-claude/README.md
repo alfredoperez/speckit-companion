@@ -1,43 +1,19 @@
 # Todo Test App
 
-A minimal React + TypeScript + Vite todo application for testing AI CLI providers with SpecKit Companion.
+A minimal React + TypeScript + Vite todo application for exercising spec-driven development with SpecKit Companion.
 
 ## Purpose
 
-This app has two roles:
-
-1. **Provider test bed** — validating spec-driven development workflows across different AI CLI providers (Claude Code, Gemini CLI, GitHub Copilot CLI).
-2. **Faithful bench** — running the same feature two ways (plain spec-kit vs the SpecKit Companion pipeline), at three sizes, to compare correctness, ceremony, and speed with capture overhead isolated. See [`bench/README.md`](./bench/README.md) (driven by the `/bench-sync` → `/bench-prep` → `/bench-capture` Claude Code commands).
+This app is the canonical example workspace: small enough to read in one sitting, complete enough that a real feature can be specified, planned, tasked and implemented in it end to end. Its siblings (`../todo-copilot`, `../todo-gemini`, `../todo-gsd-superpowers`, `../todo-matt-skills`, `../todo-living-central`, `../todo-living-colocated`) are the same app pointed at a different provider or a different layout — see [`../README.md`](../README.md) for the catalog.
 
 ## Getting Started
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
+npm run dev       # Vite dev server
+npm run build     # type-check (tsc) + production build
+npm test          # Vitest
 ```
-
-## Features to Implement
-
-The bench defines three feature specs of graded scope (see [`bench/`](./bench/)) — any of them can also serve as a provider smoke test:
-
-| Size | Scope | Feature |
-|---|---|---|
-| `easy` | update a route / title | Rename the app title to "Task Manager" |
-| `medium` | add a feature to the todos | Due dates (input + overdue badge + sort) |
-| `hard` | a whole new feature area | Tags (new `/tags` route + store slice + persistence + filter) |
-
-The exact paste-in prompts live in `bench/prompts/{easy,medium,hard}.md`.
-
-## Testing Procedure
-
-- **Adoption-ladder bench** (the primary use): follow [`bench/README.md`](./bench/README.md) — `/bench-prep <size>` → run the pipeline in each VS Code window → `/bench-capture <size>`.
-- **Provider smoke test**: set the SpecKit Companion provider (Claude / Gemini / Copilot), open this folder in VS Code, initialize the CLI so its steering file appears, then implement one of the bench prompts via the spec workflow.
 
 ## Project Structure
 
@@ -55,9 +31,14 @@ todo-claude/
 │   │   └── todos.tsx       # reducer + context + localStorage persistence
 │   ├── components/         # Header, AddTodo, TodoItem, TodoList
 │   └── pages/              # TodosPage, AboutPage (one per route)
-├── bench/                  # faithful 2-mode harness (prompts, oracle, scripts)
 ├── .specify/               # spec-kit workspace (templates, scripts, extensions)
 ├── index.html · package.json · tsconfig.json · vite.config.ts · vitest.config.ts
 ```
 
 See [`CLAUDE.md`](./CLAUDE.md) for the conventions to follow when implementing a feature.
+
+## The benchmark lives elsewhere
+
+The stock-vs-Companion benchmark used to run out of this folder. It now lives in its own repository, [`speckit-bench`](https://github.com/alfredoperez/speckit-bench), along with its results and the app it measures — so a bench round can never land in a product commit. The `/bench-*` commands in this repo drive it there.
+
+The living-spec correctness matrix moved out of this folder too, to [`../living-specs-matrix/`](../living-specs-matrix/). It proves the resolver, drift, fold-back and coverage behave, which is evidence about the extension rather than a measurement of it — and it must not sit inside an app the harness clones, or every copy of that app would carry it.

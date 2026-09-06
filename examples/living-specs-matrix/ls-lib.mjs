@@ -1,4 +1,4 @@
-// bench/living-specs/ls-lib.mjs — shared arrange helpers for the Living Specs
+// ls-lib.mjs — shared arrange helpers for the Living Specs
 // sandbox demos. Thin layer over the existing bench helpers in ../lib.mjs: it
 // bakes a throwaway repo with a livingSpecs companion.yml + a capability spec
 // fixture, plants code files + a stray orphan spec, and gives the demo runner a
@@ -10,7 +10,7 @@ import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
-import { REPO_ROOT, gitInitCell, gitCommitCellBaseline, readText } from '../lib.mjs'
+import { REPO_ROOT, gitInitCell, gitCommitCellBaseline, readText } from './ls-helpers.mjs'
 
 export const LS_DIR = dirname(fileURLToPath(import.meta.url))
 export const EVIDENCE_DIR = join(LS_DIR, 'evidence')
