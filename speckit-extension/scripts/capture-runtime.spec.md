@@ -672,3 +672,11 @@ The structure a panel draws SHALL carry, beside it, every hook command the proje
 #### Scenario: one lifecycle key holds something that is not a list of hooks
 - **WHEN** the structure is emitted
 - **THEN** that key alone is skipped, both here and where the board reads the same registry, because guarding the whole walk instead made the result depend on where in the file the bad key sat and made the two disagree
+
+### A hook's anchor resolves to exactly one boundary, by one shared definition
+
+An anchor name MAY match the step's own name, a phase name, and a node id at once, so something SHALL pick one: the step's name first, then a node, then a phase. That precedence SHALL live in one place, and both the body assembly and the structure a panel draws from SHALL read it, so the place a hook is drawn is always the place it runs. A name that matches nothing SHALL keep being warned about and skipped, and a phase and a node MAY continue to share a name.
+
+#### Scenario: a hook is attached to a name that is both a phase and a node
+- **WHEN** the pipeline structure is built
+- **THEN** the hook is emitted once, on the boundary the assembled body places it at

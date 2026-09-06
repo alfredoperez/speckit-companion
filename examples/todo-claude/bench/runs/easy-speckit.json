@@ -2,40 +2,50 @@
   "runId": "easy-speckit",
   "size": "easy",
   "mode": "speckit",
-  "spec": "001-task-manager-rename",
-  "specName": "001-task-manager-rename",
-  "startedAt": "2026-08-27T00:47:08Z",
-  "finishedAt": "2026-08-27T00:57:45Z",
-  "wallClockSec": 637,
-  "captureOverheadSec": 0,
+  "spec": "001-rename-app-title",
+  "specName": "001-rename-app-title",
+  "startedAt": "2026-09-06T10:55:20Z",
+  "finishedAt": "2026-09-06T11:00:24Z",
+  "wallClockSec": 304,
+  "captureOverheadSec": null,
   "timing": {
-    "totalSec": 484.644,
+    "totalSec": 289.772,
     "perStep": {
-      "specify": 193.698,
-      "plan": 95.445,
-      "tasks": 61.188,
-      "implement": null
+      "specify": 75.772,
+      "plan": 75.905,
+      "tasks": 35.271,
+      "implement": 77.13
     }
   },
   "buildPass": true,
-  "acceptancePassed": 3,
-  "acceptanceTotal": 3,
+  "acceptancePassed": 5,
+  "acceptanceTotal": 5,
   "acceptanceSource": "behavioral",
   "behavioralVerdicts": [
     {
       "n": 1,
       "pass": true,
-      "reason": "Header renders h1 \"Task Manager\""
+      "reason": "Header h1 renders 'Task Manager'"
     },
     {
       "n": 2,
       "pass": true,
-      "reason": "Shared Header component covers all pages"
+      "reason": "Header shared across routes, same h1"
     },
     {
       "n": 3,
       "pass": true,
-      "reason": "index.html title is \"Task Manager\""
+      "reason": "No 'Todo App' string in header"
+    },
+    {
+      "n": 4,
+      "pass": true,
+      "reason": "index.html title is 'Task Manager'"
+    },
+    {
+      "n": 5,
+      "pass": true,
+      "reason": "Title no longer contains 'Todo App'"
     }
   ],
   "deterministicBaseline": {
@@ -57,22 +67,21 @@
     "readability": 5,
     "conventions": 5,
     "scope": 5,
-    "justification": "The rename touches exactly the two places the app documents as owning the title (the Header <h1> and index.html's <title>) plus the co-located App test's role/name assertion, with no stray refactors, new files, or invented surface."
+    "justification": "The change is a verbatim string rename in the only two user-visible surfaces (the Header h1 and the index.html <title>), so there is nothing to decode and no new structure to learn. It also updates the co-located App.test.tsx heading assertion, which is exactly what the app's existing test style requires to keep the suite green. No other file, component, or line was touched, and no 'Todo App' string remains anywhere in src/ or index.html."
   },
   "shape": {
     "hasUserStories": true,
-    "specLines": 70,
-    "planLines": 75,
-    "tasksLines": 126,
-    "taskCount": 4,
+    "specLines": 76,
+    "planLines": 81,
+    "tasksLines": 75,
+    "taskCount": 5,
     "sideFiles": [
       "research.md",
-      "data-model.md",
       "quickstart.md",
       "checklists"
     ],
-    "artifactFiles": 7,
-    "artifactLines": 352
+    "artifactFiles": 6,
+    "artifactLines": 337
   },
   "diff": {
     "filesChanged": 2,
@@ -81,5 +90,5 @@
   },
   "capture": null,
   "doctor": null,
-  "capturedAt": "2026-08-27T01:00:30.511Z"
+  "capturedAt": "2026-09-06T11:12:08.239Z"
 }

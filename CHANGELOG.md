@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **A hook is drawn once on the pipeline board, even when its anchor name means two things.** A name can be a phase and a node at the same time — the `auto` step ships one, `orchestrate` — and the board tested the two independently, so a hook that runs once got two chips and the header's tally counted it twice. It is now drawn on the single boundary the built command actually places it at, and the count agrees with what you are looking at. Parked hooks follow the same rule. ([#608](https://github.com/alfredoperez/speckit-companion/issues/608))
 - **The editor and the terminal always queue on the same write lock.** Both halves worked out where the lock lives from the temporary directory their own process was given, so they agreed only when their environments did. A terminal started somewhere the editor's environment does not reach — over SSH, from a wrapper, inside a container — would take no lock the editor could see, and a write could be lost with nothing to say it happened. Both now use one fixed place.
 
 ### Added

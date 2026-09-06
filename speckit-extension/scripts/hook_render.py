@@ -112,6 +112,35 @@ _ANY_MARKER = re.compile(r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w -]
                          re.MULTILINE)
 
 
+#: The opening marker of any node or phase, and the name it carries.
+_BOUNDARY_NAME = re.compile(r"<!-- speckit-companion:(node|phase) ([\w -]+) -->")
+
+
+def step_boundaries(body: str) -> tuple:
+    """The node ids and the phase names this body offers, as two sets."""
+    found = _BOUNDARY_NAME.findall(body)
+    return ({name for kind, name in found if kind == "node"},
+            {name for kind, name in found if kind == "phase"})
+
+
+def resolve_anchor(anchor: str, command: str | None,
+                   node_ids, phase_names) -> str:
+    """Which single boundary an anchor names: `step`, `node`, `phase`, or `""`.
+
+    A name can mean two things at once — the shipped `auto` step has a phase and
+    a node both called `orchestrate` — so something has to pick one. This is the
+    one place that picks, and both the splice below and the board read it, so a
+    chip can never point at a boundary the hook does not actually run at.
+    """
+    if command and anchor == command:
+        return "step"
+    if anchor in node_ids:
+        return "node"
+    if anchor in phase_names:
+        return "phase"
+    return ""
+
+
 def _at_step_edge(body: str, when: str, rendered: str) -> str:
     """Put a hook outside every phase — before the step's work, or after all of it.
 
@@ -139,26 +168,21 @@ def insert_hooks(body: str, entries: list, nodes_dir: str | None = None,
     every phase rather than beside a node.
     """
     grouped = group_by_anchor(entries)
+    node_ids, phase_names = step_boundaries(body)
     for (when, anchor), group in grouped.items():
         rendered = "".join(render_hook(entry, nodes_dir) for entry in group)
         if not rendered:
             continue
-        if command and anchor == command:
+        kind = resolve_anchor(anchor, command, node_ids, phase_names)
+        if kind == "step":
             body = _at_step_edge(body, when, rendered)
             continue
-        # An anchor names a node or a phase. The design calls a phase the hook
-        # boundary — the coarser place to attach, so a project can wrap a whole
-        # group of nodes without naming each one. A node anchor still works, and
-        # is what the finer cases need.
-        for kind in ("node", "phase"):
-            open_marker = f"<!-- speckit-companion:{kind} {anchor} -->\n"
-            close_marker = f"<!-- /speckit-companion:{kind} {anchor} -->\n"
-            marker = open_marker if when == "before" else close_marker
-            if marker not in body:
-                continue
-            body = (body.replace(marker, rendered + marker, 1) if when == "before"
-                    else body.replace(marker, marker + rendered, 1))
-            break
+        if not kind:
+            continue
+        before = when == "before"
+        marker = f"<!-- {'' if before else '/'}speckit-companion:{kind} {anchor} -->\n"
+        body = body.replace(
+            marker, rendered + marker if before else marker + rendered, 1)
     return body
 
 

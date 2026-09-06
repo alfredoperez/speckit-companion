@@ -130,6 +130,7 @@ commands:
 ```
 
 - **Anchors** are `before`/`after` a named node. Several hooks at one anchor run **top to bottom, in declared order**.
+- **An anchor names the step, a phase, or a node.** A name can mean more than one of those at once — the shipped `auto` step has a phase and a node both called `orchestrate` — so one wins: the step's own name first, then a node, then a phase. That is the order the command body is spliced in, and the same order the Pipeline Builder draws by, so a hook appears once and on the boundary it actually runs at.
 - **Hook types:** `command` (run a shell command — needs a terminal tool; chat-only providers degrade gracefully), `prompt` (an inline instruction), `node` (run a user node file from `.specify/companion/nodes/<id>.md`).
 - **`background: true`** on any hook kicks it off and lets the pipeline continue without waiting — so a slow side-effect never holds the spec prisoner:
 

@@ -1,0 +1,323 @@
+{
+  "workflow": "companion",
+  "telemetryInstanceId": "6b1b222f-2aa8-41ab-a5a9-866a83f156c2",
+  "specName": "Hook Anchor Once",
+  "branch": "608-hook-anchor-once",
+  "selectedAt": "2026-09-06T10:56:20.893Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T10:56:20.893Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T10:59:30.490Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T10:59:40.232Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T10:59:40.335Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T10:59:40.437Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T10:59:40.541Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T11:00:08.064Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:01:46.377Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:01:52.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:02:11.317Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:02:17.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:03:46.363Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:03:51.790Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T11:03:51.901Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:06:56.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": "execute",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T11:07:39.499Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime"
+    ],
+    "loadedRequirements": {
+      "capture-runtime": [
+        "Recording state MUST NOT be able to break the run it observes",
+        "The context file is append-only, crash-safe, and tolerant of fields it does not own",
+        "Lifecycle status moves forward only, and the terminal state has exactly one writer",
+        "Timing is stamped by a script, never hand-authored",
+        "Per-task progress is finish-only, contention-free, and folded idempotently",
+        "Derived artifacts have exactly one writer",
+        "An unresolvable pointer is named, not passed over",
+        "The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses",
+        "Additive capture composes; lifecycle modes are exclusive",
+        "Folding a feature spec's requirement deltas into a living spec is idempotent for every verb combination",
+        "A probe that cannot determine an answer MUST report \"unknown\", never the negative",
+        "A report MUST NOT claim success for work it did not do",
+        "Living-spec path resolution stops at a nested project boundary",
+        "Each product ships every module its own entry points reach",
+        "The configuration is the source of truth and the command bodies are built from it",
+        "A build is all-or-nothing",
+        "A built body reaches the assistant only once it is carried out to the agent's own copy",
+        "A hook is rendered at the node boundary it names",
+        "A build states what each run must produce, derived from the order it assembled",
+        "The pipeline's decision points are data, not prose in three places",
+        "A template is customized by section, and the stock copy is never edited",
+        "Writing one key back into the configuration preserves everything else byte for byte",
+        "A configuration too broken to read is repairable from the panel that reads it",
+        "The pipeline's structure is emitted here and drawn elsewhere",
+        "A bypassed configuration is resolved and drawn, and never allowed to fail the board",
+        "A step a project declared is a real step; only a typo is refused",
+        "The write lock is released once, after the publish, on whichever path ran",
+        "The fold routes each capability's requirements to its own spec",
+        "The drift detector offers an opt-in working-tree mode",
+        "Recording which living specs cover a change MUST be deterministic, not AI-judged",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
+        "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
+        "Status resolution dispatches commands from the family the spec has been running",
+        "Every handled call records itself, including the ones that fail",
+        "A call count may shrink only when the record it produces stays identical",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
+        "A reader of a captured list MUST accept every form its writer stores",
+        "A configuration the reader cannot fully read is rejected whole, never applied in part",
+        "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
+        "The health check MUST report an implement step that closed having executed nothing",
+        "A living-spec load is sliced by requirement, and a spec with no markers is read whole",
+        "Which requirements a run read is recorded beside which capabilities it loaded",
+        "What a project could attach is emitted with the pipeline it draws"
+      ]
+    },
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "last_action": "all 6 tasks done - 1314 python + 2826 jest pass, typecheck clean",
+  "coverage": {
+    "FR-001": {
+      "title": "The board draws each attached hook exactly once, however many boundaries its anchor matches",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_a_hook_on_a_name_that_means_two_things_is_drawn_once"
+    },
+    "FR-002": {
+      "title": "The boundary a hook is drawn at is the boundary the built command body puts it at",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_it_is_drawn_where_the_built_body_puts_it"
+    },
+    "FR-003": {
+      "title": "The ambiguous-anchor precedence is defined once and used by both the board and the builder",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_it_is_drawn_where_the_built_body_puts_it"
+    },
+    "FR-004": {
+      "title": "The header hook tally agrees with the chip count, running and parked alike",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_an_ambiguous_parked_hook_is_drawn_and_counted_once"
+    },
+    "FR-005": {
+      "title": "An unambiguous hook is drawn where it is drawn today",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_an_unambiguous_hook_lands_exactly_where_it_did"
+    },
+    "FR-006": {
+      "title": "An anchor matching nothing keeps its current warn-and-skip behaviour",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_an_anchor_that_matches_nothing_is_warned_about_and_skipped"
+    },
+    "FR-007": {
+      "title": "Parked hooks resolve to a boundary by the same rule as running hooks",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce::test_an_ambiguous_parked_hook_is_drawn_and_counted_once"
+    },
+    "FR-008": {
+      "title": "A phase and a node sharing a name remains legal configuration",
+      "tests": "test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce (auto/orchestrate config builds throughout)"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "area: speckit-extension/scripts/hook_render.py — insert_hooks already resolves one boundary per hook and breaks",
+    "area: speckit-extension/scripts/pipeline-graph.py — three independent anchor filters",
+    "constraint: the shipped auto step has a phase and node both named orchestrate, so ambiguous anchors must stay legal"
+  ],
+  "intent": "Draw each attached hook once on the pipeline board, at the boundary it actually runs at.",
+  "expectations": [
+    "Refusing an ambiguous anchor at write time — the shipped auto step would be refused",
+    "Changing how hooks are executed or where they run",
+    "Changing Canvas.tsx or counts.ts"
+  ],
+  "approach": "Resolve each hook to one boundary in build_graph using a precedence helper shared with hook_render.insert_hooks.",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added resolve_anchor()/step_boundaries() in hook_render.py: one definition of step-then-node-then-phase precedence",
+      "files": [
+        "speckit-extension/scripts/hook_render.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "insert_hooks now resolves each anchor through the shared helper instead of its inline node-then-phase marker loop",
+      "files": [
+        "speckit-extension/scripts/hook_render.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "build_graph resolves every hook to one boundary up front; step/phase/node lists key off it instead of three independent anchor tests",
+      "files": [
+        "speckit-extension/scripts/pipeline-graph.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Parked tally now reads the same resolution, so a parked ambiguous hook counts once",
+      "files": [
+        "speckit-extension/scripts/pipeline-graph.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Test: a hook on auto/orchestrate emits one chip, on the node boundary the built body actually splices it at",
+      "files": [
+        "speckit-extension/tests/test_pipeline_graph.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Test: unambiguous step/phase/node hooks unchanged, a no-match anchor still warns and skips, a parked ambiguous hook draws and counts once",
+      "files": [
+        "speckit-extension/tests/test_pipeline_graph.py"
+      ]
+    }
+  },
+  "decisions": [
+    {
+      "decision": "resolve_anchor() lives in hook_render.py and derives node/phase names from the body markers for insert_hooks, while pipeline-graph passes its own phase lists",
+      "why": "one precedence definition, two callers, neither needing the other s data shape",
+      "rejected": "duplicating the step-node-phase order in pipeline-graph, which is the drift FR-003 forbids"
+    },
+    {
+      "decision": "each hook carries a resolved boundary field inside build_graph rather than the graph payload",
+      "why": "the step, phase and node lists key off one resolution; Canvas.tsx and counts.ts read the board and needed no change",
+      "rejected": "emitting boundary in the JSON protocol, which would add a field nothing consumes"
+    }
+  ],
+  "verified": [
+    {
+      "what": "spec-kit extension Python suite",
+      "command": "python3 -m pytest tests -q (in speckit-extension)",
+      "result": "1314 passed, 8 skipped"
+    },
+    {
+      "what": "VS Code extension typecheck",
+      "command": "npm run compile",
+      "result": "clean, no errors"
+    },
+    {
+      "what": "VS Code extension jest suite",
+      "command": "npx jest",
+      "result": "2826 passed, 170 suites"
+    },
+    {
+      "what": "new tests fail on the pre-change code",
+      "command": "git stash the two scripts, pytest tests/test_pipeline_graph.py::AnAmbiguousAnchorIsDrawnOnce",
+      "result": "3 failed, 2 passed - the 3 ambiguity tests catch the defect, the 2 regression guards pass either way"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "A hook anchored to a name that means two things is resolved to one boundary in hook_render.resolve_anchor and drawn once by the pipeline structure"
+    }
+  }
+}

@@ -25,6 +25,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 graph_mod = importlib.import_module("pipeline-graph")
 assemble = importlib.import_module("assemble-nodes")
+hook_render = importlib.import_module("hook_render")
 
 
 def project_with(config_text: str) -> tempfile.TemporaryDirectory:
@@ -165,6 +166,104 @@ class TheGraphFollowsTheProjectsConfiguration(unittest.TestCase):
         simple = next(v for v in specify["decisions"][0]["verdicts"] if v["name"] == "simple")
         self.assertEqual(simple["folds"], ["tasks"])
 
+
+class AnAmbiguousAnchorIsDrawnOnce(unittest.TestCase):
+    """`orchestrate` on `auto` is both a phase and a node.
+
+    The board tested the anchor name against the step, its phases and its nodes
+    independently, and none of the three knew another had already claimed it —
+    so one hook that runs once was drawn twice. The builder never had the
+    problem: it resolves to one boundary and stops. Both now read the same
+    resolution.
+    """
+
+    @staticmethod
+    def chips(step: dict) -> list:
+        drawn = [("step", h) for h in step["hooks"]]
+        for phase in step["phases"]:
+            drawn += [(f"phase:{phase['name']}", h) for h in phase["hooks"]]
+            for node in phase["nodes"]:
+                drawn += [(f"node:{node['id']}", h) for h in node["hooks"]]
+        return drawn
+
+    def test_a_hook_on_a_name_that_means_two_things_is_drawn_once(self):
+        tmp = project_with(
+            "commands:\n  auto:\n    hooks:\n      before:\n        orchestrate:\n"
+            "          - { type: prompt, text: look twice }\n")
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        auto = next(s for s in graph["steps"] if s["name"] == "auto")
+        drawn = self.chips(auto)
+        self.assertEqual(len(drawn), 1, drawn)
+
+    def test_it_is_drawn_where_the_built_body_puts_it(self):
+        config = ("commands:\n  auto:\n    hooks:\n      before:\n        orchestrate:\n"
+                  "          - { type: prompt, text: look twice }\n")
+        tmp = project_with(config)
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        auto = next(s for s in graph["steps"] if s["name"] == "auto")
+        where, _hook = self.chips(auto)[0]
+
+        # The builder splices node before phase, so the chip must sit on the node.
+        body = (EXT / "commands" / "speckit.companion.auto.md").read_text(encoding="utf-8")
+        entries = [{"when": "before", "anchor": "orchestrate", "index": 0,
+                    "hook": {"type": "prompt", "text": "look twice"}}]
+        spliced = hook_render.insert_hooks(body, entries, command="auto")
+        node_open = spliced.index("<!-- speckit-companion:node orchestrate -->")
+        phase_open = spliced.index("<!-- speckit-companion:phase orchestrate -->")
+        self.assertLess(phase_open, spliced.index("look twice"))
+        self.assertLess(spliced.index("look twice"), node_open)
+        self.assertEqual(where, "node:orchestrate")
+
+    def test_an_ambiguous_parked_hook_is_drawn_and_counted_once(self):
+        tmp = project_with(
+            "workflow: shipped\ncommands:\n  auto:\n    hooks:\n      before:\n"
+            "        orchestrate:\n          - { type: prompt, text: look twice }\n")
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        auto = next(s for s in graph["steps"] if s["name"] == "auto")
+        drawn = self.chips(auto)
+        self.assertEqual(len(drawn), 1, drawn)
+        self.assertTrue(drawn[0][1]["parked"])
+        self.assertEqual(graph["workflows"]["parked"]["unplaceable"], 0)
+
+    def test_an_unambiguous_hook_lands_exactly_where_it_did(self):
+        tmp = project_with(
+            "commands:\n  specify:\n    hooks:\n      before:\n        draft-spec:\n"
+            "          - { type: prompt, text: check the canvas }\n"
+            "      after:\n        author:\n"
+            "          - { type: prompt, text: re-read the draft }\n"
+            "        specify:\n"
+            "          - { type: prompt, text: close the step }\n")
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        self.assertEqual(
+            sorted(self.chips(specify), key=lambda c: c[0]),
+            sorted([("node:draft-spec", h) for h in
+                    next(n for p in specify["phases"] for n in p["nodes"]
+                         if n["id"] == "draft-spec")["hooks"]]
+                   + [("phase:author", h) for h in
+                      next(p for p in specify["phases"] if p["name"] == "author")["hooks"]]
+                   + [("step", h) for h in specify["hooks"]],
+                   key=lambda c: c[0]))
+        self.assertEqual(len(self.chips(specify)), 3)
+
+    def test_an_anchor_that_matches_nothing_is_warned_about_and_skipped(self):
+        tmp = project_with(
+            "commands:\n  specify:\n    hooks:\n      before:\n        no-such-place:\n"
+            "          - { type: prompt, text: nowhere }\n")
+        self.addCleanup(tmp.cleanup)
+        graph = graph_mod.build_graph(tmp.name)
+
+        specify = next(s for s in graph["steps"] if s["name"] == "specify")
+        self.assertEqual(self.chips(specify), [])
+        self.assertTrue(any("no-such-place" in w for w in graph["warnings"]), graph["warnings"])
 
 class ABrokenConfigurationStillDraws(unittest.TestCase):
     def test_the_error_arrives_as_data_not_as_a_crash(self):
