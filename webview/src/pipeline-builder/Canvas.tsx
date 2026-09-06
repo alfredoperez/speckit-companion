@@ -103,6 +103,13 @@ export function withoutNode(step: PipelineStep, nodeId: string):
     return { order: phases.flatMap(p => p.nodes), phases };
 }
 
+/** Mirrors `WORKFLOWS_REL` / `SHIPPED_WORKFLOW` in build-pipeline.py. */
+const WORKFLOWS_REL = '.specify/companion/workflows';
+const SHIPPED_WORKFLOW = 'shipped';
+
+/** What build-pipeline.py writes in place of an entry that names no extension. */
+const UNNAMED_EXTENSION = 'an extension';
+
 /** That list with `moved` taken out and put back before `target`. */
 function reordered(order: string[], moved: string, target: string): string[] {
     const without = order.filter(id => id !== moved);
@@ -125,6 +132,39 @@ function shellName(line: string): string {
     if (script < 0) { return line; }
     const base = parts[script].split('/').pop() ?? parts[script];
     return [base, ...parts.slice(script + 1)].join(' ');
+}
+
+/** A last segment that is a file extension rather than the name of a command. */
+const SCRIPT_TAIL = /^(sh|bash|zsh|fish|py|js|mjs|cjs|ts|rb|pl|lua|ps1|bat|cmd|exe)$/;
+
+/**
+ * A registered command by the part that is not on every one of them.
+ *
+ * `speckit.git.feature` cut to a lane read `spe…`, which is the prefix every
+ * one of them shares; the mark above the row already says which extension. Only
+ * a namespaced id is cut at a dot: the tail of a script is its extension, and
+ * `sh` names nothing. A path gives itself away, but `build.deploy.sh` does not
+ * — it is the tail that has to be judged, not the separators.
+ */
+function commandTail(command: string): string {
+    const id = command.trim();
+    if (!/^[\w-]+(\.[\w-]+){2,}$/.test(id)) { return shellName(command); }
+    const tail = id.slice(id.lastIndexOf('.') + 1);
+    return SCRIPT_TAIL.test(tail) ? shellName(command) : tail;
+}
+
+/**
+ * What a registered hook is called on its row.
+ *
+ * `command` and `description` are both optional in `extensions.yml` — the
+ * reader coerces a missing one to `""` — and the row has nothing else on it
+ * since the kind badge went, so an entry with neither used to render blank.
+ * Blank, not just absent: `command` reaches here unstripped, and a row of
+ * spaces is as empty to read as no row at all.
+ */
+function stockName(hook: StockHook): string {
+    if (hook.command.trim()) { return commandTail(hook.command); }
+    return hook.description.trim() || 'no command';
 }
 
 /** A count and its noun, agreeing. */
@@ -177,6 +217,49 @@ function TrashIcon() {
     );
 }
 
+/**
+ * SpecKit Companion's mark — the mascot with everything that dies at row size
+ * thrown away. The eyes are holes, so the row's own ground shows through them.
+ */
+function MossIcon() {
+    return (
+        <svg class="pb-mark pb-mark--moss" width="14" height="14" viewBox="0 0 24 24"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path fill-rule="evenodd" d="M12 21.95Q9.67 23.23 8.4 20.89Q5.75 20.71 5.95 18.06Q3.82 16.48 5.42 14.35Q4.48 11.87 6.97 10.95Q7.53 8.35 10.13 8.92Q12 7.04 13.87 8.92Q16.47 8.35 17.03 10.95Q19.52 11.87 18.58 14.35Q20.18 16.48 18.05 18.06Q18.25 20.71 15.6 20.89Q14.33 23.23 12 21.95ZM7.5 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0ZM13.1 15a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z" />
+            <path d="M12 7.7V4.9" stroke="currentColor" stroke-width="1.9"
+                stroke-linecap="round" />
+            <path d="M12 5.2C11.2 2.3 8.8 0.8 5.7 1.4C5.3 4.5 8.2 6.1 12 5.2Z" />
+            <path d="M12 5.2C12.8 2.3 15.2 0.8 18.3 1.4C18.7 4.5 15.8 6.1 12 5.2Z" />
+        </svg>
+    );
+}
+
+/**
+ * Somebody else's extension.
+ *
+ * The universal mark for a thing that plugs in, and deliberately nobody's
+ * logo: a third-party extension is not published by GitHub and putting their
+ * mark on it says it is.
+ */
+function ExtensionIcon() {
+    return (
+        <svg class="pb-mark pb-mark--extension" width="13" height="13" viewBox="0 0 16 16"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M5.5 3.5a2.5 2.5 0 0 1 5 0V4h2a.5.5 0 0 1 .5.5v2h-.5a2.5 2.5 0 0 0 0 5h.5v2a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h2v-.5z" />
+        </svg>
+    );
+}
+
+/** The mark for spec-kit's own extension, which is GitHub's. */
+function GithubIcon() {
+    return (
+        <svg class="pb-mark pb-mark--github" width="13" height="13" viewBox="0 0 16 16"
+            fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38c0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15c0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2c0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+    );
+}
+
 // ── Nodes ───────────────────────────────────────────────
 
 type NodeActions = Pick<Props, 'onOpenNode'> & {
@@ -189,14 +272,10 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
     step: string;
+    /** The file this project's own hooks are written in, as the group is headed. */
+    yours: HookHome;
 };
 
-/**
- * One side's hooks, headed by what they run against.
- *
- * "before draft-spec" said once, then the actions beneath it — rather than
- * repeating the side and the anchor on every chip.
- */
 /**
  * Every place a hook can attach, whether or not one does.
  *
@@ -207,10 +286,114 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
  * lane, which read as an unexplained list rather than as part of the run.
  *
  * So every anchor is drawn. A filled one carries its hooks; an empty one is a
- * dotted slot that adds one. Hooks from an installed extension appear as chips
- * in the same place and the same shape as your own, marked as somebody else's
- * and not editable here.
+ * dotted slot that adds one. Hooks an installed extension registered appear in
+ * the same place and the same shape as your own, under the mark of whoever
+ * registered them, and are still not edited here.
  */
+
+/** Whose a group's hooks are, which is what picks its mark. */
+type SourceMark = 'companion' | 'github' | 'extension';
+
+/** Where the hooks at one boundary came from, and which of them it carries. */
+type HookSource = {
+    /** The file or the extension, as the heading reads it. */
+    name: string;
+    mark: SourceMark;
+    title: string;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+};
+
+/**
+ * Whose an extension is.
+ *
+ * `git` is spec-kit's own — its manifest names `github/spec-kit` — so it is the
+ * only one that earns GitHub's mark. Anyone else's extension is not published
+ * by GitHub, and carrying their logo would say it is.
+ */
+function markFor(extension: string): SourceMark {
+    if (extension === 'companion') { return 'companion'; }
+    return extension === 'git' ? 'github' : 'extension';
+}
+
+function sourceMark(mark: SourceMark) {
+    if (mark === 'companion') { return <MossIcon />; }
+    return mark === 'github' ? <GithubIcon /> : <ExtensionIcon />;
+}
+
+/** What heads this project's own hooks: the file holding them, and where it is. */
+type HookHome = { name: string; title: string };
+
+/**
+ * Which file a project's hooks are in, which is not always `companion.yml`.
+ *
+ * A project on a named workflow keeps every hook, phase and reorder in that
+ * workflow's file; `companion.yml` only says which workflow is active. Heading
+ * them `companion.yml` named a file with none of them in it. `shipped` is
+ * Companion unchanged and has no file at all.
+ */
+function hookHome(workflow: string): HookHome {
+    if (workflow === SHIPPED_WORKFLOW) {
+        return {
+            name: 'as shipped',
+            title: 'Companion as it ships, which has no file of its own. '
+                + 'Switch to a workflow, or start one, to change these.',
+        };
+    }
+    const name = workflow ? `${workflow}.yml` : 'companion.yml';
+    const where = workflow ? `${WORKFLOWS_REL}/${name}` : '.specify/companion.yml';
+    return {
+        name,
+        title: `Yours, from ${where}. Click a line to change it or remove it.`,
+    };
+}
+
+/**
+ * The hooks at one boundary, split by whoever registered them, in run order.
+ *
+ * Which half goes on top is the side's to decide, and it is not the same on
+ * both: a step runs its extensions' before-hooks *now, before any of the work
+ * below* — every node in the step, and so every hook of yours hanging off one —
+ * and their after-hooks once its own work is reported. Yours-first everywhere
+ * drew `npm test` above `git commit` on a boundary that runs the commit first.
+ */
+function bySource(
+    ours: PipelineHook[], theirs: StockHook[], yours: HookHome, side: HookWhen,
+): HookSource[] {
+    const groups: HookSource[] = [];
+    for (const hook of theirs) {
+        const last = groups[groups.length - 1];
+        // Only a RUN of one extension becomes a group. Collecting every hook of
+        // an extension into one would draw an anchor that interleaves them —
+        // git, companion, git — in an order it does not run in, and running top
+        // to bottom in the order declared is the whole of the contract.
+        if (last && last.theirs[0].extension === hook.extension) {
+            last.theirs.push(hook);
+            continue;
+        }
+        const name = hook.extension || UNNAMED_EXTENSION;
+        // `the ${name} extension` is right for one that has a name and reads
+        // "the an extension extension" for one that has not.
+        const by = name === UNNAMED_EXTENSION ? name : `the ${name} extension`;
+        groups.push({
+            // `via git` rather than `git`: Companion registers a spec-kit
+            // extension of its own, so the mark alone put two identical marks
+            // side by side on one anchor — one of them editable here and one
+            // not. A name is a file you can open; `via` is a thing that runs.
+            name: `via ${name}`,
+            mark: markFor(hook.extension),
+            ours: [], theirs: [hook],
+            title: `Registered by ${by} in .specify/extensions.yml. `
+                + 'It runs here, and is not edited in this panel.',
+        });
+    }
+    if (ours.length === 0) { return groups; }
+    const mine: HookSource = {
+        name: yours.name, mark: 'companion', ours, theirs: [], title: yours.title,
+    };
+    return side === 'before' ? [...groups, mine] : [mine, ...groups];
+}
+
 /**
  * Everything attached to one anchor, in one block.
  *
@@ -224,21 +407,24 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
  * words, and one line per hook — the block under "Mark the spec complete" was
  * about five times the height of the card it hangs from.
  *
- * The side's word heads its list rather than sitting in a column beside it: a
- * 3.6rem gutter cost every row on a 300px lane the width that decides whether
- * `doctor.py --chat` fits. A row is the kind as a badge and then the name, in
- * the panel's reading colour; the whole of a long instruction is read by
- * opening the hook in the side column.
+ * Under each side the hooks are grouped by whoever registered them, headed by
+ * that source's mark and its name. Whose a hook was used to be a word at the
+ * tail of the row, so identity was the last thing read on a line whose first
+ * word was `Command` — the mechanism — and whose only other text was
+ * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
+ * is named once for the group, and the row is left to say the work.
  */
-function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, onEdit }: {
+function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yours, onEdit }: {
     before: PipelineHook[];
     after: PipelineHook[];
     stockBefore?: StockHook[];
     stockAfter?: StockHook[];
     anchor: string;
+    /** The file this project's own hooks are in, which heads their group. */
+    yours: HookHome;
     onEdit?: (hook: PipelineHook) => void;
 }) {
-    const sides: Array<[string, PipelineHook[], StockHook[]]> = [
+    const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
         ['before', before, stockBefore],
         ['after', after, stockAfter],
     ];
@@ -250,69 +436,56 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, on
                 (ours.length + theirs.length) > 0 && (
                     <div key={side} class="pb-attached-side">
                         <span class="pb-attached-when">{side}</span>
-                        <ul class="pb-attached-list">
-                            {ours.map((hook, i) => (
-                                <li key={`ours-${i}`}>
-                                    <button class="pb-hook" title={`${hook.summary}\n\nClick to edit`}
-                                        onClick={() => onEdit?.(hook)}>
-                                        {/* The kind as a badge in the same
-                                            neutral register the `gate` word
-                                            uses. Four hues for four kinds
-                                            would have been a fifth meaning
-                                            for colour on a board that already
-                                            has four. */}
-                                        <span class="pb-hook-kind">
-                                            {KIND_LABELS[hook.type]}
-                                        </span>
-                                        <span class={hook.type === 'prompt'
-                                            ? 'pb-hook-name'
-                                            : 'pb-hook-name pb-hook-name--ref'}>
-                                            {clip(hook.type === 'command'
-                                                ? shellName(hook.summary) : hook.summary)}
-                                        </span>
-                                    </button>
-                                </li>
-                            ))}
-                            {theirs.map((hook, i) => (
-                                <li key={`theirs-${i}`}>
-                                    {/* Another extension's. Not editable here, but
-                                        readable — refusing the click told you
-                                        nothing about what it does. */}
-                                    <span class="pb-hook pb-hook--stock"
-                                        title={`${hook.description || hook.command}\n\n`
-                                            + `Registered by the ${hook.extension} extension. `
-                                            + 'It runs here, and is not edited in this panel.'
-                                            + (hook.optional ? '\nIt asks before it runs.' : '')
-                                            + (hook.conditional ? '\nIt does not run every time.' : '')}>
-                                        <span class="pb-hook-kind">
-                                            {KIND_LABELS.command}
-                                        </span>
-                                        <span class="pb-hook-name pb-hook-name--ref">
-                                            {clip(hook.command)}
-                                        </span>
-                                        {/* Whose it is, named rather than
-                                            marked. `ext` said only "not yours",
-                                            which leaves "then whose?" to a
-                                            tooltip — the thing this board is
-                                            trying to stop doing. Only the
-                                            minority carry it: a badge on every
-                                            row is the noise a one-line row is
-                                            removing. */}
-                                        {/* A hook that stops and asks is the one
-                                            fact here with a consequence, so it
-                                            stays a word. Every other mark this
-                                            round took out of a tooltip; this one
-                                            must not go back in. */}
-                                        {hook.optional && (
-                                            <span class="pb-hook-asks">asks first</span>
-                                        )}
-                                        <span class="pb-hook-ext">
-                                            {clip(hook.extension, 14)}
-                                        </span>
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
+                        {bySource(ours, theirs, yours, side).map((source, at) => (
+                            <div key={`${at}-${source.name}`} class="pb-hook-group">
+                                <span class="pb-hook-source" title={source.title}>
+                                    {sourceMark(source.mark)}
+                                    <span class="pb-hook-source-name">{source.name}</span>
+                                </span>
+                                <ul class="pb-attached-list">
+                                    {source.ours.map((hook, i) => (
+                                        <li key={`ours-${i}`}>
+                                            <button class="pb-hook"
+                                                title={`${hook.summary}\n\nClick to edit`}
+                                                onClick={() => onEdit?.(hook)}>
+                                                {/* Which of the four it is: the value alone does not say. */}
+                                                <span class="pb-hook-kind">
+                                                    {KIND_LABELS[hook.type]}
+                                                </span>
+                                                <span class={hook.type === 'prompt'
+                                                    ? 'pb-hook-name'
+                                                    : 'pb-hook-name pb-hook-name--ref'}>
+                                                    {clip(hook.type === 'command'
+                                                        ? shellName(hook.summary) : hook.summary)}
+                                                </span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                    {source.theirs.map((hook, i) => (
+                                        <li key={`theirs-${i}`}>
+                                            {/* No kind badge: every one of these is a command. */}
+                                            <span class="pb-hook pb-hook--stock"
+                                                title={(hook.description.trim()
+                                                    ? `${hook.description.trim()}\n\n` : '')
+                                                    + (hook.command.trim()
+                                                        || 'This entry names no command to run.')
+                                                    + (hook.optional
+                                                        ? '\nIt asks before it runs.' : '')
+                                                    + (hook.conditional
+                                                        ? '\nIt does not run every time.' : '')}>
+                                                <span class="pb-hook-name pb-hook-name--ref">
+                                                    {clip(stockName(hook))}
+                                                </span>
+                                                {/* The one fact here with a consequence. */}
+                                                {hook.optional && (
+                                                    <span class="pb-hook-asks">asks first</span>
+                                                )}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
                     </div>
                 )
             ))}
@@ -367,7 +540,7 @@ function Node({ node, actions, stock, seams }: {
                 block under the card made it twice: a phase heading, the card,
                 and then a second BEFORE belonging to the card above it. */}
             <Attached before={before} after={[]} stockBefore={stock?.before}
-                anchor={node.id} onEdit={actions.onEditHook} />
+                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
             <div
                 class={[
                     'pb-node',
@@ -467,7 +640,7 @@ function Node({ node, actions, stock, seams }: {
                 )}
             </div>
             <Attached before={[]} after={after} stockAfter={stock?.after}
-                anchor={node.id} onEdit={actions.onEditHook} />
+                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
             {(seams?.after ?? true) && (
                 <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
             )}
@@ -694,7 +867,7 @@ function Phase({ phase, actions, controls }: {
                 heading contradict the layout. Neither block is indented, which
                 is what separates a phase's from the card-hung ones below. */}
             <Attached before={before} after={[]} anchor={phase.name}
-                onEdit={actions.onEditHook} />
+                yours={actions.yours} onEdit={actions.onEditHook} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
                     // An installed extension registers against the step, not a
@@ -714,7 +887,7 @@ function Phase({ phase, actions, controls }: {
                 ))}
             </div>
             <Attached before={[]} after={after} anchor={phase.name}
-                onEdit={actions.onEditHook} />
+                yours={actions.yours} onEdit={actions.onEditHook} />
         </section>
     );
 }
@@ -1035,7 +1208,7 @@ export function Canvas(
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
         onOpenTemplate, onNewStep, selected }: Props,
 ) {
-    const actions = { onOpenNode, selected };
+    const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 

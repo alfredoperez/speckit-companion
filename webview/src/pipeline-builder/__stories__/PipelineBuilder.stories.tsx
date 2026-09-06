@@ -495,11 +495,16 @@ export const EveryAnchorIsDrawn = {
 };
 
 export const StockHooksInTheLane = {
-    name: "27 \u00b7 Another extension's hooks, where they run",
+    name: '27 \u00b7 Where each hook came from',
     render: () => (
         <Canvas graph={graph([step('specify', [
             phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
-            phase('wrap-up', [node('handoff', 'Hand off to the next step')]),
+            phase('wrap-up', [node('handoff', 'Hand off to the next step', {
+                hooks: [{
+                    when: 'after', type: 'skill', summary: 'create-pr',
+                    anchor: 'handoff', index: 0, note: '',
+                }],
+            })]),
         ], {
             stockHooks: [
                 {

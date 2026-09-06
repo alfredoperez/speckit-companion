@@ -104,7 +104,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 The Companion pipeline is assembled: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`. Full guide: [Pipeline builder](./docs/pipeline-builder.md).
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](./docs/pipeline-builder.md).
 
 **One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
 
