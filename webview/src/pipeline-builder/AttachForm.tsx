@@ -12,7 +12,8 @@ import { KIND_LABELS } from './hookKinds';
 import { Menu } from './Menu';
 import { SidePanel } from './SidePanel';
 import {
-    HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
+    HookType, HookWhen, OfferedEntry, PipelineChoices, PipelineHook, PipelinePreset,
+    PipelineStep,
 } from '../../../src/protocol/pipeline';
 
 export interface Attachment {
@@ -117,8 +118,13 @@ export function AttachForm(props: Props) {
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const places = anchors(step);
-    const named = hookType === 'skill' ? choices.skills
-        : hookType === 'node' ? choices.nodes : [];
+    // Every kind reads its offerings the same way, so a command is a choice
+    // rather than a name you had to already know. A skill and a node are names
+    // with nothing to say about them; a command carries what it does.
+    const named: OfferedEntry[] = hookType === 'skill'
+        ? choices.skills.map(id => ({ id, label: id }))
+        : hookType === 'node' ? choices.nodes.map(id => ({ id, label: id }))
+            : hookType === 'command' ? (choices.commands ?? []) : [];
     const ready = value.trim().length > 0;
 
     // The note goes with the value: only a skill hook has one, so a note typed
@@ -217,23 +223,35 @@ export function AttachForm(props: Props) {
                                 {/* A name typed from memory is a hook that invokes
                                     nothing. The list is what this project has; the
                                     field stays free so a new one can still be named. */}
-                                <input class="pb-input pb-input--mono" type="text" value={value}
-                                    aria-label={kind.field}
-                                    list={named.length ? `pb-known-${hookType}` : undefined}
-                                    placeholder={kind.placeholder}
-                                    onInput={e => setValue((e.target as HTMLInputElement).value)} />
-                                {named.length > 0 && (
-                                    <datalist id={`pb-known-${hookType}`}>
-                                        {named.map(name => <option key={name} value={name} />)}
-                                    </datalist>
-                                )}
+                                <div class="pb-pick">
+                                    <input class="pb-input pb-input--mono" type="text" value={value}
+                                        aria-label={kind.field}
+                                        placeholder={kind.placeholder}
+                                        onInput={e => setValue((e.target as HTMLInputElement).value)} />
+                                    {named.length > 0 && (
+                                        <Menu
+                                            class="pb-pick-open"
+                                            trigger="Choose…"
+                                            label={`${kind.field}: choose from this project`}
+                                            title={`What this project has for ${kind.label}`}
+                                            options={named.map(entry => ({
+                                                id: entry.id,
+                                                label: entry.label,
+                                                note: [entry.note, entry.usually && `usually ${entry.usually}`,
+                                                    entry.from && `from ${entry.from}`]
+                                                    .filter(Boolean).join(' · ') || undefined,
+                                            }))}
+                                            onPick={id => setValue(id)} />
+                                    )}
+                                </div>
                             </>
                         )}
-                        {named.length > 0 && (
-                            <span class="pb-field-help">
-                                {named.length} in this project · start typing to filter
-                            </span>
-                        )}
+                        <span class="pb-field-help">
+                            {named.length > 0
+                                ? `${named.length} in this project · or type one`
+                                : hookType === 'prompt' ? 'Written here, kept in companion.yml'
+                                    : 'Nothing installed to choose from · type one'}
+                        </span>
                     </div>
                 </div>
 

@@ -68,6 +68,7 @@ export function step(
 export const CHOICES: PipelineChoices = {
     skills: ['create-pr', 'code-review', 'verify-code-review', 'speckit-companion-doctor'],
     nodes: ['debug-timing', 'house-review', 'timing'],
+    commands: [],
     fragments: [
         { name: 'outcomes', section: 'User Scenarios & Testing', for: 'specify',
           summary: 'Observable outcomes instead of prioritized user stories.' },

@@ -765,7 +765,20 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+        <One><AttachForm step={SPECIFY} anchor="author" choices={{
+            skills: ['create-pr'], nodes: ['review'],
+            commands: [
+                { id: 'speckit.git.feature', label: 'speckit.git.feature',
+                    note: 'Create feature branch before specification',
+                    usually: 'before specify', from: 'git' },
+                { id: 'speckit.git.commit', label: 'speckit.git.commit',
+                    note: 'Commits outstanding changes, with a prompt first', from: 'git' },
+                { id: 'speckit.companion.after-implement',
+                    label: 'speckit.companion.after-implement',
+                    note: 'Per-task journaling on implement',
+                    usually: 'after implement', from: 'companion' },
+            ],
+            fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };

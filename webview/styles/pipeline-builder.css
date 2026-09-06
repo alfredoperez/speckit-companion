@@ -2533,3 +2533,19 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     white-space: nowrap;
     border: 0;
 }
+
+/* The value and the way to choose one, on a line. The field stays free so a
+   name the project does not have yet can still be typed. */
+.pb-pick {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.pb-pick .pb-input { flex: 1; min-width: 0; }
+
+.pb-pick-open {
+    flex: none;
+    white-space: nowrap;
+}

@@ -242,9 +242,28 @@ export interface PipelinePreset {
 }
 
 /** What a hook in this project can be pointed at, so a name is picked not typed. */
+/**
+ * One thing that can go in a hook of a given kind.
+ *
+ * `id` is what gets written into the configuration; everything else exists so
+ * the person choosing does not have to already know the name.
+ */
+export interface OfferedEntry {
+    id: string;
+    label: string;
+    /** What it does, in the words the registry that declared it used. */
+    note?: string;
+    /** Where it normally attaches. Absent rather than guessed, and absent when the registry places it in several. */
+    usually?: string;
+    /** Which extension registered it, so two similar names stay distinguishable. */
+    from?: string;
+}
+
 export interface PipelineChoices {
     skills: string[];
     nodes: string[];
+    /** Hook commands this project's registries carry, so attaching one is a choice. */
+    commands: OfferedEntry[];
     /** Shipped alternatives a template section can be pointed at. */
     fragments: PipelineFragment[];
     /** Shipped configurations a new workflow can start from. */

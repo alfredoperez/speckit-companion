@@ -642,3 +642,20 @@ A fold that would leave a capability's spec with no requirements at all SHALL be
 #### Scenario: the spec carries a fence that is never closed
 - **WHEN** the guard counts
 - **THEN** it refuses nothing, because everything under an unclosed fence is invisible to it and a count it cannot trust must not be grounds for a refusal
+
+### What a project could attach is emitted with the pipeline it draws
+<!-- touches: speckit-extension/scripts/build-pipeline.py, speckit-extension/scripts/pipeline-graph.py -->
+
+The structure a panel draws SHALL carry, beside it, every hook command the project's own registries hold — the spec-kit extensions it registered and Companion's own — each with the description its registry gave it, the extension that declared it, and the lifecycle step it attaches at. A list compiled in here instead would lie about what a project has installed, and the lie would surface only when the pipeline ran. It travels with the structure rather than answering a second request, for the same reason the structure itself is derived once: a second source disagrees with the first, and the disagreement reads as one of them being out of date. A command SHALL be carried once however many steps register it, and SHALL name a usual placement only when the registries place it at exactly one — a stock install registers the automatic commit at nine, and naming the first one read presents a single truth out of nine as the answer. Reading a registry SHALL never fail the emission: one that cannot be read contributes nothing.
+
+#### Scenario: an extension is installed
+- **WHEN** the structure is emitted
+- **THEN** that extension's hook commands are carried, in its own words, and a project without it is offered none of them
+
+#### Scenario: a command is registered at several lifecycle steps
+- **WHEN** the structure is emitted
+- **THEN** it is carried once and names no usual placement, rather than naming whichever step was read first
+
+#### Scenario: the registry cannot be read
+- **WHEN** the structure is emitted
+- **THEN** it carries what it could read and the panel still works

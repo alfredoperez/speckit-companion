@@ -92,7 +92,9 @@ Placement comes first, so the form reads as the sentence it writes: *runs **befo
 | **Command** | A shell line. The assistant needs a terminal for this one. |
 | **Node** | A file from `.specify/companion/nodes/`, reusable in more than one place. |
 
-The skill and node fields offer what this project actually has, so a name typed from memory cannot become a hook that invokes nothing. Click a hook that is already there to change it or take it out.
+Every kind but Instruction offers **Choose…** beside its field, listing what this project actually has for that kind, so a name typed from memory cannot become a hook that invokes nothing. Commands are the ones nobody could be expected to remember: the list carries every hook command your registries hold — spec-kit's own `git` extension, Companion's four lifecycle hooks, and anything else you have installed — each saying in plain words what it does, who registered it, and where it usually attaches. A command registered at several steps says none of them rather than picking one: the automatic commit sits at nine, and naming the first would present one truth out of nine. The list is derived from your registries, so an extension installed tomorrow appears without anything changing here, and a project without the git extension is offered none of its hooks. The field stays free the whole time, so anything the list lacks can still be typed.
+
+Click a hook that is already there to change it or take it out.
 
 ---
 

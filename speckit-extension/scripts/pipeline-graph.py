@@ -401,6 +401,9 @@ def build_graph(project_root: str) -> dict:
     choices = {
         "skills": build.available_skills(project_root),
         "nodes": build.available_hook_nodes(project_root),
+        # Every hook command this project's registries carry, so attaching one
+        # is a choice rather than a name you have to already know.
+        "commands": build.available_hook_commands(project_root),
         # What a template section can be pointed at. Each says which section it
         # is written for, so a picker offers only the ones that belong to the
         # row someone is editing rather than every fragment that exists.
