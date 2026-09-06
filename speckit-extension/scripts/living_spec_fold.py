@@ -23,6 +23,35 @@ from spec_context import _repo_root_for, read_ctx
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
 
 
+_TOUCHES_LINE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+
+
+def _touches_globs(lines: list[str]) -> list[str]:
+    """The globs on the marker directly under a `###` heading, or []."""
+    if len(lines) < 2:
+        return []
+    m = _TOUCHES_LINE.match(lines[1])
+    return [g.strip() for g in m.group(1).split(",") if g.strip()] if m else []
+
+
+def _keep_marker(old: list[str], new: list[str]) -> list[str]:
+    """Carry a requirement's file marker across a fold, widened, never narrowed.
+
+    The replacement span covers the marker line, so a plain slice assignment
+    deletes a marker `living-adopt` wrote the first time a feature folds into
+    that requirement. A fold only ever learns about more files, so the two sets
+    are unioned rather than replaced.
+    """
+    globs = _touches_globs(old)
+    globs += [g for g in _touches_globs(new) if g not in globs]
+    if not globs:
+        return new
+    rest = new[1:]
+    if rest and _TOUCHES_LINE.match(rest[0]):
+        rest = rest[1:]
+    return [new[0], f"<!-- touches: {', '.join(globs)} -->"] + rest
+
+
 def _loaded_capabilities(feature_dir: Path) -> list[str]:
     """The capability names this feature recorded loading at specify time
     (livingSpecs.loaded), or []. Best-effort: any read/parse miss returns []."""
@@ -193,7 +222,7 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
-            body = section.rstrip("\n").splitlines()
+            body = _keep_marker(lines[span[0]:span[1]], section.rstrip("\n").splitlines())
             if span[1] < len(lines):
                 body.append("")  # keep the blank line separating the next requirement
             lines[span[0]:span[1]] = body

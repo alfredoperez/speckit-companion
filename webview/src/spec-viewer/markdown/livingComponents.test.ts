@@ -535,3 +535,29 @@ Beta, unmarked.
         expect(renderMarkdown(SPEC)).not.toContain('living-outline');
     });
 });
+
+describe('a touches marker is never prose (#672 Wave 1)', () => {
+    const MARKER = '<!-- touches: src/a/**, src/b.ts -->';
+
+    it('renders nothing in a feature spec, where no requirement pass consumes it', () => {
+        setLivingMode(false);
+        const out = renderMarkdown(`Before.\n\n${MARKER}\n\nAfter.`);
+        expect(out).not.toContain('touches:');
+        expect(out).not.toContain('template-instructions');
+        expect(out).toContain('Before.');
+        expect(out).toContain('After.');
+    });
+
+    it('renders nothing when it sits outside the Requirements section', () => {
+        setLivingMode(true);
+        const out = renderMarkdown(`## Purpose\n\n${MARKER}\n\nWhy this exists.\n`);
+        expect(out).not.toContain('touches:');
+        expect(out).toContain('Why this exists.');
+    });
+
+    it('leaves a marker inside a fenced block alone, as documentation', () => {
+        setLivingMode(false);
+        const out = renderMarkdown('```markdown\n' + MARKER + '\n```\n');
+        expect(out).toContain('touches:');
+    });
+});

@@ -379,11 +379,16 @@ A switch that adds instruction text to command bodies MUST change which bodies g
 
 ### The load steps read a living spec by requirement, and fall back to the whole file
 
-The specify and plan load steps SHALL ask the resolver what each capability should contribute for the files the change touches, and read only what it names. Where the resolver is unavailable or the call fails, they SHALL read each capability's spec whole exactly as before: the narrowing is an optimization, and it must never cost a step its brief.
+The specify and plan load steps SHALL ask the resolver what each capability should contribute for the files the change touches, and read only what it names. What the resolver names SHALL include each requirement's own text, not only its heading: a list of headings is a table of contents the step would then have to resolve by hand, which is the reading the narrowing exists to avoid. Where the resolver is unavailable or the call fails, they SHALL read each capability's spec whole exactly as before: the narrowing is an optimization, and it must never cost a step its brief.
 
 #### Scenario: the resolver answers
 - **WHEN** a load step runs against a capability carrying markers
 - **THEN** it reads that capability's purpose and the named requirements only
+- **AND** each named requirement arrives with its prose and scenarios, so no second read is needed
+
+#### Scenario: a purpose containing a fenced example
+- **WHEN** the purpose is handed to the load step
+- **THEN** it arrives whole, fences included — fence-stripping decides where the section ends and must never be what the reader is given
 
 #### Scenario: the resolver is unavailable
 - **WHEN** the call fails
@@ -400,3 +405,7 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 #### Scenario: a sync updates a requirement
 - **WHEN** the update is written
 - **THEN** that requirement's marker names the changed files as well as what it already named
+
+#### Scenario: fold-back rewrites a requirement that already carries a marker
+- **WHEN** the delta replaces that requirement's section
+- **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote

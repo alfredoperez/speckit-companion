@@ -457,6 +457,10 @@ A living spec SHALL render an outline of its requirement headings, in document o
 - **WHEN** the cards and the outline are built
 - **THEN** it is neither a card nor a row, matching what every other reader counts
 
+#### Scenario: a file marker outside a requirement card
+- **WHEN** any document renders, living or not, carrying a marker no requirement pass consumed
+- **THEN** nothing is drawn for it, because a marker is metadata and printing a comment's own source is not a rendering
+
 #### Scenario: the outline reaches the page
 - **WHEN** the document renders through the full pipeline rather than the outline pass alone
 - **THEN** the outline is live markup the stylesheet applies to, and a requirement's file marker is metadata the reader never sees as prose or as a template disclosure

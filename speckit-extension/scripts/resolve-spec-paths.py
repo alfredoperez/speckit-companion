@@ -202,18 +202,37 @@ def has_no_markers(slices: list) -> bool:
 
 
 def purpose_section(spec_text: str) -> str:
-    """The `## Purpose` section's text, or an empty string when there is none."""
-    lines = _without_fences(spec_text)
+    """The `## Purpose` section's text, or an empty string when there is none.
+
+    Finds the boundaries while ignoring fenced blocks, but returns the original
+    lines. Returning the fence-stripped text would silently delete a snippet
+    from the middle of a purpose, and the reader would have no way to tell.
+    """
+    lines = spec_text.splitlines()
+    fenced = _fence_flags(lines)
     start = next((i for i, l in enumerate(lines)
-                  if re.match(r"^##\s+Purpose\s*$", l)), None)
+                  if not fenced[i] and re.match(r"^##\s+Purpose\s*$", l)), None)
     if start is None:
         return ""
     end = len(lines)
     for i in range(start + 1, len(lines)):
-        if re.match(r"^##(?!#)\s+", lines[i]):
+        if not fenced[i] and re.match(r"^##(?!#)\s+", lines[i]):
             end = i
             break
     return "\n".join(lines[start:end]).strip()
+
+
+def _fence_flags(lines: list) -> list:
+    """True for every line inside a fenced block, and for the fences themselves."""
+    flags = []
+    inside = False
+    for line in lines:
+        if re.match(r"^\s*(```|~~~)", line):
+            inside = not inside
+            flags.append(True)
+            continue
+        flags.append(inside)
+    return flags
 
 
 def matches(cap: dict, f: str) -> bool:
@@ -492,8 +511,15 @@ def requirements_for_changed(files: list, living: dict, root: str) -> list:
         picked = requirements_for_change(slices, files)
         item["whole"] = False
         item["purpose"] = purpose_section(text) or None
+        # The body rides along. A heading alone is a table of contents, not the
+        # normative prose and scenarios the load step exists to hand over.
         item["requirements"] = [
-            {"heading": s["heading"], "matched": bool(s.get("touches"))} for s in picked
+            {
+                "heading": s["heading"],
+                "matched": bool(s.get("touches")),
+                "body": "\n".join(s.get("body") or []).strip(),
+            }
+            for s in picked
         ]
         out.append(item)
     return out

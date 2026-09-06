@@ -3407,6 +3407,30 @@ It does the second thing.
                                  "the marker line must not hide the heading from the fold")
                 self.assertIn("It now does the first thing differently.", out)
 
+    def test_a_fold_keeps_the_marker_it_replaced(self):
+        # The replacement span covers the marker line, so a plain slice
+        # assignment silently deletes what living-adopt wrote.
+        out, _ = self._fold(self.MARKED)
+        self.assertIn("<!-- touches: src/first/** -->", out)
+        self.assertIn("<!-- touches: src/second/thing.ts -->", out)
+        first = rsp.requirement_slices(out)[0]
+        self.assertEqual(first["touches"], ["src/first/**"])
+
+    def test_a_fold_widens_a_marker_and_never_narrows_it(self):
+        delta = dict(self.DELTA)
+        delta["modified"] = [(
+            "The first thing",
+            "### The first thing\n<!-- touches: src/first/extra.ts -->\n\nNow different.\n",
+        )]
+        import living_spec_fold as fold
+        out, _ = fold.apply_deltas(self.MARKED, delta)
+        self.assertEqual(rsp.requirement_slices(out)[0]["touches"],
+                         ["src/first/**", "src/first/extra.ts"])
+
+    def test_a_fold_adds_no_marker_where_there_was_none(self):
+        out, _ = self._fold(self.UNMARKED)
+        self.assertNotIn("touches:", out)
+
     def test_the_requirement_count_is_the_same_either_way(self):
         self.assertEqual(len(rsp.requirement_slices(self.UNMARKED)),
                          len(rsp.requirement_slices(self.MARKED)))

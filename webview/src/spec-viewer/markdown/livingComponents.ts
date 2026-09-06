@@ -204,8 +204,10 @@ function buildRequirementCard(heading: string, blockLines: string[], index: numb
         title = heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim();
     }
     const body = blockLines
-        // The marker did its work in the outline; it is not prose.
-        .filter((line) => !TOUCHES_LINE.test(line))
+        // Only the first line, matching what every slicer treats as the marker.
+        // Filtering all of them deletes a line further down that the outline's
+        // count, and both slicers, still read as ordinary prose.
+        .filter((line, i) => !(i === 0 && TOUCHES_LINE.test(line)))
         .map((line) => {
         if (HAS_INFERRED.test(line)) {
             inferred = true;
