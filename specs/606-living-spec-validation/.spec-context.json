@@ -1,0 +1,1063 @@
+{
+  "workflow": "companion",
+  "specName": "Living specs — trust the fold",
+  "branch": "606-living-spec-validation",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T02:05:38.995Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:06:03.895Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:06:31.868Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:07:55.378Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:07:55.474Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:08:05.661Z"
+    },
+    {
+      "step": "specify",
+      "substep": "persist-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:08:05.978Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T02:08:17.114Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T02:08:27.706Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:08:56.004Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:09:21.806Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:09:54.437Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:10:32.669Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:10:57.462Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T02:11:05.848Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:12:02.049Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:12:19.753Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T02:12:32.981Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:12:41.743Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:12:41.898Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:12:42.065Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:05.897Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:06.066Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:06.251Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:06.417Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:06.574Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:45.572Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:45.724Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:13:45.899Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:14:39.348Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:14:39.511Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:21:52.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:16.618Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:16.781Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:16.963Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:17.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:17.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:17.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:23:17.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:24:21.899Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:24:22.059Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:24:22.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:26:17.129Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:26:17.300Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:27:45.069Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:27:45.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:27:45.400Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:35:09.272Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:35:09.428Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:35:09.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:35:09.780Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:09.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:09.517Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:09.691Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:09.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:52.278Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:52.433Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:52.604Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T041",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T02:42:52.773Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T02:42:52.860Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "e5096784-c79a-4f38-adfa-b2e5af72ae03",
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "capture-runtime",
+      "specs"
+    ],
+    "loadedRequirements": {
+      "companion-commands": [
+        "Command bodies are assembled from single-sourced parts and nodes, and the assembly is the contract",
+        "Assembly changes MUST be proved against a frozen baseline",
+        "The manifest is the command inventory's single authority, and every downstream surface is gated against it",
+        "Four commands are lifecycle hooks, never user-facing verbs",
+        "The pipeline's document shape lives in command bodies, never in document templates",
+        "Both command families are always present; the workflow choice only routes dispatch",
+        "Every command degrades rather than failing the host",
+        "The pipeline right-sizes itself automatically, and an unresolved size runs the full pipeline",
+        "Completion is an explicit terminal step with exactly one writer",
+        "The feature pointer is written under the exact key the capture calls read",
+        "Living-spec commands are opt-in, non-halting, and honest about what they did not examine",
+        "Projects extend commands at node boundaries, never by editing bodies",
+        "Commands direct capable providers to parallelize, while bookkeeping stays serialized",
+        "A command that injects a step into a numbered body MUST NOT restart the numbering",
+        "A step's branch points are declared as data beside its node order",
+        "The command inventory records what each command's run must produce",
+        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
+        "Step boundaries are extension-stamped in order on every dispatch path",
+        "Task finishes are folded into the shared record one at a time, as they land",
+        "One command syncs every affected living spec from the current changes, uncommitted included",
+        "The prompting contract is held by a static gate, not by convention",
+        "The specify-time living-spec load is recorded deterministically, not by AI judgment",
+        "A simple-verdict run captures the same context a full run would, on the fast path",
+        "The tasks Polish phase validates the spec's Success Criteria in exactly one place",
+        "Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them",
+        "The load steps read a living spec by requirement, and fall back to the whole file",
+        "Adoption and sync write the file markers, so nobody maintains them by hand"
+      ],
+      "capture-runtime": [
+        "Recording state MUST NOT be able to break the run it observes",
+        "The context file is append-only, crash-safe, and tolerant of fields it does not own",
+        "Lifecycle status moves forward only, and the terminal state has exactly one writer",
+        "Timing is stamped by a script, never hand-authored",
+        "Per-task progress is finish-only, contention-free, and folded idempotently",
+        "Derived artifacts have exactly one writer",
+        "An unresolvable pointer is named, not passed over",
+        "The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses",
+        "Additive capture composes; lifecycle modes are exclusive",
+        "Folding a feature spec's requirement deltas into a living spec is idempotent for every verb combination",
+        "A probe that cannot determine an answer MUST report \"unknown\", never the negative",
+        "A report MUST NOT claim success for work it did not do",
+        "Living-spec path resolution stops at a nested project boundary",
+        "Each product ships every module its own entry points reach",
+        "The configuration is the source of truth and the command bodies are built from it",
+        "A build is all-or-nothing",
+        "A built body reaches the assistant only once it is carried out to the agent's own copy",
+        "A hook is rendered at the node boundary it names",
+        "A build states what each run must produce, derived from the order it assembled",
+        "The pipeline's decision points are data, not prose in three places",
+        "A template is customized by section, and the stock copy is never edited",
+        "Writing one key back into the configuration preserves everything else byte for byte",
+        "A configuration too broken to read is repairable from the panel that reads it",
+        "The pipeline's structure is emitted here and drawn elsewhere",
+        "A step a project declared is a real step; only a typo is refused",
+        "The write lock is released once, after the publish, on whichever path ran",
+        "The fold routes each capability's requirements to its own spec",
+        "The drift detector offers an opt-in working-tree mode",
+        "Recording which living specs cover a change MUST be deterministic, not AI-judged",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
+        "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
+        "Status resolution dispatches commands from the family the spec has been running",
+        "Every handled call records itself, including the ones that fail",
+        "A call count may shrink only when the record it produces stays identical",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
+        "A reader of a captured list MUST accept every form its writer stores",
+        "A configuration the reader cannot fully read is rejected whole, never applied in part",
+        "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
+        "The health check MUST report an implement step that closed having executed nothing",
+        "A living-spec load is sliced by requirement, and a spec with no markers is read whole",
+        "Which requirements a run read is recorded beside which capabilities it loaded"
+      ]
+    },
+    "synced": [
+      "capture-runtime",
+      "companion-commands",
+      "specs"
+    ]
+  },
+  "last_action": "living specs loaded (companion-commands, capture-runtime, specs)",
+  "coverage": {
+    "FR-001": {
+      "title": "A read-only shape check over every living spec and the delta sections of active feature specs",
+      "tasks": "T014,T015,T018"
+    },
+    "FR-002": {
+      "title": "Report a requirement that carries no scenario",
+      "tasks": "T003,T014,T015"
+    },
+    "FR-003": {
+      "title": "Report a scenario missing its condition or its outcome, naming which is absent",
+      "tasks": "T004,T014,T015"
+    },
+    "FR-004": {
+      "title": "Report two requirements sharing one heading within a single capability, never across capabilities",
+      "tasks": "T005,T014,T015"
+    },
+    "FR-005": {
+      "title": "Report a delta block marked for a capability the registry does not list",
+      "tasks": "T009,T014,T015"
+    },
+    "FR-006": {
+      "title": "Report a delta entry modifying or removing a heading the target spec does not carry",
+      "tasks": "T009,T014,T015"
+    },
+    "FR-007": {
+      "title": "Report a file marker whose pattern matches nothing on disk",
+      "tasks": "T006,T014,T015"
+    },
+    "FR-008": {
+      "title": "Always exit successfully, whatever it finds and whatever state the project is in",
+      "tasks": "T017,T021"
+    },
+    "FR-009": {
+      "title": "A machine-readable form carrying severity, code, path, line, and a one-line fix per finding",
+      "tasks": "T011,T019"
+    },
+    "FR-010": {
+      "title": "Inert when living specs are not enabled for the project",
+      "tasks": "T017,T018"
+    },
+    "FR-011": {
+      "title": "The fold runs the same check against a feature spec deltas before writing anything",
+      "tasks": "T026"
+    },
+    "FR-012": {
+      "title": "The fold refuses a capability delta on an error-level finding and names the finding",
+      "tasks": "T025,T026"
+    },
+    "FR-013": {
+      "title": "The fold applies normally when only warning-level findings are reported",
+      "tasks": "T025,T026"
+    },
+    "FR-014": {
+      "title": "A refusal for one capability never blocks another capability sound delta",
+      "tasks": "T025,T026"
+    },
+    "FR-015": {
+      "title": "The editor runs the same checks on save and publishes findings at their lines",
+      "tasks": "T027,T028,T029"
+    },
+    "FR-016": {
+      "title": "Editor findings clear when the underlying problem is fixed",
+      "tasks": "T027,T028"
+    },
+    "FR-017": {
+      "title": "The editor checks nothing for a non-spec file or a project with living specs off",
+      "tasks": "T027,T028"
+    },
+    "FR-018": {
+      "title": "The fold refuses to empty a capability spec unless retirement is declared, naming it",
+      "tasks": "T030,T033"
+    },
+    "FR-019": {
+      "title": "The registry accepts an optional per-capability retirement declaration",
+      "tasks": "T031,T032"
+    },
+    "FR-020": {
+      "title": "Checks existing in two runtimes are held to one shared set of example specs",
+      "tasks": "T011,T012,T013,T016"
+    },
+    "FR-021": {
+      "title": "Drift, sync, coverage, adoption and the requirement-level load behave exactly as today",
+      "tasks": "T041"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 30,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "living spec: companion-commands",
+    "living spec: specs",
+    "area: speckit-extension/scripts (drift.py finding shape, living_spec_fold.py, resolve-spec-paths.py)",
+    "area: src/features/specs (livingSpecsModel.ts requirement slicing)",
+    "constraint: the on-disk spec format does not change; markers are additive",
+    "constraint: living-specs.yml keeps its shape and most-specific-first glob ordering",
+    "constraint: the validator never fails or slows a host command",
+    "constraint: the extension ships in isolation and cannot shell out to the scripts"
+  ],
+  "intent": "Make a living spec's shape checkable, so a fold can refuse to damage the record and an author sees a break while typing it.",
+  "expectations": [
+    "Splitting the four largest capability specs through the registry (item 7)",
+    "Any change to the on-disk spec format",
+    "A cross-requirement graph",
+    "Feature specs beyond their existing delta sections"
+  ],
+  "decisions": [
+    {
+      "decision": "Implement the checks twice, once per runtime, pinned to one shared fixture set with a guard that fails when only one side reads an example",
+      "why": "The shipped extension cannot assume the spec-kit scripts are installed, and a save-path subprocess is a cost on every keystroke-to-disk; the same arrangement already caught a real divergence between the two requirement slicers in Wave 1",
+      "rejected": "Shelling out to the script from the editor, which makes the feature conditional on an install the extension cannot see"
+    },
+    {
+      "decision": "Severity is two values, error and warning, and only error refuses a fold",
+      "why": "Severity answers exactly one question here — does this stop the write — and the split follows the damage: a delta naming a missing heading corrupts the record, a requirement with no scenario is untidy",
+      "rejected": "A numeric scale, and per-project configurability that would make safety a project-by-project question"
+    },
+    {
+      "decision": "The fold imports the validator in-process rather than running the command and parsing its output",
+      "why": "A correctness gate must not be defeatable by a missing interpreter or a subprocess that failed for an unrelated reason and looks like no findings",
+      "rejected": "Spawning the CLI and reading its JSON"
+    },
+    {
+      "decision": "An unmatched touches pattern is a warning",
+      "why": "A marker may describe a directory a change is about to create, and marker matching only ever narrows a load, so an unmatched pattern costs a run nothing",
+      "rejected": "Error severity, which would refuse folds over a condition that is often correct"
+    },
+    {
+      "decision": "The duplicate-heading check is scoped to one capability",
+      "why": "The heading is the join key for fold-back, coverage ids and the requirement cards, and every one of those is already per capability",
+      "rejected": "Repository-wide uniqueness, which would report a finding on almost every well-written repo"
+    },
+    {
+      "decision": "Retirement is an optional retire key on the capability registry entry",
+      "why": "It is a fact about the capability, visible to a reviewer reading that entry, and it survives the fold that empties the spec",
+      "rejected": "A marker inside the spec file, which the emptying fold would delete exactly when it mattered, and a fold flag nobody is present to pass"
+    },
+    {
+      "decision": "Every finding carries a short stable code alongside its sentence",
+      "why": "A refusal names the finding and a person will search for what it means; a code also lets a script recognise the same finding after the wording is improved",
+      "rejected": "Matching on the human sentence, which makes the wording unrewordable"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan for a two-runtime shape check, an in-process fold refusal on error findings, save-time diagnostics, and a registry-declared retire guard.",
+      "key_finding": "The fold must import the validator rather than shell out to it — a correctness gate that can be defeated by a missing interpreter is not a gate."
+    },
+    "tasks": {
+      "summary": "41 tasks in 7 phases and 10 waves: shared fixtures, the two check runtimes, then the CLI, the fold refusal, save-time diagnostics, the retire guard, and a polish phase that folds this work back into three capabilities."
+    }
+  },
+  "approach": "Add a read-only shape check that reports six kinds of finding with a file, line, severity, stable code and one-line fix. Wire it into the two moments it pays: the fold imports it and refuses to write a capability whose deltas carry an error, and the editor publishes the same findings on save. A separate guard refuses a fold that would leave a capability with no requirements unless the registry declares it retired.",
+  "currentTask": "T041",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Fixture README saying both runtimes read this directory and an unread example fails the build",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/README.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Clean fixture: a well-formed spec producing no findings",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/clean.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Fixture: a requirement stating a rule with no scenario to test it by",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/requirement-without-scenario.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Fixture: scenarios missing a condition and missing an outcome, beside a complete one",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/scenario-missing-half.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Fixture: the same requirement heading stated twice in one capability",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/duplicate-requirement.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Fixture: a touches marker that matches nothing beside one that matches",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/unmatched-touches-glob.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Fixture: a requirement heading inside a fenced block, which is documentation",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/heading-in-fence.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Fixture: a requirement appended past the uncovered section, still a requirement",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/stranded-requirements.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Fixtures: a feature spec with an unregistered capability marker and two deltas naming headings the target lacks, plus the target spec they resolve against",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/delta-broken.md",
+        "speckit-extension/tests/fixtures/spec-shape/target.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Fixture: a feature spec whose deltas are sound",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/delta-clean.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Expected-findings manifest naming all ten fixtures, each with its kind and the findings it must produce",
+      "files": [
+        "speckit-extension/tests/fixtures/spec-shape/expected.json"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Python suite driven from the shared manifest, plus the drift guard and the never-gates cases; fails because the module does not exist yet",
+      "files": [
+        "speckit-extension/tests/test_living_validate.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "TypeScript suite reading the same manifest and iterating it; fails because the module does not exist yet",
+      "files": [
+        "src/features/specs/__tests__/specShapeCheck.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "The Python checks: six finding kinds with severity, stable code, path, line, message and fix; fence-aware headings matching the slicer; tracked-file glob index that took the report from 13.5s to 0.03s",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "The TypeScript twin: same six checks, pure text-in findings-out with no editor import, taking the path universe from its caller so it never walks the tree itself",
+      "files": [
+        "src/features/specs/specShapeCheck.ts",
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Confirmed both suites agree on all ten shared fixtures and neither skips one",
+      "files": [
+        "speckit-extension/tests/test_living_validate.py",
+        "src/features/specs/__tests__/specShapeCheck.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "CLI cases: human and JSON shapes, the always-zero exit, the living-specs-off no-op, unreadable files as skips, and ordering by path then line then code",
+      "files": [
+        "speckit-extension/tests/test_living_validate.py"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Walk every registered capability spec and every active feature spec's deltas, ordered by path, line and code",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "The --json report object with enabled, checked, findings and skipped, shaped like the drift detector's",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "The human renderer: severity, location, code, sentence, indented fix, a one-line clean result, and skipped files with their reasons",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "The --root and --json flags and the always-zero exit, including on an unexpected error",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "The command body, following the drift and coverage bodies: prerequisites, the run, a table of the six codes, and a report section that forbids editing to satisfy a finding",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-validate.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Registered the command in the manifest and in both documents the emissions gate holds it to",
+      "files": [
+        "speckit-extension/extension.yml",
+        "speckit-extension/README.md",
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Ran the check against this repository: 18 specs checked, one real warning found, exit 0",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Fold refusal cases: a missing delta heading, an unregistered capability marker, a warning-only delta still folding, and one broken capability not costing a sound sibling its write",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "The fold imports the validator in-process and refuses per capability on an error-level finding, naming the message, code and location; an unmarked block routes to the default capability, which is how one escaped the check",
+      "files": [
+        "speckit-extension/scripts/living_spec_fold.py",
+        "speckit-extension/scripts/living_validate.py",
+        "src/features/specs/specShapeCheck.ts",
+        "speckit-extension/tests/fixtures/spec-shape/delta-unmarked.md",
+        "speckit-extension/tests/fixtures/spec-shape/expected.json"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Diagnostics cases: the right line and capability, clearing on fix, a non-spec file ignored, living specs off, no registry, an unclaimed spec file, and a feature spec's deltas",
+      "files": [
+        "src/features/specs/__tests__/specShapeDiagnostics.test.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "The diagnostics layer: owns the collection, checks on save of a spec file, maps severity, and clears by setting an empty list rather than deleting the entry",
+      "files": [
+        "src/features/specs/specShapeDiagnostics.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Registered the save listener at activation, disposed with the collection",
+      "files": [
+        "src/extension.ts"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Retire-guard cases: refusal when undeclared naming the capability, application when declared, and no effect when only some requirements go",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Read the optional retire key in the Python registry loader and carry it through the resolver entry, which is the only shape the fold sees",
+      "files": [
+        "speckit-extension/scripts/companion_config.py",
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Carry retire on the parsed and resolved capability in the TypeScript registry reader, optional so absent reads as false",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Refuse a fold that would leave a spec with no requirements unless the capability declared retirement; downgraded delta-heading-not-found to a warning because the fold promotes an unmatched MODIFIED, which is a tested contract",
+      "files": [
+        "speckit-extension/scripts/living_spec_fold.py",
+        "speckit-extension/scripts/living_validate.py",
+        "src/features/specs/specShapeCheck.ts"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Documented the command, all six finding kinds with their severities, the fold's refusal, and the retire declaration in the living-specs guide",
+      "files": [
+        "speckit-extension/docs/living-specs.md"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Release note for the shape check, the fold's refusal and the retire guard",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Release note for save-time spec diagnostics in the Problems panel",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Registered the command in the README command table and the feature list; the packaging gate also needed it shipped and exempted from .vscodeignore",
+      "files": [
+        "speckit-extension/README.md",
+        "speckit-extension/scripts/package-manifest.py",
+        ".vscodeignore"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Delta section routing the validator, the fold refusal and the retire guard to capture-runtime",
+      "files": [
+        "specs/606-living-spec-validation/spec.md"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "Delta section routing the new command's contract to companion-commands",
+      "files": [
+        "specs/606-living-spec-validation/spec.md"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "Delta section routing the save-time diagnostics and the registry key to specs",
+      "files": [
+        "specs/606-living-spec-validation/spec.md"
+      ]
+    },
+    "T041": {
+      "status": "DONE",
+      "did": "Validated against the Success Criteria: 2795 Jest tests, 1275 Python tests, both compiles, shape parity, command emissions, and the validator clean on its own deltas",
+      "files": [
+        "package.json",
+        "speckit-extension/tests"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "npm test",
+      "result": "2795 tests across 169 suites pass, including the 18 shared-fixture cases in specShapeCheck and the 8 diagnostics cases"
+    },
+    {
+      "what": "python3 -m pytest speckit-extension/tests",
+      "result": "1275 pass, 8 skipped, including 9 living-validate cases and the fold refusal, warning-still-folds, sibling-not-blocked and retire-guard cases"
+    },
+    {
+      "what": "npm run compile and npm run compile-web",
+      "result": "both clean"
+    },
+    {
+      "what": "check-shape-parity.py",
+      "result": "14 bodies match parts, golden and the timing fence"
+    },
+    {
+      "what": "check-command-emissions.py",
+      "result": "20 commands agree across 7 install areas, 8 agent records and 2 documents"
+    },
+    {
+      "what": "living_validate.py against this repository",
+      "result": "18 specs checked, exit 0, one real warning found in capabilities/workflows/spec.md and zero findings in this spec deltas"
+    },
+    {
+      "what": "the report timing",
+      "result": "0.03s after indexing tracked files instead of walking the tree per pattern, down from 13.5s"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Task finishes were journaled in 9 batches rather than one per task, the largest stamping 7 inside a second. The per-task summaries and their order are trustworthy; the per-task timestamps are not. History is append-only, so this cannot be repaired for this run."
+    },
+    {
+      "note": "The validator found one real warning in this repository, a requirement in the workflows capability with no scenario. Left as found: fixing a spec to silence a report the same run introduced would make the report meaningless."
+    },
+    {
+      "note": "43 shorthand scenario fixtures in test_living_specs.py were rewritten as real WHEN/THEN pairs because the new check reads them as malformed. Every assertion in those tests is on headings and counts, none on bullets, so the rewrite changed no test intent."
+    }
+  ]
+}

@@ -30,7 +30,7 @@ capabilities:
 
 `living-specs.yml` sits at the project root on purpose: it is yours, it belongs in version control alongside the specs it registers, and keeping it out of `.specify/` means the routine cleanup that re-creates that folder can never wipe your registrations. If your project still keeps capabilities in the older `.specify/companion.yml`, they keep working as they are, and the next time you register or move a capability they are carried across for you.
 
-Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
+Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, an optional `retire`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
 
 ## The resolver
 
@@ -96,6 +96,43 @@ Starting living specs on a codebase you didn't grow this way is the slow part: y
 Because the read is surface-first (exported functions, routes, props, signatures, not a deep behavioral study), every draft wears its limits openly. The whole spec is marked `[DRAFT]`, each requirement is tagged `observed` (drawn straight from the code surface) or `inferred` (an educated guess), genuinely uncertain items carry an inline `[NEEDS CLARIFICATION: …]`, and any file the assistant couldn't read is listed under a `## Uncovered` heading so nobody mistakes a quick draft for a verified spec. You review and confirm, and the wizard registers the capability in `living-specs.yml` so the resolver immediately recognizes it.
 
 Adoption is deliberate and incremental: you run it for the area you care about, it appends one capability at a time (never a whole-repo bootstrap), re-running it for an area that's already registered is a safe no-op, and it changes no other command's behavior. Registration goes through a small helper that reuses the same config reader the resolver does, so it never corrupts a registry it can't fully parse.
+
+## Checking the shape: `living-validate`
+
+A living spec is only worth keeping if what gets folded into it is trustworthy, and until something checked, a requirement with no scenario or a delta pointing at a heading that does not exist landed silently and was found weeks later by whoever next read the file.
+
+```bash
+/speckit.companion.living-validate
+```
+
+It checks every registered living spec, and the delta sections of every active feature spec, against the shape everything reading them assumes. It is read-only and always exits successfully. Add `--json` for one object per finding.
+
+| Code | Severity | Raised when |
+|---|---|---|
+| `requirement-without-scenario` | warning | A requirement states a rule and never says how anyone would know it held. |
+| `scenario-missing-half` | error | A scenario has a condition and no outcome, or an outcome and no condition. |
+| `duplicate-requirement` | error | Two requirements in one capability share a heading, which is the key fold-back and coverage both join on. |
+| `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
+| `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
+| `unmatched-touches-glob` | warning | A file marker names a pattern matching nothing on disk. |
+| `unbalanced-fence` | warning | A code fence is opened and never closed, so everything after it is invisible to every reader. |
+
+Severity answers exactly one question: whether the fold stops. **The fold runs these same checks before writing anything**, per capability, and refuses to apply a capability whose deltas carry an error-level finding, naming the finding it refused on. A warning never stops anything — `delta-heading-not-found` is a warning because the fold promotes an unmatched MODIFIED into an addition, which is a defined outcome rather than damage, though a typo'd heading quietly becoming a near-duplicate requirement is still worth saying out loud.
+
+The extension runs the same checks whenever you save a `*.spec.md`, so a break appears in the editor's problem list on the line it is about while you are still looking at it.
+
+## Retiring a capability
+
+A fold that would leave a capability's spec with **no requirements at all** is refused, and the refusal names the capability. An emptied spec has lost the thing that made it worth keeping, and where a stale spec is recoverable an empty one is not. Emptying one is therefore a deliberate act, declared as one:
+
+```yaml
+capabilities:
+  - name: legacy-checkout
+    match: ["src/legacy/checkout/**"]
+    retire: true
+```
+
+`retire` is optional and absent reads as false, so every capability that never mentions it behaves exactly as it does today. It is read at one moment — the fold, and only when the fold would otherwise empty the spec.
 
 ## Spotting drift
 

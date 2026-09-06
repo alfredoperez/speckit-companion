@@ -1,0 +1,133 @@
+{
+  "clean.md": {
+    "kind": "living",
+    "findings": []
+  },
+  "target.md": {
+    "kind": "living",
+    "findings": []
+  },
+  "heading-in-fence.md": {
+    "kind": "living",
+    "findings": []
+  },
+  "requirement-without-scenario.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "requirement-without-scenario",
+        "line": 7
+      }
+    ]
+  },
+  "scenario-missing-half.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "error",
+        "code": "scenario-missing-half",
+        "line": 11
+      },
+      {
+        "severity": "error",
+        "code": "scenario-missing-half",
+        "line": 15
+      }
+    ]
+  },
+  "duplicate-requirement.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "error",
+        "code": "duplicate-requirement",
+        "line": 23
+      }
+    ]
+  },
+  "unmatched-touches-glob.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "unmatched-touches-glob",
+        "line": 17
+      }
+    ]
+  },
+  "stranded-requirements.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "requirement-without-scenario",
+        "line": 19
+      }
+    ]
+  },
+  "delta-clean.md": {
+    "kind": "feature",
+    "target": "target.md",
+    "findings": []
+  },
+  "delta-broken.md": {
+    "kind": "feature",
+    "target": "target.md",
+    "findings": [
+      {
+        "severity": "error",
+        "code": "unknown-capability",
+        "line": 11
+      },
+      {
+        "severity": "warning",
+        "code": "delta-heading-not-found",
+        "line": 25
+      },
+      {
+        "severity": "warning",
+        "code": "delta-heading-not-found",
+        "line": 37
+      }
+    ]
+  },
+  "delta-unmarked.md": {
+    "kind": "feature",
+    "target": "target.md",
+    "default": "spec-shape-target",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "delta-heading-not-found",
+        "line": 8
+      }
+    ]
+  },
+  "delta-broken-shape.md": {
+    "kind": "feature",
+    "target": "target.md",
+    "findings": [
+      {
+        "severity": "error",
+        "code": "scenario-missing-half",
+        "line": 14
+      },
+      {
+        "severity": "warning",
+        "code": "requirement-without-scenario",
+        "line": 17
+      }
+    ]
+  },
+  "unbalanced-fence.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "unbalanced-fence",
+        "line": 1
+      }
+    ]
+  }
+}

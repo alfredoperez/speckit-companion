@@ -80,6 +80,9 @@ provides:
     - name: speckit.companion.living-drift
       file: commands/speckit.companion.living-drift.md
       description: "Report living-spec drift — per capability, the source files changed since the spec was last committed (opt-in, never halts)"
+    - name: speckit.companion.living-validate
+      file: commands/speckit.companion.living-validate.md
+      description: "Check the shape of living specs and a feature spec's deltas — a requirement with no scenario, a scenario missing WHEN or THEN, a duplicate heading, a delta pointing at nothing (opt-in, read-only, never halts)"
     - name: speckit.companion.living-coverage
       file: commands/speckit.companion.living-coverage.md
       description: "Report living-spec requirement→test coverage — per requirement, whether its coverage tier maps a test (opt-in, read-only, never halts)"

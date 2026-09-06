@@ -15,7 +15,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
-| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
+| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
 
 ## Diagnostics
@@ -209,6 +209,10 @@ Brownfield adoption wizard. Point it at one code area; it reads that area's surf
 ### `speckit.companion.living-drift`
 
 Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Add `--working` to also count working-tree changes — uncommitted edits, deletions, and untracked files. Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
+
+### `speckit.companion.living-validate`
+
+The shape check every other reader assumes has already run. It reports a requirement that states a rule and never says how anyone would know it held, a scenario with a condition and no outcome (or the reverse), two requirements in one capability sharing the heading that fold-back and coverage both join on, a delta block marked for a capability the registry does not list, a MODIFIED or REMOVED entry naming a heading the target spec does not carry, and a file marker whose pattern matches nothing on disk. Each finding carries a severity, a stable code, the file, the line and a one-line fix; `--json` emits them as an object. Read-only and always exits successfully. Severity answers exactly one question — the fold runs these same checks and refuses to write a capability whose deltas carry an error, while a warning never stops anything.
 
 ### `speckit.companion.living-sync`
 

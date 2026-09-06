@@ -48,6 +48,9 @@ RUNTIME_SCRIPTS = frozenset({
     "capture.py",
     "task_sync.py",
     "living_spec_fold.py",
+    # The shape check, and the fold imports it: a gate a missing file can turn
+    # into "no findings" is not a gate, so it ships with the fold, not beside it.
+    "living_validate.py",
     "status-context.py",
     "derive-from-files.py",
     "resolve-spec-paths.py",

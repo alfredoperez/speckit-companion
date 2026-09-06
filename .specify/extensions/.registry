@@ -57,7 +57,7 @@
     "companion": {
       "version": "0.21.0",
       "source": "local",
-      "manifest_hash": "sha256:05502a3fd1eb40921640244e962507a6923373ffa8e5c3c446a7c251fbde8e9b",
+      "manifest_hash": "sha256:3acd8585abb0c6b064f9fe34e0627e305dbb50480db648411739905792978c55",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -79,6 +79,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -100,6 +101,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -121,6 +123,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -142,6 +145,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -163,6 +167,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -184,6 +189,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -205,6 +211,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ],
@@ -226,12 +233,13 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-08-27T00:44:06.394602+00:00"
+      "installed_at": "2026-09-06T03:06:16.401790+00:00"
     }
   }
 }

@@ -550,7 +550,7 @@ Every author node declares the document it writes, and a build collects those de
 
 ### A living-spec load is sliced by requirement, and a spec with no markers is read whole
 
-The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. What it reports SHALL be text a step can act on rather than references it must resolve: each requirement carries its own prose and scenarios, the purpose arrives whole, and neither is stripped of the fenced examples inside it. Removing fences is how the parser finds a heading, and it must never be what a reader is given. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
+The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. What it reports SHALL be text a step can act on rather than references it must resolve: each requirement carries its own prose and scenarios, the purpose arrives whole, and neither is stripped of the fenced examples inside it. A report SHALL distinguish "nothing was checked" from "nothing was wrong": a registry that could not be read, and a run started from below the repository root, both examined nothing, and rendering either as a clean result is the one failure a report of this kind must never have. Removing fences is how the parser finds a heading, and it must never be what a reader is given. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
 
 #### Scenario: a marked capability and a change it claims
 - **WHEN** a load resolves a capability whose requirements carry markers
@@ -560,6 +560,10 @@ The resolver SHALL report, for each capability a change matches, either that its
 #### Scenario: a purpose or a requirement containing a fenced example
 - **WHEN** the load payload is built
 - **THEN** the example is still there, because a reader handed prose with a hole in it cannot tell that anything is missing
+
+#### Scenario: a report runs where it cannot find the registry
+- **WHEN** it renders
+- **THEN** it says nothing was checked and why, rather than reporting a clean result over files it never opened
 
 #### Scenario: a capability with no markers
 - **WHEN** a load resolves it
@@ -584,3 +588,57 @@ The capture runtime SHALL record the requirement headings a run read, per capabi
 #### Scenario: a capability consulted whose markers all missed
 - **WHEN** the recorder runs
 - **THEN** it records that capability with an empty requirement list, because "consulted and contributed nothing" and "read whole" are different facts and only the second is the absent entry
+
+### A living spec's shape is checkable, and the fold refuses to write a break
+<!-- touches: speckit-extension/scripts/living_validate.py, speckit-extension/scripts/living_spec_fold.py -->
+
+The capture runtime SHALL provide a read-only check over every registered living spec and over the delta sections of active feature specs, reporting a requirement carrying no scenario, a scenario missing its condition or its outcome, two requirements sharing a heading inside one capability, a delta block marked for a capability the registry does not list, a delta entry naming a heading the target spec does not carry, and a file marker matching nothing on disk. Each finding SHALL carry a severity, a stable code, the path, the line, a sentence and a one-line fix, and the check SHALL always exit successfully — a report that can fail the shell it runs in is a gate wearing a report's clothes. Severity SHALL answer exactly one question, whether the fold stops, so error means the durable record would be damaged and warning means it would be untidy. The fold SHALL run the same check in-process before writing anything and refuse, per capability, on an error-level finding, naming it; a correctness gate that a missing interpreter or a subprocess failing for its own reasons can turn into "no findings" is not a gate. A refusal for one capability SHALL NOT prevent another's sound delta from being applied in the same run.
+
+#### Scenario: a delta would fold in a scenario nobody can check
+- **WHEN** the fold runs
+- **THEN** that capability is refused, the finding is named, and its spec is left byte for byte unchanged
+
+#### Scenario: a delta names a heading the target does not carry
+- **WHEN** the fold runs
+- **THEN** it applies, because the fold promotes an unmatched modification into an addition and that is a defined outcome rather than damage, and the finding is reported as a warning
+
+#### Scenario: one capability is refused and another is sound
+- **WHEN** the fold runs
+- **THEN** the sound capability is written and only the broken one is refused
+
+#### Scenario: the check itself fails
+- **WHEN** it raises
+- **THEN** the fold proceeds, because a broken check must never block a sound fold
+
+#### Scenario: a block is marked for a capability nobody registered
+- **WHEN** the fold runs
+- **THEN** the refusal is reported naming that capability, because an unregistered name is never one of the fold's targets and a refusal filed under it would be unreachable — the block would be dropped and the author told nothing
+
+#### Scenario: the check runs on a delta rather than on a whole spec
+- **WHEN** the requirement shapes are checked
+- **THEN** the file-marker check is skipped rather than run and discarded, because indexing the tree is a cost the fold pays before every write and this path never keeps the result
+
+### A fold cannot empty a spec unless the capability declared its retirement
+<!-- touches: speckit-extension/scripts/living_spec_fold.py, speckit-extension/scripts/companion_config.py, speckit-extension/scripts/resolve-spec-paths.py -->
+
+A fold that would leave a capability's spec with no requirements at all SHALL be refused, naming the capability, unless that capability declares its retirement in the registry. A stale spec is recoverable where an emptied one has lost the thing that made it worth keeping, so emptying one is a deliberate act and has to be declared as one. The declaration SHALL be optional and its absence SHALL read as false, and it SHALL be carried through to the shape the fold actually sees rather than left behind in the registry the fold never reads.
+
+#### Scenario: a fold would remove the last requirement and retirement is not declared
+- **WHEN** the fold runs
+- **THEN** it refuses, names the capability, and says how to declare the retirement
+
+#### Scenario: the capability declared its retirement
+- **WHEN** the same fold runs
+- **THEN** it applies
+
+#### Scenario: a fold removes some requirements but not all
+- **WHEN** it runs
+- **THEN** it applies whether or not retirement is declared
+
+#### Scenario: the guard and the applier disagree about what a requirement is
+- **WHEN** either counts
+- **THEN** they count the same headings, by the same slicer every other reader uses, because a guard with its own notion refuses a fold that wrote requirements and permits one that removed them all
+
+#### Scenario: the spec carries a fence that is never closed
+- **WHEN** the guard counts
+- **THEN** it refuses nothing, because everything under an unclosed fence is invisible to it and a count it cannot trust must not be grounds for a refusal

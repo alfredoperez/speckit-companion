@@ -20,6 +20,8 @@ from pathlib import Path
 
 from capture import set_living_specs_synced
 from spec_context import _repo_root_for, read_ctx
+from living_validate import (ERROR, _fence_flags, check_feature_deltas,
+                             fences_are_balanced)
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
 
 
@@ -111,10 +113,20 @@ def _accountability_gap(feature_dir: Path, synced) -> list[str]:
 
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
     """Find the [start, end) line span of a `### <heading>` requirement in a living
-    spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped)."""
+    spec, end being the next `###`/`##` or EOF. Heading match is exact (stripped).
+
+    Fenced blocks are skipped, so a heading inside a code example is never
+    matched or used as a boundary — the same rule the slicer, the coverage
+    denominator and the shape check all count by. Counting differently here is
+    how the empty-spec guard came to refuse a fold that had written
+    requirements, and permit one that had removed them all.
+    """
     heading = heading.strip()
+    fenced = _fence_flags(living_lines)
     start = None
     for i, line in enumerate(living_lines):
+        if fenced[i]:
+            continue
         m = _REQ_HEADING_RE.match(line)
         if m and m.group(1).strip() == heading:
             start = i
@@ -123,6 +135,8 @@ def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int
         return None
     end = len(living_lines)
     for j in range(start + 1, len(living_lines)):
+        if fenced[j]:
+            continue
         s = living_lines[j]
         if s.startswith("### ") or s.startswith("## "):
             end = j
@@ -385,6 +399,62 @@ def _resolve_fold_targets(rsp, living: dict, root: Path, deltas: dict) -> tuple[
     return targets, default_name
 
 
+def _would_empty(after: str) -> bool:
+    """True when the folded text carries no requirement at all.
+
+    Counted by the same slicer every other reader uses, so a heading in an
+    uncovered-files list is not mistaken for a requirement and a heading inside
+    a fence is not counted at all.
+    """
+    if not fences_are_balanced(after):
+        # Everything under an unclosed fence is invisible here, so the count is
+        # not the spec's — refusing on it means refusing a fold that wrote
+        # requirements, and advising a retirement that would then empty the file.
+        return False
+    rsp = _load_resolver()
+    if rsp is None:
+        return False  # unanswerable, and a guard that cannot count must not refuse
+    try:
+        return len(rsp.requirement_slices(after)) == 0
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _shape_errors(spec_text: str, spec_rel: str, targets: list, root: Path,
+                  default_name=None) -> dict:
+    """Error-level shape findings in the feature spec's deltas, per capability.
+
+    Imported and called in-process rather than run as a command: a correctness
+    gate that a missing interpreter or a subprocess failing for its own reasons
+    can turn into "no findings" is not a gate.
+    """
+    known = [c.get("name") for c in targets if c.get("name")]
+    texts: dict = {}
+    try:
+        for cap in targets:
+            # Inside the guard, and reading `name` the same way the line above
+            # does. A target with no name raised straight out of here and took
+            # the whole fold with it.
+            rel, name = cap.get("spec"), cap.get("name")
+            if not rel or not name:
+                continue
+            path = root / rel
+            if path.exists():
+                try:
+                    texts[name] = path.read_text(encoding="utf-8")
+                except OSError:
+                    pass
+        findings = check_feature_deltas(spec_text, spec_rel, known, texts, default_name)
+    except Exception:  # noqa: BLE001
+        return {}  # the check breaking must never block a sound fold
+    out: dict = {}
+    for f in findings:
+        if f["severity"] != ERROR:
+            continue  # a warning describes untidiness, not damage
+        out.setdefault(f.get("capability"), []).append(f)
+    return out
+
+
 def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
     """Fold the feature spec's requirement deltas into the resolved living spec(s).
 
@@ -485,6 +555,25 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         )
         return None
 
+    blocked = _shape_errors(
+        spec_text, str(spec_md.relative_to(root)) if spec_md.is_relative_to(root) else str(spec_md),
+        targets, root, default_name)
+
+    # A block marked for a capability nobody registered is never a target, so
+    # keying its refusal on that name made the refusal unreachable: the block
+    # was dropped and the author was told nothing at all. Reported here, before
+    # the loop, because there is no target to hang it on.
+    target_names = {c.get("name") for c in targets}
+    for name, findings in sorted(blocked.items(), key=lambda kv: str(kv[0])):
+        if name in target_names:
+            continue
+        for f in findings:
+            print(
+                f"[companion] Living-spec fold: refused {name or '(unmarked)'} — "
+                f"{f['message']} [{f['code']}] ({f['path']}:{f['line']})",
+                file=sys.stderr,
+            )
+
     synced: list[str] = []
     for cap in targets:
         spec_rel = cap.get("spec")
@@ -493,12 +582,34 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         cap_deltas = _deltas_for(deltas, cap["name"], cap["name"] == default_name)
         if not _has_deltas(cap_deltas):
             continue  # no requirement routed to this capability
+        refused = blocked.get(cap["name"]) or []
+        if refused:
+            # Per capability, never the whole fold: one broken block must not
+            # cost every sound one its write.
+            for f in refused:
+                print(
+                    f"[companion] Living-spec fold: refused {cap['name']} — "
+                    f"{f['message']} [{f['code']}] ({f['path']}:{f['line']})",
+                    file=sys.stderr,
+                )
+            continue
         living_path = root / spec_rel
         try:
             before = living_path.read_text(encoding="utf-8") if living_path.exists() else _initial_living_spec(cap.get("name") or living_path.parent.name)
         except OSError:
             continue
         after, applied = apply_deltas(before, cap_deltas)
+        if after != before and _would_empty(after) and not cap.get("retire"):
+            # An emptied spec has lost the thing that made it worth keeping, and
+            # a stale spec is recoverable where an empty one is not. Retiring a
+            # capability is deliberate, so it has to be declared as one.
+            print(
+                f"[companion] Living-spec fold: refused {cap['name']} — this would "
+                f"leave {spec_rel} with no requirements at all. Set `retire: true` on "
+                f"{cap['name']} in living-specs.yml if that is intended.",
+                file=sys.stderr,
+            )
+            continue
         unmatched = (
             (len(cap_deltas["modified"]) - applied["modified"] - applied["promoted"] - applied["promoted_present"])
             + (len(cap_deltas["removed"]) - applied["removed"])

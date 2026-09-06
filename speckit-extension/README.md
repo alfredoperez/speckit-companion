@@ -186,6 +186,7 @@ The specs live wherever you want them: all together in a central `capabilities/`
 - **Auto-loading, by requirement**: starting a feature loads the living specs of the capabilities it touches into the assistant's context before it drafts, so you stop re-explaining the codebase. A spec of any size costs a run only the requirements that matter: each requirement can name the files it describes, and a run reads the capability's purpose plus the requirements about the files it is changing. Markers are additive and arrive as adoption and sync write them, so a spec that carries none is still read whole, exactly as before.
 - **Folding**: completing a feature folds its delta sections back into each affected capability's spec. The feature spec was the proposal; the living spec becomes the record, reviewed in the same PR as the code.
 - **Adoption**: `/speckit.companion.living-adopt` drafts first-pass specs for an existing code area, surface-first and honestly marked (`[DRAFT]`, `inferred` tags, an `Uncovered` list).
+- **Shape**: `/speckit.companion.living-validate` checks that your specs are shaped the way everything reading them assumes, and the fold runs the same checks and refuses to write a delta that would damage the record.
 - **Drift and sync**: `/speckit.companion.living-drift` reports which files changed since a spec was last committed; `/speckit.companion.living-sync` updates every affected spec from your current changes in one pass, uncommitted work included, update-not-regenerate.
 - **Coverage**: `/speckit.companion.living-coverage` reports which requirements have a mapped test.
 
@@ -248,6 +249,7 @@ With no `living-specs.yml` in your project these report nothing and change nothi
 |---------|--------------|
 | `/speckit.companion.living-adopt` | Brownfield adoption wizard: draft living specs for the code areas you name, surface-first, and register the capabilities (incremental) |
 | `/speckit.companion.living-drift` | Per-capability report of source files changed since the living spec was last committed, classified `tracked` vs `unspeced` (read-only; `--working` also counts uncommitted changes) |
+| `/speckit.companion.living-validate` | Shape check across every living spec and a feature spec's deltas — a requirement with no scenario, a scenario missing a half, a duplicate heading, a delta pointing at nothing, a marker matching nothing (read-only; the fold refuses on an error-level finding) |
 | `/speckit.companion.living-sync` | Group working-tree changes (uncommitted included) by capability and update every affected spec in one pass, update-not-regenerate |
 | `/speckit.companion.living-coverage` | Per-capability requirement-to-test report: which requirements have a test mapped in the capability's `.coverage.md` tier (read-only) |
 | `/speckit.companion.living-move` | Move a living spec between central and colocated storage: the file, its tier siblings, and the registry entry together (reversible) |

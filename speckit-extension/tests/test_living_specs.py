@@ -779,8 +779,8 @@ class DeltaParserTests(unittest.TestCase):
     def test_parses_added_modified_removed_renamed(self) -> None:
         spec = (
             "# Feat\n\n"
-            "## ADDED Requirements\n\n### New thing\n\n#### Scenario: s\n- a\n\n"
-            "## MODIFIED Requirements\n\n### Old thing\n\n#### Scenario: s2\n- b\n\n"
+            "## ADDED Requirements\n\n### New thing\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
+            "## MODIFIED Requirements\n\n### Old thing\n\n#### Scenario: s2\n- **WHEN** b\n- **THEN** c\n\n"
             "## REMOVED Requirements\n\n### Dead thing\n\n"
             "## RENAMED Requirements\n\n### From name -> To name\n\n"
             "## Other section\n\nprose\n"
@@ -798,7 +798,7 @@ class DeltaParserTests(unittest.TestCase):
     def test_capability_marker_is_captured(self) -> None:
         spec = (
             "## ADDED Requirements\n<!-- capability: billing -->\n\n"
-            "### Pay\n\n#### Scenario: s\n- a\n"
+            "### Pay\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"
         )
         d = wc.parse_spec_deltas(spec)
         self.assertEqual(d["markers"].get("added"), "billing")
@@ -810,9 +810,9 @@ class DeltaParserTests(unittest.TestCase):
         spec = (
             "# Feat\n\n"
             "## ADDED Requirements\n<!-- capability: alpha -->\n\n"
-            "### Alpha thing\n\n#### Scenario: a\n- x\n\n"
+            "### Alpha thing\n\n#### Scenario: a\n- **WHEN** x\n- **THEN** y\n\n"
             "## ADDED Requirements\n<!-- capability: beta -->\n\n"
-            "### Beta thing\n\n#### Scenario: b\n- y\n"
+            "### Beta thing\n\n#### Scenario: b\n- **WHEN** y\n- **THEN** z\n"
         )
         d = wc.parse_spec_deltas(spec)
         self.assertEqual([h for h, _ in d["added"]], ["Alpha thing", "Beta thing"])
@@ -820,7 +820,7 @@ class DeltaParserTests(unittest.TestCase):
 
     def test_unmarked_block_records_none_unit_cap(self) -> None:
         d = wc.parse_spec_deltas(
-            "## ADDED Requirements\n\n### Plain thing\n\n#### Scenario: s\n- a\n")
+            "## ADDED Requirements\n\n### Plain thing\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         self.assertEqual(d["unit_caps"]["added"], [None])
 
     def test_unit_caps_align_across_all_verbs(self) -> None:
@@ -838,7 +838,7 @@ class DeltaParserTests(unittest.TestCase):
 class ApplyDeltasTests(unittest.TestCase):
     def test_added_appends_idempotently(self) -> None:
         d = wc.parse_spec_deltas(
-            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         once, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertIn("### Due dates", once)
         self.assertEqual(applied["added"], 1)
@@ -849,7 +849,7 @@ class ApplyDeltasTests(unittest.TestCase):
     def test_modified_replaces_body(self) -> None:
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
-            "#### Scenario: add\n- WHEN submitted\n- THEN it persists\n")
+            "#### Scenario: add\n- **WHEN** submitted\n- **THEN** it persists\n- THEN it persists\n")
         out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertIn("THEN it persists", out)
         self.assertNotIn("THEN a todo appears", out)
@@ -877,9 +877,9 @@ class ApplyDeltasTests(unittest.TestCase):
         # A MODIFIED with no existing heading to replace is a new requirement mis-labeled — promote it to ADDED (append), never drop it.
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n"
-            "### Ghost one\n\n#### Scenario: a\n- x\n\n"
-            "### Ghost two\n\n#### Scenario: b\n- y\n\n"
-            "### Ghost three\n\n#### Scenario: c\n- z\n")
+            "### Ghost one\n\n#### Scenario: a\n- **WHEN** x\n- **THEN** y\n\n"
+            "### Ghost two\n\n#### Scenario: b\n- **WHEN** y\n- **THEN** z\n\n"
+            "### Ghost three\n\n#### Scenario: c\n- **WHEN** z\n- **THEN** w\n")
         self.assertEqual(len(d["modified"]), 3)
         out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertNotEqual(out, TODOS_LIVING)
@@ -890,7 +890,7 @@ class ApplyDeltasTests(unittest.TestCase):
 
     def test_promoted_modified_is_idempotent_on_re_fold(self) -> None:
         d = wc.parse_spec_deltas(
-            "## MODIFIED Requirements\n\n### Ghost one\n\n#### Scenario: a\n- x\n")
+            "## MODIFIED Requirements\n\n### Ghost one\n\n#### Scenario: a\n- **WHEN** x\n- **THEN** y\n")
         once, _ = wc.apply_deltas(TODOS_LIVING, d)
         twice, applied = wc.apply_deltas(once, d)
         self.assertEqual(twice, once)               # re-fold changes nothing (heading now matches)
@@ -901,8 +901,8 @@ class ApplyDeltasTests(unittest.TestCase):
         # the MODIFIED can't match (heading is new), promotes, but the ADDED already
         # placed it — counted as promoted_present, never a false unmatched.
         d = wc.parse_spec_deltas(
-            "## ADDED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n\n"
-            "## MODIFIED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- a\n")
+            "## ADDED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
+            "## MODIFIED Requirements\n\n### Fresh req\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         out, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertEqual(out.count("### Fresh req"), 1)   # present exactly once
         self.assertEqual(applied["added"], 1)
@@ -912,8 +912,8 @@ class ApplyDeltasTests(unittest.TestCase):
     def test_partial_match_counts_only_what_landed(self) -> None:
         d = wc.parse_spec_deltas(
             "## MODIFIED Requirements\n\n"
-            "### Users can add a todo\n\n#### Scenario: add\n- THEN it persists\n\n"
-            "### Ghost\n\n#### Scenario: g\n- nothing\n")
+            "### Users can add a todo\n\n#### Scenario: add\n- **WHEN** submitted\n- **THEN** it persists\n\n"
+            "### Ghost\n\n#### Scenario: g\n- **WHEN** nothing\n- **THEN** nothing\n")
         self.assertEqual(len(d["modified"]), 2)
         _, applied = wc.apply_deltas(TODOS_LIVING, d)
         self.assertEqual(applied["modified"], 1)
@@ -929,9 +929,9 @@ class ApplyDeltasTests(unittest.TestCase):
 
     def test_all_applied_counts_match_the_parsed_counts(self) -> None:
         d = wc.parse_spec_deltas(
-            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n\n"
+            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
             "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
-            "#### Scenario: add\n- THEN it persists\n")
+            "#### Scenario: add\n- **WHEN** submitted\n- **THEN** it persists\n")
         _, applied = wc.apply_deltas(TODOS_LIVING, d)
         for verb in ("added", "modified", "removed", "renamed"):
             self.assertEqual(applied[verb], len(d[verb]), verb)
@@ -1051,7 +1051,7 @@ class FoldIdempotencyMatrixTests(unittest.TestCase):
 
     def test_existing_add_then_reapply_behavior_on_a_populated_spec_is_unchanged(self) -> None:
         deltas = wc.parse_spec_deltas(
-            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         once, applied = wc.apply_deltas(TODOS_LIVING, deltas)
         self.assertEqual(applied["added"], 1)
         twice, reapplied = wc.apply_deltas(once, deltas)
@@ -1136,11 +1136,167 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         result = wc.fold_living_spec(fdir, "ai")
         self.assertIsNotNone(result)
         self.assertIn("### Due dates", self._living(root))
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
+
+    def test_a_scenario_with_no_outcome_is_refused_and_named(self) -> None:
+        # The write is what damages the record: a scenario nobody can check
+        # becomes permanent the moment it is folded.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n"
+            "#### Scenario: no outcome\n- **WHEN** a user picks a date\n")
+        before = self._living(root)
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        log = buf.getvalue()
+        self.assertIn("refused todos", log)
+        self.assertIn("scenario-missing-half", log)
+        self.assertEqual(self._living(root), before)
+
+    def test_a_delta_naming_a_missing_heading_still_folds(self) -> None:
+        # The fold promotes a MODIFIED with no match into an addition. That is a
+        # defined outcome, so the finding is a warning and never a refusal.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## MODIFIED Requirements\n\n### A rule that moved\n\n"
+            "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        with contextlib.redirect_stderr(io.StringIO()):
+            wc.fold_living_spec(fdir, "ai")
+        self.assertIn("### A rule that moved", self._living(root))
+
+    def test_a_block_marked_for_an_unregistered_capability_is_refused_and_named(self) -> None:
+        # An unregistered name is never a target, so keying the refusal on it
+        # made the refusal unreachable: the block was dropped in silence.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n<!-- capability: not-a-capability -->\n\n"
+            "### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        before = self._living(root)
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        log = buf.getvalue()
+        self.assertIn("not-a-capability", log)
+        self.assertIn("unknown-capability", log)
+        self.assertEqual(self._living(root), before)
+
+    def test_a_warning_level_delta_still_folds(self) -> None:
+        # A requirement with no scenario is untidy; folding it damages nothing.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\nNo scenario here.\n")
+        self.assertIsNotNone(wc.fold_living_spec(fdir, "ai"))
+        self.assertIn("### Due dates", self._living(root))
+
+    def test_one_broken_capability_does_not_cost_a_sound_one_its_write(self) -> None:
+        root = _git_repo(
+            ENABLED_TWO_CAPS_YAML,
+            {"capabilities/todos/spec.md": TODOS_LIVING,
+             "capabilities/about/spec.md": "# About capability\n\n### A rule\n\n"
+                                           "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"},
+            code_files=["src/todos/list.ts", "src/about/page.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n<!-- capability: todos -->\n\n"
+            "### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
+            "## ADDED Requirements\n\n<!-- capability: about -->\n\n"
+            "### A broken one\n\n#### Scenario: no outcome\n- **WHEN** a\n")
+        about_before = self._living(root, "capabilities/about/spec.md")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        self.assertIn("### Due dates", self._living(root))
+        self.assertEqual(self._living(root, "capabilities/about/spec.md"), about_before)
+        self.assertIn("refused about", buf.getvalue())
+
+    def test_a_fold_that_would_empty_a_spec_is_refused_and_names_it(self) -> None:
+        # A stale spec is recoverable; an emptied one has lost the thing that
+        # made it worth keeping.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## REMOVED Requirements\n\n### Users can add a todo\n")
+        before = self._living(root)
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        log = buf.getvalue()
+        self.assertIn("refused todos", log)
+        self.assertIn("no requirements at all", log)
+        self.assertIn("retire: true", log)
+        self.assertEqual(self._living(root), before)
+
+    def test_an_unbalanced_fence_does_not_trigger_a_false_refusal(self) -> None:
+        # The guard was fence-aware and the applier was not, so every heading
+        # under an unclosed fence was invisible to one and visible to the other.
+        fenced = ("# Todos capability\n\n```sh\necho unclosed\n\n"
+                  "### Users can add a todo\n\n#### Scenario: add\n"
+                  "- **WHEN** a user submits text\n- **THEN** a todo appears\n")
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": fenced},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n"
+            "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        self.assertNotIn("no requirements at all", buf.getvalue())
+        self.assertIn("### Due dates", self._living(root))
+
+    def test_the_guard_counts_what_every_other_reader_counts(self) -> None:
+        # Not its own notion of a requirement: the slicer's, which is also the
+        # coverage denominator's and the shape check's. A heading a person wrote
+        # under Uncovered is a requirement to all of them or to none of them,
+        # and the guard disagreeing with the rest is worse than either answer.
+        with_uncovered = (TODOS_LIVING
+                          + "\n## Uncovered\n\n### src/todos/skimmed.ts\n")
+        root = _git_repo(ENABLED_TODOS_YAML,
+                         {"capabilities/todos/spec.md": with_uncovered},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## REMOVED Requirements\n\n### Users can add a todo\n")
+        with contextlib.redirect_stderr(io.StringIO()):
+            wc.fold_living_spec(fdir, "ai")
+        out = self._living(root)
+        self.assertNotIn("### Users can add a todo", out)
+        # One heading is left, and the guard let the fold through because that
+        # is what the slicer sees too. Whether a heading under Uncovered ought
+        # to count is a question for the slicer, answered in one place.
+        import living_spec_fold as fold
+        self.assertFalse(fold._would_empty(out))
+        self.assertIn("### src/todos/skimmed.ts", out)
+
+    def test_a_capability_that_declared_retirement_is_emptied(self) -> None:
+        retiring = ENABLED_TODOS_YAML + "      retire: true\n"
+        root = _git_repo(retiring, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## REMOVED Requirements\n\n### Users can add a todo\n")
+        with contextlib.redirect_stderr(io.StringIO()):
+            wc.fold_living_spec(fdir, "ai")
+        self.assertNotIn("### Users can add a todo", self._living(root))
+
+    def test_removing_some_requirements_is_never_the_retire_guard(self) -> None:
+        two = (TODOS_LIVING
+               + "\n### Users can remove a todo\n\n#### Scenario: rm\n"
+                 "- **WHEN** a user deletes one\n- **THEN** it is gone\n")
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": two},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## REMOVED Requirements\n\n### Users can remove a todo\n")
+        with contextlib.redirect_stderr(io.StringIO()):
+            wc.fold_living_spec(fdir, "ai")
+        out = self._living(root)
+        self.assertNotIn("### Users can remove a todo", out)
+        self.assertIn("### Users can add a todo", out)
 
     def _fold_log(self, fdir: Path) -> str:
         """The stderr receipt the fold emits."""
@@ -1153,10 +1309,10 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n\n"
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
             "## MODIFIED Requirements\n\n"
-            "### Ghost one\n\n#### Scenario: g\n- x\n\n"
-            "### Ghost two\n\n#### Scenario: h\n- y\n")
+            "### Ghost one\n\n#### Scenario: g\n- **WHEN** x\n- **THEN** y\n\n"
+            "### Ghost two\n\n#### Scenario: h\n- **WHEN** y\n- **THEN** z\n")
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified", log)
         self.assertNotIn("~2 modified", log)
@@ -1167,7 +1323,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         log = self._fold_log(fdir)
         self.assertIn("+1 added, ~0 modified, -0 removed, ↻0 renamed", log)
         self.assertNotIn("skipped", log)
@@ -1176,11 +1332,11 @@ class FoldLivingSpecTests(unittest.TestCase):
         # A MODIFIED whose requirement is already in the living spec (a re-fold, or
         # a heading already present) is redundant — the receipt must say "up to date",
         # not warn "matched no requirement".
-        already = TODOS_LIVING.rstrip() + "\n\n### Due dates\n\n#### Scenario: s\n- a\n"
+        already = TODOS_LIVING.rstrip() + "\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": already},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## MODIFIED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## MODIFIED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         log = self._fold_log(fdir)
         self.assertIn("already up to date", log)
         self.assertNotIn("matched no requirement", log)
@@ -1190,9 +1346,9 @@ class FoldLivingSpecTests(unittest.TestCase):
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n## ADDED Requirements\n\n### Users can add a todo\n\n"
-            "#### Scenario: dup\n- x\n\n"
+            "#### Scenario: dup\n- **WHEN** x\n- **THEN** y\n\n"
             "## MODIFIED Requirements\n\n### Users can add a todo\n\n"
-            "#### Scenario: add\n- THEN it persists\n")
+            "#### Scenario: add\n- **WHEN** submitted\n- **THEN** it persists\n")
         log = self._fold_log(fdir)
         self.assertIn("+0 added, ~1 modified", log)
         self.assertIn("1 addition(s) skipped: heading already present", log)
@@ -1254,7 +1410,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.set_living_specs_loaded(fdir, ["todos"])
         wc.fold_living_spec(fdir, "ai")                       # first fold — writes + records synced
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
@@ -1283,14 +1439,14 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(
             ENABLED_TWO_CAPS_YAML,
             {"capabilities/todos/spec.md": TODOS_LIVING,
-             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- x\n"},
+             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- **WHEN** x\n- **THEN** y\n"},
             code_files=["src/todos/list.ts", "src/about/page.ts"],
         )
         # A real delta for todos, but `about` was loaded and left with no delta
         # and no skip note.
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n## ADDED Requirements\n<!-- capability: todos -->\n\n"
-            "### Due dates\n\n#### Scenario: s\n- a\n")
+            "### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.set_living_specs_loaded(fdir, ["todos", "about"])
         log = self._fold_log(fdir)
         # todos folds...
@@ -1304,12 +1460,12 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(
             ENABLED_TWO_CAPS_YAML,
             {"capabilities/todos/spec.md": TODOS_LIVING,
-             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- x\n"},
+             "capabilities/about/spec.md": "# About\n\n### A\n\n#### Scenario: s\n- **WHEN** x\n- **THEN** y\n"},
             code_files=["src/todos/list.ts", "src/about/page.ts"],
         )
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n## ADDED Requirements\n<!-- capability: todos -->\n\n"
-            "### Due dates\n\n#### Scenario: s\n- a\n")
+            "### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.set_living_specs_loaded(fdir, ["todos", "about"])
         wc.set_living_specs_skipped(fdir, [{"name": "about", "reason": "unchanged"}])
         log = self._fold_log(fdir)
@@ -1329,7 +1485,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(disabled, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         log = self._fold_log(fdir)
         self.assertIn("living specs are off in this repo", log)
         self.assertNotIn("no delta block", log)
@@ -1338,7 +1494,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.set_living_specs_loaded(fdir, ["todos"])
         log = self._fold_log(fdir)
         # A real delta writes the capability spec and records the sync — no
@@ -1351,7 +1507,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.fold_living_spec(fdir, "ai")
         after_first = self._living(root)
         wc.fold_living_spec(fdir, "ai")
@@ -1362,7 +1518,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(disabled, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         before = self._living(root)
         self.assertIsNone(wc.fold_living_spec(fdir, "ai"))
         self.assertEqual(self._living(root), before)
@@ -1380,7 +1536,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         }
         root = _git_repo(yaml, caps, code_files=["src/todos/items/item.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Item due date\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Item due date\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.fold_living_spec(fdir, "ai")
         self.assertIn("### Item due date", self._living(root, "capabilities/todos-items/spec.md"))
         # The parent (less-specific) capability is NOT written.
@@ -1401,7 +1557,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         root = _git_repo(yaml, caps, code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n## ADDED Requirements\n<!-- capability: billing -->\n\n"
-            "### Invoice export\n\n#### Scenario: s\n- a\n")
+            "### Invoice export\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.fold_living_spec(fdir, "ai")
         synced = set(self._ctx(fdir)["livingSpecs"]["synced"])
         self.assertIn("billing", synced)
@@ -1416,7 +1572,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         # headerless fragment.
         root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         result = wc.fold_living_spec(fdir, "ai")
         self.assertIsNotNone(result)
         created = self._living(root)
@@ -1428,11 +1584,11 @@ class FoldLivingSpecTests(unittest.TestCase):
     def test_subsequent_fold_appends_without_re_adding_header(self) -> None:
         root = _git_repo(ENABLED_TODOS_YAML, {}, code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.fold_living_spec(fdir, "ai")
         # A second feature adds another requirement to the now-existing spec.
         fdir2 = _write_feature(root, "002-feat",
-            "# Feat2\n\n## ADDED Requirements\n\n### Reminders\n\n#### Scenario: s\n- b\n")
+            "# Feat2\n\n## ADDED Requirements\n\n### Reminders\n\n#### Scenario: s\n- **WHEN** b\n- **THEN** c\n")
         wc.fold_living_spec(fdir2, "ai")
         body = self._living(root)
         self.assertEqual(body.count("# Todos — Living Spec"), 1)
@@ -1466,9 +1622,9 @@ class PerCapabilityFoldRoutingTests(unittest.TestCase):
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n"
             "## ADDED Requirements\n<!-- capability: todos -->\n\n"
-            "### Todos gain due dates\n\n#### Scenario: s\n- a\n\n"
+            "### Todos gain due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
             "## ADDED Requirements\n<!-- capability: billing -->\n\n"
-            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+            "### Invoices can be exported\n\n#### Scenario: s\n- **WHEN** b\n- **THEN** c\n")
         result = wc.fold_living_spec(fdir, "ai")
         self.assertIsNotNone(result)
         todos = self._living(root, "capabilities/todos/spec.md")
@@ -1487,9 +1643,9 @@ class PerCapabilityFoldRoutingTests(unittest.TestCase):
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n"
             "## ADDED Requirements\n\n"  # unmarked -> the changed-files default (todos)
-            "### Todos gain due dates\n\n#### Scenario: s\n- a\n\n"
+            "### Todos gain due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n\n"
             "## ADDED Requirements\n<!-- capability: billing -->\n\n"
-            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+            "### Invoices can be exported\n\n#### Scenario: s\n- **WHEN** b\n- **THEN** c\n")
         wc.fold_living_spec(fdir, "ai")
         todos = self._living(root, "capabilities/todos/spec.md")
         billing = self._living(root, "capabilities/billing/spec.md")
@@ -1504,7 +1660,7 @@ class PerCapabilityFoldRoutingTests(unittest.TestCase):
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
-            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- a\n")
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         wc.fold_living_spec(fdir, "ai")
         after_first = self._living(root, "capabilities/todos/spec.md")
         self.assertIn("### Due dates", after_first)
@@ -1520,7 +1676,7 @@ class PerCapabilityFoldRoutingTests(unittest.TestCase):
         root = _git_repo(TWO_CAP_YAML, caps, code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
             "# Feat\n\n## ADDED Requirements\n<!-- capability: billing -->\n\n"
-            "### Invoices can be exported\n\n#### Scenario: s\n- b\n")
+            "### Invoices can be exported\n\n#### Scenario: s\n- **WHEN** b\n- **THEN** c\n")
         before = self._living(root, "capabilities/billing/spec.md")
         wc.fold_living_spec(fdir, "ai")
         self.assertNotEqual(self._living(root, "capabilities/billing/spec.md"), before)

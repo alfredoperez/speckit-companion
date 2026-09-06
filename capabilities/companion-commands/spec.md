@@ -409,3 +409,20 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 #### Scenario: fold-back rewrites a requirement that already carries a marker
 - **WHEN** the delta replaces that requirement's section
 - **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
+
+### The shape check is a command, and it reports rather than gates
+<!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
+
+The command that checks living-spec shape SHALL act only when the project has opted in, SHALL make no edits, and SHALL never fail the run. Its output MUST state both what was examined and what was skipped with a reason, so a clean report can never be read as a verdict on files that were never examined. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding: fixing is the author's decision, made with the finding in front of them, and a command that quietly rewrites a spec to silence its own report is the opposite of a check.
+
+#### Scenario: the command runs on a project with findings
+- **WHEN** it reports
+- **THEN** it names each finding's file, line and fix, and edits nothing
+
+#### Scenario: living specs are off for the project
+- **WHEN** the command runs
+- **THEN** it says so and exits successfully
+
+#### Scenario: the command is run from below the repository root
+- **WHEN** it reports
+- **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off
