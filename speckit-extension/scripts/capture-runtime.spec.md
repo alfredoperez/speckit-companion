@@ -547,3 +547,7 @@ The capture runtime SHALL record the requirement headings a run read, per capabi
 #### Scenario: a capability read whole
 - **WHEN** the recorder runs
 - **THEN** the capability is listed as loaded and the sibling record carries no entry for it
+
+#### Scenario: a capability consulted whose markers all missed
+- **WHEN** the recorder runs
+- **THEN** it records that capability with an empty requirement list, because "consulted and contributed nothing" and "read whole" are different facts and only the second is the absent entry

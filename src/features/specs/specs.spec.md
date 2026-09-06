@@ -365,6 +365,10 @@ The extension SHALL parse a living spec into requirement slices — heading, opt
 - **WHEN** either parser reads the spec
 - **THEN** it is not a requirement, in both runtimes
 
+#### Scenario: a marker that names no file
+- **WHEN** either parser reads a marker whose glob list is empty
+- **THEN** the requirement reads as unmarked, so an empty marker widens the load rather than narrowing it to nothing
+
 #### Scenario: a fixture is added
 - **WHEN** only one runtime's suite exercises it
 - **THEN** the drift guard fails, because that is a case where the two are free to disagree

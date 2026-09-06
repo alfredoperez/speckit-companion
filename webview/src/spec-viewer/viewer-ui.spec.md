@@ -456,3 +456,7 @@ A living spec SHALL render an outline of its requirement headings, in document o
 #### Scenario: a heading inside a fenced block
 - **WHEN** the cards and the outline are built
 - **THEN** it is neither a card nor a row, matching what every other reader counts
+
+#### Scenario: the outline reaches the page
+- **WHEN** the document renders through the full pipeline rather than the outline pass alone
+- **THEN** the outline is live markup the stylesheet applies to, and a requirement's file marker is metadata the reader never sees as prose or as a template disclosure
