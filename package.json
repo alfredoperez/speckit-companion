@@ -500,6 +500,12 @@
         "icon": "$(sparkle)"
       },
       {
+        "command": "speckit.livingSpecs.forFile",
+        "title": "Living Specs for This File",
+        "category": "SpecKit",
+        "icon": "$(book)"
+      },
+      {
         "command": "speckit.livingSpecs.refresh",
         "title": "Refresh Living Specs",
         "category": "SpecKit",

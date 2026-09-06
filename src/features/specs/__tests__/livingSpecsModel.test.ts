@@ -6,7 +6,7 @@ jest.mock('fs', () => {
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { readLivingSpecs, readCapabilityHealth, __test } from '../livingSpecsModel';
+import { readLivingSpecs, readCapabilityHealth, claimsForFile, __test } from '../livingSpecsModel';
 import { countLivingFacts } from '../../spec-viewer/livingHeaderMeta';
 
 const realStatSync = jest.requireActual('fs').statSync;
@@ -518,4 +518,160 @@ describe('capability registry location', () => {
         });
         expect(readLivingSpecs(r).orphans).toEqual(['src/loose.spec.md']);
     });
+});
+
+describe('claimsForFile', () => {
+    const created: string[] = [];
+    const ws = (files: Record<string, string>): string => {
+        const root = makeWorkspace(files);
+        created.push(root);
+        return root;
+    };
+    afterAll(() => {
+        for (const root of created) {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    const ALPHA = [
+        '# Alpha',
+        '',
+        '## Requirements',
+        '',
+        '### Users can set a due date',
+        '<!-- touches: src/alpha/due-date/** -->',
+        '',
+        'Prose.',
+        '',
+        '### Everything is audited',
+        '',
+        'No marker, so this one describes the whole capability.',
+        '',
+    ].join('\n');
+
+    const REGISTRY = [
+        'enabled: true',
+        'exempt: ["*.test.*"]',
+        'capabilities:',
+        '  - name: alpha',
+        '    match: ["src/alpha/**"]',
+        '    spec: src/alpha/alpha.spec.md',
+        '  - name: platform',
+        '    match: ["src/**"]',
+        '    exclude: ["src/vendor/**"]',
+        '    spec: src/platform.spec.md',
+        '',
+    ].join('\n');
+
+    const files = {
+        'living-specs.yml': REGISTRY,
+        'src/alpha/alpha.spec.md': ALPHA,
+        'src/platform.spec.md': '# Platform\n\n### Everything is logged\n\nProse.\n',
+    };
+
+    it('orders the claiming capabilities most-specific first', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/due-date/index.ts');
+        expect(claims.map((c) => c.capability)).toEqual(['alpha', 'platform']);
+    });
+
+    it('lists the requirements whose marker matches the file', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/due-date/index.ts');
+        expect(claims[0].requirements).toEqual([
+            'Users can set a due date',
+            'Everything is audited',
+        ]);
+    });
+
+    it('drops a marked requirement that claims another file', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/other.ts');
+        expect(claims[0].requirements).toEqual(['Everything is audited']);
+    });
+
+    it('lists every requirement of a spec that carries no markers', () => {
+        const claims = claimsForFile(ws(files), 'src/platform.spec.md');
+        const platform = claims.find((c) => c.capability === 'platform');
+        expect(platform?.requirements).toEqual(['Everything is logged']);
+    });
+
+    it('claims nothing for a file the registry exempts', () => {
+        expect(claimsForFile(ws(files), 'src/alpha/thing.test.ts')).toEqual([]);
+    });
+
+    it('claims nothing for a file a capability excludes', () => {
+        expect(claimsForFile(ws(files), 'src/vendor/lib.ts')).toEqual([]);
+    });
+
+    it('claims nothing when living specs are disabled', () => {
+        const root = ws({ 'living-specs.yml': 'enabled: false\ncapabilities: []\n' });
+        expect(claimsForFile(root, 'src/alpha/index.ts')).toEqual([]);
+    });
+
+    it('claims nothing for a path that escapes the workspace', () => {
+        expect(claimsForFile(ws(files), '../elsewhere/thing.ts')).toEqual([]);
+    });
+
+    it('still claims a capability whose spec file is missing, with no requirements', () => {
+        const root = ws({
+            'living-specs.yml': [
+                'enabled: true',
+                'capabilities:',
+                '  - name: ghost',
+                '    match: ["src/ghost/**"]',
+                '    spec: src/ghost/ghost.spec.md',
+                '',
+            ].join('\n'),
+        });
+        const claims = claimsForFile(root, 'src/ghost/thing.ts');
+        expect(claims.map((c) => c.capability)).toEqual(['ghost']);
+        expect(claims[0].requirements).toEqual([]);
+        expect(claims[0].readable).toBe(false);
+    });
+});
+
+/**
+ * The other half of a rule that has to exist twice: the resolver orders
+ * capabilities by specificity in Python, the status bar re-implements it here.
+ * `speckit-extension/tests/test_living_show.py` reads the same file.
+ */
+describe('capability order agrees with the resolver', () => {
+    const fixture = JSON.parse(
+        fs.readFileSync(
+            path.join(
+                __dirname, '..', '..', '..', '..',
+                'speckit-extension', 'tests', 'fixtures', 'claim-order', 'cases.json'
+            ),
+            'utf8'
+        )
+    ) as {
+        capabilities: Array<{ name: string; match: string[]; spec: string }>;
+        cases: Array<{ file: string; order: string[] }>;
+    };
+
+    let root = '';
+    beforeAll(() => {
+        const registry = [
+            'enabled: true',
+            'exempt: []',
+            'capabilities:',
+            ...fixture.capabilities.flatMap(c => [
+                `  - name: ${c.name}`,
+                `    match: [${c.match.map(m => `"${m}"`).join(', ')}]`,
+                `    spec: ${c.spec}`,
+            ]),
+            '',
+        ].join('\n');
+        const files: Record<string, string> = { 'living-specs.yml': registry };
+        for (const c of fixture.capabilities) {
+            files[c.spec] = `# ${c.name}\n`;
+        }
+        root = makeWorkspace(files);
+    });
+    afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+    it.each(fixture.cases.map(c => [c.file, c.order] as const))(
+        '%s',
+        (file, order) => {
+            expect(claimsForFile(root, file).map(c => c.capability)).toEqual(order);
+        }
+    );
 });

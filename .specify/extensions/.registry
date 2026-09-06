@@ -79,6 +79,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -101,6 +102,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -123,6 +125,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -145,6 +148,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -167,6 +171,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -189,6 +194,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -211,6 +217,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"
@@ -233,6 +240,7 @@
           "speckit.companion.living-adopt",
           "speckit.companion.living-move",
           "speckit.companion.living-drift",
+          "speckit.companion.living-show",
           "speckit.companion.living-validate",
           "speckit.companion.living-coverage",
           "speckit.companion.living-sync"

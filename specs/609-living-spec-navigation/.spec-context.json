@@ -1,0 +1,883 @@
+{
+  "workflow": "companion",
+  "telemetryInstanceId": "5df4f62f-c4fc-4585-a0c7-ccf06354b748",
+  "specName": "Living Spec Navigation",
+  "branch": "main",
+  "selectedAt": "2026-09-06T12:35:30.387Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T12:35:30.387Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T12:39:50.513Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T12:40:08.160Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:42:03.663Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:42:47.949Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:43:10.315Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T12:43:21.583Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:45:26.336Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:45:32.585Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T12:45:42.007Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:47:30.306Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:47:56.906Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:48:26.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:49:09.170Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:50:11.380Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:50:32.146Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:51:33.100Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:51:51.683Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:56:59.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:57:19.918Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:57:37.144Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:57:50.395Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T12:59:05.991Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:01:25.293Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:01:40.576Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:03:47.853Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:04:39.617Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:06:33.020Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:07:13.892Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:07:37.847Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:08:44.631Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:12:23.903Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:12:56.837Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:15:36.530Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T13:15:36.645Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T13:16:14.730Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "companion-commands",
+      "capture-runtime",
+      "specs"
+    ],
+    "loadedRequirements": {
+      "companion-commands": [
+        "Command bodies are assembled from single-sourced parts and nodes, and the assembly is the contract",
+        "Assembly changes MUST be proved against a frozen baseline",
+        "The manifest is the command inventory's single authority, and every downstream surface is gated against it",
+        "Four commands are lifecycle hooks, never user-facing verbs",
+        "The pipeline's document shape lives in command bodies, never in document templates",
+        "Both command families are always present; the workflow choice only routes dispatch",
+        "Every command degrades rather than failing the host",
+        "The pipeline right-sizes itself automatically, and an unresolved size runs the full pipeline",
+        "Completion is an explicit terminal step with exactly one writer",
+        "The feature pointer is written under the exact key the capture calls read",
+        "Living-spec commands are opt-in, non-halting, and honest about what they did not examine",
+        "Projects extend commands at node boundaries, never by editing bodies",
+        "Commands direct capable providers to parallelize, while bookkeeping stays serialized",
+        "A command that injects a step into a numbered body MUST NOT restart the numbering",
+        "A step's branch points are declared as data beside its node order",
+        "The command inventory records what each command's run must produce",
+        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
+        "Step boundaries are extension-stamped in order on every dispatch path",
+        "Task finishes are folded into the shared record one at a time, as they land",
+        "One command syncs every affected living spec from the current changes, uncommitted included",
+        "The prompting contract is held by a static gate, not by convention",
+        "The specify-time living-spec load is recorded deterministically, not by AI judgment",
+        "A simple-verdict run captures the same context a full run would, on the fast path",
+        "The tasks Polish phase validates the spec's Success Criteria in exactly one place",
+        "Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them",
+        "The load steps read a living spec by requirement, and fall back to the whole file",
+        "Adoption and sync write the file markers, so nobody maintains them by hand"
+      ],
+      "capture-runtime": [
+        "Recording state MUST NOT be able to break the run it observes",
+        "The context file is append-only, crash-safe, and tolerant of fields it does not own",
+        "Lifecycle status moves forward only, and the terminal state has exactly one writer",
+        "Timing is stamped by a script, never hand-authored",
+        "Per-task progress is finish-only, contention-free, and folded idempotently",
+        "Derived artifacts have exactly one writer",
+        "An unresolvable pointer is named, not passed over",
+        "The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses",
+        "Additive capture composes; lifecycle modes are exclusive",
+        "Folding a feature spec's requirement deltas into a living spec is idempotent for every verb combination",
+        "A probe that cannot determine an answer MUST report \"unknown\", never the negative",
+        "A report MUST NOT claim success for work it did not do",
+        "Living-spec path resolution stops at a nested project boundary",
+        "Each product ships every module its own entry points reach",
+        "The configuration is the source of truth and the command bodies are built from it",
+        "A build is all-or-nothing",
+        "A built body reaches the assistant only once it is carried out to the agent's own copy",
+        "A hook is rendered at the node boundary it names",
+        "A build states what each run must produce, derived from the order it assembled",
+        "The pipeline's decision points are data, not prose in three places",
+        "A template is customized by section, and the stock copy is never edited",
+        "Writing one key back into the configuration preserves everything else byte for byte",
+        "A configuration too broken to read is repairable from the panel that reads it",
+        "The pipeline's structure is emitted here and drawn elsewhere",
+        "A bypassed configuration is resolved and drawn, and never allowed to fail the board",
+        "A step a project declared is a real step; only a typo is refused",
+        "The write lock is released once, after the publish, on whichever path ran",
+        "The fold routes each capability's requirements to its own spec",
+        "The drift detector offers an opt-in working-tree mode",
+        "Recording which living specs cover a change MUST be deterministic, not AI-judged",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
+        "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
+        "Status resolution dispatches commands from the family the spec has been running",
+        "Every handled call records itself, including the ones that fail",
+        "A call count may shrink only when the record it produces stays identical",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
+        "A reader of a captured list MUST accept every form its writer stores",
+        "A configuration the reader cannot fully read is rejected whole, never applied in part",
+        "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
+        "The health check MUST report an implement step that closed having executed nothing",
+        "A living-spec load is sliced by requirement, and a spec with no markers is read whole",
+        "Which requirements a run read is recorded beside which capabilities it loaded",
+        "A fold cannot empty a spec unless the capability declared its retirement",
+        "A hook's anchor resolves to exactly one boundary, by one shared definition"
+      ],
+      "specs": [
+        "One answer about whether a config is usable",
+        "A spec's lifecycle state is recorded, never inferred from files",
+        "The lifecycle log is append-only and every write is atomic",
+        "One fact has exactly one derivation",
+        "Status moves forward and never regresses out of a terminal state",
+        "Reaching the pipeline's end is a real end state, not a bug",
+        "Completion is observed at one seam, and observing it writes nothing",
+        "The implementation step settles from a signal that fires in every mode",
+        "Recording state never blocks the user's work",
+        "A corrupt state record is preserved and replaced, never overwritten",
+        "Commands that need the companion piece are gated by family, not by list",
+        "Reading a record is tolerant; writing one is strict",
+        "The specs tree presents recorded state, and its view controls are per-workspace and idempotent",
+        "A workflow that records nothing still shows progress",
+        "Destructive and bulk spec actions confirm, skip no-ops, and stay inside the workspace",
+        "A built pipeline reports when it is older than what it was built from",
+        "A build is previewable, and its log is kept rather than summarized",
+        "The pipeline structure shown is the one a build would produce",
+        "Living-spec listings are read-only, bounded, and honest about what they could not compute",
+        "The Living Specs view offers a one-pass sync action",
+        "Concurrent writes to a spec's state record are serialized, never lost",
+        "A fast-path folded step is derived as folded, once",
+        "A step's duration is trusted from any deterministic writer, gated on writer authority",
+        "Requirement slicing lives beside the requirement-id parser and counts the same headings",
+        "The registry carries a capability's retirement declaration"
+      ]
+    },
+    "synced": [
+      "capture-runtime",
+      "companion-commands",
+      "spec-viewer",
+      "specs",
+      "viewer-ui"
+    ]
+  },
+  "last_action": "all 24 tasks done — compile clean, 2844 Jest pass, 1349 Python pass, parity and emission gates green",
+  "coverage": {
+    "FR-001": {
+      "title": "A read-only command prints one capability requirement headings",
+      "tasks": "T004,T005,T006,T007",
+      "tests": "speckit-extension/tests/test_living_show.py::HeadingsMode"
+    },
+    "FR-002": {
+      "title": "The command prints a single named requirement in full with its scenarios",
+      "tasks": "T004,T005,T006",
+      "tests": "speckit-extension/tests/test_living_show.py::RequirementMode"
+    },
+    "FR-003": {
+      "title": "The command prints the requirements describing a given file, grouped by capability, most-specific first",
+      "tasks": "T004,T005",
+      "tests": "speckit-extension/tests/test_living_show.py::FileMode"
+    },
+    "FR-004": {
+      "title": "An unmarked requirement describes every file its capability claims",
+      "tasks": "T005,T017",
+      "tests": "speckit-extension/tests/test_living_show.py::FileMode::test_an_unmarked_requirement_is_always_included"
+    },
+    "FR-005": {
+      "title": "Headings are identified by the same rules as the requirement-id reader and resolver, fences ignored",
+      "tasks": "T005,T008",
+      "tests": "speckit-extension/tests/test_living_show.py::CountsAgreeWithTheRepoItself"
+    },
+    "FR-006": {
+      "title": "The command exits successfully in every case, including no config and no match",
+      "tasks": "T002,T004,T006",
+      "tests": "speckit-extension/tests/test_living_show.py::DisabledOrUnconfigured"
+    },
+    "FR-007": {
+      "title": "A name matching nothing is answered with the headings that do exist",
+      "tasks": "T004,T005",
+      "tests": "speckit-extension/tests/test_living_show.py::RequirementMode::test_a_name_matching_nothing_lists_the_headings_that_exist"
+    },
+    "FR-008": {
+      "title": "The registry accepts an optional rules block with separate spec and plan guidance lists",
+      "tasks": "T001,T003",
+      "tests": "speckit-extension/tests/test_config.py::RegistryRulesTests"
+    },
+    "FR-009": {
+      "title": "The spec step receives only spec rules and the plan step only plan rules",
+      "tasks": "T009,T010,T011,T012,T014",
+      "tests": "speckit-extension/tests/test_resolve_spec_paths.py::RulesReachTheirOwnStep::test_each_step_sees_only_its_own_rules"
+    },
+    "FR-010": {
+      "title": "A registry with no rules block behaves identically to today",
+      "tasks": "T001,T003,T009",
+      "tests": "speckit-extension/tests/test_resolve_spec_paths.py::RulesReachTheirOwnStep::test_a_registry_with_no_rules_reports_empty_lists"
+    },
+    "FR-011": {
+      "title": "An unparseable rules block is skipped with one line, never failing the step",
+      "tasks": "T001,T003,T009",
+      "tests": "speckit-extension/tests/test_config.py::RegistryRulesTests::test_a_non_mapping_rules_block_is_dropped_with_a_warning"
+    },
+    "FR-012": {
+      "title": "The rules that applied are recorded alongside the capabilities that loaded",
+      "tasks": "T013",
+      "tests": "speckit-extension/tests/test_capture_fields.py"
+    },
+    "FR-013": {
+      "title": "The editor shows how many living specs claim the active file, hidden at zero or when off",
+      "tasks": "T016,T017,T019,T021",
+      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts"
+    },
+    "FR-014": {
+      "title": "Clicking the indicator lists claiming capabilities and matching requirements",
+      "tasks": "T019,T020,T021",
+      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts::the picker list"
+    },
+    "FR-015": {
+      "title": "Picking a requirement opens its capability spec positioned on it",
+      "tasks": "T018,T019",
+      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts::the picker list::groups requirements under their capability"
+    },
+    "FR-016": {
+      "title": "The indicator is computed in-process from the registry, never by dispatch",
+      "tasks": "T017,T019",
+      "tests": "src/features/specs/__tests__/livingSpecsModel.test.ts::claimsForFile"
+    },
+    "FR-017": {
+      "title": "The indicator refreshes when the active editor changes",
+      "tasks": "T019,T021",
+      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts::refreshes when the active editor changes"
+    },
+    "FR-018": {
+      "title": "The living specs reference distinguishes our meaning of living spec from spec-kit own",
+      "tasks": "T022"
+    },
+    "FR-019": {
+      "title": "Specs adopting neither markers nor rules keep working unchanged everywhere",
+      "tasks": "T003,T009,T016,T024",
+      "tests": "speckit-extension/tests/test_living_specs.py,speckit-extension/tests/test_config.py::RegistryRulesTests::test_absent_rules_normalize_to_empty_lists_for_every_step"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 16,
+    "projectedTasks": 22,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "context": [
+    "living spec: companion-commands",
+    "living spec: capture-runtime",
+    "living spec: specs",
+    "area: speckit-extension/scripts/resolve-spec-paths.py (requirement_slices, load_living)",
+    "area: src/features/specs/livingSpecsModel.ts (requirementIds, requirementSlices, globMatches)",
+    "area: speckit-extension/commands living-* family",
+    "constraint: living-spec commands are opt-in, read-only and never halt the host",
+    "constraint: registry YAML is read by a constrained parser (block maps/sequences, quoted scalars only)",
+    "constraint: requirement headings must be counted identically in resolver, model and viewer"
+  ],
+  "intent": "Make one requirement of a living spec reachable from the terminal, from the registry as reusable house rules, and from the editor's active file.",
+  "expectations": [
+    "Item 11 of #672, the guided first change, is a separate track",
+    "Item 7 of #672, splitting the four large specs, is a measurement follow-up, not code in this wave",
+    "No per-capability rules - the rules block is project-wide",
+    "No change to the on-disk living spec format",
+    "Steps other than spec and plan do not take rules in this wave"
+  ],
+  "decisions": [
+    {
+      "decision": "living-show is a mode of resolve-spec-paths.py, not a new script",
+      "why": "The resolver already owns requirement_slices, requirements_for_change and the registry load, and already emits this data for the load steps; a new script would grow a third heading parser",
+      "rejected": "A living_show.py sibling of living_validate.py, or a pure-prompt command with no script"
+    },
+    {
+      "decision": "Rules are project-wide and keyed by step, normalized in load_living_specs_block",
+      "why": "That normalizer is already the one place the registry shape is decided and already tolerates junk without raising; keying by step means there is no precedence to resolve",
+      "rejected": "Per-capability rules (needs a merge order nobody asked for) and a separate rules.yml"
+    },
+    {
+      "decision": "Rules reach a step through the resolver call its load node already makes",
+      "why": "Both steps shell out to the resolver exactly when the rules are needed and already know how to degrade; riding that call inherits the failure behaviour and costs no extra process",
+      "rejected": "Injecting rules at build time into the command bodies, which would need a rebuild whenever a project edits its rules"
+    },
+    {
+      "decision": "The status bar computes claims in-process and reuses speckit.viewSpecDocument to show them",
+      "why": "readLivingSpecs and globMatches are already exported and the match is sub-millisecond; the only new plumbing is an optional requirement heading carried through to the viewer",
+      "rejected": "A per-file CodeLens (intrusive, heavier) and dispatching living-show --file (forbidden by the spec)"
+    },
+    {
+      "decision": "The indicator hides at zero rather than showing a dimmed count",
+      "why": "A persistent zero on every unclaimed file is noise in a bar competing for a few hundred pixels, and absence already reads as nothing claims this",
+      "rejected": "Always visible with a dimmed zero"
+    },
+    {
+      "decision": "rules became an owned registry key rather than an unowned one",
+      "why": "splice_registry replaces the region spanning the owned keys, so a rules block sitting above capabilities would have been deleted on the next capability add",
+      "rejected": "Leaving rules unowned and documenting that it must sit below capabilities"
+    },
+    {
+      "decision": "The status bar keeps its own __statusBarTest export instead of __test",
+      "why": "The specs barrel re-exports both modules with export *, and two __test members are an ambiguous export",
+      "rejected": "Dropping the barrel export of the status bar module"
+    },
+    {
+      "decision": "living-show got a --capability scope flag alongside --requirement",
+      "why": "A heading can exist in two capabilities, and picking one silently would hand a reader another capability rule under the name they asked for",
+      "rejected": "Making --requirement take a capability positionally, as the contract first sketched"
+    },
+    {
+      "decision": "The rules dedupe coerces the prior side read off disk",
+      "why": "The simplifier's dict.fromkeys raises TypeError on a non-hashable entry, and this is a capture writer that must never fail the run it observes",
+      "rejected": "Keeping the explicit membership loop, which tolerated the corrupt entry but also wrote it back unchanged"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three independent slices, each attached to the file that already owns its concern: resolver modes for the terminal reader, a normalized rules block in the registry, and an in-process status bar claim lookup that reuses the spec viewer.",
+      "key_finding": "Everything this wave needs is already exported or parsed somewhere; the real constraint is that requirement headings are parsed twice (Python and TypeScript) against shared fixtures, so every new reader must go through those two parsers and never a third regex."
+    },
+    "tasks": {
+      "summary": "24 tasks: one foundational wave, three independent story phases (living-show, registry rules, editor lookup), docs, then a single validation pass."
+    },
+    "implement": {
+      "summary": "living-show reads a requirement from the terminal, a rules block carries house guidance to the spec and plan steps, and the status bar reaches the requirement that describes the open file."
+    }
+  },
+  "approach": "Add --headings/--requirement/--file modes to the existing resolver and a thin living-show command body over them. Normalize an optional project-wide rules block in the registry and let the specify and plan load nodes read their own step's rules from the resolver call they already make. Add a status bar item that matches the active file against the registry in-process and opens the matching requirement through the existing spec viewer.",
+  "currentTask": "T024",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Normalized an optional rules block to {spec:[],plan:[]}, always present, unknown steps and non-list values dropped with a warning; made rules an owned registry key so a rewrite re-emits it",
+      "files": [
+        "speckit-extension/scripts/companion_config.py",
+        "speckit-extension/scripts/register-capability.py",
+        "speckit-extension/scripts/relocate-capability.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added capability_by_name and capability_names to the resolver: one lookup that keeps registered-but-missing-spec distinct from no-requirements, plus the name list a miss reports back",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Covered the rules normalizer: absent, step isolation, non-mapping, unknown step key, non-list value, blank entries, and that a registry rewrite re-emits the rules it read (66 tests pass)",
+      "files": [
+        "speckit-extension/tests/test_config.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Wrote 12 failing tests for the three living-show modes and every degraded case: unregistered capability, registered-but-no-spec-file, no-match name, ambiguous name, unclaimed file, and disabled — all asserting exit 0",
+      "files": [
+        "speckit-extension/tests/test_living_show.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added --headings, --requirement and --file modes to the resolver CLI with a --capability scope, each honouring --json, built on requirement_slices and requirements_for_change; 12/12 tests green",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Wrote the living-show command body: read-only, opt-in, never halts, relays the script's own words rather than summarizing a requirement",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-show.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Registered speckit.companion.living-show in extension.yml with its description; the emission gate now names the remaining halves (agent emissions, docs), which land with the rebuild and the docs task",
+      "files": [
+        "speckit-extension/extension.yml"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Pinned the printed requirement count against this repo's own 14 registered capabilities, so the terminal reader can never drift from the slicer the viewer and coverage use; 13/13 green",
+      "files": [
+        "speckit-extension/tests/test_living_show.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Wrote 5 failing tests for the resolver's rules output: step isolation, absent block, malformed registry, riding along on the --requirements-for envelope, and silence when living specs are off",
+      "files": [
+        "speckit-extension/tests/test_resolve_spec_paths.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Emitted the normalized rules on a --rules flag and inside the --requirements-for envelope, so a load step reads its guidance off the call it already makes; 38/38 green",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Taught the specify load node to read rules.spec off the resolver call it already makes and treat each line as drafting guidance, with rules.plan explicitly walled off",
+      "files": [
+        "speckit-extension/nodes/specify/load-living-specs.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Taught the plan context node to read rules.plan off the same resolver call, with rules.spec walled off to the specify step",
+      "files": [
+        "speckit-extension/nodes/plan/gather-context.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added a set_living_specs_rules sibling writer and had the deterministic recorder record the guidance a run was given beside the capabilities it loaded; 446 capture tests pass",
+      "files": [
+        "speckit-extension/scripts/capture.py",
+        "speckit-extension/scripts/record-living-specs.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Rebuilt the command bodies from the edited nodes, re-froze the shape-parity golden deliberately, and emitted living-show into all seven agent areas plus the install registry; only the docs half of the emission gate is left",
+      "files": [
+        "speckit-extension/commands/speckit.companion.specify.md",
+        "speckit-extension/commands/speckit.companion.plan.md",
+        "speckit-extension/tests/golden/commands",
+        ".claude/skills",
+        ".agents/skills",
+        ".cursor/skills",
+        ".github/agents",
+        ".github/prompts",
+        ".qwen/commands",
+        ".gemini/commands",
+        ".specify/extensions/.registry"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Added four real house rules to this repo's own registry — two for specify, two for plan — so the feature is exercised by the project that ships it",
+      "files": [
+        "living-specs.yml"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Wrote 9 failing tests for claim resolution: most-specific ordering, marker matching, unmarked specs, exempt and excluded files, disabled, an escaping path, and a capability whose spec file is missing",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Added claimsForFile: reverse lookup from a source file to the capabilities claiming it and the requirements describing it, ordered most-specific first by the same specificity rule the resolver uses, computed in-process; 50/50 green",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Carried an optional requirement heading from speckit.viewSpecDocument through the provider to a new revealRequirement message the webview scrolls to; an unmatched heading leaves the reader where they are rather than erroring",
+      "files": [
+        "src/protocol/viewer.ts",
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/specViewerCommands.ts",
+        "webview/src/spec-viewer/messageHandlers.ts",
+        "webview/src/spec-viewer/toc.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added the status bar item and its quick-pick: shows how many living specs claim the active file, hidden at zero, refreshed on editor change and on a registry save, in-process with no dispatch",
+      "files": [
+        "src/features/specs/livingSpecsStatusBar.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Registered the status bar item in activation, exported it from the specs barrel, and contributed the speckit.livingSpecs.forFile command in package.json",
+      "files": [
+        "src/extension.ts",
+        "src/features/specs/index.ts",
+        "package.json"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Covered the indicator's visible and hidden cases and the picker's grouping, with onDidChangeActiveTextEditor and onDidSaveTextDocument added to the shared vscode mock; 9/9 green",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsStatusBar.test.ts",
+        "tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Opened the living specs reference by separating spec-kit's meaning of the phrase from ours, documented living-show, the editor lookup and the rules block, and recorded that the pinned spec-kit ships no /speckit.converge so nothing overlaps the doctor; emission gate now green",
+      "files": [
+        "speckit-extension/docs/living-specs.md",
+        "speckit-extension/docs/commands.md",
+        "speckit-extension/README.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Wrote release notes under Unreleased in both changelogs — living-show and the rules block on the spec-kit side, the editor lookup on the VS Code side — and named the editor lookup in the README's living specs section",
+      "files": [
+        "speckit-extension/CHANGELOG.md",
+        "CHANGELOG.md",
+        "README.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Ran compile, Jest (2844 pass), the Python suite (1349 pass) and the parity/emission gates, then checked each Success Criterion against the real repo: 7 lines instead of 432, count parity across all 14 capabilities, rules reaching a run, and every degraded path exiting 0",
+      "files": [
+        "package.json",
+        "speckit-extension/tests"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "TypeScript compile",
+      "command": "npm run compile",
+      "result": "clean, no errors"
+    },
+    {
+      "what": "Jest suite",
+      "command": "npm test",
+      "result": "2844/2844 pass, 171 suites"
+    },
+    {
+      "what": "Python suite",
+      "command": "python3 -m unittest discover -s tests (speckit-extension)",
+      "result": "1349 pass, 8 skipped, 0 failures"
+    },
+    {
+      "what": "Command shape parity",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence",
+      "warnings": [
+        "golden was re-frozen deliberately for the two intentional node edits"
+      ]
+    },
+    {
+      "what": "Command emissions gate",
+      "command": "python3 speckit-extension/scripts/check-command-emissions.py",
+      "result": "OK — 21 commands agree across 7 install areas, 8 agent records, 2 documents"
+    },
+    {
+      "what": "SC-001 one requirement instead of a file",
+      "command": "resolve-spec-paths.py --requirement \"The registry carries a capability retirement declaration\"",
+      "result": "7 lines vs the 432-line spec"
+    },
+    {
+      "what": "SC-002 count parity across every capability",
+      "command": "show_headings vs requirement_slices over all 14 registered capabilities",
+      "result": "zero mismatches"
+    },
+    {
+      "what": "SC-003 rules reach a run",
+      "command": "resolve-spec-paths.py --changed src/core/x.ts --requirements-for --json",
+      "result": "both spec rules and both plan rules present in the envelope"
+    },
+    {
+      "what": "SC-005 every degraded path exits 0",
+      "command": "living-show with an unregistered capability, a no-match name, an unclaimed file, --rules, and from an unconfigured directory",
+      "result": "all five exit 0"
+    },
+    {
+      "what": "FR-012 rules record",
+      "command": "python3 -m unittest tests.test_capture_fields",
+      "result": "34 pass, including the three new rules-record cases"
+    },
+    {
+      "what": "Living spec shape after the fold",
+      "command": "python3 speckit-extension/scripts/living_validate.py",
+      "result": "17 specs checked, 0 errors, 1 pre-existing warning in capabilities/workflows/spec.md"
+    },
+    {
+      "what": "Cross-runtime capability ordering",
+      "command": "test_living_show.py::CapabilityOrderMatchesTheEditor and livingSpecsModel.test.ts::capability order agrees with the resolver",
+      "result": "same 4 cases pass in both runtimes off one shared fixture"
+    },
+    {
+      "what": "Full validation after the simplifier pass",
+      "command": "npm run compile; npx jest; python3 -m unittest discover -s tests",
+      "result": "compile clean, 2849 Jest pass, 1354 Python pass"
+    },
+    {
+      "what": "All three gates",
+      "command": "check-shape-parity.py; check-command-emissions.py; living_validate.py",
+      "result": "parity OK on 14 bodies, emissions OK on 21 commands, 0 shape errors"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Doctor: plan and tasks were closed by 'ai' rather than the extension hook. In a terminal session this command body IS the runtime, so the self-close is what closed them; history is append-only, so the attribution cannot be repaired. Not a capture failure."
+    },
+    {
+      "note": "Doctor: 3 of 211 tool calls failed, all my own retried invocations (a zsh quoting slip in a manual check, a cwd-relative script path). No work was skipped."
+    },
+    {
+      "note": "Self-review found two fail-open probes I had written: an unreadable spec file read as a spec with no requirements in both runtimes. Fixed by keeping readable distinct from exists and catching ValueError alongside OSError, since a non-UTF-8 spec raises UnicodeDecodeError which is not an OSError.",
+      "step": "implement"
+    },
+    {
+      "note": "Self-review also caught a coverage claim for FR-012 with no test behind it. The test is now written; the claim was wrong when I made it.",
+      "step": "implement"
+    },
+    {
+      "note": "livingSpecs.rules is empty on this spec's own record because the registry gained its rules block after this run recorded its living specs. The field is exercised by tests and will populate from the next run onward.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: one capture call is recorded as failed — the implement --advance the command body asks for unconditionally, refused because mark-complete had already written completed. A designed no-op counted as a failure, not lost work. Every other check is clean."
+    }
+  ]
+}

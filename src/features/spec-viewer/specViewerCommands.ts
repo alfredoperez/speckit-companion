@@ -15,7 +15,7 @@ export function registerSpecViewerCommands(
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'speckit.viewSpecDocument',
-            (filePath: string, opts?: { living?: boolean }) =>
+            (filePath: string, opts?: { living?: boolean; requirement?: string }) =>
                 provider.show(filePath, opts),
         )
     );

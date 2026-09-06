@@ -164,6 +164,7 @@ export const workspace = {
         )
     ),
     openTextDocument: jest.fn().mockResolvedValue({}),
+    onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     findFiles: jest.fn().mockResolvedValue([]),
     createFileSystemWatcher: jest.fn().mockImplementation(createMockFileSystemWatcher),
     getConfiguration: jest.fn().mockReturnValue({
@@ -319,6 +320,7 @@ export const window = {
     showQuickPick: jest.fn(),
     showTextDocument: jest.fn(),
     activeTextEditor: undefined as any,
+    onDidChangeActiveTextEditor: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     createTerminal: jest.fn().mockReturnValue({ show: jest.fn(), sendText: jest.fn() }),
     onDidCloseTerminal: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     createOutputChannel: jest.fn().mockReturnValue({

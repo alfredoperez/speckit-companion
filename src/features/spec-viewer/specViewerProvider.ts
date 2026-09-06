@@ -206,9 +206,12 @@ export class SpecViewerProvider {
   /**
    * Show the spec viewer with the specified document
    */
-  public async show(filePath: string, opts?: { living?: boolean }): Promise<void> {
+  public async show(
+    filePath: string,
+    opts?: { living?: boolean; requirement?: string },
+  ): Promise<void> {
     if (opts?.living) {
-      return this.showLiving(filePath);
+      return this.showLiving(filePath, opts.requirement);
     }
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
@@ -273,7 +276,7 @@ export class SpecViewerProvider {
    * The panel is keyed by the tier file's own directory; tier siblings
    * (spec / arch / coverage) become the tab strip.
    */
-  private async showLiving(filePath: string): Promise<void> {
+  private async showLiving(filePath: string, requirement?: string): Promise<void> {
     const specDirectory = path.dirname(filePath);
     const documentType = livingTierType(path.basename(filePath));
 
@@ -290,9 +293,24 @@ export class SpecViewerProvider {
       };
       await this.updateLivingContent(specDirectory, documentType);
       existing.panel.reveal(vscode.ViewColumn.One);
+      this.revealRequirement(specDirectory, requirement);
       return;
     }
     await this.createPanel(specDirectory, documentType, { living: true, sourcePath: filePath });
+    this.revealRequirement(specDirectory, requirement);
+  }
+
+  /**
+   * Ask the panel to bring one requirement into view.
+   *
+   * Fire-and-forget on purpose: the reader opened the spec, and a scroll that
+   * did not happen must never be why the spec failed to open.
+   */
+  private revealRequirement(specDirectory: string, heading?: string): void {
+    if (!heading) {
+      return;
+    }
+    this.postMessage(specDirectory, { type: 'revealRequirement', heading });
   }
 
   /**

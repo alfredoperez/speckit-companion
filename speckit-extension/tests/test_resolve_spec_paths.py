@@ -10,7 +10,9 @@ Stdlib `unittest` only.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
+import io
 import json
 import re
 import sys
@@ -247,3 +249,71 @@ No marker.
         (self.root / "living-specs.yml").write_text("enabled: false\n", encoding="utf-8")
         living = rsp.load_living(str(self.root))
         self.assertFalse(living.get("enabled"))
+
+
+class RulesReachTheirOwnStep(unittest.TestCase):
+    """Guidance authored once in the registry, handed to one step at a time.
+
+    The point of the block is that nobody retypes the house rule into a chat
+    window, so the failure that matters is a rule reaching the wrong step or a
+    malformed block taking the step down with it.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def registry(self, text: str) -> None:
+        (self.root / "living-specs.yml").write_text(text, encoding="utf-8")
+
+    def rules(self) -> dict:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = rsp.main(["--root", str(self.root), "--rules", "--json"])
+        self.assertEqual(code, 0)
+        return json.loads(buf.getvalue())["rules"]
+
+    def test_each_step_sees_only_its_own_rules(self):
+        self.registry(
+            "enabled: true\n"
+            "capabilities: []\n"
+            "rules:\n"
+            "  spec:\n"
+            '    - "one outcome per scenario"\n'
+            "  plan:\n"
+            '    - "name the capability each decision belongs to"\n'
+        )
+        rules = self.rules()
+        self.assertEqual(rules["spec"], ["one outcome per scenario"])
+        self.assertEqual(rules["plan"], ["name the capability each decision belongs to"])
+
+    def test_a_registry_with_no_rules_reports_empty_lists(self):
+        self.registry("enabled: true\ncapabilities: []\n")
+        self.assertEqual(self.rules(), {"spec": [], "plan": []})
+
+    def test_a_malformed_registry_reports_no_rules_and_still_exits_zero(self):
+        self.registry("enabled: true\ncapabilities:\n  - [unclosed\n")
+        self.assertEqual(self.rules(), {"spec": [], "plan": []})
+
+    def test_rules_ride_along_with_the_requirements_envelope(self):
+        # The load steps already call --requirements-for; the rules arrive on
+        # that same call so a step never pays for a second process.
+        self.registry(
+            "enabled: true\n"
+            "capabilities: []\n"
+            "rules:\n"
+            "  spec:\n"
+            '    - "one outcome per scenario"\n'
+        )
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rsp.main(["--root", str(self.root), "--changed", "a.ts",
+                      "--requirements-for", "--json"])
+        self.assertEqual(json.loads(buf.getvalue())["rules"]["spec"],
+                         ["one outcome per scenario"])
+
+    def test_rules_are_absent_when_living_specs_are_off(self):
+        self.registry("enabled: false\ncapabilities: []\nrules:\n  spec:\n    - \"x\"\n")
+        self.assertEqual(self.rules(), {"spec": [], "plan": []})
+

@@ -574,3 +574,52 @@ class AtomicWriteTextTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 cc.atomic_write_text(str(target), "b\n")
         self.assertEqual(sorted(p.name for p in self.root.iterdir()), [])
+
+
+class RegistryRulesTests(unittest.TestCase):
+    """The `rules:` block: always normalized, never able to fail the step it guides."""
+
+    def test_absent_rules_normalize_to_empty_lists_for_every_step(self):
+        block = cc.load_living_specs_block({"enabled": True})
+        self.assertEqual(block["rules"], {"spec": [], "plan": []})
+
+    def test_authored_rules_reach_their_own_step_only(self):
+        block = cc.load_living_specs_block(
+            {"enabled": True, "rules": {"spec": ["one outcome per scenario"]}}
+        )
+        self.assertEqual(block["rules"]["spec"], ["one outcome per scenario"])
+        self.assertEqual(block["rules"]["plan"], [])
+
+    def test_a_non_mapping_rules_block_is_dropped_with_a_warning(self):
+        warnings: list[str] = []
+        rules = cc.load_rules("just a sentence", warnings)
+        self.assertEqual(rules, {"spec": [], "plan": []})
+        self.assertEqual(len(warnings), 1)
+
+    def test_an_unknown_step_key_is_dropped_with_a_warning(self):
+        warnings: list[str] = []
+        rules = cc.load_rules({"tasks": ["nope"], "spec": ["yes"]}, warnings)
+        self.assertEqual(rules["spec"], ["yes"])
+        self.assertNotIn("tasks", rules)
+        self.assertEqual(len(warnings), 1)
+
+    def test_a_non_list_step_value_is_dropped_without_touching_its_siblings(self):
+        warnings: list[str] = []
+        rules = cc.load_rules({"spec": "a bare line", "plan": ["kept"]}, warnings)
+        self.assertEqual(rules["spec"], [])
+        self.assertEqual(rules["plan"], ["kept"])
+        self.assertEqual(len(warnings), 1)
+
+    def test_blank_entries_are_dropped(self):
+        self.assertEqual(cc.load_rules({"spec": ["a", "", None]})["spec"], ["a"])
+
+    def test_a_rewrite_re_emits_the_rules_it_read(self):
+        # `rules` is an owned registry key, so a splice covers it — a writer that
+        # dropped it would delete the project's guidance on the next capability add.
+        original = cc.render_registry(
+            True, [], exempt=["x"], rules={"spec": ["keep me"], "plan": []}
+        )
+        self.assertIn("keep me", original)
+        spliced = cc.splice_registry(original, original)
+        self.assertEqual(cc.load_living_specs_block(cc.load_yaml(spliced))["rules"]["spec"],
+                         ["keep me"])

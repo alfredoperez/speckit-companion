@@ -680,3 +680,23 @@ An anchor name MAY match the step's own name, a phase name, and a node id at onc
 #### Scenario: a hook is attached to a name that is both a phase and a node
 - **WHEN** the pipeline structure is built
 - **THEN** the hook is emitted once, on the boundary the assembled body places it at
+
+### The registry carries per-step guidance, normalized to one shape
+
+The registry reader SHALL normalize an optional `rules` block to a list per known pipeline step, always present and empty when unset, dropping an unknown step key or an unusable value with a warning rather than raising. `rules` SHALL be a key the registry owns, so re-emitting the registry preserves it.
+
+#### Scenario: a capability is added to a registry that carries rules
+- **WHEN** the registry is rewritten to record the new capability
+- **THEN** the authored rules are still in the file afterwards
+
+#### Scenario: a step key nobody recognizes
+- **WHEN** the block names a step that takes no rules
+- **THEN** that key is dropped with a warning and every other step's rules are unaffected
+
+### The resolver answers for one capability, one requirement, or one file
+
+The resolver SHALL expose the slice a caller asks for — a capability's headings, one requirement in full, or the requirements matching a file — from the same slicing that serves the load steps, so the count it reports equals the coverage denominator and the viewer's outline. A requirement carrying no marker SHALL be returned for every file its capability claims.
+
+#### Scenario: a capability is registered but its spec file is gone
+- **WHEN** the resolver is asked for that capability's headings
+- **THEN** it reports that there is no spec on disk, never a spec with zero requirements

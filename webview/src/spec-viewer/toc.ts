@@ -125,6 +125,26 @@ function teardown(tocRoot: HTMLElement): void {
     observers.delete(tocRoot);
 }
 
+/**
+ * Bring one requirement into view by its heading text.
+ *
+ * A heading that matches nothing leaves the document where it is: the reader
+ * asked to open a spec, and dropping them at the top is a worse answer than
+ * their own scroll position but a far better one than an error.
+ */
+export function revealRequirement(heading: string): void {
+    const wanted = heading.trim().toLowerCase();
+    if (!wanted) return;
+    const match = Array.from(
+        document.querySelectorAll<HTMLElement>('#markdown-content h3')
+    ).find(h => (h.textContent ?? '').trim().toLowerCase() === wanted);
+    if (!match) return;
+    match.scrollIntoView({
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+        block: 'start'
+    });
+}
+
 export function buildToc(
     scrollRoot: HTMLElement | null,
     markdownRoot: HTMLElement | null,

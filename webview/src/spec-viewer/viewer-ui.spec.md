@@ -469,3 +469,15 @@ A living spec SHALL be navigable by requirement from the viewer's existing docum
 #### Scenario: the outline reaches the page
 - **WHEN** the document renders through the full pipeline rather than the outline pass alone
 - **THEN** the outline is live markup the stylesheet applies to, and a requirement's file marker is metadata the reader never sees as prose or as a template disclosure
+
+### The viewer can be told which requirement to bring into view
+
+The viewer SHALL accept a requirement heading from the extension and scroll the matching requirement into view, honouring the reader's reduced-motion preference. A heading matching no rendered requirement SHALL leave the scroll position untouched.
+
+#### Scenario: the named requirement is on the page
+- **WHEN** the viewer is told to reveal it
+- **THEN** that requirement is scrolled into view
+
+#### Scenario: the heading matches nothing rendered
+- **WHEN** the viewer is told to reveal it
+- **THEN** the document stays where the reader left it

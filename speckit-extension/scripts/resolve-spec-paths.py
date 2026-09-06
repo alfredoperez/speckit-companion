@@ -548,6 +548,164 @@ def requirements_for_changed(files: list, living: dict, root: str) -> list:
     return out
 
 
+def capability_names(living: dict) -> list:
+    """Every registered capability name, in registry order — what a miss lists back."""
+    return [str(c.get("name")) for c in (living.get("capabilities") or []) if c.get("name")]
+
+
+def capability_by_name(name: str, living: dict, root: str):
+    """Resolve one registered capability to its spec path and text.
+
+    Returns None when nothing is registered under that name. Three other answers
+    stay distinct, because collapsing any two of them reports an empty spec:
+    the file is missing (`exists` false), the file is there but could not be read
+    (`readable` false — a permission error or non-UTF-8 bytes, never the same
+    answer as absent), and the file was read (`text` set).
+    """
+    wanted = (name or "").strip().lower()
+    for cap in living.get("capabilities") or []:
+        if str(cap.get("name", "")).strip().lower() != wanted:
+            continue
+        entry = _entry(cap, root)
+        text = None
+        entry["readable"] = bool(entry.get("exists"))
+        if entry.get("exists"):
+            try:
+                with open(os.path.join(root, entry["spec"]), encoding="utf-8") as fh:
+                    text = fh.read()
+            except (OSError, ValueError):
+                # UnicodeDecodeError is a ValueError, not an OSError.
+                entry["readable"] = False
+        entry["text"] = text
+        return entry
+    return None
+
+
+def _slices_of(entry: dict) -> list:
+    """The requirement slices of a resolved capability, empty when it has no spec text."""
+    return requirement_slices(entry.get("text") or "") if entry.get("text") else []
+
+
+def _requirement_payload(cap_name: str, s: dict) -> dict:
+    return {
+        "capability": cap_name,
+        "heading": s["heading"],
+        "touches": s.get("touches"),
+        "body": "\n".join(s.get("body") or []).strip(),
+    }
+
+
+def show_headings(name: str, living: dict, root: str) -> dict:
+    """One capability's requirement headings — the table of contents, nothing else."""
+    entry = capability_by_name(name, living, root)
+    if entry is None:
+        return {"show": "headings", "capability": name, "registered": False,
+                "specExists": False, "requirements": [],
+                "capabilities": capability_names(living)}
+    return {
+        "show": "headings",
+        "capability": entry["name"],
+        "registered": True,
+        "specExists": bool(entry.get("exists")),
+        "specReadable": bool(entry.get("readable")),
+        "spec": entry.get("spec"),
+        "requirements": [
+            {"heading": s["heading"], "touches": s.get("touches")}
+            for s in _slices_of(entry)
+        ],
+        "capabilities": capability_names(living),
+    }
+
+
+def show_requirement(name: str, living: dict, root: str, capability: str | None = None) -> dict:
+    """One requirement in full, matched case-insensitively on trimmed text.
+
+    An ambiguous name returns every candidate rather than picking one — a guess
+    here would hand a reader another capability's rule under the name they asked for.
+    """
+    wanted = (name or "").strip().lower()
+    scope = [capability] if capability else capability_names(living)
+    matches, headings = [], []
+    for cap_name in scope:
+        entry = capability_by_name(cap_name, living, root)
+        if entry is None:
+            continue
+        for s in _slices_of(entry):
+            headings.append({"capability": entry["name"], "heading": s["heading"]})
+            if s["heading"].strip().lower() == wanted:
+                matches.append(_requirement_payload(entry["name"], s))
+    return {"show": "requirement", "requested": name, "matches": matches,
+            "headings": headings}
+
+
+def show_for_file(path: str, living: dict, root: str) -> dict:
+    """The requirements describing one file, grouped by capability, most-specific first."""
+    caps = []
+    for item in requirements_for_changed([path], living, root):
+        entry = capability_by_name(item["name"], living, root)
+        if item.get("whole"):
+            # No marker anywhere means every requirement describes the file.
+            reqs = [_requirement_payload(item["name"], s)
+                    for s in _slices_of(entry or {})]
+        else:
+            reqs = [
+                {"capability": item["name"], "heading": r["heading"],
+                 "matched": r.get("matched"), "body": r.get("body", "")}
+                for r in item.get("requirements") or []
+            ]
+        caps.append({"name": item["name"], "spec": item.get("spec"),
+                     "exists": item.get("exists", False), "requirements": reqs})
+    return {"show": "file", "file": path, "capabilities": caps}
+
+
+def render_rules(rules: dict) -> str:
+    """The authored guidance, per step. Silence when a project wrote none."""
+    lines = []
+    for step, items in (rules or {}).items():
+        for item in items:
+            lines.append(f"{step}: {item}")
+    return "\n".join(lines) if lines else "no rules authored"
+
+
+def render_show(result: dict) -> str:
+    """The human view of a slice. One answer per line, never a JSON dump."""
+    mode = result.get("show")
+    if mode == "headings":
+        if not result.get("registered"):
+            names = _fmt_list(result.get("capabilities") or [])
+            return f"{result['capability']}: not a registered capability; registered: {names}"
+        if not result.get("specExists"):
+            return f"{result['capability']}: registered, but no spec file on disk"
+        if not result.get("specReadable"):
+            return f"{result['capability']}: spec file could not be read"
+        reqs = result.get("requirements") or []
+        head = f"{result['capability']}: {len(reqs)} requirements"
+        return "\n".join([head] + [f"- {r['heading']}" for r in reqs])
+    if mode == "requirement":
+        matches = result.get("matches") or []
+        if len(matches) == 1:
+            m = matches[0]
+            return f"### {m['heading']}  ({m['capability']})\n\n{m['body']}".rstrip()
+        if len(matches) > 1:
+            candidates = "\n".join(f"- {m['heading']}  ({m['capability']})" for m in matches)
+            return (f'"{result["requested"]}" names more than one requirement:\n'
+                    f"{candidates}\n\nName the capability to pick one.")
+        heads = result.get("headings") or []
+        if not heads:
+            return f'"{result["requested"]}": nothing to search — no living spec is readable'
+        listing = "\n".join(f"- {h['heading']}  ({h['capability']})" for h in heads)
+        return f'"{result["requested"]}" matches no requirement. These exist:\n{listing}'
+    caps = result.get("capabilities") or []
+    if not caps:
+        return f"{result['file']}: no living spec claims this file"
+    lines = []
+    for c in caps:
+        reqs = c.get("requirements") or []
+        lines.append(f"{c['name']} ({c.get('spec')}): {len(reqs)} requirements")
+        lines.extend(f"- {r['heading']}" for r in reqs)
+    return "\n".join(lines)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Resolve Companion living-spec paths.")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
@@ -556,6 +714,16 @@ def main(argv=None) -> int:
     ap.add_argument("--orphans", action="store_true", help="orphan spec files (either layout)")
     ap.add_argument("--requirements-for", action="store_true",
                     help="with --changed: what each capability should contribute, sliced by requirement")
+    ap.add_argument("--headings", metavar="CAPABILITY",
+                    help="print one capability's requirement headings")
+    ap.add_argument("--requirement", metavar="NAME",
+                    help="print one requirement in full, by heading")
+    ap.add_argument("--file", metavar="PATH",
+                    help="print the requirements whose marker describes this file")
+    ap.add_argument("--capability", metavar="NAME",
+                    help="with --requirement: search only this capability")
+    ap.add_argument("--rules", action="store_true",
+                    help="the registry's authored per-step guidance")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable JSON object (default: a concise human list)")
     args = ap.parse_args(argv)
@@ -563,22 +731,48 @@ def main(argv=None) -> int:
     living = load_living(root)
 
     def emit(result: dict) -> None:
-        print(json.dumps(result, indent=2) if args.json else render_human(result))
+        if args.json:
+            print(json.dumps(result, indent=2))
+        elif args.rules:
+            print(render_rules(result["rules"]))
+        elif "show" in result:
+            print(render_show(result))
+        else:
+            print(render_human(result))
 
     if not living["enabled"]:
-        if args.orphans:
+        if args.rules:
+            result = {"rules": cc.load_rules(None)}
+        elif args.headings:
+            result = {"show": "headings", "capability": args.headings, "registered": False,
+                      "specExists": False, "requirements": [], "capabilities": []}
+        elif args.requirement:
+            result = {"show": "requirement", "requested": args.requirement,
+                      "matches": [], "headings": [], "capabilities": []}
+        elif args.file:
+            result = {"show": "file", "file": args.file, "capabilities": []}
+        elif args.orphans:
             result = {"orphans": []}
         elif args.all:
             result = {"capabilities": [], "orphans": []}
         elif args.requirements_for:
-            result = {"changed": args.changed or [], "capabilities": []}
+            result = {"changed": args.changed or [], "capabilities": [],
+                      "rules": cc.load_rules(None)}
         else:
             result = {"changed": args.changed or [], "matched": []}
         emit(result)
         return 0
 
     try:
-        if args.orphans:
+        if args.rules:
+            result = {"rules": living.get("rules") or cc.load_rules(None)}
+        elif args.headings:
+            result = show_headings(args.headings, living, root)
+        elif args.requirement:
+            result = show_requirement(args.requirement, living, root, args.capability)
+        elif args.file:
+            result = show_for_file(args.file, living, root)
+        elif args.orphans:
             result = {"orphans": find_orphans(living, root)}
         elif args.all:
             orphans = find_orphans(living, root)
@@ -586,8 +780,10 @@ def main(argv=None) -> int:
                       "orphans": orphans}
         elif args.requirements_for:
             files = args.changed or []
+            # The rules ride along so a load step never spawns a second process.
             result = {"changed": files,
-                      "capabilities": requirements_for_changed(files, living, root)}
+                      "capabilities": requirements_for_changed(files, living, root),
+                      "rules": living.get("rules") or cc.load_rules(None)}
         else:
             files = args.changed or []
             result = {"changed": files, "matched": match_changed(files, living, root)}
