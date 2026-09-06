@@ -257,14 +257,52 @@ describe('everything attached to one anchor sits in one block', () => {
             .toContain('.specify/companion/workflows/client.yml');
     });
 
-    it('names no file at all on the pipeline as it ships', () => {
+    // `shipped` bypasses companion.yml rather than emptying it, so the hooks
+    // under this heading are the ones that file still holds and is not running.
+    it('names the file the hooks are parked in on the pipeline as it ships', () => {
         const { host } = canvas({
             ...hooked(),
-            workflows: { available: ['shipped'], active: 'shipped' },
+            workflows: { available: ['', 'shipped'], active: 'shipped' },
         });
         const source = host.querySelector('.pb-hook-source')!;
-        expect(source.querySelector('.pb-hook-source-name')?.textContent).toBe('as shipped');
-        expect(source.getAttribute('title')).toContain('no file of its own');
+        expect(source.querySelector('.pb-hook-source-name')?.textContent)
+            .toBe('companion.yml · parked');
+        expect(source.getAttribute('title')).toContain('is still there');
+    });
+
+    const parked = () => {
+        const g = hooked();
+        const node = g.steps[0].phases[0].nodes[0];
+        node.hooks = node.hooks.map(hook => ({ ...hook, parked: true }));
+        return {
+            ...g,
+            workflows: {
+                available: ['', 'shipped'], active: 'shipped',
+                parked: { file: '.specify/companion.yml', hooks: 2 },
+            },
+        };
+    };
+
+    it('draws a parked hook where it would attach rather than dropping it', () => {
+        const { host } = canvas(parked());
+        expect(host.querySelectorAll('.pb-hook--parked')).toHaveLength(2);
+        expect(host.textContent).toContain('doctor.py --chat');
+    });
+
+    // A shade of grey in a column of grey is not a state. The word is on the
+    // row, so it is read by a screen reader and by anyone who cannot tell the
+    // two greys apart.
+    it('says parked in a word, not only in a colour', () => {
+        const { host } = canvas(parked());
+        expect(Array.from(host.querySelectorAll('.pb-hook-parked'))
+            .map(el => el.textContent)).toEqual(['parked', 'parked']);
+    });
+
+    it('offers no edit on a hook that has no file to edit', () => {
+        const { host, edited } = canvas(parked());
+        (host.querySelector('.pb-hook--parked') as HTMLElement).click();
+        expect(host.querySelectorAll('button.pb-hook')).toHaveLength(0);
+        expect(edited).toEqual([]);
     });
 
     // A heading above rows one line tall was a third of the block's height, for

@@ -59,8 +59,14 @@ class WithoutASelectionNothingChanges(unittest.TestCase):
         with project(HOOKED) as root:
             self.assertEqual(build.available_workflows(root), [])
             graph = graph_mod.build_graph(root)
-        self.assertEqual(graph["workflows"]["available"], ["shipped"])
+        self.assertEqual(graph["workflows"]["available"], ["", "shipped"])
         self.assertEqual(graph["workflows"]["active"], "")
+
+    def test_nothing_is_parked_while_the_configuration_is_the_one_running(self):
+        with project(HOOKED) as root:
+            graph = graph_mod.build_graph(root)
+        self.assertIsNone(graph["workflows"]["parked"])
+        self.assertTrue(graph["configured"])
 
 
 class ASelectionReplacesTheConfiguration(unittest.TestCase):
@@ -95,7 +101,8 @@ class ASelectionReplacesTheConfiguration(unittest.TestCase):
         with project("workflow: client\n",
                      {"bugfix": "commands: {}\n", "client": "commands: {}\n"}) as root:
             graph = graph_mod.build_graph(root)
-        self.assertEqual(graph["workflows"]["available"], ["shipped", "bugfix", "client"])
+        self.assertEqual(graph["workflows"]["available"],
+                         ["", "shipped", "bugfix", "client"])
         self.assertEqual(graph["workflows"]["active"], "client")
 
 
@@ -120,6 +127,73 @@ class WritingTheSelection(unittest.TestCase):
 
         out = config_write.set_workflow(HOOKED, "bugfix")
         self.assertEqual(cc.load_yaml(out)["workflow"], "bugfix")
+
+
+class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
+    """`shipped` bypasses the configuration; nothing it holds is removed, and
+    what it holds stays visible so the state can be seen and undone."""
+
+    def hooks_of(self, graph: dict, command: str) -> list:
+        step = next(s for s in graph["steps"] if s["name"] == command)
+        return (step["hooks"]
+                + [h for p in step["phases"] for h in p["hooks"]]
+                + [h for p in step["phases"] for n in p["nodes"] for h in n["hooks"]])
+
+    def test_the_parked_hooks_are_drawn_where_they_would_attach(self):
+        with project("workflow: shipped\n" + HOOKED) as root:
+            graph = graph_mod.build_graph(root)
+
+        parked = [h for h in self.hooks_of(graph, "plan") if h["parked"]]
+        self.assertEqual([h["summary"] for h in parked], ["check it"])
+        self.assertEqual(graph["workflows"]["parked"],
+                         {"file": ".specify/companion.yml", "hooks": 1})
+
+    def test_a_parked_hook_is_not_counted_as_a_change(self):
+        with project("workflow: shipped\n" + HOOKED) as root:
+            graph = graph_mod.build_graph(root)
+
+        plan = next(s for s in graph["steps"] if s["name"] == "plan")
+        self.assertEqual(plan["changes"]["hooks"], 0)
+        self.assertEqual(graph["counts"]["hooks"], 0)
+        self.assertFalse(graph["customised"])
+
+    def test_the_project_is_offered_as_the_way_back(self):
+        with project("workflow: shipped\n" + HOOKED) as root:
+            graph = graph_mod.build_graph(root)
+        self.assertEqual(graph["workflows"]["available"], ["", "shipped"])
+        self.assertEqual(graph["workflows"]["active"], "shipped")
+
+    def test_a_configuration_nobody_can_resolve_parks_nothing(self):
+        with project("workflow: shipped\ncommands:\n  plan:\n    nodes: [nope]\n") as root:
+            graph = graph_mod.build_graph(root)
+        self.assertIsNone(graph["workflows"]["parked"])
+
+    def test_switching_to_shipped_leaves_every_hook_where_it_was(self):
+        parked = config_write.set_workflow(HOOKED, "shipped")
+        self.assertIn("check it", parked)
+        self.assertIn('workflow: "shipped"', parked)
+
+    def test_switching_back_restores_exactly_what_was_there(self):
+        for before in (HOOKED, "# ours\n\n" + HOOKED):
+            parked = config_write.set_workflow(before, "shipped")
+            self.assertEqual(config_write.set_workflow(parked, ""), before)
+
+    def test_a_note_written_under_the_selection_survives_the_switch_back(self):
+        parked = 'workflow: "shipped"\n# why we parked it\n\n' + HOOKED
+        self.assertIn("# why we parked it", config_write.set_workflow(parked, ""))
+
+    def test_going_back_with_no_selection_written_changes_nothing(self):
+        self.assertEqual(config_write.set_workflow(HOOKED, ""), HOOKED)
+
+    def test_the_project_is_a_name_the_writer_accepts(self):
+        with project("workflow: shipped\n" + HOOKED) as root:
+            config_write.check_workflow(root, "")
+            path = Path(root) / ".specify" / "companion.yml"
+            path.write_text(
+                config_write.set_workflow(path.read_text(encoding="utf-8"), ""),
+                encoding="utf-8")
+            self.assertEqual(build.active_workflow(root), "")
+            self.assertIn("plan", build.load_config(root)["commands"])
 
 
 class CreatingAWorkflow(unittest.TestCase):

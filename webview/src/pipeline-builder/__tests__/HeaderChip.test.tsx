@@ -207,6 +207,76 @@ describe('switching workflows', () => {
         expect(options[1].textContent).toBe('bugfixIn force');
     });
 
+    // A tree carried `workflow: shipped` for an unknown stretch with every hook
+    // in companion.yml switched off, and the board drew the shipped pipeline as
+    // though nothing had been configured at all.
+    describe('running the pipeline as it ships', () => {
+        const shipped = (hooks = 2) => graph({
+            configured: false,
+            workflows: {
+                available: ['', 'shipped'], active: 'shipped',
+                parked: { file: '.specify/companion.yml', hooks },
+            },
+        });
+
+        it('says so, and says what is parked', () => {
+            const { host } = header(shipped());
+            const notice = host.querySelector('.builder-notice--warning')!;
+            expect(notice.textContent).toContain('as it ships');
+            expect(notice.textContent).toContain('.specify/companion.yml');
+            expect(notice.textContent).toContain('2 hooks of yours');
+        });
+
+        it('switches back to the project in one click', () => {
+            const { host, picked } = header(shipped());
+            const back = Array.from(host.querySelectorAll('.builder-link'))
+                .find(el => el.textContent?.includes('this project')) as HTMLButtonElement;
+            back.click();
+            expect(picked).toEqual(['']);
+        });
+
+        it('offers the project as a workflow so the switch can be undone', async () => {
+            const { host } = header(shipped());
+            (host.querySelector('.builder-workflow-current') as HTMLButtonElement).click();
+            await flush();
+            expect(Array.from(host.querySelectorAll('.pb-menu-option'))
+                .map(el => el.textContent)).toEqual([
+                'This projectWhatever .specify/companion.yml says',
+                'As shippedCompanion with nothing changed · In force',
+                'New workflow…Starts from the one in force',
+            ]);
+        });
+
+        it('does not tally a parked hook as one that runs', async () => {
+            const g = shipped();
+            g.steps[0].phases[0].nodes[0].hooks = [{
+                when: 'before', type: 'prompt', summary: 'check it',
+                anchor: '', index: 0, note: '', parked: true,
+            }];
+            const { host } = header(g);
+            expect(host.querySelector('.builder-tally')?.textContent)
+                .toContain('no hooks running');
+
+            (host.querySelector('.builder-tally') as HTMLButtonElement).click();
+            await flush();
+            expect(Array.from(host.querySelectorAll('.pb-menu-option'))
+                .map(el => el.textContent)).toContain('1 hook parked'
+                    + 'Written by this project, kept, and not running while the '
+                    + 'pipeline is the shipped one');
+        });
+
+        it('still offers the parked file to open', () => {
+            const { host } = header(shipped());
+            expect(Array.from(host.querySelectorAll('.builder-action'))
+                .map(el => el.textContent)).toContain('Open companion.yml');
+        });
+
+        it('says nothing about parking when the project runs its own pipeline', () => {
+            const { host } = header(graph({ configured: true }));
+            expect(host.querySelector('.builder-notice--warning')).toBeNull();
+        });
+    });
+
     it('names the switcher for a screen reader, not just on screen', () => {
         const { host } = header(graph({
             workflows: { available: ['shipped', 'bugfix'], active: 'bugfix' },

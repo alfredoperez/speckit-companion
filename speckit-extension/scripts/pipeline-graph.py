@@ -188,6 +188,10 @@ def _shipped_name(command: str, node_id: str) -> str:
 def _hook(entry: dict) -> dict:
     hook = entry["hook"]
     return {
+        # Written by this project and not running: `workflow: shipped` bypasses
+        # the configuration rather than removing it, so the hook is drawn where
+        # it would attach instead of vanishing with nothing to say it had.
+        "parked": bool(entry.get("parked")),
         "when": entry["when"],
         "type": hook.get("type"),
         # Where this hook lives in the configuration, so the panel can edit or
@@ -236,10 +240,34 @@ def _sequence(commands: list) -> list:
     return ranked + [c for c in loose if c not in placed]
 
 
+def _parked_hooks(project_root: str) -> dict:
+    """The project's own hooks, by command, while `shipped` is bypassing them.
+
+    Resolved before the live plan, because planning sets the phase grouping in
+    force and the parked configuration may group its steps differently.
+    """
+    parked = build._read_yaml(
+        os.path.join(project_root, build.CONFIG_REL), build.CONFIG_REL)
+    parked.pop("workflow", None)
+    if not parked:
+        return {}
+    try:
+        plan, _warnings = build.plan_build(parked)
+    except build.BuildError:
+        # A configuration nobody can resolve is not running either way, and the
+        # board's job here is to draw what it can, not to fail over the bypassed
+        # half of the project.
+        return {}
+    return {command: entry["hooks"] for command, entry in plan.items()}
+
+
 def build_graph(project_root: str) -> dict:
     use_project_nodes(project_root)
     build.use_project_hook_nodes(project_root)
     config = build.load_config(project_root)
+    active = build.active_workflow(project_root)
+    parked = (_parked_hooks(project_root)
+              if active == build.SHIPPED_WORKFLOW else {})
     plan, warnings = build.plan_build(config)
     templates = build.plan_templates(config, project_root)
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
@@ -248,7 +276,8 @@ def build_graph(project_root: str) -> dict:
     steps = []
     for command in _sequence(decomposed_commands()):
         entry = plan[command]
-        hooks = entry["hooks"]
+        hooks = entry["hooks"] + [
+            dict(h, parked=True) for h in parked.get(command, [])]
         phases = entry.get("phases") or []
 
         pinned = assemble.movability(command, entry["order"])
@@ -333,7 +362,7 @@ def build_graph(project_root: str) -> dict:
                 "added": [n for n in order if n not in default],
                 "removed": [n for n in default if n not in order],
                 "reordered": order != default and not set(order) ^ set(default),
-                "hooks": len(hooks),
+                "hooks": len(entry["hooks"]),
                 "decisions": entry.get("decisionsChanged") or [],
                 "replaced": entry.get("replaced") or [],
                 "phases": entry.get("phasesChanged") or [],
@@ -350,6 +379,11 @@ def build_graph(project_root: str) -> dict:
         for s in steps
     )
     workflows = build.available_workflows(project_root)
+    # The project's own configuration is a choice like any other, so switching
+    # to `shipped` can be undone from the same picker that made it. Without this
+    # a project with no named workflows had no way back at all.
+    own = ([""] if os.path.isfile(os.path.join(project_root, build.CONFIG_REL))
+           else [])
     choices = {
         "skills": build.available_skills(project_root),
         "nodes": build.available_hook_nodes(project_root),
@@ -361,14 +395,19 @@ def build_graph(project_root: str) -> dict:
         # question is "which of these is closest?" rather than a blank file.
         "presets": build.available_presets(),
     }
-    active = build.active_workflow(project_root)
     return {
         "steps": steps,
         "workflows": {
             # `shipped` is always offered and is never a file: it is Companion
             # with nothing changed, which is the thing you compare against.
-            "available": [build.SHIPPED_WORKFLOW] + workflows,
+            "available": own + [build.SHIPPED_WORKFLOW] + workflows,
             "active": active,
+            # How much of this project is switched off right now, so the panel
+            # can say it rather than draw a pipeline that looks untouched.
+            "parked": {
+                "file": build.CONFIG_REL.replace(os.sep, "/"),
+                "hooks": sum(len(v) for v in parked.values()),
+            } if parked else None,
         },
         # What a hook can be pointed at in this project, so the form offers
         # names instead of asking you to remember them.

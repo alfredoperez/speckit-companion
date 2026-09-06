@@ -192,6 +192,14 @@ A new workflow starts from what you run today, or from one of the two configurat
 
 Whichever you pick is copied in and yours to change from there. A preset is a start, not a fixed thing.
 
+### Running the pipeline as it ships
+
+**As shipped** is always in the **Workflow** dropdown. It is Companion with nothing changed: while it is on, nothing in `.specify/companion.yml` runs.
+
+Nothing is deleted. Your configuration is *parked*: the file stays exactly as it was, the board draws the shipped pipeline, and every hook you wrote is drawn where it would attach — dashed, struck through, and labelled `parked`, so you can see what you would get back. The header says which of the two is running and carries the way back, **Use this project's pipeline**; **This project** in the dropdown does the same thing. Either one takes the `workflow:` line back out of `companion.yml` and leaves the rest of the file untouched, so switching there and back is a round trip.
+
+Use it to answer "is this Companion or is this us?" without moving a file, and switch back when you have your answer.
+
 ---
 
 ## Build

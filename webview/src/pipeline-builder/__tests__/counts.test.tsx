@@ -49,6 +49,18 @@ describe('what the board holds, counted from the board', () => {
         expect(totals(g)).toMatchObject({ hooks: 1, stockHooks: 1 });
     });
 
+    // A parked hook is drawn and does not run, so counting it among the running
+    // ones would put "5 hooks" over a pipeline that fires none of them.
+    it('keeps the parked hooks apart from the ones that run', () => {
+        const g = graph([step('implement', [
+            phase('wrap-up', [node('complete', 'Mark it', {
+                hooks: [hook({ parked: true }), hook({ index: 1, parked: true })],
+            })]),
+        ])]);
+
+        expect(totals(g)).toMatchObject({ hooks: 0, parked: 2 });
+    });
+
     it('counts nothing when a step declares no phases', () => {
         expect(totals(graph([step('doctor', [])]))).toMatchObject({
             steps: 1, phases: 0, nodes: 0, hooks: 0,
