@@ -15,6 +15,7 @@ import {
     LivingHeaderMeta
 } from '../types';
 import { escapeHtml, encodeBase64Utf8, generateNonce } from '../utils';
+import type { InstallPrompt } from '../../../protocol/viewer';
 import { calculateWorkflowPhase, getDocTypeLabel } from '../phaseCalculation';
 import { SpecStatuses } from '../../../core/constants';
 
@@ -44,7 +45,7 @@ export function generateHtml(
     currentStep?: string | null,
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
     activityPanelEnabled: boolean = true,
-    showInstallPrompt: boolean = false,
+    installPrompt: InstallPrompt | null = null,
     livingMode: boolean = false,
     livingMeta?: LivingHeaderMeta | null,
     titleFromHeading: boolean = false,
@@ -67,7 +68,7 @@ export function generateHtml(
     // prompt isn't `off`). In the viewer the banner now renders INSIDE the Preact
     // Activity panel (#255) — we pass the visibility via `initialNavState` rather
     // than injecting markup above #app-root. Visibility is decided by the provider
-    // via `shouldShowInstallPrompt`.
+    // via `resolveInstallPrompt`.
 
     // Generate content or empty state
     const contentHtml = content
@@ -105,7 +106,7 @@ export function generateHtml(
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelEnabled,
-        showInstallPrompt,
+        installPrompt,
         livingMode,
         livingMeta: livingMeta ?? null,
         titleFromHeading,
@@ -159,17 +160,23 @@ export function generateHtml(
         // document rather than binding to the element at load time — an
         // element-bound listener would no-op against a not-yet-mounted banner.
         (function () {
+            function bannerPrompt(el) {
+                const root = el.closest('#install-banner');
+                return root && root.getAttribute('data-kind') === 'update'
+                    ? { kind: 'update', installed: root.getAttribute('data-installed') || '', expected: root.getAttribute('data-expected') || '' }
+                    : { kind: 'install' };
+            }
             document.addEventListener('click', function (e) {
                 if (!(e.target instanceof Element)) { return; }
                 const el = e.target.closest('#install-banner [data-action]');
                 if (!el) { return; }
                 const action = el.getAttribute('data-action');
                 if (action === 'installSpecKitExtension') {
-                    vscode.postMessage({ type: 'installSpecKitExtension' });
+                    vscode.postMessage({ type: 'installSpecKitExtension', prompt: bannerPrompt(el) });
                 } else if (action === 'openReadme') {
                     vscode.postMessage({ type: 'openReadme' });
                 } else if (action === 'dismissInstallBanner') {
-                    vscode.postMessage({ type: 'dismissInstallBanner' });
+                    vscode.postMessage({ type: 'dismissInstallBanner', prompt: bannerPrompt(el) });
                 }
             });
         })();

@@ -51,9 +51,10 @@ describe('readInstallPromptEnabled — gated only on its own prompt setting, not
 });
 
 describe('shouldShowInstallPrompt', () => {
-    it('shows only when enabled and not installed', () => {
-        expect(shouldShowInstallPrompt(true, false)).toBe(true);
-        expect(shouldShowInstallPrompt(true, true)).toBe(false);
-        expect(shouldShowInstallPrompt(false, false)).toBe(false);
+    it('installs when missing, updates when behind, nothing when current or disabled', () => {
+        expect(shouldShowInstallPrompt(true, { state: 'missing' })).toEqual({ kind: 'install' });
+        expect(shouldShowInstallPrompt(true, { state: 'outdated', installed: '0.20.2', expected: '0.21.0' })?.kind).toBe('update');
+        expect(shouldShowInstallPrompt(true, { state: 'current' })).toBeNull();
+        expect(shouldShowInstallPrompt(false, { state: 'missing' })).toBeNull();
     });
 });

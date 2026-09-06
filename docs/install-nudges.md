@@ -1,12 +1,12 @@
 # Install nudges
 
-Every place the VS Code extension asks you to install the companion spec-kit extension, in one list, with an honest read on whether it is too much.
+Every place the VS Code extension asks you to install the companion spec-kit extension, in one list, with an honest read on whether it is too much. The three out-of-date surfaces at the end are their siblings: same slots, same install command, shown only when the extension is installed but behind the version this build ships.
 
 To look at them: `SB_PORT=6031 npm run storybook`, then **Install nudges → Every surface**. Each story draws one surface and captions it with its source line; the last story stacks the ones a fresh, uninstalled workspace actually meets.
 
 ## The inventory
 
-Eleven surfaces. Nine can fire; two are passive entries. Three were removed — the activation toast (#1), the welcome-block pitch (#4) and the dead Steering icon (#15) — and the two fallback warnings (#9, #10) became one.
+Eleven surfaces. Nine can fire; two are passive entries. Three were removed — the activation toast (#1), the welcome-block pitch (#4) and the dead Steering icon (#15) — and the two fallback warnings (#9, #10) became one. Three more, listed after them, fire only when the installed extension is out of date.
 
 | # | Surface | Copy | Trigger | Dismissal | Recurs |
 |---|---------|------|---------|-----------|--------|
@@ -25,11 +25,21 @@ Eleven surfaces. Nine can fire; two are passive entries. Three were removed — 
 | 14 | Upgrade… quick pick entry (`src/speckit/cliCommands.ts`) | "Update spec-kit Extension — Install or force-update the companion spec-kit extension" | User runs Upgrade…. Listed whether installed or not | N/A — user-initiated | Passive |
 | ~~15~~ | ~~Steering inline install icon~~ | **Removed.** It could never render: the `when` needed `!companion.installed`, but the header node is only built when `isCompanionInstalled()` is true | — | — | Never |
 
+Out of date, not missing. The extension compares the version bundled in its own install (`speckit-extension/extension.yml` ships inside the `.vsix`) against the one in the installed manifest, `.specify/extensions/companion/extension.yml` (falling back to `.specify/extensions/.registry`, which lags a `--dev` link), locally and with no network call. The gap is resolved once at activation and again whenever either version file changes, and every surface reads that one answer. An unreadable version on either side reads as current: nothing here ever fires on a guess. A workspace with no extension at all keeps the install surfaces above and never sees these.
+
+| # | Surface | Copy | Trigger | Dismissal | Recurs |
+|---|---------|------|---------|-----------|--------|
+| 16 | Status-bar item (`src/speckit/companionUpdateNudge.ts`) | Warning background, `$(arrow-circle-up) SpecKit commands out of date`; click runs the update | Installed and behind the bundled version, `installPrompt` on, not skipped for this version, and not already updated for — an update that ran and left the version unchanged stops every surface asking for that pair, in that project only. A dispatched update that never reached the disk silences nothing | **Skip this version** on the toast, the banner ×, or turning off `speckit.companion.installPrompt` — all three hide it immediately; it also disappears when the versions match | Always on screen while the gap exists and the version has not been skipped |
+| 17 | Update banner — Create Spec + Activity panel (`src/features/spec-editor/installBanner.ts`, `ActivityPanel.tsx`) | "SpecKit commands are 0.20.2, this extension expects 0.21.0." + **Update** / × | Installed and behind, `installPrompt` on, not dismissed for this expected version. Takes the install banner's slot: one or the other, never both | × → `speckit.companionUpdateSkippedVersion` = the expected version the banner itself was showing, so the next release asks again | Every panel open, until dismissed or updated |
+| 18 | Activation notification (`src/speckit/companionUpdateNudge.ts`) | Same sentence + "Update the spec-kit extension to get the matching commands." + **Update** / **Skip this version** | Opening a workspace that is installed and behind, `installPrompt` on, the first time for that expected version (`speckit.companionUpdateNotifiedFor`, written as soon as the toast is shown) | **Skip this version** → the same `speckit.companionUpdateSkippedVersion` the banner × writes | Once per expected version |
+
 Three dismissal mechanisms with no relationship to each other:
 
 - ~~`speckit.installNudgeDismissed`~~ — **gone.** It covered #1 and #4; with both removed nothing wrote it and nothing read it, so the flag, its context key and the dismiss command that set it were deleted.
 - `speckit.installBannerDismissed` (global state) — covers #5 and #6 only.
-- `speckit.companion.installPrompt` (setting, default `true`) — covers #5 and #6 only. Its description says "The banner shows whenever the extension is missing and you haven't turned this off or dismissed it", which is true of the banners and false of everything else.
+- `speckit.companion.installPrompt` (setting, default `true`) — covers #5 and #6, and all three out-of-date surfaces (#16–#18); turning it off clears the status-bar warning at once, without waiting for a file to change. Its description says "The banner shows whenever the extension is missing and you haven't turned this off or dismissed it", which is true of the banners and false of everything else.
+
+The out-of-date surfaces keep two keys on purpose. `speckit.companionUpdateSkippedVersion` is the user saying no to a version: **Skip this version** on the toast and × on the banner both write it, and it silences all three out-of-date surfaces — banner, toast and status bar. `speckit.companionUpdateNotifiedFor` only records that the toast has been shown for a version, written the moment it appears, so it never interrupts twice for the same version. The one intended difference: ignoring the toast writes the second key and not the first, so the banner and the status-bar item stay.
 
 Nothing turns off #2 or #3, and that is deliberate: a badge and a tree row are how VS Code says "there is something here". #7 is now answered once and remembered; #9+#10 is guarded for the session.
 

@@ -72,6 +72,9 @@ export const ConfigKeys = {
         installBannerDismissed: 'speckit.installBannerDismissed',
         /** The user chose stock SpecKit at the Create-Spec modal. Asked once, then honoured. */
         companionDeclinedAtCreate: 'speckit.companionDeclinedAtCreate',
+        companionUpdateSkippedVersion: 'speckit.companionUpdateSkippedVersion',
+        companionUpdateNotifiedFor: 'speckit.companionUpdateNotifiedFor',
+        companionUpdateAttempted: 'speckit.companionUpdateAttempted',
         installedEventSent: 'speckit.installedEventSent',
     },
     workspaceState: {

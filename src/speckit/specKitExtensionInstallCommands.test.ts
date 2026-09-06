@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { registerSpecKitExtensionInstallCommands } from './specKitExtensionInstallCommands';
 import { INSTALL_PROMPT_EVENT, initTelemetry, TelemetryService } from '../core/telemetry';
+const { createMockExtensionContext } = vscode as unknown as {
+    createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
+};
 
 jest.mock('./specKitExtensionInstall', () => ({
     runInstallSpecKitExtension: jest.fn(),
@@ -20,14 +23,7 @@ function registerAndCapture(): {
             return { dispose: jest.fn() };
         }
     );
-    const globalStateStore = new Map<string, unknown>();
-    const context = {
-        subscriptions: [],
-        globalState: {
-            get: (k: string, d?: unknown) => (globalStateStore.has(k) ? globalStateStore.get(k) : d),
-            update: async (k: string, v: unknown) => { globalStateStore.set(k, v); },
-        },
-    } as unknown as vscode.ExtensionContext;
+    const { context, store: globalStateStore } = createMockExtensionContext();
     registerSpecKitExtensionInstallCommands(context);
     return { handlers, globalStateStore };
 }

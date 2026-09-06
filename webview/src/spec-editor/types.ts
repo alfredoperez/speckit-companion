@@ -2,6 +2,8 @@
  * Type definitions for the Spec Editor webview (browser-side)
  */
 
+import type { InstallPrompt } from '../../../src/protocol/viewer';
+
 // ============================================
 // VS Code API Types
 // ============================================
@@ -28,9 +30,9 @@ export type SpecEditorToExtensionMessage =
     | { type: 'removeImage'; imageId: string }
     | { type: 'ready' }
     | { type: 'cancel' }
-    | { type: 'installSpecKitExtension' }
+    | { type: 'installSpecKitExtension'; prompt?: InstallPrompt }
     | { type: 'openReadme' }
-    | { type: 'dismissInstallBanner' };
+    | { type: 'dismissInstallBanner'; prompt: InstallPrompt };
 
 // ============================================
 // Message Types: Extension → Webview

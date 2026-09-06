@@ -6,6 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { dismissInstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { formatCommandForProvider, getConfiguredProviderType } from "../../ai-providers/aiProvider";
 import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId, reportInstallPromptClicked } from "../../core/telemetry";
 import {
@@ -195,15 +196,16 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       if (fn) await fn(dir, deps);
       else deps.outputChannel.appendLine(`[SpecViewer] Unknown footerAction id: ${msg.id}`);
     },
-    installSpecKitExtension: async (_msg, _dir, _deps) => {
-      reportInstallPromptClicked('activity');
+    installSpecKitExtension: async (msg, _dir, _deps) => {
+      reportInstallPromptClicked(msg.prompt?.kind === 'update' ? 'activityUpdate' : 'activity');
+      // The install runs in a terminal; the banner changes when the files land, which the watcher reports.
       await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
     },
     openReadme: async (_msg, _dir, _deps) => {
       await vscode.commands.executeCommand('speckit.companion.openReadme');
     },
-    dismissInstallBanner: async (_msg, dir, deps) => {
-      await deps.context.globalState.update(ConfigKeys.globalState.installBannerDismissed, true);
+    dismissInstallBanner: async (msg, dir, deps) => {
+      await dismissInstallPrompt(deps.context, msg.prompt);
       await handleRefresh(dir, deps);
     },
   };

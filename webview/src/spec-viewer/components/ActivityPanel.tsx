@@ -13,28 +13,28 @@ import { TasksCard } from './cards/TasksCard';
 import { ConcernsCard } from './cards/ConcernsCard';
 import { FilesCard } from './cards/FilesCard';
 import { CommentsCard } from './cards/CommentsCard';
-import { INSTALL_BANNER_BODY } from '../../../../src/protocol/installBannerBody';
+import { installBannerFrame } from '../../../../src/protocol/installBannerBody';
 
 /**
  * The viewer install banner, rendered INSIDE the Activity panel (#255 — it used
  * to be injected full-width above #app-root in `html/generator.ts`). Markup,
  * id, classes and `data-action` buttons mirror the server-rendered
  * `installBanner.ts` so the existing document-delegated click handler still
- * resolves `installSpecKitExtension` / `openReadme`. Shown only when the
- * extension is missing (`navState.showInstallPrompt`).
+ * resolves `installSpecKitExtension` / `openReadme`. Shown when the extension
+ * is missing or behind this build (`navState.installPrompt`).
  */
 function InstallBanner() {
-    if (!navState.value?.showInstallPrompt) return null;
-    // One banner, one source. This used to be a byte-for-byte copy of the
-    // server-rendered markup, kept in step by hand — two files shipping one
-    // nudge, with the same buttons and the same dismissal flag.
+    const prompt = navState.value?.installPrompt;
+    if (!prompt) return null;
+    const { className, ariaLabel, body, data } = installBannerFrame(prompt);
     return (
         <div
-            class="install-banner"
+            class={className}
             id="install-banner"
             role="region"
-            aria-label="Install spec-kit extension"
-            dangerouslySetInnerHTML={{ __html: INSTALL_BANNER_BODY }}
+            aria-label={ariaLabel}
+            {...data}
+            dangerouslySetInnerHTML={{ __html: body }}
         />
     );
 }

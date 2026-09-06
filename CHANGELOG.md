@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **It tells you when your spec-kit commands are behind.** The VS Code extension updates itself from the Marketplace; the spec-kit extension it pairs with is installed per project and never does, so the two drifted with nothing to say so. Now a **SpecKit commands out of date** item appears in the status bar the moment the commands installed in your project are older than the ones this release expects, the install banner in Create Spec and the Activity panel names both versions with a single **Update** button, and a notification tells you once per version with **Skip this version** to silence it. Every one of them runs the same one-click `specify extension add` update and disappears as soon as the versions match. The comparison is local, so it works offline and never guesses when a version can't be read. A project without the spec-kit extension keeps the existing install prompt.
+
 ### Changed
 
 - **A hook row in the Pipeline Builder says where it came from and what it does.** A row read `Command  spe…` with `git` at the far end of the line: the name was cut on the `speckit.` prefix every one of them shares, the leading word named the mechanism rather than the work, and whose hook it was came last. Hooks are now grouped by whoever registered them, each group led by that source's mark — your own under the Companion mascot and the file they live in, an installed extension's under `via <extension>`. Only spec-kit's own `git` carries the GitHub mark; another publisher's extension gets a neutral one rather than somebody else's logo. Each row is left to name the work, so `speckit.git.commit` reads as `commit`. A block also reads top to bottom in the order it actually runs, which it did not before: an extension's before-hooks fire ahead of anything you attached and its after-hooks behind, so the two halves swap sides between `before` and `after`. Which hooks you can edit here is unchanged, and `asks first` still sits on the row it belongs to.

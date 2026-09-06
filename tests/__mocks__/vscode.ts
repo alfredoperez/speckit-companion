@@ -271,8 +271,46 @@ export function createMockTreeView() {
     return treeView;
 }
 
+export enum StatusBarAlignment {
+    Left = 1,
+    Right = 2,
+}
+
+/** An ExtensionContext whose globalState is a Map, so tests read back what the code wrote. */
+export const createMockExtensionContext = (seed: Record<string, unknown> = {}) => {
+    const store = new Map<string, unknown>(Object.entries(seed));
+    const workspaceStore = new Map<string, unknown>();
+    return {
+        store,
+        workspaceStore,
+        context: {
+            extensionPath: '/ext',
+            subscriptions: [] as unknown[],
+            globalState: {
+                get: (key: string, fallback?: unknown) => (store.has(key) ? store.get(key) : fallback),
+                update: async (key: string, value: unknown) => { store.set(key, value); },
+            },
+            workspaceState: {
+                get: (key: string, fallback?: unknown) => (workspaceStore.has(key) ? workspaceStore.get(key) : fallback),
+                update: async (key: string, value: unknown) => { workspaceStore.set(key, value); },
+            },
+        },
+    };
+};
+
+export const createMockStatusBarItem = () => ({
+    text: '',
+    tooltip: undefined as unknown,
+    command: undefined as unknown,
+    backgroundColor: undefined as unknown,
+    show: jest.fn(),
+    hide: jest.fn(),
+    dispose: jest.fn(),
+});
+
 export const window = {
     createWebviewPanel: jest.fn().mockImplementation(createMockWebviewPanel),
+    createStatusBarItem: jest.fn().mockImplementation(createMockStatusBarItem),
     createTreeView: jest.fn().mockImplementation(createMockTreeView),
     showInformationMessage: jest.fn(),
     showErrorMessage: jest.fn(),

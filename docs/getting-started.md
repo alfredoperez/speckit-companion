@@ -51,17 +51,19 @@ There are **two** installs, and they're independent:
 
 **One-click from inside the editor.** When the spec-kit extension is missing, a slim single-line **Install spec-kit extension** banner appears in the Create-Spec and Activity panels, and an install icon appears in the Specs sidebar. Click **Install** and the extension runs the install in an integrated terminal, no copy-paste. The banner has an **×** to dismiss it for good: once dismissed it stays hidden in every project and after a reload. (Already have it installed? You'll never see the banner.)
 
+**Out of date.** The spec-kit extension never updates itself. When the version installed in your project is behind the one this VS Code extension was built with, a **SpecKit commands out of date** item appears in the status bar, the same banner slot says which two versions disagree with an **Update** button, and a notification tells you once per version (with **Skip this version** to silence it). All of them run the same `specify extension add` command; the status-bar item disappears as soon as the versions match. The check is local, comparing the manifest bundled in the extension against the one installed in your project, so it never needs the network and never guesses when a version can't be read.
+
 **Manual install.** You need a **github-source** spec-kit CLI first; the stock PyPI `specify-cli` does **not** ship the `extension` subcommand:
 
 ```bash
 # 1. github-source spec-kit CLI (required: stock PyPI specify-cli lacks `extension`)
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force
 
-# 2. the companion spec-kit extension (installs/updates)
+# 2. the companion spec-kit extension (add --force when updating an existing install)
 specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip
 ```
 
-> The `companion-latest/companion.zip` URL is a stable rolling asset. It always serves the newest build, so the same command installs **and** updates. Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion`.
+> The `companion-latest/companion.zip` URL is a stable rolling asset, always serving the newest build. To update later, run the same command with `--force` — `extension add` refuses to overwrite an install without it. Once the extension is listed in the spec-kit catalog, it shortens to `specify extension add companion`.
 
 **Update it later** from the Specs view **Upgrade…** menu, *Update spec-kit Extension* (runs the same install command).
 

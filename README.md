@@ -144,7 +144,7 @@ Everything lives in plain files in your repo: the spec markdown plus a `.spec-co
 2. Click the SpecKit icon in the activity bar and open a folder.
 3. Click **+** in the Specs view, describe your feature, and pick the AI you already use.
 
-That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing.
+That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing. The two halves are versioned separately and the spec-kit one never updates itself, so when the commands in your project fall behind the version this extension expects, a status-bar warning, the panel banner, and a one-time notification say so and offer the same one-click update.
 
 Prefer to be walked through it? VS Code opens a **Get Started with SpecKit Companion** walkthrough after install, and **Help → Get Started** reopens it any time. It runs the same three steps above, plus a one-click sample spec you can read before writing one of your own.
 

@@ -2,6 +2,8 @@
  * Type definitions for the Spec Editor feature
  */
 
+import type { InstallPrompt } from '../../protocol/viewer';
+
 // ============================================
 // Session and Draft Types
 // ============================================
@@ -191,9 +193,9 @@ export type SpecEditorToExtensionMessage =
     | { type: 'removeImage'; imageId: string }
     | { type: 'ready' }
     | { type: 'cancel' }
-    | { type: 'installSpecKitExtension' }
+    | { type: 'installSpecKitExtension'; prompt?: InstallPrompt }
     | { type: 'openReadme' }
-    | { type: 'dismissInstallBanner' };
+    | { type: 'dismissInstallBanner'; prompt: InstallPrompt };
 
 // ============================================
 // Message Types: Extension → Webview

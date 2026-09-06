@@ -207,20 +207,31 @@ export const ErrorBoundaryFallback: Story = {
 export const InstallBannerSlim: Story = {
     name: 'Install banner — slim, shown',
     render: () => {
-        navState.value = baseNav({ showInstallPrompt: true });
+        navState.value = baseNav({ installPrompt: { kind: 'install' } });
+        viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
+        return <ActivityPanel />;
+    },
+};
+
+// ── 6b. Update banner — installed but behind this build ────────
+
+export const UpdateBannerShown: Story = {
+    name: 'Update banner — out of date',
+    render: () => {
+        navState.value = baseNav({ installPrompt: { kind: 'update', installed: '0.20.2', expected: '0.21.0' } });
         viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
         return <ActivityPanel />;
     },
 };
 
 // ── 7. Install banner — dismissed (hidden) ─────────────────────
-// The user dismissed the banner, so `showInstallPrompt` is false and
+// The user dismissed the banner, so `installPrompt` is null and
 // the banner is absent — only the empty activity state shows.
 
 export const InstallBannerDismissed: Story = {
     name: 'Install banner — dismissed (hidden)',
     render: () => {
-        navState.value = baseNav({ showInstallPrompt: false });
+        navState.value = baseNav({ installPrompt: null });
         viewerState.value = baseState({ status: 'draft', activeStep: 'specify' });
         return <ActivityPanel />;
     },
@@ -291,7 +302,7 @@ const richReasoningState: ViewerState = {
 export const DossierRich: Story = {
     render: () => {
         viewerState.value = richReasoningState;
-        navState.value = { showInstallPrompt: false } as NavState;
+        navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
@@ -308,7 +319,7 @@ export const DossierAllTraced: Story = {
                 tests: r.tests.length > 0 ? r.tests : ['activityPanel.test.ts::planSection'],
             })),
         };
-        navState.value = { showInstallPrompt: false } as NavState;
+        navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
@@ -333,7 +344,7 @@ export const DossierMidPipeline: Story = {
             },
             timing: { measuredPhases: 1, expectedPhases: 4, complete: false },
         };
-        navState.value = { showInstallPrompt: false } as NavState;
+        navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
@@ -359,7 +370,7 @@ export const DossierFastPathFolded: Story = {
                 elapsedMs: 31 * 60_000,
             },
         };
-        navState.value = { showInstallPrompt: false } as NavState;
+        navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };
@@ -375,7 +386,7 @@ export const DossierLogOnly: Story = {
             },
             lastAction: 'T002 finished — hero stats derivation',
         });
-        navState.value = { showInstallPrompt: false } as NavState;
+        navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;
     },
 };

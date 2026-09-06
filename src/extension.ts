@@ -21,6 +21,9 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
+import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
+import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
+import { noteInstallLanded, onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
 
 // Core
@@ -288,16 +291,37 @@ export async function activate(context: vscode.ExtensionContext) {
     // fresh checkout and recovers a project a prior swap left stranded, and it
     // never removes a command set. No-ops when already present.
     {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (root) {
-            // Drive the sidebar install affordance: the install icon shows when
-            // the spec-kit extension is NOT installed. Refreshed by the watcher
-            // below when the extension dir appears/disappears (e.g. after the
-            // one-click install terminal completes).
-            void refreshCompanionInstalledContext(root);
-            // Badge the Specs view when the spec-kit extension is missing and refresh the Specs + Steering trees; the watcher below reruns this so it flips without a reload.
-            const syncInstallAffordances = (): void => {
-                const installed = isCompanionInstalled(root);
+        // The status bar outlives any one folder; the watchers and the surfaces below are rewired when the
+        // workspace gains or loses one, so a folder added to an empty window is not stuck on activation's answer.
+        const updateStatusBar = createCompanionUpdateStatusBar(context);
+        let wiring: vscode.Disposable[] = [];
+        const wireCompanionSurfaces = (): void => {
+            wiring.forEach(d => d.dispose());
+            wiring = [];
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!root) {
+                // No project to install into: the closed folder's answer must not outlive it.
+                updateStatusBar.sync({ state: 'missing' });
+                void setContextKey(CONTEXT_KEYS.companionInstalled, false);
+                specsTreeView.badge = undefined;
+                return;
+            }
+            // One gap resolution per tick feeds every install/update surface. Pure UI — no child processes, so
+            // a setting toggle or a dismissed banner can call it too.
+            let retry: ReturnType<typeof setTimeout> | undefined;
+            // `undefined` means the tick told us nothing: mid-`--force` the extension dir is briefly gone, and
+            // acting on that would flip the badge, shell out at the CLI mid-copy, or record an update as landed
+            // before anything had. Every caller waits for the next tick instead.
+            const syncCompanionSurfaces = (): CompanionGap | undefined => {
+                const { gap, masked } = refreshCompanionGap(root, context.extensionPath);
+                if (masked) {
+                    clearTimeout(retry);
+                    retry = setTimeout(() => { syncCompanionSurfaces(); }, 1000);
+                    return undefined;
+                }
+                clearTimeout(retry);
+                const installed = gap.state !== 'missing';
+                void setContextKey(CONTEXT_KEYS.companionInstalled, installed);
                 specsTreeView.badge = installed
                     ? undefined
                     : { value: 1, tooltip: 'Install SpecKit Companion' };
@@ -306,37 +330,63 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
                 specExplorer.refresh();
                 steeringExplorer.refresh();
+                void specViewer.refreshOpenPanels();
+                updateStatusBar.sync(gap);
+                return gap;
             };
-            syncInstallAffordances();
-            // Keep the timing-augmented standard command family materialized — but
-            // ONLY when the companion spec-kit extension is installed: the ensure's
-            // bundled preset path lives inside `.specify/extensions/companion/`, so
-            // running it without the extension just fails + logs on every activation.
-            // The watcher below reruns it once the extension dir appears (one-click
-            // install), so it doesn't wait for a reload.
-            const ensureStandardWhenInstalled = (): void => {
-                if (isCompanionInstalled(root)) {
+            // What the extension landing on disk means: the surfaces change AND the standard command family is
+            // re-materialized (it shells out, and its bundled preset path lives inside the extension dir).
+            const onCompanionFilesChanged = (): CompanionGap | undefined => {
+                const gap = syncCompanionSurfaces();
+                if (gap && gap.state !== 'missing') {
                     void ensureStandardFamily(root, {
                         log: msg => outputChannel.appendLine(msg),
                     });
                 }
+                return gap;
             };
-            ensureStandardWhenInstalled();
-            // Refresh the install context key (and rerun the standard-family ensure)
-            // whenever the companion extension dir is created or removed (the
-            // one-click install lands it on disk), so both flip without a reload.
-            const extWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '.specify/extensions/companion/**')
-            );
-            const refresh = (): void => {
-                void refreshCompanionInstalledContext(root);
-                ensureStandardWhenInstalled();
-                syncInstallAffordances();
+            const activationGap = onCompanionFilesChanged();
+            if (activationGap) {
+                maybeShowCompanionUpdateNudge(context, activationGap);
+            }
+            // Change events only for the two version files: an install writes hundreds of files under `companion/**`.
+            const companionRefresh = trailing(() => {
+                // A settled, unmasked tick after the directory changed is the only evidence the extension has
+                // that a dispatched update ran and what it left behind.
+                const gap = onCompanionFilesChanged();
+                if (gap) {
+                    void noteInstallLanded(context, gap);
+                }
                 livingSpecsExplorer.refresh();
-            };
-            extWatcher.onDidCreate(refresh);
-            extWatcher.onDidDelete(refresh);
-            context.subscriptions.push(extWatcher);
+            }, 150);
+            const extDirWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/extensions/companion/**'),
+                false,
+                true,
+                false
+            );
+            const extVersionWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/extensions/{.registry,companion/extension.yml}')
+            );
+            for (const watcher of [extDirWatcher, extVersionWatcher]) {
+                watcher.onDidCreate(companionRefresh.call);
+                watcher.onDidDelete(companionRefresh.call);
+                wiring.push(watcher);
+            }
+            // Only the version watcher reports changes; `extDirWatcher` is created with change events ignored.
+            extVersionWatcher.onDidChange(companionRefresh.call);
+            // Turning the prompt off must clear the status-bar warning without waiting for a file to change.
+            wiring.push(
+                vscode.workspace.onDidChangeConfiguration(e => {
+                    if (e.affectsConfiguration('speckit.companion.installPrompt')) {
+                        syncCompanionSurfaces();
+                    }
+                }),
+                // Skipping a version or closing a banner must clear the status-bar warning at once.
+                onDidDismissInstallPrompt(() => syncCompanionSurfaces()),
+                companionRefresh,
+                { dispose: () => clearTimeout(retry) },
+            );
 
             // Refresh the Living Specs view when the living-specs config or the
             // capabilities tree changes on disk (no reload needed).
@@ -345,35 +395,36 @@ export async function activate(context: vscode.ExtensionContext) {
             );
             // Debounce: a rapid save sequence across the watched glob would
             // otherwise re-run the full `**/*.spec.md` scan per event.
-            let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-            const refreshLivingSpecs = (): void => {
-                if (refreshTimer) {
-                    clearTimeout(refreshTimer);
-                }
-                refreshTimer = setTimeout(() => livingSpecsExplorer.refresh(), 150);
-            };
-            livingSpecsWatcher.onDidCreate(refreshLivingSpecs);
-            livingSpecsWatcher.onDidChange(refreshLivingSpecs);
-            livingSpecsWatcher.onDidDelete(refreshLivingSpecs);
-            context.subscriptions.push(livingSpecsWatcher, {
-                dispose: () => {
-                    if (refreshTimer) {
-                        clearTimeout(refreshTimer);
-                    }
-                },
-            });
-        }
+            const refreshLivingSpecs = trailing(() => livingSpecsExplorer.refresh(), 150);
+            livingSpecsWatcher.onDidCreate(refreshLivingSpecs.call);
+            livingSpecsWatcher.onDidChange(refreshLivingSpecs.call);
+            livingSpecsWatcher.onDidDelete(refreshLivingSpecs.call);
+            wiring.push(livingSpecsWatcher, refreshLivingSpecs);
+        };
+        wireCompanionSurfaces();
+        context.subscriptions.push(
+            vscode.workspace.onDidChangeWorkspaceFolders(() => wireCompanionSurfaces()),
+            { dispose: () => wiring.forEach(d => d.dispose()) },
+        );
     }
 }
 
-/**
- * Mirror "is the companion spec-kit extension installed?" into the
- * `speckit.companion.installed` context key. The sidebar install affordance's
- * `when` clause reads `!speckit.companion.installed`, so this gate must be kept
- * current as the extension dir appears/disappears on disk.
- */
-async function refreshCompanionInstalledContext(root: string): Promise<void> {
-    await setContextKey(CONTEXT_KEYS.companionInstalled, isCompanionInstalled(root));
+/** Trailing-edge debounce: a burst of calls runs `fn` once, `ms` after the last one. */
+function trailing(fn: () => void, ms: number): { call: () => void; dispose: () => void } {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return {
+        call: () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(fn, ms);
+        },
+        dispose: () => {
+            if (timer) {
+                clearTimeout(timer);
+            }
+        },
+    };
 }
 
 /**

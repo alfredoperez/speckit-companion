@@ -1,21 +1,14 @@
+import * as vscode from 'vscode';
 import { UpdateChecker } from './updateChecker';
+const { createMockExtensionContext } = vscode as unknown as {
+    createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
+};
 
 describe('UpdateChecker', () => {
-    const buildContext = (currentVersion: string, skipVersion?: string) => {
-        const store = new Map<string, unknown>();
-        if (skipVersion) {
-            store.set('speckit.skipVersion', skipVersion);
-        }
-        return {
-            extension: { packageJSON: { version: currentVersion } },
-            globalState: {
-                get: (key: string, fallback?: unknown) => (store.has(key) ? store.get(key) : fallback),
-                update: async (key: string, value: unknown) => {
-                    store.set(key, value);
-                },
-            },
-        } as any;
-    };
+    const buildContext = (currentVersion: string, skipVersion?: string) => ({
+        ...createMockExtensionContext(skipVersion ? { 'speckit.skipVersion': skipVersion } : {}).context,
+        extension: { packageJSON: { version: currentVersion } },
+    } as any);
 
     const buildOutputChannel = () => ({ appendLine: jest.fn() } as any);
 

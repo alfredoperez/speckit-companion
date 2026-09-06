@@ -241,6 +241,10 @@ function sendEventOncePerKey<K extends string>(
 const INSTALL_PROMPT_SURFACES = [
     'createSpec',
     'activity',
+    'createSpecUpdate',
+    'activityUpdate',
+    'statusBarUpdate',
+    'activationUpdate',
     'sidebarBadge',
     'pinnedRow',
     'welcome',

@@ -1,6 +1,7 @@
 /**
- * Install banner — shown in the Create-Spec and Activity panels only when the
- * companion spec-kit extension is missing. Server-rendered markup; see
+ * Install banner — shown in the Create-Spec and Activity panels when the
+ * companion spec-kit extension is missing, or (the `--update` variant) behind
+ * the version this build expects. Server-rendered markup; see
  * src/features/spec-editor/installBanner.ts.
  *
  * Styled through semantic tokens, never `--vscode-*` directly: this sheet is
@@ -19,6 +20,11 @@
     background: var(--info-subtle);
     color: var(--text-body);
     font-size: 12px;
+}
+
+.install-banner--update {
+    border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+    background: var(--warning-subtle);
 }
 
 .install-banner__icon {

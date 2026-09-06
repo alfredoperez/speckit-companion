@@ -1317,7 +1317,7 @@
             "default": true,
             "scope": "window",
             "order": 6,
-            "markdownDescription": "Offer a one-click banner to install the companion spec-kit extension when it's missing. The banner shows whenever the extension is missing and you haven't turned this off or dismissed it."
+            "markdownDescription": "Offer the companion spec-kit extension when it is missing or out of date. Covers the install banner in Create Spec and the Activity panel, the update banner that replaces it when the installed extension is behind, the status-bar out-of-date warning, and the once-per-version update notification. Turning this off silences all four; the activity-bar badge and the Specs tree row are unaffected."
           },
           "speckit.viewer.activityPanel": {
             "type": "boolean",

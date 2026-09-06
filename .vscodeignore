@@ -113,3 +113,6 @@ media/**
 assets/social/**
 AGENTS.md
 package-lock.json
+# The spec-kit half's manifest: the extension compares its bundled version against the
+# workspace install to say when the command half is behind, with no network call.
+!speckit-extension/extension.yml

@@ -12,7 +12,7 @@ function render(landing?: 'overview' | 'document'): string {
     return generateHtml(
         webview, vscode.Uri.file('/ext'), '# hi', '', [], 'spec' as never, 'spec', [], 0,
         undefined, [], {}, null, null, null, null, null, null, null, null, undefined,
-        true, false, undefined, undefined, undefined, landing,
+        true, null, undefined, undefined, undefined, landing,
     );
 }
 

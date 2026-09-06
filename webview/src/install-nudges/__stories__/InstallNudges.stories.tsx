@@ -1,7 +1,7 @@
 /**
  * Every surface that promotes installing the companion spec-kit extension, on one screen.
  *
- * The two banners are the real markup and the real stylesheet. Everything else is
+ * The three banners are the real markup and the real stylesheet. Everything else is
  * VS Code chrome the extension only contributes copy to — a notification toast, a
  * viewsWelcome block, a tree row, a modal, a quick pick — so those are faithful
  * mocks, labelled as mocks, drawn from the repo's own tokens.
@@ -77,6 +77,10 @@ const CHROME_CSS = `
 .vsc-quickpick__item { padding: 4px 12px; display: flex; gap: 10px; align-items: baseline; color: var(--text-primary); }
 .vsc-quickpick__item .desc { color: var(--text-secondary); font-size: var(--text-xs); }
 
+.vsc-statusbar { width: 640px; height: 22px; display: flex; align-items: center; background: var(--bg-secondary); border-top: 1px solid var(--border); font-size: 12px; color: var(--text-primary); }
+.vsc-statusbar__item { display: flex; align-items: center; gap: 4px; height: 100%; padding: 0 8px; }
+.vsc-statusbar__item--warning { background: var(--warning); color: #000; }
+.vsc-statusbar__item .codicon { font-size: 14px; }
 .vsc-panel { width: 640px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
 .vsc-panel__h { font-size: var(--text-lg); color: var(--header-title); margin: 0 0 10px; }
 .vsc-panel__ghost { height: 64px; border: 1px dashed var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--text-xs); }
@@ -127,6 +131,27 @@ function InstallBanner() {
             <button type="button" class="install-banner__btn install-banner__btn--primary">Install</button>
             <button type="button" class="install-banner__btn install-banner__btn--link">Learn more</button>
             <button type="button" class="install-banner__dismiss codicon codicon-close" aria-label="Dismiss install prompt" />
+        </div>
+    );
+}
+
+/** The real out-of-date banner markup, as `installBanner.ts` and `ActivityPanel.tsx` emit it. */
+function UpdateBanner() {
+    return (
+        <div class="install-banner install-banner--update" role="region" aria-label="Update spec-kit extension">
+            <span class="install-banner__icon codicon codicon-arrow-circle-up" aria-hidden="true" />
+            <span class="install-banner__text">SpecKit commands are 0.20.2, this extension expects 0.21.0.</span>
+            <button type="button" class="install-banner__btn install-banner__btn--primary">Update</button>
+            <button type="button" class="install-banner__dismiss codicon codicon-close" aria-label="Dismiss update prompt" />
+        </div>
+    );
+}
+
+function StatusBar() {
+    return (
+        <div class="vsc-statusbar">
+            <div class="vsc-statusbar__item"><span class="codicon codicon-source-control" aria-hidden="true" /> main</div>
+            <div class="vsc-statusbar__item vsc-statusbar__item--warning"><span class="codicon codicon-arrow-circle-up" aria-hidden="true" /> SpecKit commands out of date</div>
         </div>
     );
 }
@@ -200,10 +225,10 @@ function CreateSpecModalDialog() {
     );
 }
 
-function CreateSpecPanel() {
+function CreateSpecPanel({ banner = <InstallBanner /> }: { banner?: ComponentChildren }) {
     return (
         <div class="vsc-panel">
-            <InstallBanner />
+            {banner}
             <h2 class="vsc-panel__h">Create New Spec</h2>
             <div class="vsc-panel__ghost">Describe what you want to build…</div>
         </div>
@@ -522,8 +547,62 @@ export const SteeringInlineIconDead: Story = {
     ),
 };
 
+export const OutOfDateStatusBar: Story = {
+    name: '16 · Status bar — SpecKit commands out of date',
+    render: () => (
+        <Page>
+            <Row
+                where="Status bar, left side, warning background"
+                source="src/speckit/companionUpdateNudge.ts · created in src/extension.ts next to the badge"
+                trigger="The extension is installed but the version in .specify/extensions/.registry (or the installed manifest) is older than the one bundled in this build. Compared locally, no network."
+                dismiss="None — click runs the update, and the item disappears as soon as the versions match. Re-checked by the same watcher that flips speckit.companion.installed."
+                mock
+            >
+                <StatusBar />
+            </Row>
+        </Page>
+    ),
+};
+
+export const OutOfDateBanner: Story = {
+    name: '17 · Update banner — Create Spec and Activity panels',
+    render: () => (
+        <Page>
+            <Row
+                where="Same slot as the install banner in both panels"
+                source="src/features/spec-editor/installBanner.ts · webview/src/spec-viewer/components/ActivityPanel.tsx · gated by resolveInstallPrompt"
+                trigger="Installed but out of date, installPrompt setting on, not dismissed for this expected version. The install banner and this one are the same slot: a workspace shows one or the other, never both."
+                dismiss="× writes speckit.companionUpdateSkippedVersion = the expected version, so a later release asks again."
+            >
+                <CreateSpecPanel banner={<UpdateBanner />} />
+            </Row>
+        </Page>
+    ),
+};
+
+export const OutOfDateToast: Story = {
+    name: '18 · Update notification on activation',
+    render: () => (
+        <Page>
+            <Row
+                where="Bottom-right toast, once per expected version"
+                source="src/speckit/companionUpdateNudge.ts"
+                trigger="Opening a workspace whose installed spec-kit extension is behind this build, the first time for that version."
+                dismiss="“Skip this version” writes the same speckit.companionUpdateSkippedVersion the banner × uses; closing it still counts as shown for this version."
+                mock
+            >
+                <Toast
+                    kind="info"
+                    message="SpecKit commands are 0.20.2, this extension expects 0.21.0. Update the spec-kit extension to get the matching commands."
+                    actions={['Update', 'Skip this version']}
+                />
+            </Row>
+        </Page>
+    ),
+};
+
 export const FreshWorkspaceAllAtOnce: Story = {
-    name: '16 · A fresh workspace, all at once',
+    name: '19 · A fresh workspace, all at once',
     parameters: {
         docs: {
             description: {

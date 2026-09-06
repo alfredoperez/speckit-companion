@@ -12,6 +12,7 @@ import type {
     WorkflowChosenAs,
     WorkflowDefinition
 } from './types';
+import { promptFromDataset } from '../../../src/protocol/installBannerBody';
 import { canSubmit, isOverLimit, shouldShowCharCount, isMacPlatform, MAX_CHARS } from './submitGate';
 
 // Get VS Code API
@@ -355,14 +356,16 @@ function setupEventListeners(): void {
     if (installBanner) {
         installBanner.addEventListener('click', (e) => {
             if (!(e.target instanceof Element)) { return; }
-            const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+            const el = e.target.closest('[data-action]');
+            const action = el?.getAttribute('data-action');
+            const prompt = promptFromDataset(installBanner);
             if (action === 'installSpecKitExtension') {
-                vscode.postMessage({ type: 'installSpecKitExtension' });
+                vscode.postMessage({ type: 'installSpecKitExtension', prompt });
             } else if (action === 'openReadme') {
                 vscode.postMessage({ type: 'openReadme' });
             } else if (action === 'dismissInstallBanner') {
                 installBanner.remove();
-                vscode.postMessage({ type: 'dismissInstallBanner' });
+                vscode.postMessage({ type: 'dismissInstallBanner', prompt });
             }
         });
     }
