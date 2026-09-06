@@ -38,11 +38,15 @@ const DELTA_HEADER_RE = /^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s
 // ordinary prose shape; refusing a whole capability over one is not a check, it
 // is a formatting preference with teeth.
 const BULLET = String.raw`^\s*(?:[-*+]|\d+[.)])\s*`;
-const WHEN_RE = new RegExp(BULLET + String.raw`\*{1,2}(WHEN|GIVEN)\*{1,2}`, 'i');
+// The emphasis is optional for the same reason the bullet shape is. A scenario
+// written `- WHEN x` states its condition as plainly as `- **WHEN** x` does, and
+// reading it as "this scenario has no condition" is both false and, at error
+// severity, enough to refuse the fold that would have written it.
+const WHEN_RE = new RegExp(BULLET + String.raw`\*{0,2}(WHEN|GIVEN)\*{0,2}\b`, 'i');
 // `AND` continues whichever half came before it, so it is never evidence of an
 // outcome. Counting it as one is how a scenario with a condition and no result
 // passes a check written to catch exactly that.
-const THEN_RE = new RegExp(BULLET + String.raw`\*{1,2}THEN\*{1,2}`, 'i');
+const THEN_RE = new RegExp(BULLET + String.raw`\*{0,2}THEN\*{0,2}\b`, 'i');
 
 /**
  * False when a fence is opened and never closed.
