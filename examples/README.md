@@ -12,7 +12,7 @@ Three kinds of folder are involved, and the difference is whether git tracks the
 | `todo-copilot/`, `todo-gemini/` | The same app set up for other providers |
 | `todo-living-central/`, `todo-living-colocated/` | The two living-spec storage layouts |
 | `todo-gsd-superpowers/`, `todo-matt-skills/` | Skill-pack comparison fixtures, slated to move to the workflow builder |
-| `todo-claude/bench/living-specs/` | The living-spec correctness matrix (`ls-r3.mjs`) — evidence that the resolver, drift, fold-back and coverage behave |
+| `living-specs-matrix/` | The living-spec correctness matrix (`ls-r3.mjs`) — evidence that the resolver, drift, fold-back and coverage behave |
 
 The spec-kit extension keeps its own example at `speckit-extension/examples/ship-ticket/` — five real node files and two configs, the ship-tail a project can copy.
 
@@ -72,7 +72,7 @@ node ../speckit-bench/sync-templates.mjs --sizes easy,medium,hard,oversized --ex
 
 | Folder | For | Made by |
 |---|---|---|
-| `bench-sandboxes/ls-*` | Living-spec correctness cells | `todo-claude/bench/living-specs/ls-r3.mjs` |
+| `bench-sandboxes/ls-*` | Living-spec correctness cells | `living-specs-matrix/ls-r3.mjs` |
 | `bench-sandboxes/582-fresh-install/` | A fresh `specify init` with nothing else, for install-path bugs | by hand |
 | `bench-sandboxes/builder-qa/` | The pipeline builder's manual test plan — hook fixtures and two run prompts are already in it | by hand; the recipe is in `RUNS.md` inside it |
 

@@ -1,0 +1,80 @@
+{
+  "ticket": "LS7",
+  "issue": 367,
+  "title": "GUI surfacing in the viewer (LS·7)",
+  "ranAt": "2026-06-25T00:00:00.000Z",
+  "mode": "webview-test",
+  "note": "UI ticket. This is NOT a pipeline sandbox demo — there is no AI/CLI step to run in a throwaway repo. The 'sandbox demo' for a VS Code/webview surface is the repo's webview-test approach: jsdom render tests that drive the new component off a ViewerState carrying livingSpecs and assert the resulting DOM, plus an extension-side derivation test that asserts .spec-context.json livingSpecs maps onto ViewerState. The automated tests prove the data→DOM mapping; the VISUAL rendering (card placement, chip styling, theme) needs MANUAL verification in the running extension.",
+  "whatTheTestsAssert": {
+    "extensionDerivation": {
+      "file": "src/features/spec-viewer/__tests__/stateDerivation.test.ts",
+      "throughRealCodePath": "deriveViewerState() — the production reader, not a re-implemented predicate",
+      "cases": [
+        "loaded + synced present → ViewerState.livingSpecs = { loaded, synced }",
+        "only loaded present → synced defaults to []",
+        "no livingSpecs field → ViewerState.livingSpecs is undefined",
+        "both lists empty → undefined",
+        "malformed shape (non-string entries, synced as a bare string) → coerced to safe trimmed string[]"
+      ]
+    },
+    "webviewRender": {
+      "file": "webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx",
+      "env": "jsdom (preact render into a real DOM container)",
+      "cases": [
+        "loaded-only → lists loaded capability names, no 'folded back' marker",
+        "loaded+synced → synced capabilities carry a 'folded back' marker, unsynced ones do not",
+        "synced-not-loaded → a capability folded back but not loaded this run is still listed",
+        "none → card renders nothing (no .activity-card--living-specs, empty textContent)"
+      ]
+    }
+  },
+  "commands": [
+    {
+      "cwd": ".",
+      "cmd": "npx tsc -p ./",
+      "exit": 0,
+      "stdoutTail": "(no output — clean compile)"
+    },
+    {
+      "cwd": ".",
+      "cmd": "npx jest LivingSpecsCard.test stateDerivation",
+      "exit": 0,
+      "stdoutTail": "PASS webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx\nPASS tests/unit/spec-viewer/stateDerivation.spec.ts\nPASS src/features/spec-viewer/__tests__/stateDerivation.test.ts\nTest Suites: 3 passed, 3 total\nTests:       48 passed, 48 total"
+    },
+    {
+      "cwd": ".",
+      "cmd": "npm test",
+      "exit": 0,
+      "stdoutTail": "Test Suites: 89 passed, 89 total\nTests:       1093 passed, 1093 total"
+    }
+  ],
+  "filesChanged": [
+    "src/core/types/specContext.ts",
+    "src/features/spec-viewer/stateDerivation.ts",
+    "src/features/spec-viewer/__tests__/stateDerivation.test.ts",
+    "webview/src/spec-viewer/types.ts",
+    "webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx",
+    "webview/src/spec-viewer/components/cards/LivingSpecsCard.stories.tsx",
+    "webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx",
+    "webview/src/spec-viewer/components/ActivityPanel.tsx",
+    "webview/styles/spec-viewer/_activity.css",
+    "README.md",
+    "docs/viewer-states.md"
+  ],
+  "manualVerification": {
+    "where": "Activity panel of the spec viewer (toggle 'Activity' in the viewer nav bar)",
+    "loadedSpec": "Open a spec whose .spec-context.json has livingSpecs.loaded — a 'Living specs' card lists those capability names.",
+    "syncedSpec": "If livingSpecs.synced is also set, those capabilities carry a 'folded back' chip.",
+    "absent": "Open any spec with no livingSpecs field — no 'Living specs' card appears (existing specs see no new UI).",
+    "stillManual": "The card's visual look (placement after Phases, chip color/contrast, theme behavior) is not asserted by the automated tests."
+  },
+  "assertions": [
+    { "name": "extension derivation maps livingSpecs onto ViewerState", "pass": true, "source": "jest" },
+    { "name": "card renders loaded names", "pass": true, "source": "jest+jsdom" },
+    { "name": "card marks synced as folded back", "pass": true, "source": "jest+jsdom" },
+    { "name": "card renders nothing with no data (opt-in)", "pass": true, "source": "jest+jsdom" },
+    { "name": "full suite green", "pass": true, "source": "npm test (1093 passed)" }
+  ],
+  "runCaptureEval": "N/A — no pipeline capture step in this UI ticket (read-only display of data LS·2/LS·3 already capture).",
+  "verdict": "PASS"
+}

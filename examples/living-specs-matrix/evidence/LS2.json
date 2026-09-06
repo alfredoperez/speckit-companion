@@ -1,0 +1,101 @@
+{
+  "ticket": "LS2",
+  "issue": 362,
+  "title": "auto-load living specs into specify & plan (LS·2)",
+  "ranAt": "2026-06-25T18:03:43.033Z",
+  "mode": "deterministic",
+  "liveSpecifyRun": "INCONCLUSIVE — not executed (no live-AI step in this harness)",
+  "sandbox": "examples/bench-sandboxes/ls-2",
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-2",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-2 --changed src/todos/items/item.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/todos/items/item.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"todos-items\",\n      \"spec\": \"capabilities/todos-items/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true,\n      \"specificity\": 15\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true,\n      \"specificity\": 9\n    }\n  ]\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-2",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/001-add-due-dates --living-specs todos-items --living-specs todos",
+      "exit": 0,
+      "stdoutTail": "[companion] Recorded loaded living specs (todos-items, todos) in examples/bench-sandboxes/ls-2/specs/001-add-due-dates/.spec-context.json"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-2-optout",
+      "cmd": "python3 speckit-extension/scripts/resolve-spec-paths.py --root examples/bench-sandboxes/ls-2-optout --changed src/todos/items/item.ts --json",
+      "exit": 0,
+      "stdoutTail": "{\n  \"changed\": [\n    \"src/todos/items/item.ts\"\n  ],\n  \"matched\": []\n}"
+    },
+    {
+      "cwd": ".",
+      "cmd": "python3 -m pytest speckit-extension/tests/test_living_specs.py -q",
+      "exit": 0,
+      "stdoutTail": "..................................                                       [100%]\n34 passed in 0.16s"
+    }
+  ],
+  "fileTree": {
+    "added": [
+      ".specify/companion.yml",
+      "capabilities/todos/spec.md",
+      "capabilities/todos-items/spec.md",
+      "src/todos/list.ts",
+      "src/todos/items/item.ts",
+      "specs/001-add-due-dates/.spec-context.json"
+    ],
+    "modified": [
+      "specs/001-add-due-dates/.spec-context.json"
+    ],
+    "removed": []
+  },
+  "config": "livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n      match: [\"src/todos/**\"]\n    - name: todos-items\n      match: [\"src/todos/items/**\"]",
+  "resolverOutputs": {
+    "changed": "{\n  \"changed\": [\n    \"src/todos/items/item.ts\"\n  ],\n  \"matched\": [\n    {\n      \"name\": \"todos-items\",\n      \"spec\": \"capabilities/todos-items/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true,\n      \"specificity\": 15\n    },\n    {\n      \"name\": \"todos\",\n      \"spec\": \"capabilities/todos/spec.md\",\n      \"location\": \"centralized\",\n      \"exists\": true,\n      \"specificity\": 9\n    }\n  ]\n}",
+    "optOut": "{\n  \"changed\": [\n    \"src/todos/items/item.ts\"\n  ],\n  \"matched\": []\n}"
+  },
+  "recordedContext": {
+    "workflow": "speckit",
+    "specName": "001-add-due-dates",
+    "branch": "001-add-due-dates",
+    "currentStep": "specify",
+    "status": "specified",
+    "history": [],
+    "livingSpecs": {
+      "loaded": [
+        "todos-items",
+        "todos"
+      ]
+    }
+  },
+  "assertions": [
+    {
+      "id": "resolves-capability-for-changed-file",
+      "status": "PASS",
+      "detail": "--changed src/todos/items/item.ts -> [todos-items, todos]"
+    },
+    {
+      "id": "records-loaded-capabilities",
+      "status": "PASS",
+      "detail": "livingSpecs.loaded -> [todos-items, todos]"
+    },
+    {
+      "id": "record-merge-keeps-lifecycle",
+      "status": "PASS",
+      "detail": "status=specified, currentStep=specify preserved"
+    },
+    {
+      "id": "opt-out-resolves-nothing",
+      "status": "PASS",
+      "detail": "enabled:false -> matched=[], exit 0"
+    },
+    {
+      "id": "pytest-green",
+      "status": "PASS",
+      "detail": "pytest exit 0"
+    }
+  ],
+  "pytest": {
+    "runner": "pytest",
+    "exit": 0,
+    "tail": "..................................                                       [100%]\n34 passed in 0.16s"
+  },
+  "verdict": "PASS"
+}

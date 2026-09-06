@@ -1,0 +1,61 @@
+{
+  "id": "S4-adds-nothing-central",
+  "title": "an untouched capability needs a skip note; without one the fold shouts",
+  "ranAt": "2026-07-22T17:38:07.988Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "gate-recorded-loaded",
+      "status": "PASS",
+      "detail": "loaded -> [todos]"
+    },
+    {
+      "id": "no-skip-shouts",
+      "status": "PASS",
+      "detail": "without a skip note: spec byte-identical AND fold prints \"the loop did not close\""
+    },
+    {
+      "id": "skip-recorded",
+      "status": "PASS",
+      "detail": "livingSpecs.skipped -> [{\"name\":\"todos\",\"reason\":\"render-only refactor, no behavior change\"}]"
+    },
+    {
+      "id": "skip-is-correctly-nothing",
+      "status": "PASS",
+      "detail": "with a skip note: spec byte-identical AND fold prints \"correctly nothing\""
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/record-living-specs.py --feature-dir specs/002-rename-vars --changed src/todos/list.ts --root .",
+      "exit": 0,
+      "stdoutTail": "[companion] Recorded living specs (todos) in specs/002-rename-vars/.spec-context.json"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-rename-vars --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: 1 capability loaded (todos), 0 delta blocks, 0 skip note(s) — 1 unaccounted (todos). The loop did not close: for each, author a delta block or record a skip (write-context.py --living-spec-skip \"<name>: <reason>\")."
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-rename-vars --living-spec-skip \"todos: render-only refactor, no behavior change\"",
+      "exit": 0,
+      "stdoutTail": "[companion] Recorded living-spec skip note(s) (todos) in examples/bench-sandboxes/ls-r3-central/specs/002-rename-vars/.spec-context.json"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-central",
+      "cmd": "python3 speckit-extension/scripts/write-context.py --feature-dir specs/002-rename-vars --fold-living-spec --by ai",
+      "exit": 0,
+      "stdoutTail": "[companion] Living-spec fold: all 1 loaded capability (todos) is accounted for (folded earlier or skipped); nothing to fold — correctly nothing."
+    }
+  ],
+  "livingSpec": {
+    "path": "capabilities/todos/spec.md",
+    "before": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n",
+    "after": "# Todos capability\n\n### Users can add a todo\n\n#### Scenario: add a todo\n- WHEN a user types text and submits\n- THEN a todo appears in the list\n",
+    "unifiedDiff": "(byte-identical — correctly nothing)"
+  }
+}

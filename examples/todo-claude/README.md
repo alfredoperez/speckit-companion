@@ -31,7 +31,6 @@ todo-claude/
 │   │   └── todos.tsx       # reducer + context + localStorage persistence
 │   ├── components/         # Header, AddTodo, TodoItem, TodoList
 │   └── pages/              # TodosPage, AboutPage (one per route)
-├── bench/living-specs/     # the living-spec correctness matrix (`ls-r3.mjs`)
 ├── .specify/               # spec-kit workspace (templates, scripts, extensions)
 ├── index.html · package.json · tsconfig.json · vite.config.ts · vitest.config.ts
 ```
@@ -42,4 +41,4 @@ See [`CLAUDE.md`](./CLAUDE.md) for the conventions to follow when implementing a
 
 The stock-vs-Companion benchmark used to run out of this folder. It now lives in its own repository, [`speckit-bench`](https://github.com/alfredoperez/speckit-bench), along with its results and the app it measures — so a bench round can never land in a product commit. The `/bench-*` commands in this repo drive it there.
 
-What stays here is `bench/living-specs/`: the living-spec correctness matrix. It proves the resolver, drift, fold-back and coverage behave, which is evidence about the extension rather than a measurement of it.
+The living-spec correctness matrix moved out of this folder too, to [`../living-specs-matrix/`](../living-specs-matrix/). It proves the resolver, drift, fold-back and coverage behave, which is evidence about the extension rather than a measurement of it — and it must not sit inside an app the harness clones, or every copy of that app would carry it.

@@ -1,0 +1,33 @@
+{
+  "id": "S6-drift-then-sync-coloc",
+  "title": "a direct edit shows as drift, then reads in-sync after the spec updates",
+  "ranAt": "2026-07-22T17:38:08.505Z",
+  "mode": "real+seeded-prose",
+  "verdict": "PASS",
+  "assertions": [
+    {
+      "id": "direct-edit-drifts",
+      "status": "PASS",
+      "detail": "drift before sync: [todos]"
+    },
+    {
+      "id": "sync-clears-drift",
+      "status": "PASS",
+      "detail": "drift after sync: []"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-coloc",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root . --json",
+      "exit": 0,
+      "stdoutTail": "          \"severity\": \"unspeced\"\n        }\n      ],\n      \"inSync\": false\n    }\n  ],\n  \"skipped\": []\n}"
+    },
+    {
+      "cwd": "examples/bench-sandboxes/ls-r3-coloc",
+      "cmd": "python3 speckit-extension/scripts/drift.py --root . --json",
+      "exit": 0,
+      "stdoutTail": "      \"spec\": \"src/todos/todos.spec.md\",\n      \"commit\": \"b0759dc8\",\n      \"drifted\": [],\n      \"inSync\": true\n    }\n  ],\n  \"skipped\": []\n}"
+    }
+  ]
+}
