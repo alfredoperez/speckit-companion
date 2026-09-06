@@ -218,6 +218,14 @@ The extension SHALL emit one event per activation-funnel rung — installed, pan
 - **WHEN** the created event fires from the create form or from the watcher observing a terminal-created spec
 - **THEN** it carries the effective workflow selection coerced through the shared coercer, how the workflow was chosen for form submissions, and which source observed the creation — never a name or path
 
+### Every field a script writes is declared in the shared context type
+
+A field written onto the per-spec context file by any writer SHALL be declared in the canonical context type and documented in the schema reference. The two halves are written in different languages and neither can call the other, so an undeclared field is one no reader on this side can consume without a cast, and one no reader on either side can discover.
+
+#### Scenario: a script writes a field the type does not have
+- **WHEN** the field is added
+- **THEN** declaring it in the type and the schema reference is part of that change, not a follow-up
+
 ### Context keys have one writer and one catalogue
 
 VS Code context keys SHALL be written through a single wrapper that accepts only catalogued key names and logs failures. Activation MUST reset every catalogued key, so a value from a previous session cannot leak into the new one and leave a menu affordance stuck.

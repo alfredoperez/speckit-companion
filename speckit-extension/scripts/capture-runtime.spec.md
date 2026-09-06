@@ -526,11 +526,16 @@ Every author node declares the document it writes, and a build collects those de
 
 ### A living-spec load is sliced by requirement, and a spec with no markers is read whole
 
-The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
+The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. What it reports SHALL be text a step can act on rather than references it must resolve: each requirement carries its own prose and scenarios, the purpose arrives whole, and neither is stripped of the fenced examples inside it. Removing fences is how the parser finds a heading, and it must never be what a reader is given. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
 
 #### Scenario: a marked capability and a change it claims
 - **WHEN** a load resolves a capability whose requirements carry markers
 - **THEN** it reports the purpose plus the matching and unmarked requirements, and not the whole file
+- **AND** each of those requirements arrives with its own text, so the step needs no second read
+
+#### Scenario: a purpose or a requirement containing a fenced example
+- **WHEN** the load payload is built
+- **THEN** the example is still there, because a reader handed prose with a hole in it cannot tell that anything is missing
 
 #### Scenario: a capability with no markers
 - **WHEN** a load resolves it
