@@ -78,13 +78,33 @@ function realPath(target: string): string {
  * identical to `spec_context._lock_path`; `crossProcessContextLock.spec.ts`
  * pins the two against each other.
  */
+/**
+ * Where every lock lives, whatever temporary directory this process was given.
+ *
+ * Both halves read the same environment variable, so they agree whenever their
+ * environments do — and silently stop sharing a lock when they do not, which is
+ * a lost write with nothing to say it happened. A fixed root is the only way two
+ * processes that never meet can be sure they queue on one file. Must match
+ * `_lock_path` in `spec_context.py`.
+ */
+function lockRoot(): string {
+    if (process.platform !== 'win32') {
+        try {
+            if (fs.statSync('/tmp').isDirectory()) return '/tmp';
+        } catch {
+            /* no /tmp: fall through to whatever this process was given */
+        }
+    }
+    return os.tmpdir();
+}
+
 export function specContextLockPath(target: string): string {
     const key = crypto
         .createHash('sha256')
         .update(realPath(target), 'utf8')
         .digest('hex')
         .slice(0, 32);
-    return path.join(os.tmpdir(), 'speckit-companion-locks', `${key}.lock`);
+    return path.join(lockRoot(), 'speckit-companion-locks', `${key}.lock`);
 }
 
 /**

@@ -337,6 +337,10 @@ Two updates to the same spec's state record that arrive at the same time both la
 - **WHEN** a waiter checks whether the lock's owner is still alive
 - **THEN** its answer counts only when the token says the two number processes the same way, since two containers sharing one temporary directory read every live holder as dead, and taking the lock on that basis is the lost write the lock exists to prevent
 
+#### Scenario: the two writers were given different temporary directories
+- **WHEN** each resolves where the lock lives
+- **THEN** they resolve to the same place, because reading the environment means they agree only when their environments do and stop sharing a lock silently when they do not
+
 #### Scenario: the lock's owner cannot be read
 - **WHEN** a waiter would reclaim it
 - **THEN** it does not, because an unreadable owner means the file was replaced or was momentarily unreadable, not that nobody holds it

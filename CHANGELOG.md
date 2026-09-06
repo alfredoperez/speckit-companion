@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The editor and the terminal always queue on the same write lock.** Both halves worked out where the lock lives from the temporary directory their own process was given, so they agreed only when their environments did. A terminal started somewhere the editor's environment does not reach — over SSH, from a wrapper, inside a container — would take no lock the editor could see, and a write could be lost with nothing to say it happened. Both now use one fixed place.
+
 ### Added
 
 - **Attaching work to the pipeline is a choice, not a command name you have to know.** The Pipeline Builder could draw every hook your project runs, including the ones installed extensions registered, but adding one was a free-text box: to attach the automatic commit you had to already know it is spelled `speckit.git.commit`, and nothing in the panel told you. Choosing a kind now offers what this project actually has for that kind, each entry saying in plain words what it does, who registered it, and where it usually goes. The list is derived from your own registries, so an extension you install tomorrow appears without anything changing here, and a project without the git extension is offered none of its hooks. Typing a name by hand still works, beside the list rather than instead of it.
