@@ -29,7 +29,11 @@ One driver per cell (`parallel` of 3). Each works only in `~/dev/projects/condui
 - After dispatching a step, **wait for it to settle** — `waitForSettle(cellDir, step)` polls `.spec-context.json` until the step's completed status **or any later one** appears. It returns `folded: true` when the status overshot, which happens for two shipped reasons: the fast path folds specify/plan/tasks onto `ready-to-implement`, and mark-complete takes implement to `completed`. **A folded step is already done — never re-dispatch it, and never steer the size verdict to make steps settle one at a time.** Right-sizing is the feature under measurement; a driver that disables it produces numbers that look valid and are not.
 - Accumulate time spent in capture into `captureOverheadSec` in the run marker, so the report can isolate it from work time.
 
-The feature prompt is `../speckit-bench/prompts/conduit/<size>.md`, the text between the `---` rules. Hard rules for a driver: no git commands, no build, no test — those are the harness's job at capture time.
+The feature prompt is `../speckit-bench/prompts/conduit/<size>.md`, the text between the `---` rules.
+
+**A driver may run the app's own build and test suite, and should.** That is what a person does, and forbidding it measured something nobody does: on the first Conduit round one arm wrote twelve tests and eleven failed on a single convention slip it had no way to see, because it was not allowed to run them. The acceptance oracle is injected only at grading time and removed afterwards, so a run cannot reach it from inside the cell — there is nothing to protect by keeping the suite closed.
+
+The one hard rule for a driver is **no git commands**. Branching and committing belong to the pipeline, and a driver reaching for git is how a cell's baseline gets rewritten under the harness.
 
 **Tell a driver its letter, never its arm.** A driver that knows it is "the Companion arm" is no longer measuring anything.
 
