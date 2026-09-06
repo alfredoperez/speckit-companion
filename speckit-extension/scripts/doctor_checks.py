@@ -12,6 +12,7 @@ nothing" and "could not look" must never print the same way. Stdlib only.
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from datetime import datetime, timedelta, timezone
@@ -499,6 +500,99 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
         "genuinely could not run, record that as a concern instead",
         {"verified": 0},
     )]
+
+
+#: What the build declared this pipeline must produce, written beside the command
+#: bodies by the same build that assembled them. The doctor reads the JSON rather
+#: than importing `manifest.py`, which is a build-time script and is not packaged.
+MANIFEST_PATH = Path(__file__).resolve().parent.parent / "commands" / ".manifest.json"
+
+
+def _declared_artifacts(manifest_path=None) -> dict | None:
+    """`{command: [entry, ...]}` from the built manifest, or None when there is none.
+
+    Absent, unreadable, or not the shape the build writes all read the same way —
+    there is nothing to hold a run to, which is a skip, never a finding.
+    """
+    try:
+        data = json.loads(Path(manifest_path or MANIFEST_PATH).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    commands = data.get("commands") if isinstance(data, dict) else None
+    return commands if isinstance(commands, dict) else None
+
+
+def _closed_steps(ctx: dict) -> set:
+    """Every step this run recorded as finished, legacy entry shape included."""
+    return {e.get("step") for e in log_entries(ctx)
+            if isinstance(e.get("step"), str) and _is_step_level(e)
+            and _entry_kind(e) == "complete"}
+
+
+def check_artifact(feature_dir: Path, ctx: dict, manifest_path=None) -> tuple:
+    """Did each closed step leave behind the file it declared it would write?
+
+    Every author node declares its output in `writes:`, and the build collects
+    those into a manifest of what a run of this pipeline must produce. Nothing
+    compared that declaration against the disk, so a step that quietly stopped
+    writing its document closed exactly like one that wrote it.
+
+    Reported, never blocking, and deliberately narrow. Only `writes:` is judged —
+    a `may-write:` artifact is one the size budget is allowed to fold away, and
+    calling a `simple` run incomplete for obeying its budget is the manifest
+    crying wolf. A step that produced none of what it declared is read as a run of
+    some other pipeline (stock spec-kit, or a run older than the node that writes
+    the file) and reported as no record rather than as a fault.
+
+    A warning, not a problem: the manifest describes the pipeline as it is built
+    today, and a spec on disk may have been produced by an earlier one. That is
+    worth saying and is not worth failing a gate over.
+    """
+    skip = _no_record("artifact", feature_dir, ctx)
+    if skip is not None:
+        return skip, []
+
+    declared = _declared_artifacts(manifest_path)
+    if declared is None:
+        return CheckStatus(
+            "artifact", "skipped",
+            "no readable artifact manifest — this install's build declared nothing to check against",
+        ), []
+
+    judged, findings = 0, []
+    for step in sorted(_closed_steps(ctx)):
+        entries = declared.get(step)
+        if not isinstance(entries, list):
+            continue
+        names = [str(e.get("artifact") or "").strip() for e in entries
+                 if isinstance(e, dict) and not e.get("conditional")]
+        nodes = {str(e.get("artifact") or "").strip(): e.get("node") for e in entries
+                 if isinstance(e, dict)}
+        names = [n for n in names if n]
+        if not names:
+            continue
+        missing = [n for n in names if not (Path(feature_dir) / n).exists()]
+        if len(missing) == len(names):
+            # None of it landed. That is a step that ran some other pipeline, not
+            # one that dropped an artifact — the manifest has no claim on it.
+            continue
+        judged += 1
+        for name in missing:
+            findings.append(Finding(
+                "artifact", "warning",
+                f"`{step}` closed without {name}",
+                f"the step declares it writes {name} (node `{nodes.get(name) or 'unknown'}`) "
+                f"and the file is not there — either the node did not run, or its `writes:` "
+                f"names something it never writes",
+                {"step": step, "artifact": name, "node": nodes.get(name)},
+            ))
+
+    if not judged:
+        return CheckStatus(
+            "artifact", "skipped",
+            "no closed step produced anything this pipeline declares — nothing to hold this run to",
+        ), []
+    return CheckStatus("artifact", "ran"), findings
 
 
 #: The generated task-list shape: one phase per user story, waves inside each
