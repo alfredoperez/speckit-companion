@@ -734,9 +734,13 @@ export function requirementSlices(specText: string): RequirementSlice[] {
         // Only the line immediately after the heading is a marker; one further
         // down is body, because a spec may legitimately discuss a marker.
         const marker = body.length > 0 ? body[0].match(TOUCHES_RE) : null;
-        const touches = marker
+        // An empty list is `undefined`, not `[]`: `<!-- touches: , -->` names no
+        // file, so the requirement is unmarked. An empty array is truthy in TS
+        // and would have made this half narrow where the Python half does not.
+        const globs = marker
             ? marker[1].split(',').map((g) => g.trim()).filter(Boolean)
-            : undefined;
+            : [];
+        const touches = globs.length > 0 ? globs : undefined;
         out.push(touches ? { heading: head[1], touches, body } : { heading: head[1], body });
         i = j;
     }

@@ -107,10 +107,12 @@ def set_living_specs_loaded_requirements(feature_dir: Path, per_cap: dict) -> Pa
     gets no entry, because naming all of its requirements would say nothing.
     Merges per capability, de-duping while preserving order, so a re-run is a
     no-op."""
+    # An empty list is meaningful: the capability was consulted and its markers
+    # all missed, which is a different fact from being read whole (no entry).
     cleaned = {
         str(cap).strip(): [str(h) for h in heads if str(h).strip()]
         for cap, heads in (per_cap or {}).items()
-        if str(cap).strip() and heads
+        if str(cap).strip() and heads is not None
     }
     if not cleaned:
         return None

@@ -186,18 +186,27 @@ export function preprocessLivingScenarios(markdown: string): string {
 const HAS_INFERRED = /\[inferred\]/i;
 const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 
+/** `<!-- touches: a/**, b.ts -->` — the marker sits directly under the heading. */
+const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
 function buildRequirementCard(heading: string, blockLines: string[], index: number): string[] {
     // Lift the `[inferred]` metadata tag out of the prose into a confidence
     // badge. The tag can sit in the heading (`### Title [inferred]`) or a body
     // line; either way it's stripped from the visible text. An untagged
     // requirement is observed and gets no badge.
     let inferred = false;
-    let title = heading;
+    // Trailing whitespace is common on a markdown line and the heading regex
+    // keeps it, so a card and its outline row would look coverage up under
+    // different keys — the disagreement this single pass exists to prevent.
+    let title = heading.trimEnd();
     if (HAS_INFERRED.test(heading)) {
         inferred = true;
         title = heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim();
     }
-    const body = blockLines.map((line) => {
+    const body = blockLines
+        // The marker did its work in the outline; it is not prose.
+        .filter((line) => !TOUCHES_LINE.test(line))
+        .map((line) => {
         if (HAS_INFERRED.test(line)) {
             inferred = true;
             return line.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '');
@@ -229,9 +238,6 @@ function buildRequirementCard(heading: string, blockLines: string[], index: numb
     ];
 }
 
-/** `<!-- touches: a/**, b.ts -->` — the marker sits directly under the heading. */
-const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
-
 /** How many files a requirement's marker names, or 0 when it carries none. */
 function touchesCount(blockLines: string[]): number {
     const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
@@ -261,10 +267,13 @@ function buildOutline(rows: Array<{ title: string; files: number }>): string[] {
             + `${dot}<span class="living-outline__label">${escapeHtml(title)}</span>${count}`
             + '</a></li>';
     });
+    // A div, not a nav: the renderer passes through `living-` prefixed div /
+    // span / ol / ul / li / p lines only, so a <nav> renders as escaped text and
+    // the outline's styling never attaches.
     return [
-        '<nav class="living-outline" aria-label="Requirements">',
-        `<ol>${items.join('')}</ol>`,
-        '</nav>',
+        '<div class="living-outline" role="navigation" aria-label="Requirements">',
+        `<ol class="living-outline__list">${items.join('')}</ol>`,
+        '</div>',
         '',
     ];
 }

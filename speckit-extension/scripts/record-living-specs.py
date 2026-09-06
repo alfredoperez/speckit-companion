@@ -61,6 +61,10 @@ def record(feature_dir: Path, changed: list[str], root: str) -> tuple[list[str],
     # markers. A capability read whole gets no entry — listing all of its
     # requirements would say nothing that `loaded` does not already say.
     try:
+        # A capability read by requirement records what it read. One that was
+        # consulted and contributed nothing records the empty list, so "its
+        # markers all missed" stays distinguishable from "it was read whole",
+        # which records no entry at all.
         per_cap = {
             entry["name"]: [r["heading"] for r in entry.get("requirements") or []]
             for entry in rsp.requirements_for_changed(files, living, root)

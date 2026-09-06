@@ -481,3 +481,57 @@ Prose.
         expect(preprocessLivingRequirements(SPEC)).toContain('aria-label="Requirements"');
     });
 });
+
+describe('the requirement outline through the real render pipeline (#672 Wave 1)', () => {
+    // These go through renderMarkdown on purpose. Calling the preprocessor
+    // directly skips preprocessHtmlComments and the raw-HTML passthrough test,
+    // which is where both of the outline's real failures lived.
+    const SPEC = `## Purpose
+
+Why this exists.
+
+## Requirements
+
+### Alpha behaviour
+<!-- touches: src/alpha/**, src/alpha/extra.ts -->
+
+Alpha.
+
+### Beta behaviour
+
+Beta, unmarked.
+`;
+
+    beforeEach(() => setLivingMode(true));
+
+    it('emits the outline as real HTML, not escaped text', () => {
+        const out = renderMarkdown(SPEC);
+        expect(out).toContain('<div class="living-outline"');
+        expect(out).toContain('<ol class="living-outline__list">');
+        expect(out).not.toContain('&lt;div class="living-outline"');
+    });
+
+    it('counts the files a marker names', () => {
+        const counts = [...renderMarkdown(SPEC).matchAll(/living-outline__files">(\d+)</g)]
+            .map((m) => m[1]);
+        expect(counts).toEqual(['2']);
+    });
+
+    it('never renders a touches marker as a Template Instructions disclosure', () => {
+        const out = renderMarkdown(SPEC);
+        expect(out).not.toContain('template-instructions');
+        expect(out).not.toContain('touches:');
+        expect(out).not.toContain('src/alpha/extra.ts');
+    });
+
+    it('a row still points at its own card', () => {
+        const out = renderMarkdown(SPEC);
+        expect(out).toContain('href="#living-req-0"');
+        expect(out).toContain('id="living-req-0"');
+    });
+
+    it('leaves the outline out when living mode is off', () => {
+        setLivingMode(false);
+        expect(renderMarkdown(SPEC)).not.toContain('living-outline');
+    });
+});
