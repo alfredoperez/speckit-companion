@@ -369,6 +369,14 @@ The extension SHALL parse a living spec into requirement slices — heading, opt
 - **WHEN** either parser reads the spec
 - **THEN** it is a requirement like any other, because where fold-back put it says nothing about whether it is one
 
+#### Scenario: a requirement whose prose carries a fenced example
+- **WHEN** either parser slices it
+- **THEN** the example is still in the body, because fences decide where a heading is and must never be removed from what a reader is handed
+
+#### Scenario: the marker line itself
+- **WHEN** either parser slices a marked requirement
+- **THEN** the marker is not part of the body, since handing parser metadata to a reader as prose is a leak rather than a fact about the requirement
+
 #### Scenario: a marker that names no file
 - **WHEN** either parser reads a marker whose glob list is empty
 - **THEN** the requirement reads as unmarked, so an empty marker widens the load rather than narrowing it to nothing

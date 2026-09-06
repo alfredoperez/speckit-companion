@@ -173,8 +173,9 @@ export const LivingComponents406: Story = {
  * The requirement outline (#672 Wave 1), driven through the real renderer.
  *
  * `viewer-ui` is one of the repository's largest living specs — the case the
- * outline exists for. Open it from the Overview's living-spec chip: the outline
- * lists every requirement, each row carries a coverage dot and, once markers are
+ * outline exists for. Open it from the Overview's living-spec chip: the viewer's
+ * own "On this page" outline lists every requirement rather than the document's
+ * three section headings, each row carrying a coverage dot and, once markers are
  * adopted, the count of files it claims.
  */
 export const RequirementOutline672: Story = {

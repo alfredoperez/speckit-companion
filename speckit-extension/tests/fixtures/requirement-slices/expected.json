@@ -102,5 +102,17 @@
       "heading": "Folded in later, unmarked",
       "touches": null
     }
+  ],
+  "fenced-body.md": [
+    {
+      "heading": "The shape is declared",
+      "touches": [
+        "src/shape.ts"
+      ]
+    },
+    {
+      "heading": "Nothing fenced here",
+      "touches": null
+    }
   ]
 }

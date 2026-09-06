@@ -91,3 +91,19 @@ describe('the two counters agree', () => {
         expect(requirementIds(fenced)).toEqual([]);
     });
 });
+
+describe('a requirement body is what a load step reads', () => {
+    it('keeps a fenced example, which fence-stripping would have deleted silently', () => {
+        const body = requirementSlices(read('fenced-body.md'))[0].body.join('\n');
+        expect(body).toContain('```json');
+        expect(body).toContain('{"heading": "…", "touches": []}');
+    });
+
+    it('never hands the marker over as prose', () => {
+        for (const name of ['fenced-body.md', 'all-marked.md', 'mixed.md']) {
+            for (const slice of requirementSlices(read(name))) {
+                expect(slice.body.join('\n')).not.toContain('touches:');
+            }
+        }
+    });
+});

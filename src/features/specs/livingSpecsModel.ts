@@ -685,6 +685,21 @@ export interface RequirementSlice {
 /** `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading. */
 const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
 
+/** True for every line inside a fenced block, and for the fences themselves. */
+function fenceFlags(lines: string[]): boolean[] {
+    const flags: boolean[] = [];
+    let inside = false;
+    for (const line of lines) {
+        if (/^\s*(```|~~~)/.test(line)) {
+            inside = !inside;
+            flags.push(true);
+            continue;
+        }
+        flags.push(inside);
+    }
+    return flags;
+}
+
 /** Lines with fenced blocks removed, so an example in a snippet is never parsed. */
 function withoutFences(specText: string): string[] {
     const kept: string[] = [];
@@ -708,7 +723,13 @@ function withoutFences(specText: string): string[] {
  * `resolve-spec-paths.py` is pinned against the same fixtures.
  */
 export function requirementSlices(specText: string): RequirementSlice[] {
-    const lines = withoutFences(specText);
+    // Fences decide which `###` is a heading; they are never removed from the
+    // text. Slicing a fence-stripped document would delete a code example from
+    // the middle of a requirement, and the reader would have no way to tell.
+    const lines = specText.split(/\r?\n/);
+    const fenced = fenceFlags(lines);
+    const isHeading = (k: number): boolean =>
+        !fenced[k] && /^###(?!#)\s+/.test(lines[k]);
     // Every `###` in the document, not just the ones under `## Requirements`.
     // Fold-back appends to the end of the file, so 44 of this repo's 193
     // requirements sit past the Uncovered section — scoping to the section hid
@@ -717,14 +738,14 @@ export function requirementSlices(specText: string): RequirementSlice[] {
     const out: RequirementSlice[] = [];
     let i = 0;
     while (i < end) {
-        const head = lines[i].match(/^###(?!#)\s+(.+?)\s*$/);
+        const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+?)\s*$/) : null;
         if (!head) {
             i++;
             continue;
         }
         let j = i + 1;
-        while (j < end && !/^###(?!#)\s+/.test(lines[j])) j++;
-        const body = lines.slice(i + 1, j);
+        while (j < end && !isHeading(j)) j++;
+        let body = lines.slice(i + 1, j);
         // Only the line immediately after the heading is a marker; one further
         // down is body, because a spec may legitimately discuss a marker.
         const marker = body.length > 0 ? body[0].match(TOUCHES_RE) : null;
@@ -735,6 +756,9 @@ export function requirementSlices(specText: string): RequirementSlice[] {
             ? marker[1].split(',').map((g) => g.trim()).filter(Boolean)
             : [];
         const touches = globs.length > 0 ? globs : undefined;
+        // The marker is parser metadata; handing it to a reader as prose is a
+        // leak, not a fact about the requirement.
+        if (marker) body = body.slice(1);
         out.push(touches ? { heading: head[1], touches, body } : { heading: head[1], body });
         i = j;
     }

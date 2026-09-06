@@ -443,11 +443,16 @@ Where a capture stands in for editor chrome the webview does not build — the s
 
 ### A living spec is navigable by requirement
 
-A living spec SHALL render an outline of its requirement headings, in document order, derived in the same pass that builds the requirement cards — a second parse is how a row and its card come to disagree. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of files its marker names where it carries one. Activating a row SHALL move the view to that requirement, by pointer and by keyboard alike. A feature spec SHALL NOT render the outline.
+A living spec SHALL be navigable by requirement from the viewer's existing document outline, not from a second one built beside it — the viewer already has a sticky outline with scroll, active-heading tracking, and a narrow-pane fallback, and a second one puts two indexes of the same headings side by side on a wide pane. Because a living spec's requirements are its subsection headings, that outline SHALL list them by default rather than behind the subsections toggle a feature spec needs. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of files its marker names where it carries one. Those marks SHALL be drawn and hidden from assistive technology, with the row's single accessible name saying what they mean in words: a dot carrying only a tooltip is not reliably announced, and a bare number beside a heading says nothing. The outline SHALL read what it shows off the rendered requirement cards, never by parsing the document again. A feature spec's outline is unchanged.
 
 #### Scenario: a large living spec is opened
 - **WHEN** it renders
-- **THEN** every requirement appears once in the outline, in document order
+- **THEN** every requirement appears once in the outline, in document order, without the reader turning on subsections
+
+#### Scenario: a requirement appended past the uncovered-files section
+- **WHEN** the cards and the outline are built
+- **THEN** it is a card and a row like any other, because fold-back appends to the end of the file and where a requirement sits says nothing about whether it is one
+- **AND** the uncovered section between them is left outside every card rather than swallowed into the one above it
 
 #### Scenario: a requirement whose coverage was never computed
 - **WHEN** its row renders

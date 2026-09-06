@@ -43,6 +43,58 @@ const TOC_SKIP_PATTERNS: RegExp[] = [
 // priority prominently, so the TOC strips the suffix to keep entries scannable.
 const PRIORITY_SUFFIX = /\s*\(Priority:\s*P\d+\)\s*$/i;
 
+/**
+ * The requirement card a heading sits inside, or null.
+ *
+ * A living spec's requirements are its `h3`s, and the card around each one
+ * already carries its coverage and the number of files its marker names. The
+ * outline reads them off that card rather than parsing the markdown a second
+ * time — a second parse is exactly how a row and its card come to disagree.
+ */
+function requirementCard(heading: HTMLElement): HTMLElement | null {
+    return heading.closest<HTMLElement>('.living-req-card');
+}
+
+/**
+ * Coverage and file-count marks for one requirement row.
+ *
+ * Both are drawn, and both are hidden from assistive tech, because the row's
+ * one accessible name says them in words instead. A dot carrying only a `title`
+ * is not reliably announced, and a bare `2` beside a heading says nothing.
+ * Returns the phrases the caller folds into that name.
+ */
+function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
+    const said: string[] = [];
+
+    // The heading moves into its own span so it can ellipsize beside the marks;
+    // as a bare text node in a flex row it would push them off the edge.
+    const label = document.createElement('span');
+    label.className = 'spec-toc-text';
+    label.textContent = a.textContent;
+    a.textContent = '';
+
+    const coverage = card.dataset.reqCoverage;
+    const dot = document.createElement('span');
+    // Unknown coverage reads as unknown, never as zero: a missing count and a
+    // genuine zero mean opposite things to a reader.
+    dot.className = coverage ? 'spec-toc-cov' : 'spec-toc-cov spec-toc-cov--unknown';
+    dot.setAttribute('aria-hidden', 'true');
+    a.append(dot, label);
+    said.push(coverage ? `covered ${coverage}` : 'coverage unknown');
+
+    const files = card.dataset.reqFiles;
+    if (files) {
+        const count = document.createElement('span');
+        count.className = 'spec-toc-files';
+        count.setAttribute('aria-hidden', 'true');
+        count.textContent = files;
+        a.appendChild(count);
+        said.push(`${files} ${files === '1' ? 'file' : 'files'}`);
+    }
+    return said;
+}
+
+
 function prefersReducedMotion(): boolean {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -87,7 +139,11 @@ export function buildToc(
     });
     const hasH3 = allHeadings.some(h => h.tagName.toLowerCase() === 'h3');
 
-    const headings = showSubsections
+    // A living spec's requirements ARE its `h3`s, so hiding them by default
+    // would leave the outline listing three section headings for a document the
+    // reader navigates by requirement.
+    const living = allHeadings.some(h => requirementCard(h) !== null);
+    const headings = showSubsections || living
         ? allHeadings
         : allHeadings.filter(h => h.tagName.toLowerCase() === 'h2');
 
@@ -109,7 +165,7 @@ export function buildToc(
     label.textContent = 'On this page';
     header.appendChild(label);
 
-    if (hasH3) {
+    if (hasH3 && !living) {
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'spec-toc-toggle';
@@ -144,17 +200,26 @@ export function buildToc(
         const a = document.createElement('a');
         a.className = `spec-toc-link spec-toc-link--${level}`;
         a.href = `#${id}`;
-        a.textContent = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
+        const text = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
+        a.textContent = text;
         // The entry clamps to two lines, so the full heading lives in the tooltip.
-        a.title = a.textContent;
+        a.title = text;
+
+        const card = requirementCard(heading);
+        // The marks are drawn but hidden from assistive tech; what they mean is
+        // said once, here, in the row's own accessible name.
+        const said = card ? requirementMarks(card, a) : [];
+        if (card) a.classList.add('spec-toc-link--requirement');
+
         if (level === 'h2') {
-            parentSection = a.textContent;
+            parentSection = text;
         } else if (parentSection) {
             // A tasks.md has five headings called "Implementation". Out of
             // context they are indistinguishable, so the accessible name says
             // which section each one belongs to.
-            a.setAttribute('aria-label', `${a.textContent} — ${parentSection}`);
+            said.unshift(parentSection);
         }
+        if (said.length) a.setAttribute('aria-label', `${text} — ${said.join(', ')}`);
         a.dataset.target = id;
         li.appendChild(a);
         list.appendChild(li);

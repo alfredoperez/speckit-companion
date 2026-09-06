@@ -105,6 +105,27 @@ class RequirementSlicesAgainstSharedFixtures(unittest.TestCase):
                 self.assertEqual(len(rsp.requirement_slices(text)), headings)
 
 
+class RequirementBodiesSurviveSlicing(unittest.TestCase):
+    """A body is what the load step reads; anything lost here is lost silently."""
+
+    FIXTURES = Path(__file__).resolve().parent / "fixtures" / "requirement-slices"
+
+    def _slices(self, name):
+        text = (self.FIXTURES / name).read_text(encoding="utf-8")
+        return rsp.requirement_slices(text)
+
+    def test_a_fenced_example_stays_in_the_body(self):
+        body = "\n".join(self._slices("fenced-body.md")[0]["body"])
+        self.assertIn("```json", body)
+        self.assertIn('{"heading": "…", "touches": []}', body)
+
+    def test_the_marker_is_not_handed_over_as_prose(self):
+        for name in ("fenced-body.md", "all-marked.md", "mixed.md"):
+            with self.subTest(fixture=name):
+                for s in self._slices(name):
+                    self.assertNotIn("touches:", "\n".join(s["body"]))
+
+
 class BothSuitesReadEveryFixture(unittest.TestCase):
     """The guard that makes the shared fixtures a contract rather than a folder.
 

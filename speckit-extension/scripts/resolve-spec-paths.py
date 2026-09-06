@@ -152,7 +152,15 @@ def requirement_slices(spec_text: str) -> list:
     the same fence-stripped text and are pinned against
     `tests/fixtures/requirement-slices/`; a fixture only one side reads fails.
     """
-    lines = _without_fences(spec_text)
+    # Fences decide which `###` is a heading; they are never removed from the
+    # text. Slicing a fence-stripped document would delete a code example from
+    # the middle of a requirement, and the reader would have no way to tell.
+    lines = spec_text.splitlines()
+    fenced = _fence_flags(lines)
+
+    def is_heading(k):
+        return not fenced[k] and re.match(r"^###(?!#)\s+", lines[k])
+
     # Every `###` in the document, not just the ones under `## Requirements`.
     # Fold-back appends to the end of the file, so real specs carry requirements
     # past the Uncovered section; scoping to the section hid them from the load
@@ -161,18 +169,23 @@ def requirement_slices(spec_text: str) -> list:
     out = []
     i = 0
     while i < end:
-        head = re.match(r"^###(?!#)\s+(.+?)\s*$", lines[i])
+        head = re.match(r"^###(?!#)\s+(.+?)\s*$", lines[i]) if not fenced[i] else None
         if not head:
             i += 1
             continue
         j = i + 1
-        while j < end and not re.match(r"^###(?!#)\s+", lines[j]):
+        while j < end and not is_heading(j):
             j += 1
         body = lines[i + 1:j]
         # Only the line immediately after the heading is a marker; one further
         # down is body, because a spec may legitimately discuss a marker.
         marker = _TOUCHES_RE.match(body[0]) if body else None
-        touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] if marker else None
+        touches = None
+        if marker:
+            touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] or None
+            # The marker is parser metadata; handing it to a reader as prose is
+            # a leak, not a fact about the requirement.
+            body = body[1:]
         out.append({"heading": head.group(1), "touches": touches, "body": body})
         i = j
     return out

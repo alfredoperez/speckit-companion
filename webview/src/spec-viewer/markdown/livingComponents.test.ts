@@ -402,7 +402,7 @@ describe('renderMarkdown — feature-spec byte parity (FR-001, SC-001)', () => {
     });
 });
 
-describe('the requirement outline (#672 Wave 1)', () => {
+describe('requirement cards carry what the outline needs (#672 Wave 1)', () => {
     const SPEC = `## Purpose
 
 Why this exists.
@@ -417,51 +417,50 @@ Alpha.
 ### Beta behaviour
 
 Beta, unmarked.
+
+## Uncovered
+
+- \`src/skimmed.ts\`
+
+### Folded in later
+
+Appended past the uncovered section, and still a requirement.
 `;
 
     afterEach(() => setLivingCoverage(null));
 
-    it('lists every requirement once, in document order', () => {
-        const out = preprocessLivingRequirements(SPEC);
-        const labels = [...out.matchAll(/living-outline__label">([^<]*)</g)].map(m => m[1]);
-        expect(labels).toEqual(['Alpha behaviour', 'Beta behaviour']);
+    it('makes a card for every requirement, including one appended past Uncovered', () => {
+        const ids = [...preprocessLivingRequirements(SPEC).matchAll(/id="living-req-(\d+)"/g)]
+            .map((m) => m[1]);
+        expect(ids).toEqual(['0', '1', '2']);
     });
 
-    it('a row points at its own card', () => {
-        const out = preprocessLivingRequirements(SPEC);
-        expect(out).toContain('href="#living-req-0"');
-        expect(out).toContain('id="living-req-0"');
-        expect(out).toContain('href="#living-req-1"');
-        expect(out).toContain('id="living-req-1"');
+    it('names the requirement on its card', () => {
+        const names = [...preprocessLivingRequirements(SPEC).matchAll(/data-req="([^"]*)"/g)]
+            .map((m) => m[1]);
+        expect(names).toEqual(['Alpha behaviour', 'Beta behaviour', 'Folded in later']);
     });
 
-    it('shows the file count a marker names, and nothing when unmarked', () => {
-        const out = preprocessLivingRequirements(SPEC);
-        const counts = [...out.matchAll(/living-outline__files">(\d+)</g)].map(m => m[1]);
+    it('carries the file count a marker names, and nothing when unmarked', () => {
+        const counts = [...preprocessLivingRequirements(SPEC).matchAll(/data-req-files="(\d+)"/g)]
+            .map((m) => m[1]);
         expect(counts).toEqual(['2']);
     });
 
-    it('unknown coverage renders as unknown, never as zero', () => {
+    it('carries known coverage and omits it when unknown, never as zero', () => {
+        setLivingCoverage({ 'Alpha behaviour': '3/4', 'Beta behaviour': '0' });
         const out = preprocessLivingRequirements(SPEC);
-        expect(out).toContain('living-outline__cov--unknown');
-        expect(out).not.toMatch(/living-outline__cov[^>]*>0</);
+        expect(out).toContain('data-req-coverage="3/4"');
+        expect(out).not.toContain('data-req-coverage="0"');
+        expect([...out.matchAll(/data-req-coverage=/g)]).toHaveLength(1);
     });
 
-    it('known coverage is distinguishable from unknown', () => {
-        setLivingCoverage({ 'Alpha behaviour': '3/4' });
-        const out = preprocessLivingRequirements(SPEC);
-        const rows = out.split('<li>').slice(1);
-        expect(rows[0]).toContain('title="3/4"');
-        expect(rows[0]).not.toContain('--unknown');
-        expect(rows[1]).toContain('--unknown');
-    });
-
-    it('emits no outline for a document with no requirements section', () => {
+    it('leaves a document with no requirements section alone', () => {
         expect(preprocessLivingRequirements('# Just a title\n\nProse.\n'))
-            .not.toContain('living-outline');
+            .not.toContain('living-req-card');
     });
 
-    it('a heading inside a fenced block is not a row', () => {
+    it('a heading inside a fenced block is not a requirement', () => {
         const withFence = `## Requirements
 
 ### Real one
@@ -472,20 +471,16 @@ Prose.
 ### Not a requirement
 \`\`\`
 `;
-        const out = preprocessLivingRequirements(withFence);
-        const labels = [...out.matchAll(/living-outline__label">([^<]*)</g)].map(m => m[1]);
-        expect(labels).toEqual(['Real one']);
-    });
-
-    it('the outline is announced as a landmark', () => {
-        expect(preprocessLivingRequirements(SPEC)).toContain('aria-label="Requirements"');
+        const names = [...preprocessLivingRequirements(withFence).matchAll(/data-req="([^"]*)"/g)]
+            .map((m) => m[1]);
+        expect(names).toEqual(['Real one']);
     });
 });
 
-describe('the requirement outline through the real render pipeline (#672 Wave 1)', () => {
-    // These go through renderMarkdown on purpose. Calling the preprocessor
-    // directly skips preprocessHtmlComments and the raw-HTML passthrough test,
-    // which is where both of the outline's real failures lived.
+describe('requirement cards through the real render pipeline (#672 Wave 1)', () => {
+    // Through renderMarkdown on purpose. Calling the preprocessor directly
+    // skips preprocessHtmlComments and the raw-HTML passthrough test, which is
+    // where the cards' real failures lived.
     const SPEC = `## Purpose
 
 Why this exists.
@@ -504,17 +499,14 @@ Beta, unmarked.
 
     beforeEach(() => setLivingMode(true));
 
-    it('emits the outline as real HTML, not escaped text', () => {
+    it('emits the cards as real HTML, not escaped text', () => {
         const out = renderMarkdown(SPEC);
-        expect(out).toContain('<div class="living-outline"');
-        expect(out).toContain('<ol class="living-outline__list">');
-        expect(out).not.toContain('&lt;div class="living-outline"');
+        expect(out).toContain('<div class="living-req-card"');
+        expect(out).not.toContain('&lt;div class="living-req-card"');
     });
 
-    it('counts the files a marker names', () => {
-        const counts = [...renderMarkdown(SPEC).matchAll(/living-outline__files">(\d+)</g)]
-            .map((m) => m[1]);
-        expect(counts).toEqual(['2']);
+    it('carries the file count a marker names', () => {
+        expect(renderMarkdown(SPEC)).toContain('data-req-files="2"');
     });
 
     it('never renders a touches marker as a Template Instructions disclosure', () => {
@@ -524,15 +516,9 @@ Beta, unmarked.
         expect(out).not.toContain('src/alpha/extra.ts');
     });
 
-    it('a row still points at its own card', () => {
-        const out = renderMarkdown(SPEC);
-        expect(out).toContain('href="#living-req-0"');
-        expect(out).toContain('id="living-req-0"');
-    });
-
-    it('leaves the outline out when living mode is off', () => {
+    it('leaves the cards out when living mode is off', () => {
         setLivingMode(false);
-        expect(renderMarkdown(SPEC)).not.toContain('living-outline');
+        expect(renderMarkdown(SPEC)).not.toContain('living-req-card');
     });
 });
 
