@@ -1,0 +1,116 @@
+{
+  "workflow": "companion",
+  "specName": "A living spec is read one requirement at a time",
+  "branch": "605-requirement-level-living-specs",
+  "currentStep": "plan",
+  "status": "planning",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-05T23:58:11.573Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T00:00:43.296Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T00:13:37.941Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:14:40.402Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "488f4800-3042-4d95-a4e0-1c8d4019fea9",
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime",
+      "spec-viewer",
+      "companion-commands",
+      "viewer-ui",
+      "specs"
+    ]
+  },
+  "last_action": "living specs loaded (capture-runtime, spec-viewer, companion-commands, viewer-ui, specs)",
+  "coverage": {
+    "FR-001": {
+      "title": "A requirement MAY carry one marker naming the files it describes, ignored by every existing reader."
+    },
+    "FR-002": {
+      "title": "A requirement with no marker is treated as describing every file its capability claims."
+    },
+    "FR-003": {
+      "title": "A marked spec contributes its purpose, matching requirements, and unmarked requirements — nothing else."
+    },
+    "FR-004": {
+      "title": "A spec with no markers loads whole, unchanged from today."
+    },
+    "FR-005": {
+      "title": "A run records which requirements it loaded, without changing the existing capability record shape."
+    },
+    "FR-006": {
+      "title": "Adoption writes a marker on each requirement it produces."
+    },
+    "FR-007": {
+      "title": "A sync writes or widens the marker of each requirement it updates."
+    },
+    "FR-008": {
+      "title": "Requirement parsing ignores fenced code blocks and both implementations count the same headings."
+    },
+    "FR-009": {
+      "title": "A living spec renders an outline of its requirement headings in document order."
+    },
+    "FR-010": {
+      "title": "An outline row shows known coverage, and shows unknown coverage as unknown rather than none."
+    },
+    "FR-011": {
+      "title": "An outline row indicates how many files its marker names, and nothing where there is no marker."
+    },
+    "FR-012": {
+      "title": "Activating an outline row moves the view to that requirement, by pointer and keyboard."
+    },
+    "FR-013": {
+      "title": "A feature spec does not render the outline."
+    },
+    "FR-014": {
+      "title": "Fold, drift, sync, coverage and adoption behave identically with or without markers."
+    },
+    "FR-015": {
+      "title": "The on-disk format, the registry and its ordering do not otherwise change."
+    }
+  },
+  "intent": "Make the requirement, not the file, the unit a living spec is loaded and navigated by, so a spec of any size costs a run only the requirements that matter.",
+  "expectations": [
+    "Validation, fold-back refusal, editor diagnostics and the retire guard (Wave 2)",
+    "Command-line requirement reads (Wave 3)",
+    "Splitting the four large specs — measured after this lands",
+    "A cross-requirement graph",
+    "Feature specs"
+  ],
+  "context": [
+    "living spec: capture-runtime, spec-viewer, companion-commands, viewer-ui, specs",
+    "area: livingSpecsModel.ts requirementIds, resolve-spec-paths.py, livingComponents.ts requirement cards",
+    "constraint: on-disk format additive only; registry and glob ordering unchanged; both parsers must count the same headings"
+  ],
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 14,
+    "projectedTasks": 24,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  }
+}
