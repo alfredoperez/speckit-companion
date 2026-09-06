@@ -390,7 +390,28 @@ const steeringRows: SidebarRow[] = [
 // Exported (and named in `excludeStories` below) so the README composites in
 // ReadmeCapture.stories.tsx reuse these fixture rows instead of forking them.
 export function specsPane(expandProfilePhoto: boolean, fill = true): SidebarPane {
-    return { id: 'specs', title: 'Specs', rows: specsRows(expandProfilePhoto), fill };
+    const rows = specsRows(expandProfilePhoto);
+    // The title bar contributes.menus["view/title"] builds for speckit.views.explorer,
+    // in navigation order: Refresh, Filter, Sort, Collapse-or-Expand, Pipeline Builder
+    // (only with the spec-kit extension installed), New Spec. Collapse All and Expand
+    // All are one slot that flips on speckit.specs.allCollapsed, so read it off the
+    // rows rather than hard-coding it — a frame must never offer Expand All over an
+    // already-expanded tree.
+    const allCollapsed = rows.every((row) => row.twistie !== 'expanded');
+    return {
+        id: 'specs',
+        title: 'Specs',
+        rows,
+        fill,
+        actions: [
+            'refresh',
+            'filter',
+            'sort-precedence',
+            allCollapsed ? 'expand-all' : 'collapse-all',
+            'circuit-board',
+            'plus',
+        ],
+    };
 }
 
 export const livingSpecsPane = (fill = false): SidebarPane => ({
