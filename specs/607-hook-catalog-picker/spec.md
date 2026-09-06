@@ -25,7 +25,7 @@ Someone attaching work to a step chooses the kind first, and then chooses the th
 3. **Given** an entry is chosen, **When** the form is submitted, **Then** the hook is attached with that entry's own identifier, exactly as typing it would have.
 4. **Given** the wanted thing is not in the list, **When** it is typed by hand, **Then** it is accepted exactly as before.
 5. **Given** the project has no skills, **When** the skill kind is chosen, **Then** the form says the list is empty rather than showing an empty control that looks broken.
-6. **Given** an instruction is the kind, **When** the second selector would appear, **Then** it does not, because an instruction is prose nobody could list.
+6. **Given** the shell-command kind is chosen, **When** the second selector would appear, **Then** the installed commands are not offered there, because that kind writes a shell line and a command spec-kit dispatches is not one.
 
 ### User Story 2 - The list is what this project has (Priority: P1)
 

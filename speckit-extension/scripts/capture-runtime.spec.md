@@ -659,3 +659,7 @@ The structure a panel draws SHALL carry, beside it, every hook command the proje
 #### Scenario: the registry cannot be read
 - **WHEN** the structure is emitted
 - **THEN** it carries what it could read and the panel still works
+
+#### Scenario: one lifecycle key holds something that is not a list of hooks
+- **WHEN** the structure is emitted
+- **THEN** that key alone is skipped, both here and where the board reads the same registry, because guarding the whole walk instead made the result depend on where in the file the bad key sat and made the two disagree
