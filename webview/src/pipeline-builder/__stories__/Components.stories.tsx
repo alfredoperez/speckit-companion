@@ -203,7 +203,7 @@ export const HooksOnANamedWorkflow: Story = {
 const PARKED = {
     workflows: {
         available: ['', 'shipped'], active: 'shipped',
-        parked: { file: '.specify/companion.yml', hooks: 4, unplaceable: 0 },
+        parked: { file: '.specify/companion.yml', unplaceable: 0, warnings: [] },
     },
 };
 

@@ -1050,7 +1050,8 @@ def config_path(project_root: str) -> str:
     if active == build.SHIPPED_WORKFLOW:
         raise ConfigWriteError(
             "this project is on \"As it ships\", which is Companion unchanged and "
-            "cannot be edited — switch to a workflow, or create one, first")
+            "cannot be edited — go back to this project's own pipeline, switch to "
+            "a workflow, or create one")
     return os.path.join(project_root, build.WORKFLOWS_REL, f"{active}.yml")
 
 

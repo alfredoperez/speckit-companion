@@ -240,6 +240,11 @@ def _sequence(commands: list) -> list:
     return ranked + [c for c in loose if c not in placed]
 
 
+#: Warnings from resolving the bypassed configuration. A running config surfaces
+#: its warnings; a parked one used to eat them, so a typo'd anchor vanished.
+_PARKED_WARNINGS: list = []
+
+
 def _parked_hooks(project_root: str) -> dict:
     """The project's own hooks, by command, while `shipped` is bypassing them.
 
@@ -252,7 +257,9 @@ def _parked_hooks(project_root: str) -> dict:
     if not parked:
         return {}
     try:
-        plan, _warnings = build.plan_build(parked)
+        plan, warnings = build.plan_build(parked)
+        _PARKED_WARNINGS.clear()
+        _PARKED_WARNINGS.extend(warnings or [])
     except Exception:
         # Any failure, not only a refusal. A file that parses as YAML but is the
         # wrong shape raises an ordinary exception, and letting that out took the
@@ -411,15 +418,16 @@ def build_graph(project_root: str) -> dict:
             "active": active,
             # How much of this project is switched off right now, so the panel
             # can say it rather than draw a pipeline that looks untouched.
-            # `hooks` is what the board draws, counted off the board itself:
-            # two numbers from two sources is how the header came to claim a
-            # hook was drawn greyed that was nowhere on the page. `unplaceable`
-            # is the rest — a hook anchored to a phase the shipped pipeline does
-            # not have has no place to be drawn, and saying so beats losing it.
+            # No count here: the webview derives what is parked from the board
+            # it draws, and a second number from a second source is how the
+            # header came to say one thing while the tally beside it said
+            # another. What only this side knows is what could not be placed at
+            # all — a hook anchored to something the shipped shape does not
+            # have, and a warning the parked resolve raised.
             "parked": {
                 "file": build.CONFIG_REL.replace(os.sep, "/"),
-                "hooks": drawn_parked,
-                "unplaceable": sum(len(v) for v in parked.values()) - drawn_parked,
+                "unplaceable": max(sum(len(v) for v in parked.values()) - drawn_parked, 0),
+                "warnings": list(_PARKED_WARNINGS),
             } if parked else None,
         },
         # What a hook can be pointed at in this project, so the form offers
@@ -466,6 +474,20 @@ def main() -> int:
         # The ways out travel with it: an error the panel can only print leaves
         # someone editing YAML by hand, which is the thing this panel replaces.
         print(json.dumps({"error": str(err), "repairs": _repairs(args.project)}))
+        return 0
+    except Exception as err:  # noqa: BLE001
+        # Not a refusal but a crash: a file that parses as YAML and is the wrong
+        # shape underneath. `str(err)` on one of those is a Python sentence
+        # nobody can act on, so the file is named and the shape is described
+        # instead. Catching only the refusal left the panel showing a traceback
+        # with no way out but hand editing, which is what this panel replaces.
+        print(json.dumps({
+            "error": f"{build.CONFIG_REL} is valid YAML but not shaped the way "
+                     f"the builder reads it ({err.__class__.__name__}: {err}). "
+                     "The commonest cause is a block written as a list where a "
+                     "map of names was expected.",
+            "repairs": _repairs(args.project),
+        }))
         return 0
     print(json.dumps(graph, indent=2))
     return 0

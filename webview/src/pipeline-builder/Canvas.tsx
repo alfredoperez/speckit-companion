@@ -460,17 +460,17 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                     {source.ours.map((hook, i) => (
                                         <li key={`ours-${i}`}>
                                             {hook.parked ? (
-                                                // Focusable, because the name clips and the rest of it lives in the tooltip.
+                                                // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
                                                 <span class="pb-hook pb-hook--parked"
-                                                    tabIndex={0}
                                                     title={`${hook.summary}\n\nParked — this `
                                                         + 'project runs the pipeline as it '
-                                                        + 'ships, so this does not run.'}
-                                                    aria-label={`${hook.summary} — parked, `
-                                                        + 'not running while the pipeline is '
-                                                        + 'the shipped one'}>
+                                                        + 'ships, so this does not run.'}>
                                                     <HookLine hook={hook} />
                                                     <span class="pb-hook-parked">parked</span>
+                                                    <span class="sr-only">
+                                                        {`${hook.summary} — parked, not running `
+                                                            + 'while the pipeline is the shipped one'}
+                                                    </span>
                                                 </span>
                                             ) : (
                                                 <button class="pb-hook"

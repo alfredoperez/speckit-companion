@@ -208,13 +208,22 @@ describe('switching workflows', () => {
     });
 
     describe('running the pipeline as it ships', () => {
-        const shipped = (hooks = 2) => graph({
-            configured: false,
-            workflows: {
-                available: ['', 'shipped'], active: 'shipped',
-                parked: { file: '.specify/companion.yml', hooks, unplaceable: 0 },
-            },
-        });
+        // Parked hooks go on the board, because that is where the header now
+        // counts them: one number, from the thing the reader is looking at.
+        const shipped = (hooks = 2) => {
+            const g = graph({
+                configured: false,
+                workflows: {
+                    available: ['', 'shipped'], active: 'shipped',
+                    parked: { file: '.specify/companion.yml', unplaceable: 0, warnings: [] },
+                },
+            });
+            g.steps[0].phases[0].nodes[0].hooks = Array.from({ length: hooks }, (_, i) => ({
+                when: 'before' as const, type: 'prompt' as const, summary: `parked ${i}`,
+                anchor: '', index: i, note: '', parked: true,
+            }));
+            return g;
+        };
 
         it('says so, and says what is parked', () => {
             const { host } = header(shipped());
@@ -243,6 +252,31 @@ describe('switching workflows', () => {
                 .some(el => el.textContent?.includes('Open companion.yml'))).toBe(true);
         });
 
+        it('the notice and the tally never disagree', () => {
+            // A hook whose anchor names both a phase and a node is drawn twice
+            // and was counted once, so the notice said one number and the menu
+            // beside it said another.
+            const g = shipped(0);
+            const hook = {
+                when: 'before' as const, type: 'prompt' as const, summary: 'both',
+                anchor: '', index: 0, note: '', parked: true,
+            };
+            g.steps[0].phases[0].hooks = [hook];
+            g.steps[0].phases[0].nodes[0].hooks = [hook];
+            const notice = header(g).host.querySelector('.builder-notice--warning')!;
+            expect(notice.textContent).toContain('2 hooks of yours');
+        });
+
+        it('says what the parked resolve could not work out at all', () => {
+            const g = shipped(0);
+            g.workflows.parked = {
+                file: '.specify/companion.yml', unplaceable: 0,
+                warnings: ["hook anchor 'plan-docc' for plan.after not in active recipe"],
+            };
+            const notice = header(g).host.querySelector('.builder-notice--warning')!;
+            expect(notice.textContent).toContain('plan-docc');
+        });
+
         it('does not claim a hook is parked when none is', () => {
             const { host } = header(graph({
                 configured: false,
@@ -260,9 +294,13 @@ describe('switching workflows', () => {
                 configured: false,
                 workflows: {
                     available: ['', 'shipped'], active: 'shipped',
-                    parked: { file: '.specify/companion.yml', hooks: 1, unplaceable: 2 },
+                    parked: { file: '.specify/companion.yml', unplaceable: 2, warnings: [] },
                 },
             });
+            g.steps[0].phases[0].nodes[0].hooks = [{
+                when: 'before', type: 'prompt', summary: 'drawn one',
+                anchor: '', index: 0, note: '', parked: true,
+            }];
             const notice = header(g).host.querySelector('.builder-notice--warning')!;
             expect(notice.textContent).toContain('1 hook of yours');
             expect(notice.textContent).toContain('2 hooks');
@@ -290,12 +328,7 @@ describe('switching workflows', () => {
         });
 
         it('does not tally a parked hook as one that runs', async () => {
-            const g = shipped();
-            g.steps[0].phases[0].nodes[0].hooks = [{
-                when: 'before', type: 'prompt', summary: 'check it',
-                anchor: '', index: 0, note: '', parked: true,
-            }];
-            const { host } = header(g);
+            const { host } = header(shipped(1));
             expect(host.querySelector('.builder-tally')?.textContent)
                 .toContain('no hooks running');
 

@@ -223,11 +223,13 @@ export interface PipelineWorkflows {
     active: string;
     /**
      * The configuration `shipped` is bypassing. Absent when nothing is parked.
-     * `hooks` is counted off the board itself, so the header can never claim a
-     * hook is drawn that is not; `unplaceable` is the rest, whose anchor the
-     * shipped pipeline does not have.
+     *
+     * No count of what is drawn: the webview derives that from the board, and a
+     * second number from a second source is how the header came to say one
+     * thing while the tally beside it said another. What only the resolver
+     * knows is what could not be placed at all, and what it warned about.
      */
-    parked?: { file: string; hooks: number; unplaceable: number } | null;
+    parked?: { file: string; unplaceable: number; warnings: string[] } | null;
 }
 
 /** A whole configuration Companion ships as a starting point for a new workflow. */

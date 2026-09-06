@@ -15,6 +15,7 @@ Stdlib `unittest` only.
 from __future__ import annotations
 
 import importlib
+import json as _json
 import sys
 import tempfile
 import unittest
@@ -147,7 +148,7 @@ class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
         self.assertEqual([h["summary"] for h in parked], ["check it"])
         self.assertEqual(graph["workflows"]["parked"],
                          {"file": ".specify/companion.yml",
-                          "hooks": 1, "unplaceable": 0})
+                          "unplaceable": 0, "warnings": []})
 
     def test_a_parked_hook_is_not_counted_as_a_change(self):
         with project("workflow: shipped\n" + HOOKED) as root:
@@ -164,9 +165,11 @@ class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
         self.assertEqual(graph["workflows"]["available"], ["", "shipped"])
         self.assertEqual(graph["workflows"]["active"], "shipped")
 
-    def test_the_reported_count_is_what_the_board_actually_draws(self):
-        # Two numbers from two sources is how the header came to say a hook was
-        # drawn that was nowhere on the page.
+    def test_no_count_of_what_is_drawn_is_reported_here(self):
+        # The webview counts what is parked off the board it draws. A second
+        # number from this side is how the header came to say one thing while
+        # the tally beside it said another, so this side reports only what the
+        # board cannot know: what could not be placed, and what warned.
         with project("workflow: shipped\n" + HOOKED) as root:
             graph = graph_mod.build_graph(root)
 
@@ -179,7 +182,41 @@ class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
                          for x in n["hooks"]])
             if h["parked"]
         )
-        self.assertEqual(graph["workflows"]["parked"]["hooks"], drawn)
+        self.assertEqual(drawn, 1)
+        self.assertNotIn("hooks", graph["workflows"]["parked"])
+        self.assertEqual(graph["workflows"]["parked"]["unplaceable"], 0)
+
+    def test_a_warning_from_the_parked_resolve_is_carried_not_eaten(self):
+        # A running config surfaces its warnings; a parked one used to throw
+        # them away, so a typo'd anchor landed in neither count and nothing said
+        # anything at all.
+        typo = HOOKED.replace("plan-doc", "plan-docc")
+        with project("workflow: shipped\n" + typo) as root:
+            graph = graph_mod.build_graph(root)
+        parked = graph["workflows"]["parked"]
+        if parked is not None:
+            self.assertIsInstance(parked["warnings"], list)
+
+    def test_a_misshapen_configuration_reaches_the_panel_as_a_readable_error(self):
+        # Catching only the refusal left the panel with a Python traceback and
+        # no repairs — no way out but hand editing, which is what it replaces.
+        import subprocess
+        import sys as _sys
+
+        bad = ("commands:\n"
+               "  plan:\n"
+               "    hooks:\n"
+               "      - { type: command, run: \"echo hi\" }\n")
+        with project(bad) as root:
+            res = subprocess.run(
+                [_sys.executable, str(SCRIPTS / "pipeline-graph.py")],
+                cwd=root, capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0)
+        payload = _json.loads(res.stdout)
+        self.assertIn("companion.yml", payload["error"])
+        self.assertIn("not shaped the way", payload["error"])
+        self.assertNotIn("Traceback", res.stdout)
+        self.assertIn("repairs", payload)
 
     def test_a_misshapen_configuration_does_not_take_the_board_down(self):
         # A file that parses as YAML but is the wrong shape raises an ordinary

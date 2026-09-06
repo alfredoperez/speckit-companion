@@ -300,7 +300,7 @@ The structure the builder draws — the steps, the phases, the nodes, where the 
 
 ### A bypassed configuration is resolved and drawn, and never allowed to fail the board
 
-A run of the shipped pipeline selects no configuration, so a project's own file is bypassed rather than emptied. The emitted structure SHALL still resolve that bypassed file and carry its hooks at the anchors they would attach to, marked as not running and excluded from every count of what this project changed — a board that draws nothing for a configured project is indistinguishable from one that was never configured. Resolving it SHALL never fail the board on any error, not only on a refusal: a file that parses but is the wrong shape raises an ordinary error, and the project most likely to hold one is the project that chose the shipped pipeline because its own configuration was broken. The count reported for what is parked SHALL be counted off the structure actually emitted, never from the bypassed plan, since a hook whose anchor the shipped shape does not have has nowhere to be drawn; those SHALL be reported separately rather than folded into a number that says they are on the board.
+A run of the shipped pipeline selects no configuration, so a project's own file is bypassed rather than emptied. The emitted structure SHALL still resolve that bypassed file and carry its hooks at the anchors they would attach to, marked as not running and excluded from every count of what this project changed — a board that draws nothing for a configured project is indistinguishable from one that was never configured. Resolving it SHALL never fail the board on any error, not only on a refusal: a file that parses but is the wrong shape raises an ordinary error, and the project most likely to hold one is the project that chose the shipped pipeline because its own configuration was broken. The same is required of the whole emission — a crash that is not a refusal SHALL still reach the panel as a readable error carrying the ways out, and the message SHALL name the file and describe the shape rather than passing on a language runtime's own sentence, which nobody can act on. What is parked SHALL NOT be counted here at all: the surface that draws the board counts what it drew, and a second number from a second source is how a header comes to say one thing while the tally beside it says another. This side reports only what the board cannot know — a hook whose anchor the shipped shape does not have, so there is nowhere to draw it, and any warning the bypassed resolve raised, which SHALL be carried rather than discarded since a running configuration surfaces its warnings and a parked one must not silently eat them.
 
 #### Scenario: the bypassed file is the wrong shape
 - **WHEN** the structure is resolved
@@ -308,7 +308,15 @@ A run of the shipped pipeline selects no configuration, so a project's own file 
 
 #### Scenario: a bypassed hook attaches to something the shipped shape lacks
 - **WHEN** the structure is emitted
-- **THEN** the parked count reports only what is drawn, and the rest is reported as having nowhere to go
+- **THEN** it is reported as having nowhere to go, and no count of what was drawn is emitted here at all
+
+#### Scenario: the bypassed resolve raises a warning
+- **WHEN** the structure is emitted
+- **THEN** the warning is carried, because a hook that resolved to nothing lands in no count and would otherwise be lost in silence
+
+#### Scenario: the configuration crashes the emission rather than refusing
+- **WHEN** the panel asks for the structure
+- **THEN** it receives a readable error naming the file and the shape, together with the repairs, rather than a language runtime's own sentence and no way out
 
 ### A step a project declared is a real step; only a typo is refused
 

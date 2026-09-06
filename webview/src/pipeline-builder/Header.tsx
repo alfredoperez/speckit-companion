@@ -362,16 +362,21 @@ export function Header(props: Props) {
                         <code class="builder-notice-file">
                             {parked?.file ?? '.specify/companion.yml'}
                         </code>{' '}
-                        is running.{parked?.hooks
-                            ? ` ${tally(parked.hooks, 'hook')} of yours ${parked.hooks === 1
+                        {/* One number, from the board the reader is looking at.
+                            Taking it from the resolver instead let the notice
+                            say one thing while the tally beside it said another. */}
+                        is running.{counts.parked
+                            ? ` ${tally(counts.parked, 'hook')} of yours ${counts.parked === 1
                                 ? 'is' : 'are'} parked on the board, kept exactly as written.`
                             : ''}
-                        {/* Counted off the board, so it can only ever be a hook
-                            with nowhere on the shipped shape to be drawn. */}
                         {parked?.unplaceable
                             ? ` ${tally(parked.unplaceable, 'hook')} ${parked.unplaceable === 1
                                 ? 'attaches' : 'attach'} to something the shipped pipeline does`
                                 + ' not have, so there is nowhere to draw it.'
+                            : ''}
+                        {parked?.warnings?.length
+                            ? ` ${parked.warnings.length === 1 ? 'One hook' : 'Some hooks'} could`
+                                + ' not be resolved at all: ' + parked.warnings.join('; ')
                             : ''}
                     </span>
                     {/* The way back is the point of the notice, so it is offered

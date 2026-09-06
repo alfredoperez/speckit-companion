@@ -2520,3 +2520,16 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
         max-width: calc(100cqw - var(--space-4) * 2);
     }
 }
+
+/* The whole of a clipped name, for a reader the clip and the tooltip both miss. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
