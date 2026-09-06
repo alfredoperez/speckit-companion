@@ -153,19 +153,13 @@ def requirement_slices(spec_text: str) -> list:
     `tests/fixtures/requirement-slices/`; a fixture only one side reads fails.
     """
     lines = _without_fences(spec_text)
-    start = next((i for i, l in enumerate(lines)
-                  if re.match(r"^##\s+Requirements\s*$", l)), None)
-    if start is None:
-        return []
-
+    # Every `###` in the document, not just the ones under `## Requirements`.
+    # Fold-back appends to the end of the file, so real specs carry requirements
+    # past the Uncovered section; scoping to the section hid them from the load
+    # while the coverage denominator still counted them.
     end = len(lines)
-    for i in range(start + 1, len(lines)):
-        if re.match(r"^##(?!#)\s+", lines[i]):
-            end = i
-            break
-
     out = []
-    i = start + 1
+    i = 0
     while i < end:
         head = re.match(r"^###(?!#)\s+(.+?)\s*$", lines[i])
         if not head:

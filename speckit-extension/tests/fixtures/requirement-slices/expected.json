@@ -84,5 +84,23 @@
         "src/**"
       ]
     }
+  ],
+  "stranded-after-uncovered.md": [
+    {
+      "heading": "Inside the section",
+      "touches": [
+        "src/inside/**"
+      ]
+    },
+    {
+      "heading": "Folded in later",
+      "touches": [
+        "src/later/thing.ts"
+      ]
+    },
+    {
+      "heading": "Folded in later, unmarked",
+      "touches": null
+    }
   ]
 }

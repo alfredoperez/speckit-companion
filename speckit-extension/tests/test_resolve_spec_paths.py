@@ -98,15 +98,10 @@ class RequirementSlicesAgainstSharedFixtures(unittest.TestCase):
                         continue
                     if not fence:
                         kept.append(ln)
-                in_req, headings = False, 0
-                for ln in kept:
-                    if re.match(r"^##\s+Requirements\s*$", ln):
-                        in_req = True
-                        continue
-                    if in_req and re.match(r"^##(?!#)\s+", ln):
-                        in_req = False
-                    if in_req and re.match(r"^###(?!#)\s+", ln):
-                        headings += 1
+                # Every `###` in the document. The denominator counts the whole
+                # file, and fold-back appends past the Uncovered section, so a
+                # section-scoped count is exactly how the two come to disagree.
+                headings = sum(1 for ln in kept if re.match(r"^###(?!#)\s+", ln))
                 self.assertEqual(len(rsp.requirement_slices(text)), headings)
 
 

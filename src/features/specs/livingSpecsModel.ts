@@ -709,19 +709,13 @@ function withoutFences(specText: string): string[] {
  */
 export function requirementSlices(specText: string): RequirementSlice[] {
     const lines = withoutFences(specText);
-    const start = lines.findIndex((l) => /^##\s+Requirements\s*$/.test(l));
-    if (start === -1) return [];
-
-    let end = lines.length;
-    for (let i = start + 1; i < lines.length; i++) {
-        if (/^##(?!#)\s+/.test(lines[i])) {
-            end = i;
-            break;
-        }
-    }
-
+    // Every `###` in the document, not just the ones under `## Requirements`.
+    // Fold-back appends to the end of the file, so 44 of this repo's 193
+    // requirements sit past the Uncovered section — scoping to the section hid
+    // them from the load while the coverage denominator still counted them.
+    const end = lines.length;
     const out: RequirementSlice[] = [];
-    let i = start + 1;
+    let i = 0;
     while (i < end) {
         const head = lines[i].match(/^###(?!#)\s+(.+?)\s*$/);
         if (!head) {
