@@ -119,6 +119,15 @@ class RequirementBodiesSurviveSlicing(unittest.TestCase):
         self.assertIn("```json", body)
         self.assertIn('{"heading": "…", "touches": []}', body)
 
+    def test_a_body_stops_at_the_next_section_heading(self):
+        # Otherwise the last requirement before an uncovered section hands that
+        # whole section to a load step as its own normative prose.
+        first = self._slices("stranded-after-uncovered.md")[0]
+        body = "\n".join(first["body"])
+        self.assertNotIn("## Uncovered", body)
+        self.assertNotIn("src/skimmed.ts", body)
+        self.assertIn("Written when the spec was adopted.", body)
+
     def test_the_marker_is_not_handed_over_as_prose(self):
         for name in ("fenced-body.md", "all-marked.md", "mixed.md"):
             with self.subTest(fixture=name):

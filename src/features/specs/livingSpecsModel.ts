@@ -678,7 +678,7 @@ export interface RequirementSlice {
     heading: string;
     /** The marker's globs, absent when the requirement carries none. */
     touches?: string[];
-    /** Lines after the heading, up to the next `###` or the end of the section. */
+    /** Lines after the heading, up to the next `###`, the next `##`, or the end. */
     body: string[];
 }
 
@@ -700,19 +700,6 @@ function fenceFlags(lines: string[]): boolean[] {
     return flags;
 }
 
-/** Lines with fenced blocks removed, so an example in a snippet is never parsed. */
-function withoutFences(specText: string): string[] {
-    const kept: string[] = [];
-    let inFence = false;
-    for (const line of specText.split(/\r?\n/)) {
-        if (/^\s*(```|~~~)/.test(line)) {
-            inFence = !inFence;
-            continue;
-        }
-        if (!inFence) kept.push(line);
-    }
-    return kept;
-}
 
 /**
  * Every requirement in a spec, with the files its marker claims.
@@ -730,6 +717,8 @@ export function requirementSlices(specText: string): RequirementSlice[] {
     const fenced = fenceFlags(lines);
     const isHeading = (k: number): boolean =>
         !fenced[k] && /^###(?!#)\s+/.test(lines[k]);
+    const isSection = (k: number): boolean =>
+        !fenced[k] && /^##(?!#)\s+/.test(lines[k]);
     // Every `###` in the document, not just the ones under `## Requirements`.
     // Fold-back appends to the end of the file, so 44 of this repo's 193
     // requirements sit past the Uncovered section — scoping to the section hid
@@ -743,8 +732,11 @@ export function requirementSlices(specText: string): RequirementSlice[] {
             i++;
             continue;
         }
+        // A requirement ends at the next requirement OR the next section
+        // heading. Without the second, the last requirement before an uncovered
+        // section swallows that whole section as its own prose.
         let j = i + 1;
-        while (j < end && !isHeading(j)) j++;
+        while (j < end && !isHeading(j) && !isSection(j)) j++;
         let body = lines.slice(i + 1, j);
         // Only the line immediately after the heading is a marker; one further
         // down is body, because a spec may legitimately discuss a marker.

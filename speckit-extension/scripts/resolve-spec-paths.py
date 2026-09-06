@@ -131,19 +131,6 @@ def _glob_matches(pat: str, f: str) -> bool:
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 
 
-def _without_fences(spec_text: str) -> list:
-    """Lines with fenced blocks removed, so an example in a snippet is never parsed."""
-    kept = []
-    in_fence = False
-    for line in spec_text.splitlines():
-        if re.match(r"^\s*(```|~~~)", line):
-            in_fence = not in_fence
-            continue
-        if not in_fence:
-            kept.append(line)
-    return kept
-
-
 def requirement_slices(spec_text: str) -> list:
     """Every requirement in a spec, with the files its marker claims.
 
@@ -161,6 +148,9 @@ def requirement_slices(spec_text: str) -> list:
     def is_heading(k):
         return not fenced[k] and re.match(r"^###(?!#)\s+", lines[k])
 
+    def is_section(k):
+        return not fenced[k] and re.match(r"^##(?!#)\s+", lines[k])
+
     # Every `###` in the document, not just the ones under `## Requirements`.
     # Fold-back appends to the end of the file, so real specs carry requirements
     # past the Uncovered section; scoping to the section hid them from the load
@@ -173,8 +163,12 @@ def requirement_slices(spec_text: str) -> list:
         if not head:
             i += 1
             continue
+        # A requirement ends at the next requirement OR the next section
+        # heading. Without the second, the last requirement before an uncovered
+        # section swallows that whole section and hands it to a load step as its
+        # own normative prose.
         j = i + 1
-        while j < end and not is_heading(j):
+        while j < end and not is_heading(j) and not is_section(j):
             j += 1
         body = lines[i + 1:j]
         # Only the line immediately after the heading is a marker; one further
@@ -472,13 +466,26 @@ def _fmt_list(items: list[str]) -> str:
 def render_human(result: dict) -> str:
     """Concise human-readable view of a result object.
 
-    --changed -> `[name, name]` (most-specific first)
-    --orphans -> `[path, path]`
-    --all     -> capability names line + orphans line
+    --changed          -> `[name, name]` (most-specific first)
+    --orphans          -> `[path, path]`
+    --all              -> capability names line + orphans line
+    --requirements-for -> one line per capability: whole, or its requirements
     Empty modes print `[]` (no error), matching the inert/opt-out contract.
     """
     if "matched" in result:
         return _fmt_list([m["name"] for m in result["matched"]])
+    # Keyed on `changed`, not on `capabilities`: both shapes carry capabilities,
+    # and falling into the --all branch printed an orphans line that was never
+    # computed.
+    if "changed" in result and "capabilities" in result:
+        lines = []
+        for c in result["capabilities"]:
+            if c.get("whole"):
+                lines.append(f"{c['name']}: whole")
+            else:
+                heads = [r["heading"] for r in c.get("requirements") or []]
+                lines.append(f"{c['name']}: {_fmt_list(heads)}")
+        return "\n".join(lines) if lines else "[]"
     if "capabilities" in result:
         caps = _fmt_list([c["name"] for c in result["capabilities"]])
         orphans = _fmt_list(result.get("orphans", []))

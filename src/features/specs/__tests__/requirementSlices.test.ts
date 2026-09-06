@@ -99,6 +99,15 @@ describe('a requirement body is what a load step reads', () => {
         expect(body).toContain('{"heading": "…", "touches": []}');
     });
 
+    it('stops at the next section heading, not only the next requirement', () => {
+        // Otherwise the last requirement before an uncovered section hands that
+        // whole section to a load step as its own normative prose.
+        const body = requirementSlices(read('stranded-after-uncovered.md'))[0].body.join('\n');
+        expect(body).not.toContain('## Uncovered');
+        expect(body).not.toContain('src/skimmed.ts');
+        expect(body).toContain('Written when the spec was adopted.');
+    });
+
     it('never hands the marker over as prose', () => {
         for (const name of ['fenced-body.md', 'all-marked.md', 'mixed.md']) {
             for (const slice of requirementSlices(read(name))) {

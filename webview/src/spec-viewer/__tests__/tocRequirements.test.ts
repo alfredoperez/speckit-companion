@@ -93,7 +93,7 @@ describe('the living-spec outline (#672 Wave 1)', () => {
 
     it('counts the files a marker names, and shows none when unmarked', () => {
         const counts = rows(mount(SPEC).toc)
-            .map((a) => a.querySelector('.spec-toc-files')?.textContent ?? null);
+            .map((a) => a.querySelector('.spec-toc-patterns')?.textContent ?? null);
         expect(counts).toEqual(['2', null, null]);
     });
 

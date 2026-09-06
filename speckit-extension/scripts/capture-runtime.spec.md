@@ -553,6 +553,10 @@ The capture runtime SHALL record the requirement headings a run read, per capabi
 - **WHEN** the recorder runs
 - **THEN** the capability is listed as loaded and the sibling record carries no entry for it
 
+#### Scenario: the recorder runs while the editor is writing the same record
+- **WHEN** it takes its several read-modify-write turns
+- **THEN** each queues on the shared write lock like any other writer, because a script that mutates the record and does not take the lock is the lost write the lock exists to prevent, whichever script it is
+
 #### Scenario: a capability consulted whose markers all missed
 - **WHEN** the recorder runs
 - **THEN** it records that capability with an empty requirement list, because "consulted and contributed nothing" and "read whole" are different facts and only the second is the absent entry

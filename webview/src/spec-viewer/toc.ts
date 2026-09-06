@@ -82,14 +82,17 @@ function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
     a.append(dot, label);
     said.push(coverage ? `covered ${coverage}` : 'coverage unknown');
 
-    const files = card.dataset.reqFiles;
+    const files = card.dataset.reqPatterns;
     if (files) {
         const count = document.createElement('span');
-        count.className = 'spec-toc-files';
+        count.className = 'spec-toc-patterns';
         count.setAttribute('aria-hidden', 'true');
         count.textContent = files;
         a.appendChild(count);
-        said.push(`${files} ${files === '1' ? 'file' : 'files'}`);
+        // Patterns, not files: `src/alpha/**` is one entry claiming a whole
+        // directory, and calling that "1 file" is a number the reader can check
+        // and find wrong.
+        said.push(`${files} ${files === '1' ? 'path pattern' : 'path patterns'}`);
     }
     return said;
 }

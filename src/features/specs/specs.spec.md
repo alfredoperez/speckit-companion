@@ -333,6 +333,14 @@ Two updates to the same spec's state record that arrive at the same time both la
 - **WHEN** a serialized write throws
 - **THEN** its error reaches its caller and the next queued write for that spec still runs
 
+#### Scenario: a holder's process cannot be found
+- **WHEN** a waiter checks whether the lock's owner is still alive
+- **THEN** its answer counts only when the token says the two number processes the same way, since two containers sharing one temporary directory read every live holder as dead, and taking the lock on that basis is the lost write the lock exists to prevent
+
+#### Scenario: the lock's owner cannot be read
+- **WHEN** a waiter would reclaim it
+- **THEN** it does not, because an unreadable owner means the file was replaced or was momentarily unreadable, not that nobody holds it
+
 ### A fast-path folded step is derived as folded, once
 
 The shared step-history derivation SHALL mark a step folded when its own extension-stamped step-level start/complete pair spans under one second and its start lands within one second of the previous step's extension-stamped close — anchored on the stamped pair, never on the derived close, which can be a much later next-step start. The flag is independent of duration trust (a same-instant fold is folded but untrusted), is set nowhere else, and folded steps keep counting as measured timing coverage.

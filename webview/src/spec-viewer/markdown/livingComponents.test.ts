@@ -442,7 +442,7 @@ Appended past the uncovered section, and still a requirement.
     });
 
     it('carries the file count a marker names, and nothing when unmarked', () => {
-        const counts = [...preprocessLivingRequirements(SPEC).matchAll(/data-req-files="(\d+)"/g)]
+        const counts = [...preprocessLivingRequirements(SPEC).matchAll(/data-req-patterns="(\d+)"/g)]
             .map((m) => m[1]);
         expect(counts).toEqual(['2']);
     });
@@ -506,7 +506,7 @@ Beta, unmarked.
     });
 
     it('carries the file count a marker names', () => {
-        expect(renderMarkdown(SPEC)).toContain('data-req-files="2"');
+        expect(renderMarkdown(SPEC)).toContain('data-req-patterns="2"');
     });
 
     it('never renders a touches marker as a Template Instructions disclosure', () => {

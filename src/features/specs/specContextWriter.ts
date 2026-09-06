@@ -119,8 +119,38 @@ async function readLockOwner(lock: string): Promise<string | null> {
  * recognised — but "still working" and "gone" must never be confused, or the
  * reclaim becomes the lost write it exists to prevent.
  */
+/**
+ * Where this process's pids are meaningful.
+ *
+ * A pid only says anything to a reader that numbers processes the same way.
+ * The scope is written into the lock token so a reader can tell whether its
+ * pid check applies at all. Must match `_pid_scope` in `spec_context.py` —
+ * the two halves read each other's lock files.
+ */
+let cachedScope: string | undefined;
+export function pidScope(): string {
+    if (cachedScope !== undefined) return cachedScope;
+    try {
+        cachedScope = `${os.hostname()}.${fs.statSync('/proc/self/ns/pid').ino}`;
+    } catch {
+        try {
+            cachedScope = os.hostname();
+        } catch {
+            cachedScope = 'unknown';
+        }
+    }
+    return cachedScope;
+}
+
 function lockOwnerIsGone(owner: string): boolean {
-    const pid = Number(owner.split(':', 1)[0]);
+    // A token from another pid scope is unanswerable: two containers sharing
+    // one temp dir number processes differently, and there every live holder
+    // reads as dead. Unanswerable is never "gone".
+    const parts = owner.split(':');
+    if (parts.length < 3 || parts[1] !== pidScope()) {
+        return false;
+    }
+    const pid = Number(parts[0]);
     if (!Number.isInteger(pid) || pid <= 0) {
         return false;
     }
@@ -132,10 +162,17 @@ function lockOwnerIsGone(owner: string): boolean {
     }
 }
 
-/** Remove the lock, but only while it still carries the token we saw. */
+/**
+ * Remove the lock, but only while it still carries the token we saw.
+ *
+ * An unreadable owner is not a reason to reclaim. It means the file was
+ * replaced or momentarily unreadable, and deleting it there would drop a lock
+ * another process now legitimately holds — the lost write this exists to stop.
+ */
 async function reclaimLock(lock: string, owner: string | null): Promise<void> {
+    if (owner === null) return;
     try {
-        if (owner !== null && (await readLockOwner(lock)) !== owner) {
+        if ((await readLockOwner(lock)) !== owner) {
             return;
         }
         await fs.promises.unlink(lock);
@@ -191,7 +228,7 @@ async function acquireContextLock(target: string): Promise<string | null> {
     if (!(await ensureLockDir(target, path.dirname(lock)))) {
         return null;
     }
-    const token = `${process.pid}:${crypto.randomBytes(8).toString('hex')}`;
+    const token = `${process.pid}:${pidScope()}:${crypto.randomBytes(8).toString('hex')}`;
     const giveUpAt = Date.now() + LOCK_MAX_WAIT_MS;
     for (;;) {
         try {

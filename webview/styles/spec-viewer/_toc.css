@@ -260,7 +260,7 @@ aside.spec-toc.spec-toc--compact {
     border: 1px solid var(--border-hover);
 }
 
-.spec-toc-files {
+.spec-toc-patterns {
     flex: none;
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;

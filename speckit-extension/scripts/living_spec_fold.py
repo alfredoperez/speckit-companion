@@ -42,6 +42,10 @@ def _keep_marker(old: list[str], new: list[str]) -> list[str]:
     that requirement. A fold only ever learns about more files, so the two sets
     are unioned rather than replaced.
     """
+    # An empty replacement section deletes the requirement block; there is no
+    # heading left to hang a marker under.
+    if not new:
+        return new
     globs = _touches_globs(old)
     globs += [g for g in _touches_globs(new) if g not in globs]
     if not globs:

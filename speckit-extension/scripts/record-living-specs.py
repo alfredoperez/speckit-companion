@@ -97,6 +97,17 @@ def main(argv=None) -> int:
     except SystemExit:
         return 0  # a malformed arg must not fail the host command (SystemExit escapes `except Exception`)
 
+    # This process mutates the record — three read-modify-write cycles on the
+    # shared file — so its reads and its publishes must queue behind any other
+    # writer's. Without this the editor's own write can land between one of
+    # those reads and its publish and be silently discarded.
+    try:
+        from spec_context import enable_write_lock
+
+        enable_write_lock()
+    except ImportError:
+        pass
+
     try:
         feature_dir = Path(args.feature_dir)
         root = args.root

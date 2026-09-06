@@ -241,7 +241,7 @@ function buildRequirementCard(
     // heading rather than parsing the markdown a second time.
     const covAttr = cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0'
         ? ` data-req-coverage="${escapeHtml(String(cov))}"` : '';
-    const filesAttr = files > 0 ? ` data-req-files="${files}"` : '';
+    const filesAttr = files > 0 ? ` data-req-patterns="${files}"` : '';
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
         + ` data-req="${escapeHtml(title)}"${covAttr}${filesAttr}>`,
@@ -252,7 +252,7 @@ function buildRequirementCard(
     ];
 }
 
-/** How many files a requirement's marker names, or 0 when it carries none. */
+/** How many path patterns a requirement's marker names, or 0 when unmarked. */
 function touchesCount(blockLines: string[]): number {
     const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
     return m ? m[1].split(',').map((g) => g.trim()).filter(Boolean).length : 0;
