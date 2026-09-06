@@ -81,9 +81,17 @@ class BothSuitesReadEveryFixture(unittest.TestCase):
         on_disk = {p.name for p in FIXTURES.glob("*.md")} - {"README.md"}
         self.assertEqual(set(manifest()), on_disk)
 
-    def test_the_typescript_suite_reads_the_same_manifest(self):
-        twin = REPO / "src" / "features" / "specs" / "__tests__" / "specShapeCheck.test.ts"
-        self.assertIn("spec-shape", twin.read_text(encoding="utf-8"))
+    def test_the_typescript_suite_iterates_the_manifest_rather_than_a_list(self):
+        # Asserting the twin merely mentions the directory would pass even if it
+        # had stopped reading the manifest entirely. What makes the fixtures a
+        # contract is that the twin loops over the manifest's own keys.
+        twin = (REPO / "src" / "features" / "specs" / "__tests__"
+                / "specShapeCheck.test.ts").read_text(encoding="utf-8")
+        self.assertIn("Object.entries(manifest)", twin)
+        self.assertIn("read('expected.json')", twin)
+        for name in manifest():
+            self.assertNotIn(f"'{name}'", twin,
+                             "the twin names a fixture instead of iterating the manifest")
 
 
 class TheReportNeverGates(unittest.TestCase):
@@ -141,6 +149,85 @@ class TheGlobIndexSeesNewFilesToo(unittest.TestCase):
             built.write_text("x\n", encoding="utf-8")
             lv._PATHS_CACHE.clear()
             self.assertNotIn("build/out.js", lv.repo_paths(tmp))
+
+
+class NothingCheckedIsNeverReportedAsNothingWrong(unittest.TestCase):
+    """A run that could not read the registry is not a run that found nothing."""
+
+    def test_running_from_a_subdirectory_says_where_the_registry_is(self):
+        report = lv.build_report(str(REPO / "src"))
+        self.assertFalse(report["enabled"])
+        self.assertTrue(report["skipped"])
+        rendered = lv.render_human(report)
+        self.assertIn("living-specs.yml", rendered)
+        self.assertIn("--root", rendered)
+        self.assertNotIn("nothing to check", rendered)
+
+    def test_a_project_with_no_registry_anywhere_says_it_is_off(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            report = lv.build_report(tmp)
+            self.assertEqual(lv.render_human(report),
+                             "Living specs are off in this repo; nothing to check.")
+
+
+class ScenarioBulletsAreMarkdown(unittest.TestCase):
+    """One unrecognised bullet refused a whole capability, so the shapes a
+    person actually writes all have to be recognised."""
+
+    def _halves(self, bullets):
+        text = ("## Requirements\n\n### A rule\n\nProse.\n\n"
+                "#### Scenario: s\n" + "\n".join(bullets) + "\n")
+        return [f["code"] for f in lv.check_living_spec(text, "x.md", root=None)]
+
+    def test_every_ordinary_bullet_shape_is_recognised(self):
+        for pair in (["- **WHEN** a", "- **THEN** b"],
+                     ["+ **WHEN** a", "+ **THEN** b"],
+                     ["* **WHEN** a", "* **THEN** b"],
+                     ["1. **WHEN** a", "2. **THEN** b"],
+                     ["1) **WHEN** a", "2) **THEN** b"],
+                     ["  - **WHEN** a", "  - **THEN** b"],
+                     ["- *WHEN* a", "- *THEN* b"]):
+            with self.subTest(bullets=pair):
+                self.assertEqual(self._halves(pair), [])
+
+    def test_a_missing_half_is_still_caught(self):
+        self.assertEqual(self._halves(["+ **WHEN** a"]), ["scenario-missing-half"])
+
+
+class TheMarkerCheckIsSkippedWhereItIsNotWanted(unittest.TestCase):
+    """The fold takes this path before every write, and the marker check indexed
+    the tree for a finding it discards."""
+
+    def test_no_root_means_no_tree_is_indexed(self):
+        text = ("## Requirements\n\n### A rule\n"
+                "<!-- touches: src/nowhere/at/all/** -->\n\nProse.\n\n"
+                "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        codes = [f["code"] for f in lv.check_living_spec(text, "x.md", root=None)]
+        self.assertEqual(codes, [])
+
+    def test_a_delta_check_asks_git_for_nothing(self):
+        import subprocess
+
+        calls = []
+        real = subprocess.run
+
+        def spy(*a, **k):
+            calls.append(a[0] if a else None)
+            return real(*a, **k)
+
+        subprocess.run = spy
+        try:
+            lv._PATHS_CACHE.clear()
+            lv.check_feature_deltas(
+                "## ADDED Requirements\n\n### A rule\n"
+                "<!-- touches: src/nowhere/** -->\n\n"
+                "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n",
+                "spec.md", known_capabilities=[], target_texts={})
+        finally:
+            subprocess.run = real
+        self.assertEqual(calls, [])
 
 
 class FindingsAreOrdered(unittest.TestCase):

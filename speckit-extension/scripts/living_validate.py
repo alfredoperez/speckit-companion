@@ -30,11 +30,15 @@ _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
 _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$",
                               re.IGNORECASE)
-_WHEN_RE = re.compile(r"^\s*[-*]\s*\*\*(WHEN|GIVEN)\*\*", re.IGNORECASE)
+#: Any markdown bullet, ordered or not. `+` is a bullet and a numbered list is
+#: ordinary prose shape; refusing a whole capability over one is not a check, it
+#: is a formatting preference with teeth.
+_BULLET = r"^\s*(?:[-*+]|\d+[.)])\s*"
+_WHEN_RE = re.compile(_BULLET + r"\*{1,2}(WHEN|GIVEN)\*{1,2}", re.IGNORECASE)
 # `AND` continues whichever half came before it, so it is never evidence of an
 # outcome. Counting it as one is how a scenario with a condition and no result
 # passes a check written to catch exactly that.
-_THEN_RE = re.compile(r"^\s*[-*]\s*\*\*THEN\*\*", re.IGNORECASE)
+_THEN_RE = re.compile(_BULLET + r"\*{1,2}THEN\*{1,2}", re.IGNORECASE)
 
 #: Severity decides one thing: whether a fold stops. Nothing else reads it.
 ERROR = "error"
@@ -128,19 +132,29 @@ def _tracked_files(root: str):
     """Git's own file list, or None when git cannot answer."""
     import subprocess
 
-    try:
-        # Tracked AND untracked-but-not-ignored. Tracked alone reads every file
-        # a feature branch just added as absent, so a marker on new code — the
-        # commonest marker there is — reported as matching nothing.
-        res = subprocess.run(
-            ["git", "-C", root, "ls-files", "-z",
-             "--cached", "--others", "--exclude-standard"],
-            capture_output=True, timeout=20)
-    except Exception:  # noqa: BLE001
+    def ask(args):
+        try:
+            res = subprocess.run(["git", "-C", root, "ls-files", "-z"] + args,
+                                 capture_output=True, timeout=20)
+        except Exception:  # noqa: BLE001
+            return None
+        if res.returncode != 0:
+            return None
+        return [p for p in res.stdout.decode("utf-8", "replace").split("\0") if p]
+
+    # Tracked AND untracked-but-not-ignored. Tracked alone reads every file a
+    # feature branch just added as absent, so a marker on new code — the
+    # commonest marker there is — reported as matching nothing.
+    files = ask(["--cached", "--others", "--exclude-standard"])
+    if files is None:
         return None
-    if res.returncode != 0:
-        return None
-    return [p for p in res.stdout.decode("utf-8", "replace").split("\0") if p]
+    # A second call for submodule contents, because git refuses to combine
+    # `--recurse-submodules` with `--others`. A repo with no submodules answers
+    # this with what the first call already said.
+    nested = ask(["--cached", "--recurse-submodules"])
+    if nested:
+        files = list(dict.fromkeys(files + nested))
+    return files
 
 
 _PATTERN_CACHE: dict = {}
@@ -166,7 +180,21 @@ def _glob_matches_anything(pattern: str, root: str) -> bool:
     return any(rx.match(p) for p in repo_paths(root))
 
 
-def check_living_spec(text: str, path: str, root: str = ".",
+def fences_are_balanced(text: str) -> bool:
+    """False when a fence is opened and never closed.
+
+    Everything after an unclosed fence is invisible to every reader — the
+    slicer, the coverage denominator, the shape check and the fold alike — so a
+    count taken from such a document cannot be trusted by any of them.
+    """
+    opened = 0
+    for line in text.splitlines():
+        if re.match(r"^\s*(```|~~~)", line):
+            opened += 1
+    return opened % 2 == 0
+
+
+def check_living_spec(text: str, path: str, root: str | None = ".",
                       capability: str | None = None, offset: int = 0) -> list:
     """Every shape finding in one living spec, ordered by line.
 
@@ -233,7 +261,7 @@ def check_living_spec(text: str, path: str, root: str = ".",
                 capability))
 
         marker = _TOUCHES_RE.match(lines[i + 1]) if i + 1 < j else None
-        if marker:
+        if marker and root is not None:
             globs = [g.strip() for g in marker.group(1).split(",") if g.strip()]
             missing = [g for g in globs if not _glob_matches_anything(g, root)]
             if missing and len(missing) == len(globs):
@@ -243,6 +271,16 @@ def check_living_spec(text: str, path: str, root: str = ".",
                     "Point the marker at the files this requirement describes, or remove it.",
                     capability))
         i = j
+
+    if not fences_are_balanced(text):
+        # Reported first and at line 1, because everything below the unclosed
+        # fence is invisible to this check too — the finding is about the file,
+        # not about anything in it.
+        findings.append(_finding(
+            WARNING, "unbalanced-fence", path, 1,
+            "A code fence is opened and never closed, so everything after it is "
+            "invisible to every reader of this spec.",
+            "Close the fence, or remove it.", capability))
 
     if offset:
         for f in findings:
@@ -318,10 +356,12 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
         # this the fold happily wrote a scenario nobody could ever check.
         if block["verb"] in ("ADDED", "MODIFIED"):
             body = "\n".join(text.splitlines()[block["start"]:block["end"]])
-            for f in check_living_spec(body, path, capability=cap, offset=block["start"]):
-                if f["code"] == "unmatched-touches-glob":
-                    continue  # needs the tree; the standalone run reports it
-                findings.append(f)
+            # `root=None` skips the marker check rather than running it and
+            # discarding the result. Running it indexed the tree — a git call,
+            # or an unbounded walk when git could not answer — for a finding
+            # this never keeps, on the path the fold takes before every write.
+            findings.extend(check_living_spec(
+                body, path, root=None, capability=cap, offset=block["start"]))
 
         if block["verb"] not in ("MODIFIED", "REMOVED"):
             continue
@@ -381,6 +421,19 @@ def _active_feature_specs(root: str) -> list:
     return out
 
 
+def _registry_above(root: str):
+    """A `living-specs.yml` in an ancestor directory, or None."""
+    here = os.path.abspath(root)
+    while True:
+        parent = os.path.dirname(here)
+        if parent == here:
+            return None
+        here = parent
+        candidate = os.path.join(here, "living-specs.yml")
+        if os.path.isfile(candidate):
+            return candidate
+
+
 def build_report(root: str = ".") -> dict:
     """Every finding across the project's living specs and active feature specs.
 
@@ -393,10 +446,21 @@ def build_report(root: str = ".") -> dict:
                 "skipped": [{"path": ".", "reason": "the capability resolver is unavailable"}]}
     try:
         living = rsp.load_living(root)
-    except Exception:  # noqa: BLE001
+    except Exception as err:  # noqa: BLE001
         return {"enabled": False, "checked": 0, "findings": [],
-                "skipped": [{"path": "living-specs.yml", "reason": "could not be read"}]}
+                "skipped": [{"path": "living-specs.yml",
+                             "reason": f"could not be read ({err.__class__.__name__})"}]}
     if not living.get("enabled"):
+        # A registry one directory up is the commonest reason this looks off:
+        # the command was run from a subdirectory, not from the repository root.
+        if not os.path.isfile(os.path.join(root, "living-specs.yml")):
+            found = _registry_above(root)
+            if found:
+                return {"enabled": False, "checked": 0, "findings": [], "skipped": [{
+                    "path": os.path.relpath(found, root).replace(os.sep, "/"),
+                    "reason": "the registry is above this directory — run from the "
+                              "repository root, or pass --root",
+                }]}
         return {"enabled": False, "checked": 0, "findings": [], "skipped": []}
 
     findings: list = []
@@ -440,10 +504,21 @@ def build_report(root: str = ".") -> dict:
 
 
 def render_human(report: dict) -> str:
-    """The list a person reads. Modelled on the drift detector's output."""
-    if not report["enabled"]:
-        return "Living specs are off in this repo; nothing to check."
+    """The list a person reads. Modelled on the drift detector's output.
+
+    A run that could not read the registry is not a run that found nothing, and
+    saying "nothing to check" for both is how a clean report comes to be read as
+    a verdict on files nobody examined. The skipped list carries the difference,
+    so it is printed whether or not the feature resolved as on.
+    """
     out = []
+    if not report["enabled"]:
+        if not report["skipped"]:
+            return "Living specs are off in this repo; nothing to check."
+        out.append("Nothing was checked. Why:")
+        for s in report["skipped"]:
+            out.append(f"  {s['path']} — {s['reason']}")
+        return "\n".join(out)
     if not report["findings"]:
         out.append(f"✓ {report['checked']} spec(s) checked, nothing to report.")
     else:

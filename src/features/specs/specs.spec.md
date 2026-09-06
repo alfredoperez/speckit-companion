@@ -410,6 +410,14 @@ The extension SHALL run the living-spec shape checks whenever a `*.spec.md` is s
 - **WHEN** the save completes
 - **THEN** nothing is checked and no problem appears
 
+#### Scenario: the document's workspace folder goes away
+- **WHEN** the check next runs for it
+- **THEN** anything already published for that document is cleared, since nothing else will clear it
+
+#### Scenario: a scenario's bullets are written as an ordered or plus-prefixed list
+- **WHEN** the shape is checked
+- **THEN** both halves are recognised, because refusing a whole capability over a markdown bullet style is a formatting preference with teeth rather than a check
+
 ### The registry carries a capability's retirement declaration
 <!-- touches: src/features/specs/livingSpecsModel.ts -->
 

@@ -550,7 +550,7 @@ Every author node declares the document it writes, and a build collects those de
 
 ### A living-spec load is sliced by requirement, and a spec with no markers is read whole
 
-The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. What it reports SHALL be text a step can act on rather than references it must resolve: each requirement carries its own prose and scenarios, the purpose arrives whole, and neither is stripped of the fenced examples inside it. Removing fences is how the parser finds a heading, and it must never be what a reader is given. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
+The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. What it reports SHALL be text a step can act on rather than references it must resolve: each requirement carries its own prose and scenarios, the purpose arrives whole, and neither is stripped of the fenced examples inside it. A report SHALL distinguish "nothing was checked" from "nothing was wrong": a registry that could not be read, and a run started from below the repository root, both examined nothing, and rendering either as a clean result is the one failure a report of this kind must never have. Removing fences is how the parser finds a heading, and it must never be what a reader is given. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
 
 #### Scenario: a marked capability and a change it claims
 - **WHEN** a load resolves a capability whose requirements carry markers
@@ -560,6 +560,10 @@ The resolver SHALL report, for each capability a change matches, either that its
 #### Scenario: a purpose or a requirement containing a fenced example
 - **WHEN** the load payload is built
 - **THEN** the example is still there, because a reader handed prose with a hole in it cannot tell that anything is missing
+
+#### Scenario: a report runs where it cannot find the registry
+- **WHEN** it renders
+- **THEN** it says nothing was checked and why, rather than reporting a clean result over files it never opened
 
 #### Scenario: a capability with no markers
 - **WHEN** a load resolves it
@@ -606,6 +610,14 @@ The capture runtime SHALL provide a read-only check over every registered living
 - **WHEN** it raises
 - **THEN** the fold proceeds, because a broken check must never block a sound fold
 
+#### Scenario: a block is marked for a capability nobody registered
+- **WHEN** the fold runs
+- **THEN** the refusal is reported naming that capability, because an unregistered name is never one of the fold's targets and a refusal filed under it would be unreachable — the block would be dropped and the author told nothing
+
+#### Scenario: the check runs on a delta rather than on a whole spec
+- **WHEN** the requirement shapes are checked
+- **THEN** the file-marker check is skipped rather than run and discarded, because indexing the tree is a cost the fold pays before every write and this path never keeps the result
+
 ### A fold cannot empty a spec unless the capability declared its retirement
 <!-- touches: speckit-extension/scripts/living_spec_fold.py, speckit-extension/scripts/companion_config.py, speckit-extension/scripts/resolve-spec-paths.py -->
 
@@ -622,3 +634,11 @@ A fold that would leave a capability's spec with no requirements at all SHALL be
 #### Scenario: a fold removes some requirements but not all
 - **WHEN** it runs
 - **THEN** it applies whether or not retirement is declared
+
+#### Scenario: the guard and the applier disagree about what a requirement is
+- **WHEN** either counts
+- **THEN** they count the same headings, by the same slicer every other reader uses, because a guard with its own notion refuses a fold that wrote requirements and permits one that removed them all
+
+#### Scenario: the spec carries a fence that is never closed
+- **WHEN** the guard counts
+- **THEN** it refuses nothing, because everything under an unclosed fence is invisible to it and a count it cannot trust must not be grounds for a refusal

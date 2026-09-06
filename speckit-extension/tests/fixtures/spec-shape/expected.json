@@ -119,5 +119,15 @@
         "line": 17
       }
     ]
+  },
+  "unbalanced-fence.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "unbalanced-fence",
+        "line": 1
+      }
+    ]
   }
 }

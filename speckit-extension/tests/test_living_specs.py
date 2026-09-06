@@ -1171,7 +1171,9 @@ class FoldLivingSpecTests(unittest.TestCase):
             wc.fold_living_spec(fdir, "ai")
         self.assertIn("### A rule that moved", self._living(root))
 
-    def test_a_block_marked_for_an_unregistered_capability_is_refused(self) -> None:
+    def test_a_block_marked_for_an_unregistered_capability_is_refused_and_named(self) -> None:
+        # An unregistered name is never a target, so keying the refusal on it
+        # made the refusal unreachable: the block was dropped in silence.
         root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
                          code_files=["src/todos/list.ts"])
         fdir = _write_feature(root, "001-feat",
@@ -1181,6 +1183,9 @@ class FoldLivingSpecTests(unittest.TestCase):
         buf = io.StringIO()
         with contextlib.redirect_stderr(buf):
             wc.fold_living_spec(fdir, "ai")
+        log = buf.getvalue()
+        self.assertIn("not-a-capability", log)
+        self.assertIn("unknown-capability", log)
         self.assertEqual(self._living(root), before)
 
     def test_a_warning_level_delta_still_folds(self) -> None:
@@ -1228,6 +1233,46 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIn("no requirements at all", log)
         self.assertIn("retire: true", log)
         self.assertEqual(self._living(root), before)
+
+    def test_an_unbalanced_fence_does_not_trigger_a_false_refusal(self) -> None:
+        # The guard was fence-aware and the applier was not, so every heading
+        # under an unclosed fence was invisible to one and visible to the other.
+        fenced = ("# Todos capability\n\n```sh\necho unclosed\n\n"
+                  "### Users can add a todo\n\n#### Scenario: add\n"
+                  "- **WHEN** a user submits text\n- **THEN** a todo appears\n")
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": fenced},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n"
+            "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            wc.fold_living_spec(fdir, "ai")
+        self.assertNotIn("no requirements at all", buf.getvalue())
+        self.assertIn("### Due dates", self._living(root))
+
+    def test_the_guard_counts_what_every_other_reader_counts(self) -> None:
+        # Not its own notion of a requirement: the slicer's, which is also the
+        # coverage denominator's and the shape check's. A heading a person wrote
+        # under Uncovered is a requirement to all of them or to none of them,
+        # and the guard disagreeing with the rest is worse than either answer.
+        with_uncovered = (TODOS_LIVING
+                          + "\n## Uncovered\n\n### src/todos/skimmed.ts\n")
+        root = _git_repo(ENABLED_TODOS_YAML,
+                         {"capabilities/todos/spec.md": with_uncovered},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(root, "001-feat",
+            "# Feat\n\n## REMOVED Requirements\n\n### Users can add a todo\n")
+        with contextlib.redirect_stderr(io.StringIO()):
+            wc.fold_living_spec(fdir, "ai")
+        out = self._living(root)
+        self.assertNotIn("### Users can add a todo", out)
+        # One heading is left, and the guard let the fold through because that
+        # is what the slicer sees too. Whether a heading under Uncovered ought
+        # to count is a question for the slicer, answered in one place.
+        import living_spec_fold as fold
+        self.assertFalse(fold._would_empty(out))
+        self.assertIn("### src/todos/skimmed.ts", out)
 
     def test_a_capability_that_declared_retirement_is_emptied(self) -> None:
         retiring = ENABLED_TODOS_YAML + "      retire: true\n"

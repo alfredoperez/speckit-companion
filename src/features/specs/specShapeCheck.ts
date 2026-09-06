@@ -34,11 +34,30 @@ const SECTION_RE = /^##(?!#)\s+(.+?)\s*$/;
 const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
 const CAP_MARKER_RE = /^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$/i;
 const DELTA_HEADER_RE = /^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$/i;
-const WHEN_RE = /^\s*[-*]\s*\*\*(WHEN|GIVEN)\*\*/i;
+// Any markdown bullet, ordered or not. `+` is a bullet and a numbered list is
+// ordinary prose shape; refusing a whole capability over one is not a check, it
+// is a formatting preference with teeth.
+const BULLET = String.raw`^\s*(?:[-*+]|\d+[.)])\s*`;
+const WHEN_RE = new RegExp(BULLET + String.raw`\*{1,2}(WHEN|GIVEN)\*{1,2}`, 'i');
 // `AND` continues whichever half came before it, so it is never evidence of an
 // outcome. Counting it as one is how a scenario with a condition and no result
 // passes a check written to catch exactly that.
-const THEN_RE = /^\s*[-*]\s*\*\*THEN\*\*/i;
+const THEN_RE = new RegExp(BULLET + String.raw`\*{1,2}THEN\*{1,2}`, 'i');
+
+/**
+ * False when a fence is opened and never closed.
+ *
+ * Everything after an unclosed fence is invisible to every reader — the slicer,
+ * the coverage denominator, the shape check and the fold alike — so a count
+ * taken from such a document cannot be trusted by any of them.
+ */
+export function fencesAreBalanced(text: string): boolean {
+    let opened = 0;
+    for (const line of text.split(/\r?\n/)) {
+        if (/^\s*(```|~~~)/.test(line)) opened += 1;
+    }
+    return opened % 2 === 0;
+}
 
 /** True for every line inside a fenced block, and for the fences themselves. */
 function fenceFlags(lines: string[]): boolean[] {
@@ -159,6 +178,16 @@ export function checkLivingSpec(
             }
         }
         i = j;
+    }
+
+    if (!fencesAreBalanced(text)) {
+        // Reported at line 1, because everything below the unclosed fence is
+        // invisible to this check too: the finding is about the file.
+        findings.push(finding(
+            'warning', 'unbalanced-fence', path, 1,
+            'A code fence is opened and never closed, so everything after it is '
+            + 'invisible to every reader of this spec.',
+            'Close the fence, or remove it.', options.capability));
     }
 
     if (offset) for (const f of findings) f.line += offset;

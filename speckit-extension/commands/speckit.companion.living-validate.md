@@ -34,8 +34,9 @@ Add `--json` when a caller needs the machine-readable object rather than the lis
 | `scenario-missing-half` | error | A scenario has a condition and no outcome, or an outcome and no condition. |
 | `duplicate-requirement` | error | Two requirements in one capability share a heading, which is the join key fold-back and coverage use. |
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
-| `delta-heading-not-found` | error | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
+| `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. The fold promotes an unmatched modification into an addition, so this is a defined outcome rather than damage. |
 | `unmatched-touches-glob` | warning | A file marker names a pattern matching nothing on disk. |
+| `unbalanced-fence` | warning | A code fence is opened and never closed, so everything after it is invisible to every reader. |
 
 Severity answers exactly one question: whether the fold stops. An error means the durable record would be damaged; a warning means it would be untidy.
 

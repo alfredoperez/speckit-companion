@@ -422,3 +422,7 @@ The command that checks living-spec shape SHALL act only when the project has op
 #### Scenario: living specs are off for the project
 - **WHEN** the command runs
 - **THEN** it says so and exits successfully
+
+#### Scenario: the command is run from below the repository root
+- **WHEN** it reports
+- **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off

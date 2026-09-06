@@ -54,7 +54,7 @@ export function findingsFor(
     }
     if (!listing.enabled) return [];
     const rel = path.relative(workspaceRoot, file).split(path.sep).join('/');
-    // A living spec is one the registry claims; anything else `*.spec.md` is not.
+    // Every `*.spec.md` is checked; only one the registry claims gets a name.
     const capability = listing.capabilities.find(c => c.spec === rel)?.name;
     // Only the checks this document answers on its own. The marker check wants
     // the whole tree, which is not a cost to pay on every save.
@@ -102,7 +102,12 @@ export function registerSpecShapeDiagnostics(): vscode.Disposable {
 
     const publish = (doc: vscode.TextDocument): void => {
         const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
-        if (!folder) return;
+        if (!folder) {
+            // A document whose folder went away keeps whatever was published
+            // for it until something clears it, and nothing else will.
+            collection.delete(doc.uri);
+            return;
+        }
         const root = folder.uri.fsPath;
         const file = doc.uri.fsPath;
         const text = doc.getText();

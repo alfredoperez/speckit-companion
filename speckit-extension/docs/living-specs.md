@@ -115,6 +115,7 @@ It checks every registered living spec, and the delta sections of every active f
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
 | `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
 | `unmatched-touches-glob` | warning | A file marker names a pattern matching nothing on disk. |
+| `unbalanced-fence` | warning | A code fence is opened and never closed, so everything after it is invisible to every reader. |
 
 Severity answers exactly one question: whether the fold stops. **The fold runs these same checks before writing anything**, per capability, and refuses to apply a capability whose deltas carry an error-level finding, naming the finding it refused on. A warning never stops anything — `delta-heading-not-found` is a warning because the fold promotes an unmatched MODIFIED into an addition, which is a defined outcome rather than damage, though a typo'd heading quietly becoming a near-duplicate requirement is still worth saying out loud.
 

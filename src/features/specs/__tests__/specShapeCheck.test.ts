@@ -32,8 +32,13 @@ const manifest: Record<string, Expected> = JSON.parse(read('expected.json'));
 // The universe a `touches` marker is matched against. Tracked files plus the
 // directories holding them, which is what the Python half indexes too.
 const paths: string[] = (() => {
-    const files = execFileSync('git', ['-C', REPO, 'ls-files'], { encoding: 'utf-8' })
-        .split('\n').filter(Boolean);
+    // Tracked AND untracked-but-not-ignored, matching what the Python half
+    // indexes. Tracked alone would have made the two disagree on a marker
+    // naming a file a branch just added.
+    const files = execFileSync(
+        'git', ['-C', REPO, 'ls-files', '--cached', '--others', '--exclude-standard'],
+        { encoding: 'utf-8' },
+    ).split('\n').filter(Boolean);
     const all = new Set(files);
     for (const f of files) {
         const parts = f.split('/');
@@ -83,10 +88,16 @@ describe('the drift guard', () => {
         expect(Object.keys(manifest).sort()).toEqual(onDisk);
     });
 
-    it('the Python suite reads the same manifest', () => {
+    it('the Python suite iterates the manifest rather than a list', () => {
+        // Asserting the twin merely mentions the directory would pass even if it
+        // had stopped reading the manifest entirely. What makes the fixtures a
+        // contract is that the twin loops over the manifest's own keys.
         const twin = fs.readFileSync(
             path.join(REPO, 'speckit-extension', 'tests', 'test_living_validate.py'), 'utf-8');
-        expect(twin).toContain('spec-shape');
+        expect(twin).toContain('for name, expected in manifest().items()');
+        for (const name of Object.keys(manifest)) {
+            expect(twin).not.toContain(`"${name}"`);
+        }
     });
 });
 
