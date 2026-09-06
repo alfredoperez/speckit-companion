@@ -451,8 +451,14 @@ def _parsed_batch(raw: str) -> dict:
     for key in ("verified", "decisions", "concerns", "expectations", "context", "coverage"):
         if key in doc and not isinstance(doc[key], list):
             raise ValueError(f"--batch '{key}' must be a list")
-    if "set" in doc and doc["set"] is not None and not isinstance(doc["set"], dict):
-        raise ValueError("--batch 'set' must be a map of field to value")
+    if "set" in doc and doc["set"] is not None:
+        if not isinstance(doc["set"], dict):
+            raise ValueError("--batch 'set' must be a map of field to value")
+        for key, val in doc["set"].items():
+            if isinstance(val, (dict, list)):
+                raise ValueError(
+                    f"--batch 'set.{key}' must be a string, number or boolean "
+                    f"(a nested value has nowhere to go in a flat field)")
     for item in doc.get("coverage") or []:
         if not isinstance(item, dict) or not item.get("req"):
             raise ValueError("--batch 'coverage' entries need a 'req' key")

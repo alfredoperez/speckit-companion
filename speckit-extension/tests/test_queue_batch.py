@@ -243,6 +243,34 @@ class ImplementVerifiesItsOwnWork(unittest.TestCase):
         self.assertLess(impl["total"], 60, "the verification rules must not blow the budget")
 
 
+def _batch_error(raw):
+    try:
+        capture._parsed_batch(raw)
+    except ValueError as exc:
+        return str(exc)
+    return None
+
+
+class ABatchSetTakesFlatFieldsOnly(unittest.TestCase):
+    """`set` lands as plain `key=value` pairs, so a nested value has nowhere to
+    go: it used to be stringified into a Python repr and stored as that."""
+
+    def test_a_scalar_of_any_kind_is_accepted(self):
+        self.assertIsNone(_batch_error(
+            '{"set": {"intent": "a", "flag": true, "n": 3, "nothing": null}}'))
+
+    def test_a_nested_object_is_refused_by_name(self):
+        err = _batch_error('{"set": {"intent": "a", "nested": {"k": 1}}}')
+        self.assertIn("set.nested", err or "")
+
+    def test_a_list_is_refused_by_name(self):
+        err = _batch_error('{"set": {"tags": ["a", "b"]}}')
+        self.assertIn("set.tags", err or "")
+
+    def test_set_itself_must_be_a_map(self):
+        self.assertIn("map of field", _batch_error('{"set": ["a=b"]}') or "")
+
+
 class TheWrapUpIsOneCall(unittest.TestCase):
     """Specify's wrap-up spent one call per plain field. `--batch` takes them
     together, and the result has to be byte-identical to the separate calls."""

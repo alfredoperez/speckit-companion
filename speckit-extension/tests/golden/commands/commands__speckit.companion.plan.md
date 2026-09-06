@@ -162,6 +162,8 @@ These rules apply to every Companion profile command. The extension records life
 
   Run it every time. `EXECUTE_COMMAND` is an instruction addressed to a runtime, and in a terminal session that runtime is you — so *dispatching the hook* and *printing the words "Executing the hook"* produce identical output and nothing downstream can tell them apart. A run once sat at `status: tasking` for eight and a half minutes with the next step unreachable because the block was printed and not run, and that stall is now permanently part of that step's recorded duration. Losing `by: extension` on the completion attribution costs nothing; losing the completion costs the run.
 
+  **Implement is the exception: it does not run this call at all.** Its own final node already wrote `completed`, which closes the implement step in the same write, and the writer declines an advance on a completed spec — so the call is a round-trip that records nothing.
+
   For **clarify and analyze** use `--finish` instead of `--advance` — they record a boundary without owning a status:
 
   ```bash
