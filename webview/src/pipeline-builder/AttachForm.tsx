@@ -12,7 +12,8 @@ import { KIND_LABELS } from './hookKinds';
 import { Menu } from './Menu';
 import { SidePanel } from './SidePanel';
 import {
-    HookType, HookWhen, PipelineChoices, PipelineHook, PipelinePreset, PipelineStep,
+    HookType, HookWhen, OfferedEntry, PipelineChoices, PipelineHook, PipelinePreset,
+    PipelineStep,
 } from '../../../src/protocol/pipeline';
 
 export interface Attachment {
@@ -117,8 +118,23 @@ export function AttachForm(props: Props) {
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const places = anchors(step);
-    const named = hookType === 'skill' ? choices.skills
-        : hookType === 'node' ? choices.nodes : [];
+    // Every kind reads its offerings the same way, so a hook is a choice rather
+    // than a name you had to already know. A skill and a node are names with
+    // nothing to say about them; a spec-kit command carries what it does.
+    //
+    // The commands belong to Instruction, not to Command: a `command` hook is
+    // rendered as a bash fence, and `speckit.git.commit` is a command spec-kit
+    // dispatches, not a shell line. Offered under Command it would have written
+    // a hook that runs nothing. An instruction that asks for it is how this
+    // project's own hooks reach a skill or an agent.
+    const named: OfferedEntry[] = hookType === 'skill'
+        ? choices.skills.map(id => ({ id, label: id }))
+        : hookType === 'node' ? choices.nodes.map(id => ({ id, label: id }))
+            : hookType === 'prompt' ? (choices.commands ?? []) : [];
+
+    /** What picking an entry writes. A command becomes the sentence that runs it. */
+    const chosen = (entry: OfferedEntry): string =>
+        hookType === 'prompt' ? `Run \`/${entry.id}\` now.` : entry.id;
     const ready = value.trim().length > 0;
 
     // The note goes with the value: only a skill hook has one, so a note typed
@@ -209,31 +225,71 @@ export function AttachForm(props: Props) {
                         {/* One line, for the kind that is on. */}
                         <span class="pb-field-note">{kind.help}</span>
                         {hookType === 'prompt' ? (
-                            <textarea class="pb-input pb-input--area" rows={3} value={value}
-                                aria-label={kind.field} placeholder={kind.placeholder}
-                                onInput={e => setValue((e.target as HTMLTextAreaElement).value)} />
+                            <div class="pb-pick">
+                                <textarea class="pb-input pb-input--area" rows={3} value={value}
+                                    aria-label={kind.field} placeholder={kind.placeholder}
+                                    onInput={e => setValue((e.target as HTMLTextAreaElement).value)} />
+                                {named.length > 0 && (
+                                    <Menu
+                                        class="pb-pick-open"
+                                        align="right"
+                                        trigger="Choose…"
+                                        label="Ask for a command this project has"
+                                        title="Commands this project's extensions registered"
+                                        options={named.map(entry => ({
+                                            id: entry.id,
+                                            label: entry.label,
+                                            note: [entry.note,
+                                                entry.usually && `usually ${entry.usually}`,
+                                                entry.from && `from ${entry.from}`]
+                                                .filter(Boolean).join(' · ') || undefined,
+                                        }))}
+                                        onPick={id => setValue(
+                                            chosen(named.find(e => e.id === id) ?? { id, label: id }))} />
+                                )}
+                            </div>
                         ) : (
                             <>
                                 {/* A name typed from memory is a hook that invokes
                                     nothing. The list is what this project has; the
                                     field stays free so a new one can still be named. */}
-                                <input class="pb-input pb-input--mono" type="text" value={value}
-                                    aria-label={kind.field}
-                                    list={named.length ? `pb-known-${hookType}` : undefined}
-                                    placeholder={kind.placeholder}
-                                    onInput={e => setValue((e.target as HTMLInputElement).value)} />
-                                {named.length > 0 && (
-                                    <datalist id={`pb-known-${hookType}`}>
-                                        {named.map(name => <option key={name} value={name} />)}
-                                    </datalist>
-                                )}
+                                <div class="pb-pick">
+                                    <input class="pb-input pb-input--mono" type="text" value={value}
+                                        aria-label={kind.field}
+                                        list={named.length ? `pb-known-${hookType}` : undefined}
+                                        placeholder={kind.placeholder}
+                                        onInput={e => setValue((e.target as HTMLInputElement).value)} />
+                                    {named.length > 0 && (
+                                        <>
+                                            {/* Kept beside the menu, not replaced by it: the
+                                                menu is for someone who does not know the name,
+                                                and this is for someone who does. */}
+                                            <datalist id={`pb-known-${hookType}`}>
+                                                {named.map(e => <option key={e.id} value={e.id} />)}
+                                            </datalist>
+                                            <Menu
+                                                class="pb-pick-open"
+                                                align="right"
+                                                trigger="Choose…"
+                                                label={`${kind.field}: choose from this project`}
+                                                title={`What this project has for ${kind.label}`}
+                                                options={named.map(entry => ({
+                                                    id: entry.id, label: entry.label,
+                                                }))}
+                                                onPick={id => setValue(id)} />
+                                        </>
+                                    )}
+                                </div>
                             </>
                         )}
-                        {named.length > 0 && (
-                            <span class="pb-field-help">
-                                {named.length} in this project · start typing to filter
-                            </span>
-                        )}
+                        <span class="pb-field-help">
+                            {named.length > 0
+                                ? hookType === 'prompt'
+                                    ? `${named.length} command(s) this project can be asked to run`
+                                    : `${named.length} in this project · start typing to filter`
+                                : hookType === 'prompt' ? ''
+                                    : 'Nothing installed to choose from · type one'}
+                        </span>
                     </div>
                 </div>
 

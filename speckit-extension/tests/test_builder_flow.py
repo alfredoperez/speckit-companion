@@ -681,5 +681,122 @@ commands:
         self.project.build_ok()
 
 
+GIT_REGISTRY = """extensions:
+  - name: git
+    version: 1.0.0
+hooks:
+  before_specify:
+  - extension: git
+    command: speckit.git.feature
+    enabled: true
+    optional: false
+    description: Create feature branch before specification
+  before_plan:
+  - extension: git
+    command: speckit.git.commit
+    enabled: true
+    optional: true
+    description: Auto-commit before implementation planning
+  after_plan:
+  - extension: git
+    command: speckit.git.commit
+    enabled: true
+    optional: true
+    description: Auto-commit after implementation planning
+"""
+
+
+class TheCatalogIsWhatThisProjectHas(unittest.TestCase):
+    """A hard-coded list would lie about what is installed, and the lie is only
+    found when the pipeline runs."""
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def _commands(self):
+        return self.project.graph()["choices"]["commands"]
+
+    def _ids(self):
+        return [c["id"] for c in self._commands()]
+
+    def test_companions_own_hooks_are_always_offered(self):
+        ids = self._ids()
+        for name in ("speckit.companion.after-specify", "speckit.companion.after-plan",
+                     "speckit.companion.after-tasks", "speckit.companion.after-implement"):
+            self.assertIn(name, ids)
+
+    def test_an_installed_extensions_hooks_are_offered_with_its_own_words(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            GIT_REGISTRY, encoding="utf-8")
+        by_id = {c["id"]: c for c in self._commands()}
+        self.assertIn("speckit.git.feature", by_id)
+        self.assertEqual(by_id["speckit.git.feature"]["note"],
+                         "Create feature branch before specification")
+        self.assertEqual(by_id["speckit.git.feature"]["from"], "git")
+
+    def test_an_absent_extension_offers_nothing(self):
+        self.assertNotIn("speckit.git.commit", self._ids())
+
+    def test_a_command_registered_at_several_steps_is_offered_once(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            GIT_REGISTRY, encoding="utf-8")
+        ids = self._ids()
+        self.assertEqual(ids.count("speckit.git.commit"), 1)
+
+    def test_a_command_registered_in_several_places_names_none_of_them(self):
+        # The automatic commit sits at nine lifecycle steps in a stock install,
+        # so naming the first one read would present one truth out of nine.
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            GIT_REGISTRY, encoding="utf-8")
+        by_id = {c["id"]: c for c in self._commands()}
+        self.assertNotIn("usually", by_id["speckit.git.commit"])
+
+    def test_a_lifecycle_key_becomes_a_readable_placement(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            GIT_REGISTRY, encoding="utf-8")
+        by_id = {c["id"]: c for c in self._commands()}
+        self.assertEqual(by_id["speckit.git.feature"]["usually"], "before specify")
+
+    def test_an_entry_with_no_command_name_is_skipped(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            "hooks:\n  before_specify:\n  - extension: git\n    description: nameless\n",
+            encoding="utf-8")
+        self.assertNotIn("", self._ids())
+
+    def test_an_unreadable_registry_contributes_nothing_and_never_raises(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            "hooks: [this is not a map]\n", encoding="utf-8")
+        ids = self._ids()
+        self.assertIn("speckit.companion.after-specify", ids)
+        self.assertNotIn("speckit.git.commit", ids)
+
+    def test_one_malformed_key_costs_only_itself(self):
+        # Guarding the whole loop made the result depend on where in the file
+        # the bad key sat, and made the picker disagree with the board.
+        for placement in ("first", "middle", "last"):
+            with self.subTest(bad=placement):
+                good_a = ("  before_specify:\n  - extension: a\n"
+                          "    command: GOOD.first\n")
+                good_b = ("  after_plan:\n  - extension: b\n"
+                          "    command: GOOD.second\n")
+                bad = "  before_tasks: 5\n"
+                order = {"first": bad + good_a + good_b,
+                         "middle": good_a + bad + good_b,
+                         "last": good_a + good_b + bad}[placement]
+                (self.project.root / ".specify" / "extensions.yml").write_text(
+                    "hooks:\n" + order, encoding="utf-8")
+                ids = self._ids()
+                self.assertIn("GOOD.first", ids)
+                self.assertIn("GOOD.second", ids)
+
+    def test_every_entry_carries_an_id_and_a_label(self):
+        (self.project.root / ".specify" / "extensions.yml").write_text(
+            GIT_REGISTRY, encoding="utf-8")
+        for entry in self._commands():
+            self.assertTrue(entry["id"])
+            self.assertTrue(entry["label"])
+
+
 if __name__ == "__main__":
     unittest.main()

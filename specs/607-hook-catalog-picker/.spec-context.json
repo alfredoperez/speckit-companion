@@ -1,0 +1,559 @@
+{
+  "workflow": "companion",
+  "specName": "Attach a hook from a list, not from memory",
+  "branch": "607-hook-catalog-picker",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T03:59:08.438Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T04:00:16.600Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T04:00:24.205Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:00:53.434Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:00:53.529Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:01:16.079Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:01:48.524Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:01:48.851Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T04:02:19.578Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:02:19.691Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:02:33.187Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T04:02:33.260Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:04:12.194Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:04:12.358Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:05:35.659Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:05:35.821Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:17.961Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.126Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.306Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.474Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.644Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.804Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:07:18.965Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:09.421Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:09.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:09.772Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:09.947Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:10.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T04:10:10.271Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T04:10:10.360Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "2edfe797-44b5-4fd9-ae1b-98558171153e",
+  "livingSpecs": {
+    "loaded": [
+      "capture-runtime"
+    ],
+    "loadedRequirements": {
+      "capture-runtime": [
+        "Recording state MUST NOT be able to break the run it observes",
+        "The context file is append-only, crash-safe, and tolerant of fields it does not own",
+        "Lifecycle status moves forward only, and the terminal state has exactly one writer",
+        "Timing is stamped by a script, never hand-authored",
+        "Per-task progress is finish-only, contention-free, and folded idempotently",
+        "Derived artifacts have exactly one writer",
+        "An unresolvable pointer is named, not passed over",
+        "The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses",
+        "Additive capture composes; lifecycle modes are exclusive",
+        "Folding a feature spec's requirement deltas into a living spec is idempotent for every verb combination",
+        "A probe that cannot determine an answer MUST report \"unknown\", never the negative",
+        "A report MUST NOT claim success for work it did not do",
+        "Living-spec path resolution stops at a nested project boundary",
+        "Each product ships every module its own entry points reach",
+        "The configuration is the source of truth and the command bodies are built from it",
+        "A build is all-or-nothing",
+        "A built body reaches the assistant only once it is carried out to the agent's own copy",
+        "A hook is rendered at the node boundary it names",
+        "A build states what each run must produce, derived from the order it assembled",
+        "The pipeline's decision points are data, not prose in three places",
+        "A template is customized by section, and the stock copy is never edited",
+        "Writing one key back into the configuration preserves everything else byte for byte",
+        "A configuration too broken to read is repairable from the panel that reads it",
+        "The pipeline's structure is emitted here and drawn elsewhere",
+        "A bypassed configuration is resolved and drawn, and never allowed to fail the board",
+        "A step a project declared is a real step; only a typo is refused",
+        "The write lock is released once, after the publish, on whichever path ran",
+        "The fold routes each capability's requirements to its own spec",
+        "The drift detector offers an opt-in working-tree mode",
+        "Recording which living specs cover a change MUST be deterministic, not AI-judged",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
+        "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
+        "Status resolution dispatches commands from the family the spec has been running",
+        "Every handled call records itself, including the ones that fail",
+        "A call count may shrink only when the record it produces stays identical",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
+        "A reader of a captured list MUST accept every form its writer stores",
+        "A configuration the reader cannot fully read is rejected whole, never applied in part",
+        "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
+        "The health check MUST report an implement step that closed having executed nothing",
+        "A living-spec load is sliced by requirement, and a spec with no markers is read whole",
+        "Which requirements a run read is recorded beside which capabilities it loaded"
+      ]
+    },
+    "synced": [
+      "capture-runtime"
+    ]
+  },
+  "last_action": "living specs loaded (capture-runtime)",
+  "coverage": {
+    "FR-001": {
+      "title": "Attaching offers a list of what this project has, for the chosen kind",
+      "tasks": "T002,T004,T006,T007"
+    },
+    "FR-002": {
+      "title": "The second selector reacts to the kind selector",
+      "tasks": "T005,T006"
+    },
+    "FR-003": {
+      "title": "Changing the kind clears a choice made for the previous kind",
+      "tasks": "T005"
+    },
+    "FR-004": {
+      "title": "Each entry carries a plain-language description where the source has one",
+      "tasks": "T002,T007"
+    },
+    "FR-005": {
+      "title": "Choosing an entry attaches the hook with that entry exact identifier",
+      "tasks": "T005,T007"
+    },
+    "FR-006": {
+      "title": "Typing an identifier by hand remains possible for every kind that has one",
+      "tasks": "T005,T007"
+    },
+    "FR-007": {
+      "title": "The commands come from the project registries, never a compiled-in list",
+      "tasks": "T002,T009"
+    },
+    "FR-008": {
+      "title": "A command registered for several steps is offered once",
+      "tasks": "T001,T002"
+    },
+    "FR-009": {
+      "title": "An unreadable or absent registry leaves the form working",
+      "tasks": "T001,T002"
+    },
+    "FR-010": {
+      "title": "A kind with nothing to offer says so rather than showing an empty control",
+      "tasks": "T005,T008"
+    },
+    "FR-011": {
+      "title": "The instruction kind shows no second selector, because its value is prose",
+      "tasks": "T005,T008"
+    },
+    "FR-012": {
+      "title": "An entry says where it usually attaches, and omits that rather than guessing",
+      "tasks": "T010,T011"
+    },
+    "FR-013": {
+      "title": "Editing in place, moving to another boundary and the note field keep working",
+      "tasks": "T017"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "living spec: capture-runtime",
+    "area: webview/src/pipeline-builder (AttachForm, hookKinds, the Menu component)",
+    "area: speckit-extension/scripts/pipeline-graph.py (where choices is built)",
+    "area: speckit-extension/scripts/build-pipeline.py (stock_hooks reads .specify/extensions.yml)",
+    "constraint: the panel derives nothing a second time; the catalog travels in the graph message",
+    "constraint: reading a registry must never fail the panel"
+  ],
+  "intent": "Make attaching work to the pipeline a choice from what this project has, rather than a command name you have to already know.",
+  "expectations": [
+    "Drawing the node dependency graph (the #594 half of the merged issue)",
+    "Offering extensions that are not installed",
+    "Moving or restricting where a hook may attach"
+  ],
+  "decisions": [
+    {
+      "decision": "The catalog is built where every other choice is built and travels in the same message",
+      "why": "The panel derives structure once and draws it elsewhere; a second fetch is a second source that can disagree with the board beside it",
+      "rejected": "A request-on-open message, and a list compiled into the panel that would lie about what is installed"
+    },
+    {
+      "decision": "An offered entry carries a description and a usual placement, not just a name",
+      "why": "A list of bare command names asks the same knowledge the free-text box asked, one click earlier; both registries already carry the description",
+      "rejected": "Names only"
+    },
+    {
+      "decision": "Render the picker with the panel own menu rather than the existing type-ahead",
+      "why": "A datalist only reveals itself once you type something that matches, so a person who does not know the name never sees it, and it has nowhere to put a description",
+      "rejected": "Keeping the datalist, and opening a separate dialog"
+    },
+    {
+      "decision": "Usual placement is informational and never restricts where a hook may attach",
+      "why": "A project may legitimately attach a hook anywhere, and the pipeline itself does not enforce the convention",
+      "rejected": "Filtering the list by the anchor being edited, which hides valid choices"
+    },
+    {
+      "decision": "The same command registered at several steps is offered once",
+      "why": "A stock install registers the automatic commit at nine lifecycle steps; nine rows would say nothing true",
+      "rejected": "Grouping by step, which turns one choice into two"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan for a per-project command catalog carried in the graph message, offered through the panel own menu with descriptions, with free text still beside it.",
+      "key_finding": "The form already cascades and already clears on a kind change — what is missing is that the command kind offers nothing and the entries carry no description."
+    },
+    "tasks": {
+      "summary": "17 tasks in 5 phases and 4 waves: the per-project catalog first, then the picker, then the placement on the row, then the surfaces and the fold."
+    }
+  },
+  "approach": "Add a per-project catalog of installed hook commands to the data the panel already receives, widen offered entries from bare names to entries carrying a description and a usual placement, and show them through the panel's own menu rather than a type-ahead. Typing by hand stays beside the list.",
+  "currentTask": "T017",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Catalog cases: both registries, de-duplication, placement from the lifecycle key, a nameless entry skipped, an unreadable registry, and a command in several places naming none",
+      "files": [
+        "speckit-extension/tests/test_builder_flow.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Read every hook command the project registries carry, de-duplicated on the name, with its description, its extension and a placement only where there is exactly one",
+      "files": [
+        "speckit-extension/scripts/build-pipeline.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Declared the offered-entry shape and added the command catalog to the choices the panel receives",
+      "files": [
+        "src/protocol/pipeline.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Put the catalog in choices beside skills and nodes, built where every other choice is built",
+      "files": [
+        "speckit-extension/scripts/pipeline-graph.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Form cases: the list per kind, the descriptions on each row, no choice carried across a kind change, the exact identifier attached, typing still accepted, an empty list said in words, and no picker for an instruction",
+      "files": [
+        "webview/src/pipeline-builder/__tests__/AttachForm.test.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Every kind reads its offerings the same way, so a command is a choice rather than a name you had to know",
+      "files": [
+        "webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Show the entries through the panel's own menu with the description under each row, and keep the free-text field beside it",
+      "files": [
+        "webview/src/pipeline-builder/AttachForm.tsx",
+        "webview/styles/pipeline-builder.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Say the list is empty rather than showing an empty control, and show no picker for an instruction",
+      "files": [
+        "webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Registry cases: an extension's hooks with its own words, an absent extension offering nothing, and Companion's own four always present",
+      "files": [
+        "speckit-extension/tests/test_builder_flow.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Placement cases: a lifecycle key read as words, and a command registered in several places naming none of them",
+      "files": [
+        "speckit-extension/tests/test_builder_flow.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Render the placement and the registering extension on the row, omitting either when absent",
+      "files": [
+        "webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "A story showing the picker on a project with the git extension installed",
+      "files": [
+        "webview/src/pipeline-builder/__stories__/Components.stories.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Documented attaching from the list, including why a command in several places names none",
+      "files": [
+        "docs/pipeline-builder.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "User-facing release note for choosing a hook instead of spelling it",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Release note for the catalog the spec-kit side now emits",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Delta routing the emitted catalog to capture-runtime",
+      "files": [
+        "specs/607-hook-catalog-picker/spec.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Validated against the Success Criteria: 2821 Jest, 1308 Python, both compiles, shape parity, command emissions, the shape check, and the catalog verified against this repository's real registry",
+      "files": [
+        "package.json",
+        "speckit-extension/tests"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "npm test",
+      "result": "2821 tests pass, including 8 new AttachForm cases covering the cascade, the clearing and the free-text fallback"
+    },
+    {
+      "what": "python3 -m pytest speckit-extension/tests",
+      "result": "1308 pass, 8 skipped, including 9 catalog cases"
+    },
+    {
+      "what": "both compiles, shape parity, command emissions, Storybook build",
+      "result": "all clean"
+    },
+    {
+      "what": "the catalog against this repository real registry",
+      "result": "the seven commands the issue names, the automatic commit once with no placement because it is registered at nine steps"
+    },
+    {
+      "what": "living_validate on this spec deltas",
+      "result": "no findings"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Task finishes were journaled in batches rather than one per task. The summaries and their order are trustworthy; the per-task timestamps are not, and history is append-only so this cannot be repaired for this run."
+    },
+    {
+      "note": "The datalist type-ahead was replaced by the panel menu. A person who knew the old behaviour will find filtering-by-typing no longer narrows a list, though typing a full name still works and the list is now browsable, which is the point of the change."
+    }
+  ]
+}

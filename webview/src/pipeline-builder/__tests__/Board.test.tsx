@@ -1140,12 +1140,10 @@ describe('a hook can be changed once it is there', () => {
         const sheet = mount(
             <AttachForm step={step()} anchor="gather"
                 choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'],
-                    fragments: [], presets: [] }}
+                    commands: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
-        const options = Array.from(sheet.querySelectorAll('datalist option'))
-            .map(el => el.getAttribute('value'));
-        expect(options).toEqual(['create-pr', 'verify-code-review']);
+        expect(sheet.querySelector('.pb-pick-open')).not.toBeNull();
         expect(sheet.querySelector('.pb-field-help')?.textContent).toContain('2 in this project');
     });
 
@@ -1153,7 +1151,7 @@ describe('a hook can be changed once it is there', () => {
         const noop = () => undefined;
         const sheet = mount(
             <AttachForm step={step()} anchor="complete"
-                choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+                choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
                 editing={{
                     when: 'after', type: 'skill', summary: 'create-pr',
                     anchor: 'complete', index: 1, note: 'only on green',
@@ -1170,7 +1168,7 @@ describe('a hook can be changed once it is there', () => {
     it('says nothing about removing when it is a new hook', () => {
         const noop = () => undefined;
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />);
         expect(sheet.querySelector('.pb-action--remove')).toBeNull();
     });

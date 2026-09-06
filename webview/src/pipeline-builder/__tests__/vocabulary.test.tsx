@@ -17,7 +17,7 @@ describe('one action keeps one name through the flow', () => {
 
         document.body.innerHTML = '';
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />,
         );
         expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
@@ -26,7 +26,7 @@ describe('one action keeps one name through the flow', () => {
 
     it('names the anchor row for when and where it goes, not what it is', () => {
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
                 onCancel={noop} onAttach={noop} />);
         const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
             .map(el => el.textContent);

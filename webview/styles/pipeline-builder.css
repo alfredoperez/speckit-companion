@@ -1809,6 +1809,11 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     z-index: 5;
     min-width: 220px;
     max-width: 340px;
+    /* A list is as long as whatever registered into it. Unbounded, seven rows
+       already ran past the bottom of the pane that scrolls it, and it was
+       clipped rather than scrolled. */
+    max-height: 60vh;
+    overflow-y: auto;
     margin: 0;
     padding: var(--space-1);
     list-style: none;
@@ -1868,11 +1873,13 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     right: 0;
 }
 
-/* What picking this one does. A select had nowhere to put it. */
+/* What picking this one does. A select had nowhere to put it. Body, not the
+   metadata tone: on a row whose whole point is the sentence under the name,
+   this is the readable content and not a label beside it. */
 .pb-menu-note {
     font-size: var(--text-xs);
     line-height: 1.4;
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 /* ── L1 ── Feedback: what a write did, and what a build did ──
@@ -2532,4 +2539,20 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* The value and the way to choose one, on a line. The field stays free so a
+   name the project does not have yet can still be typed. */
+.pb-pick {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.pb-pick .pb-input { flex: 1; min-width: 0; }
+
+.pb-pick-open {
+    flex: none;
+    white-space: nowrap;
 }

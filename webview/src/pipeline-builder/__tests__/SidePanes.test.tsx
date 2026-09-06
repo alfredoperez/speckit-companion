@@ -231,7 +231,7 @@ describe('every side pane wears one shell', () => {
         onClose: noop, onOpenFile: noop, onSave: noop, onRestore: noop, onAttach: noop,
         onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
     };
-    const CHOICES = { skills: [], nodes: [], fragments: [], presets: [] };
+    const CHOICES = { skills: [], nodes: [], commands: [], fragments: [], presets: [] };
     const TEMPLATE = step({
         template: {
             file: 'spec-template.md', sections: [],
@@ -682,7 +682,7 @@ describe('the kind tick is three steps of one neutral', () => {
 describe('the hook form asks for the placement first', () => {
     const noop = () => undefined;
     const CHOICES = {
-        skills: ['create-pr', 'verify-code-review'], nodes: [], fragments: [], presets: [],
+        skills: ['create-pr', 'verify-code-review'], nodes: [], commands: [], fragments: [], presets: [],
     };
 
     function form(anchor = 'draft-spec', when?: 'before' | 'after') {

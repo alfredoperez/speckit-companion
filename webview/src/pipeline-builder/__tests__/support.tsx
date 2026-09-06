@@ -62,7 +62,7 @@ export function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     return {
         steps: [step()],
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [], fragments: [], presets: [] },
+        choices: { skills: [], nodes: [], commands: [], fragments: [], presets: [] },
         configured: false,
         customised: false,
         warnings: [],

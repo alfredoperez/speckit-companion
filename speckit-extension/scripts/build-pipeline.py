@@ -116,7 +116,13 @@ def stock_hooks(project_root: str, command: str) -> list:
 
     out = []
     for when in cc.WHENS:
-        for entry in hooks.get(f"{when}_{command}") or []:
+        entries = hooks.get(f"{when}_{command}")
+        # A key holding a scalar is not a list of hooks. Iterating it raised
+        # straight out of here and took the whole board down for a registry
+        # nobody could have hand-checked.
+        if not isinstance(entries, (list, tuple)):
+            continue
+        for entry in entries:
             if not isinstance(entry, dict):
                 continue
             # Absent `enabled` means enabled, matching the command bodies.
@@ -132,6 +138,100 @@ def stock_hooks(project_root: str, command: str) -> list:
                 # the panel says "sometimes" rather than promising it will run.
                 "conditional": bool(str(entry.get("condition") or "").strip()),
             })
+    return out
+
+
+def _placement(key: str) -> str:
+    """`before_specify` as words, or nothing.
+
+    A key that is not shaped this way yields no placement rather than a guess:
+    the panel says where a hook usually goes only when the registry said so.
+    """
+    for when in cc.WHENS:
+        prefix = f"{when}_"
+        if key.startswith(prefix) and len(key) > len(prefix):
+            return f"{when} {key[len(prefix):].replace('_', ' ')}"
+    return ""
+
+
+def available_hook_commands(project_root: str) -> list:
+    """Every hook command this project could attach, from the registries it has.
+
+    Two sources, in the order a stock install reads them: the spec-kit
+    extensions the project registered, then Companion's own. Compiled into the
+    panel instead, this list would lie about what is installed and the lie would
+    only surface when the pipeline ran.
+
+    De-duplicated on the command name, first description winning: a stock
+    install registers the automatic commit at nine lifecycle steps, and nine
+    rows would say nothing true. Never raises — a registry that cannot be read
+    contributes nothing.
+    """
+    out: list = []
+    seen: dict = {}
+    placements: dict = {}
+
+    def add(command, note, source, key):
+        command = str(command or "").strip()
+        if not command:
+            return
+        placement = _placement(key) if key else ""
+        if placement:
+            placements.setdefault(command, set()).add(placement)
+        if command in seen:
+            return
+        entry = {"id": command, "label": command}
+        if str(note or "").strip():
+            entry["note"] = str(note).strip()
+        if source:
+            entry["from"] = str(source)
+        seen[command] = entry
+        out.append(entry)
+
+    hooks = None
+    try:
+        path = os.path.join(project_root, EXTENSIONS_REL)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                registry = cc.load_yaml(fh.read()) or {}
+            hooks = registry.get("hooks")
+    except (ValueError, SystemExit, OSError, AttributeError, TypeError):
+        hooks = None  # a registry nobody can read offers nothing, and fails nothing
+
+    if isinstance(hooks, dict):
+        for key, entries in hooks.items():
+            # Per key, so one malformed value costs its own key and not every
+            # command declared after it. Guarding the whole loop instead made
+            # the result depend on where in the file the bad key sat, and made
+            # the picker disagree with the board drawn beside it.
+            try:
+                for entry in entries or []:
+                    if not isinstance(entry, dict):
+                        continue
+                    if entry.get("enabled") is False:
+                        continue
+                    add(entry.get("command"), entry.get("description"),
+                        entry.get("extension"), str(key))
+            except (ValueError, SystemExit, OSError, AttributeError, TypeError):
+                continue
+
+    try:
+        with open(os.path.join(EXT, "extension.yml"), encoding="utf-8") as fh:
+            own = cc.load_yaml(fh.read()) or {}
+        for key, entry in (own.get("hooks") or {}).items():
+            if isinstance(entry, dict):
+                add(entry.get("command"), entry.get("description"),
+                    "companion", str(key))
+    except (ValueError, SystemExit, OSError, AttributeError, TypeError):
+        pass
+
+    # A placement only when there is one. The automatic commit is registered at
+    # nine lifecycle steps, so naming the first one read would be picking a
+    # single truth out of nine and presenting it as the answer.
+    for command, where in placements.items():
+        if len(where) == 1 and command in seen:
+            seen[command]["usually"] = next(iter(where))
+
     return out
 
 

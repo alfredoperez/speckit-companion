@@ -58,7 +58,7 @@ function graph(steps: PipelineStep[], over: Partial<PipelineGraph> = {}): Pipeli
     return {
         steps,
         workflows: { available: ['shipped'], active: '' },
-        choices: { skills: [], nodes: [], fragments: [], presets: [] },
+        choices: { skills: [], nodes: [], commands: [], fragments: [], presets: [] },
         configured: false,
         customised: false,
         warnings: [],

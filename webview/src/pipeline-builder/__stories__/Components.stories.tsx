@@ -765,8 +765,39 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], fragments: [], presets: [] }}
+        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
+    ),
+};
+
+/**
+ * The catalog, on the kind that can actually run one.
+ *
+ * A spec-kit command is dispatched, not shelled, so it belongs to Instruction:
+ * picking one writes the sentence that asks for it, which is how this project's
+ * own hooks reach a skill or an agent. Each row says what the command does, who
+ * registered it, and where it usually goes, so choosing needs no memorised name.
+ */
+export const AttachFromTheCatalog: Story = {
+    name: 'Add hook · choosing a command this project has',
+    render: () => (
+        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={{
+            skills: ['create-pr'], nodes: ['review'], fragments: [], presets: [],
+            commands: [
+                { id: 'speckit.git.initialize', label: 'speckit.git.initialize',
+                    note: 'Sets up the git repository',
+                    usually: 'before constitution', from: 'git' },
+                { id: 'speckit.git.feature', label: 'speckit.git.feature',
+                    note: 'Creates the feature branch',
+                    usually: 'before specify', from: 'git' },
+                { id: 'speckit.git.commit', label: 'speckit.git.commit',
+                    note: 'Commits outstanding changes, with a prompt first', from: 'git' },
+                { id: 'speckit.companion.after-implement',
+                    label: 'speckit.companion.after-implement',
+                    note: 'Per-task journaling on implement',
+                    usually: 'after implement', from: 'companion' },
+            ],
+        }} onCancel={noop} onAttach={noop} /></One>
     ),
 };
 

@@ -92,7 +92,15 @@ Placement comes first, so the form reads as the sentence it writes: *runs **befo
 | **Command** | A shell line. The assistant needs a terminal for this one. |
 | **Node** | A file from `.specify/companion/nodes/`, reusable in more than one place. |
 
-The skill and node fields offer what this project actually has, so a name typed from memory cannot become a hook that invokes nothing. Click a hook that is already there to change it or take it out.
+Every kind offers **Choose…** beside its field, listing what this project actually has for that kind, so a name typed from memory cannot become a hook that invokes nothing. Skill and Node offer their own names and keep filtering as you type.
+
+**Instruction** carries the one nobody could be expected to remember: every hook command your registries hold — spec-kit's own `git` extension, Companion's four lifecycle hooks, and anything else installed — each saying in plain words what it does, who registered it, and where it usually attaches. Picking one writes the sentence that asks for it, which you can then edit. It goes here rather than under Command because a Command hook is rendered as a shell line, and `speckit.git.commit` is a command spec-kit dispatches rather than something a shell can run; written as a shell line it would do nothing. Asking for it is how this project's own hooks reach a skill or an agent.
+
+A command registered at several steps says none of them rather than picking one: the automatic commit sits at nine, and naming the first would present one truth out of nine. The list is derived from your registries, so an extension installed tomorrow appears without anything changing here, and a project without the git extension is offered none of its hooks. The field stays free the whole time, so anything the list lacks can still be written.
+
+These commands are already registered at their own lifecycle steps and already run there. Attaching one here adds a second invocation at a finer boundary — a node or a phase rather than a whole step — which is the point, but it is an addition rather than a move.
+
+Click a hook that is already there to change it or take it out.
 
 ---
 
