@@ -25,9 +25,9 @@ One driver per cell (`parallel` of 3). Each works only in `~/dev/projects/condui
 
 - For EACH step, prepend the **same** GUI preamble every arm gets — `buildStepPreamble(step, specDir)` from `driver.mjs`, which imports the real renderer from `dist/ai-providers/promptPreamble.js` so it cannot drift — then dispatch the step's command.
   - **stock arm** → stock `/speckit.*` command bodies. No capture script; stock is blind by design.
-  - **Companion arms** → `/speckit.companion.*` command bodies **plus** capture via `node ../speckit-bench/cap.mjs <step> <action>`, run with cwd = the cell. It takes two arguments — `specify complete`, `plan start`, `task <TaskID>` — and errors on a bare step.
+  - **Companion arms** → `/speckit.companion.*` command bodies, **and nothing on top of them**. The bodies carry every capture call a run needs. A driver that also runs `cap.mjs <step> start` writes the start stamp twice — the second is a documented no-op that still costs a round-trip on every step, and it inflated wave A's call count by four. The count that matters comes from the writer's own `.trace.jsonl`, so the driver has no bookkeeping of its own to do.
 - After dispatching a step, **wait for it to settle** — `waitForSettle(cellDir, step)` polls `.spec-context.json` until the step's completed status **or any later one** appears. It returns `folded: true` when the status overshot, which happens for two shipped reasons: the fast path folds specify/plan/tasks onto `ready-to-implement`, and mark-complete takes implement to `completed`. **A folded step is already done — never re-dispatch it, and never steer the size verdict to make steps settle one at a time.** Right-sizing is the feature under measurement; a driver that disables it produces numbers that look valid and are not.
-- Accumulate time spent in capture into `captureOverheadSec` in the run marker, so the report can isolate it from work time.
+- Do not time the capture calls. The harness counts them from `.trace.jsonl` and the timing itself is under the noise floor.
 
 The feature prompt is `../speckit-bench/prompts/conduit/<size>.md`, the text between the `---` rules.
 

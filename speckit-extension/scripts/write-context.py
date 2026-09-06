@@ -637,10 +637,10 @@ def _main() -> int:
 
     # `--set` writes a plain field; it appends no lifecycle entry and touches no
     # status, so it cannot conflict with `--advance` or `--finish`. Letting the
-    # two ride together is what stops every handoff paying a separate call just
-    # to pin `workflow=companion`. Every other capture flag still takes
+    # two ride together is what stops every handoff, and the close of the
+    # spec, paying a separate call just to pin `workflow=companion`. Every other capture flag still takes
     # precedence, because those DO write history and the ordering would matter.
-    lifecycle = args.advance or args.finish
+    lifecycle = args.advance or args.finish or args.mark_complete
     set_only = bool(args.set_pairs) and not (
         captured_beyond_set or capture_mode or args.living_specs
         or args.living_spec_skips or args.fold_living_spec
