@@ -219,10 +219,7 @@ export function Header(props: Props) {
     // file and no configuration at all, so keying on the configuration alone
     // let the panel say "Changed · 1 step" and, one line below, that this is
     // the pipeline as it ships.
-    // What this project wrote and is not running. A tree carried
-    // `workflow: shipped` for an unknown stretch with every hook silently off,
-    // and the board drew the same pipeline it draws for a project that never
-    // configured anything.
+    // What this project wrote and is not running.
     const onShipped = graph.workflows.active === 'shipped';
     const parked = onShipped ? graph.workflows.parked : null;
     const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0
@@ -308,7 +305,7 @@ export function Header(props: Props) {
             <div class="builder-facts">
                 {/* Named for what it does, and offered only when there is a file
                     to open — a project running the shipped pipeline has none. */}
-                {(graph.configured || parked) && (
+                {(graph.configured || onShipped) && (
                     <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
                         Open companion.yml
                     </button>
@@ -341,7 +338,7 @@ export function Header(props: Props) {
                         label="More pipeline actions" title="More"
                         options={[
                             { id: 'step', label: 'Add step' },
-                            ...(graph.configured || parked
+                            ...(graph.configured || onShipped
                                 ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                             { id: 'preview', label: 'Preview build', disabled: busy },
                         ]}
@@ -365,16 +362,26 @@ export function Header(props: Props) {
                         <code class="builder-notice-file">
                             {parked?.file ?? '.specify/companion.yml'}
                         </code>{' '}
-                        is running{parked?.hooks
-                            ? `, including ${tally(parked.hooks, 'hook')} of yours` : ''}
-                        {' '}— parked, kept exactly as it is, and drawn greyed on the board.
+                        is running.{parked?.hooks
+                            ? ` ${tally(parked.hooks, 'hook')} of yours ${parked.hooks === 1
+                                ? 'is' : 'are'} parked on the board, kept exactly as written.`
+                            : ''}
+                        {/* Counted off the board, so it can only ever be a hook
+                            with nowhere on the shipped shape to be drawn. */}
+                        {parked?.unplaceable
+                            ? ` ${tally(parked.unplaceable, 'hook')} ${parked.unplaceable === 1
+                                ? 'attaches' : 'attach'} to something the shipped pipeline does`
+                                + ' not have, so there is nowhere to draw it.'
+                            : ''}
                     </span>
-                    {parked && (
-                        <button class="builder-link"
-                            onClick={() => props.onSelectWorkflow('')}>
-                            Use this project&rsquo;s pipeline
-                        </button>
-                    )}
+                    {/* The way back is the point of the notice, so it is offered
+                        whenever the shipped pipeline is in force — not only when
+                        something resolved as parked. A config the builder could
+                        not read is the case that most needs it. */}
+                    <button class="builder-link"
+                        onClick={() => props.onSelectWorkflow('')}>
+                        Use this project&rsquo;s pipeline
+                    </button>
                 </div>
             )}
 

@@ -278,7 +278,7 @@ describe('everything attached to one anchor sits in one block', () => {
             ...g,
             workflows: {
                 available: ['', 'shipped'], active: 'shipped',
-                parked: { file: '.specify/companion.yml', hooks: 2 },
+                parked: { file: '.specify/companion.yml', hooks: 2, unplaceable: 0 },
             },
         };
     };

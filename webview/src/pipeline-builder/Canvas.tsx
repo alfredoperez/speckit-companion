@@ -460,16 +460,15 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                     {source.ours.map((hook, i) => (
                                         <li key={`ours-${i}`}>
                                             {hook.parked ? (
-                                                /* Not a button: `shipped` selects no
-                                                   configuration, so there is no file
-                                                   an edit could go in. It is drawn
-                                                   where it would attach, and the word
-                                                   says it is off without asking anyone
-                                                   to read a shade of grey. */
+                                                // Focusable, because the name clips and the rest of it lives in the tooltip.
                                                 <span class="pb-hook pb-hook--parked"
+                                                    tabIndex={0}
                                                     title={`${hook.summary}\n\nParked — this `
                                                         + 'project runs the pipeline as it '
-                                                        + 'ships, so this does not run.'}>
+                                                        + 'ships, so this does not run.'}
+                                                    aria-label={`${hook.summary} — parked, `
+                                                        + 'not running while the pipeline is '
+                                                        + 'the shipped one'}>
                                                     <HookLine hook={hook} />
                                                     <span class="pb-hook-parked">parked</span>
                                                 </span>

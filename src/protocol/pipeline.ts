@@ -221,8 +221,13 @@ export interface PipelineWorkflows {
     available: string[];
     /** Which one `companion.yml` selects. Empty means companion.yml itself. */
     active: string;
-    /** The configuration `shipped` is bypassing. Absent when nothing is parked. */
-    parked?: { file: string; hooks: number } | null;
+    /**
+     * The configuration `shipped` is bypassing. Absent when nothing is parked.
+     * `hooks` is counted off the board itself, so the header can never claim a
+     * hook is drawn that is not; `unplaceable` is the rest, whose anchor the
+     * shipped pipeline does not have.
+     */
+    parked?: { file: string; hooks: number; unplaceable: number } | null;
 }
 
 /** A whole configuration Companion ships as a starting point for a new workflow. */

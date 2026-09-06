@@ -278,6 +278,10 @@ Writing a value back into `companion.yml` SHALL be a surgical text edit — repl
 - **WHEN** the file is written back
 - **THEN** every line outside that key is unchanged, comments and spacing included
 
+#### Scenario: a key is written back off again
+- **WHEN** an empty value is written for a key the file carries
+- **THEN** that key's line is removed and everything around it is left byte for byte, because a selection you can make and cannot unmake is a trap rather than a choice
+
 ### A configuration too broken to read is repairable from the panel that reads it
 
 Because the builder refuses an edit that would break the configuration, what it writes is always valid — but a file edited by hand, written by an older build, or left broken by a version with no guard yet still lands the panel on its error state. Recovery SHALL therefore be offered as the panel's own named actions rather than as "open the YAML file", which is the editing the panel exists to replace. Each repair SHALL be a small, named retreat toward what ships, they SHALL be ordered narrowest first, and each SHALL state what it will cost, because a recovery that silently discards an afternoon's work is worse than the broken pipeline.
@@ -293,6 +297,18 @@ The structure the builder draws — the steps, the phases, the nodes, where the 
 #### Scenario: the builder renders a project's pipeline
 - **WHEN** the structure is resolved
 - **THEN** it reflects the project's configuration, not the shipped defaults with the project's changes imagined on top
+
+### A bypassed configuration is resolved and drawn, and never allowed to fail the board
+
+A run of the shipped pipeline selects no configuration, so a project's own file is bypassed rather than emptied. The emitted structure SHALL still resolve that bypassed file and carry its hooks at the anchors they would attach to, marked as not running and excluded from every count of what this project changed — a board that draws nothing for a configured project is indistinguishable from one that was never configured. Resolving it SHALL never fail the board on any error, not only on a refusal: a file that parses but is the wrong shape raises an ordinary error, and the project most likely to hold one is the project that chose the shipped pipeline because its own configuration was broken. The count reported for what is parked SHALL be counted off the structure actually emitted, never from the bypassed plan, since a hook whose anchor the shipped shape does not have has nowhere to be drawn; those SHALL be reported separately rather than folded into a number that says they are on the board.
+
+#### Scenario: the bypassed file is the wrong shape
+- **WHEN** the structure is resolved
+- **THEN** the board is emitted with nothing parked, rather than failing and leaving the panel with no way to repair anything
+
+#### Scenario: a bypassed hook attaches to something the shipped shape lacks
+- **WHEN** the structure is emitted
+- **THEN** the parked count reports only what is drawn, and the rest is reported as having nowhere to go
 
 ### A step a project declared is a real step; only a typo is refused
 

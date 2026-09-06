@@ -207,15 +207,12 @@ describe('switching workflows', () => {
         expect(options[1].textContent).toBe('bugfixIn force');
     });
 
-    // A tree carried `workflow: shipped` for an unknown stretch with every hook
-    // in companion.yml switched off, and the board drew the shipped pipeline as
-    // though nothing had been configured at all.
     describe('running the pipeline as it ships', () => {
         const shipped = (hooks = 2) => graph({
             configured: false,
             workflows: {
                 available: ['', 'shipped'], active: 'shipped',
-                parked: { file: '.specify/companion.yml', hooks },
+                parked: { file: '.specify/companion.yml', hooks, unplaceable: 0 },
             },
         });
 
@@ -225,6 +222,51 @@ describe('switching workflows', () => {
             expect(notice.textContent).toContain('as it ships');
             expect(notice.textContent).toContain('.specify/companion.yml');
             expect(notice.textContent).toContain('2 hooks of yours');
+        });
+
+        it('offers the way back even when nothing resolved as parked', () => {
+            // A config the builder could not read parks nothing, and that is the
+            // project that most needs the way back and the way into the file.
+            const g = graph({
+                configured: false,
+                workflows: {
+                    available: ['', 'shipped'], active: 'shipped', parked: null,
+                },
+            });
+            const { host, picked } = header(g);
+            const back = Array.from(host.querySelectorAll('.builder-link'))
+                .find(el => el.textContent?.includes('this project')) as HTMLButtonElement;
+            expect(back).toBeTruthy();
+            back.click();
+            expect(picked).toEqual(['']);
+            expect(Array.from(host.querySelectorAll('.builder-action'))
+                .some(el => el.textContent?.includes('Open companion.yml'))).toBe(true);
+        });
+
+        it('does not claim a hook is parked when none is', () => {
+            const { host } = header(graph({
+                configured: false,
+                workflows: {
+                    available: ['', 'shipped'], active: 'shipped', parked: null,
+                },
+            }));
+            const notice = host.querySelector('.builder-notice--warning')!;
+            expect(notice.textContent).toContain('as it ships');
+            expect(notice.textContent).not.toContain('parked');
+        });
+
+        it('says when a parked hook has nowhere on the board to go', () => {
+            const g = graph({
+                configured: false,
+                workflows: {
+                    available: ['', 'shipped'], active: 'shipped',
+                    parked: { file: '.specify/companion.yml', hooks: 1, unplaceable: 2 },
+                },
+            });
+            const notice = header(g).host.querySelector('.builder-notice--warning')!;
+            expect(notice.textContent).toContain('1 hook of yours');
+            expect(notice.textContent).toContain('2 hooks');
+            expect(notice.textContent).toContain('nowhere to draw');
         });
 
         it('switches back to the project in one click', () => {

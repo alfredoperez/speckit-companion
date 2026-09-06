@@ -146,7 +146,8 @@ class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
         parked = [h for h in self.hooks_of(graph, "plan") if h["parked"]]
         self.assertEqual([h["summary"] for h in parked], ["check it"])
         self.assertEqual(graph["workflows"]["parked"],
-                         {"file": ".specify/companion.yml", "hooks": 1})
+                         {"file": ".specify/companion.yml",
+                          "hooks": 1, "unplaceable": 0})
 
     def test_a_parked_hook_is_not_counted_as_a_change(self):
         with project("workflow: shipped\n" + HOOKED) as root:
@@ -162,6 +163,37 @@ class RunningAsShippedParksRatherThanDeletes(unittest.TestCase):
             graph = graph_mod.build_graph(root)
         self.assertEqual(graph["workflows"]["available"], ["", "shipped"])
         self.assertEqual(graph["workflows"]["active"], "shipped")
+
+    def test_the_reported_count_is_what_the_board_actually_draws(self):
+        # Two numbers from two sources is how the header came to say a hook was
+        # drawn that was nowhere on the page.
+        with project("workflow: shipped\n" + HOOKED) as root:
+            graph = graph_mod.build_graph(root)
+
+        drawn = sum(
+            1
+            for step in graph["steps"]
+            for h in (step["hooks"]
+                      + [x for p in step["phases"] for x in p["hooks"]]
+                      + [x for p in step["phases"] for n in p["nodes"]
+                         for x in n["hooks"]])
+            if h["parked"]
+        )
+        self.assertEqual(graph["workflows"]["parked"]["hooks"], drawn)
+
+    def test_a_misshapen_configuration_does_not_take_the_board_down(self):
+        # A file that parses as YAML but is the wrong shape raises an ordinary
+        # exception, not a refusal. The project most likely to hit this is the
+        # one that picked the shipped pipeline BECAUSE its config was broken.
+        bad = ("workflow: shipped\n"
+               "commands:\n"
+               "  plan:\n"
+               "    hooks:\n"
+               "      - { type: command, run: \"echo hi\" }\n")
+        with project(bad) as root:
+            graph = graph_mod.build_graph(root)
+        self.assertTrue(graph["steps"])
+        self.assertIsNone(graph["workflows"]["parked"])
 
     def test_a_configuration_nobody_can_resolve_parks_nothing(self):
         with project("workflow: shipped\ncommands:\n  plan:\n    nodes: [nope]\n") as root:

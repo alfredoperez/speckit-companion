@@ -253,10 +253,11 @@ def _parked_hooks(project_root: str) -> dict:
         return {}
     try:
         plan, _warnings = build.plan_build(parked)
-    except build.BuildError:
-        # A configuration nobody can resolve is not running either way, and the
-        # board's job here is to draw what it can, not to fail over the bypassed
-        # half of the project.
+    except Exception:
+        # Any failure, not only a refusal. A file that parses as YAML but is the
+        # wrong shape raises an ordinary exception, and letting that out took the
+        # whole board down for the one project most likely to hit it: the one
+        # that picked the shipped pipeline BECAUSE its own config was broken.
         return {}
     return {command: entry["hooks"] for command, entry in plan.items()}
 
@@ -274,6 +275,7 @@ def build_graph(project_root: str) -> dict:
 
     own_steps = set(project_commands())
     steps = []
+    drawn_parked = 0
     for command in _sequence(decomposed_commands()):
         entry = plan[command]
         hooks = entry["hooks"] + [
@@ -307,6 +309,11 @@ def build_graph(project_root: str) -> dict:
 
         order = entry["order"]
         template = templates.get(command)
+        step_parked = [h for h in hooks if h.get("parked") and (
+            h["anchor"] == command
+            or any(h["anchor"] == p["name"] for p in drawn_phases)
+            or any(h["anchor"] == n for p in phases for n in p["nodes"]))]
+        drawn_parked += len(step_parked)
         steps.append({
             "name": command,
             # Stock spec-kit's own extension hooks, which a Companion run fires
@@ -404,9 +411,15 @@ def build_graph(project_root: str) -> dict:
             "active": active,
             # How much of this project is switched off right now, so the panel
             # can say it rather than draw a pipeline that looks untouched.
+            # `hooks` is what the board draws, counted off the board itself:
+            # two numbers from two sources is how the header came to claim a
+            # hook was drawn greyed that was nowhere on the page. `unplaceable`
+            # is the rest — a hook anchored to a phase the shipped pipeline does
+            # not have has no place to be drawn, and saying so beats losing it.
             "parked": {
                 "file": build.CONFIG_REL.replace(os.sep, "/"),
-                "hooks": sum(len(v) for v in parked.values()),
+                "hooks": drawn_parked,
+                "unplaceable": sum(len(v) for v in parked.values()) - drawn_parked,
             } if parked else None,
         },
         # What a hook can be pointed at in this project, so the form offers

@@ -203,15 +203,14 @@ export const HooksOnANamedWorkflow: Story = {
 const PARKED = {
     workflows: {
         available: ['', 'shipped'], active: 'shipped',
-        parked: { file: '.specify/companion.yml', hooks: 4 },
+        parked: { file: '.specify/companion.yml', hooks: 4, unplaceable: 0 },
     },
 };
 
 /**
  * What this project wrote, drawn where it would attach, and not running.
  *
- * `workflow: shipped` bypasses `companion.yml` rather than emptying it, and a
- * tree carried that for an unknown stretch with every hook silently off. So the
+ * `workflow: shipped` bypasses `companion.yml` rather than emptying it, so the
  * hooks stay on the board — dashed, struck through, and carrying the word,
  * because a shade of grey in a column of greys is not a state anyone can read.
  */

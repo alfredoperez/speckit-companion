@@ -850,8 +850,8 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     cursor: pointer;
 }
 
-/* Not on another extension's: it is read here, never opened. */
-.pb-hook:not(.pb-hook--stock):hover { background: var(--bg-hover); }
+/* Not on another extension's, and not on a parked one: neither opens. */
+.pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):hover { background: var(--bg-hover); }
 
 /* The name, and only the name: the row used to repeat the kind as a lowercase
    word beside the badge that now says it. */
@@ -866,11 +866,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 .pb-hook-name--ref { font-family: var(--font-mono); }
 
-/* Written by this project and not running, because the pipeline is the shipped
-   one. Drawn where it would attach rather than hidden — but a dimming alone is
-   one more shade of grey in a column of them, and it would take the row's own
-   words below the contrast every other line keeps. So the difference is shape
-   and words: a dashed edge, a struck name, and the word `parked`. */
+/* Shape and words, never a dimming: one more grey among greys reads as nothing. */
 .pb-hook--parked {
     cursor: default;
     border: 1px dashed var(--border);
