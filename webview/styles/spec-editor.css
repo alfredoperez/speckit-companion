@@ -371,72 +371,13 @@
     font-size: 0.9em;
 }
 
-/* Radio-card group: one card per offerable workflow, description always visible. */
-.workflow-choices {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-.workflow-card {
-    position: relative;
-}
-
-/* The radio stays in the accessibility tree and keyboard order; the card label
-   is its visual surface. */
-.workflow-card input[type='radio'] {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-    margin: 0;
-    pointer-events: none;
-}
-
-.workflow-card-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
-    border: 1px solid var(--vscode-input-border, var(--border));
-    border-radius: var(--radius-sm);
-    background-color: var(--vscode-input-background);
-    cursor: pointer;
-}
-
-.workflow-card input:checked + .workflow-card-label {
-    border-color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.workflow-card input:focus-visible + .workflow-card-label {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-}
-
-.workflow-card-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.workflow-card-name {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
+/* Two survivors of the radio-card group the select replaced: the pitch banner
+   reuses both. */
 .workflow-card-badge {
     font-size: 0.8em;
     padding: 1px 8px;
     border-radius: 999px;
     border: 1px solid var(--vscode-input-border, var(--border));
-    color: var(--text-body);
-}
-
-.workflow-card-description {
-    font-size: 0.9em;
     color: var(--text-body);
 }
 

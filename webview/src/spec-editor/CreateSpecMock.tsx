@@ -16,8 +16,6 @@ export interface CreateSpecMockProps {
     narrow?: boolean;
     workflows?: MockWorkflowChoice[];
     selectedWorkflow?: string;
-    /** Renders the "Try Companion for this spec" affordance on the Companion card. */
-    showTrial?: boolean;
 }
 
 const MAX_CHARS = 50_000;
@@ -28,6 +26,8 @@ export const MOCK_WORKFLOWS: MockWorkflowChoice[] = [
     { name: 'companion', displayName: 'SpecKit Companion', description: 'specs 60–68% leaner, same correctness', installed: true },
 ];
 
+const isCustomWorkflow = (name: string) => name !== 'speckit' && name !== 'companion';
+
 export function CreateSpecMock({
     initialContent = '',
     submitting = false,
@@ -37,11 +37,21 @@ export function CreateSpecMock({
     narrow = false,
     workflows = MOCK_WORKFLOWS,
     selectedWorkflow = 'speckit',
-    showTrial = false,
 }: CreateSpecMockProps) {
     const count = overLimit ? MAX_CHARS + 1200 : initialContent.length;
     const canSubmit = initialContent.trim().length > 0 && !overLimit && !submitting;
     const showCount = count >= MAX_CHARS * 0.9;
+
+    const selected = workflows.find(wf => wf.name === selectedWorkflow) ?? workflows[0];
+    const companion = workflows.find(wf => wf.name === 'companion');
+    const needsInstall = selected?.installed === false;
+
+    // The banner pitches Companion whenever it is missing, and otherwise carries a
+    // project-defined workflow's own description. Both installed and nothing custom
+    // selected means there is nothing to say, and the space goes back to the form.
+    const pitchCompanion = companion?.installed === false;
+    const pitchCustom =
+        !pitchCompanion && !!selected && isCustomWorkflow(selected.name) && !!selected.description;
 
     return (
         <div class="spec-editor" id="app" aria-busy={submitting ? 'true' : 'false'}>
@@ -53,41 +63,45 @@ export function CreateSpecMock({
 
                 <div class="spec-editor-content">
                     <div class="workflow-row">
-                        <div class="workflow-selector">
-                            <span class="workflow-selector-label" id="story-workflow-label">Workflow</span>
-                            <div class="workflow-choices" role="radiogroup" aria-labelledby="story-workflow-label">
-                                {workflows.map(wf => (
-                                    <div class="workflow-card" key={wf.name}>
-                                        <input
-                                            type="radio"
-                                            name="story-workflow"
-                                            id={`story-workflow-${wf.name}`}
-                                            value={wf.name}
-                                            checked={wf.name === selectedWorkflow}
-                                            readOnly
-                                        />
-                                        <label class="workflow-card-label" for={`story-workflow-${wf.name}`}>
-                                            <span class="workflow-card-header">
-                                                <span class="workflow-card-name">{wf.displayName}</span>
-                                                {!wf.installed && <span class="workflow-card-badge">Install to enable</span>}
-                                            </span>
-                                            <span class="workflow-card-description">{wf.description}</span>
-                                            {showTrial && wf.name === 'companion' && (
-                                                <button type="button" class="workflow-card-trial">Try Companion for this spec</button>
-                                            )}
-                                        </label>
-                                    </div>
-                                ))}
+                        {workflows.length > 1 && (
+                            <div class="workflow-selector">
+                                <label class="workflow-selector-label" for="story-workflow">Workflow</label>
+                                <select class="workflow-select" id="story-workflow" value={selected?.name}>
+                                    {workflows.map(wf => (
+                                        <option value={wf.name} key={wf.name}>
+                                            {wf.installed === false ? `${wf.displayName} — install to enable` : wf.displayName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                    {(pitchCompanion || pitchCustom) && (
+                        <div class="workflow-pitch">
+                            {pitchCompanion && (
+                                <span class="codicon codicon-rocket workflow-pitch__glyph" aria-hidden="true" />
+                            )}
+                            <div class="workflow-pitch__body">
+                                {pitchCompanion ? (
+                                    <>
+                                        {companion?.description && (
+                                            <span class="workflow-pitch__text">{companion.description}</span>
+                                        )}
+                                        <span class="workflow-card-badge">Install to enable</span>
+                                        {selectedWorkflow !== 'companion' && (
+                                            <button type="button" class="workflow-card-trial">Try Companion for this spec</button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <span class="workflow-pitch__text">{selected?.description}</span>
+                                )}
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <div class="editor-container">
                         <label class="editor-label" for="story-brief">Feature Brief</label>
-                        <details class="writing-tips">
-                            <summary>Writing tips</summary>
-                            <p>Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
-                        </details>
+                        <p class="sr-only">Include the problem, who it affects, key requirements, and constraints. A Jira or GitHub link also works on its own.</p>
                         <textarea
                             id="story-brief"
                             class="spec-editor-textarea"
@@ -121,12 +135,14 @@ export function CreateSpecMock({
                 </div>
 
                 <footer class="spec-editor-actions">
-                    <div class="keyboard-hints"><kbd>Ctrl/Cmd</kbd>+<kbd>Enter</kbd> to submit • <kbd>Esc</kbd> to cancel</div>
+                    <div class="keyboard-hints"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit • <kbd>Esc</kbd> to cancel</div>
                     <div class="action-spacer" />
                     <button class="btn-cancel" type="button">Cancel</button>
-                    {showAuto && <button class="btn-secondary" type="button" disabled={!canSubmit}>Auto</button>}
-                    <button class="btn-primary" type="button" disabled={!canSubmit}>
-                        {submitting ? 'Creating…' : 'Create Spec'}
+                    {showAuto && !needsInstall && <button class="btn-secondary" type="button" disabled={!canSubmit}>Auto</button>}
+                    <button class="btn-primary" type="button" disabled={!needsInstall && !canSubmit}>
+                        {needsInstall
+                            ? `Install ${selected?.displayName ?? 'workflow'}`
+                            : submitting ? 'Creating…' : 'Create Spec'}
                     </button>
                 </footer>
             </main>

@@ -120,8 +120,8 @@
         <!-- one label per beat, stacked on the same anchor; only one is ever visible -->
         <div id="hi" data-layout-allow-overlap></div>
         <div class="lbl" id="lbl0" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">WORKFLOW</span>Chosen at creation, then every step follows it</div>
-        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">BUILT IN</span>Both are there before you configure anything</div>
-        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">YOUR OWN</span>The third one came from your settings file</div>
+        <div class="lbl" id="lbl1" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">YOUR OWN</span>The one your settings file named, in the same list</div>
+        <div class="lbl" id="lbl2" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">WHAT IT DOES</span>Its description comes along with it</div>
         <div class="lbl" id="lbl3" data-layout-allow-overlap data-layout-allow-occlusion><span class="eb">CUSTOM STEP</span>Your own phase becomes a step of the run</div>
       </div>
     </div>
@@ -170,9 +170,12 @@
         return { s:s, x:tx, y:ty };
       }
       /* REST frames the Create New Spec dialog from its title down past the
-         workflow list. It is frame zero, so it is the pose a reader sees
-         before the clip plays and the pose the loop returns to. */
-      REST = camFit([212,86,800,219], 60, 99);
+         workflow picker. It is frame zero, so it is the pose a reader sees
+         before the clip plays and the pose the loop returns to. The 800 px
+         column caps the scale at 1.43x and the vertical clamp pins the frame
+         to the top of the capture, which is what keeps the picker, the banner
+         under it and the Feature Brief label all in one shot. */
+      REST = camFit([212,87,800,54], 60, 99);
 
       function proj(r, cam) {
         return { x: cam.s*r[0]*K + cam.x, y: cam.s*(r[1]*K + OFFY) + cam.y,
@@ -181,20 +184,23 @@
 
       /* every r is a real element box measured off the captured DOM,
          in the capture's own CSS pixels: [x, y, width, height].
-         Story: the workflow list -> the two built-ins -> the custom one
-         picked -> the step rail the created spec builds from it.
-         Beat 3 holds all three cards so the selected border is seen moving
-         from the first card to the third, instead of hidden under the marker. */
+         Story: the workflow picker -> the custom workflow selected in it ->
+         the description the picker row cannot carry -> the step rail the
+         created spec builds from it.
+         The picker is a native select, so only the chosen workflow is ever on
+         screen and there is no shot of the three side by side. Beat 2 makes
+         the pick itself the event: the dissolve to the picked state runs under
+         the marker while it settles, so the row is seen changing. */
       var BEATS = [
-        {"t":3,"r":[212,86,800,219],"noZoom":true,"label":"Chosen at creation, then every step follows it"},
-        {"t":6.3,"r":[212,107,800,129],"noZoom":true,"label":"Both are there before you configure anything"},
-        {"t":9.5,"r":[212,107,800,198],"noZoom":true,"label":"The third one came from your settings file"},
-        {"t":12.9,"r":[11,155,189,184],"pad":120,"maxS":1.7,"label":"Your own phase becomes a step of the run"},
+        {"t":3,"r":[212,87,800,54],"noZoom":true,"label":"Chosen at creation, then every step follows it"},
+        {"t":6.3,"r":[212,114,800,27],"noZoom":true,"label":"The one your settings file named, in the same list"},
+        {"t":9.5,"r":[212,169,800,35],"noZoom":true,"label":"Its description comes along with it"},
+        {"t":12.9,"r":[12,163,183,174],"pad":120,"maxS":1.7,"label":"Your own phase becomes a step of the run"},
         {"t":16.9,"rest":true,"move":0.9}
       ];
       /* which capture each moment shows; the loop dissolve returns to frame zero's shot */
       var CUTS = [
-        {"t":9.5,"from":0,"to":1,"fade":0.3},
+        {"t":6.4,"from":0,"to":1,"fade":0.4},
         {"t":12.7,"from":1,"to":2,"fade":0.7},
         {"t":16.9,"from":2,"to":0,"fade":0.9}
       ];
