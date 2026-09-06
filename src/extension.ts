@@ -35,6 +35,7 @@ import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSe
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
+import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
 
 let aiProvider: IAIProvider;
 let extensionContext: vscode.ExtensionContext;
@@ -62,6 +63,7 @@ export async function activate(context: vscode.ExtensionContext) {
     extensionContext = context;
     setLifecycleOutputChannel(outputChannel);
     context.subscriptions.push(registerTerminalStepTracker(context));
+    context.subscriptions.push(registerSpecShapeDiagnostics());
 
     // Initialize SpecKit detector
     const specKitDetector = SpecKitDetector.getInstance();

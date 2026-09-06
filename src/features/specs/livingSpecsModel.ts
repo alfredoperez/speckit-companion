@@ -47,6 +47,11 @@ export interface ResolvedCapability {
     /** Membership globs, carried for health computation. */
     match: string[];
     exclude: string[];
+    /**
+     * Emptying this capability's spec is a deliberate act, declared here.
+     * Absent is false, which is every capability that never says otherwise.
+     */
+    retire?: boolean;
 }
 
 /**
@@ -79,6 +84,7 @@ interface RawCapability {
     name: string;
     match: string[];
     exclude: string[];
+    retire?: boolean;
     /** Resolved spec path; '' flags a declared-but-empty (bad) colocated entry. */
     spec: string;
 }
@@ -139,7 +145,7 @@ function globToRegExp(pattern: string): RegExp {
     return new RegExp(out + '$');
 }
 
-function globMatches(pattern: string, file: string): boolean {
+export function globMatches(pattern: string, file: string): boolean {
     return globToRegExp(pattern).test(posix(file));
 }
 
@@ -289,6 +295,7 @@ function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCa
             name,
             match: asList(entry.match),
             exclude: asList(entry.exclude),
+            retire: entry.retire === true,
             spec,
         });
     }
@@ -532,6 +539,7 @@ export function readLivingSpecs(
             tiers: tierPaths(specPosix, workspaceRoot).filter(t => t.exists),
             match: cap.match,
             exclude: cap.exclude,
+            retire: cap.retire,
         });
     }
     resolved.sort((a, b) => a.name.localeCompare(b.name));

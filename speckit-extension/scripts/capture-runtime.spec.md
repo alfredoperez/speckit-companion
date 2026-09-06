@@ -584,3 +584,41 @@ The capture runtime SHALL record the requirement headings a run read, per capabi
 #### Scenario: a capability consulted whose markers all missed
 - **WHEN** the recorder runs
 - **THEN** it records that capability with an empty requirement list, because "consulted and contributed nothing" and "read whole" are different facts and only the second is the absent entry
+
+### A living spec's shape is checkable, and the fold refuses to write a break
+<!-- touches: speckit-extension/scripts/living_validate.py, speckit-extension/scripts/living_spec_fold.py -->
+
+The capture runtime SHALL provide a read-only check over every registered living spec and over the delta sections of active feature specs, reporting a requirement carrying no scenario, a scenario missing its condition or its outcome, two requirements sharing a heading inside one capability, a delta block marked for a capability the registry does not list, a delta entry naming a heading the target spec does not carry, and a file marker matching nothing on disk. Each finding SHALL carry a severity, a stable code, the path, the line, a sentence and a one-line fix, and the check SHALL always exit successfully — a report that can fail the shell it runs in is a gate wearing a report's clothes. Severity SHALL answer exactly one question, whether the fold stops, so error means the durable record would be damaged and warning means it would be untidy. The fold SHALL run the same check in-process before writing anything and refuse, per capability, on an error-level finding, naming it; a correctness gate that a missing interpreter or a subprocess failing for its own reasons can turn into "no findings" is not a gate. A refusal for one capability SHALL NOT prevent another's sound delta from being applied in the same run.
+
+#### Scenario: a delta would fold in a scenario nobody can check
+- **WHEN** the fold runs
+- **THEN** that capability is refused, the finding is named, and its spec is left byte for byte unchanged
+
+#### Scenario: a delta names a heading the target does not carry
+- **WHEN** the fold runs
+- **THEN** it applies, because the fold promotes an unmatched modification into an addition and that is a defined outcome rather than damage, and the finding is reported as a warning
+
+#### Scenario: one capability is refused and another is sound
+- **WHEN** the fold runs
+- **THEN** the sound capability is written and only the broken one is refused
+
+#### Scenario: the check itself fails
+- **WHEN** it raises
+- **THEN** the fold proceeds, because a broken check must never block a sound fold
+
+### A fold cannot empty a spec unless the capability declared its retirement
+<!-- touches: speckit-extension/scripts/living_spec_fold.py, speckit-extension/scripts/companion_config.py, speckit-extension/scripts/resolve-spec-paths.py -->
+
+A fold that would leave a capability's spec with no requirements at all SHALL be refused, naming the capability, unless that capability declares its retirement in the registry. A stale spec is recoverable where an emptied one has lost the thing that made it worth keeping, so emptying one is a deliberate act and has to be declared as one. The declaration SHALL be optional and its absence SHALL read as false, and it SHALL be carried through to the shape the fold actually sees rather than left behind in the registry the fold never reads.
+
+#### Scenario: a fold would remove the last requirement and retirement is not declared
+- **WHEN** the fold runs
+- **THEN** it refuses, names the capability, and says how to declare the retirement
+
+#### Scenario: the capability declared its retirement
+- **WHEN** the same fold runs
+- **THEN** it applies
+
+#### Scenario: a fold removes some requirements but not all
+- **WHEN** it runs
+- **THEN** it applies whether or not retirement is declared

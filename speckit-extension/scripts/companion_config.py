@@ -560,6 +560,9 @@ def load_living_specs_block(block) -> dict:
                 "match": _as_list(entry.get("match")),
                 "exclude": _as_list(entry.get("exclude")),
                 "spec": spec,
+                # Emptying a capability's spec is a deliberate act. Absent is
+                # false, which is every capability that never says otherwise.
+                "retire": entry.get("retire") is True,
             }
         )
     return {"enabled": enabled, "exempt": exempt, "capabilities": capabilities}

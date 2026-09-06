@@ -392,3 +392,29 @@ The extension SHALL parse a living spec into requirement slices — heading, opt
 #### Scenario: a fixture is added
 - **WHEN** only one runtime's suite exercises it
 - **THEN** the drift guard fails, because that is a case where the two are free to disagree
+
+### The editor checks a spec's shape on save, in its own process
+<!-- touches: src/features/specs/specShapeCheck.ts, src/features/specs/specShapeDiagnostics.ts -->
+
+The extension SHALL run the living-spec shape checks whenever a `*.spec.md` is saved and publish each finding against that file at its line, clearing them when the underlying problem is fixed. The checks SHALL run in the extension's own process rather than by invoking the spec-kit scripts: the shipped extension is only what is in its package and cannot assume those scripts are installed, and a subprocess in the save path is a cost paid on every write. That makes the checks exist in two runtimes, so both SHALL be held to one shared set of example specs and an example exercised by only one of them SHALL fail the build. Nothing SHALL be checked for a file that is not a spec file, or for a project that has not enabled living specs.
+
+#### Scenario: a spec is saved with a scenario missing its outcome
+- **WHEN** the save completes
+- **THEN** a problem appears against that file on the scenario's line
+
+#### Scenario: the problem is fixed and the file saved again
+- **WHEN** the check re-runs
+- **THEN** the problem is gone, because the findings are replaced rather than the entry deleted
+
+#### Scenario: a file that is not a spec file is saved
+- **WHEN** the save completes
+- **THEN** nothing is checked and no problem appears
+
+### The registry carries a capability's retirement declaration
+<!-- touches: src/features/specs/livingSpecsModel.ts -->
+
+The registry reader SHALL carry each capability's optional retirement declaration onto the resolved capability, defaulting to false when absent, so both runtimes read the same registry the same way.
+
+#### Scenario: a capability omits the declaration
+- **WHEN** the registry is read
+- **THEN** it resolves as not retiring, which is every capability that never says otherwise

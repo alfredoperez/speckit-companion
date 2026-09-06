@@ -319,6 +319,9 @@ def _entry(cap: dict, root: str) -> dict:
         "location": _location(cap),
         "exists": os.path.isfile(os.path.join(root, spec)),
         "tiers": tier_paths(spec, root),
+        # Carried through, because the fold's empty-spec guard reads it and the
+        # entry is the only shape the fold ever sees.
+        "retire": cap.get("retire") is True,
     }
 
 

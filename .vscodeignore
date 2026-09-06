@@ -68,6 +68,7 @@ speckit-extension/**
 !speckit-extension/scripts/capture.py
 !speckit-extension/scripts/task_sync.py
 !speckit-extension/scripts/living_spec_fold.py
+!speckit-extension/scripts/living_validate.py
 !speckit-extension/scripts/run_trace.py
 # The shared atomic-write helper. The capture writers publish through it; each
 # guards the import and falls back to its old fixed-`.tmp` write, so leaving it
