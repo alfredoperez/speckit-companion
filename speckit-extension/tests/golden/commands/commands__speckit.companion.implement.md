@@ -79,16 +79,28 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
 2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other (any order is safe), and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done** before starting the next. Halt on a failed task and report the cause.
 
-3. **Build a wave's tasks yourself, in turn — inline is the default.** Implement each task in the wave directly (write its file), in any order within the wave since they're independent. Closing a task is **one call, the moment its work is complete** — not at the end of the wave:
+3. **Hand each user-story phase to a worker where your host has one; build everything else yourself.** Setup, Foundational and Polish stay with you — Setup is trivial, Foundational blocks every story, Polish is cross-cutting. A **story phase** is the unit worth handing off, because it is minutes of work and pages of reading, and every file you open is context you then carry for the rest of the run: on one measured run, reading was 87% of everything the implementing agent took in. Never fan out per *task* — a task is seconds of work against a comparable startup, so it saves nothing and it was tried.
+
+   **Only dispatch story phases whose files are disjoint.** Every task line names its exact file, so compare the file names across the phases before dispatching: two phases naming the same file are not independent whatever the story numbering says, and those run one after another in priority order. Give each worker its phase's task lines, that user story from `spec.md`, and the plan's Structure Decision — then ask it to read what it needs, write the code **and that story's tests**, run the suite, and return only a distilled result: what it built, the files it touched, and any test still failing. A worker that returns file contents has defeated the point.
+
+   ```bash
+   # the worker, per task it finishes — append only, never fold
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
+   # you, the moment each worker's result returns
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --materialize
+   ```
+
+   Folding is a read-modify-write on the shared file and two folders is the race the append log exists to prevent, so **workers only ever append and you do every fold**, in the foreground, one at a time.
+
+4. **Without a worker, build the waves yourself, and close each task as you finish it** — the moment its work is done, never batched at the end of a wave:
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --close-task <TaskID> --by ai --did "<one line>" --files "<files>"
    ```
-   `--close-task` appends the finish and folds it in one go: the panel updates and the task's `tasks.md` box is checked (never hand-edit the checkbox). The append carries its own real clock, so per-task timing is unchanged. This is the main agent closing its own task, which is why the two halves can be one call.
-   - *A fanned-out worker still closes in two halves.* If your host has a subagent/`Task` tool **and** a wave's tasks are each substantial enough that a separate worker would pay for its own startup, you may dispatch one subagent per task instead. Each makes only its task's edits and **appends its own finish and nothing more** — `--task <TaskID> --kind complete --by ai --did … --files … --append`. Workers never fold: two writers on the shared file is the race the append log exists to prevent. As each result returns, you run `--materialize` yourself. For the common case (small files, quick edits) the overhead does **not** pay off, so inline is both the default and usually the faster choice. Either way the result is identical.
+   `--close-task` appends the finish and folds it in one call: the panel updates and the task's `tasks.md` box is checked (never hand-edit the checkbox). It is the main agent closing its own task, which is why the two halves can be one call. The result is identical to the fanned-out path; only what you had to read to get there differs.
 
-4. **After each wave, reconcile, then cross the join line.** Type-check/build the wave's files together and fix any seam drift, then run `--materialize` once more as a backstop — it is idempotent, so re-folding never double-counts, and it catches any finish whose fold was missed. `tasks.md` is owned only through `--materialize` (the script flips the boxes), so it never diverges from the journal. Now move past the `⟶ Wait` line to the next wave.
+5. **At each join line, reconcile before crossing it.** Type-check or build the phase's files together and fix any seam drift — a worker that changed an interface another assumed is exactly what this catches — then run `--materialize` once more as a backstop. It is idempotent, so re-folding never double-counts, and it catches any finish whose fold was missed. `tasks.md` is owned only through `--materialize`, so it never diverges from the journal.
 
-5. **Run the project's own checks before you call this done.** Validating against the spec's **Functional Requirements** and **Success Criteria** by reading is not validation — a test you wrote and never executed is a guess about your own code. Run the suite and the type-check/build the project actually uses (read them from its `package.json` scripts, `Makefile`, or the repo's own instructions; do not invent a command).
+6. **Run the project's own checks before you call this done.** Validating against the spec's **Functional Requirements** and **Success Criteria** by reading is not validation — a test you wrote and never executed is a guess about your own code. Run the suite and the type-check/build the project actually uses (read them from its `package.json` scripts, `Makefile`, or the repo's own instructions; do not invent a command).
 
    - **A test you authored that fails is your task, not a follow-up.** Fix it now. Shipping a red suite is a defect the run introduced, and it is the single most common way a finished-looking run is not finished.
    - **A pre-existing test your change invalidated is also yours.** Renaming what a component shows breaks the test asserting the old text; updating it is part of the change, not scope creep.
@@ -97,7 +109,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
    Then report a short summary of what was built and anything left undone.
 
-6. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
+7. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
      "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
@@ -115,7 +127,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    One `--verified` per real check (tests, build, manual pass — include warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction — on a clean run record none (the empty list is itself the signal). All additive and de-duped; re-runs never duplicate.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
-7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
+8. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
 
    **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced — fix it, or leave the spec at `implemented` and say why. Completing on red is how a run that looks finished ships broken code, and the completed status is the one signal a reader trusts without opening anything. Where the checks genuinely could not be run, record that as a concern before completing, so the state says "finished, unverified" rather than implying "finished, verified". Run from the repository root (the feature directory resolves on its own):
    ```bash
@@ -184,8 +196,6 @@ Record every boundary by **running the writer script**, never by editing `.spec-
 
 - **Never write the next step's start.** The next command owns it; writing it here renders a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
-
-**Nothing follows.** This step's own final node wrote `completed`; the run is over.
 
 <!-- speckit-companion:part self-advance -->
 ## Self-advance — hand off to the next step

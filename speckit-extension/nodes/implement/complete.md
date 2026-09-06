@@ -5,7 +5,7 @@ kind: control
 command: implement
 reads: []
 ---
-7. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
+8. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
 
    **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced — fix it, or leave the spec at `implemented` and say why. Completing on red is how a run that looks finished ships broken code, and the completed status is the one signal a reader trusts without opening anything. Where the checks genuinely could not be run, record that as a concern before completing, so the state says "finished, unverified" rather than implying "finished, verified". Run from the repository root (the feature directory resolves on its own):
    ```bash
