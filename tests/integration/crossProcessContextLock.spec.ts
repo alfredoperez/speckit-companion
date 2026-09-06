@@ -204,6 +204,30 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         expect(fs.existsSync(lock)).toBe(false);
     });
 
+    it('both halves agree on the lock root whatever temporary directory they were given', () => {
+        // They read the same environment variable, so they agree whenever their
+        // environments do — and silently stop sharing a lock when they do not,
+        // which is a lost write with nothing to say it happened.
+        const { specDir } = makeCell();
+        const target = path.join(specDir, '.spec-context.json');
+        const ours = specContextLockPath(target);
+
+        const ask = (env: NodeJS.ProcessEnv): string =>
+            execFileSync('python3', [
+                '-c',
+                'import sys;sys.path.insert(0,"speckit-extension/scripts");'
+                + 'import spec_context as sc;from pathlib import Path;'
+                + 'print(sc._lock_path(Path(sys.argv[1])))',
+                target,
+            ], { encoding: 'utf-8', env, cwd: process.cwd() }).trim();
+
+        expect(ask({ ...process.env })).toBe(ours);
+        expect(ask({ ...process.env, TMPDIR: '/var/folders/zz/nowhere/T' })).toBe(ours);
+        const stripped = { ...process.env };
+        delete stripped.TMPDIR;
+        expect(ask(stripped)).toBe(ours);
+    });
+
     it('a live holder from another pid scope is waited for, not read as dead', async () => {
         // Two containers sharing one temp dir number processes differently, so
         // the holder's pid is meaningless here and frequently unused. Taking the

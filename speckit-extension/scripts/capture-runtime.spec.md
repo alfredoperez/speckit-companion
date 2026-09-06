@@ -332,6 +332,15 @@ Ordering SHALL NOT be applied to a step outside the canonical order: the canonic
 - **WHEN** the write is attempted
 - **THEN** it is refused by name rather than defaulting to another step
 
+### Both writers resolve the lock to one place, whatever environment they were given
+<!-- touches: speckit-extension/scripts/spec_context.py -->
+
+Where a spec's write lock lives SHALL NOT depend on the temporary directory the resolving process happens to have. Both halves read the same environment, so deriving it that way makes them agree only when their environments do, and stop sharing a lock silently when they do not — which is the lost write the lock exists to prevent, with nothing to say it happened. A terminal reached over a connection, from a wrapper, or inside a container is exactly the case that differs. A fixed root is the only way two processes that never meet can be sure they queue on one file, and it is what makes the directory's shared-host permissions load-bearing rather than decorative.
+
+#### Scenario: the editor and a terminal were given different temporary directories
+- **WHEN** each resolves where the lock lives
+- **THEN** they resolve to the same file
+
 ### The write lock is released once, after the publish, on whichever path ran
 
 A context write SHALL hold its lock until the publish has succeeded or failed, on every code path including the fallback one. A release attached to the first attempt let the fallback path publish unlocked, which is precisely the window the lock exists to close.

@@ -383,7 +383,15 @@ def _lock_path(target: Path) -> Path:
     import tempfile
 
     key = hashlib.sha256(str(target.resolve()).encode("utf-8")).hexdigest()[:32]
-    root = Path(tempfile.gettempdir()) / "speckit-companion-locks"
+    # `/tmp` on posix, not the temporary directory this process happens to have.
+    # Both halves read the same environment variable, so they agree whenever
+    # their environments do — and silently stop sharing a lock when they do not,
+    # which is a lost write with nothing to say it happened. A fixed root is the
+    # only way two processes that never meet can be sure they queue on one file.
+    root = Path(
+        "/tmp" if os.name == "posix" and os.path.isdir("/tmp")
+        else tempfile.gettempdir()
+    ) / "speckit-companion-locks"
     root.mkdir(parents=True, exist_ok=True)
     # Sticky and world-writable, the way /tmp itself is: on a shared host the
     # first user to create this must not lock every other user out of locking.
