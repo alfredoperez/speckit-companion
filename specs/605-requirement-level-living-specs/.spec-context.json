@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "A living spec is read one requirement at a time",
   "branch": "605-requirement-level-living-specs",
-  "currentStep": "plan",
-  "status": "planning",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
   "history": [
     {
       "step": "specify",
@@ -32,6 +32,41 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-09-06T00:14:40.402Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:16:41.004Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:16:58.568Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T00:17:08.738Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:17:59.520Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:18:14.813Z"
     }
   ],
   "unattended": true,
@@ -48,49 +83,64 @@
   "last_action": "living specs loaded (capture-runtime, spec-viewer, companion-commands, viewer-ui, specs)",
   "coverage": {
     "FR-001": {
-      "title": "A requirement MAY carry one marker naming the files it describes, ignored by every existing reader."
+      "title": "A requirement MAY carry one marker naming the files it describes, ignored by every existing reader.",
+      "tasks": "T003,T004,T010"
     },
     "FR-002": {
-      "title": "A requirement with no marker is treated as describing every file its capability claims."
+      "title": "A requirement with no marker is treated as describing every file its capability claims.",
+      "tasks": "T011,T015"
     },
     "FR-003": {
-      "title": "A marked spec contributes its purpose, matching requirements, and unmarked requirements — nothing else."
+      "title": "A marked spec contributes its purpose, matching requirements, and unmarked requirements — nothing else.",
+      "tasks": "T011,T012,T013,T015"
     },
     "FR-004": {
-      "title": "A spec with no markers loads whole, unchanged from today."
+      "title": "A spec with no markers loads whole, unchanged from today.",
+      "tasks": "T011,T015"
     },
     "FR-005": {
-      "title": "A run records which requirements it loaded, without changing the existing capability record shape."
+      "title": "A run records which requirements it loaded, without changing the existing capability record shape.",
+      "tasks": "T014,T016"
     },
     "FR-006": {
-      "title": "Adoption writes a marker on each requirement it produces."
+      "title": "Adoption writes a marker on each requirement it produces.",
+      "tasks": "T008"
     },
     "FR-007": {
-      "title": "A sync writes or widens the marker of each requirement it updates."
+      "title": "A sync writes or widens the marker of each requirement it updates.",
+      "tasks": "T009"
     },
     "FR-008": {
-      "title": "Requirement parsing ignores fenced code blocks and both implementations count the same headings."
+      "title": "Requirement parsing ignores fenced code blocks and both implementations count the same headings.",
+      "tasks": "T003,T004,T005,T006,T007"
     },
     "FR-009": {
-      "title": "A living spec renders an outline of its requirement headings in document order."
+      "title": "A living spec renders an outline of its requirement headings in document order.",
+      "tasks": "T018,T021"
     },
     "FR-010": {
-      "title": "An outline row shows known coverage, and shows unknown coverage as unknown rather than none."
+      "title": "An outline row shows known coverage, and shows unknown coverage as unknown rather than none.",
+      "tasks": "T018,T019,T021"
     },
     "FR-011": {
-      "title": "An outline row indicates how many files its marker names, and nothing where there is no marker."
+      "title": "An outline row indicates how many files its marker names, and nothing where there is no marker.",
+      "tasks": "T018,T021"
     },
     "FR-012": {
-      "title": "Activating an outline row moves the view to that requirement, by pointer and keyboard."
+      "title": "Activating an outline row moves the view to that requirement, by pointer and keyboard.",
+      "tasks": "T020,T021"
     },
     "FR-013": {
-      "title": "A feature spec does not render the outline."
+      "title": "A feature spec does not render the outline.",
+      "tasks": "T020,T021"
     },
     "FR-014": {
-      "title": "Fold, drift, sync, coverage and adoption behave identically with or without markers."
+      "title": "Fold, drift, sync, coverage and adoption behave identically with or without markers.",
+      "tasks": "T010,T026"
     },
     "FR-015": {
-      "title": "The on-disk format, the registry and its ordering do not otherwise change."
+      "title": "The on-disk format, the registry and its ordering do not otherwise change.",
+      "tasks": "T010,T017,T026"
     }
   },
   "intent": "Make the requirement, not the file, the unit a living spec is loaded and navigated by, so a spec of any size costs a run only the requirements that matter.",
@@ -112,5 +162,42 @@
     "projectedTasks": 24,
     "scopeSignal": "larger",
     "verdict": "normal"
+  },
+  "approach": "A requirement gains an optional HTML-comment marker naming the files it describes; adoption and sync write it as a by-product. The load step then contributes a capability's purpose, the requirements whose marker matches a changed file, and every unmarked requirement, instead of the whole spec. The viewer derives a requirement outline from the pass that already builds requirement cards.",
+  "decisions": [
+    {
+      "decision": "The marker is an HTML comment on the line under the requirement heading",
+      "why": "The hard constraint is that no existing reader changes behaviour; an HTML comment is invisible to every markdown renderer and matches the <!-- capability: … --> convention fold-back already uses",
+      "rejected": "Per-requirement frontmatter (impossible — document-level), a sidecar map (drifts on rename), an attribute on the heading (changes the join key fold-back and coverage match on)"
+    },
+    {
+      "decision": "Marker globs reuse each side existing registry matcher",
+      "why": "Two glob dialects in one feature is a bug generator, and a marker is the same kind of statement as a capability match list",
+      "rejected": "A stricter prefix-only form, or a new matcher tuned for markers — both would drift from registry semantics"
+    },
+    {
+      "decision": "Requirement slicing is implemented twice and pinned by one shared fixture set",
+      "why": "Forced — the viewer has no Python and the command bodies have no TypeScript; the risk is divergence not duplication, and core.spec.md already prescribes pinning two runtimes against shared cases",
+      "rejected": "Parse only in Python and round-trip from the viewer (slower, new failure mode at paint time); parse only in TS and shell out (command bodies must work with no extension installed)"
+    },
+    {
+      "decision": "An unmarked requirement is contributed by every load",
+      "why": "This is the safety property: a marker can only narrow, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one",
+      "rejected": "Unmarked means loaded only when nothing else matched — makes one requirement load depend on another marker"
+    },
+    {
+      "decision": "The outline is derived in the requirement-card pass",
+      "why": "The spec forbids a second parse, and that pass already walks every heading and already keys coverage by the same verbatim text, so a row and its card cannot disagree",
+      "rejected": "A separate outline component re-parsing the markdown — the exact mechanism by which the two could diverge"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Additive marker + selective load + an outline derived from the existing card pass; two parsers pinned by shared fixtures.",
+      "key_finding": "The manifest of what to load is already computable — the resolver knows the changed files and the renderer already walks every heading; the feature is mostly wiring what exists, plus one genuinely duplicated parser that has to be pinned."
+    },
+    "tasks": {
+      "summary": "26 tasks across 6 phases: a Foundational phase that pins the two parsers against shared fixtures blocks all three stories; markers are written before the load narrows on them, and the outline lands last."
+    }
   }
 }
