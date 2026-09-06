@@ -57,3 +57,45 @@ Phase 0. Every unknown the spec left open, settled with the reason.
 **Rationale**: Those bodies are assembled from nodes and frozen by `check-shape-parity.py`, so any edit reds the gate until the captures are re-blessed. Treating that as a task rather than a failure is the repo's own convention.
 
 **Alternatives considered**: Putting the selection logic entirely in the resolver so the node text never changes — attractive, and partly true: the resolver does the matching. But the node body is what tells the assistant to pass the changed files and read the returned slice, so it has to say so.
+
+## Baseline for SC-001 (measured before any change)
+
+Fourteen capabilities, **3,560 lines** across **208 requirements** — an average of 17 lines per requirement.
+
+| Capability | Lines | Requirements |
+| --- | ---: | ---: |
+| capture-runtime | 509 | 26 |
+| viewer-ui | 429 | 22 |
+| companion-commands | 371 | 16 |
+| specs | 359 | 19 |
+| core | 317 | 17 |
+| spec-viewer | 309 | 19 |
+| workflows | 201 | 15 |
+| ai-providers | 198 | 15 |
+| webview-shared | 160 | 10 |
+| steering | 152 | 12 |
+| editor-ui | 148 | 8 |
+| speckit-cli | 144 | 10 |
+| extension-services | 136 | 12 |
+| spec-editor | 127 | 7 |
+
+**The arithmetic SC-001 rests on.** A change touching one file in `capture-runtime` today costs 509 lines. If markers narrow it to a purpose section plus two or three requirements, that is roughly 20 lines of purpose plus 60 of requirement — about 80 lines, an **84% reduction**. The 60% target therefore has real headroom, and would still be met if a change matched as many as **nine** of the capability's 26 requirements.
+
+**Where the target is at risk**: a capability whose requirements are largely unmarked, since every unmarked requirement is contributed by every load. That is the deliberate safety property, not a defect — but it means the measured number depends on adoption, and this run's own record (five capabilities, about 1,900 lines loaded to describe a change to a handful of files) is the honest before-picture.
+
+## SC-001, measured after implementation
+
+Method: copy `capture-runtime.spec.md` (509 lines, 26 requirements — the worst case from the baseline) into a scratch registry, give each requirement a marker naming one of five capture scripts round-robin, then ask the real resolver what a change to one script contributes.
+
+| | Lines |
+| --- | ---: |
+| Whole spec, as today | 509 |
+| Purpose + the 6 matching requirements | 73 |
+| **Reduction** | **86%** |
+
+**SC-001 asked for 60%. The measured figure is 86%**, which matches the arithmetic in the baseline section rather than beating it by luck.
+
+Two honest caveats on the number:
+
+- **The marking is synthetic.** Round-robin across five scripts is a plausible distribution, not the real one. A capability whose requirements genuinely cluster on one file would narrow less; one whose requirements spread wider would narrow more. What the measurement establishes is that the mechanism delivers the order of magnitude the target assumed, not that every capability will hit 86%.
+- **The reduction depends on adoption, by design.** Every unmarked requirement is contributed to every load, so a spec that is half-marked narrows roughly half as much. That is the safety property, not a shortfall — and it means the number improves as adoption and sync write markers over time, rather than arriving all at once.

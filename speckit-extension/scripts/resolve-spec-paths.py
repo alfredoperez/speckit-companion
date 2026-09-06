@@ -127,6 +127,101 @@ def _glob_matches(pat: str, f: str) -> bool:
     return re.match(_glob_to_regex(pat), f) is not None
 
 
+#: `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading.
+_TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+
+
+def _without_fences(spec_text: str) -> list:
+    """Lines with fenced blocks removed, so an example in a snippet is never parsed."""
+    kept = []
+    in_fence = False
+    for line in spec_text.splitlines():
+        if re.match(r"^\s*(```|~~~)", line):
+            in_fence = not in_fence
+            continue
+        if not in_fence:
+            kept.append(line)
+    return kept
+
+
+def requirement_slices(spec_text: str) -> list:
+    """Every requirement in a spec, with the files its marker claims.
+
+    The Python half of a parser that must exist twice — the viewer has no Python
+    and the command bodies have no TypeScript. Both count the same headings off
+    the same fence-stripped text and are pinned against
+    `tests/fixtures/requirement-slices/`; a fixture only one side reads fails.
+    """
+    lines = _without_fences(spec_text)
+    start = next((i for i, l in enumerate(lines)
+                  if re.match(r"^##\s+Requirements\s*$", l)), None)
+    if start is None:
+        return []
+
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if re.match(r"^##(?!#)\s+", lines[i]):
+            end = i
+            break
+
+    out = []
+    i = start + 1
+    while i < end:
+        head = re.match(r"^###(?!#)\s+(.+?)\s*$", lines[i])
+        if not head:
+            i += 1
+            continue
+        j = i + 1
+        while j < end and not re.match(r"^###(?!#)\s+", lines[j]):
+            j += 1
+        body = lines[i + 1:j]
+        # Only the line immediately after the heading is a marker; one further
+        # down is body, because a spec may legitimately discuss a marker.
+        marker = _TOUCHES_RE.match(body[0]) if body else None
+        touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] if marker else None
+        out.append({"heading": head.group(1), "touches": touches, "body": body})
+        i = j
+    return out
+
+
+def requirements_for_change(slices: list, changed: list) -> list:
+    """Requirements whose marker matches a changed file, plus every unmarked one.
+
+    A marker can only narrow: an unmarked requirement is always contributed, so
+    a missing or too-narrow marker costs a run an extra requirement rather than
+    starving it of one.
+    """
+    files = [_posix(f) for f in changed]
+    out = []
+    for s in slices:
+        if not s.get("touches"):
+            out.append(s)
+            continue
+        if any(_glob_matches(g, f) for g in s["touches"] for f in files):
+            out.append(s)
+    return out
+
+
+def has_no_markers(slices: list) -> bool:
+    """True when a spec carries no marker at all, so it is read whole as before."""
+    return all(not s.get("touches") for s in slices)
+
+
+def purpose_section(spec_text: str) -> str:
+    """The `## Purpose` section's text, or an empty string when there is none."""
+    lines = _without_fences(spec_text)
+    start = next((i for i, l in enumerate(lines)
+                  if re.match(r"^##\s+Purpose\s*$", l)), None)
+    if start is None:
+        return ""
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if re.match(r"^##(?!#)\s+", lines[i]):
+            end = i
+            break
+    return "\n".join(lines[start:end]).strip()
+
+
 def matches(cap: dict, f: str) -> bool:
     """File belongs to capability: any `match` glob, minus any `exclude` glob."""
     f = _posix(f)
@@ -365,12 +460,59 @@ def render_human(result: dict) -> str:
     return _fmt_list(result.get("orphans", []))
 
 
+def requirements_for_changed(files: list, living: dict, root: str) -> list:
+    """What a load should contribute, per capability, for a set of changed files.
+
+    A capability whose spec carries no marker anywhere is reported `whole`, and
+    the caller reads the file exactly as it does today. Otherwise the caller gets
+    the Purpose section plus the requirements to contribute — those whose marker
+    matches, and every unmarked one.
+
+    A capability whose markers all miss still appears, with its purpose and no
+    requirements: it was consulted, and completion accounting must still see it.
+    """
+    out = []
+    for entry in match_changed(files, living, root):
+        spec_rel = entry.get("spec") or ""
+        item = {
+            "name": entry.get("name"),
+            "spec": spec_rel,
+            "exists": entry.get("exists", False),
+            "whole": True,
+            "purpose": None,
+            "requirements": [],
+        }
+        if not item["exists"]:
+            out.append(item)
+            continue
+        try:
+            with open(os.path.join(root, spec_rel), encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            out.append(item)
+            continue
+        slices = requirement_slices(text)
+        if has_no_markers(slices):
+            out.append(item)
+            continue
+        picked = requirements_for_change(slices, files)
+        item["whole"] = False
+        item["purpose"] = purpose_section(text) or None
+        item["requirements"] = [
+            {"heading": s["heading"], "matched": bool(s.get("touches"))} for s in picked
+        ]
+        out.append(item)
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Resolve Companion living-spec paths.")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--changed", nargs="*", help="changed files -> capabilities in scope")
     ap.add_argument("--all", action="store_true", help="every capability (union) + orphans")
     ap.add_argument("--orphans", action="store_true", help="orphan spec files (either layout)")
+    ap.add_argument("--requirements-for", action="store_true",
+                    help="with --changed: what each capability should contribute, sliced by requirement")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable JSON object (default: a concise human list)")
     args = ap.parse_args(argv)
@@ -385,6 +527,8 @@ def main(argv=None) -> int:
             result = {"orphans": []}
         elif args.all:
             result = {"capabilities": [], "orphans": []}
+        elif args.requirements_for:
+            result = {"changed": args.changed or [], "capabilities": []}
         else:
             result = {"changed": args.changed or [], "matched": []}
         emit(result)
@@ -397,6 +541,10 @@ def main(argv=None) -> int:
             orphans = find_orphans(living, root)
             result = {"capabilities": discover_all(living, root, orphans),
                       "orphans": orphans}
+        elif args.requirements_for:
+            files = args.changed or []
+            result = {"changed": files,
+                      "capabilities": requirements_for_changed(files, living, root)}
         else:
             files = args.changed or []
             result = {"changed": files, "matched": match_changed(files, living, root)}

@@ -440,3 +440,19 @@ Where a capture stands in for editor chrome the webview does not build — the s
 - **WHEN** the pane the frame is about renders
 - **THEN** it shows that view's title-bar actions in the contributed order, and the collapse-or-expand slot matches the tree on screen
 - **AND** the neighbouring panes stay bare
+
+### A living spec is navigable by requirement
+
+A living spec SHALL render an outline of its requirement headings, in document order, derived in the same pass that builds the requirement cards — a second parse is how a row and its card come to disagree. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of files its marker names where it carries one. Activating a row SHALL move the view to that requirement, by pointer and by keyboard alike. A feature spec SHALL NOT render the outline.
+
+#### Scenario: a large living spec is opened
+- **WHEN** it renders
+- **THEN** every requirement appears once in the outline, in document order
+
+#### Scenario: a requirement whose coverage was never computed
+- **WHEN** its row renders
+- **THEN** it reads as unknown rather than as zero, which would mean none
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** the cards and the outline are built
+- **THEN** it is neither a card nor a row, matching what every other reader counts

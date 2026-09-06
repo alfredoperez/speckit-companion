@@ -523,3 +523,27 @@ Every author node declares the document it writes, and a build collects those de
 #### Scenario: this install's build declared nothing
 - **WHEN** the manifest is absent or cannot be read
 - **THEN** the check is reported as skipped with that reason, and no finding is emitted
+
+### A living-spec load is sliced by requirement, and a spec with no markers is read whole
+
+The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
+
+#### Scenario: a marked capability and a change it claims
+- **WHEN** a load resolves a capability whose requirements carry markers
+- **THEN** it reports the purpose plus the matching and unmarked requirements, and not the whole file
+
+#### Scenario: a capability with no markers
+- **WHEN** a load resolves it
+- **THEN** it is reported as read whole, byte-identical to the behaviour before markers existed
+
+### Which requirements a run read is recorded beside which capabilities it loaded
+
+The capture runtime SHALL record the requirement headings a run read, per capability, as a sibling of the existing loaded-capability list rather than as a change to it — that list is a plain list of names several readers already consume, including the completion accounting that requires every loaded capability to end with a delta or a recorded skip. A capability read whole receives no entry, because naming all of its requirements would say nothing the capability record does not. The write is additive and idempotent, and a failure to record it MUST NEVER fail the host command.
+
+#### Scenario: a capability read by requirement
+- **WHEN** the recorder runs
+- **THEN** the sibling record names the requirements read, and the capability list keeps its plain-list shape
+
+#### Scenario: a capability read whole
+- **WHEN** the recorder runs
+- **THEN** the capability is listed as loaded and the sibling record carries no entry for it

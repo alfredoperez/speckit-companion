@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "A living spec is read one requirement at a time",
   "branch": "605-requirement-level-living-specs",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -67,6 +67,228 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-09-06T00:18:14.813Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-06T00:18:21.261Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:18:54.677Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:19:22.439Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:19:56.147Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:20:38.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:21:02.643Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:21:43.355Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:21:58.274Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:22:23.106Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:22:35.449Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:23:48.210Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:25:54.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:26:19.411Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:26:38.122Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:27:33.906Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:27:54.184Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:28:09.477Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:29:26.414Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:30:19.339Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:30:39.624Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:31:42.959Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:31:43.160Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:33:28.813Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:33:48.334Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:34:15.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:34:40.283Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-06T00:36:20.468Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-06T00:36:20.562Z"
     }
   ],
   "unattended": true,
@@ -78,9 +300,21 @@
       "companion-commands",
       "viewer-ui",
       "specs"
+    ],
+    "skipped": [
+      {
+        "name": "spec-viewer",
+        "reason": "read as context for how the living panel presents a capability, but this feature changed nothing in it — the outline lives in the webview renderer (viewer-ui), not the panel provider"
+      }
+    ],
+    "synced": [
+      "capture-runtime",
+      "companion-commands",
+      "specs",
+      "viewer-ui"
     ]
   },
-  "last_action": "living specs loaded (capture-runtime, spec-viewer, companion-commands, viewer-ui, specs)",
+  "last_action": "26/26 tasks done — all suites green, SC-001 measured at 86%",
   "coverage": {
     "FR-001": {
       "title": "A requirement MAY carry one marker naming the files it describes, ignored by every existing reader.",
@@ -189,6 +423,16 @@
       "decision": "The outline is derived in the requirement-card pass",
       "why": "The spec forbids a second parse, and that pass already walks every heading and already keys coverage by the same verbatim text, so a row and its card cannot disagree",
       "rejected": "A separate outline component re-parsing the markdown — the exact mechanism by which the two could diverge"
+    },
+    {
+      "decision": "The outline uses index-based anchors rather than the requirement title in an attribute",
+      "why": "escapeHtml does not escape attribute quotes, which CLAUDE.md names as a live hazard; the existing card already interpolates a title into data-req, and new code should not repeat it",
+      "rejected": "Reusing the existing data-req title as the anchor"
+    },
+    {
+      "decision": "Made the viewer card pass fence-aware",
+      "why": "It counted a ### inside a code block as a requirement where the resolver never did — the outline and the coverage denominator would have disagreed, which is precisely what FR-008 forbids",
+      "rejected": "Fixing only the outline and leaving the cards counting fenced headings"
     }
   ],
   "step_summaries": {
@@ -198,6 +442,236 @@
     },
     "tasks": {
       "summary": "26 tasks across 6 phases: a Foundational phase that pins the two parsers against shared fixtures blocks all three stories; markers are written before the load narrows on them, and the outline lands last."
+    },
+    "implement": {
+      "summary": "Requirement slicing in both runtimes pinned by shared fixtures, a --requirements-for resolver mode wired into both load steps, markers written by adopt and sync, and an outline derived from the existing card pass."
     }
-  }
+  },
+  "currentTask": "T026",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Eight parsing fixtures plus expected.json — the contract both runtimes read; a fixture only one suite exercises fails the drift guard",
+      "files": [
+        "speckit-extension/tests/fixtures/requirement-slices/"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Measured the baseline: 3,560 lines across 208 requirements in 14 capabilities; capture-runtime at 509/26 is the worst case, and the arithmetic gives SC-001 real headroom (84% on a 2-3 requirement match)",
+      "files": [
+        "specs/605-requirement-level-living-specs/research.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added requirementSlices/requirementsForChange/hasNoMarkers beside requirementIds, reusing its fence rule and the model's own glob matcher",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added the Python twin (requirement_slices, requirements_for_change, has_no_markers, purpose_section) reusing the resolver's own _glob_matches and fence rule",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Python suite reads all eight shared fixtures plus expected.json; 9 tests including that slicing counts the same headings as the coverage denominator",
+      "files": [
+        "speckit-extension/tests/test_resolve_spec_paths.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "TypeScript suite reads the same eight fixtures and expected.json; 17 tests covering slicing, narrowing, and that fences never inflate either counter",
+      "files": [
+        "src/features/specs/__tests__/requirementSlices.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Drift guard: expected.json must name every fixture on disk, and the TS suite must iterate that manifest rather than a hand-kept list — so a new fixture cannot be covered by only one runtime",
+      "files": [
+        "speckit-extension/tests/test_resolve_spec_paths.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Adoption now writes a touches marker under each requirement heading, from the files that requirement was derived from, with the position rule and the narrow-is-safe rationale stated",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-adopt.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Sync widens the touches marker of each requirement it updates — union with what it already named, never narrowing, with the reason stated",
+      "files": [
+        "speckit-extension/commands/speckit.companion.living-sync.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Additive-contract tests: the fold reports identical counts and matches the same heading with or without markers; an unmarked spec still loads whole; an unmarked requirement survives a change matching nothing",
+      "files": [
+        "speckit-extension/tests/test_living_specs.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added --requirements-for to the resolver: per capability its purpose, the requirements to contribute, and whole=true when the spec carries no marker; verified narrowing and the always-loaded unmarked requirement on a scratch registry",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "The specify load step asks for --requirements-for and reads only the named requirements, with a whole-file fallback so narrowing can never cost the brief",
+      "files": [
+        "speckit-extension/nodes/specify/load-living-specs.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "The plan load step reads by requirement too, reusing the recorded capability list and falling back to whole-file reads if the resolver is unavailable",
+      "files": [
+        "speckit-extension/nodes/plan/gather-context.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Recorder writes livingSpecs.loadedRequirements as a sibling via a new capture writer; loaded keeps its shape, a whole-read capability gets no entry, and a failure there can never fail the command",
+      "files": [
+        "speckit-extension/scripts/capture.py",
+        "speckit-extension/scripts/record-living-specs.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Resolver-mode tests: a marked spec narrows to matching plus unmarked, a non-matching change still gets the unmarked one, no markers reports whole, a missing spec never raises, and matched distinguishes a hit from an unmarked requirement",
+      "files": [
+        "speckit-extension/tests/test_resolve_spec_paths.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Recorder tests: the sibling is written per capability, loaded keeps its plain-list shape, a whole read records no entry, and re-recording is a no-op",
+      "files": [
+        "speckit-extension/tests/test_record_living_specs.py"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Regenerated the 14 frozen command bodies after the two node edits; shape-parity green and 1247 spec-kit tests pass",
+      "files": [
+        "speckit-extension/tests/golden/commands/",
+        "speckit-extension/commands/"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Outline derived inside the requirement-card pass: one row per heading, coverage from the same heading-keyed store the badges read, file count from the marker, index-based anchors rather than a title in an attribute",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Outline styling: sticky column beside the cards, static above them under 760px, full ellipsis trio on a long heading, coverage as a filled dot vs an unknown ring (shape not colour alone)",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Made the card pass fence-aware so a ### inside a code block is not a requirement — the viewer was counting them where the resolver never did; the outline is living-mode only because the whole path already is",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Eight outline tests: every requirement once in order, row-to-card anchors, file counts, unknown-never-zero coverage, known vs unknown distinguishable, no section means no outline, fenced heading is not a row, landmark announced",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Story driving the outline through the real renderer on the largest living spec, plus a short marked capability so the file count and a long-heading ellipsis are both visible",
+      "files": [
+        "webview/src/spec-viewer/FullViewer.stories.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Measured SC-001 on the real parser against the worst-case capability: 509 lines to 73, an 86% reduction against a 60% target, with the synthetic-marking and adoption-dependence caveats recorded",
+      "files": [
+        "specs/605-requirement-level-living-specs/research.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Documented the marker in the living-specs section: what it looks like, that adoption and sync write it, that an unmarked requirement is read by every run so a marker can only narrow, and the measured 509-to-73 figure",
+      "files": [
+        "speckit-extension/README.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Release notes on both halves: the spec-kit side gains the marker and the narrowed load with the measured figure; the VS Code side gains the outline",
+      "files": [
+        "CHANGELOG.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Validation: 2743 JS tests, 1247 Python (8 skipped), shape-parity OK, command-emissions OK across 19 commands, both typechecks clean"
+    }
+  },
+  "verified": [
+    {
+      "what": "VS Code extension + webview suite",
+      "command": "npm test",
+      "result": "2743 passed"
+    },
+    {
+      "what": "spec-kit extension suite",
+      "command": "python3 -m pytest speckit-extension/tests -q",
+      "result": "1247 passed, 8 skipped"
+    },
+    {
+      "what": "command shape parity after the two node edits",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 speckit-extension/scripts/check-command-emissions.py",
+      "result": "OK — 19 commands agree across 7 install areas, 8 agent records, 2 documents"
+    },
+    {
+      "what": "typecheck, both projects",
+      "command": "npx tsc -p ./ --noEmit && npx tsc -p tsconfig.webview.json --noEmit",
+      "result": "clean"
+    },
+    {
+      "what": "SC-001 measured on the worst-case capability",
+      "command": "resolver --requirements-for against a marked copy of capture-runtime.spec.md",
+      "result": "509 lines to 73 — an 86% reduction against a 60% target"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "SC-001 was measured with synthetic round-robin markers, not real adoption. The mechanism delivers the expected order of magnitude; the per-capability figure will vary with how requirements actually cluster.",
+      "step": "implement"
+    },
+    {
+      "note": "No capability carries markers yet, so today every load still reports whole and reads the full spec. The benefit arrives as adoption and sync write markers over time, which is the deliberate gradual path.",
+      "step": "implement"
+    }
+  ]
 }

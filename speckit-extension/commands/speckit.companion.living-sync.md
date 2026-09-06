@@ -38,6 +38,15 @@ For **each** capability with drifted files, edit its spec file (the `spec` path)
 
 > The capability has drifted — the code it describes changed since the spec was last committed (working-tree changes included). **UPDATE, do not regenerate**: keep every requirement, clarification, and acceptance scenario already written, and revise only what the changed files require. Read the listed changed files, work out what behavior was added, changed, or removed, and reflect exactly that. A file deleted from the working tree means its behavior was **removed** — reflect the removal rather than describing the file as if it still existed. Never rewrite untouched sections, never reorder requirements, and never flatten hand-written detail into a fresh draft.
 
+**Widen each updated requirement's `touches` marker.** A requirement you revised now also describes the files that caused the revision, so its marker must say so — otherwise a later run narrowing on markers would skip the very requirement this change just made relevant. On the line immediately under the heading:
+
+```markdown
+### Pages delegate their chrome to a layout primitive
+<!-- touches: src/layout/**, src/pages/shell.tsx -->
+```
+
+**Widen, never narrow.** Write the union of what the marker already named and the changed files you folded in. A requirement that used to describe a file it no longer touches keeps claiming it until someone edits the marker by hand — that costs a run one extra requirement, where narrowing could cost it a needed one. A requirement carrying no marker is read by every run, so leaving one unmarked is always safe; add one only when the changed files genuinely tell you what that requirement is about.
+
 Work through the capabilities one at a time. If one capability's update fails (unreadable file, unresolvable content), warn, skip it, and continue with the rest — one bad capability never blocks the others.
 
 ### 3. Handle the skipped capabilities honestly

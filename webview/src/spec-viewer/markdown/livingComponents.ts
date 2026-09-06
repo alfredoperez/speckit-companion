@@ -186,7 +186,7 @@ export function preprocessLivingScenarios(markdown: string): string {
 const HAS_INFERRED = /\[inferred\]/i;
 const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 
-function buildRequirementCard(heading: string, blockLines: string[]): string[] {
+function buildRequirementCard(heading: string, blockLines: string[], index: number): string[] {
     // Lift the `[inferred]` metadata tag out of the prose into a confidence
     // badge. The tag can sit in the heading (`### Title [inferred]`) or a body
     // line; either way it's stripped from the visible text. An untagged
@@ -221,11 +221,51 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
         : [];
 
     return [
-        `<div class="living-req-card" data-req="${escapeHtml(title)}">`,
+        `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}" data-req="${escapeHtml(title)}">`,
         `### ${title}`,
         ...metaLine,
         ...body,
         '</div>',
+    ];
+}
+
+/** `<!-- touches: a/**, b.ts -->` — the marker sits directly under the heading. */
+const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
+/** How many files a requirement's marker names, or 0 when it carries none. */
+function touchesCount(blockLines: string[]): number {
+    const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
+    return m ? m[1].split(',').map((g) => g.trim()).filter(Boolean).length : 0;
+}
+
+/**
+ * The outline: one row per requirement, so a 400-line spec is navigable without
+ * scrolling. Built in the same pass that builds the cards, from the same
+ * headings and the same heading-keyed coverage store the badges read — a second
+ * parse is exactly how a row and its card would come to disagree.
+ */
+function buildOutline(rows: Array<{ title: string; files: number }>): string[] {
+    if (rows.length === 0) return [];
+    const items = rows.map(({ title, files }, i) => {
+        const cov = livingCoverage[title];
+        const known = cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0';
+        // Unknown coverage renders as unknown, never as zero — a missing count
+        // and a genuine zero mean opposite things to a reader.
+        const dot = known
+            ? `<span class="living-outline__cov" title="${escapeHtml(String(cov))}"></span>`
+            : '<span class="living-outline__cov living-outline__cov--unknown" title="coverage unknown"></span>';
+        const count = files > 0
+            ? `<span class="living-outline__files">${files}</span>`
+            : '';
+        return `<li><a class="living-outline__row" href="#living-req-${i}">`
+            + `${dot}<span class="living-outline__label">${escapeHtml(title)}</span>${count}`
+            + '</a></li>';
+    });
+    return [
+        '<nav class="living-outline" aria-label="Requirements">',
+        `<ol>${items.join('')}</ol>`,
+        '</nav>',
+        '',
     ];
 }
 
@@ -249,22 +289,52 @@ export function preprocessLivingRequirements(markdown: string): string {
             }
         }
 
-        const out: string[] = lines.slice(0, secStart + 1);
+        // A `###` inside a fenced block is an example, not a requirement. The
+        // resolver's parser already ignores those, and the outline shares the
+        // coverage denominator's headings — a viewer that counted one more would
+        // put a row on the page that no other reader believes exists.
+        const fenced = new Set<number>();
+        let inFence = false;
+        for (let k = secStart + 1; k < secEnd; k++) {
+            if (/^\s*(```|~~~)/.test(lines[k])) {
+                inFence = !inFence;
+                fenced.add(k);
+                continue;
+            }
+            if (inFence) fenced.add(k);
+        }
+        const isHeading = (k: number): boolean =>
+            !fenced.has(k) && /^###(?!#)\s+/.test(lines[k]);
+
+        const cards: string[] = [];
+        const rows: Array<{ title: string; files: number }> = [];
         let i = secStart + 1;
+        let index = 0;
         while (i < secEnd) {
-            const head = lines[i].match(/^###(?!#)\s+(.+)$/);
+            const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+)$/) : null;
             if (!head) {
-                out.push(lines[i]);
+                cards.push(lines[i]);
                 i++;
                 continue;
             }
             const heading = head[1];
             let j = i + 1;
-            while (j < secEnd && !/^###(?!#)\s+/.test(lines[j])) j++;
-            out.push(...buildRequirementCard(heading, lines.slice(i + 1, j)));
+            while (j < secEnd && !isHeading(j)) j++;
+            const blockLines = lines.slice(i + 1, j);
+            rows.push({
+                title: heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim(),
+                files: touchesCount(blockLines),
+            });
+            cards.push(...buildRequirementCard(heading, blockLines, index));
+            index++;
             i = j;
         }
-        out.push(...lines.slice(secEnd));
+        const out: string[] = [
+            ...lines.slice(0, secStart + 1),
+            ...buildOutline(rows),
+            ...cards,
+            ...lines.slice(secEnd),
+        ];
         return out.join('\n');
     });
 }

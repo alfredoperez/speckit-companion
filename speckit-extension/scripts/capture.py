@@ -94,6 +94,47 @@ def set_living_specs_loaded(feature_dir: Path, names: list[str]) -> Path | None:
     return target
 
 
+def set_living_specs_loaded_requirements(feature_dir: Path, per_cap: dict) -> Path | None:
+    """Record which REQUIREMENTS a run read, per capability.
+
+    A sibling of `livingSpecs.loaded`, never a change to it: that list is a plain
+    list of names several readers already consume — including the completion
+    accounting that requires every loaded capability to end with a delta or a
+    recorded skip — so widening its element type would break each of them for a
+    feature none of them care about.
+
+    Written only for a capability read by requirement. A capability read whole
+    gets no entry, because naming all of its requirements would say nothing.
+    Merges per capability, de-duping while preserving order, so a re-run is a
+    no-op."""
+    cleaned = {
+        str(cap).strip(): [str(h) for h in heads if str(h).strip()]
+        for cap, heads in (per_cap or {}).items()
+        if str(cap).strip() and heads
+    }
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    block = ctx.get("livingSpecs")
+    if not isinstance(block, dict):
+        block = {}
+    prior = block.get("loadedRequirements")
+    merged = dict(prior) if isinstance(prior, dict) else {}
+    for cap, heads in cleaned.items():
+        seen: list = []
+        for h in list(merged.get(cap) or []) + heads:
+            if h not in seen:
+                seen.append(h)
+        merged[cap] = seen
+    block["loadedRequirements"] = merged
+    ctx["livingSpecs"] = block
+    atomic_write(target, ctx)
+    return target
+
+
 def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
     """Record the capability names whose living specs were folded into on completion.
 

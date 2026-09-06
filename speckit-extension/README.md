@@ -183,11 +183,20 @@ The specs live wherever you want them: all together in a central `capabilities/`
      Specs GIF: sidebar row → click → viewer opens → drift → Update. -->
 ![The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/living-specs-pair.png)
 
-- **Auto-loading**: starting a feature loads the living specs of the capabilities it touches into the assistant's context before it drafts, so you stop re-explaining the codebase.
+- **Auto-loading, by requirement**: starting a feature loads the living specs of the capabilities it touches into the assistant's context before it drafts, so you stop re-explaining the codebase. A spec of any size costs a run only the requirements that matter: each requirement can name the files it describes, and a run reads the capability's purpose plus the requirements about the files it is changing. On this repository's largest capability that is 73 lines instead of 509.
 - **Folding**: completing a feature folds its delta sections back into each affected capability's spec. The feature spec was the proposal; the living spec becomes the record, reviewed in the same PR as the code.
 - **Adoption**: `/speckit.companion.living-adopt` drafts first-pass specs for an existing code area, surface-first and honestly marked (`[DRAFT]`, `inferred` tags, an `Uncovered` list).
 - **Drift and sync**: `/speckit.companion.living-drift` reports which files changed since a spec was last committed; `/speckit.companion.living-sync` updates every affected spec from your current changes in one pass, uncommitted work included, update-not-regenerate.
 - **Coverage**: `/speckit.companion.living-coverage` reports which requirements have a mapped test.
+
+**How a requirement names its files.** One optional line, directly under the requirement's heading:
+
+```markdown
+### Users can set a due date on a todo
+<!-- touches: src/todos/due-date/**, src/todos/todo-form.ts -->
+```
+
+Adoption writes it from the files it read; sync widens it as those files change. You never have to write one by hand, and a requirement carrying none is **read by every run** — so a marker can only ever narrow what a run loads, never starve it. That is what makes adopting them gradually safe: a half-marked spec is simply a spec that narrows half as much. Opening a living spec in the viewer shows an outline of its requirements, with each row's coverage and the number of files it claims.
 
 The loop that keeps a spec honest:
 

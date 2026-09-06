@@ -3345,3 +3345,85 @@ class RegistryNotAdoptedTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# LS·7 — the additive contract for `touches` markers (#672 Wave 1).
+#
+# A marker exists to narrow what a RUN reads. Every other reader — fold-back,
+# the requirement-id denominator, the viewer's cards — must be unable to tell
+# whether one is there. If any of them react to it, the marker stops being free
+# and becomes a format change, which the spec forbids outright.
+class TouchesMarkersAreInvisibleToEveryExistingReader(unittest.TestCase):
+    UNMARKED = """## Purpose
+
+Why this exists.
+
+## Requirements
+
+### The first thing
+
+It does the first thing.
+
+#### Scenario: it happens
+- **WHEN** something
+- **THEN** something else
+
+### The second thing
+
+It does the second thing.
+"""
+
+    @property
+    def MARKED(self) -> str:
+        return (self.UNMARKED
+                .replace("### The first thing\n",
+                         "### The first thing\n<!-- touches: src/first/** -->\n")
+                .replace("### The second thing\n",
+                         "### The second thing\n<!-- touches: src/second/thing.ts -->\n"))
+
+    DELTA = {
+        "added": [],
+        "modified": [("The first thing",
+                      "### The first thing\n\nIt now does the first thing differently.\n")],
+        "removed": [],
+        "renamed": [],
+    }
+
+    def _fold(self, text: str):
+        import living_spec_fold as fold
+        return fold.apply_deltas(text, self.DELTA)
+
+    def test_fold_back_produces_the_same_counts_either_way(self):
+        _, unmarked = self._fold(self.UNMARKED)
+        _, marked = self._fold(self.MARKED)
+        self.assertEqual(unmarked, marked,
+                         "a marker must not change what the fold reports it did")
+
+    def test_fold_back_matches_the_same_heading_either_way(self):
+        for label, text in (("unmarked", self.UNMARKED), ("marked", self.MARKED)):
+            with self.subTest(spec=label):
+                out, counts = self._fold(text)
+                self.assertEqual(counts.get("modified"), 1,
+                                 "the marker line must not hide the heading from the fold")
+                self.assertIn("It now does the first thing differently.", out)
+
+    def test_the_requirement_count_is_the_same_either_way(self):
+        self.assertEqual(len(rsp.requirement_slices(self.UNMARKED)),
+                         len(rsp.requirement_slices(self.MARKED)))
+
+    def test_only_the_marked_spec_reports_markers(self):
+        self.assertTrue(rsp.has_no_markers(rsp.requirement_slices(self.UNMARKED)))
+        self.assertFalse(rsp.has_no_markers(rsp.requirement_slices(self.MARKED)))
+
+    def test_an_unmarked_spec_still_loads_whole(self):
+        slices = rsp.requirement_slices(self.UNMARKED)
+        picked = rsp.requirements_for_change(slices, ["src/anything/at/all.ts"])
+        self.assertEqual(len(picked), len(slices),
+                         "with no markers, every requirement is contributed — today's behaviour")
+
+    def test_a_marker_never_removes_an_unmarked_requirement(self):
+        half = self.UNMARKED.replace(
+            "### The first thing\n", "### The first thing\n<!-- touches: src/first/** -->\n")
+        picked = rsp.requirements_for_change(rsp.requirement_slices(half), ["src/elsewhere.ts"])
+        self.assertEqual([s["heading"] for s in picked], ["The second thing"],
+                         "the unmarked requirement survives a change that matches nothing")

@@ -169,6 +169,58 @@ export const LivingComponents406: Story = {
     ),
 };
 
+/**
+ * The requirement outline (#672 Wave 1), driven through the real renderer.
+ *
+ * `viewer-ui` is one of the repository's largest living specs — the case the
+ * outline exists for. Open it from the Overview's living-spec chip: the outline
+ * lists every requirement, each row carries a coverage dot and, once markers are
+ * adopted, the count of files it claims.
+ */
+export const RequirementOutline672: Story = {
+    name: '672 · Requirement outline on a large living spec',
+    render: () => (
+        <InteractiveViewer
+            ctx={ctx406}
+            docs={docs406}
+            initialDoc="living:viewer-ui"
+            vs={vsFromContext(ctx406, completedFooter)}
+            livingDocs={{
+                'viewer-ui': { md: viewerUiLiving, label: 'viewer-ui' },
+                'spec-viewer': { md: specViewerLiving, label: 'spec-viewer' },
+                // A short, marked spec beside the long unmarked ones, so the file
+                // count and a narrow column are both visible in one story.
+                marked: {
+                    label: 'marked',
+                    md: [
+                        '# marked',
+                        '',
+                        '## Purpose',
+                        '',
+                        'A capability whose requirements carry file markers.',
+                        '',
+                        '## Requirements',
+                        '',
+                        '### A requirement whose heading is long enough to need the ellipsis it carries',
+                        '<!-- touches: src/alpha/**, src/alpha/extra.ts, src/alpha/third.ts -->',
+                        '',
+                        'It claims three paths.',
+                        '',
+                        '#### Scenario: it applies',
+                        '- **WHEN** something changes under those paths',
+                        '- **THEN** this requirement is the one a run reads',
+                        '',
+                        '### An unmarked requirement',
+                        '',
+                        'Read by every run, which is what makes partial adoption safe.',
+                        '',
+                    ].join('\n'),
+                },
+            }}
+        />
+    ),
+};
+
 export const IncompleteMetadata393: Story = {
     name: '393 · Incomplete metadata (no Approach)',
     render: () => (

@@ -401,3 +401,83 @@ describe('renderMarkdown — feature-spec byte parity (FR-001, SC-001)', () => {
         expect(out).toContain('&lt;img');
     });
 });
+
+describe('the requirement outline (#672 Wave 1)', () => {
+    const SPEC = `## Purpose
+
+Why this exists.
+
+## Requirements
+
+### Alpha behaviour
+<!-- touches: src/alpha/**, src/alpha/extra.ts -->
+
+Alpha.
+
+### Beta behaviour
+
+Beta, unmarked.
+`;
+
+    afterEach(() => setLivingCoverage(null));
+
+    it('lists every requirement once, in document order', () => {
+        const out = preprocessLivingRequirements(SPEC);
+        const labels = [...out.matchAll(/living-outline__label">([^<]*)</g)].map(m => m[1]);
+        expect(labels).toEqual(['Alpha behaviour', 'Beta behaviour']);
+    });
+
+    it('a row points at its own card', () => {
+        const out = preprocessLivingRequirements(SPEC);
+        expect(out).toContain('href="#living-req-0"');
+        expect(out).toContain('id="living-req-0"');
+        expect(out).toContain('href="#living-req-1"');
+        expect(out).toContain('id="living-req-1"');
+    });
+
+    it('shows the file count a marker names, and nothing when unmarked', () => {
+        const out = preprocessLivingRequirements(SPEC);
+        const counts = [...out.matchAll(/living-outline__files">(\d+)</g)].map(m => m[1]);
+        expect(counts).toEqual(['2']);
+    });
+
+    it('unknown coverage renders as unknown, never as zero', () => {
+        const out = preprocessLivingRequirements(SPEC);
+        expect(out).toContain('living-outline__cov--unknown');
+        expect(out).not.toMatch(/living-outline__cov[^>]*>0</);
+    });
+
+    it('known coverage is distinguishable from unknown', () => {
+        setLivingCoverage({ 'Alpha behaviour': '3/4' });
+        const out = preprocessLivingRequirements(SPEC);
+        const rows = out.split('<li>').slice(1);
+        expect(rows[0]).toContain('title="3/4"');
+        expect(rows[0]).not.toContain('--unknown');
+        expect(rows[1]).toContain('--unknown');
+    });
+
+    it('emits no outline for a document with no requirements section', () => {
+        expect(preprocessLivingRequirements('# Just a title\n\nProse.\n'))
+            .not.toContain('living-outline');
+    });
+
+    it('a heading inside a fenced block is not a row', () => {
+        const withFence = `## Requirements
+
+### Real one
+
+Prose.
+
+\`\`\`markdown
+### Not a requirement
+\`\`\`
+`;
+        const out = preprocessLivingRequirements(withFence);
+        const labels = [...out.matchAll(/living-outline__label">([^<]*)</g)].map(m => m[1]);
+        expect(labels).toEqual(['Real one']);
+    });
+
+    it('the outline is announced as a landmark', () => {
+        expect(preprocessLivingRequirements(SPEC)).toContain('aria-label="Requirements"');
+    });
+});

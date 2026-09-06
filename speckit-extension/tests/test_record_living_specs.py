@@ -185,3 +185,77 @@ class BreadcrumbTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LoadedRequirementsIsASiblingNotAReplacement(unittest.TestCase):
+    """`livingSpecs.loadedRequirements` records what a run read, per capability.
+
+    `loaded` keeps its shape: several readers consume it as a plain list of
+    names, including the completion accounting that requires every loaded
+    capability to end with a delta or a recorded skip.
+    """
+
+    MARKED = """## Purpose
+
+Why demo exists.
+
+## Requirements
+
+### Alpha behaviour
+<!-- touches: src/alpha/** -->
+
+Alpha.
+
+### Shared behaviour
+
+No marker.
+"""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        (self.root / "capabilities" / "demo").mkdir(parents=True)
+        (self.root / "src" / "alpha").mkdir(parents=True)
+        (self.root / "src" / "alpha" / "f.ts").write_text("x", encoding="utf-8")
+        (self.root / "living-specs.yml").write_text(
+            "enabled: true\ncapabilities:\n  - name: demo\n    match: [\"src/**\"]\n",
+            encoding="utf-8")
+        self.feature = self.root / "specs" / "001-x"
+        self.feature.mkdir(parents=True)
+
+    def _spec(self, text):
+        (self.root / "capabilities" / "demo" / "spec.md").write_text(text, encoding="utf-8")
+
+    def _ctx(self):
+        return json.loads((self.feature / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_a_marked_capability_records_the_requirements_it_read(self):
+        self._spec(self.MARKED)
+        rls.record(self.feature, ["src/alpha/f.ts"], str(self.root))
+        living = self._ctx()["livingSpecs"]
+        self.assertEqual(living["loaded"], ["demo"])
+        self.assertEqual(living["loadedRequirements"]["demo"],
+                         ["Alpha behaviour", "Shared behaviour"])
+
+    def test_loaded_keeps_its_plain_list_shape(self):
+        self._spec(self.MARKED)
+        rls.record(self.feature, ["src/alpha/f.ts"], str(self.root))
+        loaded = self._ctx()["livingSpecs"]["loaded"]
+        self.assertIsInstance(loaded, list)
+        self.assertTrue(all(isinstance(n, str) for n in loaded))
+
+    def test_a_capability_read_whole_records_no_requirement_entry(self):
+        self._spec(self.MARKED.replace("<!-- touches: src/alpha/** -->\n", ""))
+        rls.record(self.feature, ["src/alpha/f.ts"], str(self.root))
+        living = self._ctx()["livingSpecs"]
+        self.assertEqual(living["loaded"], ["demo"])
+        self.assertNotIn("demo", living.get("loadedRequirements") or {},
+                         "naming every requirement of a whole read says nothing")
+
+    def test_recording_twice_is_a_no_op(self):
+        self._spec(self.MARKED)
+        rls.record(self.feature, ["src/alpha/f.ts"], str(self.root))
+        first = self._ctx()["livingSpecs"]
+        rls.record(self.feature, ["src/alpha/f.ts"], str(self.root))
+        self.assertEqual(self._ctx()["livingSpecs"], first)

@@ -376,3 +376,27 @@ A switch that adds instruction text to command bodies MUST change which bodies g
 #### Scenario: a parity gate runs while the switch is on locally
 - **WHEN** the gate assembles the bodies to compare them
 - **THEN** it compares the off render, so a local switch can never fail the gate
+
+### The load steps read a living spec by requirement, and fall back to the whole file
+
+The specify and plan load steps SHALL ask the resolver what each capability should contribute for the files the change touches, and read only what it names. Where the resolver is unavailable or the call fails, they SHALL read each capability's spec whole exactly as before: the narrowing is an optimization, and it must never cost a step its brief.
+
+#### Scenario: the resolver answers
+- **WHEN** a load step runs against a capability carrying markers
+- **THEN** it reads that capability's purpose and the named requirements only
+
+#### Scenario: the resolver is unavailable
+- **WHEN** the call fails
+- **THEN** the step reads the whole spec and continues, without failing the command
+
+### Adoption and sync write the file markers, so nobody maintains them by hand
+
+Adoption SHALL write a marker under each requirement it produces, naming the files that requirement was derived from. A sync SHALL write or widen the marker of each requirement it updates, as the union of what the marker already named and the files it folded in — never narrowing, since a requirement that keeps claiming a file it no longer touches costs a run one extra requirement, where narrowing could cost it a needed one.
+
+#### Scenario: a capability is adopted
+- **WHEN** its requirements are written
+- **THEN** each carries a marker naming the files it was derived from
+
+#### Scenario: a sync updates a requirement
+- **WHEN** the update is written
+- **THEN** that requirement's marker names the changed files as well as what it already named

@@ -10,8 +10,8 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T001** [P] Create the shared fixture directory with one spec fragment per parsing case: no markers, all marked, mixed, a marker inside a fenced block, a marker one line too far down, two requirements sharing a heading, a marker matching nothing, a marker matching everything the capability claims · `speckit-extension/tests/fixtures/requirement-slices/`
-- [ ] **T002** [P] Record the baseline for SC-001: the line count each capability's spec contributes to a load today, for the largest capability and for a typical change · `specs/605-requirement-level-living-specs/research.md`
+- [x] **T001** [P] Create the shared fixture directory with one spec fragment per parsing case: no markers, all marked, mixed, a marker inside a fenced block, a marker one line too far down, two requirements sharing a heading, a marker matching nothing, a marker matching everything the capability claims · `speckit-extension/tests/fixtures/requirement-slices/`
+- [x] **T002** [P] Record the baseline for SC-001: the line count each capability's spec contributes to a load today, for the largest capability and for a typical change · `specs/605-requirement-level-living-specs/research.md`
 
 ---
 
@@ -23,19 +23,19 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 **Wave 2 — independent (different files, same fixtures):**
 
-- [ ] **T003** [P] [US2] Add `requirementSlices(specText)` beside `requirementIds()`: strip fences with the existing rule, walk `###` headings under `## Requirements`, read a `touches` marker only on the line immediately following a heading, return `{heading, touches?, body}` · `src/features/specs/livingSpecsModel.ts`
-- [ ] **T004** [P] [US2] Add the Python twin in the resolver: same fence rule, same heading rule, same marker position rule · `speckit-extension/scripts/resolve-spec-paths.py`
+- [x] **T003** [P] [US2] Add `requirementSlices(specText)` beside `requirementIds()`: strip fences with the existing rule, walk `###` headings under `## Requirements`, read a `touches` marker only on the line immediately following a heading, return `{heading, touches?, body}` · `src/features/specs/livingSpecsModel.ts`
+- [x] **T004** [P] [US2] Add the Python twin in the resolver: same fence rule, same heading rule, same marker position rule · `speckit-extension/scripts/resolve-spec-paths.py`
 
 **⟶ Wait for Wave 2 to finish, then:**
 
 **Wave 3 — independent (different files):**
 
-- [ ] **T005** [P] [US2] TypeScript suite reads every fixture in the shared directory and asserts the slice for each · `src/features/specs/__tests__/livingSpecsModel.test.ts`
-- [ ] **T006** [P] [US2] Python suite reads the same fixtures and asserts the same slices · `speckit-extension/tests/test_resolve_spec_paths.py`
+- [x] **T005** [P] [US2] TypeScript suite reads every fixture in the shared directory and asserts the slice for each · `src/features/specs/__tests__/livingSpecsModel.test.ts`
+- [x] **T006** [P] [US2] Python suite reads the same fixtures and asserts the same slices · `speckit-extension/tests/test_resolve_spec_paths.py`
 
 **⟶ Wait for Wave 3 to finish, then:**
 
-- [ ] **T007** [US2] The drift guard: a test asserting every fixture in the directory is exercised by both suites, so a fixture only one side reads fails the build (FR-008) · `speckit-extension/tests/test_resolve_spec_paths.py`
+- [x] **T007** [US2] The drift guard: a test asserting every fixture in the directory is exercised by both suites, so a fixture only one side reads fails the build (FR-008) · `speckit-extension/tests/test_resolve_spec_paths.py`
 
 **Checkpoint**: both runtimes agree on what a requirement is and what a marker says, and cannot silently diverge.
 
@@ -51,12 +51,12 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T008** [P] [US2] Adoption writes a `touches` marker on each requirement it produces, naming the files that requirement was derived from (FR-006) · `speckit-extension/commands/speckit.companion.living-adopt.md`
-- [ ] **T009** [P] [US2] Sync writes or widens the marker of each requirement it updates, as the union of what it named and what changed — never narrowing (FR-007) · `speckit-extension/commands/speckit.companion.living-sync.md`
+- [x] **T008** [P] [US2] Adoption writes a `touches` marker on each requirement it produces, naming the files that requirement was derived from (FR-006) · `speckit-extension/commands/speckit.companion.living-adopt.md`
+- [x] **T009** [P] [US2] Sync writes or widens the marker of each requirement it updates, as the union of what it named and what changed — never narrowing (FR-007) · `speckit-extension/commands/speckit.companion.living-sync.md`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T010** [US2] Assert the additive contract: fold-back, drift, coverage and the viewer's cards produce identical results on a spec with markers and the same spec without them (FR-001, FR-014, FR-015) · `speckit-extension/tests/test_living_specs.py`
+- [x] **T010** [US2] Assert the additive contract: fold-back, drift, coverage and the viewer's cards produce identical results on a spec with markers and the same spec without them (FR-001, FR-014, FR-015) · `speckit-extension/tests/test_living_specs.py`
 
 **Checkpoint**: markers are written by normal work, and no existing behaviour changed.
 
@@ -70,26 +70,26 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 ### Implementation
 
-- [ ] **T011** [US1] Add `--requirements-for` to the resolver: given the changed files, return per capability its `purpose`, the requirements to contribute, and `whole: true|false` — `whole` when the spec carries no marker anywhere (FR-003, FR-004) · `speckit-extension/scripts/resolve-spec-paths.py`
+- [x] **T011** [US1] Add `--requirements-for` to the resolver: given the changed files, return per capability its `purpose`, the requirements to contribute, and `whole: true|false` — `whole` when the spec carries no marker anywhere (FR-003, FR-004) · `speckit-extension/scripts/resolve-spec-paths.py`
 
 **⟶ Wait for T011 to finish, then:**
 
 **Wave 2 — independent (different files):**
 
-- [ ] **T012** [P] [US1] The specify load step asks for the slice and reads it, instead of reading the whole spec (FR-003) · `speckit-extension/nodes/specify/load-living-specs.md`
-- [ ] **T013** [P] [US1] The plan load step does the same on its side (FR-003) · `speckit-extension/nodes/plan/gather-context.md`
-- [ ] **T014** [P] [US1] The recorder writes `livingSpecs.loadedRequirements` as a sibling of `livingSpecs.loaded`, leaving the existing field's shape untouched, and writes nothing for a capability loaded whole (FR-005) · `speckit-extension/scripts/record-living-specs.py`
+- [x] **T012** [P] [US1] The specify load step asks for the slice and reads it, instead of reading the whole spec (FR-003) · `speckit-extension/nodes/specify/load-living-specs.md`
+- [x] **T013** [P] [US1] The plan load step does the same on its side (FR-003) · `speckit-extension/nodes/plan/gather-context.md`
+- [x] **T014** [P] [US1] The recorder writes `livingSpecs.loadedRequirements` as a sibling of `livingSpecs.loaded`, leaving the existing field's shape untouched, and writes nothing for a capability loaded whole (FR-005) · `speckit-extension/scripts/record-living-specs.py`
 
 **⟶ Wait for Wave 2 to finish, then:**
 
 **Wave 3 — independent (different files):**
 
-- [ ] **T015** [P] [US1] Resolver tests: a marked spec narrows, an unmarked spec returns `whole`, a spec whose markers all miss returns its purpose and no requirements but is still matched, unmarked requirements are always contributed (FR-002, FR-003, FR-004) · `speckit-extension/tests/test_resolve_spec_paths.py`
-- [ ] **T016** [P] [US1] Recorder tests: the sibling field is written, `loaded` keeps its shape, a whole-load writes no entry (FR-005) · `speckit-extension/tests/test_living_specs.py`
+- [x] **T015** [P] [US1] Resolver tests: a marked spec narrows, an unmarked spec returns `whole`, a spec whose markers all miss returns its purpose and no requirements but is still matched, unmarked requirements are always contributed (FR-002, FR-003, FR-004) · `speckit-extension/tests/test_resolve_spec_paths.py`
+- [x] **T016** [P] [US1] Recorder tests: the sibling field is written, `loaded` keeps its shape, a whole-load writes no entry (FR-005) · `speckit-extension/tests/test_living_specs.py`
 
 **⟶ Wait for Wave 3 to finish, then:**
 
-- [ ] **T017** [US1] Regenerate the frozen command bodies after the two node edits, and confirm `check-shape-parity.py` is green · `speckit-extension/tests/golden/commands/`
+- [x] **T017** [US1] Regenerate the frozen command bodies after the two node edits, and confirm `check-shape-parity.py` is green · `speckit-extension/tests/golden/commands/`
 
 **Checkpoint**: a run on a marked capability reads a slice and names what it read; an unmarked capability is byte-identical to today.
 
@@ -103,21 +103,21 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 ### Implementation
 
-- [ ] **T018** [US3] Derive the outline inside `preprocessLivingRequirements` from the headings that pass already walks, reading coverage from the same heading-keyed store the badges use, and the file count from each slice's marker (FR-009, FR-010, FR-011) · `webview/src/spec-viewer/markdown/livingComponents.ts`
+- [x] **T018** [US3] Derive the outline inside `preprocessLivingRequirements` from the headings that pass already walks, reading coverage from the same heading-keyed store the badges use, and the file count from each slice's marker (FR-009, FR-010, FR-011) · `webview/src/spec-viewer/markdown/livingComponents.ts`
 
 **⟶ Wait for T018 to finish, then:**
 
 **Wave 2 — independent (different files):**
 
-- [ ] **T019** [P] [US3] Style the outline: sticky beside the cards, readable at a narrow width, the ellipsis trio complete on a long heading, and coverage shown as unknown rather than zero where it is unknown · `webview/styles/spec-viewer/_living.css`
-- [ ] **T020** [P] [US3] Activation moves the view to the requirement, by pointer and by keyboard, and the outline is rendered in living mode only — never on a feature spec (FR-012, FR-013) · `webview/src/spec-viewer/markdown/livingComponents.ts`
+- [x] **T019** [P] [US3] Style the outline: sticky beside the cards, readable at a narrow width, the ellipsis trio complete on a long heading, and coverage shown as unknown rather than zero where it is unknown · `webview/styles/spec-viewer/_living.css`
+- [x] **T020** [P] [US3] Activation moves the view to the requirement, by pointer and by keyboard, and the outline is rendered in living mode only — never on a feature spec (FR-012, FR-013) · `webview/src/spec-viewer/markdown/livingComponents.ts`
 
 **⟶ Wait for Wave 2 to finish, then:**
 
 **Wave 3 — independent (different files):**
 
-- [ ] **T021** [P] [US3] Tests: every requirement appears once in document order; a known-coverage row is distinguishable from unknown; the file count matches the marker; a feature spec renders no outline · `webview/src/spec-viewer/markdown/__tests__/livingComponents.test.ts`
-- [ ] **T022** [P] [US3] A story covering a living spec with markers, one without, and a long heading at a narrow width · `webview/src/spec-viewer/__stories__/`
+- [x] **T021** [P] [US3] Tests: every requirement appears once in document order; a known-coverage row is distinguishable from unknown; the file count matches the marker; a feature spec renders no outline · `webview/src/spec-viewer/markdown/__tests__/livingComponents.test.ts`
+- [x] **T022** [P] [US3] A story covering a living spec with markers, one without, and a long heading at a narrow width · `webview/src/spec-viewer/__stories__/`
 
 **Checkpoint**: a reader reaches any requirement in a 400-line spec in one action.
 
@@ -127,13 +127,13 @@ Three stories, and they layer: the marker has to exist before a load can narrow 
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T023** [P] Measure SC-001 against T002's baseline and record the real number; if it lands materially under 60%, say so on the issue rather than restating the target · `specs/605-requirement-level-living-specs/research.md`
-- [ ] **T024** [P] Document the marker in the living-specs reference: what it is, who writes it, that it can only narrow a load, and that an unmarked requirement is always read · `docs/` and `speckit-extension/README.md`
-- [ ] **T025** [P] Changelog entries in release-notes voice, on both halves: the VS Code side gains the outline, the spec-kit side gains the marker and the selective load · `CHANGELOG.md`, `speckit-extension/CHANGELOG.md`
+- [x] **T023** [P] Measure SC-001 against T002's baseline and record the real number; if it lands materially under 60%, say so on the issue rather than restating the target · `specs/605-requirement-level-living-specs/research.md`
+- [x] **T024** [P] Document the marker in the living-specs reference: what it is, who writes it, that it can only narrow a load, and that an unmarked requirement is always read · `docs/` and `speckit-extension/README.md`
+- [x] **T025** [P] Changelog entries in release-notes voice, on both halves: the VS Code side gains the outline, the spec-kit side gains the marker and the selective load · `CHANGELOG.md`, `speckit-extension/CHANGELOG.md`
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T026** Validate against the Success Criteria: `npm test`, `python3 -m pytest speckit-extension/tests -q`, `check-shape-parity.py`, and a drift check reading zero · repository root
+- [x] **T026** Validate against the Success Criteria: `npm test`, `python3 -m pytest speckit-extension/tests -q`, `check-shape-parity.py`, and a drift check reading zero · repository root
 
 ---
 

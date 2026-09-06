@@ -55,8 +55,20 @@ def record(feature_dir: Path, changed: list[str], root: str) -> tuple[list[str],
     names = [m["name"] for m in rsp.match_changed(files, living, root)]
     if not names:
         return [], "no-match"
-    from capture import set_living_specs_loaded
+    from capture import set_living_specs_loaded, set_living_specs_loaded_requirements
     set_living_specs_loaded(feature_dir, names)
+    # Which requirements the run will read, for the capabilities that carry
+    # markers. A capability read whole gets no entry — listing all of its
+    # requirements would say nothing that `loaded` does not already say.
+    try:
+        per_cap = {
+            entry["name"]: [r["heading"] for r in entry.get("requirements") or []]
+            for entry in rsp.requirements_for_changed(files, living, root)
+            if not entry.get("whole")
+        }
+        set_living_specs_loaded_requirements(feature_dir, per_cap)
+    except Exception:  # noqa: BLE001 — the record must never fail the command
+        pass
     return names, "loaded"
 
 

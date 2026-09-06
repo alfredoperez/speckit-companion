@@ -138,3 +138,91 @@ A developer opens a living spec of 400 lines and sees a list of its requirements
 - `src/features/specs/livingSpecsModel.ts` — the extension-side home
 - `resolve-spec-paths.py` — the spec-kit-side home
 - `living-specs.yml` — the registry, unchanged
+
+## ADDED Requirements
+<!-- capability: capture-runtime -->
+
+### A living-spec load is sliced by requirement, and a spec with no markers is read whole
+
+The resolver SHALL report, for each capability a change matches, either that its spec is read whole — the case when the spec carries no file marker anywhere — or the capability's purpose plus the requirements to contribute: those whose marker matches a changed file, and every requirement carrying no marker. A capability whose markers all miss still appears, with its purpose and no requirements, because it was consulted and completion accounting must still see it. A marker can only narrow: an unmarked requirement is contributed by every load, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one.
+
+#### Scenario: a marked capability and a change it claims
+- **WHEN** a load resolves a capability whose requirements carry markers
+- **THEN** it reports the purpose plus the matching and unmarked requirements, and not the whole file
+
+#### Scenario: a capability with no markers
+- **WHEN** a load resolves it
+- **THEN** it is reported as read whole, byte-identical to the behaviour before markers existed
+
+### Which requirements a run read is recorded beside which capabilities it loaded
+
+The capture runtime SHALL record the requirement headings a run read, per capability, as a sibling of the existing loaded-capability list rather than as a change to it — that list is a plain list of names several readers already consume, including the completion accounting that requires every loaded capability to end with a delta or a recorded skip. A capability read whole receives no entry, because naming all of its requirements would say nothing the capability record does not. The write is additive and idempotent, and a failure to record it MUST NEVER fail the host command.
+
+#### Scenario: a capability read by requirement
+- **WHEN** the recorder runs
+- **THEN** the sibling record names the requirements read, and the capability list keeps its plain-list shape
+
+#### Scenario: a capability read whole
+- **WHEN** the recorder runs
+- **THEN** the capability is listed as loaded and the sibling record carries no entry for it
+
+## ADDED Requirements
+<!-- capability: companion-commands -->
+
+### The load steps read a living spec by requirement, and fall back to the whole file
+
+The specify and plan load steps SHALL ask the resolver what each capability should contribute for the files the change touches, and read only what it names. Where the resolver is unavailable or the call fails, they SHALL read each capability's spec whole exactly as before: the narrowing is an optimization, and it must never cost a step its brief.
+
+#### Scenario: the resolver answers
+- **WHEN** a load step runs against a capability carrying markers
+- **THEN** it reads that capability's purpose and the named requirements only
+
+#### Scenario: the resolver is unavailable
+- **WHEN** the call fails
+- **THEN** the step reads the whole spec and continues, without failing the command
+
+### Adoption and sync write the file markers, so nobody maintains them by hand
+
+Adoption SHALL write a marker under each requirement it produces, naming the files that requirement was derived from. A sync SHALL write or widen the marker of each requirement it updates, as the union of what the marker already named and the files it folded in — never narrowing, since a requirement that keeps claiming a file it no longer touches costs a run one extra requirement, where narrowing could cost it a needed one.
+
+#### Scenario: a capability is adopted
+- **WHEN** its requirements are written
+- **THEN** each carries a marker naming the files it was derived from
+
+#### Scenario: a sync updates a requirement
+- **WHEN** the update is written
+- **THEN** that requirement's marker names the changed files as well as what it already named
+
+## ADDED Requirements
+<!-- capability: specs -->
+
+### Requirement slicing lives beside the requirement-id parser and counts the same headings
+
+The extension SHALL parse a living spec into requirement slices — heading, optional file marker, body — next to the existing requirement-id parser, stripping fenced blocks with the same rule so an example in a snippet is never counted. The parser exists in two runtimes because neither can call the other, so both SHALL be held to one shared set of fixtures, and a fixture exercised by only one of them SHALL fail the build.
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** either parser reads the spec
+- **THEN** it is not a requirement, in both runtimes
+
+#### Scenario: a fixture is added
+- **WHEN** only one runtime's suite exercises it
+- **THEN** the drift guard fails, because that is a case where the two are free to disagree
+
+## ADDED Requirements
+<!-- capability: viewer-ui -->
+
+### A living spec is navigable by requirement
+
+A living spec SHALL render an outline of its requirement headings, in document order, derived in the same pass that builds the requirement cards — a second parse is how a row and its card come to disagree. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of files its marker names where it carries one. Activating a row SHALL move the view to that requirement, by pointer and by keyboard alike. A feature spec SHALL NOT render the outline.
+
+#### Scenario: a large living spec is opened
+- **WHEN** it renders
+- **THEN** every requirement appears once in the outline, in document order
+
+#### Scenario: a requirement whose coverage was never computed
+- **WHEN** its row renders
+- **THEN** it reads as unknown rather than as zero, which would mean none
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** the cards and the outline are built
+- **THEN** it is neither a card nor a row, matching what every other reader counts

@@ -356,3 +356,15 @@ The shared step-history derivation SHALL count a step's span as measured when th
 #### Scenario: a premature agent finish over an extension start
 - **WHEN** a step's start is stamped `by:extension` and an `ai` step-level complete lands immediately after
 - **THEN** that step's duration is not trusted
+
+### Requirement slicing lives beside the requirement-id parser and counts the same headings
+
+The extension SHALL parse a living spec into requirement slices — heading, optional file marker, body — next to the existing requirement-id parser, stripping fenced blocks with the same rule so an example in a snippet is never counted. The parser exists in two runtimes because neither can call the other, so both SHALL be held to one shared set of fixtures, and a fixture exercised by only one of them SHALL fail the build.
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** either parser reads the spec
+- **THEN** it is not a requirement, in both runtimes
+
+#### Scenario: a fixture is added
+- **WHEN** only one runtime's suite exercises it
+- **THEN** the drift guard fails, because that is a case where the two are free to disagree

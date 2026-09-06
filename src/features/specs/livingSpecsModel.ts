@@ -672,6 +672,98 @@ export function requirementIds(specText: string): string[] {
     return [...new Set(kept.join('\n').match(REQUIREMENT_ID_RE) ?? [])];
 }
 
+/** One requirement, as both the loader and the outline see it. */
+export interface RequirementSlice {
+    /** The heading text, verbatim — the join key fold-back, coverage and the cards already share. */
+    heading: string;
+    /** The marker's globs, absent when the requirement carries none. */
+    touches?: string[];
+    /** Lines after the heading, up to the next `###` or the end of the section. */
+    body: string[];
+}
+
+/** `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading. */
+const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
+/** Lines with fenced blocks removed, so an example in a snippet is never parsed. */
+function withoutFences(specText: string): string[] {
+    const kept: string[] = [];
+    let inFence = false;
+    for (const line of specText.split(/\r?\n/)) {
+        if (/^\s*(```|~~~)/.test(line)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (!inFence) kept.push(line);
+    }
+    return kept;
+}
+
+/**
+ * Every requirement in a spec, with the files its marker claims.
+ *
+ * Counts exactly the headings `requirementIds()` counts, off the same
+ * fence-stripped text — the outline and the coverage denominator have to agree
+ * or a row contradicts the badge beside it. The Python twin in
+ * `resolve-spec-paths.py` is pinned against the same fixtures.
+ */
+export function requirementSlices(specText: string): RequirementSlice[] {
+    const lines = withoutFences(specText);
+    const start = lines.findIndex((l) => /^##\s+Requirements\s*$/.test(l));
+    if (start === -1) return [];
+
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i++) {
+        if (/^##(?!#)\s+/.test(lines[i])) {
+            end = i;
+            break;
+        }
+    }
+
+    const out: RequirementSlice[] = [];
+    let i = start + 1;
+    while (i < end) {
+        const head = lines[i].match(/^###(?!#)\s+(.+?)\s*$/);
+        if (!head) {
+            i++;
+            continue;
+        }
+        let j = i + 1;
+        while (j < end && !/^###(?!#)\s+/.test(lines[j])) j++;
+        const body = lines.slice(i + 1, j);
+        // Only the line immediately after the heading is a marker; one further
+        // down is body, because a spec may legitimately discuss a marker.
+        const marker = body.length > 0 ? body[0].match(TOUCHES_RE) : null;
+        const touches = marker
+            ? marker[1].split(',').map((g) => g.trim()).filter(Boolean)
+            : undefined;
+        out.push(touches ? { heading: head[1], touches, body } : { heading: head[1], body });
+        i = j;
+    }
+    return out;
+}
+
+/**
+ * Which requirements a change should read: those whose marker matches a changed
+ * file, plus every unmarked one. A marker can only ever narrow — an unmarked
+ * requirement is always contributed, so a missing or too-narrow marker costs a
+ * run an extra requirement rather than starving it of one.
+ */
+export function requirementsForChange(
+    slices: RequirementSlice[],
+    changedFiles: string[],
+): RequirementSlice[] {
+    const files = changedFiles.map(posix);
+    return slices.filter(
+        (s) => !s.touches || s.touches.some((g) => files.some((f) => globMatches(g, f))),
+    );
+}
+
+/** True when a spec carries no marker at all, so it is read whole as before. */
+export function hasNoMarkers(slices: RequirementSlice[]): boolean {
+    return slices.every((s) => !s.touches);
+}
+
 /** A coverage line "names a test" per the CLI rule. */
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 
