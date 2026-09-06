@@ -106,6 +106,21 @@ Three slash commands, one size at a time:
 
 `/bench-run-all <size>` is the agent-driven automation of the same loop (drives the folders headlessly via Workflow agents instead of you in VS Code) — it uses `bench/driver.mjs` for faithful per-step dispatch + settle-waits.
 
+## Running every cell at once
+
+The two variant folders are keyed by mode, so they hold one feature at a time and three sizes means three rounds back to back. Keyed by size *and* mode instead, every cell gets its own folder and the round costs the slowest cell rather than the sum of all of them.
+
+```bash
+node bench/sync-templates.mjs --sizes easy,medium,hard   # bake 6 folders, real installers
+node bench/run-all.mjs prep    --sizes easy,medium,hard  # arm all 6
+#   … drive all 6, one agent per folder …
+node bench/run-all.mjs capture --sizes easy,medium,hard  # measure all 6, one report
+```
+
+`--size <one>` still addresses the two shared folders, which is the shape the manual VS Code loop uses and the one `/bench-prep` and `/bench-capture` drive. Nothing about the measurements changes: the same folders, the same installers, the same per-step preamble. Only how many of them exist at once.
+
+`node bench/run-all.mjs --dry-run` lists both sets and which folders are baked.
+
 ## What gets measured
 
 Per cell: `npm run build` · the **behavioral oracle** (`behavioral-judge.mjs`, with the testid suite as a labeled baseline) · the **full regression suite** (`src/**`) · convention + blast-radius checks · the **capture eval** (`check_capture.py`, skipped for `speckit`) · an independent **rubric** (readability/conventions/scope) · artifact shape (spec/plan/tasks lines, **total artifact lines across all files**, task count, side files) · diff size · **capture overhead** (time journaling, companion only) · and the **comparative review** (`reviews/<size>.md`).

@@ -100,6 +100,8 @@ import {
   gitInitCell,
   gitCommitCellBaseline,
   folderDir,
+  everyCell,
+  SIZES,
   writeVscodeSettings,
   seedConstitution,
   relFromRepo,
@@ -107,7 +109,21 @@ import {
 
 const args = parseArgs(process.argv.slice(2))
 const only = args.only ? String(args.only).toLowerCase() : null
-const variants = only ? MODES.filter((m) => m === only) : MODES
+// `--sizes easy,medium,hard` bakes one folder per cell, so every cell can be
+// built at the same time. Without it, one folder per mode: the shape the manual
+// VS Code loop uses, where the two folders hold one feature at a time.
+const sizes = args.sizes
+  ? String(args.sizes).split(',').map((x) => x.trim()).filter(Boolean)
+  : null
+const badSize = (sizes || []).find((x) => !SIZES.includes(x))
+if (badSize) {
+  console.error(`--sizes must be from ${SIZES.join(',')} (got ${badSize})`)
+  process.exit(1)
+}
+const modes = only ? MODES.filter((m) => m === only) : MODES
+const variants = sizes
+  ? everyCell(sizes, modes)
+  : modes.map((mode) => ({ size: null, mode }))
 if (!variants.length) {
   console.error(`--only must be one of ${MODES.join('|')}`)
   process.exit(1)
@@ -153,9 +169,10 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
   mkdirSync(TEMPLATES_DIR, { recursive: true })
   console.log(`Baking ${variants.length} variant folder(s) under ${relFromRepo(TEMPLATES_DIR)}/ via the real installers\n`)
 
-  for (const variant of variants) {
-    const dir = folderDir(variant)
-    process.stdout.write(`• todo-${variant}: clone… `)
+  for (const { size, mode: variant } of variants) {
+    const dir = folderDir(variant, size)
+    const name = size ? `${size}-${variant}` : variant
+    process.stdout.write(`• todo-${name}: clone… `)
     cloneDir(SANDBOX_DIR, dir)
     presentAsCleanApp(dir) // the model must never see the oracle/prompts/stats or any bench framing
     gitInitCell(dir) // own git root so the capture writer resolves the folder, not the parent repo
@@ -175,7 +192,7 @@ if (process.argv[1] && process.argv[1].endsWith('sync-templates.mjs')) {
   }
 
   console.log(`\nDone. ${variants.length} folder(s) ready (real installers ran).`)
-  if (COMPANION_MODES.some((m) => variants.includes(m))) {
+  if (variants.some(({ mode }) => COMPANION_MODES.includes(mode))) {
     console.log('Companion folders need python3 + the local speckit-extension to drive capture.')
   }
 }

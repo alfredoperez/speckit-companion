@@ -74,8 +74,16 @@ export function seedConstitution(dir) {
   run('cp', [CANONICAL_CONSTITUTION, dst])
 }
 
-export function folderDir(style) {
-  return join(TEMPLATES_DIR, `todo-${style}`)
+export function folderDir(style, size = null) {
+  // Keyed by size AND mode when a size is given, so every cell has its own
+  // folder and all six can be built at once. Keyed by mode alone otherwise,
+  // which is the one-size-at-a-time shape the manual VS Code loop uses.
+  return join(TEMPLATES_DIR, size ? `todo-${size}-${style}` : `todo-${style}`)
+}
+
+/** Every (size, mode) pair, in the order a report reads them. */
+export function everyCell(sizes = SIZES, modes = MODES) {
+  return sizes.flatMap((size) => modes.map((mode) => ({ size, mode })))
 }
 
 // Pin the SpecKit Companion settings per folder via .vscode/settings.json, so
