@@ -9,8 +9,9 @@ The browser-side half of the Create Spec panel: it is the first thing a user tou
 ## Requirements
 
 ### A typed message channel is the editor's only way to affect anything
+<!-- touches: webview/src/spec-editor/index.ts, webview/src/spec-editor/types.ts -->
 
-The editor UI SHALL cause no side effect outside its own document. Every outcome a user asks for — creating a spec, running a workflow command, attaching or removing an image, cancelling, opening docs — MUST be expressed as a message on the webview→extension channel, and every change to the editor's own contents MUST arrive as a message back. The webview has no filesystem, no workspace, and no credentials; keeping the boundary total is what lets the extension remain the single place where authority and validation live.
+The editor UI SHALL cause no side effect outside its own document. Every outcome a user asks for — creating a spec, running a workflow command, attaching or removing an image, cancelling, opening docs — MUST be expressed as a message on the webview→extension channel, and every change to the editor's own contents MUST arrive as a message back. The webview has no filesystem, no workspace, and no credentials; keeping the boundary total is what lets the extension remain the single place where authority and validation live. The install banner is server-rendered markup the editor did not build, so its install and dismiss messages MUST carry the prompt the banner itself declares rather than anything the editor infers — the editor reads it back off the banner and forwards it untouched.
 
 #### Scenario: the user asks for something with an effect
 - **WHEN** any control in the editor is activated
@@ -21,6 +22,10 @@ The editor UI SHALL cause no side effect outside its own document. Every outcome
 - **WHEN** the extension confirms an image was stored
 - **THEN** the editor learns the attachment's identity and preview location from that reply
 - **AND** it never constructs those itself from the local file
+
+#### Scenario: a control on the install banner is used
+- **WHEN** the install or the dismiss control is activated
+- **THEN** the message carries the prompt the banner declared, so the extension acts on the banner the user actually saw
 
 ### One gate decides whether the description can be submitted
 
@@ -125,8 +130,9 @@ While the extension is working, the editor MUST prevent a second submission from
 - **THEN** the busy state is released, the message is shown as escaped text, and focus moves to the control that dismisses it
 
 ### The Storybook mock stays a faithful stand-in for the real form
+<!-- touches: webview/src/spec-editor/CreateSpecMock.tsx, webview/src/spec-editor/__stories__/CreateSpec.stories.tsx -->
 
-Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, hands-off-available-or-not, attachments-present, the workflow choice cards (multi-workflow, Companion-not-installed, trial affordance), and a narrow (split-pane) layout — so a reviewer reading Storybook is not shown an arrangement the product never produces. To keep the visuals honest, the mock MUST render through the shipped `spec-editor.css` using the real form's class names and native controls (`textarea`, radio-card inputs) rather than bespoke inline styles, so it inherits the product's styling instead of re-declaring it. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
+Because the shipped editor is imperative DOM rather than a component tree, a separate Preact mock exists purely as the visual baseline. That mock MUST reflect the real form's states — empty, over-limit, submitting, hands-off-available-or-not, attachments-present, the workflow row (multi-workflow with a project-defined workflow's description in the banner, Companion-not-installed with its badge and trial, Companion selected while missing so the primary button becomes the install and the hands-off affordance is withheld), and a narrow (split-pane) layout — so a reviewer reading Storybook is not shown an arrangement the product never produces. The workflow choice MUST be mocked as the shipped native select with the pitch banner beneath it, not as a stack of cards, and the trial affordance belongs in that banner rather than on a card of its own. To keep the visuals honest, the mock MUST render through the shipped `spec-editor.css` using the real form's class names and native controls (`textarea`, `select`) rather than bespoke inline styles, so it inherits the product's styling instead of re-declaring it. When the real form gains or loses a state, updating the mock is part of that change, not a follow-up. [inferred]
 
 This duplication is accepted for now and its cost is recorded plainly: the mock is still hand-maintained and nothing enforces that its structure matches the real DOM, so a stale mock misrepresents the product to every reviewer who trusts it — though sharing the shipped stylesheet narrows the drift to structure rather than appearance.
 

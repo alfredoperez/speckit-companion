@@ -53,6 +53,7 @@ The row's display name and its icon SHALL derive from the same provider resoluti
 - **THEN** a themed Codicon matching the provider's own QuickPick icon is used when it declares one (Antigravity resolves to its rocket glyph), otherwise the neutral chat glyph is chosen deliberately rather than reached by falling through the lookup
 
 ### The Companion node reports install state and reads the installed extension live
+<!-- touches: src/features/steering/companionSteering.ts -->
 
 The node SHALL distinguish "installed" from "not installed" from the extension's on-disk presence, offer the install action when absent, and when present derive its configuration groups, command list, and preset templates by reading the installed manifest and configuration rather than a list compiled into this extension. A compiled-in list goes stale the moment the Companion ships a new command.
 

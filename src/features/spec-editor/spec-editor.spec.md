@@ -53,6 +53,7 @@ The workflow list SHALL be built from what the active AI provider supports, so a
 - **THEN** that workflow is omitted
 
 ### A missing dependency degrades or refuses, but never dispatches something unresolvable
+<!-- touches: src/features/spec-editor/installBanner.ts, src/features/spec-editor/specEditorProvider.ts, src/features/spec-editor/types.ts -->
 
 When a chosen action needs the companion piece and it is absent, the host SHALL either downgrade to the equivalent stock action or, when there is no equivalent, refuse to start at all. Either way the user gets a non-blocking explanation and a one-click way to install. Dispatching a command the AI cannot resolve is never acceptable. When the panel surfaces its install prompt, and when the user takes it, the host SHALL record the exposure and the click so install-prompt adoption can be measured.
 
@@ -70,6 +71,8 @@ Because Create Spec is the highest-intent install moment, an ordinary (non-Auto,
 
 The install-first modal is asked once. Choosing "use SpecKit instead" SHALL be remembered in global state, and the modal SHALL NOT be raised again for that user — it fires because the user asked for something the extension provides, which is what earns it a modal, and a modal that reappears after being answered is nagging rather than asking. The fallback warning SHALL be one sentence owned by the shared dispatch routine, raised through it from Create Spec and from every pipeline step alike, on a session cooldown rather than once per step or once forever: whether the extension is installed is one fact about the workspace, and a permanent mute would hide a failed install for the rest of the session. The install banner's markup SHALL be single-sourced under the protocol layer, so the Create-Spec panel and the viewer's Activity panel render one banner rather than two hand-kept copies of it.
 
+The banner is not one prompt but two, and which one the panel shows SHALL come from the one shared resolver rather than from the panel's own reading of the setting and the workspace: an absent companion piece asks to install, one behind the version this build ships asks to update, and a current install shows nothing. The update variant names both versions, offers a single Update action and no "Learn more", and reports its exposure and its click under its own surface name so install and update adoption are not counted as one number. The prompt the user actually saw SHALL ride on the banner and come back with the click, because the host's view of the workspace can have moved on since the banner was drawn — the dismissal must then write the flag for the banner that was closed, not for the gap that exists now, and a message that arrives without one is treated as the install banner rather than failing.
+
 #### Scenario: the user has already chosen SpecKit at the modal
 - **WHEN** they submit another Companion pick without the companion piece
 - **THEN** the stock downgrade proceeds without the modal
@@ -77,6 +80,15 @@ The install-first modal is asked once. Choosing "use SpecKit instead" SHALL be r
 #### Scenario: a four-step Companion run without the companion piece
 - **WHEN** each step falls back to stock
 - **THEN** the warning is shown once, and the log records every fallback
+
+#### Scenario: the installed companion piece is behind this build
+- **WHEN** the panel is rendered
+- **THEN** the update banner shows, naming the installed and the expected version, with one Update action
+- **AND** the exposure is reported under the update surface rather than the install one
+
+#### Scenario: the banner is dismissed
+- **WHEN** the dismiss control is used
+- **THEN** the prompt the banner declared is sent back with the dismissal, so an update is silenced for that version alone and the install banner's permanent flag is not written by mistake
 
 ### Attachments live outside the workspace unless a provider's sandbox forces otherwise
 

@@ -182,6 +182,7 @@ The name of the per-spec context file SHALL be declared by the module that reads
 _None — every file in both areas was read._
 
 ### One resolution produces a spec's pipeline, and it includes the steps the project added
+<!-- touches: src/features/workflows/projectSteps.ts -->
 
 Every surface that describes a spec's pipeline — the viewer rail, the sidebar tree, the footer's next-step label, the dispatch path, and the timing denominator — SHALL obtain its ordered step list from one shared resolution, and no surface SHALL derive its own. For a spec recorded against the Companion pipeline that resolution SHALL be the shipped steps with the project's own steps spliced in, read from the step directories the project already writes; a stock or user-defined pipeline SHALL be returned unchanged. No workflow entry is written into user settings to make a project's step visible, and no copy of a built-in pipeline is created.
 
