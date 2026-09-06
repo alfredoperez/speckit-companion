@@ -40,6 +40,7 @@ assemble = importlib.import_module("assemble-nodes")
 build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
 template_render = importlib.import_module("template_render")
+hook_render = importlib.import_module("hook_render")
 
 
 def _template(command: str, resolved, project_root: str, config: dict):
@@ -162,7 +163,8 @@ def _node(command: str, node_id: str, hooks: list, pinned: str = "",
         # the panel, so `plan` counted four artifacts while `side-files`, which
         # writes three of them, showed none at all.
         "mayWrite": _as_files(meta.get("may-write")),
-        "hooks": [_hook(h) for h in hooks if h["anchor"] == node_id],
+        "hooks": [_hook(h) for h in hooks
+                  if h["boundary"] == "node" and h["anchor"] == node_id],
     }
 
 
@@ -285,9 +287,20 @@ def build_graph(project_root: str) -> dict:
     drawn_parked = 0
     for command in _sequence(decomposed_commands()):
         entry = plan[command]
-        hooks = entry["hooks"] + [
-            dict(h, parked=True) for h in parked.get(command, [])]
         phases = entry.get("phases") or []
+        # One anchor, one boundary. The step, phase and node lists below used to
+        # test `anchor ==` independently, so a name that meant two things at once
+        # — `orchestrate` is both a phase and a node on `auto` — drew the same
+        # hook twice for something that runs once. Resolving here, through the
+        # precedence the builder splices by, is what keeps the picture honest.
+        node_ids = {n for p in phases for n in p["nodes"]}
+        phase_names = {p["name"] for p in phases}
+        declared = entry["hooks"] + [
+            dict(h, parked=True) for h in parked.get(command, [])]
+        hooks = [
+            dict(h, boundary=hook_render.resolve_anchor(
+                h["anchor"], command, node_ids, phase_names))
+            for h in declared]
 
         pinned = assemble.movability(command, entry["order"])
         default = entry["default"]
@@ -311,15 +324,13 @@ def build_graph(project_root: str) -> dict:
                           _variants(command, n, offered))
                     for n in phase["nodes"]
                 ],
-                "hooks": [_hook(h) for h in hooks if h["anchor"] == phase["name"]],
+                "hooks": [_hook(h) for h in hooks
+                          if h["boundary"] == "phase" and h["anchor"] == phase["name"]],
             })
 
         order = entry["order"]
         template = templates.get(command)
-        step_parked = [h for h in hooks if h.get("parked") and (
-            h["anchor"] == command
-            or any(h["anchor"] == p["name"] for p in drawn_phases)
-            or any(h["anchor"] == n for p in phases for n in p["nodes"]))]
+        step_parked = [h for h in hooks if h.get("parked") and h["boundary"]]
         drawn_parked += len(step_parked)
         steps.append({
             "name": command,
@@ -345,7 +356,7 @@ def build_graph(project_root: str) -> dict:
             # Hooks on the step itself — outside every phase. The one anchor a
             # regroup cannot orphan, so the panel draws it at the step's edges
             # rather than beside whichever phase happens to be first.
-            "hooks": [_hook(h) for h in hooks if h["anchor"] == command],
+            "hooks": [_hook(h) for h in hooks if h["boundary"] == "step"],
             "decisions": entry.get("decisions") or [],
             "artifacts": manifest_mod.artifacts_for(manifest, command),
             # `sections` is what this project replaced; `sectionsAvailable` is
