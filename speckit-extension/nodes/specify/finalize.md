@@ -7,27 +7,19 @@ reads: [branch]
 ---
 **Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
 
-**Capture the context (the C of Intent/Context/Expectations).** Record what this run worked *from* — the living specs loaded above (when any), the key files/areas you investigated, and the constraints you honored — one short entry each (best-effort; skip silently if `python3` is unavailable; omit entirely when there is nothing worth recording):
+**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity. Five volleys used to be about eleven round-trips; batched, they are one write of the shared file.
+
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --context "living spec: <name>" --context "area: <path or subsystem>" --context "constraint: <rule honored>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --batch '{
+  "context": ["living spec: <name>", "area: <path or subsystem>", "constraint: <rule honored>"],
+  "expectations": ["<out-of-scope item>", "<another>"],
+  "set": {"intent": "<one-line goal>", "workflow": "companion"}
+}'
 ```
 
-**Capture the goal and the fence.** Before closing the step, persist the spec's distilled intent (one sentence — what this feature is *for*) and each explicit non-goal / out-of-scope item, so a resume or a colliding future spec can read them without re-reading the spec (best-effort; skip silently if `python3` is unavailable):
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set intent="<one-line goal>"
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --expectation "<out-of-scope item>" --expectation "<another>"
-```
-Omit the `--expectation` call when the spec declares no non-goals — never invent them.
+Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context` when there is nothing worth recording and `expectations` when the spec declares no non-goals — never invent either. **`workflow` is the one field that is not optional**: without it the shared writer defaults to `speckit`, and a later footer advance dispatches the stock command.
 
-**Capture the approach (simple mode only).** A `simple` run writes the plan inline as the `## Approach` section of `spec.md` and never reaches `plan` (which is where a full run records `--set approach`). So when `verdict == "simple"`, persist that same one-line approach onto `.spec-context.json` so the viewer Overview's APPROACH card reads it (best-effort; skip silently if `python3` is unavailable):
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set approach="<one-line summary of the Approach section>"
-```
-
-**Pin the workflow identity.** Record that this spec runs the **Companion** workflow, so the viewer advances it on Companion — not stock — at `plan`, `tasks`, and `implement`. Without this the shared writer defaults `workflow` to `speckit`, and a later footer advance dispatches the stock command. This is a **required deterministic write** (only skip if `python3` is genuinely unavailable), not best-effort:
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
-```
+**On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline as the `## Approach` section of `spec.md` and never reaches `plan`, which is where a full run records it. So when `verdict == "simple"`, put it in the `set` map alongside the rest — `"approach": "<one-line summary of the Approach section>"` — rather than paying a second call for it.
 
 **Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash

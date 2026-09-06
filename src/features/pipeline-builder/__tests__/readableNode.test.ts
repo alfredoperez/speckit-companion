@@ -88,9 +88,12 @@ describe('a node file read as instructions', () => {
     });
 
     it('reports a node that is nothing but shared blocks as exactly that', () => {
+        // `auto/handoff.md` carries the shared parts and nothing else. The
+        // per-step handoffs each name their own successor now, so they are no
+        // longer examples of this — which is the point of pinning a node that is.
         const file = path.join(
             __dirname, '..', '..', '..', '..',
-            'speckit-extension', 'nodes', 'specify', 'handoff.md');
+            'speckit-extension', 'nodes', 'auto', 'handoff.md');
         const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
 
         expect(body).toBe('');

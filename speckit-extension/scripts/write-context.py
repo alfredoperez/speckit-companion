@@ -634,7 +634,20 @@ def _main() -> int:
     # A no-op fold already named its own exact reason on stderr (from
     # fold_living_spec) — don't paper over it with a generic OR-string.
 
-    if captured or capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips or args.fold_living_spec:
+    # `--set` writes a plain field: no history entry, no status change, so it
+    # cannot conflict with a lifecycle flag. Letting the two ride together is what
+    # stops every handoff, and the call that completes the spec, paying a second
+    # round-trip just to pin `workflow=companion`. Every OTHER capture flag still
+    # wins, because those do write history and then the ordering would matter.
+    lifecycle = args.advance or args.finish or args.mark_complete
+    set_only = bool(args.set_pairs) and not (
+        capture_mode or args.living_specs
+        or args.living_spec_skips or args.fold_living_spec
+    )
+    if lifecycle and set_only:
+        for line in captured:
+            print(line)
+    elif captured or capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips or args.fold_living_spec:
         for line in captured:
             print(line)
         skipped = [

@@ -1710,8 +1710,18 @@ class MultiFlagDispatchTests(unittest.TestCase):
         finally:
             sys.argv, sys.stdout, sys.stderr = orig_argv, orig_stdout, orig_stderr
 
-    def test_a_lifecycle_flag_dropped_for_a_capture_flag_says_so(self) -> None:
+    def test_a_lifecycle_flag_rides_with_set_and_is_judged_on_its_own(self) -> None:
+        # --set never displaces --mark-complete: the pin lands, and the close is
+        # attempted and refused for the spec's own reason (not implemented yet).
         rc, err = self._run_err(["--mark-complete", "--set", "size=normal"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(_ctx(self.fd)["status"], "planning")
+        self.assertEqual(_ctx(self.fd)["size"], "normal")
+        self.assertIn("refusing to mark complete", err)
+        self.assertNotIn("not applied", err)
+
+    def test_a_lifecycle_flag_dropped_for_a_capture_flag_says_so(self) -> None:
+        rc, err = self._run_err(["--mark-complete", "--decision", "d1"])
         self.assertEqual(rc, 0)
         self.assertEqual(_ctx(self.fd)["status"], "planning")
         self.assertIn("--mark-complete not applied", err)
