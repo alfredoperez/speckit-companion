@@ -34,6 +34,6 @@ These are the live-AI / GUI surfaces tests don't exercise:
 
 1. **Footer dispatch** — open a spec in the viewer; confirm the footer shows the right next-step button for its state and that clicking it dispatches the correct `/speckit.companion.*` command. (The fix makes the footer resolve the spec's own workflow instead of always the default.)
 2. **Auto-complete** — take a spec to 100% tasks and confirm it reaches **Completed** (status `completed`) without getting stuck at `implementing`.
-3. **A real Companion run** — run a small spec end-to-end via the panel and confirm it reaches `completed`. The real e2e path is `examples/todo-claude/bench` / `/eval-speckit-extension`, not ad-hoc runs.
+3. **A real Companion run** — run a small spec end-to-end via the panel and confirm it reaches `completed`. The real e2e path is the bench (`speckit-bench`, driven by `/bench-*`) or `/eval-speckit-extension`, not ad-hoc runs.
 
 > Both the document scan and the footer-button derivation (`deriveViewerState` in `buildViewerPayload`) now resolve the spec's own workflow via `resolveWorkflowSteps`, falling back to the default pipeline only when none is set — so a workflow whose step *set* differs from the canonical pipeline drives the footer button correctly, not just the document scan.
