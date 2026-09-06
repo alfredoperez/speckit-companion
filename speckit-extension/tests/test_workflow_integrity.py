@@ -146,8 +146,12 @@ class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
         cmds = REPO / "speckit-extension" / "commands"
         for step in ("specify", "plan", "tasks", "implement"):
             body = (cmds / f"speckit.companion.{step}.md").read_text()
-            self.assertIn("--set workflow=companion", body,
-                          f"{step} never pins the workflow, so a mid-run join keeps stock dispatch")
+            # The invariant is that the step pins it, not how it spells it: the
+            # flag form, or the `set` map inside a batched wrap-up.
+            pinned = ("--set workflow=companion" in body
+                      or '"workflow": "companion"' in body)
+            self.assertTrue(pinned,
+                            f"{step} never pins the workflow, so a mid-run join keeps stock dispatch")
 
 
 class CaptureWritesAreAtomic(unittest.TestCase):

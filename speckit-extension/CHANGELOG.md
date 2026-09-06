@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+- **The pipeline stops doing work nobody asked for.** Closing a task was two calls to the same script, one to record it and one to make it visible; it is now one, and the script had shipped that one-call form for months with nothing using it. Specify's wrap-up was about eleven separate writes of the same file and is now a single one. Every step re-read the workflow definition to learn which step came next, which is a constant, so each step now names its successor outright. Companion's own lifecycle hooks fired on Companion runs and rewrote what the step had just written; they still serve stock runs and are skipped on a Companion one. And completion was written three ways at the end of implement — the step's own final node is the only one that writes it now. Nothing about what gets recorded changes, only how many times the run stops to record it.
+
 ### Fixed
 - **A scenario written without bold keywords is a scenario.** The shape check only recognised a `WHEN` or a `THEN` when it was wrapped in asterisks, so `- WHEN a user picks a date` was reported as "this scenario has no condition" — and because that finding stops a fold, an author who did not bold the keyword silently lost the write-back their run had prepared. The emphasis is now optional in both the checker and the editor's diagnostics. A word that merely starts with a keyword still is not one, and a scenario genuinely missing a half is still an error.
 

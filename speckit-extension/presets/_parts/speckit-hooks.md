@@ -7,7 +7,7 @@ Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`
 **Before-hooks — run these *now*, before any of the work below.**
 - Check whether `.specify/extensions.yml` exists in the project root. If it does not, skip silently — there are no hooks.
 - If it exists, read it and look for entries under `hooks.before_<step>`. If the YAML cannot be parsed, skip hook checking silently and continue normally.
-- Filter out hooks where `enabled` is explicitly `false`. A hook with no `enabled` field is enabled by default.
+- Filter out hooks where `enabled` is explicitly `false` (no `enabled` field means enabled), **and hooks whose `extension` is `companion`** — those exist so a stock `/speckit.*` run still records its lifecycle, and this command records its own in its own body, so dispatching them here is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
 - Do **not** interpret or evaluate a hook's `condition` expression yourself: a hook with no `condition` (or a null/empty one) is executable; a hook with a non-empty `condition` is left to the HookExecutor — skip it here.
 - For each executable hook, emit one block based on its `optional` flag:
   - **Optional** (`optional: true`):

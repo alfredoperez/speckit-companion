@@ -1,11 +1,15 @@
 """#625 the inert third size, #613 a verdict that can fail, #614 the directive counter."""
+import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO / "speckit-extension" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+import capture  # noqa: E402  — the module under test, reached through SCRIPTS
 NODES = REPO / "speckit-extension" / "nodes"
 COMMANDS = REPO / "speckit-extension" / "commands"
 
@@ -237,3 +241,40 @@ class ImplementVerifiesItsOwnWork(unittest.TestCase):
         impl = next(c for c in json.loads(out)["commands"]
                     if c["command"] == "speckit.companion.implement.md")
         self.assertLess(impl["total"], 60, "the verification rules must not blow the budget")
+
+
+class TheWrapUpIsOneCall(unittest.TestCase):
+    """Specify's wrap-up spent one call per plain field. `--batch` takes them
+    together, and the result has to be byte-identical to the separate calls."""
+
+    def _ctx(self, tmp):
+        return json.loads((Path(tmp) / ".spec-context.json").read_text())
+
+    def test_a_set_map_lands_exactly_like_separate_calls(self):
+        pairs = {"intent": "why this exists", "approach": "how", "workflow": "companion"}
+
+        with tempfile.TemporaryDirectory() as one, tempfile.TemporaryDirectory() as many:
+            for d in (one, many):
+                (Path(d) / ".spec-context.json").write_text('{"specName":"x"}')
+
+            capture.apply_batch(Path(one), json.dumps({"set": pairs}), "specify")
+            for k, v in pairs.items():
+                capture.set_fields(Path(many), [f"{k}={v}"])
+
+            batched, separate = self._ctx(one), self._ctx(many)
+            for k, v in pairs.items():
+                self.assertEqual(batched.get(k), v, f"{k} did not land in the batch")
+            self.assertEqual(batched, separate, "the batch must be byte-equivalent")
+
+    def test_an_absent_or_empty_set_writes_nothing(self):
+        for payload in ({}, {"set": {}}, {"set": None}):
+            with tempfile.TemporaryDirectory() as d:
+                (Path(d) / ".spec-context.json").write_text('{"specName":"x"}')
+                capture.apply_batch(Path(d), json.dumps(payload), "specify")
+                self.assertEqual(self._ctx(d), {"specName": "x"}, f"{payload} wrote something")
+
+    def test_a_set_that_is_not_a_map_is_refused(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / ".spec-context.json").write_text('{"specName":"x"}')
+            with self.assertRaises(ValueError):
+                capture.apply_batch(Path(d), json.dumps({"set": "not a map"}), "specify")

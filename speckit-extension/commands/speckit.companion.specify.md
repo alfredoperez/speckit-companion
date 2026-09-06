@@ -42,7 +42,7 @@ Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`
 **Before-hooks — run these *now*, before any of the work below.**
 - Check whether `.specify/extensions.yml` exists in the project root. If it does not, skip silently — there are no hooks.
 - If it exists, read it and look for entries under `hooks.before_<step>`. If the YAML cannot be parsed, skip hook checking silently and continue normally.
-- Filter out hooks where `enabled` is explicitly `false`. A hook with no `enabled` field is enabled by default.
+- Filter out hooks where `enabled` is explicitly `false` (no `enabled` field means enabled), **and hooks whose `extension` is `companion`** — those exist so a stock `/speckit.*` run still records its lifecycle, and this command records its own in its own body, so dispatching them here is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
 - Do **not** interpret or evaluate a hook's `condition` expression yourself: a hook with no `condition` (or a null/empty one) is executable; a hook with a non-empty `condition` is left to the HookExecutor — skip it here.
 - For each executable hook, emit one block based on its `optional` flag:
   - **Optional** (`optional: true`):
@@ -267,27 +267,19 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
 <!-- speckit-companion:node finalize -->
 **Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
 
-**Capture the context (the C of Intent/Context/Expectations).** Record what this run worked *from* — the living specs loaded above (when any), the key files/areas you investigated, and the constraints you honored — one short entry each (best-effort; skip silently if `python3` is unavailable; omit entirely when there is nothing worth recording):
+**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity. Five volleys used to be about eleven round-trips; batched, they are one write of the shared file.
+
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --context "living spec: <name>" --context "area: <path or subsystem>" --context "constraint: <rule honored>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --batch '{
+  "context": ["living spec: <name>", "area: <path or subsystem>", "constraint: <rule honored>"],
+  "expectations": ["<out-of-scope item>", "<another>"],
+  "set": {"intent": "<one-line goal>", "workflow": "companion"}
+}'
 ```
 
-**Capture the goal and the fence.** Before closing the step, persist the spec's distilled intent (one sentence — what this feature is *for*) and each explicit non-goal / out-of-scope item, so a resume or a colliding future spec can read them without re-reading the spec (best-effort; skip silently if `python3` is unavailable):
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set intent="<one-line goal>"
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --expectation "<out-of-scope item>" --expectation "<another>"
-```
-Omit the `--expectation` call when the spec declares no non-goals — never invent them.
+Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context` when there is nothing worth recording and `expectations` when the spec declares no non-goals — never invent either. **`workflow` is the one field that is not optional**: without it the shared writer defaults to `speckit`, and a later footer advance dispatches the stock command.
 
-**Capture the approach (simple mode only).** A `simple` run writes the plan inline as the `## Approach` section of `spec.md` and never reaches `plan` (which is where a full run records `--set approach`). So when `verdict == "simple"`, persist that same one-line approach onto `.spec-context.json` so the viewer Overview's APPROACH card reads it (best-effort; skip silently if `python3` is unavailable):
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set approach="<one-line summary of the Approach section>"
-```
-
-**Pin the workflow identity.** Record that this spec runs the **Companion** workflow, so the viewer advances it on Companion — not stock — at `plan`, `tasks`, and `implement`. Without this the shared writer defaults `workflow` to `speckit`, and a later footer advance dispatches the stock command. This is a **required deterministic write** (only skip if `python3` is genuinely unavailable), not best-effort:
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set workflow=companion
-```
+**On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline as the `## Approach` section of `spec.md` and never reaches `plan`, which is where a full run records it. So when `verdict == "simple"`, put it in the `set` map alongside the rest — `"approach": "<one-line summary of the Approach section>"` — rather than paying a second call for it.
 
 **Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash
@@ -343,29 +335,35 @@ These rules apply to every Companion profile command. The extension records life
 - **Implement — finishing a task *is* logging it (finish-only).** Recording a task's finish is the **closing action of that task**, done the instant its work is complete and before you start the next one — not a bookkeeping pass you batch at the end of a phase. **A batch is a defect, and it is now caught:** the doctor clusters task finishes and names any group stamped inside a few seconds of each other, because those timestamps measure when you wrote the batch, not how long each task took. On one measured run 16 of 25 finishes landed under a tenth of a second apart, and implement's durations are permanently untrustworthy as a result — history is append-only, so this cannot be repaired afterwards. Implement records almost no substep boundaries by design; the per-task journal *is* its shape, which is why batching it erases the only fine-grained record the step has. The closing action is a single append (feature dir from `.specify/feature.json`):
 
   ```bash
-  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>" --append
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --close-task <TaskID> --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>"
   ```
 
-  `--append` writes **one line** to `.spec-context.events.jsonl` and does **not** read or rewrite the shared `.spec-context.json`, so it never hits the "read the file first" retry and **parallel workers can each append their own finish at the same time without contending** — the line carries its own real timestamp (`date -u` is stamped by the script). The `--did`/`--files` flags ride along so the Activity panel's Tasks card is populated from the script. **Do NOT hand-edit the `- [ ]` checkbox in `tasks.md`** — the script owns it: materialize flips it to `- [x]` from your appended finish, so a fanned-out subagent only appends and never touches the shared `tasks.md`. Do NOT hand-author per-task JSON and do NOT write a per-task `start`.
+  `--close-task` appends the finish **and** folds it in one call: the line lands in `.spec-context.events.jsonl` with its own real clock (`date -u` is stamped by the script), the panel's Tasks card is populated from `--did`/`--files`, and the task's `- [ ]` box in `tasks.md` is flipped to `- [x]`. **Do NOT hand-edit that checkbox** — the script owns it. Do NOT hand-author per-task JSON, and do NOT write a per-task `start`.
 
-  Then **fold the appended lines into `.spec-context.json` — per task, the moment each finish lands.** The fold is the second half of the task's closing action, run by the **MAIN agent only**, in the foreground, one task at a time — for your own task right after its append, and for a fanned-out worker's task the moment its result returns:
+  Re-closing a task never double-counts, so a retry is safe.
+
+  **A fanned-out worker closes in two halves instead.** Folding is a read-modify-write on the shared file, and two folders is the contention the append log exists to prevent — so a worker appends only:
 
   ```bash
-  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --materialize
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
   ```
 
-  `--materialize` is the one read-modify-write: it folds the finishes into the panel **and checks off the matching `tasks.md` boxes** for every journaled task, idempotently (re-folding never double-counts). The panel only sees folded finishes — the append log is not watched — so folding per task is what makes progress advance task by task instead of jumping in end-of-wave bursts. Workers never run `--materialize` (that would put two writers on the shared file); they only append, and the MAIN agent serializes every fold. Run it once more at each wave join as a backstop, and the end-of-step hook materializes anything left and fills any task you didn't journal. What's trustworthy here is the **per-task summary** (`did`/`files`) and the order tasks completed, plus the **step-level** start→complete span, which the scripts stamp exactly. The per-task *timestamps* are best-effort — they reflect when each finish was recorded, not a precisely measured duration; that's fine, the summaries are the point.
+  and the MAIN agent folds each returned result with `--materialize`, one at a time. Run `--materialize` once more at a wave join as a backstop; the end-of-step hook folds anything left and fills any task you did not journal.
+
+  What is trustworthy here is the **per-task summary** (`did`/`files`) and the order tasks completed, plus the **step-level** start→complete span, which the scripts stamp exactly. The per-task *timestamps* are best-effort: they record when each finish was written, not a measured duration. That is fine — the summaries are the point.
 - **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
+
+**The next step is `plan`** — dispatch `/speckit.companion.plan <feature_dir>`. Unless this spec was classified `simple`, in which case plan and tasks are already folded and the next step is `implement`: `/speckit.companion.implement <feature_dir>`.
 
 <!-- speckit-companion:part self-advance -->
 ## Self-advance — hand off to the next step
 
 This is one step in the Companion pipeline. How the run continues depends on the environment you are running in; do not invoke a separate headless/deterministic run command for the everyday flow.
 
-- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, read the Companion workflow definition (`speckit-extension/workflows/speckit-companion.workflow.yml`) to learn which step comes next, then continue into it on your own — dispatch the next step's `/speckit.companion.*` command and keep going through the pipeline.
-- **Pause at every review gate, and name the command that continues.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. When you stop, read the next step out of the workflow definition and **name its command literally** — "approve and run `/speckit.companion.plan <feature_dir>`", not "approve to move to plan". The workflow file knows the command; a gate message that makes the reader work it out is the workflow failing to hand off, not restraint. Only continue once the gate is approved.
-- **Terminal step after implement.** After the implementation step finishes (and any commit step), the workflow's final step is `mark-complete`. Run it so the spec lands at `status: completed`. That step writes `completed` only through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented` — never introduce a second completed-writer.
+- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, dispatch the next step's `/speckit.companion.*` command and keep going. The order is fixed and this step's own handoff names its successor — there is no file to open to find out.
+- **Pause at every review gate, and name the command that continues.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. When you stop, **name the next command literally** — "approve and run `/speckit.companion.plan <feature_dir>`", not "approve to move to plan". A gate message that makes the reader work out what comes next is the workflow failing to hand off, not restraint. Only continue once the gate is approved.
+- **Nothing follows implement.** Implement's own final node writes `completed` through `write-context.py --mark-complete`, so the spec is already finished when this step ends. Do not dispatch `/speckit.companion.mark-complete` afterwards: it is the manual recovery command and the workflow engine's terminal step, not a step a run adds for itself. There is exactly one writer of `completed`; never introduce a second.
 - **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually (by the developer or the companion panel). Completion likewise stays a manual action there.
 <!-- /speckit-companion:part self-advance -->
 <!-- /speckit-companion:node handoff -->

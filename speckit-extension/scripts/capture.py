@@ -431,7 +431,7 @@ def set_classification(feature_dir: Path, raw: str) -> Path:
 # --------------------------------------------------------------------------- #
 
 BATCH_KEYS = ("verified", "decisions", "concerns", "expectations", "context",
-              "coverage", "step_summary", "last_action")
+              "coverage", "step_summary", "last_action", "set")
 
 
 def _parsed_batch(raw: str) -> dict:
@@ -451,6 +451,8 @@ def _parsed_batch(raw: str) -> dict:
     for key in ("verified", "decisions", "concerns", "expectations", "context", "coverage"):
         if key in doc and not isinstance(doc[key], list):
             raise ValueError(f"--batch '{key}' must be a list")
+    if "set" in doc and doc["set"] is not None and not isinstance(doc["set"], dict):
+        raise ValueError("--batch 'set' must be a map of field to value")
     for item in doc.get("coverage") or []:
         if not isinstance(item, dict) or not item.get("req"):
             raise ValueError("--batch 'coverage' entries need a 'req' key")
@@ -504,4 +506,12 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
              "step summary")
     if doc.get("last_action"):
         note(set_fields(feature_dir, [f"last_action={doc['last_action']}"]), "last_action")
+    # `set` carries the plain fields a wrap-up would otherwise spend one call
+    # each on — intent, approach, workflow, size, unattended. They are ordinary
+    # `--set` pairs; batching them changes nothing about what lands, only how
+    # many times the file is opened to land it.
+    pairs = doc.get("set")
+    if isinstance(pairs, dict) and pairs:
+        note(set_fields(feature_dir, [f"{k}={v}" for k, v in pairs.items()]),
+             f"{len(pairs)} field(s)")
     return target, landed

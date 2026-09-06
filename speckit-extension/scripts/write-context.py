@@ -557,6 +557,7 @@ def _main() -> int:
             target = set_classification(feature_dir, args.classification)
             captured.append(f"[companion] Recorded classification in {target}")
         if args.set_pairs:
+            captured_beyond_set = bool(captured)
             target = set_fields(feature_dir, args.set_pairs)
             captured.append(f"[companion] Set {', '.join(args.set_pairs)} in {target}")
         if args.batch:
@@ -634,7 +635,20 @@ def _main() -> int:
     # A no-op fold already named its own exact reason on stderr (from
     # fold_living_spec) — don't paper over it with a generic OR-string.
 
-    if captured or capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips or args.fold_living_spec:
+    # `--set` writes a plain field; it appends no lifecycle entry and touches no
+    # status, so it cannot conflict with `--advance` or `--finish`. Letting the
+    # two ride together is what stops every handoff paying a separate call just
+    # to pin `workflow=companion`. Every other capture flag still takes
+    # precedence, because those DO write history and the ordering would matter.
+    lifecycle = args.advance or args.finish
+    set_only = bool(args.set_pairs) and not (
+        captured_beyond_set or capture_mode or args.living_specs
+        or args.living_spec_skips or args.fold_living_spec
+    )
+    if lifecycle and set_only:
+        for line in captured:
+            print(line)
+    elif captured or capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips or args.fold_living_spec:
         for line in captured:
             print(line)
         skipped = [
