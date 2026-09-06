@@ -4,6 +4,8 @@ The full reference for living specs: the registry, the resolver, auto-loading, f
 
 Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* (checkout, auth, billing, todos) that stays current as the code evolves. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
 
+**One caution before anything else: spec-kit uses the phrase "living spec" for something different.** Upstream, a living spec means keeping the *feature's* `spec.md` open and regenerating its plan and tasks underneath it as the feature evolves — one document, one feature, edited in place. Here it means a durable spec per *capability* that feature deltas fold into when a feature ships, and the feature spec still ends. Both are about a document that stays true; only one of them outlives the feature that wrote it. If you arrived from the spec-kit guide, read every "living spec" below as ours.
+
 This is how Companion moves a team along a maturity ladder:
 
 - **spec-first**: the spec exists before the code, then dies at ship. Feature specs pile up as history. This is stock spec-kit.
@@ -120,6 +122,48 @@ It checks every registered living spec, and the delta sections of every active f
 Severity answers exactly one question: whether the fold stops. **The fold runs these same checks before writing anything**, per capability, and refuses to apply a capability whose deltas carry an error-level finding, naming the finding it refused on. A warning never stops anything — `delta-heading-not-found` is a warning because the fold promotes an unmatched MODIFIED into an addition, which is a defined outcome rather than damage, though a typo'd heading quietly becoming a near-duplicate requirement is still worth saying out loud.
 
 The extension runs the same checks whenever you save a `*.spec.md`, so a break appears in the editor's problem list on the line it is about while you are still looking at it.
+
+## Reading one requirement: `living-show`
+
+A capability's spec runs to hundreds of lines, and nearly every question about one is about a single requirement. `living-show` prints the slice instead of the file, using the same parser the load steps use, so what it prints and what a run reads can never disagree.
+
+```bash
+/speckit.companion.living-show --headings checkout
+/speckit.companion.living-show --requirement "Users can set a due date"
+/speckit.companion.living-show --file src/checkout/cart/index.ts
+```
+
+| Flag | Answers |
+|---|---|
+| `--headings <capability>` | What rules does this capability state? Every requirement heading, in file order, with the count. |
+| `--requirement "<heading>"` | What does this one rule say, and how would anyone know it held? The heading, its prose, and its scenarios. Add `--capability <name>` to search one capability. |
+| `--file <path>` | Which durable rules describe this file? Grouped by capability, most-specific capability first. |
+
+Read-only, and every answer exits successfully — including "not a registered capability" (which lists the ones that are), "registered but no spec file on disk", "matches no requirement" (which lists the headings that exist), and an ambiguous name (which lists the candidates rather than guessing). Add `--json` when something downstream needs the object.
+
+A requirement with no `touches` marker comes back for every file its capability claims: a marker can only ever narrow, so a partly-marked spec never returns an empty slice.
+
+**In the editor**, the same question is answered without a command. Open any source file a capability claims and the status bar reads `2 living specs`; click it and you get the claiming capabilities, the requirements whose markers match the file underneath each one, and the spec opened on the requirement you pick. The match happens inside the extension, so there is nothing to dispatch and nothing to wait for. Nothing is shown for a file no capability claims, for an exempt file, or when living specs are off.
+
+## House rules: `rules:`
+
+Conventions about *how* your specs and plans should read — "one outcome per scenario", "name the capability each decision belongs to" — are the sentences people retype into a chat window on every run. Write them once in the registry instead:
+
+```yaml
+rules:
+  spec:
+    - "Write every scenario as WHEN/THEN with exactly one observable outcome"
+  plan:
+    - "Name the capability each decision belongs to, so the fold knows where it goes"
+```
+
+`rules.spec` reaches the specify step and `rules.plan` reaches the plan step; neither sees the other's. They ride along on the resolver call each step already makes, so they cost nothing extra, and the run records the guidance it was given beside the capabilities it loaded.
+
+The block is optional and project-wide — there is no per-capability form, because two capabilities matching one change would need a precedence rule nobody has asked for. A `rules:` block that will not parse is skipped with a warning and the step runs exactly as it would have; guidance about how to write a spec must never be the reason a spec is not written.
+
+### A note on `/speckit.converge`
+
+Checked against the pinned spec-kit release: it ships no `/speckit.converge` command, so there is nothing here that overlaps or duplicates it. `/speckit.companion.doctor` reports on a *run's* health — unfinished steps, unjournaled tasks, a step that closed having verified nothing — which is a different question from reconciling a spec with its code, the job `living-drift` and `living-sync` already own. If converge ships upstream later, the overlap to look at is with those two, not with the doctor.
 
 ## Retiring a capability
 

@@ -359,6 +359,11 @@ export type ExtensionToViewerMessage =
     | {
           type: 'actionToast';
           message: string;
+      }
+    | {
+          type: 'revealRequirement';
+          /** The requirement heading to bring into view, verbatim. */
+          heading: string;
       };
 
 /**

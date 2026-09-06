@@ -426,3 +426,31 @@ The command that checks living-spec shape SHALL act only when the project has op
 #### Scenario: the command is run from below the repository root
 - **WHEN** it reports
 - **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off
+
+### A living spec is readable one slice at a time, from a terminal
+
+A command SHALL print a capability's requirement headings, one named requirement with its scenarios, or the requirements whose file markers describe a given path, using the same requirement parser the load steps use. It SHALL be read-only, and every outcome — including an unregistered capability, a missing spec file, a name matching nothing, an ambiguous name, and a file nothing claims — SHALL exit successfully with the alternatives named.
+
+#### Scenario: a reader asks for one requirement
+- **WHEN** the command is given a requirement heading that exists in exactly one capability
+- **THEN** that requirement's prose and scenarios are printed and no other requirement is
+
+#### Scenario: a heading names two capabilities
+- **WHEN** the requested heading exists in more than one registered capability
+- **THEN** every candidate is listed with its capability and none is chosen
+
+#### Scenario: living specs are off
+- **WHEN** the command runs in a project with no registry, or one that is disabled
+- **THEN** it reports nothing and exits successfully
+
+### A project's authored guidance reaches the step it was written for
+
+The specify and plan steps SHALL read their own step's rules from the registry, off the resolver call each already makes, and treat each line as guidance for how to write that step's artifact. Neither step SHALL see the other's rules, and a registry with no rules SHALL produce behaviour identical to one written before rules existed.
+
+#### Scenario: a project authors rules for both steps
+- **WHEN** a specify run loads living specs
+- **THEN** it holds the spec rules and does not hold the plan rules
+
+#### Scenario: the rules cannot be read
+- **WHEN** the rules block will not parse
+- **THEN** the step runs unchanged and says once that the rules were skipped

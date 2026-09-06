@@ -15,7 +15,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
-| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
+| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-show`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
 
 ## Diagnostics
@@ -209,6 +209,10 @@ Brownfield adoption wizard. Point it at one code area; it reads that area's surf
 ### `speckit.companion.living-drift`
 
 Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Add `--working` to also count working-tree changes — uncommitted edits, deletions, and untracked files. Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
+
+### `speckit.companion.living-show`
+
+Prints one slice of a living spec instead of the whole file: `--headings <capability>` for its requirement headings in file order, `--requirement "<heading>"` for one requirement with its prose and scenarios (add `--capability` to search one capability), and `--file <path>` for the requirements whose markers describe that file, grouped by capability, most-specific first. It uses the same parser the load steps use, so its count is the viewer outline's count and the coverage denominator. Read-only, `--json` available, and every answer exits successfully — an unregistered capability lists the registered ones, a name matching nothing lists the headings that exist, and an ambiguous name lists the candidates rather than guessing. In the editor the same lookup runs the other way: the status bar names how many living specs claim the file you have open, and one click opens the requirement that describes it.
 
 ### `speckit.companion.living-validate`
 

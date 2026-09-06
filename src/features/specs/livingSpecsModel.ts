@@ -270,14 +270,15 @@ function mappingOrUndefined(read: MappingRead): Record<string, unknown> | undefi
     return read.ok ? read.value : undefined;
 }
 
-function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCapability[] } {
+function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCapability[]; exempt: string[] } {
     if (isMapping(block) && isMapping(block.livingSpecs)) {
         block = block.livingSpecs;
     }
     if (!isMapping(block)) {
-        return { enabled: false, capabilities: [] };
+        return { enabled: false, capabilities: [], exempt: [...DEFAULT_EXEMPT_GLOBS] };
     }
     const enabled = block.enabled === true;
+    const exempt = 'exempt' in block ? asList(block.exempt) : [...DEFAULT_EXEMPT_GLOBS];
     const rawCaps = Array.isArray(block.capabilities) ? block.capabilities : [];
     const capabilities: RawCapability[] = [];
     for (const entry of rawCaps) {
@@ -299,12 +300,14 @@ function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCa
             spec,
         });
     }
-    return { enabled, capabilities };
+    return { enabled, capabilities, exempt };
 }
 
 interface RegistryResolution {
     enabled: boolean;
     capabilities: RawCapability[];
+    /** Project-wide globs no capability claims, whatever its `match` says. */
+    exempt: string[];
     legacyStale: boolean;
     error?: string;
 }
@@ -331,6 +334,7 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
         return {
             enabled: false,
             capabilities: [],
+            exempt: [...DEFAULT_EXEMPT_GLOBS],
             legacyStale: legacyHasBlock,
             error: `${LIVING_SPECS_REL} could not be read (${reason}); no capabilities loaded`,
         };
@@ -342,11 +346,12 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
         return {
             enabled: false,
             capabilities: [],
+            exempt: [...DEFAULT_EXEMPT_GLOBS],
             legacyStale: false,
             error: `${LEGACY_CONFIG_REL} could not be read (${legacyRead.reason}); no capabilities loaded`,
         };
     }
-    return { enabled: false, capabilities: [], legacyStale: false };
+    return { enabled: false, capabilities: [], exempt: [...DEFAULT_EXEMPT_GLOBS], legacyStale: false };
 }
 
 function capLocation(cap: RawCapability): 'centralized' | 'colocated' {
@@ -659,6 +664,11 @@ export function resolveCapabilityBySpecPath(
 /** Drift exempt-globs mirroring the CLI defaults. */
 const DEFAULT_EXEMPT_GLOBS = ['*.config.*', '*.test.*', '**/migrations/**'];
 
+/** True when a file is exempt: a bare glob also matches at any depth. */
+function isExempt(globs: string[], file: string): boolean {
+    return globs.some(g => globMatches(g, file) || globMatches(`**/${g}`, file));
+}
+
 const REQUIREMENT_ID_RE = /\bN?FR-\d+\b/g;
 
 /**
@@ -781,6 +791,97 @@ export function requirementsForChange(
     );
 }
 
+/** One capability that claims a source file, and the rules that describe it. */
+export interface FileClaim {
+    capability: string;
+    /** POSIX repo-relative spec path — what the viewer opens. */
+    specPath: string;
+    /** Whether that spec file is on disk. */
+    exists: boolean;
+    /**
+     * False when the spec is on disk but could not be read. Kept apart from
+     * `exists` because an unreadable spec reporting no requirements is a spec
+     * with no rules as far as every reader can tell.
+     */
+    readable: boolean;
+    /** Requirements whose marker matches this file, plus every unmarked one. */
+    requirements: string[];
+}
+
+/**
+ * How specific a capability is for one file: the longest literal prefix of a
+ * matching glob that actually prefixes the file. Mirrors the resolver's
+ * `_specificity`, so the editor orders claims the way every command body does.
+ */
+function specificity(cap: RawCapability, file: string): number {
+    let best = 0;
+    for (const pattern of cap.match) {
+        if (!globMatches(pattern, file)) {
+            continue;
+        }
+        const literal = pattern.split(/[*?[]/)[0].replace(/\/+$/, '');
+        const prefixes = literal !== '' && (file === literal || file.startsWith(`${literal}/`));
+        best = Math.max(best, prefixes ? literal.length : 1);
+    }
+    return best;
+}
+
+/**
+ * Which living specs claim a source file, and which of their requirements
+ * describe it — the reverse of the load step's question.
+ *
+ * In-process by design: this answers on every editor change, so it is a
+ * registry read and a handful of glob matches, never a dispatch. Any miss (off,
+ * unconfigured, unreadable, a path outside the workspace) is an empty list, so
+ * the caller can render nothing without distinguishing the reasons.
+ */
+export function claimsForFile(workspaceRoot: string, relPath: string): FileClaim[] {
+    const file = posix(relPath);
+    if (!file || !isPathWithinRoot(workspaceRoot, file)) {
+        return [];
+    }
+    const { enabled, capabilities, exempt } = resolveRegistry(workspaceRoot);
+    if (!enabled) {
+        return [];
+    }
+    // An exempt file belongs to no capability however its globs read.
+    if (isExempt(exempt, file)) {
+        return [];
+    }
+    const claims: Array<FileClaim & { rank: number }> = [];
+    for (const cap of capabilities) {
+        if (cap.exclude.some((g) => globMatches(g, file))) {
+            continue;
+        }
+        if (!cap.match.some((g) => globMatches(g, file))) {
+            continue;
+        }
+        const specPath = posix(cap.spec);
+        const exists = specPath !== '' && fileExists(workspaceRoot, specPath);
+        let readable = exists;
+        let requirements: string[] = [];
+        if (exists) {
+            try {
+                const text = fs.readFileSync(path.join(workspaceRoot, specPath), 'utf8');
+                requirements = requirementsForChange(requirementSlices(text), [file])
+                    .map((r) => r.heading);
+            } catch {
+                readable = false;
+            }
+        }
+        claims.push({
+            capability: cap.name,
+            specPath,
+            exists,
+            readable,
+            requirements,
+            rank: specificity(cap, file),
+        });
+    }
+    claims.sort((a, b) => b.rank - a.rank || a.capability.localeCompare(b.capability));
+    return claims.map(({ rank, ...claim }) => claim);
+}
+
 /** True when a spec carries no marker at all, so it is read whole as before. */
 export function hasNoMarkers(slices: RequirementSlice[]): boolean {
     return slices.every((s) => !s.touches);
@@ -852,7 +953,7 @@ async function computeDriftedFiles(
         return changed.filter(file =>
             cap.match.some(g => globMatches(g, file)) &&
             !cap.exclude.some(g => globMatches(g, file)) &&
-            !DEFAULT_EXEMPT_GLOBS.some(g => globMatches(g, file) || globMatches(`**/${g}`, file)) &&
+            !isExempt(DEFAULT_EXEMPT_GLOBS, file) &&
             !ownFiles.has(posix(file))
         );
     } catch {

@@ -504,8 +504,14 @@ DEFAULT_EXEMPT_GLOBS = ["*.config.*", "*.test.*", "**/migrations/**"]
 LIVING_SPECS_REL = "living-specs.yml"
 LEGACY_CONFIG_REL = os.path.join(".specify", "companion.yml")
 
-# Top-level keys the registry file owns, in emit order.
-REGISTRY_KEYS = ("enabled", "exempt", "capabilities")
+# Top-level keys the registry file owns, in emit order. `rules` is owned so a
+# rewrite re-emits it: an owned region that stopped at `capabilities` would
+# delete a `rules` block that happened to sit above it.
+REGISTRY_KEYS = ("enabled", "exempt", "capabilities", "rules")
+
+#: Pipeline steps that may carry authored guidance. An unrecognised key is
+#: dropped rather than passed through, so a typo never reaches a step silently.
+RULE_STEPS = ("spec", "plan")
 
 
 def _as_list(value) -> list:
@@ -517,12 +523,38 @@ def _as_list(value) -> list:
     return [str(value)] if value != "" else []
 
 
+def load_rules(block, warnings: list | None = None) -> dict:
+    """Normalize the registry's `rules:` block into {step: [line]} for every known step.
+
+    Every step key is always present, empty when unset, so no reader needs a
+    presence check. Anything unusable is dropped with a warning rather than
+    raised — guidance that will not parse must never fail the step it guides.
+    """
+    warn = warnings if warnings is not None else []
+    out = {step: [] for step in RULE_STEPS}
+    if block is None:
+        return out
+    if not isinstance(block, dict):
+        warn.append("rules: must be a mapping of step name to a list of lines; ignored")
+        return out
+    for key, value in block.items():
+        step = str(key)
+        if step not in RULE_STEPS:
+            warn.append(f"rules.{step}: not a pipeline step that takes rules; ignored")
+            continue
+        if value is not None and not isinstance(value, list):
+            warn.append(f"rules.{step}: must be a list of lines; ignored")
+            continue
+        out[step] = _as_list(value)
+    return out
+
+
 def load_living_specs(config: dict) -> dict:
     """Read the `livingSpecs` block of a companion.yml-shaped mapping."""
     return load_living_specs_block((config or {}).get("livingSpecs"))
 
 
-def load_living_specs_block(block) -> dict:
+def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
     """Normalize a living-specs mapping into a typed shape.
 
     Returns {"enabled": bool, "exempt": [glob], "capabilities": [{name, match, exclude, spec}]}.
@@ -538,7 +570,12 @@ def load_living_specs_block(block) -> dict:
     if isinstance(block, dict) and isinstance(block.get("livingSpecs"), dict):
         block = block["livingSpecs"]
     if not isinstance(block, dict):
-        return {"enabled": False, "exempt": list(DEFAULT_EXEMPT_GLOBS), "capabilities": []}
+        return {
+            "enabled": False,
+            "exempt": list(DEFAULT_EXEMPT_GLOBS),
+            "capabilities": [],
+            "rules": load_rules(None),
+        }
     enabled = bool(block.get("enabled", False))
     exempt = _as_list(block.get("exempt")) if "exempt" in block else list(DEFAULT_EXEMPT_GLOBS)
     raw = block.get("capabilities") or []
@@ -565,7 +602,12 @@ def load_living_specs_block(block) -> dict:
                 "retire": entry.get("retire") is True,
             }
         )
-    return {"enabled": enabled, "exempt": exempt, "capabilities": capabilities}
+    return {
+        "enabled": enabled,
+        "exempt": exempt,
+        "capabilities": capabilities,
+        "rules": load_rules(block.get("rules"), rule_warnings),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -604,13 +646,15 @@ def resolve_living_specs(root: str):
                 "warnings": [error],
                 "errors": [error],
             }
-        warnings = []
+        rule_warnings = []
+        living = load_living_specs_block(doc, rule_warnings)
+        warnings = list(rule_warnings)
         if legacy_has_block:
             warnings.append(
                 f"{LEGACY_CONFIG_REL} still has a livingSpecs block; {LIVING_SPECS_REL} "
                 "is the registry and the old block is ignored — delete it"
             )
-        return load_living_specs_block(doc), {
+        return living, {
             "origin": "registry",
             "path": LIVING_SPECS_REL,
             "legacy_stale": legacy_has_block,
@@ -721,11 +765,13 @@ def atomic_write_text(path: str, text: str) -> None:
         raise
 
 
-def render_registry(enabled: bool, capabilities: list, exempt=None) -> str:
+def render_registry(enabled: bool, capabilities: list, exempt=None, rules=None) -> str:
     """Render the registry file's flattened body from a normalized capability list.
 
     `exempt=None` omits the key (the reader then applies DEFAULT_EXEMPT_GLOBS); an empty
     list is written as `exempt: []`, which the reader honors as "no exemptions".
+    `rules` is re-emitted because the owned region covers it — a rewrite that
+    dropped the argument would delete the project's authored guidance.
     """
     lines = [f"enabled: {'true' if enabled else 'false'}"]
     if exempt is not None:
@@ -736,6 +782,13 @@ def render_registry(enabled: bool, capabilities: list, exempt=None) -> str:
             lines.extend(render_capability(cap))
     else:
         lines.append("capabilities: []")
+    authored = [(step, (rules or {}).get(step) or []) for step in RULE_STEPS]
+    authored = [(step, items) for step, items in authored if items]
+    if authored:
+        lines.append("rules:")
+        for step, items in authored:
+            lines.append(f"  {step}:")
+            lines.extend(f'    - "{item}"' for item in items)
     return "\n".join(lines) + "\n"
 
 

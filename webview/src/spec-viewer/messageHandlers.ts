@@ -14,6 +14,7 @@ import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/di
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries } from './signals';
 import { setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
+import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
 /**
@@ -86,6 +87,10 @@ export function buildHandlers(
 
         actionToast: message => {
             showToast('action-toast', message.message);
+        },
+
+        revealRequirement: message => {
+            revealRequirement(message.heading);
         },
     };
 }

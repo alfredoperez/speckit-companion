@@ -137,6 +137,40 @@ def set_living_specs_loaded_requirements(feature_dir: Path, per_cap: dict) -> Pa
     return target
 
 
+def set_living_specs_rules(feature_dir: Path, rules: dict) -> Path | None:
+    """Record the authored guidance a run was given, per step.
+
+    A sibling of `livingSpecs.loaded` for the same reason as
+    `loadedRequirements`: a reader asking "what was this run told?" should get
+    the guidance beside the capabilities, and neither list changes shape for the
+    other. A project with no rules writes nothing, so absence stays absence."""
+    cleaned = {
+        str(step).strip(): [str(line) for line in lines if str(line).strip()]
+        for step, lines in (rules or {}).items()
+        if str(step).strip() and lines
+    }
+    if not cleaned:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    block = ctx.get("livingSpecs")
+    if not isinstance(block, dict):
+        block = {}
+    prior = block.get("rules")
+    merged = dict(prior) if isinstance(prior, dict) else {}
+    for step, lines in cleaned.items():
+        # The prior side was read off disk: coerce it, or a hand-corrupted
+        # non-string entry raises inside a writer that must never fail a run.
+        kept = [str(line) for line in (merged.get(step) or [])]
+        merged[step] = list(dict.fromkeys(kept + lines))
+    block["rules"] = merged
+    ctx["livingSpecs"] = block
+    atomic_write(target, ctx)
+    return target
+
+
 def set_living_specs_synced(feature_dir: Path, names: list[str]) -> Path | None:
     """Record the capability names whose living specs were folded into on completion.
 

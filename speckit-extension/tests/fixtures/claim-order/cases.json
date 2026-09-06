@@ -1,0 +1,15 @@
+{
+  "_comment": "Capability ordering for one file, asserted in both runtimes. The resolver orders by the longest matching-glob literal prefix that actually prefixes the file; the editor's status bar re-implements that rule in TypeScript, and a drift between them means the terminal and the picker disagree about which capability is the primary frame.",
+  "capabilities": [
+    { "name": "platform", "match": ["src/**"], "spec": "src/platform.spec.md" },
+    { "name": "alpha", "match": ["src/alpha/**"], "spec": "src/alpha/alpha.spec.md" },
+    { "name": "alpha-forms", "match": ["src/alpha/forms/**"], "spec": "src/alpha/forms/forms.spec.md" },
+    { "name": "widgets", "match": ["src/**/*.widget.ts"], "spec": "src/widgets.spec.md" }
+  ],
+  "cases": [
+    { "file": "src/alpha/forms/field.ts", "order": ["alpha-forms", "alpha", "platform"] },
+    { "file": "src/alpha/index.ts", "order": ["alpha", "platform"] },
+    { "file": "src/top.ts", "order": ["platform"] },
+    { "file": "src/alpha/bar.widget.ts", "order": ["alpha", "platform", "widgets"] }
+  ]
+}

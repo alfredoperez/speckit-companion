@@ -39,3 +39,14 @@ capabilities:
     match: ["webview/src/markdown/**", "webview/src/render/**", "webview/src/shared/**", "webview/src/ui/**"]
   - name: workflows
     match: ["src/features/workflows/**", "src/features/workflow-editor/**", "speckit-extension/workflows/**"]
+
+# House rules, written once here instead of retyped into chat on every run.
+# `spec` reaches the specify step, `plan` reaches the plan step, and neither
+# sees the other's.
+rules:
+  spec:
+    - "Write every scenario as WHEN/THEN with exactly one observable outcome"
+    - "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+  plan:
+    - "Name the capability each decision belongs to, so the fold knows where it goes"
+    - "Prefer extending the file that already owns a concern over adding a new one"

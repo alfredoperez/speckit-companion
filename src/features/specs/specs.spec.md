@@ -430,3 +430,27 @@ The registry reader SHALL carry each capability's optional retirement declaratio
 #### Scenario: a capability omits the declaration
 - **WHEN** the registry is read
 - **THEN** it resolves as not retiring, which is every capability that never says otherwise
+
+### A source file reports the living specs that claim it, in the editor's own process
+
+The extension SHALL resolve, for a workspace-relative path, the capabilities whose membership globs claim it — most-specific first, honouring exclusions and the registry's exempt list — and the requirements of each whose marker matches that path. The resolution SHALL happen in the extension process, never by dispatching a command, and SHALL order capabilities by the same specificity rule the resolver uses.
+
+#### Scenario: two capabilities claim one file
+- **WHEN** the claims for that file are resolved
+- **THEN** the more specific capability is first
+
+#### Scenario: the file is exempt
+- **WHEN** the path matches the registry's exempt globs
+- **THEN** no capability claims it
+
+#### Scenario: a claiming capability has no spec file
+- **WHEN** its claims are resolved
+- **THEN** the capability still appears with no requirements, so the claim is not lost
+
+### The status bar names the living specs for the active file and reaches one requirement
+
+A status bar item SHALL show how many living specs claim the active editor's file, hidden when the count is zero, when living specs are off, and when the editor holds no workspace file. Activating it SHALL list the claiming capabilities with their matching requirements, and choosing one SHALL open that capability's spec positioned on that requirement.
+
+#### Scenario: the active editor changes to an unclaimed file
+- **WHEN** the indicator refreshes
+- **THEN** it is hidden rather than showing a zero

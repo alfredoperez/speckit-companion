@@ -327,3 +327,11 @@ Which spec-kit-extension nudge belongs on screen — none, an install, or an upd
 - **WHEN** the reader closes it
 - **THEN** only the version pair the banner named is silenced
 - **AND** the panel refreshes without the banner
+
+### Opening a spec can name the requirement to bring into view
+
+The viewer's open command SHALL accept an optional requirement heading and, once the spec renders, bring the matching requirement into view. A heading matching nothing SHALL leave the document where it is rather than failing the open.
+
+#### Scenario: a requirement heading that does not exist
+- **WHEN** the spec is opened with it
+- **THEN** the spec still opens and no error is shown
