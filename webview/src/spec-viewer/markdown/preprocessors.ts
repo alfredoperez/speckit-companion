@@ -369,9 +369,15 @@ export function stripTaskFormatLegend(markdown: string): string {
  * Empty comments are removed entirely.
  */
 export function preprocessHtmlComments(markdown: string): string {
-    return markdown.replace(/<!--([\s\S]*?)-->/g, (_match, content) => {
+    return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
         const trimmed = content.trim();
         if (!trimmed) return '';
+        // A `touches:` marker is machine metadata a living spec's requirement
+        // carries, not authoring scaffolding. Left to the rule below it would
+        // become a "Template Instructions" disclosure printing its own source,
+        // and the requirement pass — which runs after this one — would never
+        // see it. It passes through untouched and is dropped there.
+        if (/^touches:/i.test(trimmed)) return match;
         return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
     });
 }

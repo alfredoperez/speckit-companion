@@ -79,6 +79,18 @@ All declared fields are formally **declared** (optional) in the canonical
 `SpecContext` type and `spec-context.schema.json`; remaining skill fields
 stay tolerated via `additionalProperties: true`.
 
+### Living specs (optional, script-written)
+
+Written by the spec-kit side at specify time and at completion; the extension only reads them.
+
+| Field | Type | Description |
+|---|---|---|
+| `livingSpecs.loaded` | `string[]` | Capability names this feature loaded into context, most-specific first |
+| `livingSpecs.synced` | `string[]` | Capability names this feature folded its changes back into at completion |
+| `livingSpecs.loadedRequirements` | `Record<string, string[]>` | For a load sliced by file marker, the requirement headings each capability contributed. A capability read whole gets no entry; one consulted whose markers all missed gets an empty list |
+
+`loadedRequirements` is a sibling of `loaded`, never a change to it: several readers consume `loaded` as a plain list of names, including the completion accounting that requires every loaded capability to end with a delta or a recorded skip.
+
 ### Derived in-memory (never persisted)
 
 The viewer computes per-step timing from `history[]` on every render:

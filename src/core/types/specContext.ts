@@ -254,6 +254,12 @@ export interface ReviewComment {
 export interface LivingSpecsContext {
     loaded?: string[];
     synced?: string[];
+    /**
+     * Which requirement headings each capability contributed, for a load that
+     * was sliced by marker. A capability read whole gets no entry; one that was
+     * consulted and matched nothing gets an empty list.
+     */
+    loadedRequirements?: Record<string, string[]>;
 }
 
 /** A choice made during the run, with the reasoning and the road not taken. */

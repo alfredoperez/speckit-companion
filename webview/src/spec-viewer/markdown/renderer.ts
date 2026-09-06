@@ -45,6 +45,9 @@ let livingMode = false;
 // escaped, not passed through as raw HTML.
 const LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
 
+// `<!-- touches: a/**, b.ts -->` — a living requirement's file marker.
+const TOUCHES_MARKER_LINE = /^\s*<!--\s*touches:\s*.+?\s*-->\s*$/i;
+
 // Per-task capture summaries (what each task did + files), keyed by task id.
 // Injected from viewerState so the tasks.md document can show captured detail.
 let taskSummaries: Record<string, { did?: string; files?: string[] }> = {};
@@ -326,6 +329,11 @@ export function renderMarkdown(markdown: string): string {
             codeContent.push(line);
             continue;
         }
+
+        // A requirement's file marker is metadata, never prose. The living
+        // requirement pass consumes the ones it owns; any other path reaches
+        // here, and printing the comment's own source is not a rendering.
+        if (TOUCHES_MARKER_LINE.test(line)) continue;
 
         // Blockquote (group consecutive '>' lines into one <blockquote>).
         // Must come before list/empty handling so we accumulate first and

@@ -1,0 +1,118 @@
+{
+  "no-markers.md": [
+    {
+      "heading": "The first thing",
+      "touches": null
+    },
+    {
+      "heading": "The second thing",
+      "touches": null
+    }
+  ],
+  "all-marked.md": [
+    {
+      "heading": "Reads the config",
+      "touches": [
+        "src/config/**",
+        "src/config.ts"
+      ]
+    },
+    {
+      "heading": "Writes the record",
+      "touches": [
+        "src/record/writer.ts"
+      ]
+    }
+  ],
+  "mixed.md": [
+    {
+      "heading": "Marked one",
+      "touches": [
+        "src/marked/**"
+      ]
+    },
+    {
+      "heading": "Unmarked one",
+      "touches": null
+    },
+    {
+      "heading": "Marked two",
+      "touches": [
+        "src/other/thing.ts",
+        "src/other/second.ts"
+      ]
+    }
+  ],
+  "marker-in-fence.md": [
+    {
+      "heading": "Explains the marker",
+      "touches": null
+    }
+  ],
+  "marker-too-far.md": [
+    {
+      "heading": "Has a late marker",
+      "touches": null
+    }
+  ],
+  "duplicate-headings.md": [
+    {
+      "heading": "Same name",
+      "touches": [
+        "src/first/**"
+      ]
+    },
+    {
+      "heading": "Same name",
+      "touches": [
+        "src/second/**"
+      ]
+    }
+  ],
+  "marker-matches-nothing.md": [
+    {
+      "heading": "Points at nothing",
+      "touches": [
+        "src/does-not-exist/**"
+      ]
+    }
+  ],
+  "marker-matches-everything.md": [
+    {
+      "heading": "Claims the lot",
+      "touches": [
+        "src/**"
+      ]
+    }
+  ],
+  "stranded-after-uncovered.md": [
+    {
+      "heading": "Inside the section",
+      "touches": [
+        "src/inside/**"
+      ]
+    },
+    {
+      "heading": "Folded in later",
+      "touches": [
+        "src/later/thing.ts"
+      ]
+    },
+    {
+      "heading": "Folded in later, unmarked",
+      "touches": null
+    }
+  ],
+  "fenced-body.md": [
+    {
+      "heading": "The shape is declared",
+      "touches": [
+        "src/shape.ts"
+      ]
+    },
+    {
+      "heading": "Nothing fenced here",
+      "touches": null
+    }
+  ]
+}

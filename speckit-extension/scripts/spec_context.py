@@ -410,6 +410,24 @@ def _warn_no_lock(target: Path, reason: object) -> None:
     )
 
 
+def _pid_scope() -> str:
+    """Where this process's pids are meaningful.
+
+    A pid only says anything to a reader that numbers processes the same way.
+    Two containers sharing one temp dir do not, and there every live holder
+    reads as dead. The scope is written into the token so a reader can tell
+    whether its pid check applies at all.
+    """
+    try:
+        return f"{os.uname().nodename}.{os.stat('/proc/self/ns/pid').st_ino}"
+    except (AttributeError, OSError):
+        pass
+    try:
+        return os.uname().nodename
+    except AttributeError:
+        return "unknown"
+
+
 def _owner_is_gone(owner: str) -> bool:
     """True only when the token's owner is provably dead.
 
@@ -418,15 +436,16 @@ def _owner_is_gone(owner: str) -> bool:
     never be confused, or the reclaim becomes the lost write it exists to
     prevent. On Windows there is no way to ask (`os.kill` there TERMINATES for
     any signal but the console ones), so nothing is ever claimed gone and the
-    ceiling is the only bound.
+    ceiling is the only bound. A token from another pid scope is the same case:
+    unanswerable, so never claimed gone.
     """
     if os.name != "posix":
         return False
-    head = owner.split(":", 1)[0]
-    if not head.isdigit():
+    parts = owner.split(":")
+    if len(parts) < 3 or not parts[0].isdigit() or parts[1] != _pid_scope():
         return False
     try:
-        os.kill(int(head), 0)
+        os.kill(int(parts[0]), 0)
     except ProcessLookupError:
         return True
     except OSError:
@@ -435,9 +454,16 @@ def _owner_is_gone(owner: str) -> bool:
 
 
 def _reclaim_lock(lock: Path, owner: str | None) -> None:
-    """Remove the lock, but only while it still carries the token we saw."""
+    """Remove the lock, but only while it still carries the token we saw.
+
+    An unreadable owner is not a reason to reclaim. It means the file was
+    replaced or momentarily unreadable, and deleting it there would drop a lock
+    another process now legitimately holds — the lost write this exists to stop.
+    """
+    if owner is None:
+        return
     try:
-        if owner is not None and _read_lock_owner(lock) != owner:
+        if _read_lock_owner(lock) != owner:
             return
         lock.unlink(missing_ok=True)
     except OSError:
@@ -515,7 +541,7 @@ def _acquire_lock(target: Path) -> None:
     except OSError as exc:  # unwritable temp dir: record rather than refuse
         _warn_no_lock(target, exc)
         return
-    token = f"{os.getpid()}:{secrets.token_hex(8)}"
+    token = f"{os.getpid()}:{_pid_scope()}:{secrets.token_hex(8)}"
     give_up_at = time.monotonic() + _LOCK_MAX_WAIT_S
     while True:
         try:

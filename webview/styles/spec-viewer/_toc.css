@@ -222,3 +222,46 @@ aside.spec-toc.spec-toc--compact {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
+
+/* ── A living spec's requirement rows ───────────────────────────────── */
+/* A living spec is navigated by requirement, so its `h3`s are the outline
+   rather than a subsection a toggle hides. They read as primary navigation,
+   not metadata, which is why they take --text-body rather than the muted
+   tone the collapsed-subsection rows use. */
+.spec-toc-link--requirement {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-body);
+}
+
+/* The full ellipsis trio: two of the three alone silently wrap instead. */
+.spec-toc-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Known coverage is a filled dot, unknown a ring. Shape, not only colour, and
+   never a `0` — which would read as "none" rather than "not computed". */
+.spec-toc-cov {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+}
+
+.spec-toc-cov--unknown {
+    background: transparent;
+    border: 1px solid var(--border-hover);
+}
+
+.spec-toc-patterns {
+    flex: none;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}

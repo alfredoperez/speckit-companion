@@ -114,11 +114,15 @@ Produce a feature specification: prioritized user stories with acceptance scenar
      python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files…>
      ```
      This writes only additive `livingSpecs.loaded` + the breadcrumb on `.spec-context.json`; it never touches the lifecycle log. It is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read — so it never fails or slows the command; and, exactly like every other capture call here, skip it silently if `python3` or the script is unavailable. This call is the reliable record the later `plan` step and the Overview chips read.
-   - **Then read what it recorded, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If it is empty, there is nothing to load — continue to the spec draft. Otherwise, for each recorded capability (in the recorded order — most-specific first), resolve its spec path and read it into your working context:
+   - **Then read what it recorded — by requirement, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If it is empty, there is nothing to load — continue to the spec draft. Otherwise ask the resolver what each capability should contribute for these files:
      ```bash
-     python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --json
+     python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --requirements-for --json
      ```
-     Read each match's `spec` path (centralized capabilities resolve to `capabilities/<name>/spec.md`; colocated ones carry their own path): the leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. Skip any the resolver marked `"exists": false` (or missing on disk); load the rest. These living specs are background you must honor while drafting — they describe how the area already behaves. This reading is best-effort context; the recorder above is the reliable write.
+     Each entry comes back in the recorded order — most-specific first — with either `"whole": true`, meaning read the whole `spec` file exactly as before, or `"whole": false` plus a `purpose` and the `requirements` to contribute. **Each requirement carries its `heading` and its full `body`** — the normative prose and its scenarios — so a narrowed load is context you already hold, not a table of contents to go and resolve. **Read only what it names.** A capability's spec runs to hundreds of lines and most of them describe behaviour this change will never touch; the requirements listed are the ones that describe the files you are about to change, plus every requirement whose author left it unmarked. Skip any the resolver marked `"exists": false`.
+
+     A requirement carrying no marker is always in the list, so a partly-marked spec never starves you of context — the narrowing can only ever remove requirements that explicitly claim other files. If the resolver is unavailable or the call fails, fall back to reading each `spec` path whole, exactly as before: the narrowing is an optimization and must never cost you the brief.
+
+     The leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. These are background you must honor while drafting — they describe how the area already behaves.
 
 <!-- /speckit-companion:node load-living-specs -->
 <!-- /speckit-companion:phase gather -->

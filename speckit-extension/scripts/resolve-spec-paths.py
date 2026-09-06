@@ -127,6 +127,121 @@ def _glob_matches(pat: str, f: str) -> bool:
     return re.match(_glob_to_regex(pat), f) is not None
 
 
+#: `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading.
+_TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+
+
+def requirement_slices(spec_text: str) -> list:
+    """Every requirement in a spec, with the files its marker claims.
+
+    The Python half of a parser that must exist twice — the viewer has no Python
+    and the command bodies have no TypeScript. Both count the same headings off
+    the same fence-stripped text and are pinned against
+    `tests/fixtures/requirement-slices/`; a fixture only one side reads fails.
+    """
+    # Fences decide which `###` is a heading; they are never removed from the
+    # text. Slicing a fence-stripped document would delete a code example from
+    # the middle of a requirement, and the reader would have no way to tell.
+    lines = spec_text.splitlines()
+    fenced = _fence_flags(lines)
+
+    def is_heading(k):
+        return not fenced[k] and re.match(r"^###(?!#)\s+", lines[k])
+
+    def is_section(k):
+        return not fenced[k] and re.match(r"^##(?!#)\s+", lines[k])
+
+    # Every `###` in the document, not just the ones under `## Requirements`.
+    # Fold-back appends to the end of the file, so real specs carry requirements
+    # past the Uncovered section; scoping to the section hid them from the load
+    # while the coverage denominator still counted them.
+    end = len(lines)
+    out = []
+    i = 0
+    while i < end:
+        head = re.match(r"^###(?!#)\s+(.+?)\s*$", lines[i]) if not fenced[i] else None
+        if not head:
+            i += 1
+            continue
+        # A requirement ends at the next requirement OR the next section
+        # heading. Without the second, the last requirement before an uncovered
+        # section swallows that whole section and hands it to a load step as its
+        # own normative prose.
+        j = i + 1
+        while j < end and not is_heading(j) and not is_section(j):
+            j += 1
+        body = lines[i + 1:j]
+        # Only the line immediately after the heading is a marker; one further
+        # down is body, because a spec may legitimately discuss a marker.
+        marker = _TOUCHES_RE.match(body[0]) if body else None
+        touches = None
+        if marker:
+            touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] or None
+            # The marker is parser metadata; handing it to a reader as prose is
+            # a leak, not a fact about the requirement.
+            body = body[1:]
+        out.append({"heading": head.group(1), "touches": touches, "body": body})
+        i = j
+    return out
+
+
+def requirements_for_change(slices: list, changed: list) -> list:
+    """Requirements whose marker matches a changed file, plus every unmarked one.
+
+    A marker can only narrow: an unmarked requirement is always contributed, so
+    a missing or too-narrow marker costs a run an extra requirement rather than
+    starving it of one.
+    """
+    files = [_posix(f) for f in changed]
+    out = []
+    for s in slices:
+        if not s.get("touches"):
+            out.append(s)
+            continue
+        if any(_glob_matches(g, f) for g in s["touches"] for f in files):
+            out.append(s)
+    return out
+
+
+def has_no_markers(slices: list) -> bool:
+    """True when a spec carries no marker at all, so it is read whole as before."""
+    return all(not s.get("touches") for s in slices)
+
+
+def purpose_section(spec_text: str) -> str:
+    """The `## Purpose` section's text, or an empty string when there is none.
+
+    Finds the boundaries while ignoring fenced blocks, but returns the original
+    lines. Returning the fence-stripped text would silently delete a snippet
+    from the middle of a purpose, and the reader would have no way to tell.
+    """
+    lines = spec_text.splitlines()
+    fenced = _fence_flags(lines)
+    start = next((i for i, l in enumerate(lines)
+                  if not fenced[i] and re.match(r"^##\s+Purpose\s*$", l)), None)
+    if start is None:
+        return ""
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if not fenced[i] and re.match(r"^##(?!#)\s+", lines[i]):
+            end = i
+            break
+    return "\n".join(lines[start:end]).strip()
+
+
+def _fence_flags(lines: list) -> list:
+    """True for every line inside a fenced block, and for the fences themselves."""
+    flags = []
+    inside = False
+    for line in lines:
+        if re.match(r"^\s*(```|~~~)", line):
+            inside = not inside
+            flags.append(True)
+            continue
+        flags.append(inside)
+    return flags
+
+
 def matches(cap: dict, f: str) -> bool:
     """File belongs to capability: any `match` glob, minus any `exclude` glob."""
     f = _posix(f)
@@ -351,18 +466,83 @@ def _fmt_list(items: list[str]) -> str:
 def render_human(result: dict) -> str:
     """Concise human-readable view of a result object.
 
-    --changed -> `[name, name]` (most-specific first)
-    --orphans -> `[path, path]`
-    --all     -> capability names line + orphans line
+    --changed          -> `[name, name]` (most-specific first)
+    --orphans          -> `[path, path]`
+    --all              -> capability names line + orphans line
+    --requirements-for -> one line per capability: whole, or its requirements
     Empty modes print `[]` (no error), matching the inert/opt-out contract.
     """
     if "matched" in result:
         return _fmt_list([m["name"] for m in result["matched"]])
+    # Keyed on `changed`, not on `capabilities`: both shapes carry capabilities,
+    # and falling into the --all branch printed an orphans line that was never
+    # computed.
+    if "changed" in result and "capabilities" in result:
+        lines = []
+        for c in result["capabilities"]:
+            if c.get("whole"):
+                lines.append(f"{c['name']}: whole")
+            else:
+                heads = [r["heading"] for r in c.get("requirements") or []]
+                lines.append(f"{c['name']}: {_fmt_list(heads)}")
+        return "\n".join(lines) if lines else "[]"
     if "capabilities" in result:
         caps = _fmt_list([c["name"] for c in result["capabilities"]])
         orphans = _fmt_list(result.get("orphans", []))
         return f"capabilities: {caps}\norphans: {orphans}"
     return _fmt_list(result.get("orphans", []))
+
+
+def requirements_for_changed(files: list, living: dict, root: str) -> list:
+    """What a load should contribute, per capability, for a set of changed files.
+
+    A capability whose spec carries no marker anywhere is reported `whole`, and
+    the caller reads the file exactly as it does today. Otherwise the caller gets
+    the Purpose section plus the requirements to contribute — those whose marker
+    matches, and every unmarked one.
+
+    A capability whose markers all miss still appears, with its purpose and no
+    requirements: it was consulted, and completion accounting must still see it.
+    """
+    out = []
+    for entry in match_changed(files, living, root):
+        spec_rel = entry.get("spec") or ""
+        item = {
+            "name": entry.get("name"),
+            "spec": spec_rel,
+            "exists": entry.get("exists", False),
+            "whole": True,
+            "purpose": None,
+            "requirements": [],
+        }
+        if not item["exists"]:
+            out.append(item)
+            continue
+        try:
+            with open(os.path.join(root, spec_rel), encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            out.append(item)
+            continue
+        slices = requirement_slices(text)
+        if has_no_markers(slices):
+            out.append(item)
+            continue
+        picked = requirements_for_change(slices, files)
+        item["whole"] = False
+        item["purpose"] = purpose_section(text) or None
+        # The body rides along. A heading alone is a table of contents, not the
+        # normative prose and scenarios the load step exists to hand over.
+        item["requirements"] = [
+            {
+                "heading": s["heading"],
+                "matched": bool(s.get("touches")),
+                "body": "\n".join(s.get("body") or []).strip(),
+            }
+            for s in picked
+        ]
+        out.append(item)
+    return out
 
 
 def main(argv=None) -> int:
@@ -371,6 +551,8 @@ def main(argv=None) -> int:
     ap.add_argument("--changed", nargs="*", help="changed files -> capabilities in scope")
     ap.add_argument("--all", action="store_true", help="every capability (union) + orphans")
     ap.add_argument("--orphans", action="store_true", help="orphan spec files (either layout)")
+    ap.add_argument("--requirements-for", action="store_true",
+                    help="with --changed: what each capability should contribute, sliced by requirement")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable JSON object (default: a concise human list)")
     args = ap.parse_args(argv)
@@ -385,6 +567,8 @@ def main(argv=None) -> int:
             result = {"orphans": []}
         elif args.all:
             result = {"capabilities": [], "orphans": []}
+        elif args.requirements_for:
+            result = {"changed": args.changed or [], "capabilities": []}
         else:
             result = {"changed": args.changed or [], "matched": []}
         emit(result)
@@ -397,6 +581,10 @@ def main(argv=None) -> int:
             orphans = find_orphans(living, root)
             result = {"capabilities": discover_all(living, root, orphans),
                       "orphans": orphans}
+        elif args.requirements_for:
+            files = args.changed or []
+            result = {"changed": files,
+                      "capabilities": requirements_for_changed(files, living, root)}
         else:
             files = args.changed or []
             result = {"changed": files, "matched": match_changed(files, living, root)}

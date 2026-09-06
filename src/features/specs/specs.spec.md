@@ -333,6 +333,14 @@ Two updates to the same spec's state record that arrive at the same time both la
 - **WHEN** a serialized write throws
 - **THEN** its error reaches its caller and the next queued write for that spec still runs
 
+#### Scenario: a holder's process cannot be found
+- **WHEN** a waiter checks whether the lock's owner is still alive
+- **THEN** its answer counts only when the token says the two number processes the same way, since two containers sharing one temporary directory read every live holder as dead, and taking the lock on that basis is the lost write the lock exists to prevent
+
+#### Scenario: the lock's owner cannot be read
+- **WHEN** a waiter would reclaim it
+- **THEN** it does not, because an unreadable owner means the file was replaced or was momentarily unreadable, not that nobody holds it
+
 ### A fast-path folded step is derived as folded, once
 
 The shared step-history derivation SHALL mark a step folded when its own extension-stamped step-level start/complete pair spans under one second and its start lands within one second of the previous step's extension-stamped close — anchored on the stamped pair, never on the derived close, which can be a much later next-step start. The flag is independent of duration trust (a same-instant fold is folded but untrusted), is set nowhere else, and folded steps keep counting as measured timing coverage.
@@ -356,3 +364,31 @@ The shared step-history derivation SHALL count a step's span as measured when th
 #### Scenario: a premature agent finish over an extension start
 - **WHEN** a step's start is stamped `by:extension` and an `ai` step-level complete lands immediately after
 - **THEN** that step's duration is not trusted
+
+### Requirement slicing lives beside the requirement-id parser and counts the same headings
+
+The extension SHALL parse a living spec into requirement slices — heading, optional file marker, body — next to the existing requirement-id parser, stripping fenced blocks with the same rule so an example in a snippet is never counted. Both parsers SHALL count requirements across the whole document rather than within a named section: fold-back appends to the end of the file, so a spec that has been folded into more than once carries requirements past its uncovered-files section, and scoping the slicer to a section is precisely how it comes to see fewer requirements than the denominator counts. The parser exists in two runtimes because neither can call the other, so both SHALL be held to one shared set of fixtures, and a fixture exercised by only one of them SHALL fail the build.
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** either parser reads the spec
+- **THEN** it is not a requirement, in both runtimes
+
+#### Scenario: a requirement appended past the uncovered-files section
+- **WHEN** either parser reads the spec
+- **THEN** it is a requirement like any other, because where fold-back put it says nothing about whether it is one
+
+#### Scenario: a requirement whose prose carries a fenced example
+- **WHEN** either parser slices it
+- **THEN** the example is still in the body, because fences decide where a heading is and must never be removed from what a reader is handed
+
+#### Scenario: the marker line itself
+- **WHEN** either parser slices a marked requirement
+- **THEN** the marker is not part of the body, since handing parser metadata to a reader as prose is a leak rather than a fact about the requirement
+
+#### Scenario: a marker that names no file
+- **WHEN** either parser reads a marker whose glob list is empty
+- **THEN** the requirement reads as unmarked, so an empty marker widens the load rather than narrowing it to nothing
+
+#### Scenario: a fixture is added
+- **WHEN** only one runtime's suite exercises it
+- **THEN** the drift guard fails, because that is a case where the two are free to disagree

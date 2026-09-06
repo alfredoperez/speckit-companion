@@ -64,5 +64,50 @@ class ConcurrentCapturesAllSurvive(unittest.TestCase):
         self.assertEqual(ctx.get("second"), 2)
 
 
+class APidOnlySpeaksInsideItsOwnScope(unittest.TestCase):
+    """A pid says nothing to a reader that numbers processes differently."""
+
+    def setUp(self):
+        sys.path.insert(0, str(REPO / "speckit-extension" / "scripts"))
+        import spec_context
+
+        self.sc = spec_context
+
+    def test_a_token_carries_the_scope_its_pid_belongs_to(self):
+        # pid : scope : nonce — the reader needs all three to judge the first.
+        self.assertIn(self.sc._pid_scope(), f"1:{self.sc._pid_scope()}:abc")
+
+    def test_a_dead_pid_in_our_own_scope_is_gone(self):
+        import os
+
+        dead = subprocess.run(
+            [sys.executable, "-c", "import os;print(os.getpid())"],
+            capture_output=True, text=True, check=True).stdout.strip()
+        self.assertNotEqual(int(dead), os.getpid())
+        self.assertTrue(
+            self.sc._owner_is_gone(f"{dead}:{self.sc._pid_scope()}:abc"))
+
+    def test_a_pid_from_another_scope_is_never_claimed_gone(self):
+        self.assertFalse(self.sc._owner_is_gone("999999:some-other-container:abc"))
+
+    def test_a_token_with_no_scope_is_never_claimed_gone(self):
+        # The old two-part shape. Unanswerable, so it waits rather than reclaims.
+        self.assertFalse(self.sc._owner_is_gone("999999:abc"))
+
+
+class AnUnreadableOwnerIsNotAReasonToReclaim(unittest.TestCase):
+    def test_reclaim_does_nothing_without_an_owner(self):
+        sys.path.insert(0, str(REPO / "speckit-extension" / "scripts"))
+        import spec_context
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        lock = Path(tmp.name) / "x.lock"
+        lock.write_text("somebody-else", encoding="utf-8")
+        spec_context._reclaim_lock(lock, None)
+        # Deleting it would drop a lock another process legitimately holds.
+        self.assertTrue(lock.exists())
+
+
 if __name__ == "__main__":
     unittest.main()

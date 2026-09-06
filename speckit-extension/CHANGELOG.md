@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+
+- **A big living spec no longer costs a whole run.** Starting a feature used to read every line of every capability it touched — on the largest one here, 509 lines to describe a change to a single file. A requirement can now name the files it describes, and a run reads the capability's purpose plus the requirements about the files being changed: 73 lines instead of 509 on that same capability. Adopting a code area and syncing from your changes write those file names for you, so nothing new is yours to maintain. A requirement that names no files is read by every run, so a spec you have only partly adopted simply narrows less — it can never leave a run under-briefed.
+
 ### Fixed
 - **A capture no longer overwrites what the editor just recorded.** Capture already took turns with other captures, but the editor writes the same run record too, and the two could not see each other — so a capture that started before an editor write finished would publish the copy it had read and quietly undo it. Both now take turns on the same lock, held for the whole of a capture's run rather than dropped between its first write and its last. A capture that crashed is recognised as gone and its turn taken over at once, so it can never wedge a later run; one still working is waited for instead of overwritten.
 - **A step closes itself, so a run cannot stall silently.** A step's completion was written only by its after-hook, and a hook is a block of text asking a runtime to dispatch a command — in a terminal session that runtime is the same assistant that just printed it, so "running the hook" and "printing the word Executing" look identical. One run sat with its next step unreachable for eight and a half minutes because of it, and that wait is now permanently part of that step's recorded duration. Every step now closes itself as the last thing it does. The write is idempotent, so when the hook did fire nothing changes.

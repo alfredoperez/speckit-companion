@@ -71,8 +71,18 @@ The exact required structure:
    Each requirement is:
 
    - a **heading** naming the behavior — `### Pages delegate their chrome to a layout primitive`,
+   - immediately under the heading, a **`touches` marker** naming the files that requirement was derived from (below),
    - a sentence or two of **normative prose** using MUST/SHALL/SHOULD, saying what is guaranteed and why,
    - one or more **`#### Scenario: <short name>`** blocks with `- **WHEN** …` / `- **THEN** …` (and `- **AND** …`) bullets giving a concrete, checkable case.
+
+   **Write the `touches` marker from the files you actually read for that requirement.** It goes on the line *immediately* after the heading — one line further down and it is body, not a marker:
+
+   ```markdown
+   ### Pages delegate their chrome to a layout primitive
+   <!-- touches: src/layout/**, src/pages/shell.tsx -->
+   ```
+
+   Comma-separated paths or globs, relative to the workspace root, in the same glob dialect the registry's own `match:` list uses. Name what that requirement describes, not everything the capability claims — the marker's whole job is to let a later run read this requirement only when it is relevant. Narrow is safe: a requirement whose marker is too narrow is still read whenever it is unmarked-adjacent work, because **an unmarked requirement is read by every run**. So write the marker when you know the files, and leave it off when you genuinely do not.
 
    Write about behavior, contracts, and intent. Do **not** transcribe the surface you read. A requirement must never be a restatement of:
 

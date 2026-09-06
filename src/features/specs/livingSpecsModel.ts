@@ -672,6 +672,112 @@ export function requirementIds(specText: string): string[] {
     return [...new Set(kept.join('\n').match(REQUIREMENT_ID_RE) ?? [])];
 }
 
+/** One requirement, as both the loader and the outline see it. */
+export interface RequirementSlice {
+    /** The heading text, verbatim — the join key fold-back, coverage and the cards already share. */
+    heading: string;
+    /** The marker's globs, absent when the requirement carries none. */
+    touches?: string[];
+    /** Lines after the heading, up to the next `###`, the next `##`, or the end. */
+    body: string[];
+}
+
+/** `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading. */
+const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
+/** True for every line inside a fenced block, and for the fences themselves. */
+function fenceFlags(lines: string[]): boolean[] {
+    const flags: boolean[] = [];
+    let inside = false;
+    for (const line of lines) {
+        if (/^\s*(```|~~~)/.test(line)) {
+            inside = !inside;
+            flags.push(true);
+            continue;
+        }
+        flags.push(inside);
+    }
+    return flags;
+}
+
+
+/**
+ * Every requirement in a spec, with the files its marker claims.
+ *
+ * Counts exactly the headings `requirementIds()` counts, off the same
+ * fence-stripped text — the outline and the coverage denominator have to agree
+ * or a row contradicts the badge beside it. The Python twin in
+ * `resolve-spec-paths.py` is pinned against the same fixtures.
+ */
+export function requirementSlices(specText: string): RequirementSlice[] {
+    // Fences decide which `###` is a heading; they are never removed from the
+    // text. Slicing a fence-stripped document would delete a code example from
+    // the middle of a requirement, and the reader would have no way to tell.
+    const lines = specText.split(/\r?\n/);
+    const fenced = fenceFlags(lines);
+    const isHeading = (k: number): boolean =>
+        !fenced[k] && /^###(?!#)\s+/.test(lines[k]);
+    const isSection = (k: number): boolean =>
+        !fenced[k] && /^##(?!#)\s+/.test(lines[k]);
+    // Every `###` in the document, not just the ones under `## Requirements`.
+    // Fold-back appends to the end of the file, so 44 of this repo's 193
+    // requirements sit past the Uncovered section — scoping to the section hid
+    // them from the load while the coverage denominator still counted them.
+    const end = lines.length;
+    const out: RequirementSlice[] = [];
+    let i = 0;
+    while (i < end) {
+        const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+?)\s*$/) : null;
+        if (!head) {
+            i++;
+            continue;
+        }
+        // A requirement ends at the next requirement OR the next section
+        // heading. Without the second, the last requirement before an uncovered
+        // section swallows that whole section as its own prose.
+        let j = i + 1;
+        while (j < end && !isHeading(j) && !isSection(j)) j++;
+        let body = lines.slice(i + 1, j);
+        // Only the line immediately after the heading is a marker; one further
+        // down is body, because a spec may legitimately discuss a marker.
+        const marker = body.length > 0 ? body[0].match(TOUCHES_RE) : null;
+        // An empty list is `undefined`, not `[]`: `<!-- touches: , -->` names no
+        // file, so the requirement is unmarked. An empty array is truthy in TS
+        // and would have made this half narrow where the Python half does not.
+        const globs = marker
+            ? marker[1].split(',').map((g) => g.trim()).filter(Boolean)
+            : [];
+        const touches = globs.length > 0 ? globs : undefined;
+        // The marker is parser metadata; handing it to a reader as prose is a
+        // leak, not a fact about the requirement.
+        if (marker) body = body.slice(1);
+        out.push(touches ? { heading: head[1], touches, body } : { heading: head[1], body });
+        i = j;
+    }
+    return out;
+}
+
+/**
+ * Which requirements a change should read: those whose marker matches a changed
+ * file, plus every unmarked one. A marker can only ever narrow — an unmarked
+ * requirement is always contributed, so a missing or too-narrow marker costs a
+ * run an extra requirement rather than starving it of one.
+ */
+export function requirementsForChange(
+    slices: RequirementSlice[],
+    changedFiles: string[],
+): RequirementSlice[] {
+    const files = changedFiles.map(posix);
+    return slices.filter(
+        (s) => !s.touches || s.touches.some((g) => files.some((f) => globMatches(g, f))),
+    );
+}
+
+/** True when a spec carries no marker at all, so it is read whole as before. */
+export function hasNoMarkers(slices: RequirementSlice[]): boolean {
+    return slices.every((s) => !s.touches);
+}
+
 /** A coverage line "names a test" per the CLI rule. */
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 

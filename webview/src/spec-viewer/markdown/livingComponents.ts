@@ -186,18 +186,34 @@ export function preprocessLivingScenarios(markdown: string): string {
 const HAS_INFERRED = /\[inferred\]/i;
 const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 
-function buildRequirementCard(heading: string, blockLines: string[]): string[] {
+/** `<!-- touches: a/**, b.ts -->` — the marker sits directly under the heading. */
+const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
+function buildRequirementCard(
+    heading: string,
+    blockLines: string[],
+    index: number,
+): string[] {
+    const files = touchesCount(blockLines);
     // Lift the `[inferred]` metadata tag out of the prose into a confidence
     // badge. The tag can sit in the heading (`### Title [inferred]`) or a body
     // line; either way it's stripped from the visible text. An untagged
     // requirement is observed and gets no badge.
     let inferred = false;
-    let title = heading;
+    // Trailing whitespace is common on a markdown line and the heading regex
+    // keeps it, so a card and its outline row would look coverage up under
+    // different keys — the disagreement this single pass exists to prevent.
+    let title = heading.trimEnd();
     if (HAS_INFERRED.test(heading)) {
         inferred = true;
         title = heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim();
     }
-    const body = blockLines.map((line) => {
+    const body = blockLines
+        // Only the first line, matching what every slicer treats as the marker.
+        // Filtering all of them deletes a line further down that the outline's
+        // count, and both slicers, still read as ordinary prose.
+        .filter((line, i) => !(i === 0 && TOUCHES_LINE.test(line)))
+        .map((line) => {
         if (HAS_INFERRED.test(line)) {
             inferred = true;
             return line.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '');
@@ -220,14 +236,28 @@ function buildRequirementCard(heading: string, blockLines: string[]): string[] {
         ? [`<div class="living-req-meta">${badges.join('')}</div>`]
         : [];
 
+    // The coverage and the file count ride on the card as data. The outline is
+    // the viewer's own table of contents, which reads them off the rendered
+    // heading rather than parsing the markdown a second time.
+    const covAttr = cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0'
+        ? ` data-req-coverage="${escapeHtml(String(cov))}"` : '';
+    const filesAttr = files > 0 ? ` data-req-patterns="${files}"` : '';
     return [
-        `<div class="living-req-card" data-req="${escapeHtml(title)}">`,
+        `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
+        + ` data-req="${escapeHtml(title)}"${covAttr}${filesAttr}>`,
         `### ${title}`,
         ...metaLine,
         ...body,
         '</div>',
     ];
 }
+
+/** How many path patterns a requirement's marker names, or 0 when unmarked. */
+function touchesCount(blockLines: string[]): number {
+    const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
+    return m ? m[1].split(',').map((g) => g.trim()).filter(Boolean).length : 0;
+}
+
 
 /**
  * Requirement cards: wrap each `###` requirement under
@@ -241,30 +271,59 @@ export function preprocessLivingRequirements(markdown: string): string {
         const secStart = lines.findIndex((l) => /^##\s+Requirements\s*$/.test(l));
         if (secStart === -1) return md;
 
-        let secEnd = lines.length;
-        for (let i = secStart + 1; i < lines.length; i++) {
-            if (/^##\s+/.test(lines[i])) {
-                secEnd = i;
-                break;
-            }
-        }
+        // To the end of the document, not to the next `##`. Fold-back appends
+        // past the uncovered-files section, so stopping there left every
+        // requirement folded in after adoption rendered as bare markdown while
+        // the coverage denominator still counted it. Lines that are not a
+        // requirement heading pass through untouched, so the uncovered section
+        // reaches its own pass exactly as before.
+        const secEnd = lines.length;
 
-        const out: string[] = lines.slice(0, secStart + 1);
+        // A `###` inside a fenced block is an example, not a requirement. The
+        // resolver's parser already ignores those, and the cards share the
+        // coverage denominator's headings — a viewer that counted one more would
+        // put a card on the page that no other reader believes exists.
+        const fenced = new Set<number>();
+        let inFence = false;
+        for (let k = secStart + 1; k < secEnd; k++) {
+            if (/^\s*(```|~~~)/.test(lines[k])) {
+                inFence = !inFence;
+                fenced.add(k);
+                continue;
+            }
+            if (inFence) fenced.add(k);
+        }
+        const isHeading = (k: number): boolean =>
+            !fenced.has(k) && /^###(?!#)\s+/.test(lines[k]);
+        const isSection = (k: number): boolean =>
+            !fenced.has(k) && /^##(?!#)\s+/.test(lines[k]);
+
+        const cards: string[] = [];
         let i = secStart + 1;
+        let index = 0;
         while (i < secEnd) {
-            const head = lines[i].match(/^###(?!#)\s+(.+)$/);
+            const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+)$/) : null;
             if (!head) {
-                out.push(lines[i]);
+                cards.push(lines[i]);
                 i++;
                 continue;
             }
             const heading = head[1];
+            // A card ends at the next requirement OR the next section heading.
+            // Without the second, the last requirement before `## Uncovered`
+            // swallowed that whole section into its card.
             let j = i + 1;
-            while (j < secEnd && !/^###(?!#)\s+/.test(lines[j])) j++;
-            out.push(...buildRequirementCard(heading, lines.slice(i + 1, j)));
+            while (j < secEnd && !isHeading(j) && !isSection(j)) j++;
+            const blockLines = lines.slice(i + 1, j);
+            cards.push(...buildRequirementCard(heading, blockLines, index));
+            index++;
             i = j;
         }
-        out.push(...lines.slice(secEnd));
+        const out: string[] = [
+            ...lines.slice(0, secStart + 1),
+            ...cards,
+            ...lines.slice(secEnd),
+        ];
         return out.join('\n');
     });
 }

@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {
+    pidScope,
     specContextLockPath,
     updateSpecContext,
     writeSpecContext,
@@ -189,7 +190,7 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         );
         const lock = specContextLockPath(target);
         fs.mkdirSync(path.dirname(lock), { recursive: true });
-        fs.writeFileSync(lock, `${deadPid}:abcdef`, 'utf-8');
+        fs.writeFileSync(lock, `${deadPid}:${pidScope()}:abcdef`, 'utf-8');
 
         const started = Date.now();
         await updateSpecContext(
@@ -202,6 +203,28 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         // Reclaimed and then released, not merely written around.
         expect(fs.existsSync(lock)).toBe(false);
     });
+
+    it('a live holder from another pid scope is waited for, not read as dead', async () => {
+        // Two containers sharing one temp dir number processes differently, so
+        // the holder's pid is meaningless here and frequently unused. Taking the
+        // lock on that basis is the lost write the lock exists to prevent.
+        const { specDir } = makeCell();
+        const target = path.join(specDir, '.spec-context.json');
+        const lock = specContextLockPath(target);
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        fs.writeFileSync(lock, `999999:some-other-container:abcdef`, 'utf-8');
+
+        const started = Date.now();
+        await updateSpecContext(
+            specDir,
+            ctx => ({ ...ctx, survived: true }) as SpecContext,
+            fallback()
+        );
+        // It waits out the ceiling rather than reclaiming, so the write still
+        // lands but the lock was never taken from under a possible live holder.
+        expect(readRecord(specDir).survived).toBe(true);
+        expect(Date.now() - started).toBeGreaterThan(1000);
+    }, 60000);
 
     it('a lock whose owner is still running is waited for, not taken', async () => {
         const { specDir } = makeCell();

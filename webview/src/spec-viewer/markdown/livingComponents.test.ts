@@ -401,3 +401,149 @@ describe('renderMarkdown — feature-spec byte parity (FR-001, SC-001)', () => {
         expect(out).toContain('&lt;img');
     });
 });
+
+describe('requirement cards carry what the outline needs (#672 Wave 1)', () => {
+    const SPEC = `## Purpose
+
+Why this exists.
+
+## Requirements
+
+### Alpha behaviour
+<!-- touches: src/alpha/**, src/alpha/extra.ts -->
+
+Alpha.
+
+### Beta behaviour
+
+Beta, unmarked.
+
+## Uncovered
+
+- \`src/skimmed.ts\`
+
+### Folded in later
+
+Appended past the uncovered section, and still a requirement.
+`;
+
+    afterEach(() => setLivingCoverage(null));
+
+    it('makes a card for every requirement, including one appended past Uncovered', () => {
+        const ids = [...preprocessLivingRequirements(SPEC).matchAll(/id="living-req-(\d+)"/g)]
+            .map((m) => m[1]);
+        expect(ids).toEqual(['0', '1', '2']);
+    });
+
+    it('names the requirement on its card', () => {
+        const names = [...preprocessLivingRequirements(SPEC).matchAll(/data-req="([^"]*)"/g)]
+            .map((m) => m[1]);
+        expect(names).toEqual(['Alpha behaviour', 'Beta behaviour', 'Folded in later']);
+    });
+
+    it('carries the file count a marker names, and nothing when unmarked', () => {
+        const counts = [...preprocessLivingRequirements(SPEC).matchAll(/data-req-patterns="(\d+)"/g)]
+            .map((m) => m[1]);
+        expect(counts).toEqual(['2']);
+    });
+
+    it('carries known coverage and omits it when unknown, never as zero', () => {
+        setLivingCoverage({ 'Alpha behaviour': '3/4', 'Beta behaviour': '0' });
+        const out = preprocessLivingRequirements(SPEC);
+        expect(out).toContain('data-req-coverage="3/4"');
+        expect(out).not.toContain('data-req-coverage="0"');
+        expect([...out.matchAll(/data-req-coverage=/g)]).toHaveLength(1);
+    });
+
+    it('leaves a document with no requirements section alone', () => {
+        expect(preprocessLivingRequirements('# Just a title\n\nProse.\n'))
+            .not.toContain('living-req-card');
+    });
+
+    it('a heading inside a fenced block is not a requirement', () => {
+        const withFence = `## Requirements
+
+### Real one
+
+Prose.
+
+\`\`\`markdown
+### Not a requirement
+\`\`\`
+`;
+        const names = [...preprocessLivingRequirements(withFence).matchAll(/data-req="([^"]*)"/g)]
+            .map((m) => m[1]);
+        expect(names).toEqual(['Real one']);
+    });
+});
+
+describe('requirement cards through the real render pipeline (#672 Wave 1)', () => {
+    // Through renderMarkdown on purpose. Calling the preprocessor directly
+    // skips preprocessHtmlComments and the raw-HTML passthrough test, which is
+    // where the cards' real failures lived.
+    const SPEC = `## Purpose
+
+Why this exists.
+
+## Requirements
+
+### Alpha behaviour
+<!-- touches: src/alpha/**, src/alpha/extra.ts -->
+
+Alpha.
+
+### Beta behaviour
+
+Beta, unmarked.
+`;
+
+    beforeEach(() => setLivingMode(true));
+
+    it('emits the cards as real HTML, not escaped text', () => {
+        const out = renderMarkdown(SPEC);
+        expect(out).toContain('<div class="living-req-card"');
+        expect(out).not.toContain('&lt;div class="living-req-card"');
+    });
+
+    it('carries the file count a marker names', () => {
+        expect(renderMarkdown(SPEC)).toContain('data-req-patterns="2"');
+    });
+
+    it('never renders a touches marker as a Template Instructions disclosure', () => {
+        const out = renderMarkdown(SPEC);
+        expect(out).not.toContain('template-instructions');
+        expect(out).not.toContain('touches:');
+        expect(out).not.toContain('src/alpha/extra.ts');
+    });
+
+    it('leaves the cards out when living mode is off', () => {
+        setLivingMode(false);
+        expect(renderMarkdown(SPEC)).not.toContain('living-req-card');
+    });
+});
+
+describe('a touches marker is never prose (#672 Wave 1)', () => {
+    const MARKER = '<!-- touches: src/a/**, src/b.ts -->';
+
+    it('renders nothing in a feature spec, where no requirement pass consumes it', () => {
+        setLivingMode(false);
+        const out = renderMarkdown(`Before.\n\n${MARKER}\n\nAfter.`);
+        expect(out).not.toContain('touches:');
+        expect(out).not.toContain('template-instructions');
+        expect(out).toContain('Before.');
+        expect(out).toContain('After.');
+    });
+
+    it('renders nothing when it sits outside the Requirements section', () => {
+        setLivingMode(true);
+        const out = renderMarkdown(`## Purpose\n\n${MARKER}\n\nWhy this exists.\n`);
+        expect(out).not.toContain('touches:');
+        expect(out).toContain('Why this exists.');
+    });
+
+    it('leaves a marker inside a fenced block alone, as documentation', () => {
+        setLivingMode(false);
+        const out = renderMarkdown('```markdown\n' + MARKER + '\n```\n');
+        expect(out).toContain('touches:');
+    });
+});

@@ -440,3 +440,32 @@ Where a capture stands in for editor chrome the webview does not build — the s
 - **WHEN** the pane the frame is about renders
 - **THEN** it shows that view's title-bar actions in the contributed order, and the collapse-or-expand slot matches the tree on screen
 - **AND** the neighbouring panes stay bare
+
+### A living spec is navigable by requirement
+
+A living spec SHALL be navigable by requirement from the viewer's existing document outline, not from a second one built beside it — the viewer already has a sticky outline with scroll, active-heading tracking, and a narrow-pane fallback, and a second one puts two indexes of the same headings side by side on a wide pane. Because a living spec's requirements are its subsection headings, that outline SHALL list them by default rather than behind the subsections toggle a feature spec needs. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of path patterns its marker names where it carries one — patterns, not files, since one entry can claim a whole directory and calling that a file count is a number the reader can check and find wrong. Those marks SHALL be drawn and hidden from assistive technology, with the row's single accessible name saying what they mean in words: a dot carrying only a tooltip is not reliably announced, and a bare number beside a heading says nothing. The outline SHALL read what it shows off the rendered requirement cards, never by parsing the document again. A feature spec's outline is unchanged.
+
+#### Scenario: a large living spec is opened
+- **WHEN** it renders
+- **THEN** every requirement appears once in the outline, in document order, without the reader turning on subsections
+
+#### Scenario: a requirement appended past the uncovered-files section
+- **WHEN** the cards and the outline are built
+- **THEN** it is a card and a row like any other, because fold-back appends to the end of the file and where a requirement sits says nothing about whether it is one
+- **AND** the uncovered section between them is left outside every card rather than swallowed into the one above it
+
+#### Scenario: a requirement whose coverage was never computed
+- **WHEN** its row renders
+- **THEN** it reads as unknown rather than as zero, which would mean none
+
+#### Scenario: a heading inside a fenced block
+- **WHEN** the cards and the outline are built
+- **THEN** it is neither a card nor a row, matching what every other reader counts
+
+#### Scenario: a file marker outside a requirement card
+- **WHEN** any document renders, living or not, carrying a marker no requirement pass consumed
+- **THEN** nothing is drawn for it, because a marker is metadata and printing a comment's own source is not a rendering
+
+#### Scenario: the outline reaches the page
+- **WHEN** the document renders through the full pipeline rather than the outline pass alone
+- **THEN** the outline is live markup the stylesheet applies to, and a requirement's file marker is metadata the reader never sees as prose or as a template disclosure
