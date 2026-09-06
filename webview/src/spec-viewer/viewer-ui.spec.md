@@ -235,8 +235,9 @@ The header MUST render the title exactly as supplied and MUST NOT re-case it or 
 - **THEN** the header prints it exactly as authored, because the resolver returned it verbatim
 
 ### A living spec's actions sit in the footer bar; its header carries facts only
+<!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
 
-In living mode the footer MUST render the capability's two actions — update this spec when drifted, otherwise a drift re-check, and beside either an update of every drifted spec — in the same bar every other state uses, with a context line saying whether the code has moved. The header MUST NOT carry buttons: it shows a DRAFT badge only when the document is a draft, the drift marker, coverage, and where the capability applies and where its file lives, each once. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders the markup exported from the protocol layer rather than a copy of it.
+In living mode the footer MUST render the capability's two actions — update this spec when drifted, otherwise a drift re-check, and beside either an update of every drifted spec — in the same bar every other state uses, with a context line saying whether the code has moved. The header MUST NOT carry buttons: it shows a DRAFT badge only when the document is a draft, the drift marker, coverage, and where the capability applies and where its file lives, each once. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders whichever nudge the extension sent — an install, or an update naming the installed and expected versions — from the one frame the protocol layer builds, taking its classes, its label, its body and the prompt it carries in `data-*` from there rather than deciding any of them itself.
 
 #### Scenario: a drifted living spec is open
 - **WHEN** the footer renders
@@ -245,6 +246,11 @@ In living mode the footer MUST render the capability's two actions — update th
 #### Scenario: a glob longer than the header row
 - **WHEN** it renders
 - **THEN** it wraps rather than ending in an ellipsis
+
+#### Scenario: the extension sends an update prompt
+- **WHEN** the Activity panel renders it
+- **THEN** the banner is the protocol's update frame, carrying both versions on the root a click reads them back from
+- **AND** a state with no prompt at all renders no banner
 
 ### Delegated click handling must survive non-element targets and late mounts
 
@@ -407,6 +413,7 @@ The short strings the webview composes itself — a footer context line, a secti
 - **THEN** a colon introduces the figures
 
 ### The capture stories are published copies of the real viewer, never forks of it
+<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
 The stories and fixtures that produce the project's documentation imagery MUST compose the shipped viewer components with fixture data rather than re-implement any surface, because their output is published copy: what they render is what readers of the documentation are told the product looks like. A change to a component's behavior, styling, or tokens therefore makes the captured imagery stale, and the response SHALL be to regenerate it from the stories, never to hand-edit the imagery or let a story drift onto its own rendering of the surface.
 
@@ -426,3 +433,10 @@ A scene several captures share SHALL be exported once and composed by each of th
 - **WHEN** a still and a clip both frame it
 - **THEN** both compose the one exported scene
 - **AND** that scene is not itself listed as a story
+
+Where a capture stands in for editor chrome the webview does not build — the sidebar frames — the stand-in SHALL match what the real view contributes: its title-bar actions in the order the menu declares them, painted on the one pane the frame is about and left off its neighbours the way the editor paints them, and a slot whose icon depends on state read off the fixture rows rather than hard-coded.
+
+#### Scenario: a sidebar frame is captured
+- **WHEN** the pane the frame is about renders
+- **THEN** it shows that view's title-bar actions in the contributed order, and the collapse-or-expand slot matches the tree on screen
+- **AND** the neighbouring panes stay bare

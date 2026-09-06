@@ -94,8 +94,9 @@ Any fact this feature shares with another surface — the sidebar tree, the Livi
 - **AND** the two surfaces cannot show different names for the same spec, while the slug stays the stable identifier behind filtering, sorting, and open
 
 ### Every refresh ships a complete state snapshot from one builder
+<!-- touches: src/features/spec-viewer/specViewerProvider.ts -->
 
-Both refresh paths — a document switch and a change to the spec's recorded context — MUST build their payload through one shared builder and send a *complete* state, never a partial merged onto whatever the webview last held. A payload that omits a state-bearing field would let the webview keep a stale value beside fresh ones, which is how the footer once offered an action the spec's real state did not permit.
+Both refresh paths — a document switch and a change to the spec's recorded context — MUST build their payload through one shared builder and send a *complete* state, never a partial merged onto whatever the webview last held. A payload that omits a state-bearing field would let the webview keep a stale value beside fresh ones, which is how the footer once offered an action the spec's real state did not permit. A snapshot also carries facts that belong to the project rather than to the spec — whether the spec-kit half is missing or out of date — so when those change on disk every open run panel MUST be re-posted a fresh snapshot rather than left waiting for one of its own files to change.
 
 #### Scenario: the recorded context changes on disk
 - **WHEN** a watcher reports a change to an open spec's recorded context
@@ -106,6 +107,11 @@ Both refresh paths — a document switch and a change to the spec's recorded con
 - **WHEN** the refresh is triggered by state alone
 - **THEN** document and staleness reads are skipped as unnecessary work
 - **AND** the snapshot remains internally consistent by reusing the panel's cached values for the fields it did not recompute
+
+#### Scenario: the spec-kit extension lands on disk while panels are open
+- **WHEN** the files that decide the install nudge change
+- **THEN** every open run panel is re-posted a complete snapshot
+- **AND** the nudge settles without the reader touching a spec file
 
 ### The action catalog is the authority on what the reader may do
 
@@ -306,3 +312,18 @@ Once a spec has reached a done-building state, the footer MUST offer only its fi
 - **WHEN** a spec's status reports it is done building while its recorded current step lags at an earlier step
 - **THEN** the footer offers only the finish actions
 - **AND** the forward advance action is absent
+
+### The install nudge is resolved per render, and a click reports the banner the reader saw
+<!-- touches: src/features/spec-viewer/specViewerProvider.ts, src/features/spec-viewer/html/generator.ts, src/features/spec-viewer/messageHandlers.ts -->
+
+Which spec-kit-extension nudge belongs on screen — none, an install, or an update naming the installed and expected versions — MUST be resolved through the one shared resolver that already weighs the setting, what is on disk, and any dismissal, and the whole prompt SHALL be carried to the webview on the first render and re-sent on every state update, never reduced to a bare "show it" flag. The banner lives inside the Activity panel, so with that panel off nothing is resolved and nothing is reported as shown; when a banner does render, the shown report names which kind it is. The banner's own messages MUST carry the prompt back as the banner declared it, because the extension's view of the gap can have moved on since it was drawn: the click report names the update surface rather than the install one, and the dismissal is persisted through the single dismissal writer against the banner the reader actually closed — permanently for the install nudge, and only for that expected version for an update, so the next release asks again.
+
+#### Scenario: the installed commands are behind this build
+- **WHEN** the panel renders
+- **THEN** the update prompt is sent with both versions
+- **AND** the shown report names the update surface, not the install one
+
+#### Scenario: an update banner is dismissed
+- **WHEN** the reader closes it
+- **THEN** only the version pair the banner named is silenced
+- **AND** the panel refreshes without the banner

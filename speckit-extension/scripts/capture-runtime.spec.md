@@ -506,3 +506,20 @@ Running the project's own checks is an instruction with no observer, so a run ca
 #### Scenario: the spec never reached implement
 - **WHEN** the health check runs on a spec with no implement completion recorded
 - **THEN** the check reports itself as having no record, never as a problem
+
+### The health check MUST report a step that closed without the document it declared it writes
+<!-- touches: speckit-extension/scripts/doctor.py, speckit-extension/scripts/doctor_checks.py -->
+
+Every author node declares the document it writes, and a build collects those declarations into a manifest; until something compared that manifest against the disk, a step that quietly stopped writing its document closed exactly like one that wrote it. The check SHALL read the built manifest and, for each step the run recorded as finished, report a declared document that is not on disk. Only unconditional declarations are judged — an artifact the size budget is allowed to fold away is not a fault — and findings are raised at warning severity, never as a gate, because the manifest describes the pipeline as it is built today while the spec on disk may have been produced by an earlier one. A step that produced none of what this pipeline declares SHALL be read as a run of some other pipeline and reported as no record rather than as a fault, and an absent, unreadable, or misshapen manifest SHALL be reported as a skip with its reason, since there is then nothing to hold the run to.
+
+#### Scenario: a closed step is missing one of the documents it declares
+- **WHEN** the health check runs on a spec whose finished step wrote some but not all of its declared documents
+- **THEN** it emits a warning naming the step, the missing document, and the node that declares it
+
+#### Scenario: the spec was produced by a different pipeline
+- **WHEN** no closed step produced any of the documents this pipeline declares
+- **THEN** the check reports itself as skipped rather than flagging every declaration as missing
+
+#### Scenario: this install's build declared nothing
+- **WHEN** the manifest is absent or cannot be read
+- **THEN** the check is reported as skipped with that reason, and no finding is emitted

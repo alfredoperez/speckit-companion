@@ -346,6 +346,7 @@ The tasks command's final Polish phase generates a task to validate the result a
 - **THEN** the Polish phase generates and owns the validation run, as before
 
 ### A diagnostic command recomputes reality rather than trusting what a run recorded
+<!-- touches: speckit-extension/commands/speckit.companion.doctor.md -->
 
 Where a command reports on the health of a run, it MUST derive its answer by recomputing, never by reading back a verdict the run recorded about itself — a run that claimed it was clean is precisely the case worth checking. Such a command SHALL be read-only, SHALL always exit successfully, and SHALL isolate each of its checks so that one failing becomes that check's stated skip reason rather than taking the report down. It MUST report, for every check it knows about, whether that check ran, was skipped with a reason, or did not apply, so that "found nothing" and "could not look" can never print the same way. Its core checks MUST derive from the durable record and the on-disk documents alone, so that it produces a meaningful verdict on a run that finished long before the command existed.
 
@@ -356,6 +357,13 @@ Where a command reports on the health of a run, it MUST derive its answer by rec
 #### Scenario: a check cannot run
 - **WHEN** the input a check needs is missing
 - **THEN** it is reported as skipped with the reason, never as clean
+
+Where the build has recorded what a run of this pipeline must produce, the command SHALL also hold the run to that record and report a step that closed without a document it declared. That finding is a warning rather than a gate, because the record describes the pipeline as it is built today while the spec on disk may have been produced by an earlier one, and a step that produced none of the declared documents SHALL be read as a run of some other pipeline and reported as no record rather than as a fault.
+
+#### Scenario: a step closed without the document its node declares
+- **WHEN** the command compares what the build recorded against the spec on disk
+- **THEN** the missing document is reported as a warning naming the step and the node that writes it
+- **AND** a step that produced none of the declared documents is reported as no record rather than a fault
 
 ### Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them
 
