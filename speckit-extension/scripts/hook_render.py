@@ -108,13 +108,11 @@ def group_by_anchor(entries: list) -> dict:
 
 
 #: Any node or phase boundary, whichever comes first or last in a body.
-_ANY_MARKER = re.compile(r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) [\w -]+ -->[ \t]*\n",
+_ANY_MARKER = re.compile(r"^[ \t]*<!-- /?speckit-companion:(?:node|phase) .+? -->[ \t]*\n",
                          re.MULTILINE)
 
 
-#: The opening marker of any node or phase, and the name it carries. Whatever
-#: name the wrapper wrote, character for character — a pattern for the name
-#: would drop the hooks of any phase someone called `caps/auth`.
+#: A node or phase opening marker, and the name as written — a phase may be called anything.
 _BOUNDARY_NAME = re.compile(
     r"^[ \t]*<!-- speckit-companion:(node|phase) (.+?) -->[ \t]*$", re.MULTILINE)
 

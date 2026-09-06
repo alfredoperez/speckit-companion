@@ -130,9 +130,7 @@ class AHookCanAttachToAPhase(unittest.TestCase):
         self.assertIn("phase hook", build.render("specify", plan["specify"]))
 
     def test_a_phase_named_with_more_than_letters_still_takes_its_hook(self):
-        # A phase name is free text a project writes. Reading the boundary names
-        # back out of the body with a pattern for the name dropped the hooks of
-        # any phase called something like `caps/auth` — silently, at build.
+        # A phase name is free text, so a pattern for it drops hooks silently at build.
         self.addCleanup(assemble.use_project_phases, {})
         config = {"commands": {"specify": {
             "phases": [{"name": "caps/auth", "nodes": assemble.default_order("specify")}],
@@ -140,6 +138,18 @@ class AHookCanAttachToAPhase(unittest.TestCase):
         plan, warnings = build.plan_build(config)
         self.assertEqual(warnings, [])
         self.assertIn("odd name hook", build.render("specify", plan["specify"]))
+
+    def test_a_step_hook_stays_outside_a_phase_named_with_more_than_letters(self):
+        # The step edge is found by the same marker scan, so it narrowed the same way.
+        self.addCleanup(assemble.use_project_phases, {})
+        config = {"commands": {"specify": {
+            "phases": [{"name": "caps/auth", "nodes": assemble.default_order("specify")}],
+            "hooks": {"before": {"specify": [{"type": "prompt", "text": "step edge hook"}]}}}}}
+        plan, warnings = build.plan_build(config)
+        self.assertEqual(warnings, [])
+        body = build.render("specify", plan["specify"])
+        self.assertLess(body.index("step edge hook"),
+                        body.index("<!-- speckit-companion:phase caps/auth -->"))
 
     def test_an_anchor_that_is_neither_node_nor_phase_is_warned_about(self):
         config = {"commands": {"specify": {"hooks": {"after": {
