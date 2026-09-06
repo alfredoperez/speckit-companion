@@ -14,6 +14,12 @@
         "rule": "side-tab",
         "value": "border-left-width: 3px",
         "createdAt": "2026-09-04T02:08:14.556Z"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-09-06T00:02:36.937Z",
+        "reason": "Established house face for the whole feature-clip family: all 17 compositions under media/feature-clips/ self-host Geist-Regular.ttf via the same @font-face. Pre-existing, not introduced by this change; swapping one clip's face would break consistency across sixteen others. Not user-confirmed — a font change across the clip family is a separate design decision."
       }
     ]
   }
