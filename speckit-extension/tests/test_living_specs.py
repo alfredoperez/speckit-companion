@@ -3743,3 +3743,24 @@ A feed is a URL.
             "CLAUDE.md:1")
         self.assertEqual(adopted_sources(["### R", "<!-- adopted: developer -->"]), "developer")
         self.assertIsNone(adopted_sources(["### R", "<!-- touches: a/** -->", "body"]))
+
+
+# LS·9 — a feature can introduce behaviour no capability owns yet. The fold has
+# no target for it, and dropping it silently means the run reported a sync that
+# did not happen.
+class ADeltaWithNoHomeIsReported(unittest.TestCase):
+    def test_an_unregistered_capability_is_named_on_stderr(self):
+        import io, contextlib
+        import living_spec_fold as fold
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/todos.spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        fdir = _write_feature(
+            root, "001-feat",
+            "# Feat\n\n## ADDED Requirements\n\n<!-- capability: reminders -->\n\n"
+            "### A reminder fires\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            fold.fold_living_spec(fdir, "ai")
+        self.assertIn("reminders", err.getvalue())
+        self.assertIn("not a registered capability", err.getvalue())
+        self.assertIn("register-capability.py", err.getvalue())

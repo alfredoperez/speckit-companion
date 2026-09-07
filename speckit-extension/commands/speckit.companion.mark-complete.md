@@ -71,6 +71,20 @@ no delta block, **idempotent** on re-run, and records the synced
 capability names onto `livingSpecs.synced` in `.spec-context.json`. Best-effort — it never fails the
 host command.
 
+**Read what it printed.** A block marked for a capability the registry does not hold has nowhere to
+land, so the fold names it and folds nothing for it. That is the ordinary case for a feature that
+introduced behaviour no capability owned yet. Register it with the files this feature actually
+touched, then fold again — the fold is idempotent, so the capabilities that already landed are
+untouched:
+
+```bash
+python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match '<glob>'
+python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
+```
+
+Name it for what a person can now do, not for the directory it lives in, and say in your summary
+that a new capability appeared and why.
+
 ## Graceful Degradation
 
 Best-effort and idempotent:

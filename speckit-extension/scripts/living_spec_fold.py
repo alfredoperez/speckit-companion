@@ -605,6 +605,21 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
                 file=sys.stderr,
             )
 
+    # A well-formed block naming a capability nobody registered is not a target
+    # either, and until now it was dropped without a word: the run wrote a
+    # requirement, the fold said it synced, and the requirement was nowhere. New
+    # behaviour with no home is exactly what a growing codebase produces, so say
+    # so and name the command that gives it one.
+    marked = {c for v in ("added", "modified", "removed", "renamed")
+              for c in (deltas.get("unit_caps", {}).get(v) or []) if c}
+    for name in sorted(marked - target_names):
+        print(
+            f"[companion] Living-spec fold: '{name}' is not a registered capability, "
+            f"so its requirements were not folded. Register it and fold again: "
+            f"register-capability.py --name {name} --match '<glob>'",
+            file=sys.stderr,
+        )
+
     synced: list[str] = []
     for cap in targets:
         spec_rel = cap.get("spec")

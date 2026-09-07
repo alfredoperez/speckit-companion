@@ -362,21 +362,26 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             f"{reqs} requirement(s) beside its siblings is a paragraph with its own file, "
             f"not a spec a reader searches for.",
             "Merge it into the sibling it belongs with, and drop its registry entry.", capability))
-    _draft_banner = any(l.startswith("> [DRAFT]") and "rules are transcribed" in l for l in lines[:6])
-    if root is not None and _draft_banner and not any(ADOPTED_LINE.match(l) for l in lines):
+    _draft_banner = any(l.startswith("> [DRAFT]") and "Adopted from" in l for l in lines[:6])
+    if root is not None and _draft_banner and reqs > 0 and not any(ADOPTED_LINE.match(l) for l in lines):
         # The banner summarises the per-requirement markers under it. Every one of
         # them has been confirmed by a run that folded a change onto it, so the
         # banner is now the only thing still calling this spec unreviewed.
+        # A spec with no requirements at all has no markers for a different
+        # reason, and telling it its banner is stale is backwards.
         findings.append(_finding(
             WARNING, "draft-banner-stale", path, 1,
             "Every adopted requirement in this spec has been confirmed by a run, "
             "but the draft banner still says the whole spec is unreviewed.",
             "Remove the `> [DRAFT]` line.", capability))
-    if root is not None and capability and _draft_banner:
+    if (root is not None and capability and _draft_banner and reqs > 0
+            and str(path).endswith(".arch.md")):
         # Adoption transcribes the rules that hold between files, and a rule about
         # a boundary carries the boundary's own glob as its marker. A draft with
         # none was read from the code, which is the way both measured attempts
-        # lost four of five layering rules.
+        # lost four of five layering rules. A spec with no requirements is not
+        # that failure: it is a slice whose rules belong to its layer, and saying
+        # so is the correct outcome.
         globs = _capability_globs(root, capability)
         scoped = any(_marker_glob_in(lines[k + 1] if k + 1 < len(lines) else "", globs)
                      for k in range(len(lines)) if is_req(k))

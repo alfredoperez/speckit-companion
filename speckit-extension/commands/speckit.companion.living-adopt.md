@@ -44,11 +44,17 @@ Before listing a single file, read the project's own conventions, stopping at th
 
 If no conventions doc and no enforcement config names a constraint, ask once, before proposing anything: *"Does this codebase have rules about what may import what, or about how a directory is sliced?"* Cite the answer the way you would cite a file. If the answer is no, record that under `## Uncovered` rather than inventing one.
 
-**Then propose the capability tree, cut where those rules live.** A layered codebase keeps its load-bearing rules *between* layers, so cut by layer there; by bounded context in a domain-shaped codebase. One capability per thing a person would name, prefixed by its area (`entities`, `article-feed`). A layer whose rules say how it is sliced is a capability in its own right, sharing its `match` with the by-noun capabilities beside it: membership is coarse and the narrowing happens at the requirement, so six capabilities may all carry `match: ["src/features/**"]` — one holding the layer's rules, the rest holding what each slice is for. Leave the layer capability out and the slicing rules have no owner; that is exactly how "a slice is one user action" was lost.
+**Then read the area and work out what it does, and propose that.** Open the routes, the loaders and the entry points, and answer one question: what can a person do here? The answers are the capabilities. `article-reading`, `authoring-an-article`, `signing-in` — things you could say to someone who has never seen the repository. A directory is not a capability: it is where some of one lives. Expect a capability to span several directories and a directory to serve several capabilities, and never produce one per folder, which yields a file per folder saying the folder's name back.
 
-For each proposed capability, derive:
-- a **name** (a short slug for the area, e.g. `billing`),
-- a **match** glob from the area path (e.g. adopting `src/billing/` → `["src/billing/**"]`; a nested leaf → `["src/billing/invoices/**"]`),
+Cutting by directory was tried on a nine-directory `src/pages`: it gave ten capabilities, nine of which said "this slice carries no rule of its own" and nothing else. **If a proposed capability's spec would have no requirement a person outside the team could read, it is not a capability.**
+
+**Propose the layer as one capability of its own**, named for the layer, carrying the whole layer glob and the conventions you transcribed. This is the one that gets an `.arch.md`. Every behaviour capability beside it shares the same coarse membership, so a file is claimed by both and the narrowing happens at the requirement.
+
+Bring the whole list to the developer before writing anything: each capability's name, one line on what it covers, the directories it draws from, and roughly how many requirements you expect. Offer a coarser and a finer cut with the count each would give. **This is where the shape gets decided, and it is theirs to decide.**
+
+For each capability the developer keeps, derive:
+- a **name** (a short slug for what it does, e.g. `article-reading`),
+- a **match** glob covering every directory it draws from,
 - a **spec** path, which depends on the storage layout chosen below.
 
 #### Choose the storage layout
@@ -69,36 +75,42 @@ Two consequences to state out loud when proposing colocated paths, because both 
 
 Show the proposed capability tree to the developer — names, match globs, and the resolved spec path for each — and pause for confirmation before drafting and registering. This is the one review gate in this command.
 
-### 2. Draft each living spec — the registry, one purpose, and the rules. Nothing else.
+### 2. Draft two files per capability: what the area does, and how it is built
 
-**Adoption does not write behaviour.** Both frameworks this was compared against refuse to bootstrap specs from code, and two measured attempts here show why: a read of the code produces what files *say*, and files say behaviours — 447 and 732 lines against a hand-written 255, with 4 of 5 architectural rules missing both times. Behaviour arrives later, one delta at a time, folded in when a feature completes; that mechanism exists and is the one that keeps a spec true. What adoption writes is the part no later change will ever write: what each capability is **for**, and the rules that hold **between** files.
+**A spec says what the area does. It is not a style guide.** Import direction, file naming, barrels and path helpers are real rules and they are worth keeping, but they describe how the code is written, not what the software does, and a reader who opens a spec to learn what a screen shows should not find a linting policy. Living specs already ship two tiers for exactly this split, and adoption writes both.
 
-Each spec, at the path chosen at the review gate:
+**`<name>.spec.md` — the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects, which are the area's surface and are stable. Two measured attempts at reading *implementation* produced 447 and 732 lines against a hand-written 255, so the guard is this: **a requirement that names a function, a hook, a component or a file is not observable, and belongs in the arch tier or nowhere.** Say what happens, not what calls what.
 
-1. **Title** — `# <Capability> — Living Spec`.
-2. **Draft banner** — the line under the title, `[DRAFT]` first: `> [DRAFT] Adopted from the project's conventions and the code's shape — the rules are transcribed, the behaviours arrive by fold-back. Review before trusting.` The banner is a summary of the per-requirement markers below it, so it goes when the last one does.
+**`<name>.arch.md` — the cold tier, read only when a plan is architecture-significant.** The conventions you transcribed in step 1, each with the file and line it came from and the tool that enforces it where one does. This is where a layering rule lives. Nothing here is read by an ordinary run, which is the point: it is true, it is rarely needed, and it costs nothing to keep.
+
+Both files, at the paths chosen at the review gate:
+
+1. **Title** — `# <Capability> — Living Spec` and `# <Capability> — Architecture`.
+2. **Draft banner** on each, `[DRAFT]` first: `> [DRAFT] Adopted from the code's surface and the project's conventions. Review before trusting.` The banner summarises the per-requirement markers below it, so it goes when the last one does.
 3. **`## Purpose`** — one or two sentences on why this capability exists and what would go wrong without it.
-4. **`## Requirements`** — the transcribed rules, each in the requirement shape the fold and the resolver both read:
+4. **`## Requirements`** — in the shape the fold and the resolver both read. A spec requirement:
 
    ```markdown
-   ### An entity imports downward only
-   <!-- touches: src/entities/** -->
-   <!-- adopted: CLAUDE.md:18 -->
+   ### An article is read by its slug
+   <!-- touches: src/pages/article/** -->
+   <!-- adopted: src/pages/article/article-page.route.tsx -->
 
-   An entity SHALL import only from `src/shared`. Stated in `CLAUDE.md:18`, enforced by `.dependency-cruiser.js`.
+   The article screen SHALL render the article named by the slug in the URL, together with its comments.
 
-   #### Scenario: one entity needs another's data
-   - **WHEN** an entity needs another entity's data
-   - **THEN** the two are composed in a feature, widget or page, because a sibling import makes both undeletable
+   #### Scenario: the URL carries no slug
+   - **WHEN** someone opens the article route with no slug
+   - **THEN** they are sent to the 404 screen, because an article without a slug is not a screen
    ```
 
-   **Every requirement carries an `adopted` marker saying where you transcribed it from**, under `touches`: a file and line, or `developer` when the answer came from the question above. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears the marker the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
+   An arch requirement is the same shape, and its WHEN is a **future edit** rather than something a user does: "when two pages need the same helper". Its THEN says where the code goes instead, never that something is forbidden.
 
-   Three things are load-bearing. The **marker is the whole layer glob**, never a file, because the rule is about the boundary and not about anything inside it. The **WHEN is a future edit**, not a runtime event — "when two actions need the same helper" — because the rule is read by whoever writes the next import. The **THEN says where the code goes instead**, not that the import is forbidden. And every rule **cites its source**: the file and line it was transcribed from, and the tool that enforces it where one does. "Nothing for what a test already enforces" does not apply here — a linter rejects an import, it cannot redirect one, and the citation is what makes this a transcription rather than a guess.
+   **Every requirement in both files carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
+
+   The `touches` marker for an arch rule is the **whole layer glob**, because the rule is about the boundary. For a spec requirement it is the files that produce that behaviour.
 
 5. **`## Uncovered`** — rules with no owner and areas with no capability. Not files nobody opened.
 
-A capability with no rule of its own — a by-noun slice whose only constraints belong to its layer — carries a `## Purpose` and an empty `## Requirements`, and that is correct. The validator warns when a `[DRAFT]` spec has no requirement scoped to the capability's whole glob, which is the check that a layer's rules were transcribed rather than skipped.
+**A slice with nothing of its own is not registered.** Where a slice's only constraints belong to its layer and it has no distinct behaviour, the layer capability covers it: the resolver matches the file through the layer's glob and hands over the same requirements, so a second entry adds a file, a tree row and nothing else. Say in the report which slices you left out and why. They arrive as capabilities later, when a run folds something into one of them the layer does not already say.
 
 ### 3. Walk the clarifications
 
