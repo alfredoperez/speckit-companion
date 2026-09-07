@@ -367,12 +367,26 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
             findings.extend(check_living_spec(
                 body, path, root=None, capability=cap, offset=block["start"]))
 
-        if block["verb"] not in ("MODIFIED", "REMOVED"):
-            continue
         target = target_texts.get(cap) if cap else None
         if target is None:
             continue
         present = {s["heading"] for s in _requirement_headings(target)}
+        if block["verb"] == "ADDED":
+            # An addition that restates an existing heading in other words is
+            # that requirement changed, and belongs under MODIFIED. Folded as
+            # ADDED it becomes a second requirement for one behaviour, which is
+            # the way a spec grows without anything having been decided.
+            for heading, line in block["headings"]:
+                near = _nearest_heading(heading, present)
+                if near:
+                    findings.append(_finding(
+                        WARNING, "added-heading-near-existing", path, line,
+                        f'ADDED "{heading}" reads like "{near}", which {cap}\'s spec already has.',
+                        "If it is the same requirement changed, put it under MODIFIED with the existing heading.",
+                        cap))
+            continue
+        if block["verb"] not in ("MODIFIED", "REMOVED"):
+            continue
         for heading, line in block["headings"]:
             if heading in present:
                 continue
@@ -388,6 +402,35 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
                 cap))
     findings.sort(key=lambda f: (f["line"], f["code"]))
     return findings
+
+
+_STOP = {"a", "an", "the", "is", "are", "to", "of", "and", "or", "in", "on", "for", "with", "its", "it"}
+
+
+def _words(heading: str) -> set:
+    return {w for w in re.findall(r"[a-z0-9]+", heading.lower()) if w not in _STOP}
+
+
+def _nearest_heading(heading: str, present: set):
+    """The existing heading this one mostly restates, or None.
+
+    Word overlap, nothing cleverer: two headings sharing most of their content
+    words are the same requirement said twice. An exact match is not "near",
+    it is the case the MODIFIED check already handles.
+    """
+    mine = _words(heading)
+    if not mine:
+        return None
+    for other in present:
+        if other == heading:
+            continue
+        theirs = _words(other)
+        if not theirs:
+            continue
+        overlap = len(mine & theirs) / len(mine | theirs)
+        if overlap >= 0.6 or mine <= theirs or theirs <= mine:
+            return other
+    return None
 
 
 def _requirement_headings(text: str) -> list:

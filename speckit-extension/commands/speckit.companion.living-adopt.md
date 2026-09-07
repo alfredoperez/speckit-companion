@@ -135,6 +135,15 @@ The exact required structure:
 6. **`[NEEDS CLARIFICATION: …]`** — append this marker inline to any requirement you are genuinely unsure about (an ambiguous name, an inferred behavior you could not confirm). Use it sparingly — it flags the low-confidence items for a human to resolve, and step 3 walks them.
 7. **`## Uncovered`** — a section listing every file you could **not** read (unreadable or over budget), one per line, so the draft's coverage is honest. If you read everything, write `_None — every file in the area was read._`
 
+**Write less than the code would let you.** Adoption over-describes by default — one adopted spec came out at 508 lines — and every line is context a later run carries. Four rules hold it down:
+
+- **One requirement per observable SHALL.** A heading states one thing the area guarantees. Two guarantees are two headings; a heading that needs "and" is usually two.
+- **At most two scenarios per requirement**, unless a third covers a *different failure* the first two miss. A third scenario that restates the happy path with other nouns is padding.
+- **Nothing for what a type or a test already enforces.** A compiler error or a green test is a stronger record than prose, and the prose will drift while the type will not.
+- **No `inferred` requirement without a scenario.** A guess with no checkable case is a note, not a requirement; leave it out or mark it `[NEEDS CLARIFICATION: …]`.
+
+**`## Known limits`** — when the code carries a `// simplified: <ceiling>, <upgrade path>` comment inside the area, list it here, one line each, quoting the ceiling and the file. This is the record of what was deliberately not built, so a later reader does not mistake a chosen corner for an oversight. Omit the section when the area has none.
+
 Keep the whole spec `[DRAFT]` — you are proposing a record drawn from the surface, not certifying behavior.
 
 ### 3. Walk the clarifications

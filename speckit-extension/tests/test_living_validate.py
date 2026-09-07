@@ -249,3 +249,25 @@ class FindingsAreOrdered(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnAddedHeadingThatRestatesAnExistingOneIsFlagged(unittest.TestCase):
+    """A near-duplicate ADDED heading folds into a second requirement for one
+    behaviour. The validator says so; it never blocks (warning, not error)."""
+
+    TARGET = "# Cap — Living Spec\n\n## Requirements\n\n### Pages delegate their chrome to a layout primitive\n\n#### Scenario: a\n- **WHEN** x\n- **THEN** y\n"
+
+    def _run(self, delta):
+        return lv.check_feature_deltas(
+            delta, "specs/001/spec.md", ["cap"], {"cap": self.TARGET}, default_capability="cap")
+
+    def test_a_restated_heading_under_added_warns_and_names_the_original(self):
+        delta = "## ADDED Requirements\n\n### The chrome of a page is delegated to the layout primitive\n\n#### Scenario: s\n- **WHEN** x\n- **THEN** y\n"
+        codes = [(f["code"], f["severity"]) for f in self._run(delta)]
+        self.assertIn(("added-heading-near-existing", "warning"), codes)
+        msg = next(f["message"] for f in self._run(delta) if f["code"] == "added-heading-near-existing")
+        self.assertIn("Pages delegate their chrome to a layout primitive", msg)
+
+    def test_a_genuinely_new_heading_under_added_is_silent(self):
+        delta = "## ADDED Requirements\n\n### Queued favourites survive a reload\n\n#### Scenario: s\n- **WHEN** x\n- **THEN** y\n"
+        self.assertNotIn("added-heading-near-existing", [f["code"] for f in self._run(delta)])
