@@ -11,13 +11,13 @@ reads: []
    ```bash
    git fetch --all --prune
    ```
-   Take the highest `NNN` across local branches, remote branches, and `specs/` directories, and use `NNN+1`. Derive a 2–4 word short-name from the description.
+   Take the highest `NNN` across local branches, remote branches, and `specs/` directories, and use `NNN+1`. Derive a 2–4 word short-name from the description; the spec file is `<feature_directory>/<short-name>.spec.md`.
 
    Create and check out the branch, then the directory:
    ```bash
    git checkout -b <NNN+1>-<short-name>
    ```
-   **Never write into a directory that already contains a `spec.md`** — that is a stale pointer to a prior spec, not this feature.
+   **Never write into a directory that already contains a feature spec (`*.spec.md`, or an older `spec.md`)** — that is a stale pointer to a prior spec, not this feature.
 
    Create `<feature_directory>/`, then point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}` — that exact key is what the later capture calls resolve the spec through when they run without `--feature-dir`, so any other key silently drops those writes. Then stamp the **specify START** as the step-start instruction above directs — the directory now exists, so this is the moment it says to run it, before any other work.
 

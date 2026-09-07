@@ -22,6 +22,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path  # noqa: E402
+from spec_context import feature_spec_path  # noqa: E402
 
 _REQ_RE = re.compile(r"^###(?!#)\s+(.+?)\s*$")
 _SCENARIO_RE = re.compile(r"^####(?!#)\s+Scenario\s*:\s*(.+?)\s*$", re.IGNORECASE)
@@ -411,7 +413,7 @@ def _active_feature_specs(root: str) -> list:
         return []
     out = []
     for name in sorted(os.listdir(specs_dir)):
-        spec_md = os.path.join(specs_dir, name, "spec.md")
+        spec_md = str(feature_spec_path(Path(specs_dir) / name))
         if not os.path.isfile(spec_md):
             continue
         ctx = os.path.join(specs_dir, name, ".spec-context.json")

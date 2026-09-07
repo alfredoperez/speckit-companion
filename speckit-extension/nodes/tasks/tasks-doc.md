@@ -6,7 +6,7 @@ command: tasks
 writes: tasks.md
 reads: []
 ---
-1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
+1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `plan.md` and the feature spec (`<short-name>.spec.md`, or `spec.md` in a project written before this) (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
 2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `- [ ] **T###** [P?] [US#] Description · exact/file/path`:
    - `[P]` marks a task that is **independent** of the others in its wave — a different file with no incomplete dependency, so it can be built in any order (or in parallel on a host that wants to).

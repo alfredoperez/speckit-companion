@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **A feature spec is named for its feature.** Companion now writes `specs/012-offline-queue/offline-queue.spec.md` instead of `spec.md`, so three open specs read as three features in the tab bar rather than `spec.md` three times. The Specs tree, the viewer, step completion, and the living-spec checks find either name, so specs written before this and specs a stock `/speckit.specify` writes next to them keep working unchanged.
+
 ### Fixed
 
 - **A hook is drawn once on the pipeline board, even when its anchor name means two things.** A name can be a phase and a node at the same time — the `auto` step ships one, `orchestrate` — and the board tested the two independently, so a hook that runs once got two chips and the header's tally counted it twice. It is now drawn on the single boundary the built command actually places it at, and the count agrees with what you are looking at. Parked hooks follow the same rule. ([#608](https://github.com/alfredoperez/speckit-companion/issues/608))

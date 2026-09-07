@@ -13,6 +13,7 @@ import {
 } from './types';
 import { fileNameToDocType, fileNameToDisplayName } from '../../core/utils/fileNaming';
 import type { WorkflowStepConfig } from '../workflows/types';
+import { featureSpecName, resolveStepFile } from '../specs/featureSpecPath';
 
 /**
  * Legacy per-document scratchpad files (`*-extra.md`). Review comments now live
@@ -125,14 +126,14 @@ export async function scanDocuments(
                 continue;
             }
 
-            const fileName = step.file ?? `${step.name}.md`;
+            const fileName = resolveStepFile(specDirectory, step);
 
             // Try specDirectory first, then changeRoot
             let filePath = path.join(specDirectory, fileName);
             let exists = await fileExists(filePath);
 
             if (!exists && changeRoot && changeRoot !== specDirectory) {
-                const changeRootPath = path.join(changeRoot, fileName);
+                const changeRootPath = path.join(changeRoot, resolveStepFile(changeRoot, step));
                 const existsAtRoot = await fileExists(changeRootPath);
                 if (existsAtRoot) {
                     filePath = changeRootPath;
@@ -203,7 +204,8 @@ export async function scanDocuments(
         }
     } else {
         // Default: hard-coded core documents
-        for (const [type, fileName] of Object.entries(CORE_DOCUMENT_FILES)) {
+        for (const [type, defaultName] of Object.entries(CORE_DOCUMENT_FILES)) {
+            const fileName = type === 'spec' ? featureSpecName(specDirectory) : defaultName;
             let filePath = path.join(specDirectory, fileName);
             let exists = await fileExists(filePath);
 

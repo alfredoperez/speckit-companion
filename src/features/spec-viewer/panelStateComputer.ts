@@ -43,6 +43,7 @@ import type { FeatureWorkflowContext } from "../workflows/types";
 import { deriveStepHistory, getSpecStatus } from "../specs/stepHistoryDerivation";
 import { StepName, Status } from "../../core/types/specContext";
 import type { PhaseInfo } from "./types";
+import { isFeatureSpecFile } from "../specs/featureSpecPath";
 
 // ─── Document resolution ────────────────────────────────────────────────────
 
@@ -70,7 +71,8 @@ export function resolveDisplayDocument(
     let doc = requestedType ? openable.find(d => d.type === requestedType) : undefined;
     if (!doc && requestedType) {
         const requestedFile = `${requestedType}.md`;
-        doc = openable.find(d => d.isCore && d.fileName === requestedFile);
+        doc = openable.find(d => d.isCore && (d.fileName === requestedFile
+            || (requestedType === 'spec' && isFeatureSpecFile(d.fileName))));
     }
     if (!doc) doc = openable.find(d => d.isCore && d.exists);
     if (!doc) doc = openable[0];

@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 from capture import set_living_specs_synced
-from spec_context import _repo_root_for, read_ctx
+from spec_context import _repo_root_for, feature_spec_path, read_ctx
 from living_validate import (ERROR, _fence_flags, check_feature_deltas,
                              fences_are_balanced)
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
@@ -488,7 +488,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         )
         return None
 
-    spec_md = feature_dir / "spec.md"
+    spec_md = feature_spec_path(feature_dir)
     try:
         spec_text = spec_md.read_text(encoding="utf-8")
     except OSError:
