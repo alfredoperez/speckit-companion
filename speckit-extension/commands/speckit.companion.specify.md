@@ -79,7 +79,7 @@ For `specify`, branch creation is normally one of these `before_specify` hooks (
 Produce a feature specification: prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria, then a quality checklist.
 <!-- speckit-companion:phase gather -->
 <!-- speckit-companion:node resolve-dir -->
-1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
+1. **Resolve the feature directory — mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work — and on a project's first run it is absent or a zero-byte file, which means the same thing: nothing to reuse. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
    - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. **Never write into a directory that already contains a `spec.md`** — that's a stale pointer to a prior spec, not this feature.
    Create `<feature_directory>/`, then point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}` — that exact key is what the later capture calls resolve the spec through when they run without `--feature-dir`, so any other key silently drops those writes. Then stamp the **specify START** as the step-start instruction above directs — the directory now exists, so this is the moment it says to run it, before any other work.
@@ -93,7 +93,7 @@ Produce a feature specification: prioritized user stories with acceptance scenar
      python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files…>
      ```
      This writes only additive `livingSpecs.loaded` + the breadcrumb on `.spec-context.json`; it never touches the lifecycle log. It is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read — so it never fails or slows the command; and, exactly like every other capture call here, skip it silently if `python3` or the script is unavailable. This call is the reliable record the later `plan` step and the Overview chips read.
-   - **Then read what it recorded — by requirement, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If it is empty, there is nothing to load — continue to the spec draft. Otherwise ask the resolver what each capability should contribute for these files:
+   - **Then read what it recorded — by requirement, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If the key is absent — the recorder writes nothing when the feature is off or nothing matched — or the list is empty, there is nothing to load; continue to the spec draft. Otherwise ask the resolver what each capability should contribute for these files:
      ```bash
      python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --requirements-for --json
      ```

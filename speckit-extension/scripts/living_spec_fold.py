@@ -304,7 +304,7 @@ def _initial_living_spec(capability_name: str) -> str:
 
 
 def _git_changed_files(root: Path) -> list[str]:
-    """Files this feature branch changed vs its merge-base with the default branch.
+    """Files this feature changed vs its merge-base with the default branch — committed, uncommitted and untracked.
 
     Best-effort: returns [] if git can't answer (detached/odd checkout, no
     merge-base). On the write-side fold, an empty result means the caller
@@ -322,8 +322,15 @@ def _git_changed_files(root: Path) -> list[str]:
         if not mb:
             continue
         try:
+            # Working tree against the merge-base, not HEAD against it: at the
+            # moment the fold runs the feature is usually uncommitted, and a new
+            # slice is untracked. Both are what this run changed.
             out = subprocess.run(
-                ["git", "diff", "--name-only", mb, "HEAD"], cwd=str(root),
+                ["git", "diff", "--name-only", mb], cwd=str(root),
+                capture_output=True, text=True, check=True,
+            ).stdout
+            out += subprocess.run(
+                ["git", "ls-files", "--others", "--exclude-standard"], cwd=str(root),
                 capture_output=True, text=True, check=True,
             ).stdout
         except (subprocess.CalledProcessError, FileNotFoundError):
