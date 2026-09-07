@@ -1,10 +1,10 @@
 # Specs Pipeline Build — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-Turning the pipeline configuration into command bodies: one verdict on whether a config is usable, staleness reported against every input, a build that is previewable and logged, and a drawn structure that is the build's own.
+This capability turns the project's pipeline configuration into the command bodies the assistant reads, and tells the user when what was built no longer matches what it was built from. Without it the editor shows one pipeline and the assistant runs another.
 
 ## Requirements
 
@@ -47,3 +47,7 @@ The structure the pipeline builder draws SHALL be derived by the same half of th
 #### Scenario: the builder renders a pipeline
 - **WHEN** its structure is resolved
 - **THEN** it comes from the build's own derivation, so what is drawn is what a build would produce
+
+## Uncovered
+
+- All files under `__tests__/` were listed but not read.

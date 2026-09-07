@@ -208,6 +208,16 @@ def fences_are_balanced(text: str) -> bool:
     return opened % 2 == 0
 
 
+def _has_sibling_spec(root: str, path: str) -> bool:
+    """Another `*.spec.md` in the same directory."""
+    try:
+        folder = os.path.dirname(os.path.join(root, path))
+        here = os.path.basename(path)
+        return any(n != here and n.endswith(".spec.md") for n in os.listdir(folder))
+    except OSError:
+        return False
+
+
 def _split_advice(path: str) -> str:
     """Where this spec's siblings go, which depends on how it is stored."""
     if _posix_path(path).startswith(f"{cc.DEFAULT_CAPABILITY_ROOT}/"):
@@ -303,11 +313,15 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
         i = j
 
     reqs = sum(1 for i in range(len(lines)) if is_req(i))
-    if root is not None and 0 < reqs < MIN_REQUIREMENTS:
+    # Thin only when it sits beside siblings: a capability that is genuinely small
+    # is one small file, and that is fine. The stub this catches is the one a split
+    # produced — a paragraph given its own tab next to five real specs.
+    if root is not None and 0 < reqs < MIN_REQUIREMENTS and _has_sibling_spec(root, path):
         findings.append(_finding(
             WARNING, "spec-too-thin", path, 1,
-            f"{reqs} requirement(s) is a paragraph with its own file, not a spec a reader searches for.",
-            "Merge it into the sibling spec it belongs with, and drop its registry entry.", capability))
+            f"{reqs} requirement(s) beside its siblings is a paragraph with its own file, "
+            f"not a spec a reader searches for.",
+            "Merge it into the sibling it belongs with, and drop its registry entry.", capability))
     if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
         # A capability with a wide surface is one folder, not one file. Warning
         # only: splitting is a judgement about where the seams are, and a gate

@@ -1,14 +1,15 @@
 # Core Telemetry — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-What the extension reports about itself and how: only shapes, never content; the engagement and activation-funnel counts with their de-dupe scopes; the two switches that gate every event; and fire-and-forget delivery.
+Core owns the one telemetry service every feature reports through, so the rule that nothing user-authored ever leaves the machine is enforced in a single place. Without it each call site would decide for itself what is safe to send, and one of them would eventually be wrong.
 
 ## Requirements
 
 ### Telemetry carries shapes, never content
+<!-- touches: src/core/telemetry.ts -->
 
 Every telemetry payload SHALL contain only enum-like values, booleans, versions, counts, and a random per-spec identifier. User-authored text — prompt content, file paths, spec names, custom workflow and step names — MUST never be sent. Any value read from disk or settings that could be free text MUST be coerced to a known allow-list before reporting, with anything unrecognized reduced to a neutral placeholder.
 
@@ -45,6 +46,7 @@ The extension SHALL emit a bare event when a spec, a living spec, or a steering 
 - **THEN** no de-dupe slot is consumed, so the first successful send still happens once telemetry turns on
 
 ### The activation funnel is measured rung by rung, each with its own de-dupe scope
+<!-- touches: src/core/telemetry.ts -->
 
 The extension SHALL emit one event per activation-funnel rung — installed, panel opened, spec created, phase dispatched, completed — plus a sample-opened engagement event for the welcome's live sample, each de-duplicated at the scope that makes its count honest. The installed event fires once ever per install identity, recorded in a persistent marker that is claimed only after a confirmed send; a wiped persistent state legitimately reads as a new install identity, and the event never fires per session. The panel-opened and sample-opened events fire once per session, so repeated visibility toggles or repeated sample clicks cannot inflate them. The completed event fires exactly once per transition into the completed status, observed at a single seam every completion path flows through. Every funnel event honors both telemetry switches, and no de-dupe slot — persistent or in-memory — is consumed when the event could not be sent.
 
@@ -65,6 +67,7 @@ The extension SHALL emit one event per activation-funnel rung — installed, pan
 - **THEN** it carries the effective workflow selection coerced through the shared coercer, how the workflow was chosen for form submissions, and which source observed the creation — never a name or path
 
 ### Both telemetry switches gate every event and apply without restart
+<!-- touches: src/core/telemetry.ts -->
 
 The extension SHALL send an event only when the editor-wide telemetry gate and its own telemetry setting are both on. Either switch turning off MUST stop all events immediately, and turning it back on mid-session MUST resume sending — in both directions without a reload, tracked through the editor's own telemetry-changed notification rather than a per-send poll.
 
@@ -73,6 +76,7 @@ The extension SHALL send an event only when the editor-wide telemetry gate and i
 - **THEN** no further events are sent, and re-enabling it resumes sending without reconstructing anything
 
 ### Every event carries the common facts under an anonymous install identity
+<!-- touches: src/core/telemetry.ts -->
 
 The extension SHALL attach the extension version, editor version, and platform to every event it sends, and SHALL group events per install under the editor's own anonymized machine identifier processed anonymously (no person profile). Event-specific properties win over the attached common facts on a key collision, so call-site payloads stay frozen.
 
@@ -81,9 +85,14 @@ The extension SHALL attach the extension version, editor version, and platform t
 - **THEN** it carries the extension version, editor version, and platform, grouped under an anonymous install identity that is never derived from the user
 
 ### Telemetry delivery is fire-and-forget and silently fallible
+<!-- touches: src/core/telemetry.ts -->
 
 Each event SHALL be delivered as a single post with no queue, no retries, and no batching; a delivery failure of any kind (offline, outage, quota, non-success response) MUST surface nothing to the user and block nothing.
 
 #### Scenario: the analytics backend is unreachable
 - **WHEN** events fire while the backend is down
 - **THEN** the extension behaves normally and no error is surfaced or logged to the user
+
+## Uncovered
+
+_None — every file in the area was read._

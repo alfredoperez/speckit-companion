@@ -1,10 +1,10 @@
-# Steering Companion Node — Living Spec
+# Steering Companion — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The Companion node reads the installed companion extension live, confines every path it opens to the root that owns it, and degrades to an empty section when the configuration cannot be read.
+The Companion node shows the installed Companion extension's configuration, commands and preset templates inside the steering tree, read from the installed files rather than a list compiled into this extension. Without it a user cannot see what the Companion actually ships, and a stale compiled list would tell them the wrong thing. This file holds the rules for reading that installation safely: live, path-confined, and tolerant of broken configuration.
 
 ## Requirements
 
@@ -23,6 +23,7 @@ The node SHALL distinguish "installed" from "not installed" from the extension's
 - **THEN** the node switches to its installed presentation and populates its children with no window reload
 
 ### Every path the tree opens is confined to the root that owns it
+<!-- touches: src/features/steering/companionSteering.ts, src/features/steering/steeringExplorerProvider.ts -->
 
 A path assembled from user- or manifest-supplied text SHALL be rejected unless it resolves inside its owning root — the workspace for configuration and reference sources, the installed extension directory for command bodies and templates. Manifests and settings are editable text, so a relative escape must not turn a tree click into an arbitrary-file open.
 
@@ -35,6 +36,7 @@ A path assembled from user- or manifest-supplied text SHALL be rejected unless i
 - **THEN** that source is skipped and no reference row is created for it
 
 ### Unreadable or malformed configuration degrades to an empty section
+<!-- touches: src/features/steering/companionSteering.ts -->
 
 Any parse or read failure while assembling a section SHALL yield an empty result for that section rather than an error dialog or a failed render. The steering view is ambient context, so one broken YAML file must not take the tree down.
 
@@ -49,3 +51,7 @@ Configuration the tree can parse but the runtime cannot SHALL be treated the sam
 - **WHEN** the file parses locally but contains a construct the runtime reader rejects
 - **THEN** no group entries are produced
 - **AND** the tree does not advertise settings the runtime will ignore
+
+## Uncovered
+
+_None — every file in the area was read._

@@ -1,10 +1,10 @@
 # Specs Commands — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The specs sidebar and the commands it dispatches: recorded state presented as a tree, Companion commands gated by family through one dispatch routine, and destructive actions that confirm and stay inside the workspace.
+This capability is the sidebar tree and the commands that act on a spec: dispatching a step to the AI, filtering and ordering the tree, and the bulk and destructive actions. Without it the recorded state has no face and no hands.
 
 ## Requirements
 
@@ -52,6 +52,33 @@ The view's title bar SHALL carry, in order: refresh, filter, sort, one collapse-
 #### Scenario: the tree is expanded
 - **WHEN** the reader looks at the title bar
 - **THEN** one button offers Collapse All; after it is used, the same slot offers Expand All
+
+### A workflow that records nothing still shows progress
+
+Workflows the user defines themselves run commands that write documents but never touch the state record, which would strand them at their first step forever. For those workflows only, progression SHALL be reconstructed from the one signal they do leave — their step outputs on disk — and only ever *forward* of what the record already says. Workflows that do record their own progress MUST be left entirely alone.
+
+A workflow the product ships is recognized by its own step sequence, not by whether every step name belongs to the lifecycle set. A built-in pipeline that ends in a step outside that set MUST still be recognized as built-in and MUST NOT be reconstructed from disk. Recognition may only ever move a workflow from user-defined to built-in — never the reverse — so nothing that reconstructs progression today stops doing so.
+
+A step may claim a whole folder as its own output. Everything inside a claimed folder belongs to the step that claims it and MUST NOT count as loose evidence for any other step.
+
+#### Scenario: a user's workflow has produced its third step's output
+- **WHEN** the record still says step one
+- **THEN** a reconstructed progression advances it to the third step so the forward action appears
+- **AND** the built-in pipelines are untouched by this path
+
+#### Scenario: the record is already at or ahead of what disk shows
+- **WHEN** reconstruction runs
+- **THEN** the real record wins and nothing is rewritten
+
+#### Scenario: a built-in pipeline ends in a step outside the lifecycle set
+- **WHEN** the reader opens a spec running that pipeline
+- **THEN** no progression is reconstructed from disk
+- **AND** the forward action names the same step the step strip shows as pending
+
+#### Scenario: only a claimed folder's document is present
+- **WHEN** the sole document beyond the specification lives in a folder an earlier step claims
+- **THEN** no later step reads as having produced output
+- **AND** a document loose in the spec directory still counts as before
 
 ### Destructive and bulk spec actions confirm, skip no-ops, and stay inside the workspace
 

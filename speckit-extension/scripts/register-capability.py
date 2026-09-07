@@ -64,7 +64,7 @@ def _normalize_existing(living: dict) -> list[dict]:
 
 
 def register(root: str, name: str, match: list[str], exclude: list[str],
-             spec: str | None) -> dict:
+             spec: str | None, replaces: list[str] | None = None) -> dict:
     """Append one capability idempotently. Returns the result object.
 
     Raises ValueError on a malformed existing config (the CLI maps it to exit 2)
@@ -93,6 +93,15 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     capabilities = _normalize_existing(living)
     spec_path = spec or _default_spec(name)
 
+    # A capability that was split into granular specs leaves an entry pointing at
+    # a file that is gone. The helper only ever appended, so every re-adoption had
+    # to hand-edit the registry; naming what this supersedes closes that.
+    superseded = []
+    if replaces:
+        wanted = set(replaces)
+        superseded = [c["name"] for c in capabilities if c["name"] in wanted]
+        capabilities = [c for c in capabilities if c["name"] not in wanted]
+
     existing = next((c for c in capabilities if c["name"] == name), None)
     if existing is not None:
         # Idempotent: report what's ACTUALLY on disk, not the requested inputs
@@ -100,6 +109,7 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
         return {
             "name": name,
             "action": "already-registered",
+            "superseded": superseded,
             "spec": existing.get("spec") or _default_spec(name),
             "match": existing.get("match", []),
             "configPath": CONFIG_REL,
@@ -123,6 +133,7 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
     result = {
         "name": name,
         "action": "created" if not existed else "appended",
+        "superseded": superseded,
         "spec": spec_path,
         "match": match,
         "configPath": CONFIG_REL,
@@ -173,6 +184,8 @@ def main(argv=None) -> int:
     ap.add_argument("--exclude", action="append", default=[], help="exclusion glob (repeatable)")
     ap.add_argument("--spec", default=None, help="spec path (default: capabilities/<name>/spec.md)")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
+    ap.add_argument("--replaces", action="append", default=[],
+                    help="a capability this one supersedes — its entry is removed (repeatable)")
     ap.add_argument("--json", action="store_true", help="emit the machine-readable result object")
     args = ap.parse_args(argv)
 
@@ -181,7 +194,7 @@ def main(argv=None) -> int:
         return 2
 
     try:
-        result = register(args.root, args.name, args.match, args.exclude, args.spec)
+        result = register(args.root, args.name, args.match, args.exclude, args.spec, args.replaces)
     except ValueError as exc:
         sys.stderr.write(f"register-capability: refusing to write — {exc}\n")
         return 2
@@ -193,6 +206,9 @@ def main(argv=None) -> int:
     else:
         print(f"[companion] {result['action']} capability '{result['name']}' "
               f"({result['spec']}) in {result['configPath']}")
+        if result.get("superseded"):
+            print(f"[companion] removed the entry it supersedes: "
+                  f"{', '.join(result['superseded'])}")
         if result.get("migratedFrom"):
             print(f"[companion] moved your capability registrations out of "
                   f"{result['migratedFrom']} into {result['configPath']} — commit it; "

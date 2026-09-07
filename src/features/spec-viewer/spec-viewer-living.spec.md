@@ -1,29 +1,12 @@
-# Spec Viewer Living Mode — Living Spec
+# Spec Viewer Living — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The viewer's capability-facing mode: a living spec presented as tiers rather than a run, best-effort header facts omitted rather than zeroed, slow facts arriving after first paint, and living specs surfaced as chips in the run log.
+Living mode presents a capability rather than a run: its tiers, its verified coverage, its health facts, and the chips a run log uses to hand off to it. Without it the viewer would dress a living spec in workflow machinery it does not have and show unverified coverage with the authority of a check.
 
 ## Requirements
-### Best-effort facts are omitted, never rendered as zeros
-
-Any fact the viewer cannot determine — a count, a date, a coverage ratio, a drift verdict — MUST be left out of the surface rather than shown as an empty or zero value. A zero the reader can trust and a fact nobody could compute are different claims, and rendering them identically makes the surface lie.
-
-#### Scenario: a capability's health cannot be computed
-- **WHEN** the repository has no version control, or the check times out
-- **THEN** the coverage and drift facts are simply absent from the header
-- **AND** nothing renders as `0`
-
-### Slow facts arrive after first paint and are discarded if the panel moved on
-
-A fact that costs real time to compute MUST NOT block the panel's first render. It SHALL be resolved afterwards and pushed to the panel, and the push MUST be dropped if the panel has since been re-anchored to a different subject — otherwise a slow answer about one capability lands on another.
-
-#### Scenario: two capabilities share a panel
-- **WHEN** the reader switches to a second capability while the first one's health check is still running
-- **THEN** the late result is discarded
-- **AND** the header keeps showing only facts belonging to what is on screen
 
 ### A living spec is presented as a capability, not a run
 
@@ -65,3 +48,39 @@ When a run loaded living specs, the viewer MUST surface them in the run log as c
 - **WHEN** a loaded living spec has no resolvable in-root document
 - **THEN** it is still listed but is not made clickable
 - **AND** the run log never renders the capability's purpose or requirement rows inline
+
+### Displayed coverage is verified, and an empty result is stated rather than hidden
+
+The requirement-to-test table renders with the visual authority of a check, so it MUST behave like one. A test a requirement names SHALL be confirmed to exist before the table presents it as coverage, and a named test that cannot be found SHALL render in a state distinct from both a confirmed test and a requirement that was never mapped — a link resolving to nothing is worse than an honest gap, because it reads as coverage that exists. Where several tests are named, the label SHALL say how many were found, so a partly-real link is not read as whole. The distinction MUST survive without colour.
+
+Coverage is the one section exempt from hiding itself when empty. Nothing traced is a finding, not an absence, and the header strip reports the count whether the section renders or not — so hiding it left the page stating the zero and withholding the explanation at the same time.
+
+#### Scenario: a requirement names a test that is not on disk
+- **WHEN** a linked test path does not resolve in the workspace
+- **THEN** that row renders in its own state and the label says how many of the named tests were found
+
+#### Scenario: no requirement has a linked test
+- **WHEN** coverage rows exist and none is traced
+- **THEN** the section renders, states the zero, and lists the untraced requirements
+
+### Best-effort facts are omitted, never rendered as zeros
+
+Any fact the viewer cannot determine — a count, a date, a coverage ratio, a drift verdict — MUST be left out of the surface rather than shown as an empty or zero value. A zero the reader can trust and a fact nobody could compute are different claims, and rendering them identically makes the surface lie.
+
+#### Scenario: a capability's health cannot be computed
+- **WHEN** the repository has no version control, or the check times out
+- **THEN** the coverage and drift facts are simply absent from the header
+- **AND** nothing renders as `0`
+
+### Slow facts arrive after first paint and are discarded if the panel moved on
+
+A fact that costs real time to compute MUST NOT block the panel's first render. It SHALL be resolved afterwards and pushed to the panel, and the push MUST be dropped if the panel has since been re-anchored to a different subject — otherwise a slow answer about one capability lands on another.
+
+#### Scenario: two capabilities share a panel
+- **WHEN** the reader switches to a second capability while the first one's health check is still running
+- **THEN** the late result is discarded
+- **AND** the header keeps showing only facts belonging to what is on screen
+
+## Uncovered
+
+_None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._

@@ -1,20 +1,12 @@
-# Viewer State — Living Spec
+# Viewer UI State — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> Adopted from existing code on 2026-07-19 and split by concern on 2026-09-07. Requirements describe observed behavior and have not been individually verified against tests.
 
 ## Purpose
 
-How the webview receives, applies, and reads the run state the extension sends: state messages replace the snapshot wholesale, one derivation answers whether a step is running, and record values are never trusted as object keys. The webview renders state; it never decides it.
+This is how the webview takes in what the extension knows and never adds a fact of its own: state arrives whole, is applied whole, and one derivation answers whether anything is running. Without it two surfaces could disagree about the run, and the reader would be shown a spec that does not exist.
 
 ## Requirements
-
-### The step order and the document vocabulary have one declaration
-
-The canonical order of pipeline steps and the document types the protocol names SHALL be imported from the shared contract, never restated in a component. The step order had been copied into three places, so adding a step meant finding all three, and a missed copy renders a step out of order or not at all.
-
-#### Scenario: a step is added to the canonical order
-- **WHEN** the shared contract changes
-- **THEN** every surface that orders steps picks it up with no edit of its own
 
 ### The webview never decides the run's state — it renders the state it is given
 
@@ -81,19 +73,6 @@ Where a spec written by an older version persisted a different shape for a field
 - **THEN** the converter accepts that shape and emits the current one
 - **AND** no consumer downstream of the converter branches on which shape it was
 
-### A recorded step completion settles the step even when status lags
+## Uncovered
 
-A step whose completion is recorded in the run's history is read as settled, and its forward action reappears, even when the top-level status still names that step as running. A lagging status can never keep a finished step spinning or hold the panel locked.
-
-#### Scenario: history records the current step complete but status still names it running
-
-- **WHEN** the current step's completion is present in history but the top-level status still names that step as in progress
-- **THEN** the step reads as settled and no spinner runs
-- **AND** the forward-motion action reappears
-
-#### Scenario: the step is genuinely still running
-
-- **WHEN** the current step's latest history entry is a start with no matching completion
-- **THEN** the step reads as running and the forward action stays withheld
-
-> The companion requirement for #492 — fold-back naming its exact outcome and surfacing loaded-but-unfolded capabilities — is recorded in the `capture-runtime` living spec's own change record and the spec-kit extension CHANGELOG, not folded here: the fold grammar applies one delta set to its target, so routing this feature's cross-cutting change through a single `viewer-ui` block keeps each capability spec honest.
+_None recorded by the original adoption for this concern._

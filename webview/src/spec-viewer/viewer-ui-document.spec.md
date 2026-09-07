@@ -1,10 +1,10 @@
-# Viewer Document — Living Spec
+# Viewer UI Document — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> Adopted from existing code on 2026-07-19 and split by concern on 2026-09-07. Requirements describe observed behavior and have not been individually verified against tests.
 
 ## Purpose
 
-Rendering a spec's markdown as a commentable document: every line addressable and safely escaped, and the inline comments that attach to it re-anchored on every render, posted to the extension as the owner of the record, and closed once the spec settles.
+This is the rendering pipeline that turns a spec's markdown into a document a person can read, annotate and navigate by requirement. Without it the viewer would show formatted text nobody can point at, and document text could reach the page as live markup.
 
 ## Requirements
 
@@ -45,63 +45,51 @@ A destination taken from the document — a link target, an image source — MUS
 - **THEN** it is not rendered as an activatable link
 - **AND** nothing the reader can click executes it
 
-### Comments survive re-render by re-anchoring, and the card speaks for where it sits
+### A living spec is navigable by requirement
 
-Persisted comments MUST be restored inline on every render and after every state change, and restoration MUST be idempotent so repeated calls do not duplicate cards. Anchoring is best-effort and follows a fixed precedence — the stored line when its content still matches, else any line matching the stored text, else the first line under the stored heading, else the stored line if it still exists. A comment that matches nothing stays available in the consolidated list rather than being dropped. A restored card MUST describe the line it actually mounted onto; the stored anchor is the *input* to re-anchoring, never its output.
+A living spec SHALL be navigable by requirement from the viewer's existing document outline, not from a second one built beside it — the viewer already has a sticky outline with scroll, active-heading tracking, and a narrow-pane fallback, and a second one puts two indexes of the same headings side by side on a wide pane. Because a living spec's requirements are its subsection headings, that outline SHALL list them by default rather than behind the subsections toggle a feature spec needs. Each row SHALL show that requirement's coverage where it is known and as unknown where it is not, never as zero, and the number of path patterns its marker names where it carries one — patterns, not files, since one entry can claim a whole directory and calling that a file count is a number the reader can check and find wrong. Those marks SHALL be drawn and hidden from assistive technology, with the row's single accessible name saying what they mean in words: a dot carrying only a tooltip is not reliably announced, and a bare number beside a heading says nothing. The outline SHALL read what it shows off the rendered requirement cards, never by parsing the document again. A feature spec's outline is unchanged.
 
-#### Scenario: the document drifts by a line
-- **WHEN** a comment's stored line no longer matches but its text is found elsewhere
-- **THEN** the card mounts on the line where the text now lives
-- **AND** the card reports that line, not the stored one
+#### Scenario: a large living spec is opened
+- **WHEN** it renders
+- **THEN** every requirement appears once in the outline, in document order, without the reader turning on subsections
 
-#### Scenario: a document switch replaces the rendered body
-- **WHEN** new content renders
-- **THEN** stale mounts are cleared before comments are re-anchored
-- **AND** no comment is left pointing at a removed element
+#### Scenario: a requirement appended past the uncovered-files section
+- **WHEN** the cards and the outline are built
+- **THEN** it is a card and a row like any other, because fold-back appends to the end of the file and where a requirement sits says nothing about whether it is one
+- **AND** the uncovered section between them is left outside every card rather than swallowed into the one above it
 
-### A teardown must unmount what it marked, not re-find it
+#### Scenario: a requirement whose coverage was never computed
+- **WHEN** its row renders
+- **THEN** it reads as unknown rather than as zero, which would mean none
 
-Anything that marks an element on open — an editor, a comment container — MUST remember the element it marked and act on that reference when closing. Re-deriving the target on teardown by walking the DOM fails whenever the mount is not an ancestor-reachable relative of the trigger, and leaves the element stuck in its opened state forever.
+#### Scenario: a heading inside a fenced block
+- **WHEN** the cards and the outline are built
+- **THEN** it is neither a card nor a row, matching what every other reader counts
 
-#### Scenario: an editor opened next to a table row is closed
-- **WHEN** the editor's container was inserted as a sibling rather than a descendant
-- **THEN** the close path still finds and unmounts it
-- **AND** the row loses its editing mark
+#### Scenario: a file marker outside a requirement card
+- **WHEN** any document renders, living or not, carrying a marker no requirement pass consumed
+- **THEN** nothing is drawn for it, because a marker is metadata and printing a comment's own source is not a rendering
 
-### Comment mutations are posted to the extension, which owns the record
+#### Scenario: the outline reaches the page
+- **WHEN** the document renders through the full pipeline rather than the outline pass alone
+- **THEN** the outline is live markup the stylesheet applies to, and a requirement's file marker is metadata the reader never sees as prose or as a template disclosure
 
-Adding, editing, or removing a comment MUST post the change to the extension rather than write anything itself; the local card is a rendering of the record, not the record. An edit that changes nothing, or that resolves to no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them, so what is shown after the round trip is what was actually persisted.
+### The viewer can be told which requirement to bring into view
 
-The line-level structural actions (remove a story, scenario, task, section, or line) are likewise requests the webview posts, not edits it performs. They MUST be labelled as suggestions rather than as direct removals, so the reader is never told a click deletes content the webview does not itself remove.
+The viewer SHALL accept a requirement heading from the extension and scroll the matching requirement into view, honouring the reader's reduced-motion preference. A heading matching no rendered requirement SHALL leave the scroll position untouched.
 
-#### Scenario: a comment is deleted
-- **WHEN** the reader deletes a card
-- **THEN** the removal is posted, the card unmounts, and focus returns to the line's own control
-- **AND** the pending count updates
+#### Scenario: the named requirement is on the page
+- **WHEN** the viewer is told to reveal it
+- **THEN** that requirement is scrolled into view
 
-#### Scenario: a reader picks a structural line action
-- **WHEN** the reader chooses to remove a story, scenario, task, section, or line from its menu
-- **THEN** the control reads as a suggestion, not a direct removal
-- **AND** the request is posted for the AI to act on rather than editing the document in place
-
-### A settled spec is readable but not annotatable
-
-Once a spec is completed or archived, its comments MUST still be visible — they are the record of what was asked — but every path that would create or change one SHALL be closed: the composer refuses to open, and mounted cards render without their action controls. This read-only decision SHALL follow the spec's live status, exactly as the footer's actions already do — it is re-evaluated when the status changes inside an open panel, never fixed at the moment the page was built.
-
-#### Scenario: a completed spec is opened
-- **WHEN** the reader hovers a line
-- **THEN** the composer does not open
-- **AND** existing comments remain visible without edit or delete controls
-
-#### Scenario: a spec settles while its panel is open
-- **WHEN** the status becomes completed during the session
-- **THEN** the annotation paths close in place
-- **AND** the reader does not have to reopen the panel for it to take effect
+#### Scenario: the heading matches nothing rendered
+- **WHEN** the viewer is told to reveal it
+- **THEN** the document stays where the reader left it
 
 ## Uncovered
 
-The following files were not read in full — their exported surface and role were established, but their bodies were not reviewed line by line:
+The following files were not read in full by the original adoption — their exported surface and role were established, but their bodies were not reviewed line by line:
 
 - `webview/src/spec-viewer/markdown/preprocessors.ts` (read partially; only the first ~60 lines and the export inventory)
+- `webview/src/spec-viewer/toc.ts`
 - `webview/src/spec-viewer/highlighting.ts`
-- `webview/src/spec-viewer/components/InlineEditor.tsx`

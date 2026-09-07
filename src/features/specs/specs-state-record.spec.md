@@ -1,10 +1,10 @@
 # Specs State Record — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The durable per-spec state file: how it is read, how it is written, and what a writer may never do to it. Reading is tolerant, writing is strict, append-only, atomic, serialized, and never in the user's way.
+This capability owns the per-spec state file, `.spec-context.json`: reading it tolerantly, writing it atomically, and never letting a write shorten its history. Without it every surface would guess a spec's progress from which files exist on disk, which is how two parts of the UI came to disagree about the same spec.
 
 ## Requirements
 
@@ -49,25 +49,6 @@ The reader SHALL accept records written by older versions, by other tools, and b
 - **WHEN** the extension updates the record
 - **THEN** that field is still there afterwards
 
-### Recording state never blocks the user's work
-
-Every lifecycle write SHALL be best-effort with respect to the user's action: a failure is logged where a maintainer can find it and then swallowed, so a dispatch, a click, or a tree refresh is never aborted because the record could not be updated. Losing one entry costs fidelity; failing the action costs the user their work.
-
-#### Scenario: the state file is locked by another process during a dispatch
-- **WHEN** the step-start write fails
-- **THEN** the failure is logged
-- **AND** the command still dispatches
-
-### A corrupt state record is preserved and replaced, never overwritten
-
-Because the writer refuses to overwrite an unparseable record, recovery MUST move the broken bytes aside to a non-colliding backup before writing a fresh minimal record in its place. The user keeps the original for manual salvage and gets a working spec back in one action.
-
-#### Scenario: the record is truncated to invalid JSON
-- **WHEN** recovery runs
-- **THEN** the broken file is renamed to a timestamped backup beside it
-- **AND** a fresh minimal record takes its place
-- **AND** a second recovery in the same second does not clobber the first backup
-
 ### Concurrent writes to a spec's state record are serialized, never lost
 
 Two updates to the same spec's state record that arrive at the same time both land: writes to a single spec's `.spec-context.json` run one at a time, so a concurrent read-modify-write can never overwrite another writer's entry. Writes to different specs stay independent and never wait on each other, and a failed write releases the queue for the next one instead of wedging it.
@@ -91,3 +72,26 @@ Two updates to the same spec's state record that arrive at the same time both la
 #### Scenario: the lock's owner cannot be read
 - **WHEN** a waiter would reclaim it
 - **THEN** it does not, because an unreadable owner means the file was replaced or was momentarily unreadable, not that nobody holds it
+
+### Recording state never blocks the user's work
+
+Every lifecycle write SHALL be best-effort with respect to the user's action: a failure is logged where a maintainer can find it and then swallowed, so a dispatch, a click, or a tree refresh is never aborted because the record could not be updated. Losing one entry costs fidelity; failing the action costs the user their work.
+
+#### Scenario: the state file is locked by another process during a dispatch
+- **WHEN** the step-start write fails
+- **THEN** the failure is logged
+- **AND** the command still dispatches
+
+### A corrupt state record is preserved and replaced, never overwritten
+
+Because the writer refuses to overwrite an unparseable record, recovery MUST move the broken bytes aside to a non-colliding backup before writing a fresh minimal record in its place. The user keeps the original for manual salvage and gets a working spec back in one action.
+
+#### Scenario: the record is truncated to invalid JSON
+- **WHEN** recovery runs
+- **THEN** the broken file is renamed to a timestamped backup beside it
+- **AND** a fresh minimal record takes its place
+- **AND** a second recovery in the same second does not clobber the first backup
+
+## Uncovered
+
+- All files under `__tests__/` were listed but not read.

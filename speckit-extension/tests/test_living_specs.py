@@ -3516,6 +3516,31 @@ class RegistryNotAdoptedTests(unittest.TestCase):
             self.assertEqual(err.getvalue(), "")
 
 
+class ReplacingASupersededCapability(unittest.TestCase):
+    """A capability split into granular specs leaves an entry pointing at a file
+    that is gone. The helper only appended, so every re-adoption hand-edited the
+    registry to remove it."""
+
+    def test_the_named_entry_goes_when_the_new_one_lands(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            reg = Path(root) / "living-specs.yml"
+            reg.write_text(
+                'enabled: true\ncapabilities:\n'
+                '  - name: old\n    match: ["src/**"]\n    spec: capabilities/old/old.spec.md\n',
+                encoding="utf-8")
+            out = regcap.register(root, "new-a", ["src/a/**"], [],
+                                  "capabilities/new/a.spec.md", replaces=["old"])
+            self.assertEqual(out["superseded"], ["old"])
+            text = reg.read_text(encoding="utf-8")
+            self.assertNotIn("name: old", text)
+            self.assertIn("name: new-a", text)
+
+    def test_replacing_a_name_that_is_not_there_is_silent(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            out = regcap.register(root, "solo", ["src/**"], [], None, replaces=["absent"])
+            self.assertEqual(out["superseded"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
 

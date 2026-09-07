@@ -1,12 +1,13 @@
-# Spec Viewer State Derivation — Living Spec
+# Spec Viewer State — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-How the viewer decides where a spec stands: state read from the recorded run rather than files on disk, verified coverage, trusted timing spans, single-owner facts, staleness, quiet-run recovery and completion announcements.
+State derivation decides where a spec stands from its recorded run, not from which files happen to exist, and owns the timing, staleness, recovery and completion judgements that follow from it. Without one derivation the viewer and the sidebar drift into contradicting each other in front of the reader.
 
 ## Requirements
+
 ### Viewer state is derived from the spec's recorded run, not from files on disk
 
 Everything the reader sees about *where the spec stands* — the status badge, which step is running, which steps are done, and which actions the footer offers — MUST be derived from the spec's recorded context. The presence or absence of a document file SHALL NOT be read as evidence that a step completed. File existence remains meaningful only for what it actually proves: whether a document can be opened, and whether a step tab has something behind it.
@@ -20,20 +21,6 @@ Everything the reader sees about *where the spec stands* — the status badge, w
 - **WHEN** the recorded context names a later current step but carries no entries for the steps before it
 - **THEN** those earlier steps are treated as completed by their position in the ordering
 - **AND** no step is left falsely pulsing
-
-### Displayed coverage is verified, and an empty result is stated rather than hidden
-
-The requirement-to-test table renders with the visual authority of a check, so it MUST behave like one. A test a requirement names SHALL be confirmed to exist before the table presents it as coverage, and a named test that cannot be found SHALL render in a state distinct from both a confirmed test and a requirement that was never mapped — a link resolving to nothing is worse than an honest gap, because it reads as coverage that exists. Where several tests are named, the label SHALL say how many were found, so a partly-real link is not read as whole. The distinction MUST survive without colour.
-
-Coverage is the one section exempt from hiding itself when empty. Nothing traced is a finding, not an absence, and the header strip reports the count whether the section renders or not — so hiding it left the page stating the zero and withholding the explanation at the same time.
-
-#### Scenario: a requirement names a test that is not on disk
-- **WHEN** a linked test path does not resolve in the workspace
-- **THEN** that row renders in its own state and the label says how many of the named tests were found
-
-#### Scenario: no requirement has a linked test
-- **WHEN** coverage rows exist and none is traced
-- **THEN** the section renders, states the zero, and lists the untraced requirements
 
 ### Timing is reported by real wall-clock spans, and only timed steps count toward coverage
 
@@ -98,3 +85,7 @@ When a step's recorded completion appears, the viewer SHOULD tell the reader, wi
 - **WHEN** the viewer first observes a spec whose steps are already complete
 - **THEN** nothing is announced
 - **AND** a genuinely new completion after that is announced once
+
+## Uncovered
+
+_None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._

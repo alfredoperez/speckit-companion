@@ -1,12 +1,13 @@
 # Spec Viewer Actions — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-What the reader may do from the viewer: the footer action catalog, the finish-only footer for done specs, step dispatch through the shared routine, and review-comment persistence.
+Actions are what the reader may do next and what the viewer writes to the spec's record on their behalf: the footer catalog, pipeline dispatch, and review-comment persistence. Without a single authority the footer offers steps the spec cannot take, and without a single writer two mutations clobber each other.
 
 ## Requirements
+
 ### The action catalog is the authority on what the reader may do
 
 The set of actions offered at the bottom of the viewer MUST be computed as a function of the spec's state alone, and the same true state SHALL always yield the same set. Each action declares whether it affects the whole spec or only the current step, and that scope is surfaced to the reader. Closure actions appear only once the spec has reached its final approval gate; the forward action targets the spec's real current step and disappears when the workflow has genuinely moved past it.
@@ -30,15 +31,6 @@ Which steps exist SHALL come from the one shared pipeline resolution the sidebar
 #### Scenario: the project placed a real step after implement
 - **WHEN** implement has settled
 - **THEN** the forward action targets that step rather than disappearing
-
-### A done spec offers only its finish actions, never the forward advance
-
-Once a spec has reached a done-building state, the footer MUST offer only its finish actions (Mark Completed / Archive) and MUST NOT surface the forward advance action, regardless of what the recorded current step says. A fast-path finish can flip the status to done before the pipeline records the final step's boundary, leaving the recorded current step transiently behind; the done status alone SHALL suppress the forward action so advance and finish are never offered together.
-
-#### Scenario: the status is done but the recorded current step still trails
-- **WHEN** a spec's status reports it is done building while its recorded current step lags at an earlier step
-- **THEN** the footer offers only the finish actions
-- **AND** the forward advance action is absent
 
 ### Pipeline actions target the spec's real step, and degrade safely when the pipeline is unavailable
 
@@ -65,6 +57,20 @@ The resolution, the fallback warning, the usage event, and the prompt assembly S
 - **THEN** it carries only the provider, the phase coerced to its allow-list, and the spec's correlation identifier when one exists
 - **AND** it attaches no retired dimension, so no reported field can outlive the concept it described
 
+### Reading a spec must never damage its record
+
+The viewer SHALL treat the spec's recorded context as read-only after the first open. It MAY create a minimal record when none exists at all, but a record that exists and cannot be parsed MUST be rendered from an in-memory stand-in and left untouched on disk. Repairing a corrupt record is the reader's explicit decision, taken through an offer that backs up the original first.
+
+#### Scenario: the record is unreadable mid-write
+- **WHEN** the record cannot be parsed during a render
+- **THEN** the panel renders from a minimal in-memory stand-in
+- **AND** nothing is written over the file on disk
+
+#### Scenario: the reader accepts a reset
+- **WHEN** the reader chooses to reset a corrupt record
+- **THEN** the original is backed up before a fresh record is written
+- **AND** the open panel refreshes onto the repaired state
+
 ### Review comments persist through the single writer, one mutation at a time
 
 An inline comment MUST be persisted to the spec's record the moment it is added, edited, or removed, and MUST reach disk through the sanctioned writer rather than a direct write. Mutations for a given spec SHALL be serialized so two comments added in quick succession cannot read the same baseline and clobber each other, and a failed mutation MUST NOT wedge the queue for the ones behind it. A mutation SHALL be refused outright when the existing record cannot be read.
@@ -78,3 +84,7 @@ An inline comment MUST be persisted to the spec's record the moment it is added,
 - **WHEN** a document's pending comments are sent to the assistant
 - **THEN** the prompt asks for targeted in-place edits and explicitly forbids regenerating the document from a template
 - **AND** the dispatched comments are marked applied rather than deleted
+
+## Uncovered
+
+_None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._

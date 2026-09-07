@@ -1,14 +1,15 @@
 # Steering Tree — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The steering tree renders the guidance files an assistant reads, straight from disk, under the configured provider's own filenames. It shows a section only when it holds something, keeps the provider node as the stable entry point, and re-renders when the files behind it change.
+Steering is the extension's window onto the persistent guidance an AI assistant reads before it does anything: the provider's rules files, its agents and skills, the SpecKit project scaffolding, and the reference folders a custom workflow consults. Without it those files stay invisible — scattered across the workspace and the user's home directory, under names that differ per provider — so users can't tell what context their assistant actually has, and can't correct it. This file holds the rules for what the tree shows and when it re-renders.
 
 ## Requirements
 
 ### Steering is a window over files on disk, never a second source of truth
+<!-- touches: src/features/steering/steeringExplorerProvider.ts -->
 
 The view SHALL render only what exists on disk at read time and SHALL NOT cache guidance content in its own store. Every row either opens a real file or offers the action that creates one, so what the user sees is what the assistant reads.
 
@@ -22,6 +23,7 @@ The view SHALL render only what exists on disk at read time and SHALL NOT cache 
 - **THEN** the row is omitted rather than offering a click that fails
 
 ### The tree names the configured provider's own files, never a hard-coded vendor filename
+<!-- touches: src/features/steering/steeringExplorerProvider.ts -->
 
 Every file-name label, create-action title, and scope path SHALL be resolved from the active provider's path configuration. Guidance filenames differ per provider, so a hard-coded name would tell the user to create a file their assistant will never read.
 
@@ -31,6 +33,7 @@ Every file-name label, create-action title, and scope path SHALL be resolved fro
 - **AND** its title names the provider's real filename
 
 ### Sections appear only when they hold content, and the provider node stays the stable entry point
+<!-- touches: src/features/steering/steeringExplorerProvider.ts -->
 
 The root SHALL omit any section with nothing in it, and SHALL always show the provider node so it remains findable. The Companion node SHALL appear only when the companion extension is installed (surfacing its Configuration and Commands); when it is absent the node is omitted here entirely — the install nudge lives on the higher-signal surfaces (the activity-bar badge, the pinned Specs CTA, and Create Spec) rather than as a warning row in this tree. An always-visible empty section trains users to ignore the view.
 
@@ -40,6 +43,7 @@ The root SHALL omit any section with nothing in it, and SHALL always show the pr
 - **AND** the provider node is still present, while the Companion node appears only if the companion extension is installed
 
 ### The tree refreshes itself when the files behind it change
+<!-- touches: src/features/steering/steeringExplorerProvider.ts -->
 
 The view SHALL watch the directories and files it renders — the provider's agent and skill locations at both scopes, the Companion configuration, and the Companion install marker — and re-render on create, change, or delete. Requiring a manual refresh means the view is routinely wrong about the assistant's context.
 

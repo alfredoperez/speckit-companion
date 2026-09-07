@@ -1,12 +1,13 @@
 # Spec Viewer Panel — Living Spec
 
-> Adopted from existing code on 2026-07-19. Requirements describe observed behavior and have not been individually verified against tests.
+> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The panel side of the spec viewer: one panel per spec, the complete state snapshot every refresh ships, the read-only stance toward the spec's record, the locked-down webview shell and the message contract it shares with the webview.
+The panel is the extension-side host for one spec's reading surface: one panel per spec, a shell generated under a locked-down policy, and every refresh carrying a complete snapshot. Without it a spec could end up with two disagreeing views of itself, or a webview holding stale fields beside fresh ones.
 
 ## Requirements
+
 ### One panel per spec, revealed rather than duplicated
 
 Opening any document of a spec MUST resolve to that spec's own panel. A second open — of the same document, a sibling document, or the spec as a whole — SHALL reuse and reveal the existing panel rather than creating another. Panels are keyed by the spec's directory so a spec can never end up with two disagreeing views of itself, and closing a panel MUST release everything scoped to it (pending timers, per-spec notification memory).
@@ -51,19 +52,26 @@ Both refresh paths — a document switch and a change to the spec's recorded con
 - **THEN** every open run panel is re-posted a complete snapshot
 - **AND** the nudge settles without the reader touching a spec file
 
-### Reading a spec must never damage its record
+### The webview shell is generated under a locked-down policy
 
-The viewer SHALL treat the spec's recorded context as read-only after the first open. It MAY create a minimal record when none exists at all, but a record that exists and cannot be parsed MUST be rendered from an in-memory stand-in and left untouched on disk. Repairing a corrupt record is the reader's explicit decision, taken through an offer that backs up the original first.
+Each render MUST emit its own content-security policy with a freshly generated per-render nonce, restrict resource loading to the extension's own assets plus the explicitly named script sources, and escape every value interpolated into the shell. Element-content escaping is not attribute-safe, so a document body carried through an HTML attribute SHALL be base64-encoded and decoded by the webview rather than escaped — the helper that does it is named for the encoding it performs, not for escaping, because a name that says "escape" invites its use where no escaping is happening. Regenerating the shell is also what resets the webview's in-memory selection, so any navigation meant to preserve that selection MUST go through a message instead.
 
-#### Scenario: the record is unreadable mid-write
-- **WHEN** the record cannot be parsed during a render
-- **THEN** the panel renders from a minimal in-memory stand-in
-- **AND** nothing is written over the file on disk
+#### Scenario: a pipeline entry is selected
+- **WHEN** the reader picks a document from the pipeline rail
+- **THEN** only the content is swapped by message
+- **AND** the shell is not regenerated, so the reader's current view is preserved
 
-#### Scenario: the reader accepts a reset
-- **WHEN** the reader chooses to reset a corrupt record
-- **THEN** the original is backed up before a fresh record is written
-- **AND** the open panel refreshes onto the repaired state
+#### Scenario: a document containing markup is rendered into the shell
+- **WHEN** the raw document is placed in the attribute the webview reads it from
+- **THEN** it is base64-encoded, so no character in it can terminate the attribute
+
+### The viewer's message contract is declared once, for both sides
+
+The set of messages the panel and its webview exchange, and the document types they name, SHALL live in one shared protocol module both sides import, not be restated in the extension-side types file. The two ends cannot then hold different ideas of what a message is, and a variant added on one side is visible to the other by construction.
+
+#### Scenario: a message variant is added
+- **WHEN** the protocol gains a new message type
+- **THEN** both the panel and the webview see the same declaration without either restating it
 
 ### The install nudge is resolved per render, and a click reports the banner the reader saw
 <!-- touches: src/features/spec-viewer/specViewerProvider.ts, src/features/spec-viewer/html/generator.ts, src/features/spec-viewer/messageHandlers.ts -->
@@ -87,27 +95,6 @@ The viewer's open command SHALL accept an optional requirement heading and, once
 #### Scenario: a requirement heading that does not exist
 - **WHEN** the spec is opened with it
 - **THEN** the spec still opens and no error is shown
-
-### The webview shell is generated under a locked-down policy
-
-Each render MUST emit its own content-security policy with a freshly generated per-render nonce, restrict resource loading to the extension's own assets plus the explicitly named script sources, and escape every value interpolated into the shell. Element-content escaping is not attribute-safe, so a document body carried through an HTML attribute SHALL be base64-encoded and decoded by the webview rather than escaped — the helper that does it is named for the encoding it performs, not for escaping, because a name that says "escape" invites its use where no escaping is happening. Regenerating the shell is also what resets the webview's in-memory selection, so any navigation meant to preserve that selection MUST go through a message instead.
-
-#### Scenario: a pipeline entry is selected
-- **WHEN** the reader picks a document from the pipeline rail
-- **THEN** only the content is swapped by message
-- **AND** the shell is not regenerated, so the reader's current view is preserved
-
-#### Scenario: a document containing markup is rendered into the shell
-- **WHEN** the raw document is placed in the attribute the webview reads it from
-- **THEN** it is base64-encoded, so no character in it can terminate the attribute
-
-### The viewer's message contract is declared once, for both sides
-
-The set of messages the panel and its webview exchange, and the document types they name, SHALL live in one shared protocol module both sides import, not be restated in the extension-side types file. The two ends cannot then hold different ideas of what a message is, and a variant added on one side is visible to the other by construction.
-
-#### Scenario: a message variant is added
-- **WHEN** the protocol gains a new message type
-- **THEN** both the panel and the webview see the same declaration without either restating it
 
 ## Uncovered
 
