@@ -404,11 +404,15 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
     return findings
 
 
-_STOP = {"a", "an", "the", "is", "are", "to", "of", "and", "or", "in", "on", "for", "with", "its", "it"}
+_STOP = {"a", "an", "the", "is", "are", "to", "of", "and", "or", "in", "on", "for", "with",
+         "its", "it", "their", "this", "that"}
 
 
 def _words(heading: str) -> set:
-    return {w for w in re.findall(r"[a-z0-9]+", heading.lower()) if w not in _STOP}
+    # A crude stem — "pages"/"page", "delegated"/"delegate" — is enough here; a
+    # real stemmer is a dependency for a warning.
+    return {re.sub(r"(ing|ed|es|e|s|d)$", "", w) if len(w) > 3 else w
+            for w in re.findall(r"[a-z0-9]+", heading.lower()) if w not in _STOP}
 
 
 def _nearest_heading(heading: str, present: set):
