@@ -12,7 +12,7 @@ import {
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps, ConfigKeys } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
-import { isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
+import { featureSpecName, isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
 import { deriveDocumentState } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
 import { specStatusLabel, documentStateLabel, DocumentStatus } from './specStatusLabel';
@@ -393,7 +393,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                         scanDir(path.join(dirPath, entry.name), entryRelativePath);
                     } else if (entry.isFile() && entry.name.endsWith('.md')) {
                         // Skip core docs at root level
-                        if (!relativePath && (mainDocs.includes(entry.name) || isFeatureSpecFile(entry.name))) {
+                        if (!relativePath && (mainDocs.includes(entry.name) || entry.name === featureSpecName(specFullPath))) {
                             continue;
                         }
                         results.push(entryRelativePath);

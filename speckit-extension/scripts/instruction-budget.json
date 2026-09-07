@@ -31,7 +31,7 @@
     "speckit.companion.auto.md": 2337,
     "speckit.companion.classify.md": 296,
     "speckit.companion.doctor.md": 1215,
-    "speckit.companion.implement.md": 4486,
+    "speckit.companion.implement.md": 4482,
     "speckit.companion.living-adopt.md": 3012,
     "speckit.companion.living-coverage.md": 327,
     "speckit.companion.living-drift.md": 506,
@@ -44,6 +44,6 @@
     "speckit.companion.resume.md": 370,
     "speckit.companion.specify.md": 5529,
     "speckit.companion.status.md": 306,
-    "speckit.companion.tasks.md": 3561
+    "speckit.companion.tasks.md": 3554
   }
 }

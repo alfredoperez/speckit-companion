@@ -19,7 +19,12 @@ export function isFeatureSpecFile(fileName: string): boolean {
 export function featureSpecName(specDir: string): string {
     try {
         const named = fs.readdirSync(specDir).filter(n => n.endsWith(NAMED_SPEC_SUFFIX)).sort();
-        if (named.length > 0) return named[0];
+        if (named.length > 0) {
+            // The folder's own name wins over whatever sorts first, so a second
+            // spec file beside it cannot become the feature's spec.
+            const own = path.basename(specDir).replace(/^\d+-/, '') + NAMED_SPEC_SUFFIX;
+            return named.includes(own) ? own : named[0];
+        }
     } catch { /* unreadable dir reads as stock */ }
     return STOCK_SPEC_FILE;
 }

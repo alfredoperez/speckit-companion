@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import re
+from datetime import datetime
 import sys
 from pathlib import Path
 
@@ -546,11 +547,29 @@ def _main() -> int:
             _record_outcome(False, str(exc))
             return 2
 
-    if args.at and args.kind != "start":
+    # `--kind` defaults to "start", so gating on it alone let every lifecycle
+    # flag past: --advance --at wrote nothing but exited 0.
+    _lifecycle_other = bool(args.advance or args.finish or args.materialize
+                            or args.mark_complete or args.tasks_file or args.task
+                            or args.close_task)
+    if args.at and (args.kind != "start" or _lifecycle_other):
         msg = "--at applies only to a step start; every other boundary is stamped live."
         print(f"[companion] {msg}", file=sys.stderr)
         _record_outcome(False, msg)
         return 2
+    if args.at:
+        # An unparseable or tz-naive stamp is worse than no stamp: the doctor
+        # reads None for it and the step's duration disappears.
+        try:
+            _parsed_at = datetime.fromisoformat(args.at.replace("Z", "+00:00"))
+        except ValueError:
+            _parsed_at = None
+        if _parsed_at is None or _parsed_at.tzinfo is None:
+            msg = (f"--at must be an ISO-8601 UTC stamp (e.g. 2026-09-06T10:00:00Z); "
+                   f"got {args.at!r}.")
+            print(f"[companion] {msg}", file=sys.stderr)
+            _record_outcome(False, msg)
+            return 2
 
     if args.batch:
         try:

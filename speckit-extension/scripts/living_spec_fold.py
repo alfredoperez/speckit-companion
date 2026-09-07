@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from capture import set_living_specs_synced
 from spec_context import _repo_root_for, feature_spec_path, read_ctx
@@ -329,9 +329,11 @@ def _git_changed_files(root: Path) -> list[str]:
                 ["git", "diff", "--name-only", mb], cwd=str(root),
                 capture_output=True, text=True, check=True,
             ).stdout
+            tracked = [x for x in out.splitlines() if x.strip()]
+            dirs = sorted({str(PurePosixPath(f).parent) for f in tracked}) or ["."]
             out += subprocess.run(
-                ["git", "ls-files", "--others", "--exclude-standard"], cwd=str(root),
-                capture_output=True, text=True, check=True,
+                ["git", "ls-files", "--others", "--exclude-standard", "--", *dirs],
+                cwd=str(root), capture_output=True, text=True, check=True,
             ).stdout
         except (subprocess.CalledProcessError, FileNotFoundError):
             return []

@@ -108,7 +108,7 @@ This budget governs the step that follows. Where it would produce something the 
    - A **wave** is a set of tasks that touch different files and don't depend on each other, so they can be built in any order. Head it with a line like `**Wave 1 — independent (different files):**` and tag each of its tasks `[P]`.
    - Between waves, write an explicit join line — `**⟶ Wait for Wave 1 to finish, then:**` — before the tasks that depend on the previous wave. Those form the next wave (or run singly).
    - A wave of one is fine — a single task, no `[P]`. Same-file or dependent tasks are **never** in the same wave. Group every genuinely-independent task of the phase into one wave, so the dependency boundaries are honest.
-   This wave layout is the execution map implement reads — it replaces the old scattered-`[P]` list. (Implement builds the tasks inline by default; the wave grouping documents the dependency order and tells a subagent-capable host which tasks *could* run together.)
+   This wave layout is the execution map implement reads — it replaces the old scattered-`[P]` list. (Implement dispatches one worker per story phase; the wave grouping is the dependency order within a phase.)
 
 4. Group the waves into phases, in this order:
    - **Phase 1: Setup** — project structure, config, and tooling prerequisites shared by everything.

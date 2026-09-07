@@ -44,4 +44,13 @@ describe('featureSpecPath', () => {
         expect(isFeatureSpecFile('offline-queue.spec.md')).toBe(true);
         expect(isFeatureSpecFile('plan.md')).toBe(false);
     });
+
+    it("prefers the folder's own name over whatever sorts first", () => {
+        // A second spec file beside the feature's own must not displace it.
+        const dir = path.join(tmp, '001-offline-queue');
+        fs.mkdirSync(dir);
+        fs.writeFileSync(path.join(dir, 'aaa-notes.spec.md'), '# notes');
+        fs.writeFileSync(path.join(dir, 'offline-queue.spec.md'), '# the feature');
+        expect(featureSpecName(dir)).toBe('offline-queue.spec.md');
+    });
 });

@@ -302,7 +302,7 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
         i = j
 
     reqs = sum(1 for i in range(len(lines)) if is_req(i))
-    if reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES:
+    if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
         # A capability with a wide surface is one folder, not one file. Warning
         # only: splitting is a judgement about where the seams are, and a gate
         # that blocks on it would just teach people to write fewer scenarios.
@@ -469,7 +469,8 @@ def _nearest_heading(heading: str, present: set):
         if not theirs:
             continue
         overlap = len(mine & theirs) / len(mine | theirs)
-        if overlap >= 0.6 or mine <= theirs or theirs <= mine:
+        if overlap >= 0.6 or (min(len(mine), len(theirs)) >= 3
+                              and (mine <= theirs or theirs <= mine)):
             return other
     return None
 

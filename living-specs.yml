@@ -98,7 +98,7 @@ capabilities:
     match: ["src/features/specs/stepHistoryDerivation.ts", "src/features/specs/historyHelpers.ts", "src/features/specs/lastTransition.ts"]
     spec: src/features/specs/specs-step-history.spec.md
   - name: specs-commands
-    match: ["src/features/specs/specCommands.ts", "src/features/specs/dispatchStep.ts", "src/features/specs/profileDispatch.ts", "src/features/specs/customCommandConfig.ts", "src/features/specs/specExplorerProvider.ts", "src/features/specs/specsFilterState.ts", "src/features/specs/specsSortMode.ts", "src/features/specs/specsSortState.ts", "src/features/specs/specsSidebarState.ts", "src/features/specs/selectionContextKeys.ts", "src/features/specs/fuzzyMatch.ts", "src/features/specs/sampleSpec.ts", "src/features/specs/index.ts", "src/features/specs/__tests__/**", "src/features/specs/*.spec.md"]
+    match: ["src/features/specs/specCommands.ts", "src/features/specs/featureSpecPath.ts", "src/features/specs/dispatchStep.ts", "src/features/specs/profileDispatch.ts", "src/features/specs/customCommandConfig.ts", "src/features/specs/specExplorerProvider.ts", "src/features/specs/specsFilterState.ts", "src/features/specs/specsSortMode.ts", "src/features/specs/specsSortState.ts", "src/features/specs/specsSidebarState.ts", "src/features/specs/selectionContextKeys.ts", "src/features/specs/fuzzyMatch.ts", "src/features/specs/sampleSpec.ts", "src/features/specs/index.ts", "src/features/specs/__tests__/**", "src/features/specs/*.spec.md"]
     spec: src/features/specs/specs-commands.spec.md
   - name: specs-pipeline-build
     match: ["src/features/specs/pipelineBuild.ts", "src/features/specs/pipelineBuildCommands.ts", "src/features/specs/pipelineGraph.ts"]
@@ -181,9 +181,6 @@ capabilities:
   - name: viewer-ui-presentation
     match: ["webview/src/spec-viewer/__stories__/**", "webview/src/spec-viewer/TechyButtons.stories.tsx", "webview/src/spec-viewer/TechyCards.stories.tsx"]
     spec: webview/src/spec-viewer/viewer-ui-presentation.spec.md
-  - name: viewer-ui-state
-    match: []
-    spec: webview/src/spec-viewer/viewer-ui-state.spec.md
 
 # House rules, written once here instead of retyped into chat on every run.
 # `spec` reaches the specify step, `plan` reaches the plan step, and neither
@@ -195,3 +192,16 @@ rules:
   plan:
     - "Name the capability each decision belongs to, so the fold knows where it goes"
     - "Prefer extending the file that already owns a concern over adding a new one"
+
+# Requirements dropped when the oversized specs were split (2026-09-07), each
+# because a test already enforces it. Kept here so the decision is greppable.
+#
+#   companion-commands  The prompting contract is held by a static gate, not by convention
+#                       → speckit-extension/tests/test_check_quality.py
+#   extension-services  Reconciling the companion's command family is add-only and idempotent
+#   extension-services  An install-state gate keys on the signal that actually implies the capability
+#                       → src/features/settings/companionPresetReconciler.test.ts
+#   ai-providers        The preamble's schema block is generated from the canonical contract
+#   steering            A provider's label and its mark resolve from one decision
+#   steering            A file the view creates lands where the view watches and reads
+

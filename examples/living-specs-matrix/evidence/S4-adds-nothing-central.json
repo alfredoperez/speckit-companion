@@ -1,7 +1,7 @@
 {
   "id": "S4-adds-nothing-central",
   "title": "an untouched capability needs a skip note; without one the fold shouts",
-  "ranAt": "2026-09-07T03:16:01.049Z",
+  "ranAt": "2026-09-07T03:33:27.487Z",
   "mode": "real+seeded-prose",
   "verdict": "PASS",
   "assertions": [
