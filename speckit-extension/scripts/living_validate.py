@@ -32,10 +32,11 @@ _SCENARIO_RE = re.compile(r"^####(?!#)\s+Scenario\s*:\s*(.+?)\s*$", re.IGNORECAS
 _SECTION_RE = re.compile(r"^##(?!#)\s+(.+?)\s*$")
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
-#: Past these a spec is a folder's worth of concerns in one file. Warnings, not
-#: gates — see `spec-too-large`.
+#: Past these a spec is a folder's worth of concerns in one file; under the floor
+#: it is a paragraph with its own tab. Warnings, not gates.
 MAX_REQUIREMENTS = 8
 MAX_LINES = 160
+MIN_REQUIREMENTS = 3
 
 _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$",
                               re.IGNORECASE)
@@ -302,6 +303,11 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
         i = j
 
     reqs = sum(1 for i in range(len(lines)) if is_req(i))
+    if root is not None and 0 < reqs < MIN_REQUIREMENTS:
+        findings.append(_finding(
+            WARNING, "spec-too-thin", path, 1,
+            f"{reqs} requirement(s) is a paragraph with its own file, not a spec a reader searches for.",
+            "Merge it into the sibling spec it belongs with, and drop its registry entry.", capability))
     if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
         # A capability with a wide surface is one folder, not one file. Warning
         # only: splitting is a judgement about where the seams are, and a gate

@@ -22,6 +22,18 @@ If the argument is **empty**, do not fall back to scanning the whole repo. List 
 
 If the argument names **several areas**, adopt them in one run: propose the full capability tree across all of them, and bring the whole tree to the single review gate in step 1. Do not silently expand beyond what was named.
 
+<!-- speckit-companion:part smallest-thing -->
+## The smallest thing that works
+
+**Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later.
+
+**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
+
+**Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A" — remove it instead.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
+<!-- /speckit-companion:part smallest-thing -->
+
 ## What to do
 
 ### 1. Scope the area and propose capabilities
@@ -137,7 +149,9 @@ The exact required structure:
 
 **Cut where the architecture's rules live, and read `CLAUDE.md` first to find out where that is.** A layered codebase keeps its load-bearing rules *between* layers — imports go one way, a slice never reaches sideways — so a cut by business noun has nowhere to put them: measured once, a by-noun cut of a Feature-Sliced app lost three of its five layering rules. Cut by layer there, by bounded context in a domain-shaped codebase.
 
-**A capability is a folder, not a file.** Past 8 requirements or 160 lines, split it at the review gate — `capabilities/<capability>/<concern>.spec.md`, or `<area>/<capability>-<concern>.spec.md` colocated — one registry entry each.
+**A capability is a folder, not a file, and you cut it at its seams.** Past 8 requirements or 160 lines, split it at the review gate — `capabilities/<capability>/<concern>.spec.md`, or `<area>/<capability>-<concern>.spec.md` colocated — one registry entry each. A seam is a concern a reader would search for by name; it is never "the next eight". A file with fewer than three requirements is a paragraph with its own tab, so it merges into the sibling it belongs with — the validator warns on both ends. Four to six files is what a large area usually comes to.
+
+**An area that already has a spec is re-adopted from that spec, not from the code.** Its requirements are the input: move each one verbatim — heading, `touches` marker, scenarios — into the granular file whose concern it belongs to, drop only what a type or a test already enforces and say which, then delete the original and register the new files. A reworded heading is a lost requirement, because fold-back finds a requirement by its exact heading.
 
 **Write less than the code would let you.** Adoption over-describes by default — one adopted spec came out at 508 lines — and every line is context a later run carries. Four rules hold it down:
 
