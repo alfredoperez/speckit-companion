@@ -77,8 +77,10 @@ def measure(path: str) -> dict:
     for m in _PART_FENCE.finditer(body):
         shared[m.group(1)] = directives(m.group(2))
     own = directives(_PART_FENCE.sub("", body))
+    words = len(_FRONTMATTER.sub("", body).split())
     return {
         "command": os.path.basename(path),
+        "words": words,
         "own": own,
         "shared": sum(shared.values()),
         "total": own + sum(shared.values()),
@@ -104,10 +106,10 @@ def main() -> int:
         import json
         print(json.dumps({"ceiling": args.ceiling, "commands": rows}, indent=2))
     else:
-        print(f"{'command':46} {'own':>5} {'shared':>7} {'total':>6}  over?")
+        print(f"{'command':46} {'own':>5} {'shared':>7} {'total':>6}  {'words':>6}  over?")
         for r in rows:
             flag = "  ⚠" if r["total"] > args.ceiling else ""
-            print(f"{r['command']:46} {r['own']:>5} {r['shared']:>7} {r['total']:>6}{flag}")
+            print(f"{r['command']:46} {r['own']:>5} {r['shared']:>7} {r['total']:>6}  {r['words']:>6}{flag}")
         worst = rows[0]
         if worst["shared"] > worst["own"]:
             print(f"\nMost of {worst['command']}'s load is shared, not its own: "
@@ -115,15 +117,18 @@ def main() -> int:
                   f"dispatches would re-pay the shared half each time.")
 
     import json
-    marks = {}
+    marks, word_marks = {}, {}
     if os.path.exists(HIGH_WATER):
         with open(HIGH_WATER, encoding="utf-8") as fh:
-            marks = json.load(fh).get("commands", {})
+            stored = json.load(fh)
+        marks, word_marks = stored.get("commands", {}), stored.get("words", {})
 
     if args.record:
         with open(HIGH_WATER, "w", encoding="utf-8") as fh:
             json.dump({"ceiling": DEFAULT_CEILING,
                        "commands": {r["command"]: r["total"] for r in sorted(
+                           rows, key=lambda r: r["command"])},
+                       "words": {r["command"]: r["words"] for r in sorted(
                            rows, key=lambda r: r["command"])}}, fh, indent=2)
             fh.write("\n")
         print(f"\nRecorded {len(rows)} high-water marks in {os.path.basename(HIGH_WATER)}.")
@@ -138,6 +143,15 @@ def main() -> int:
     for r, mark in risen:
         print(f"{r['command']}: {r['total']} directives, up from {mark}. "
               f"Shed one elsewhere or run --record deliberately.", file=sys.stderr)
+    # Words ratchet too, with a little slack: a directive is a rule, a word is
+    # only weight, and one rewritten sentence should not fail a build. Five
+    # percent is under what any of the diet's cuts moved.
+    heavier = [(r, word_marks[r["command"]]) for r in rows
+               if r["command"] in word_marks and r["words"] > word_marks[r["command"]] * 1.05]
+    for r, mark in heavier:
+        print(f"{r['command']}: {r['words']} words, up from {mark}. "
+              f"Cut elsewhere or run --record deliberately.", file=sys.stderr)
+    risen = risen + heavier
     for r in new:
         print(f"{r['command']}: new command at {r['total']} directives, over the "
               f"{args.ceiling} ceiling.", file=sys.stderr)
