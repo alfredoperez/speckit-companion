@@ -208,6 +208,27 @@ def fences_are_balanced(text: str) -> bool:
     return opened % 2 == 0
 
 
+def _capability_globs(root: str, capability: str) -> set:
+    rsp = _load_resolver()
+    if rsp is None:
+        return set()
+    try:
+        caps = (rsp.load_living(root) or {}).get("capabilities") or []
+    except Exception:  # noqa: BLE001
+        return set()
+    for c in caps:
+        if c.get("name") == capability:
+            return {g.replace(os.sep, "/") for g in (c.get("match") or [])}
+    return set()
+
+
+def _marker_glob_in(line: str, globs: set) -> bool:
+    m = _TOUCHES_RE.match(line)
+    if not m:
+        return False
+    return any(p.strip() in globs for p in m.group(1).split(","))
+
+
 def _has_sibling_spec(root: str, path: str) -> bool:
     """Another `*.spec.md` in the same directory."""
     try:
@@ -322,6 +343,21 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             f"{reqs} requirement(s) beside its siblings is a paragraph with its own file, "
             f"not a spec a reader searches for.",
             "Merge it into the sibling it belongs with, and drop its registry entry.", capability))
+    if root is not None and capability and any(l.startswith("> [DRAFT]") and "rules are transcribed" in l for l in lines[:6]):
+        # Adoption transcribes the rules that hold between files, and a rule about
+        # a boundary carries the boundary's own glob as its marker. A draft with
+        # none was read from the code, which is the way both measured attempts
+        # lost four of five layering rules.
+        globs = _capability_globs(root, capability)
+        scoped = any(_marker_glob_in(lines[k + 1] if k + 1 < len(lines) else "", globs)
+                     for k in range(len(lines)) if is_req(k))
+        if globs and not scoped:
+            findings.append(_finding(
+                WARNING, "draft-without-boundary-rule", path, 1,
+                "This adopted spec has no requirement scoped to the capability's whole "
+                "glob, so the rules that hold between its files were not transcribed.",
+                "Read the project's conventions and enforcement configs, and add each rule "
+                "as a requirement whose marker is the layer glob.", capability))
     if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
         # A capability with a wide surface is one folder, not one file. Warning
         # only: splitting is a judgement about where the seams are, and a gate
