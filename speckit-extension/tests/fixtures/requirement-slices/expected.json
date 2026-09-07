@@ -114,5 +114,17 @@
       "heading": "Nothing fenced here",
       "touches": null
     }
+  ],
+  "formatted-by-prettier.md": [
+    {
+      "heading": "Route paths are named, never spelled out",
+      "touches": [
+        "src/shared/router.ts"
+      ]
+    },
+    {
+      "heading": "Still unmarked when prose comes first",
+      "touches": null
+    }
   ]
 }

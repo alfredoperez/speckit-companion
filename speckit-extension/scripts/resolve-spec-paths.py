@@ -171,9 +171,15 @@ def requirement_slices(spec_text: str) -> list:
         while j < end and not is_heading(j) and not is_section(j):
             j += 1
         body = lines[i + 1:j]
-        # Only the line immediately after the heading is a marker; one further
+        # The marker is the first non-blank line after the heading. It used to
+        # have to be the line immediately after, which a markdown formatter
+        # breaks: prettier puts a blank line between a heading and an HTML
+        # comment, so one pre-commit hook silently unmarked every requirement
+        # in a spec and every load quietly fell back to reading it whole (#690).
+        # Still only the first non-blank line, so a marker discussed further
         # down is body, because a spec may legitimately discuss a marker.
-        marker = _TOUCHES_RE.match(body[0]) if body else None
+        first = next((ln for ln in body if ln.strip()), None)
+        marker = _TOUCHES_RE.match(first) if first is not None else None
         touches = None
         if marker:
             touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] or None

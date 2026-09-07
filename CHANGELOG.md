@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **A living spec keeps its file markers after a formatter has been near it.** A requirement says which files it describes on the line below its heading, and a markdown formatter puts a blank line there. That blank line used to erase the marker as far as the extension was concerned, so a run quietly read whole specs while reporting that it was reading only the parts it needed. Any project whose pre-commit hooks format markdown had this.
+
 ### Changed
 
 - **A feature spec is named for its feature.** Companion now writes `specs/012-offline-queue/offline-queue.spec.md` instead of `spec.md`, so three open specs read as three features in the tab bar rather than `spec.md` three times. The Specs tree, the viewer, step completion, and the living-spec checks find either name, so specs written before this and specs a stock `/speckit.specify` writes next to them keep working unchanged.

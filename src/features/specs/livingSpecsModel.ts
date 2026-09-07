@@ -771,9 +771,14 @@ export function requirementSlices(specText: string): RequirementSlice[] {
         let j = i + 1;
         while (j < end && !isHeading(j) && !isSection(j)) j++;
         let body = lines.slice(i + 1, j);
-        // Only the line immediately after the heading is a marker; one further
+        // The marker is the first non-blank line after the heading. Requiring
+        // the immediately-next line is what a markdown formatter breaks: it puts
+        // a blank line between a heading and an HTML comment, silently unmarking
+        // every requirement in the spec (#690). Still only the first non-blank
+        // line, so a marker discussed further
         // down is body, because a spec may legitimately discuss a marker.
-        const marker = body.length > 0 ? body[0].match(TOUCHES_RE) : null;
+        const first = body.find(ln => ln.trim().length > 0);
+        const marker = first !== undefined ? first.match(TOUCHES_RE) : null;
         // An empty list is `undefined`, not `[]`: `<!-- touches: , -->` names no
         // file, so the requirement is unmarked. An empty array is truthy in TS
         // and would have made this half narrow where the Python half does not.
