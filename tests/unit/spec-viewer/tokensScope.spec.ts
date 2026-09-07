@@ -45,3 +45,10 @@ describe('viewer palette scoping', () => {
     }
   });
 });
+
+// The UA's own [hidden] rule loses to any author `display`, so hiding must be enforced here.
+describe('hidden attribute', () => {
+  it('is enforced in the shared stylesheet every webview imports', () => {
+    expect(sharedTokens).toMatch(/\[hidden\]\s*\{[^}]*display:\s*none\s*!important/);
+  });
+});

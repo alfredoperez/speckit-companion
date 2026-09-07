@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - **A capability with no coverage file says so.** It used to render exactly like a fully covered one — both showed nothing — so "we have no number for this" read as "nothing to report". The three states now look like three states.
 
 ### Fixed
+- **The empty grey bar under the workflow picker is gone.** Create New Spec used to leave a blank filled strip between the workflow picker and the Feature Brief whenever there was nothing to say about the selected workflow. The space now closes up, and the workflow blurb still appears when there is one.
 - **A living spec keeps its file markers after a formatter has been near it.** A requirement says which files it describes on the line below its heading, and a markdown formatter puts a blank line there. That blank line used to erase the marker as far as the extension was concerned, so a run quietly read whole specs while reporting that it was reading only the parts it needed. Any project whose pre-commit hooks format markdown had this.
 
 ### Changed

@@ -237,3 +237,11 @@ body.vscode-high-contrast {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ============================================
+   Hidden — global, beats any author `display`
+   ============================================ */
+
+[hidden] {
+    display: none !important;
+}
