@@ -22,6 +22,8 @@ If the argument is **empty**, do not fall back to scanning the whole repo. List 
 
 If the argument names **several areas**, adopt them in one run: propose the full capability tree across all of them, and bring the whole tree to the single review gate in step 1. Do not silently expand beyond what was named.
 
+If the argument is `.`, the developer asked for the **whole project**. Read the conventions as always, then propose the tree for the whole source tree. Say at the gate how many capabilities and how many spec files that comes to, and offer a coarser cut (one spec per area) and a finer one (a spec per concern within an area) with the count each would give, so the size of the thing is a choice rather than a surprise. Nothing is written until they pick.
+
 <!-- speckit-companion:part smallest-thing -->
 ## The smallest thing that works
 

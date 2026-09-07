@@ -68,6 +68,7 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.delete',
             'speckit.livingSpecs.drift',
             'speckit.livingSpecs.init',
+            'speckit.livingSpecs.move',
             'speckit.livingSpecs.refresh',
             'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
@@ -112,12 +113,44 @@ describe('registerLivingSpecsCommands', () => {
                 ['README.md', vscode.FileType.File],
                 ['node_modules', vscode.FileType.Directory],
             ]);
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'src' });
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([{ label: 'src' }]);
 
             await handlers['speckit.livingSpecs.adopt']();
 
             expect(executeSlashCommand).toHaveBeenCalledWith(
                 '/speckit.companion.living-adopt src',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
+        it('adopts several areas in one run', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([
+                { label: 'src/pages' },
+                { label: 'src/features' },
+            ]);
+
+            await handlers['speckit.livingSpecs.adopt']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt src/pages src/features',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
+        it('collapses the whole-project choice to the repository root', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([
+                { label: '$(globe) The whole project' },
+                { label: 'src' },
+            ]);
+
+            await handlers['speckit.livingSpecs.adopt']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt .',
                 'SpecKit - Adopt Code Area',
                 true
             );
@@ -134,13 +167,39 @@ describe('registerLivingSpecsCommands', () => {
 
         it('carries the layout through when setup already chose one', async () => {
             (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
-            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'src/pages' });
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([{ label: 'src/pages' }]);
 
             await handlers['speckit.livingSpecs.adopt']({ layout: 'colocated' });
 
             expect(executeSlashCommand).toHaveBeenCalledWith(
                 '/speckit.companion.living-adopt src/pages --layout colocated',
                 'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+    });
+
+    describe('move', () => {
+        it('asks where the capability should live and dispatches the answer', async () => {
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'Central' });
+
+            await handlers['speckit.livingSpecs.move']({ capability: { name: 'billing' } });
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-move billing to central',
+                'SpecKit - Move Living Specs',
+                true
+            );
+        });
+
+        it('moves every spec when invoked without a capability', async () => {
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'Next to the code' });
+
+            await handlers['speckit.livingSpecs.move']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-move everything to colocated',
+                'SpecKit - Move Living Specs',
                 true
             );
         });

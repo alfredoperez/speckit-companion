@@ -498,6 +498,12 @@
         "icon": "$(checklist)"
       },
       {
+        "command": "speckit.livingSpecs.move",
+        "title": "Move Living Spec\u2026",
+        "category": "SpecKit",
+        "icon": "$(arrow-swap)"
+      },
+      {
         "command": "speckit.livingSpecs.init",
         "title": "Set Up Living Specs",
         "category": "SpecKit"
@@ -749,6 +755,11 @@
           "command": "speckit.livingSpecs.update",
           "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability-drifted",
           "group": "livingSpecs@0"
+        },
+        {
+          "command": "speckit.livingSpecs.move",
+          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-capability-missing)",
+          "group": "livingSpecs@3"
         },
         {
           "command": "speckit.livingSpecs.drift",

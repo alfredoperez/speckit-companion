@@ -71,34 +71,6 @@ export async function listCodeAreas(root: string): Promise<string[]> {
     return areas;
 }
 
-const TYPE_A_PATH = '$(edit) Type a path\u2026';
-
-/** Ask which part of the codebase to adopt. Returns undefined when the user backs out. */
-async function pickCodeArea(root: string): Promise<string | undefined> {
-    const areas = await listCodeAreas(root);
-    const items: vscode.QuickPickItem[] = areas.map(label => ({ label }));
-    items.push({ label: TYPE_A_PATH, alwaysShow: true });
-
-    const picked = await vscode.window.showQuickPick(items, {
-        title: 'Adopt Code Area',
-        placeHolder: 'Which part of the codebase should become living specs?',
-        matchOnDescription: true,
-    });
-    if (!picked) {
-        return undefined;
-    }
-    if (picked.label !== TYPE_A_PATH) {
-        return picked.label;
-    }
-    const typed = await vscode.window.showInputBox({
-        title: 'Adopt Code Area',
-        prompt: 'Path to adopt, relative to the workspace root',
-        placeHolder: 'src/features/checkout',
-        validateInput: value => (value.trim() ? undefined : 'Enter a path to adopt'),
-    });
-    return typed?.trim() || undefined;
-}
-
 type SpecLayout = 'central' | 'colocated';
 
 /** The registry a fresh project starts from: on, default exemptions, nothing adopted yet. */
@@ -131,6 +103,54 @@ async function pickLayout(): Promise<SpecLayout | undefined> {
         return undefined;
     }
     return picked.label === central ? 'central' : 'colocated';
+}
+
+const TYPE_A_PATH = '$(edit) Type a path\u2026';
+const WHOLE_PROJECT = '$(globe) The whole project';
+
+/**
+ * Ask which parts of the codebase to adopt. One prompt, because the rest of the
+ * conversation — how many capabilities, how finely to cut them — belongs at the
+ * plan the command shows before it writes anything, where the answer is informed.
+ *
+ * Returns the chosen areas, `['.']` for the whole project, or undefined when the
+ * user backs out.
+ */
+async function pickCodeAreas(root: string): Promise<string[] | undefined> {
+    const areas = await listCodeAreas(root);
+    const items: vscode.QuickPickItem[] = [
+        { label: WHOLE_PROJECT, detail: 'You will see the proposed capabilities before anything is written.', alwaysShow: true },
+        ...areas.map(label => ({ label })),
+        { label: TYPE_A_PATH, alwaysShow: true },
+    ];
+
+    const picked = await vscode.window.showQuickPick(items, {
+        title: 'Adopt Code Area',
+        placeHolder: 'Which parts of the codebase should become living specs?',
+        canPickMany: true,
+    });
+    if (!picked || picked.length === 0) {
+        return undefined;
+    }
+    const labels = picked.map(p => p.label);
+    if (labels.includes(WHOLE_PROJECT)) {
+        return ['.'];
+    }
+    const chosen = labels.filter(l => l !== TYPE_A_PATH);
+    if (!labels.includes(TYPE_A_PATH)) {
+        return chosen;
+    }
+    const typed = await vscode.window.showInputBox({
+        title: 'Adopt Code Area',
+        prompt: 'Path to adopt, relative to the workspace root',
+        placeHolder: 'src/features/checkout',
+        validateInput: value => (value.trim() ? undefined : 'Enter a path to adopt'),
+    });
+    const extra = typed?.trim();
+    if (extra) {
+        chosen.push(extra);
+    }
+    return chosen.length > 0 ? chosen : undefined;
 }
 
 async function dispatchScoped(command: 'living-drift' | 'living-coverage', title: string, item?: LivingSpecNode): Promise<void> {
@@ -205,6 +225,28 @@ export function registerLivingSpecsCommands(
             outputChannel.appendLine(`[SpecKit] Coverage check for: ${capabilityName(item) || '(all capabilities)'}`);
             await dispatchScoped('living-coverage', 'SpecKit - Requirement Coverage', item);
         }),
+        vscode.commands.registerCommand('speckit.livingSpecs.move', async (item?: LivingSpecNode) => {
+            const name = capabilityName(item);
+            const subject = name || 'everything';
+            const to = await vscode.window.showQuickPick(
+                [
+                    { label: 'Next to the code', detail: `Move ${subject} beside the code it describes.` },
+                    { label: 'Central', detail: `Move ${subject} under one capabilities folder.` },
+                ],
+                { title: name ? `Move ${name}` : 'Move every living spec', placeHolder: 'Where should it live?' },
+            );
+            if (!to) {
+                outputChannel.appendLine('[SpecKit] Living-spec move cancelled at the layout prompt');
+                return;
+            }
+            const layout = to.label === 'Central' ? 'central' : 'colocated';
+            outputChannel.appendLine(`[SpecKit] Living-spec move dispatched: ${subject} to ${layout}`);
+            await getAIProvider().executeSlashCommand(
+                `/speckit.companion.living-move ${subject} to ${layout}`,
+                'SpecKit - Move Living Specs',
+                true,
+            );
+        }),
         vscode.commands.registerCommand('speckit.livingSpecs.init', async () => {
             const root = workspaceRoot();
             if (!root) {
@@ -245,16 +287,17 @@ export function registerLivingSpecsCommands(
                 vscode.window.showWarningMessage('Open a folder before adopting a code area.');
                 return;
             }
-            const area = await pickCodeArea(root);
-            if (!area) {
+            const areas = await pickCodeAreas(root);
+            if (!areas) {
                 outputChannel.appendLine('[SpecKit] Living-spec adoption cancelled at the area prompt');
                 return;
             }
             // Setup already asked where specs live, so adoption must not ask again.
             const layout = opts?.layout ? ` --layout ${opts.layout}` : '';
-            outputChannel.appendLine(`[SpecKit] Living-spec adoption dispatched for: ${area}`);
+            const target = areas.join(' ');
+            outputChannel.appendLine(`[SpecKit] Living-spec adoption dispatched for: ${target}`);
             await getAIProvider().executeSlashCommand(
-                `/speckit.companion.living-adopt ${area}${layout}`,
+                `/speckit.companion.living-adopt ${target}${layout}`,
                 'SpecKit - Adopt Code Area',
                 true,
             );
