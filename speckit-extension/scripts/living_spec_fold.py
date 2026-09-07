@@ -16,10 +16,10 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from capture import set_living_specs_synced
-from spec_context import _repo_root_for, read_ctx
+from spec_context import _repo_root_for, feature_spec_path, read_ctx
 from living_validate import (ERROR, _fence_flags, check_feature_deltas,
                              fences_are_balanced)
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
@@ -290,7 +290,7 @@ def _deltas_for(deltas: dict, cap_name: str, is_default: bool) -> dict:
 
 
 def _initial_living_spec(capability_name: str) -> str:
-    """A minimal well-formed living-spec scaffold for a capability whose spec.md
+    """A minimal well-formed living-spec scaffold for a capability whose spec file
     doesn't exist yet, so the first ADDED fold creates a titled, sectioned spec
     (the accumulation story LS·4 relies on) rather than a headerless fragment.
     The slug is humanized into a title; ADDED requirements append under
@@ -304,7 +304,7 @@ def _initial_living_spec(capability_name: str) -> str:
 
 
 def _git_changed_files(root: Path) -> list[str]:
-    """Files this feature branch changed vs its merge-base with the default branch.
+    """Files this feature changed vs its merge-base with the default branch — committed, uncommitted and untracked.
 
     Best-effort: returns [] if git can't answer (detached/odd checkout, no
     merge-base). On the write-side fold, an empty result means the caller
@@ -322,9 +322,18 @@ def _git_changed_files(root: Path) -> list[str]:
         if not mb:
             continue
         try:
+            # Working tree against the merge-base, not HEAD against it: at the
+            # moment the fold runs the feature is usually uncommitted, and a new
+            # slice is untracked. Both are what this run changed.
             out = subprocess.run(
-                ["git", "diff", "--name-only", mb, "HEAD"], cwd=str(root),
+                ["git", "diff", "--name-only", mb], cwd=str(root),
                 capture_output=True, text=True, check=True,
+            ).stdout
+            tracked = [x for x in out.splitlines() if x.strip()]
+            dirs = sorted({str(PurePosixPath(f).parent) for f in tracked}) or ["."]
+            out += subprocess.run(
+                ["git", "ls-files", "--others", "--exclude-standard", "--", *dirs],
+                cwd=str(root), capture_output=True, text=True, check=True,
             ).stdout
         except (subprocess.CalledProcessError, FileNotFoundError):
             return []
@@ -450,7 +459,16 @@ def _shape_errors(spec_text: str, spec_rel: str, targets: list, root: Path,
     out: dict = {}
     for f in findings:
         if f["severity"] != ERROR:
-            continue  # a warning describes untidiness, not damage
+            # Not a block, but not silence either: a warning here is the one
+            # chance to say "this ADDED heading restates one the spec already
+            # has" BEFORE it becomes a permanent second requirement. A run that
+            # folded two near-duplicates never saw this, because it was dropped.
+            print(
+                f"[companion] Living-spec fold: warning at {f['path']}:{f['line']} "
+                f"[{f['code']}] {f['message']} {f['fix']}",
+                file=sys.stderr,
+            )
+            continue
         out.setdefault(f.get("capability"), []).append(f)
     return out
 
@@ -461,7 +479,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
     Opt-in (livingSpecs.enabled) and best-effort: any miss (feature off, no
     config, no resolver, no delta block, no spec file) is a clean no-op that
     returns None and writes nothing. On a real fold, applies the deltas to each
-    target's capabilities/<name>/spec.md, records the synced names onto
+    target's registered spec path, records the synced names onto
     livingSpecs.synced, logs a one-line per-capability summary, and returns the
     updated .spec-context.json path. Idempotent: re-running folds nothing new."""
     root = _repo_root_for(feature_dir)
@@ -488,7 +506,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         )
         return None
 
-    spec_md = feature_dir / "spec.md"
+    spec_md = feature_spec_path(feature_dir)
     try:
         spec_text = spec_md.read_text(encoding="utf-8")
     except OSError:

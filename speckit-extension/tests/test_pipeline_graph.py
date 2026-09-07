@@ -71,7 +71,7 @@ class TheGraphDescribesTheWholePipeline(unittest.TestCase):
 
     def test_artifacts_come_from_the_manifest(self):
         specify = next(s for s in self.graph["steps"] if s["name"] == "specify")
-        self.assertIn("spec.md", specify["artifacts"])
+        self.assertIn("<short-name>.spec.md", specify["artifacts"])
 
     def test_an_unconfigured_project_reports_no_customisation(self):
         self.assertFalse(self.graph["configured"])

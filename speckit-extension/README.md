@@ -221,7 +221,7 @@ The spec-driven run itself, in the order you'd use them.
 
 | Command | What it does |
 |---------|--------------|
-| `/speckit.companion.specify` | Write `spec.md` (requirements, acceptance scenarios, success criteria) and classify the change's size |
+| `/speckit.companion.specify` | Write the feature spec, `<name>.spec.md` (requirements, acceptance scenarios, success criteria), and classify the change's size. The file is named for the feature — `specs/012-offline-queue/offline-queue.spec.md` — so open tabs read as features, not `spec.md` three times; a stock `spec.md` still reads everywhere |
 | `/speckit.companion.plan` | Write `plan.md` and its design artifacts, right-sized to that classification |
 | `/speckit.companion.tasks` | Write `tasks.md`: a dependency-ordered task list |
 | `/speckit.companion.implement` | Execute `tasks.md`, journaling each task as it finishes |

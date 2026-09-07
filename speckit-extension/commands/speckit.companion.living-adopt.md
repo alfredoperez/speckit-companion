@@ -22,11 +22,27 @@ If the argument is **empty**, do not fall back to scanning the whole repo. List 
 
 If the argument names **several areas**, adopt them in one run: propose the full capability tree across all of them, and bring the whole tree to the single review gate in step 1. Do not silently expand beyond what was named.
 
+<!-- speckit-companion:part smallest-thing -->
+## The smallest thing that works
+
+**Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later.
+
+**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
+
+**Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A" — remove it instead.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
+<!-- /speckit-companion:part smallest-thing -->
+
 ## What to do
 
-### 1. Scope the area and propose capabilities
+### 1. Read the rules before you read the code
 
-List the files under the named area. From their **surface only** — exported symbols, route registrations, component props, public function/class signatures, config keys — propose a **small tree of capabilities for just this area**. Most areas are one capability; a clearly layered area (e.g. a parent module with a distinct nested sub-area) may warrant a leaf capability plus its parent, mirroring the resolver's most-specific-first model. Never propose a capability outside the named area.
+Before listing a single file, read the project's own conventions, stopping at the first source that names a constraint: `CLAUDE.md` or `AGENTS.md`, `CONTRIBUTING.md`, the README's architecture section, then the enforcement configs — `.dependency-cruiser.js`, `eslint.config.*` (`no-restricted-imports`, `boundaries/*`, `import/no-restricted-paths`), `nx.json` `depConstraints`, `tsconfig` project references, and any test matching `*arch*`, `*boundar*` or `*layer*`. Copy each constraint into a working list with the file and line it came from. These are the rules a file-by-file read can never produce, because their evidence is an import that does not exist, in a file you will never open. Measured twice: a read of the code kept 1 of a Feature-Sliced app's 5 layering rules, and both times all five were sitting in the app's own `CLAUDE.md`.
+
+If no conventions doc and no enforcement config names a constraint, ask once, before proposing anything: *"Does this codebase have rules about what may import what, or about how a directory is sliced?"* Cite the answer the way you would cite a file. If the answer is no, record that under `## Uncovered` rather than inventing one.
+
+**Then propose the capability tree, cut where those rules live.** A layered codebase keeps its load-bearing rules *between* layers, so cut by layer there; by bounded context in a domain-shaped codebase. One capability per thing a person would name, prefixed by its area (`entities`, `article-feed`). A layer whose rules say how it is sliced is a capability in its own right, sharing its `match` with the by-noun capabilities beside it: membership is coarse and the narrowing happens at the requirement, so six capabilities may all carry `match: ["src/features/**"]` — one holding the layer's rules, the rest holding what each slice is for. Leave the layer capability out and the slicing rules have no owner; that is exactly how "a slice is one user action" was lost.
 
 For each proposed capability, derive:
 - a **name** (a short slug for the area, e.g. `billing`),
@@ -51,91 +67,33 @@ Two consequences to state out loud when proposing colocated paths, because both 
 
 Show the proposed capability tree to the developer — names, match globs, and the resolved spec path for each — and pause for confirmation before drafting and registering. This is the one review gate in this command.
 
-### 2. Draft each living spec — surface-first, honestly marked
+### 2. Draft each living spec — the registry, one purpose, and the rules. Nothing else.
 
-For each confirmed capability, draft the spec at the path confirmed at the review gate — `capabilities/<name>/spec.md` for central, `<area root>/<name>.spec.md` for colocated. Read the area's files; if a file is unreadable (binary, permission) or too large to read within a reasonable budget, **do not silently skip it** — record its path for the `## Uncovered` section.
+**Adoption does not write behaviour.** Both frameworks this was compared against refuse to bootstrap specs from code, and two measured attempts here show why: a read of the code produces what files *say*, and files say behaviours — 447 and 732 lines against a hand-written 255, with 4 of 5 architectural rules missing both times. Behaviour arrives later, one delta at a time, folded in when a feature completes; that mechanism exists and is the one that keeps a spec true. What adoption writes is the part no later change will ever write: what each capability is **for**, and the rules that hold **between** files.
 
-A living spec uses the **requirement-and-scenario shape** — a named requirement heading with at least one scenario under it. This is not a stylistic preference: fold-back identifies a requirement by its exact `###` heading text, so a living spec written any other way cannot be updated by the pipeline. Numbered `FR-001` bullets are the *feature*-spec format and must not be used here.
+Each spec, at the path chosen at the review gate:
 
-The exact required structure:
-
-1. **Title** — `# <Capability> — Living Spec`, matching the title the fold scaffolds when it creates a capability spec itself (`_initial_living_spec` in `write-context.py`).
-2. **Draft banner** — immediately under the title, a line marking the whole spec a draft and stating the default confidence: `> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.`
-
-   Keep `[DRAFT]` as the first token on that line. The viewer detects it there and badges the spec accordingly.
-3. **`## Purpose`** — one or two sentences on **why this capability exists** and what would go wrong without it. Write this first, before any requirement. It is the anchor that keeps the rest of the document about intent; a spec without it drifts into inventorying the code.
-4. **`## Requirements`** — then, under it, one `### <requirement>` per requirement.
-
-   **Never use `###` for section groupings.** Do not organize requirements under headings like `### Public surface` or `### Layout primitives` — those mirror the code's structure, and fold-back would read them as requirement names and overwrite whole groups at once. Requirements are the only thing at `###`.
-
-   Each requirement is:
-
-   - a **heading** naming the behavior — `### Pages delegate their chrome to a layout primitive`,
-   - immediately under the heading, a **`touches` marker** naming the files that requirement was derived from (below),
-   - a sentence or two of **normative prose** using MUST/SHALL/SHOULD, saying what is guaranteed and why,
-   - one or more **`#### Scenario: <short name>`** blocks with `- **WHEN** …` / `- **THEN** …` (and `- **AND** …`) bullets giving a concrete, checkable case.
-
-   **Write the `touches` marker from the files you actually read for that requirement.** It goes on the line *immediately* after the heading — one line further down and it is body, not a marker:
+1. **Title** — `# <Capability> — Living Spec`.
+2. **Draft banner** — the line under the title, `[DRAFT]` first: `> [DRAFT] Adopted from the project's conventions and the code's shape — the rules are transcribed, the behaviours arrive by fold-back. Review before trusting.`
+3. **`## Purpose`** — one or two sentences on why this capability exists and what would go wrong without it.
+4. **`## Requirements`** — the transcribed rules, each in the requirement shape the fold and the resolver both read:
 
    ```markdown
-   ### Pages delegate their chrome to a layout primitive
-   <!-- touches: src/layout/**, src/pages/shell.tsx -->
+   ### An entity imports downward only
+   <!-- touches: src/entities/** -->
+
+   An entity SHALL import only from `src/shared`. Stated in `CLAUDE.md:18`, enforced by `.dependency-cruiser.js`.
+
+   #### Scenario: one entity needs another's data
+   - **WHEN** an entity needs another entity's data
+   - **THEN** the two are composed in a feature, widget or page, because a sibling import makes both undeletable
    ```
 
-   Comma-separated paths or globs, relative to the workspace root, in the same glob dialect the registry's own `match:` list uses. Name what that requirement describes, not everything the capability claims — the marker's whole job is to let a later run read this requirement only when it is relevant. Narrow is safe: a requirement whose marker is too narrow is still read whenever it is unmarked-adjacent work, because **an unmarked requirement is read by every run**. So write the marker when you know the files, and leave it off when you genuinely do not.
+   Three things are load-bearing. The **marker is the whole layer glob**, never a file, because the rule is about the boundary and not about anything inside it. The **WHEN is a future edit**, not a runtime event — "when two actions need the same helper" — because the rule is read by whoever writes the next import. The **THEN says where the code goes instead**, not that the import is forbidden. And every rule **cites its source**: the file and line it was transcribed from, and the tool that enforces it where one does. "Nothing for what a test already enforces" does not apply here — a linter rejects an import, it cannot redirect one, and the citation is what makes this a transcription rather than a guess.
 
-   Write about behavior, contracts, and intent. Do **not** transcribe the surface you read. A requirement must never be a restatement of:
+5. **`## Uncovered`** — rules with no owner and areas with no capability. Not files nobody opened.
 
-   - a prop list or function parameter list,
-   - an export inventory,
-   - literal class names, CSS variable names, or design-token values (`max-w-4xl`, `h-14`, `--surface`),
-   - a type signature, or an enum's members.
-
-   Those are the code. They change on every routine edit, they generate drift noise, and a reader gets them faster from the source file.
-
-   Ask of every requirement: *would this still be true and useful after a reasonable refactor?* If renaming a prop would falsify it, rewrite it one level up.
-
-   ```markdown
-   ✗ Wrong — the feature-spec format, transcribing the surface:
-
-   ### Layout primitives
-
-   - **FR-004** `ContentPage` MUST accept `title` (required), `description`,
-     `breadcrumbItems`, `actions`, `children`, and `width`.
-   - **FR-005** `ContentPage` MUST support exactly three width variants —
-     `medium`, `wide`, `full` — mapping to `max-w-4xl` and `max-w-none`.
-
-   ✓ Right — named requirement, intent-level prose, concrete scenarios:
-
-   ### Pages delegate their chrome to a layout primitive
-
-   Pages SHALL compose a shell-provided layout primitive rather than
-   hand-rolling header, scroll, or width behavior, so responsive behavior
-   changes in one place instead of per page.
-
-   #### Scenario: a reading page is added
-   - **WHEN** a page presents scrollable content
-   - **THEN** it composes the content-page primitive
-   - **AND** the page header stays fixed while the body scrolls
-
-   #### Scenario: a workbench page is added
-   - **WHEN** a page hosts a board or editor that scrolls internally
-   - **THEN** the shell surrenders scroll control to the page body
-   ```
-
-   Note what the ✓ version dropped: the prop names, the class values, the component identifier. Note what it kept: the contract. Four transcribed requirements collapsed into one real one.
-
-   Name concrete symbols only when the symbol *is* the contract — a public entry point, a route path, a documented config key. Cite it as context, not as the requirement's content.
-
-   Aim for the requirements a competent engineer would need to rebuild this area correctly, not a list of everything it currently contains. Fewer, denser requirements beat exhaustive transcription; if an area yields thirty requirements, you are almost certainly describing the code.
-
-5. **Confidence** — the whole document is a surface-first draft, so `observed` is the **default and is stated once in the draft banner**. Do not tag individual requirements `[observed]`; a tag on every line carries no information.
-
-   Tag only the exceptions, inline in the requirement's prose: `[inferred]` for a requirement extrapolated beyond what the surface shows (likely intent you could not confirm). If you find yourself tagging nearly everything `[inferred]`, the draft is guesswork — say so in your report rather than shipping it quietly.
-6. **`[NEEDS CLARIFICATION: …]`** — append this marker inline to any requirement you are genuinely unsure about (an ambiguous name, an inferred behavior you could not confirm). Use it sparingly — it flags the low-confidence items for a human to resolve, and step 3 walks them.
-7. **`## Uncovered`** — a section listing every file you could **not** read (unreadable or over budget), one per line, so the draft's coverage is honest. If you read everything, write `_None — every file in the area was read._`
-
-Keep the whole spec `[DRAFT]` — you are proposing a record drawn from the surface, not certifying behavior.
+A capability with no rule of its own — a by-noun slice whose only constraints belong to its layer — carries a `## Purpose` and an empty `## Requirements`, and that is correct. The validator warns when a `[DRAFT]` spec has no requirement scoped to the capability's whole glob, which is the check that a layer's rules were transcribed rather than skipped.
 
 ### 3. Walk the clarifications
 
@@ -161,7 +119,7 @@ For each confirmed capability, register it so the shipped resolver recognizes it
 python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match "<glob>" [--match "<glob>" …] [--exclude "<glob>"] [--spec <path>]
 ```
 
-**Pass `--spec` for every colocated capability**, with the same path you drafted the spec to. Omit it for central ones — the helper emits `spec` only when it differs from the centralized default, which keeps the config terse.
+**Pass `--spec` for every capability**, central or colocated, with the same path you drafted the spec to. A spec is named for what it describes, so `spec.md` is never a filename you write and six open tabs stay tellable apart. The registry's own default is still the older `capabilities/<name>/spec.md`, which is why `--spec` is not optional. The helper emits `spec` only when it differs from that default, which keeps the config terse.
 
 The registry lives at the project root, deliberately outside `.specify/`, so a routine `git restore … .specify/` can never wipe it. Commit `living-specs.yml` along with the specs it registers. If this project still keeps its capabilities in the older `.specify/companion.yml`, the helper moves them across on its first write and says so — nothing is lost and nothing needs doing by hand.
 

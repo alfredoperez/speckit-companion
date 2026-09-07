@@ -1142,6 +1142,23 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIn("### Due dates", self._living(root))
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
 
+    def test_a_warning_is_printed_before_the_fold_applies_it(self) -> None:
+        # A warning does not block, but dropping it silently is how a run folded
+        # two near-duplicate headings and only noticed afterwards.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        existing = [l[4:] for l in TODOS_LIVING.splitlines() if l.startswith("### ")][0]
+        restated = "A user is able to " + existing[0].lower() + existing[1:]
+        fdir = _write_feature(root, "001-feat",
+            f"# Feat\n\n## ADDED Requirements\n\n### {restated}\n\n"
+            "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        self.assertIn("added-heading-near-existing", buf.getvalue())
+        self.assertIn(existing, buf.getvalue())
+
     def test_a_scenario_with_no_outcome_is_refused_and_named(self) -> None:
         # The write is what damages the record: a scenario nobody can check
         # becomes permanent the moment it is folded.
@@ -3497,6 +3514,31 @@ class RegistryNotAdoptedTests(unittest.TestCase):
                 code = module.main(argv)
             self.assertEqual(code, 0)
             self.assertEqual(err.getvalue(), "")
+
+
+class ReplacingASupersededCapability(unittest.TestCase):
+    """A capability split into granular specs leaves an entry pointing at a file
+    that is gone. The helper only appended, so every re-adoption hand-edited the
+    registry to remove it."""
+
+    def test_the_named_entry_goes_when_the_new_one_lands(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            reg = Path(root) / "living-specs.yml"
+            reg.write_text(
+                'enabled: true\ncapabilities:\n'
+                '  - name: old\n    match: ["src/**"]\n    spec: capabilities/old/old.spec.md\n',
+                encoding="utf-8")
+            out = regcap.register(root, "new-a", ["src/a/**"], [],
+                                  "capabilities/new/a.spec.md", replaces=["old"])
+            self.assertEqual(out["superseded"], ["old"])
+            text = reg.read_text(encoding="utf-8")
+            self.assertNotIn("name: old", text)
+            self.assertIn("name: new-a", text)
+
+    def test_replacing_a_name_that_is_not_there_is_silent(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            out = regcap.register(root, "solo", ["src/**"], [], None, replaces=["absent"])
+            self.assertEqual(out["superseded"], [])
 
 
 if __name__ == "__main__":

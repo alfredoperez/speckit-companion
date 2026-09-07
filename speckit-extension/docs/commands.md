@@ -166,7 +166,7 @@ The four step commands are the Companion pipeline itself. They mirror stock spec
 
 ### `speckit.companion.specify`
 
-Writes `<feature_directory>/spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
+Writes `<feature_directory>/<short-name>.spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
 
 ### `speckit.companion.plan`
 
@@ -179,6 +179,8 @@ Writes `tasks.md`: a dependency-ordered checklist grouped by user story into pha
 ### `speckit.companion.implement`
 
 Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand, then marks the spec complete at the end.
+
+On a host with a subagent tool it hands each user-story phase to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. Without a subagent tool it builds the waves inline exactly as before.
 
 ### `speckit.companion.auto`
 

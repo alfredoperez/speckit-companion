@@ -57,6 +57,7 @@ import {
   removeComment as removeCommentFromCtx,
 } from "./reviewComments";
 import type { CoreDocumentType } from "./types";
+import { isFeatureSpecFile } from "../specs/featureSpecPath";
 import type { ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -920,7 +921,8 @@ async function handleAddComment(
   const instance = deps.getInstance(specDirectory);
   let sourceLines: string[] | null = null;
   const sourceDoc = instance?.state.availableDocuments.find(
-    (d) => d.type === doc || d.fileName === `${doc}.md` || d.fileName === doc,
+    (d) => d.type === doc || d.fileName === `${doc}.md` || d.fileName === doc
+      || (doc === "spec" && isFeatureSpecFile(d.fileName)),
   );
   if (sourceDoc) {
     try {

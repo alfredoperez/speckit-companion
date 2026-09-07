@@ -31,7 +31,7 @@ from doctor import (  # noqa: E402
     read_text,
     run_git,
 )
-from spec_context import _entry_kind, _is_step_level  # noqa: E402
+from spec_context import _entry_kind, _is_step_level, feature_spec_path  # noqa: E402
 from task_sync import parse_task_markers  # noqa: E402
 
 #: A fenced block longer than this in a task list is implementation, not a task
@@ -127,26 +127,28 @@ def _artifact_signals(feature_dir: Path, ctx: dict) -> list:
     fast_path = size == "simple"
     signals = []
 
-    spec = read_text(feature_dir / "spec.md")
+    spec_path = feature_spec_path(feature_dir)
+    spec_name = spec_path.name
+    spec = read_text(spec_path)
     plan = read_text(feature_dir / "plan.md")
     tasks = read_text(feature_dir / "tasks.md")
 
     if spec:
-        ids = _task_ids(feature_dir / "spec.md")
+        ids = _task_ids(spec_path)
         if ids:
             # A fast-tracked change keeps its approach inline, but never its task list.
             signals.append({
                 "step": "specify", "did": "tasks",
-                "what": f"{len(ids)} task checkbox(es) in spec.md",
-                "where": "spec.md", "evidence": sorted(set(ids))[:10],
+                "what": f"{len(ids)} task checkbox(es) in {spec_name}",
+                "where": spec_name, "evidence": sorted(set(ids))[:10],
             })
         if not fast_path:
-            signals += _code_signals("specify", "spec.md", spec)
+            signals += _code_signals("specify", spec_name, spec)
             if re.search(r"^##+\s*(Approach|Project Structure|Architecture|Design)\b", spec, re.MULTILINE):
                 signals.append({
                     "step": "specify", "did": "plan",
-                    "what": "a plan-shaped section in spec.md (approach, structure, or design)",
-                    "where": "spec.md", "evidence": [],
+                    "what": f"a plan-shaped section in {spec_name} (approach, structure, or design)",
+                    "where": spec_name, "evidence": [],
                 })
 
     if plan:
@@ -165,12 +167,16 @@ def _artifact_signals(feature_dir: Path, ctx: dict) -> list:
     return signals
 
 
+def _core_docs(feature_dir: Path) -> list:
+    return [feature_spec_path(feature_dir), feature_dir / "plan.md", feature_dir / "tasks.md"]
+
+
 def _duplication_signals(feature_dir: Path) -> list:
     """Task identifiers living in more than one document — two copies that will diverge."""
     where: dict = {}
-    for name in ("spec.md", "plan.md", "tasks.md"):
-        for tid in set(_task_ids(feature_dir / name)):
-            where.setdefault(tid, []).append(name)
+    for doc in _core_docs(feature_dir):
+        for tid in set(_task_ids(doc)):
+            where.setdefault(tid, []).append(doc.name)
     dupes = {tid: docs for tid, docs in where.items() if len(docs) > 1}
     if not dupes:
         return []
@@ -273,7 +279,7 @@ def _time_share(ctx: dict) -> dict | None:
 def check_bleed(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
     """Report where one step did another step's work."""
     feature_dir = Path(feature_dir)
-    if not any((feature_dir / n).is_file() for n in ("spec.md", "plan.md", "tasks.md")):
+    if not any(d.is_file() for d in _core_docs(feature_dir)):
         return CheckStatus("bleed", "not-applicable"), []
 
     signals = _artifact_signals(feature_dir, ctx)
@@ -285,7 +291,7 @@ def check_bleed(root, feature_dir: Path, ctx: dict, report=None) -> tuple:
         detail = s["what"]
         if s["evidence"]:
             detail += " — " + ", ".join(str(x) for x in s["evidence"])
-        if s["where"] and s["where"] not in ("spec.md", "plan.md", "tasks.md"):
+        if s["where"] and s["where"] not in {d.name for d in _core_docs(feature_dir)}:
             detail += f" ({s['where']})"
         title = (f"`{s['step']}` did `{s['did']}` work" if s["step"] != s["did"]
                  else "The same task list lives in two documents")

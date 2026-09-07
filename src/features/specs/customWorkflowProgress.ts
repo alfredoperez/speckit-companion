@@ -21,7 +21,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SpecContext, HistoryEntry, StepName, STEP_NAMES } from '../../core/types/specContext';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { getStepFile, DEFAULT_WORKFLOW, COMPANION_WORKFLOW } from '../workflows/workflowManager';
+import { DEFAULT_WORKFLOW, COMPANION_WORKFLOW } from '../workflows/workflowManager';
+import { isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
 
 const COMPANION_COMMAND_PREFIX = 'speckit.companion.';
 
@@ -61,7 +62,7 @@ export function isCustomWorkflow(steps: WorkflowStepConfig[] | undefined): boole
     return steps.some(s => !STEP_NAMES.includes(s.name as StepName));
 }
 
-const CORE_DOCS = ['spec.md', 'plan.md', 'tasks.md'];
+const CORE_DOCS = ['plan.md', 'tasks.md'];
 
 /**
  * Every `.md` in the spec dir (recursively, hidden dirs skipped) that no step
@@ -80,7 +81,7 @@ function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): bo
     const claimed = new Set<string>();
     const claimedDirs = new Set<string>();
     for (const s of allSteps) {
-        claimed.add(getStepFile(s));
+        claimed.add(resolveStepFile(specDir, s));
         for (const f of s.subFiles ?? []) claimed.add(f);
         if (s.subDir) claimedDirs.add(s.subDir);
     }
@@ -98,7 +99,7 @@ function relatedDocsPresent(specDir: string, allSteps: WorkflowStepConfig[]): bo
                 if (claimedDirs.has(entryRel)) continue;
                 scan(path.join(dir, e.name), entryRel);
             } else if (e.isFile() && e.name.endsWith('.md')) {
-                if (!rel && (CORE_DOCS.includes(e.name) || claimed.has(e.name))) continue;
+                if (!rel && (CORE_DOCS.includes(e.name) || isFeatureSpecFile(e.name) || claimed.has(e.name))) continue;
                 if (claimed.has(entryRel)) continue;
                 found = true;
                 return;
@@ -127,7 +128,7 @@ export function stepHasOutput(
 ): boolean {
     if (step.actionOnly) return false;
     try {
-        if (fs.existsSync(path.join(specDir, getStepFile(step)))) return true;
+        if (fs.existsSync(path.join(specDir, resolveStepFile(specDir, step)))) return true;
     } catch { /* fall through */ }
     for (const f of step.subFiles ?? []) {
         try {
@@ -141,7 +142,7 @@ export function stepHasOutput(
             for (const e of entries) {
                 if (e.isFile() && e.name.endsWith('.md')) return true;
                 if (e.isDirectory()) {
-                    if (fs.existsSync(path.join(dir, e.name, getStepFile(step)))) return true;
+                    if (fs.existsSync(path.join(dir, e.name, resolveStepFile(path.join(dir, e.name), step)))) return true;
                 }
             }
         } catch { /* skip */ }

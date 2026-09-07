@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { featureSpecPath } from '../specs/featureSpecPath';
 
 export interface StepHistoryLike {
     startedAt?: string;
@@ -87,7 +88,7 @@ export class StepCompletionNotifier {
         const OPEN = 'Open spec';
         const choice = await vscode.window.showInformationMessage(msg, OPEN);
         if (choice === OPEN) {
-            const specFile = path.join(specDir, 'spec.md');
+            const specFile = featureSpecPath(specDir);
             await vscode.commands.executeCommand('speckit.viewSpecDocument', specFile);
         }
     }

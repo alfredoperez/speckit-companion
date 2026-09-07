@@ -277,7 +277,7 @@ function renderSlimCompanionPreamble(step: PromptStep, target: string, dispatchU
         MARKER_OPEN,
         `This command's body carries the full \`.spec-context.json\` capture & timing protocol — schema, status lifecycle, self-close, and per-task journaling. Follow it. This preamble adds only the dispatch context the body can't know:`,
         '',
-        `1. Pre-step seed: in ${target}, set currentStep = "${step}" and the matching in-progress status, and append { step: "${step}", substep: null, kind: "start", by: "extension", at: "${dispatchUtc}" } — use this DISPATCH TIME for the start entry (the extension sent it; do NOT run \`date -u\` for this one).`,
+        `1. Pre-step seed: the start stamp the body describes, for ${target}, carries this DISPATCH TIME — pass it as \`--at "${dispatchUtc}"\` on that one call. Do NOT run \`date -u\` for it and never hand-write the entry; a start already recorded makes the call a no-op.`,
         '',
         NEXT_STEP_GUARD(step),
         MARKER_CLOSE,

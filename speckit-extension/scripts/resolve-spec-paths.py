@@ -268,8 +268,15 @@ def _specificity(cap: dict, f: str) -> int:
 
 
 def _location(cap: dict) -> str:
-    expected = f"{cc.DEFAULT_CAPABILITY_ROOT}/{cap['name']}/spec.md"
-    return "centralized" if _posix(cap.get("spec") or "") == expected else "colocated"
+    """Centralized means "under the capability root", not one exact filename.
+
+    A capability folder holds one spec or several granular ones, so equality
+    with `capabilities/<name>/spec.md` called every split spec colocated and
+    sent `living-move` the wrong way.
+    """
+    spec = _posix(cap.get("spec") or "")
+    root = f"{cc.DEFAULT_CAPABILITY_ROOT}/"
+    return "centralized" if spec.startswith(root) else "colocated"
 
 
 def _resolve_spec(cap: dict) -> str:

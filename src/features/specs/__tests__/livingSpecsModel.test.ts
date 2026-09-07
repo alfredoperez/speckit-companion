@@ -50,7 +50,7 @@ describe('readLivingSpecs', () => {
     it('returns an inert empty listing when there is no companion.yml', () => {
         const root = ws({ 'capabilities/x/spec.md': '# x' });
         const listing = readLivingSpecs(root);
-        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false });
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false });
     });
 
     it('returns an inert empty listing when livingSpecs.enabled is false', () => {
@@ -506,7 +506,7 @@ describe('capability registry location', () => {
 
     it('reads as not adopted when neither location exists', () => {
         const listing = readLivingSpecs(root({ 'src/a.ts': 'x' }));
-        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false });
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false });
     });
 
     it('treats a nested directory with only a registry as its own project', () => {

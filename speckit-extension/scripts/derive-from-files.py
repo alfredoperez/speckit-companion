@@ -25,13 +25,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 wc = importlib.import_module("write-context")
 ts = importlib.import_module("task_sync")
+spec_context = importlib.import_module("spec_context")
 
 
 def _infer(feature_dir: Path) -> tuple[str, str] | None:
     """Map artifact presence to (step, status); None when nothing is present."""
     tasks_md = feature_dir / "tasks.md"
     plan_md = feature_dir / "plan.md"
-    spec_md = feature_dir / "spec.md"
+    spec_md = spec_context.feature_spec_path(feature_dir)
 
     if tasks_md.is_file():
         all_ids, done_ids = wc.parse_task_markers(tasks_md)

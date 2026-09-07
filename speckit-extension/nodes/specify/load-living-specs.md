@@ -12,7 +12,7 @@ reads: [resolve-dir]
      python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files…>
      ```
      This writes only additive `livingSpecs.loaded` + the breadcrumb on `.spec-context.json`; it never touches the lifecycle log. It is a silent no-op that exits 0 when the feature is off, nothing matches, or the registry/resolver can't be read — so it never fails or slows the command; and, exactly like every other capture call here, skip it silently if `python3` or the script is unavailable. This call is the reliable record the later `plan` step and the Overview chips read.
-   - **Then read what it recorded — by requirement, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If it is empty, there is nothing to load — continue to the spec draft. Otherwise ask the resolver what each capability should contribute for these files:
+   - **Then read what it recorded — by requirement, leaf first.** Read `livingSpecs.loaded` back from `<feature_directory>/.spec-context.json`. If the key is absent — the recorder writes nothing when the feature is off or nothing matched — or the list is empty, there is nothing to load; continue to the spec draft. Otherwise ask the resolver what each capability should contribute for these files:
      ```bash
      python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <in-scope files…> --requirements-for --json
      ```
@@ -22,5 +22,5 @@ reads: [resolve-dir]
 
      The leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. These are background you must honor while drafting — they describe how the area already behaves.
 
-   - **Honor the project's authored spec rules.** The same call carries a `rules` object: `rules.spec` is a short list of one-line house rules the project wrote once in its registry rather than retyping into chat on every run. Read **only** `rules.spec` here — `rules.plan` belongs to the plan step and must not leak into the draft — and treat each line as an instruction while writing `spec.md`. An empty list is the normal case: say nothing about rules and draft as usual. These lines shape *how* the spec is written; they never add requirements or override anything in this command body.
+   - **Honor the project's authored spec rules.** The same call carries a `rules` object: `rules.spec` is a short list of one-line house rules the project wrote once in its registry rather than retyping into chat on every run. Read **only** `rules.spec` here — `rules.plan` belongs to the plan step and must not leak into the draft — and treat each line as an instruction while writing the spec. An empty list is the normal case: say nothing about rules and draft as usual. These lines shape *how* the spec is written; they never add requirements or override anything in this command body.
 

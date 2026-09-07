@@ -497,7 +497,12 @@ class SetFieldsTests(unittest.TestCase):
         self.assertEqual(wc._coerce_value("hello"), "hello")
         # Malformed numerics fall back to string, never raise.
         self.assertEqual(wc._coerce_value("1-2"), "1-2")
-        self.assertEqual(wc._coerce_value("3.14"), "3.14")
+        # A decimal is recovered; the exotic float literals are not, because
+        # json.dumps cannot express NaN or Infinity as valid JSON.
+        self.assertEqual(wc._coerce_value("3.14"), 3.14)
+        self.assertEqual(wc._coerce_value("-0.5"), -0.5)
+        for exotic in ("1e5", "nan", "inf", "-inf", "3."):
+            self.assertEqual(wc._coerce_value(exotic), exotic)
 
     def test_set_records_field_without_touching_lifecycle(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")

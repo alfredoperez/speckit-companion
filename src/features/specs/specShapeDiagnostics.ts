@@ -40,12 +40,18 @@ function toDiagnostic(doc: vscode.TextDocument, finding: Finding): vscode.Diagno
  * Exported so the behaviour can be tested without a save event: the gate and
  * the mapping are the parts worth pinning, not the listener wiring.
  */
+/** A feature spec: `specs/<dir>/spec.md` or `specs/<dir>/<name>.spec.md`. */
+const FEATURE_SPEC_RE = /^specs\/[^/]+\/([^/]+\.)?spec\.md$/;
+
 export function findingsFor(
     workspaceRoot: string,
     file: string,
     text: string
 ): Finding[] {
     if (!file.endsWith('.spec.md')) return [];
+    // A named feature spec ends in `.spec.md` too. It is checked as a feature
+    // spec by deltaFindingsFor below, never against the living-spec shape.
+    if (FEATURE_SPEC_RE.test(path.relative(workspaceRoot, file).split(path.sep).join('/'))) return [];
     let listing;
     try {
         listing = readLivingSpecs(workspaceRoot, { withOrphans: false });
@@ -61,14 +67,14 @@ export function findingsFor(
     return checkLivingSpec(text, rel, { capability });
 }
 
-/** The feature-spec half: a `spec.md` under `specs/`, checked for its deltas. */
+/** The feature-spec half: a `<name>.spec.md` (or stock `spec.md`) under `specs/`, checked for its deltas. */
 export function deltaFindingsFor(
     workspaceRoot: string,
     file: string,
     text: string
 ): Finding[] {
     const rel = path.relative(workspaceRoot, file).split(path.sep).join('/');
-    if (!/^specs\/[^/]+\/spec\.md$/.test(rel)) return [];
+    if (!FEATURE_SPEC_RE.test(rel)) return [];
     let listing;
     try {
         listing = readLivingSpecs(workspaceRoot, { withOrphans: false });

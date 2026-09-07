@@ -64,6 +64,7 @@ import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitE
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
 import { enrichLivingSpecs } from "./livingSpecsContent";
+import { featureSpecPath } from "../specs/featureSpecPath";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -577,7 +578,7 @@ export class SpecViewerProvider {
 
     const anchor = instance.state.livingSourcePath
       ?? instance.state.availableDocuments.find(d => d.type === 'spec')?.filePath
-      ?? path.join(specDirectory, 'spec.md');
+      ?? featureSpecPath(specDirectory);
     const documents = livingTierDocuments(anchor);
     const doc = documents.find(d => d.type === documentType && d.exists)
       ?? documents.find(d => d.exists)
@@ -1199,7 +1200,7 @@ export class SpecViewerProvider {
             derivedVs.livingSpecs = enrichLivingSpecs(
               derivedVs.livingSpecs,
               wsRoot,
-              path.join(specDirectory, "spec.md")
+              featureSpecPath(specDirectory)
             );
           }
         }

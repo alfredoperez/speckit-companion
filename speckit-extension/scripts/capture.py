@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import sys
+import re
 from pathlib import Path
 
 from spec_context import (
@@ -33,7 +34,12 @@ def _coerce_value(raw: str):
     try:
         return int(raw)
     except ValueError:
-        return raw
+        pass
+    # A decimal point is required, so "1e5", "nan" and "inf" stay strings and
+    # json.dumps never has to emit a value JSON cannot express.
+    if re.fullmatch(r"-?\d+\.\d+", raw):
+        return float(raw)
+    return raw
 
 
 PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep"})
@@ -454,6 +460,11 @@ def _parsed_batch(raw: str) -> dict:
     if "set" in doc and doc["set"] is not None:
         if not isinstance(doc["set"], dict):
             raise ValueError("--batch 'set' must be a map of field to value")
+        bad = sorted(set(doc["set"]) & PROTECTED_SET_KEYS)
+        if bad:
+            raise ValueError(
+                f"--batch 'set' cannot write lifecycle key(s): {', '.join(bad)} — "
+                f"they are managed by the capture/mark-complete writers.")
         for key, val in doc["set"].items():
             if isinstance(val, (dict, list)):
                 raise ValueError(

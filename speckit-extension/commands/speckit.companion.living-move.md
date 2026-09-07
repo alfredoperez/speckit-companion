@@ -6,7 +6,7 @@ description: "Move a living spec between central and colocated storage — file,
 
 Move a capability's living spec between the two storage layouts, without hand-editing config or moving files yourself.
 
-- **central** — `capabilities/<name>/spec.md`. One folder holds the whole record.
+- **central** — `capabilities/<capability>/<name>.spec.md`. One folder per capability, holding one spec or several granular ones. A legacy `capabilities/<name>/spec.md` still reads, and moving it centrally renames it to the new shape.
 - **colocated** — `<area root>/<name>.spec.md`, sitting next to the code it describes.
 
 Neither is more correct. Colocating makes ownership obvious and the spec travels with the code when it moves; centralizing keeps the whole record readable in one place and survives code being reorganized. Repos commonly end up mixed, and that is a fine outcome.
@@ -30,8 +30,8 @@ If either is missing, ask. List the capabilities with their current layout so th
 Resolve the current layout of each named capability and the exact path each spec will land at. Show that before touching anything:
 
 ```text
-billing        capabilities/billing/spec.md  →  src/billing/billing.spec.md
-billing-tax    capabilities/billing-tax/spec.md  →  src/billing/tax/billing-tax.spec.md
+billing        capabilities/billing/billing.spec.md  →  src/billing/billing.spec.md
+billing-tax    capabilities/billing/tax.spec.md  →  src/billing/tax/billing-tax.spec.md
 ```
 
 Call out anything the developer would not predict:

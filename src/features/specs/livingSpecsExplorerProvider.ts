@@ -55,13 +55,13 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         const root = this.workspaceRoot;
         if (!root) {
-            return { enabled: false, capabilities: [], orphans: [], legacyStale: false };
+            return { enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false };
         }
         try {
             this.cached = readLivingSpecs(root);
         } catch {
             this.log('Failed to read living specs');
-            this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false };
+            this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false };
         }
         return this.cached;
     }
@@ -108,12 +108,22 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 return [...notices, LivingSpecItem.problem("Can't read living-specs.yml", listing.error)];
             }
             if (!hasContent) {
-                const message = listing.enabled
-                    ? 'No living specs yet'
-                    : 'Living Specs are off';
-                const tooltip = listing.enabled
-                    ? 'Adopt a code area to create and register your first living spec.'
-                    : 'Set enabled: true in living-specs.yml to track capability specs.';
+                // Three situations, not two. "Off" tells someone to flip a flag,
+                // which is unfollowable in a project that has no registry to flip
+                // it in — the common case, since `specify init` writes none.
+                let message: string;
+                let tooltip: string;
+                if (listing.enabled) {
+                    message = 'No living specs yet';
+                    tooltip = 'Adopt a code area to create and register your first living spec.';
+                } else if (listing.configured) {
+                    message = 'Living Specs are off';
+                    tooltip = 'Set enabled: true in living-specs.yml to track capability specs.';
+                } else {
+                    message = 'No living specs in this project';
+                    tooltip = 'Run /speckit.companion.living-adopt on a code area to write the first one '
+                        + 'and create living-specs.yml.';
+                }
                 return [...notices, LivingSpecItem.info(message, tooltip)];
             }
 

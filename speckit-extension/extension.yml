@@ -49,7 +49,7 @@ provides:
       description: "Continue the spec-driven pipeline from the last completed step, carrying recorded decisions into scope, and dispatch the next command"
     - name: speckit.companion.specify
       file: commands/speckit.companion.specify.md
-      description: "Companion specify — spec.md with prioritized user stories"
+      description: "Companion specify — a feature spec with prioritized user stories"
     - name: speckit.companion.plan
       file: commands/speckit.companion.plan.md
       description: "Companion plan — implementation plan with research & design artifacts"

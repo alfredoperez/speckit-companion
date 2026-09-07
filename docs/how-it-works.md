@@ -522,7 +522,7 @@ Workspace Root/
 │
 ├── specs/                         # Spec directories (shared)
 │   └── {spec-name}/
-│       ├── spec.md                # Requirements
+│       ├── {name}.spec.md         # Requirements (Companion); stock spec-kit writes spec.md
 │       ├── plan.md                # Design
 │       └── tasks.md               # Implementation tasks
 │

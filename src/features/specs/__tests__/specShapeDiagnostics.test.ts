@@ -137,4 +137,26 @@ describe('what the editor checks in a feature spec (#672 Wave 2)', () => {
         });
         expect(deltaFindingsFor(root, path.join(root, 'elsewhere/spec.md'), DELTA)).toEqual([]);
     });
+
+    it('does not lint a named feature spec against the living-spec shape', () => {
+        // `<name>.spec.md` in a feature folder ends in `.spec.md` like a colocated
+        // living spec does; linting it as one filled Problems with bogus findings.
+        const root = workspace({
+            'living-specs.yml': REGISTRY,
+            'src/todos/todos.spec.md': SOUND_SPEC,
+            'specs/001-x/offline-queue.spec.md': DELTA,
+        });
+        const file = path.join(root, 'specs/001-x/offline-queue.spec.md');
+        expect(findingsFor(root, file, DELTA)).toEqual([]);
+        expect(deltaFindingsFor(root, file, DELTA).length).toBeGreaterThan(0);
+    });
+
+    it('still lints a colocated living spec', () => {
+        const root = workspace({
+            'living-specs.yml': REGISTRY,
+            'src/todos/todos.spec.md': '# Todos\n\n## Requirements\n\n### A rule with no scenario\n',
+        });
+        const file = path.join(root, 'src/todos/todos.spec.md');
+        expect(findingsFor(root, file, fs.readFileSync(file, 'utf8')).length).toBeGreaterThan(0);
+    });
 });

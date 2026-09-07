@@ -90,9 +90,22 @@ class DirectivesCanBeCounted(unittest.TestCase):
         # The finding this exists to make visible: most of implement is not its own.
         self.assertGreater(impl["shared"], impl["own"])
 
-    def test_it_can_gate_on_a_ceiling(self):
-        self.assertEqual(self._run("--ceiling", "1000").returncode, 0)
-        self.assertEqual(self._run("--strict", "--ceiling", "1").returncode, 1)
+    def test_the_corpus_is_at_or_under_its_recorded_marks(self):
+        """--strict is a ratchet, so a clean tree passes by construction. A tree
+        that has grown a directive does not, which is the case below."""
+        self.assertEqual(self._run("--strict").returncode, 0)
+
+    def test_a_command_that_grows_a_directive_fails_and_is_named(self):
+        cmd = COMMANDS / "speckit.companion.status.md"
+        before = cmd.read_text(encoding="utf-8")
+        try:
+            cmd.write_text(before + "\n- one more rule to remember\n", encoding="utf-8")
+            run = self._run("--strict")
+        finally:
+            cmd.write_text(before, encoding="utf-8")
+        self.assertEqual(run.returncode, 1)
+        self.assertIn("speckit.companion.status.md", run.stderr)
+        self.assertIn("up from", run.stderr)
 
 
 if __name__ == "__main__":
