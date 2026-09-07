@@ -48,6 +48,7 @@ describe('LivingSpecsExplorerProvider', () => {
             enabled: false,
             capabilities: [],
             orphans: [],
+            configured: true,
         });
 
         const roots = await provider.getChildren();
@@ -57,6 +58,23 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(roots[0].contextValue).toBe('living-specs-empty');
         expect(roots[0].command).toBeUndefined();
         expect((roots[0].iconPath as vscode.ThemeIcon).id).toBe('info');
+    });
+
+    it('a project with no registry is told how to make one, not to flip a flag', async () => {
+        // `specify init` writes no living-specs.yml, so "set enabled: true in
+        // living-specs.yml" pointed at a file that does not exist.
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: false,
+            capabilities: [],
+            orphans: [],
+            configured: false,
+        });
+
+        const roots = await provider.getChildren();
+
+        expect(roots).toHaveLength(1);
+        expect(roots[0].label).toBe('No living specs in this project');
+        expect(String(roots[0].tooltip)).toContain('living-adopt');
     });
 
     it('says the registry is unreadable instead of claiming living specs are off', async () => {

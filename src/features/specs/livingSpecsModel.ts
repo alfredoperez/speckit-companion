@@ -78,6 +78,14 @@ export interface LivingSpecsListing {
      * not tell", and the caller must say so rather than render an empty list.
      */
     error?: string;
+    /**
+     * True when this project has a living-specs registry at all — the file, or a
+     * legacy config block. False means nothing has been set up, which reads the
+     * same as `enabled: false` and is not the same thing: there is no flag to
+     * turn on, so telling someone to turn one on sends them to edit a file that
+     * does not exist.
+     */
+    configured: boolean;
 }
 
 interface RawCapability {
@@ -310,6 +318,7 @@ interface RegistryResolution {
     exempt: string[];
     legacyStale: boolean;
     error?: string;
+    configured: boolean;
 }
 
 /**
@@ -328,7 +337,7 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
     if (isFile(registryFile)) {
         const registryRead = readMapping(registryFile);
         if (registryRead.ok) {
-            return { ...normalizeBlock(registryRead.value), legacyStale: legacyHasBlock };
+            return { ...normalizeBlock(registryRead.value), legacyStale: legacyHasBlock, configured: true };
         }
         const reason = registryRead.absent ? 'file disappeared while reading' : registryRead.reason;
         return {
@@ -336,11 +345,12 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
             capabilities: [],
             exempt: [...DEFAULT_EXEMPT_GLOBS],
             legacyStale: legacyHasBlock,
+            configured: true,
             error: `${LIVING_SPECS_REL} could not be read (${reason}); no capabilities loaded`,
         };
     }
     if (legacyHasBlock) {
-        return { ...normalizeBlock(legacyBlock), legacyStale: false };
+        return { ...normalizeBlock(legacyBlock), legacyStale: false, configured: true };
     }
     if (!legacyRead.ok && !legacyRead.absent) {
         return {
@@ -348,15 +358,17 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
             capabilities: [],
             exempt: [...DEFAULT_EXEMPT_GLOBS],
             legacyStale: false,
+            configured: true,
             error: `${LEGACY_CONFIG_REL} could not be read (${legacyRead.reason}); no capabilities loaded`,
         };
     }
-    return { enabled: false, capabilities: [], exempt: [...DEFAULT_EXEMPT_GLOBS], legacyStale: false };
+    return { enabled: false, capabilities: [], exempt: [...DEFAULT_EXEMPT_GLOBS], legacyStale: false, configured: false };
 }
 
 function capLocation(cap: RawCapability): 'centralized' | 'colocated' {
-    const expected = `${DEFAULT_CAPABILITY_ROOT}/${cap.name}/spec.md`;
-    return posix(cap.spec) === expected ? 'centralized' : 'colocated';
+    // Centralized means "under the capability root", not one exact filename: a
+    // capability folder holds one spec or several granular ones.
+    return posix(cap.spec).startsWith(`${DEFAULT_CAPABILITY_ROOT}/`) ? 'centralized' : 'colocated';
 }
 
 /**
@@ -515,9 +527,9 @@ export function readLivingSpecs(
     workspaceRoot: string,
     options?: { withOrphans?: boolean }
 ): LivingSpecsListing {
-    const { enabled, capabilities, legacyStale, error } = resolveRegistry(workspaceRoot);
+    const { enabled, capabilities, legacyStale, error, configured } = resolveRegistry(workspaceRoot);
     if (!enabled) {
-        const listing: LivingSpecsListing = { enabled: false, capabilities: [], orphans: [], legacyStale };
+        const listing: LivingSpecsListing = { enabled: false, capabilities: [], orphans: [], legacyStale, configured };
         if (error) {
             listing.error = error;
         }
@@ -558,6 +570,7 @@ export function readLivingSpecs(
         // resolution (the viewer's per-render enrichment) skip it.
         orphans: options?.withOrphans === false ? [] : findOrphans(capabilities, workspaceRoot),
         legacyStale,
+        configured: true,
     };
 }
 
