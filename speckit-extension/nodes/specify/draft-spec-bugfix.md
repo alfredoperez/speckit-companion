@@ -3,10 +3,10 @@ id: draft-spec-bugfix
 name: Draft the spec as a fix contract
 kind: author
 command: specify
-writes: spec.md
+writes: <short-name>.spec.md
 reads: [resolve-dir]
 ---
-2. Create `<feature_directory>/spec.md` as a **fix contract**: three statements of behaviour rather than a set of user stories. A fix is not a feature — nobody wants it, they want the defect gone — and the story shape makes people invent a journey to hold a bug.
+2. Create `<feature_directory>/<short-name>.spec.md` as a **fix contract**: three statements of behaviour rather than a set of user stories. A fix is not a feature — nobody wants it, they want the defect gone — and the story shape makes people invent a journey to hold a bug.
 
    Reproduce it before writing. A contract written from the report rather than from the behaviour describes the report.
 

@@ -26,7 +26,7 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
-Two things keep this honest:
+Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the script stamps now. Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
 - **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
@@ -35,65 +35,54 @@ Two things keep this honest:
 <!-- speckit-companion:part speckit-hooks -->
 ## Pre-Execution Checks — stock spec-kit extension hooks
 
-Companion runs **on top of** stock spec-kit, so a project's installed spec-kit **extensions** (git, and any others registered in `.specify/extensions.yml`) must still fire on a Companion run exactly as they do on a stock `/speckit.*` run. This is separate from Companion's own node-hooks (`.specify/companion.yml`): both fire. Like the rest of the pipeline, checking these hooks must **never fail the host command** — if anything is missing or malformed, skip silently and continue.
+Companion runs **on top of** stock spec-kit, so a project's installed spec-kit **extensions** (git, and any others registered in `.specify/extensions.yml`) must still fire on a Companion run exactly as they do on a stock `/speckit.*` run. That is separate from Companion's own node-hooks in `.specify/companion.yml`; both fire. Like the rest of the pipeline this must **never fail the host command** — anything missing or malformed is skipped silently.
 
-Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`.
+Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`. Run the pass twice — `hooks.before_<step>` **now, before any of the work below**, and `hooks.after_<step>` once this command's work is fully reported, before handing off.
 
-**Before-hooks — run these *now*, before any of the work below.**
-- Check whether `.specify/extensions.yml` exists in the project root. If it does not, skip silently — there are no hooks.
-- If it exists, read it and look for entries under `hooks.before_<step>`. If the YAML cannot be parsed, skip hook checking silently and continue normally.
-- Filter out hooks where `enabled` is explicitly `false` (no `enabled` field means enabled), **and hooks whose `extension` is `companion`** — those exist so a stock `/speckit.*` run still records its lifecycle, and this command records its own in its own body, so dispatching them here is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
-- Do **not** interpret or evaluate a hook's `condition` expression yourself: a hook with no `condition` (or a null/empty one) is executable; a hook with a non-empty `condition` is left to the HookExecutor — skip it here.
-- For each executable hook, emit one block based on its `optional` flag:
-  - **Optional** (`optional: true`):
-    ```
-    ## Extension Hooks
+- **Read `.specify/extensions.yml`.** Absent, unparseable, or carrying no entries for that anchor: skip silently, there is nothing to run.
+- **Skip a hook that is `enabled: false`** (no `enabled` field means enabled), **and any hook whose `extension` is `companion`** — those exist so a stock run records its lifecycle, and this command records its own in its own body, so dispatching them is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
+- **Leave `condition` to the HookExecutor.** A hook with no condition, or a null or empty one, is executable; one with a non-empty condition is skipped here and never evaluated by you.
+- **Emit one block per executable hook.** An optional hook (`optional: true`):
 
-    **Optional Pre-Hook**: {extension}
-    Command: `/{command}`
-    Description: {description}
+  ```
+  ## Extension Hooks
 
-    Prompt: {prompt}
-    To execute: `/{command}`
-    ```
-  - **Mandatory** (`optional: false`):
-    ```
-    ## Extension Hooks
+  **Optional Pre-Hook**: {extension}
+  Command: `/{command}`
+  Description: {description}
 
-    **Automatic Pre-Hook**: {extension}
-    Executing: `/{command}`
-    EXECUTE_COMMAND: {command}
+  Prompt: {prompt}
+  To execute: `/{command}`
+  ```
 
-    Wait for the result of the hook command before proceeding to the Outline.
-    ```
-- If no before-hooks are registered, skip silently.
+  A mandatory hook (`optional: false`) instead:
 
-**After-hooks — run these once this command's work is fully reported, before handing off.**
-- Re-check `.specify/extensions.yml`; if absent or unparseable, skip silently. Look under `hooks.after_<step>`, applying the same `enabled` / `condition` filtering as above.
-- For each executable hook, emit one block:
-  - **Optional** (`optional: true`):
-    ```
-    ## Extension Hooks
+  ```
+  ## Extension Hooks
 
-    **Optional Hook**: {extension}
-    Command: `/{command}`
-    Description: {description}
+  **Automatic Pre-Hook**: {extension}
+  Executing: `/{command}`
+  EXECUTE_COMMAND: {command}
 
-    Prompt: {prompt}
-    To execute: `/{command}`
-    ```
-  - **Mandatory** (`optional: false`):
-    ```
-    ## Extension Hooks
+  Wait for the result of the hook command before proceeding to the Outline.
+  ```
 
-    **Automatic Hook**: {extension}
-    Executing: `/{command}`
-    EXECUTE_COMMAND: {command}
-    ```
-- If no after-hooks are registered, skip silently.
+  Those are the **before** pass's labels. In the **after** pass drop `Pre-` from the label, and drop the closing wait line — there is nothing left to wait for.
 
-For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); spec directory and file creation are always handled by the command body itself.
+For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); the spec directory and its files are always created by the command body itself.
 <!-- /speckit-companion:part speckit-hooks -->
+
+<!-- speckit-companion:part smallest-thing -->
+## The smallest thing that works
+
+**Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later.
+
+**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
+
+**Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A" — remove it instead.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
+<!-- /speckit-companion:part smallest-thing -->
 
 ## Outline
 
@@ -109,11 +98,11 @@ Produce an implementation plan and its design artifacts in phases: load context 
   - Generate `contracts/` only if the feature exposes an interface a consumer or test codes against.
 
 This budget governs every step that follows. Where a later step would produce something the budget skips, omit it — do not produce it and then delete it.
-1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `<feature_directory>/spec.md` and `.specify/memory/constitution.md` if present — the inputs the plan must satisfy. **Read what `specify` already recorded before opening a file.** `specify` writes what it read onto `.spec-context.json` under `context` — the code areas it looked at, and the constraints it found there. Read those entries first and treat them as the map: they name where the feature attaches, so you open the files they point at rather than rediscovering them. On one measured run this step was the longest section of the whole run at 2m47s, re-reading the area `specify` had already read and already described. The entries carry locations, not content, so you will still open the files that matter — but you should be filling gaps in a map you were handed, not drawing it again. If no `context` entries were recorded, investigate from scratch as below.
+1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load the feature spec (`<feature_directory>/<short-name>.spec.md`, or `spec.md` in a project written before this) and `.specify/memory/constitution.md` if present — the inputs the plan must satisfy. **Read what `specify` already recorded before opening a file.** `specify` writes what it read onto `.spec-context.json` under `context` — the code areas it looked at, and the constraints it found there. Read those entries first and treat them as the map: they name where the feature attaches, so you open the files they point at rather than rediscovering them. On one measured run this step was the longest section of the whole run at 2m47s, re-reading the area `specify` had already read and already described. The entries carry locations, not content, so you will still open the files that matter — but you should be filling gaps in a map you were handed, not drawing it again. If no `context` entries were recorded, investigate from scratch as below.
 
-Then **investigate the codebase** to understand where this feature attaches: the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch. Read inline by default. **The exception worth parallelizing:** a *large or unfamiliar* codebase with several **independent areas** to map — there, reading is genuinely heavy (each area means opening many files), so when your host has subagents, dispatch one read-only subagent per area in a single message, each returning a **distilled finding** (the pattern to copy, the concrete file paths, the conventions to match) rather than a dump of file contents. That is the case where a separate worker pays for its startup. For a small or familiar codebase, just read the areas yourself in turn — identical result, less overhead. Collect the findings as the research basis for the plan.
+Then **investigate the codebase** to understand where this feature attaches: the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch. Read inline by default. **When the recorded `context` names two or more `area:` entries and you have a subagent tool, dispatch one read-only worker per area in a single message** — an instruction, not a judgement about size — each returning a **distilled finding**: the pattern to copy, the concrete file paths, the conventions to match, never file contents. Reading is most of what this step costs and every file you open yourself is context you carry to the end of the run. One area, or no subagent tool: read it yourself. Collect the findings as the research basis for the plan.
 
-   **Reuse the living specs already loaded, and read them by requirement (best-effort, opt-in, read-only).** If `specify` loaded living specs for this feature, it recorded them on `.spec-context.json` under `livingSpecs.loaded` — **reuse that record instead of re-resolving**. Read `<feature_directory>/.spec-context.json`; if `livingSpecs.loaded` lists capability names, ask the resolver what each should contribute for the files this change touches:
+   **Reuse the living specs already loaded, and read them by requirement (best-effort, opt-in, read-only).** If `specify` loaded living specs for this feature, it recorded them on `.spec-context.json` under `livingSpecs.loaded` — **reuse that record instead of re-resolving**. Specify recorded against the files it knew before drafting and this plan names more, so when they reach a capability the record misses, run `record-living-specs.py --feature-dir <feature_directory> --changed <every file this change touches>` once — additive and de-duped, so the record only widens. Read `<feature_directory>/.spec-context.json`; if `livingSpecs.loaded` lists capability names, ask the resolver what each should contribute for the files this change touches:
    ```bash
    python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <files…> --requirements-for --json
    ```
@@ -149,53 +138,39 @@ Then **investigate the codebase** to understand where this feature attaches: the
 <!-- speckit-companion:part timing -->
 ## Timing — keep `.spec-context.json` honest
 
-These rules apply to every Companion profile command. The extension records lifecycle timing with its own scripts wherever it can; these rules keep anything you append consistent with that and accurate for any dispatcher (terminal, IDE chat, or the GUI). The model is **finish-only**: each task and each substep records a *single* finish event, and its duration is the gap to the previous finish (or the step's start). Never a `start`+`complete` pair for a task or substep — a pair stamped at one instant is what produces `0s` ticks and bursts.
+Record every boundary by **running the writer script**, never by editing `.spec-context.json` yourself — a hand-authored edit is what corrupts the file. The model is **finish-only**: one finish per task and per substep, its duration the gap back to the previous finish. Never a `start`+`complete` pair for either, which stamps a `0s` tick and measures nothing.
 
-- **Never hand-edit `.spec-context.json`.** Record every finish by **running the writer script**, never by editing the JSON file yourself — a hand-authored edit is what corrupts the file (a duplicated `status` key). The script stamps the real clock, writes atomically, and is idempotent. The commands below are the only way you touch timing.
-- **Always close your own step — the after-hook is a preference, not a guarantee.** The last thing you do in a step, *after* emitting any mandatory after-hook block, is close it yourself:
+- **Close your own step**, as the last thing you do, after emitting any mandatory after-hook block:
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --advance --by ai
   ```
 
-  `--advance` appends the step-level complete **and** flips `status` to that step's canonical completed value, in one atomic write. It is **idempotent and first-writer-wins**: when the after-hook did dispatch, its extension-stamped close already landed and this call is a no-op that changes nothing. When the hook did *not* dispatch, this is the only thing that closes the step.
+  `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step — and when the hook was *printed* rather than dispatched, which is indistinguishable downstream, it is the only thing that closes it. One run sat at `status: tasking` for eight minutes that way. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; and **implement** runs neither, because its own final node writes `completed`, which closes the step in the same write.
 
-  Run it every time. `EXECUTE_COMMAND` is an instruction addressed to a runtime, and in a terminal session that runtime is you — so *dispatching the hook* and *printing the words "Executing the hook"* produce identical output and nothing downstream can tell them apart. A run once sat at `status: tasking` for eight and a half minutes with the next step unreachable because the block was printed and not run, and that stall is now permanently part of that step's recorded duration. Losing `by: extension` on the completion attribution costs nothing; losing the completion costs the run.
-
-  **Implement is the exception: it does not run this call at all.** Its own final node already wrote `completed`, which closes the implement step in the same write, and the writer declines an advance on a completed spec — so the call is a round-trip that records nothing.
-
-  For **clarify and analyze** use `--finish` instead of `--advance` — they record a boundary without owning a status:
-
-  ```bash
-  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --finish --by ai
-  ```
-- **Substeps — one finish each, via the script.** For each substep boundary (plan: `research`, `design`; tasks: `generate`), the moment that substep ends, run:
+- **One finish per substep, the moment it ends** — plan records `research` and `design`, tasks records `generate`. Never two in one batch, never a separate start.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai
   ```
 
-  One call per substep, each stamped with its own real clock at the moment it finishes — never two substeps in one batch, never a separate `start`. The delta between consecutive finishes is each substep's duration.
-- **Implement — finishing a task *is* logging it (finish-only).** Recording a task's finish is the **closing action of that task**, done the instant its work is complete and before you start the next one — not a bookkeeping pass you batch at the end of a phase. **A batch is a defect, and it is now caught:** the doctor clusters task finishes and names any group stamped inside a few seconds of each other, because those timestamps measure when you wrote the batch, not how long each task took. On one measured run 16 of 25 finishes landed under a tenth of a second apart, and implement's durations are permanently untrustworthy as a result — history is append-only, so this cannot be repaired afterwards. Implement records almost no substep boundaries by design; the per-task journal *is* its shape, which is why batching it erases the only fine-grained record the step has. The closing action is a single append (feature dir from `.specify/feature.json`):
+- **Closing a task is that task's last action, not a bookkeeping pass you batch later.** Feature dir from `.specify/feature.json`:
 
   ```bash
-  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --close-task <TaskID> --by ai --did "<one-line summary of what this task did>" --files "<comma,separated,files,touched>"
+  python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --close-task <TaskID> --by ai --did "<one line>" --files "<files>"
   ```
 
-  `--close-task` appends the finish **and** folds it in one call: the line lands in `.spec-context.events.jsonl` with its own real clock (`date -u` is stamped by the script), the panel's Tasks card is populated from `--did`/`--files`, and the task's `- [ ]` box in `tasks.md` is flipped to `- [x]`. **Do NOT hand-edit that checkbox** — the script owns it. Do NOT hand-author per-task JSON, and do NOT write a per-task `start`.
+  One call appends the finish with its own real clock, folds it into the panel, and flips that task's box in `tasks.md`. Never hand-edit that box or hand-author per-task JSON, and never write a per-task start. Re-closing is safe. **Batching is a defect the doctor catches**: it names any cluster of finishes stamped seconds apart, because those timestamps record when the batch was written, and history is append-only so it cannot be repaired afterwards. The per-task summaries and their order are what is trustworthy; the timestamps are best-effort, and that is fine.
 
-  Re-closing a task never double-counts, so a retry is safe.
-
-  **A fanned-out worker closes in two halves instead.** Folding is a read-modify-write on the shared file, and two folders is the contention the append log exists to prevent — so a worker appends only:
+  **A fanned-out worker appends only**, because folding is a read-modify-write and two folders contend:
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --task <TaskID> --kind complete --by ai --did "<one line>" --files "<files>" --append
   ```
 
-  and the MAIN agent folds each returned result with `--materialize`, one at a time. Run `--materialize` once more at a wave join as a backstop; the end-of-step hook folds anything left and fills any task you did not journal.
+  The MAIN agent folds each returned result with `--materialize`, one at a time, and once more at a wave join as a backstop.
 
-  What is trustworthy here is the **per-task summary** (`did`/`files`) and the order tasks completed, plus the **step-level** start→complete span, which the scripts stamp exactly. The per-task *timestamps* are best-effort: they record when each finish was written, not a measured duration. That is fine — the summaries are the point.
-- **Never write the next step's start.** Only the next command appends the next step's start entry; writing it here makes the viewer render a phantom "Generating <next>…".
+- **Never write the next step's start.** The next command owns it; writing it here renders a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 
 **The next step is `tasks`** — dispatch `/speckit.companion.tasks <feature_dir>`.
@@ -224,7 +199,7 @@ Idempotent, and a required deterministic write — skip only if `python3` is gen
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
 
-**Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
+**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn — an empty file is a project that declared nothing, not a broken one. Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
 **Hook types:**
 

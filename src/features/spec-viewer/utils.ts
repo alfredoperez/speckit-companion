@@ -10,6 +10,7 @@ import { CORE_DOCUMENT_FILES, CoreDocumentType, DocumentType } from './types';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { isInsideSpecDirectory } from '../../core/specDirectoryResolver';
 import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
+import { STOCK_SPEC_FILE, featureSpecPath, isFeatureSpecFile } from '../specs/featureSpecPath';
 
 /**
  * Generates a random nonce for CSP
@@ -57,7 +58,7 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
     if (steps) {
         for (const step of steps) {
             const stepFile = (step.file ?? `${step.name}.md`).toLowerCase();
-            if (fileName === stepFile) {
+            if (fileName === stepFile || (stepFile === STOCK_SPEC_FILE && isFeatureSpecFile(fileName))) {
                 return step.name;
             }
         }
@@ -65,7 +66,7 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
 
     // Check core documents
     for (const [type, file] of Object.entries(CORE_DOCUMENT_FILES)) {
-        if (fileName === file) {
+        if (fileName === file || (file === STOCK_SPEC_FILE && isFeatureSpecFile(fileName))) {
             return type as CoreDocumentType;
         }
     }
@@ -91,7 +92,7 @@ export function getSpecDirectoryFromPath(filePath: string): string {
         try {
             if (
                 fs.existsSync(path.join(dir, SPEC_CONTEXT_FILENAME)) ||
-                fs.existsSync(path.join(dir, 'spec.md'))
+                fs.existsSync(featureSpecPath(dir))
             ) {
                 return dir;
             }

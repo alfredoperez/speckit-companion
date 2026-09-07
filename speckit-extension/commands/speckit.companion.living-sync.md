@@ -47,6 +47,8 @@ For **each** capability with drifted files, edit its spec file (the `spec` path)
 
 **Widen, never narrow.** Write the union of what the marker already named and the changed files you folded in. A requirement that used to describe a file it no longer touches keeps claiming it until someone edits the marker by hand — that costs a run one extra requirement, where narrowing could cost it a needed one. A requirement carrying no marker is read by every run, so leaving one unmarked is always safe; add one only when the changed files genuinely tell you what that requirement is about.
 
+**Remove what the code no longer has.** When the changed files no longer contain what a requirement describes, the requirement is not "stale" — it is gone, and it is deleted from the spec, not softened. A sync that only ever adds produces a spec that is half history. Likewise a `// simplified:` comment that has disappeared from the code takes its `## Known limits` line with it, and a new one adds its line.
+
 Work through the capabilities one at a time. If one capability's update fails (unreadable file, unresolvable content), warn, skip it, and continue with the rest — one bad capability never blocks the others.
 
 ### 3. Handle the skipped capabilities honestly

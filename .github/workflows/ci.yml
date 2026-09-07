@@ -56,11 +56,12 @@ jobs:
       - name: Check command inventory (emissions, install records, and docs match the manifest)
         run: python3 speckit-extension/scripts/check-command-emissions.py
 
-      # Reported, not gated: the ceiling is a guardrail for the composable work,
-      # and today's bodies are already over it. Printing it on every build is what
-      # makes a change to the budget visible in the diff that caused it.
-      - name: Report the instruction budget per command
-        run: python3 speckit-extension/scripts/instruction-budget.py
+      # A ratchet, not the ideal ceiling: the bodies are already over 40, so gating
+      # on 40 would be red from the first build and get switched off. This fails
+      # only when a command carries MORE directives than it did, which is the
+      # regression worth catching. Shedding some is always fine; --record locks it in.
+      - name: Check the instruction budget per command (ratchet)
+        run: python3 speckit-extension/scripts/instruction-budget.py --strict
 
       - name: Report what a run of the pipeline is expected to produce
         run: python3 speckit-extension/scripts/manifest.py

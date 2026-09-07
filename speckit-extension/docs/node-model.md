@@ -30,7 +30,7 @@ nodes/plan/
 
 `scripts/assemble-nodes.py` builds the command body:
 
-1. Read `_frame.md` verbatim — the command frontmatter, the `## User Input` block, and the `## Outline` lead-in. This is connective glue you'd never reorder, so it has its own home outside the node list.
+1. Read `_frame.md` verbatim — the command frontmatter, the `## User Input` block, the step-start / stock-hook / smallest-thing part fences, and the `## Outline` lead-in. This is connective glue you'd never reorder, so it has its own home outside the node list, and a rule that must reach every node lives here rather than in one of them.
 2. Read each node named in `_order.yml`, strip its frontmatter, and concatenate the bodies in order.
 3. Run the **part-fence pass** (shared with `build-commands.py`) so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
 4. Append the **orchestrator** part, when present (run-time hook instructions; see below).

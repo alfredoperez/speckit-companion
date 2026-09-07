@@ -1,44 +1,186 @@
 enabled: true
 exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
 capabilities:
-  - name: core
-    match: ["src/core/**"]
-    spec: src/core/core.spec.md
-  - name: specs
-    match: ["src/features/specs/**"]
-    spec: src/features/specs/specs.spec.md
-  - name: spec-viewer
-    match: ["src/features/spec-viewer/**"]
-    spec: src/features/spec-viewer/spec-viewer.spec.md
   - name: spec-editor
     match: ["src/features/spec-editor/**"]
     spec: src/features/spec-editor/spec-editor.spec.md
-  - name: steering
-    match: ["src/features/steering/**"]
-    spec: src/features/steering/steering.spec.md
-  - name: ai-providers
-    match: ["src/ai-providers/**"]
-    spec: src/ai-providers/ai-providers.spec.md
-  - name: speckit-cli
-    match: ["src/speckit/**"]
-    spec: src/speckit/speckit-cli.spec.md
-  - name: viewer-ui
-    match: ["webview/src/spec-viewer/**"]
-    spec: webview/src/spec-viewer/viewer-ui.spec.md
   - name: editor-ui
     match: ["webview/src/spec-editor/**"]
     spec: webview/src/spec-editor/editor-ui.spec.md
-  - name: capture-runtime
-    match: ["speckit-extension/scripts/**"]
-    spec: speckit-extension/scripts/capture-runtime.spec.md
-  - name: companion-commands
-    match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]
-  - name: extension-services
-    match: ["src/features/agents/**", "src/features/skills/**", "src/features/settings/**", "src/features/permission/**"]
-  - name: webview-shared
-    match: ["webview/src/markdown/**", "webview/src/render/**", "webview/src/shared/**", "webview/src/ui/**"]
-  - name: workflows
-    match: ["src/features/workflows/**", "src/features/workflow-editor/**", "speckit-extension/workflows/**"]
+  - name: core-spec-discovery
+    match: ["src/core/specDirectoryResolver.ts", "src/core/specDirectoryResolver.test.ts", "src/core/utils/fileSystemUtils.ts"]
+    spec: src/core/core-spec-discovery.spec.md
+  - name: core-spec-lifecycle
+    match: ["src/core/types/**"]
+    spec: src/core/core-spec-lifecycle.spec.md
+  - name: core-telemetry
+    match: ["src/core/telemetry.ts", "src/core/__tests__/**"]
+    spec: src/core/core-telemetry.spec.md
+  - name: core-shared-primitives
+    match: ["src/core/settingsMigration.ts", "src/core/settingsMigration.test.ts", "src/core/constants.ts", "src/core/index.ts", "src/core/errors/**", "src/core/managers/**", "src/core/providers/**", "src/core/utils/**"]
+    spec: src/core/core-shared-primitives.spec.md
+  - name: steering-tree
+    match: ["src/features/steering/steeringExplorerProvider.ts", "src/features/steering/providerIcon.ts", "src/features/steering/types.ts", "src/features/steering/index.ts", "src/features/steering/__tests__/steeringExplorerProvider.test.ts", "src/features/steering/__tests__/providerIcon.test.ts"]
+    spec: src/features/steering/steering-tree.spec.md
+  - name: steering-companion
+    match: ["src/features/steering/companionSteering.ts", "src/features/steering/companionSteering.test.ts"]
+    spec: src/features/steering/steering-companion.spec.md
+  - name: steering-documents
+    match: ["src/features/steering/steeringManager.ts", "src/features/steering/steeringCommands.ts", "src/features/steering/__tests__/steeringManager.test.ts"]
+    spec: src/features/steering/steering-documents.spec.md
+  - name: ai-providers-provider-contract
+    match: ["src/ai-providers/aiProvider.ts", "src/ai-providers/aiProviderFactory.ts", "src/ai-providers/providerRegistry.ts", "src/ai-providers/permissionValidation.ts", "src/ai-providers/index.ts", "src/ai-providers/__tests__/**"]
+    spec: src/ai-providers/ai-providers-provider-contract.spec.md
+  - name: ai-providers-terminal-dispatch
+    match: ["src/ai-providers/cliTerminalProvider.ts", "src/ai-providers/*CliProvider.ts", "src/ai-providers/claudeCodeProvider.ts", "src/ai-providers/openCodeProvider.ts", "src/ai-providers/codexCommandBuilder.ts", "src/ai-providers/codexPromptResolver.ts", "src/ai-providers/initOptions.ts"]
+    spec: src/ai-providers/ai-providers-terminal-dispatch.spec.md
+  - name: ai-providers-editor-chat-dispatch
+    match: ["src/ai-providers/ideChatProvider.ts", "src/ai-providers/claudePanelProvider.ts", "src/ai-providers/wibeyPanelProvider.ts"]
+    spec: src/ai-providers/ai-providers-editor-chat-dispatch.spec.md
+  - name: ai-providers-prompt-shaping
+    match: ["src/ai-providers/promptBuilder.ts"]
+    spec: src/ai-providers/ai-providers-prompt-shaping.spec.md
+  - name: ai-providers-preamble
+    match: ["src/ai-providers/promptPreamble.ts"]
+    spec: src/ai-providers/ai-providers-preamble.spec.md
+  - name: asset-discovery
+    match: ["src/features/agents/**", "src/features/skills/**"]
+    spec: capabilities/extension-services/asset-discovery.spec.md
+  - name: settings
+    match: ["src/features/settings/**"]
+    spec: capabilities/extension-services/settings.spec.md
+  - name: permission-mode
+    match: ["src/features/permission/**"]
+    spec: capabilities/extension-services/permission-mode.spec.md
+  - name: workflow-definitions
+    match: ["src/features/workflows/workflowManager.ts", "src/features/workflows/types.ts", "src/features/workflows/index.ts", "src/features/workflows/__tests__/workflowManager.test.ts", "src/features/workflows/__tests__/resolveEffectiveDefaultWorkflow.test.ts"]
+    spec: capabilities/workflows/workflow-definitions.spec.md
+  - name: workflow-selection
+    match: ["src/features/workflows/workflowSelector.ts"]
+    spec: capabilities/workflows/workflow-selection.spec.md
+  - name: pipeline
+    match: ["src/features/workflows/pipelineResolution.ts", "src/features/workflows/projectSteps.ts", "src/features/workflows/stepSequence.ts", "src/features/workflows/checkpointHandler.ts", "src/features/workflows/__tests__/pipelineResolution.test.ts", "src/features/workflows/__tests__/projectSteps.test.ts", "src/features/workflow-editor/**"]
+    spec: capabilities/workflows/pipeline.spec.md
+  - name: shipped-presets
+    match: ["speckit-extension/workflows/**"]
+    spec: capabilities/workflows/shipped-presets.spec.md
+  - name: spec-viewer-panel
+    match: ["src/features/spec-viewer/specViewerProvider.ts", "src/features/spec-viewer/panelRegistry.ts", "src/features/spec-viewer/panelStateComputer.ts", "src/features/spec-viewer/specViewerCommands.ts", "src/features/spec-viewer/documentScanner.ts", "src/features/spec-viewer/extractBlock.ts", "src/features/spec-viewer/index.ts", "src/features/spec-viewer/types.ts", "src/features/spec-viewer/utils.ts", "src/features/spec-viewer/html/**", "src/features/spec-viewer/spec-viewer-*.spec.md", "src/features/spec-viewer/__tests__/showSpec.test.ts", "src/features/spec-viewer/__tests__/getSpecDirectoryFromPath.test.ts", "src/features/spec-viewer/__tests__/documentScanner.test.ts", "src/features/spec-viewer/__tests__/generator.test.ts", "src/features/spec-viewer/__tests__/panelStateComputer.test.ts"]
+    spec: src/features/spec-viewer/spec-viewer-panel.spec.md
+  - name: spec-viewer-state
+    match: ["src/features/spec-viewer/stateDerivation.ts", "src/features/spec-viewer/phaseCalculation.ts", "src/features/spec-viewer/staleness.ts", "src/features/spec-viewer/runRecovery.ts", "src/features/spec-viewer/stepCompletionNotifier.ts", "src/features/spec-viewer/__tests__/stateDerivation.test.ts", "src/features/spec-viewer/__tests__/transitionsViewerState.test.ts", "src/features/spec-viewer/__tests__/coverageVerification.test.ts", "src/features/spec-viewer/__tests__/phaseCalculation.test.ts", "src/features/spec-viewer/__tests__/staleness.test.ts", "src/features/spec-viewer/__tests__/runRecovery.test.ts", "src/features/spec-viewer/__tests__/stepCompletionNotifier.test.ts"]
+    spec: src/features/spec-viewer/spec-viewer-state.spec.md
+  - name: spec-viewer-actions
+    match: ["src/features/spec-viewer/footerActions.ts", "src/features/spec-viewer/messageHandlers.ts", "src/features/spec-viewer/optionalCommands.ts", "src/features/spec-viewer/customCommands.ts", "src/features/spec-viewer/reviewComments.ts", "src/features/spec-viewer/__tests__/footerActions.test.ts", "src/features/spec-viewer/__tests__/footerMatrix.test.ts", "src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts", "src/features/spec-viewer/__tests__/actionSteps.test.ts", "src/features/spec-viewer/__tests__/messageHandlers.test.ts", "src/features/spec-viewer/__tests__/optionalCommands.test.ts", "src/features/spec-viewer/__tests__/reviewComments.test.ts"]
+    spec: src/features/spec-viewer/spec-viewer-actions.spec.md
+  - name: spec-viewer-living
+    match: ["src/features/spec-viewer/livingDocs.ts", "src/features/spec-viewer/livingHeaderMeta.ts", "src/features/spec-viewer/livingSpecsContent.ts", "src/features/spec-viewer/__tests__/livingDocs.test.ts", "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts", "src/features/spec-viewer/__tests__/livingSpecsContent.test.ts"]
+    spec: src/features/spec-viewer/spec-viewer-living.spec.md
+  - name: webview-shared-rendering-contracts
+    match: ["webview/src/markdown/**", "webview/src/render/**", "webview/src/ui/**"]
+    spec: capabilities/webview-shared/rendering-contracts.spec.md
+  - name: webview-shared-messaging
+    match: ["webview/src/shared/hooks/useDispatch.ts"]
+    spec: capabilities/webview-shared/messaging.spec.md
+  - name: webview-shared-transient-surfaces
+    match: ["webview/src/shared/hooks/useInlineConfirm.ts", "webview/src/shared/components/UndoToast*", "webview/src/shared/components/Toast*"]
+    spec: capabilities/webview-shared/transient-surfaces.spec.md
+  - name: webview-shared-primitives
+    match: ["webview/src/shared/**"]
+    spec: capabilities/webview-shared/primitives.spec.md
+  - name: specs-state-record
+    match: ["src/features/specs/specContextReader.ts", "src/features/specs/specContextWriter.ts", "src/features/specs/specContextManager.ts", "src/features/specs/specContextBackfill.ts", "src/features/specs/specContextReset.ts", "src/features/specs/transitionLogger.ts"]
+    spec: src/features/specs/specs-state-record.spec.md
+  - name: specs-lifecycle-status
+    match: ["src/features/specs/stepLifecycle.ts", "src/features/specs/specContextReconciler.ts", "src/features/specs/implementCloseGuard.ts", "src/features/specs/terminalStepTracker.ts", "src/features/specs/customWorkflowProgress.ts", "src/features/specs/specStatusLabel.ts"]
+    spec: src/features/specs/specs-lifecycle-status.spec.md
+  - name: specs-step-history
+    match: ["src/features/specs/stepHistoryDerivation.ts", "src/features/specs/historyHelpers.ts", "src/features/specs/lastTransition.ts"]
+    spec: src/features/specs/specs-step-history.spec.md
+  - name: specs-commands
+    match: ["src/features/specs/specCommands.ts", "src/features/specs/featureSpecPath.ts", "src/features/specs/dispatchStep.ts", "src/features/specs/profileDispatch.ts", "src/features/specs/customCommandConfig.ts", "src/features/specs/specExplorerProvider.ts", "src/features/specs/specsFilterState.ts", "src/features/specs/specsSortMode.ts", "src/features/specs/specsSortState.ts", "src/features/specs/specsSidebarState.ts", "src/features/specs/selectionContextKeys.ts", "src/features/specs/fuzzyMatch.ts", "src/features/specs/sampleSpec.ts", "src/features/specs/index.ts", "src/features/specs/__tests__/**", "src/features/specs/*.spec.md"]
+    spec: src/features/specs/specs-commands.spec.md
+  - name: specs-pipeline-build
+    match: ["src/features/specs/pipelineBuild.ts", "src/features/specs/pipelineBuildCommands.ts", "src/features/specs/pipelineGraph.ts"]
+    spec: src/features/specs/specs-pipeline-build.spec.md
+  - name: specs-living-specs
+    match: ["src/features/specs/livingSpecsModel.ts", "src/features/specs/livingSpecsCommands.ts", "src/features/specs/livingSpecsExplorerProvider.ts", "src/features/specs/livingSpecsStatusBar.ts", "src/features/specs/specShapeCheck.ts", "src/features/specs/specShapeDiagnostics.ts"]
+    spec: src/features/specs/specs-living-specs.spec.md
+  - name: capture-runtime-context-writer
+    match: ["speckit-extension/scripts/spec_context.py", "speckit-extension/scripts/write-context.py", "speckit-extension/scripts/capture-runtime-*.spec.md"]
+    spec: speckit-extension/scripts/capture-runtime-context-writer.spec.md
+  - name: capture-runtime-capture-writes
+    match: ["speckit-extension/scripts/capture.py", "speckit-extension/scripts/task_sync.py", "speckit-extension/scripts/derive-from-files.py"]
+    spec: speckit-extension/scripts/capture-runtime-capture-writes.spec.md
+  - name: capture-runtime-health-reports
+    match: ["speckit-extension/scripts/doctor.py", "speckit-extension/scripts/doctor_*.py", "speckit-extension/scripts/drift.py", "speckit-extension/scripts/run_trace.py"]
+    spec: speckit-extension/scripts/capture-runtime-health-reports.spec.md
+  - name: capture-runtime-spec-resolution
+    match: ["speckit-extension/scripts/resolve-spec-paths.py", "speckit-extension/scripts/status-context.py", "speckit-extension/scripts/companion_config.py", "speckit-extension/scripts/register-capability.py"]
+    spec: speckit-extension/scripts/capture-runtime-spec-resolution.spec.md
+  - name: capture-runtime-living-spec-load
+    match: ["speckit-extension/scripts/record-living-specs.py", "speckit-extension/scripts/check-coverage.py"]
+    spec: speckit-extension/scripts/capture-runtime-living-spec-load.spec.md
+  - name: capture-runtime-living-spec-fold
+    match: ["speckit-extension/scripts/living_spec_fold.py", "speckit-extension/scripts/living_validate.py", "speckit-extension/scripts/spec_deltas.py", "speckit-extension/scripts/relocate-capability.py"]
+    spec: speckit-extension/scripts/capture-runtime-living-spec-fold.spec.md
+  - name: capture-runtime-pipeline-build
+    match: ["speckit-extension/scripts/build-commands.py", "speckit-extension/scripts/assemble-nodes.py", "speckit-extension/scripts/_command_parts.py", "speckit-extension/scripts/emission_sync.py", "speckit-extension/scripts/hook_render.py", "speckit-extension/scripts/manifest.py", "speckit-extension/scripts/template_render.py", "speckit-extension/scripts/decision_routes.py", "speckit-extension/scripts/package-manifest.py", "speckit-extension/scripts/check-command-emissions.py", "speckit-extension/scripts/check-shape-parity.py", "speckit-extension/scripts/capture-golden.py", "speckit-extension/scripts/instruction-budget.*"]
+    spec: speckit-extension/scripts/capture-runtime-pipeline-build.spec.md
+  - name: capture-runtime-pipeline-graph
+    match: ["speckit-extension/scripts/build-pipeline.py", "speckit-extension/scripts/pipeline-graph.py", "speckit-extension/scripts/config_write.py", "speckit-extension/scripts/config_repair.py"]
+    spec: speckit-extension/scripts/capture-runtime-pipeline-graph.spec.md
+  - name: command-assembly
+    match: ["speckit-extension/presets/_parts/**", "speckit-extension/commands/.manifest.json"]
+    spec: capabilities/companion-commands/command-assembly.spec.md
+  - name: pipeline-steps
+    match: ["speckit-extension/nodes/specify/**", "speckit-extension/nodes/plan/**", "speckit-extension/nodes/tasks/**", "speckit-extension/commands/speckit.companion.specify.md", "speckit-extension/commands/speckit.companion.plan.md", "speckit-extension/commands/speckit.companion.tasks.md", "speckit-extension/commands/speckit.companion.classify.md"]
+    spec: capabilities/companion-commands/pipeline-steps.spec.md
+  - name: dispatch-and-capture
+    match: ["speckit-extension/nodes/auto/**", "speckit-extension/presets/companion-standard/**", "speckit-extension/commands/speckit.companion.after-*.md", "speckit-extension/commands/speckit.companion.auto.md", "speckit-extension/commands/speckit.companion.status.md", "speckit-extension/commands/speckit.companion.resume.md"]
+    spec: capabilities/companion-commands/dispatch-and-capture.spec.md
+  - name: implement-and-completion
+    match: ["speckit-extension/nodes/implement/**", "speckit-extension/commands/speckit.companion.implement.md", "speckit-extension/commands/speckit.companion.mark-complete.md", "speckit-extension/commands/speckit.companion.doctor.md"]
+    spec: capabilities/companion-commands/implement-and-completion.spec.md
+  - name: living-spec-commands
+    match: ["speckit-extension/commands/speckit.companion.living-*.md"]
+    spec: capabilities/companion-commands/living-spec-commands.spec.md
+  - name: speckit-cli-detection
+    match: ["src/speckit/detector*.ts", "src/speckit/index.ts"]
+    spec: src/speckit/speckit-cli-detection.spec.md
+  - name: speckit-cli-commands
+    match: ["src/speckit/cliCommands*.ts", "src/speckit/utilityCommands.ts", "src/speckit/specKitAgent*.ts"]
+    spec: src/speckit/speckit-cli-commands.spec.md
+  - name: speckit-cli-extension-install
+    match: ["src/speckit/specKitExtensionInstall*.ts"]
+    spec: src/speckit/speckit-cli-extension-install.spec.md
+  - name: speckit-cli-companion-version
+    match: ["src/speckit/companionUpdateNudge*.ts", "src/speckit/companionVersionGap*.ts"]
+    spec: src/speckit/speckit-cli-companion-version.spec.md
+  - name: speckit-cli-update-check
+    match: ["src/speckit/updateChecker*.ts"]
+    spec: src/speckit/speckit-cli-update-check.spec.md
+  - name: speckit-cli-task-progress
+    match: ["src/speckit/taskProgressService.ts", "src/speckit/__tests__/taskProgressService.test.ts"]
+    spec: src/speckit/speckit-cli-task-progress.spec.md
+  - name: viewer-ui-state
+    match: ["webview/src/spec-viewer/signals.ts", "webview/src/spec-viewer/messageHandlers.ts", "webview/src/spec-viewer/stepInFlight.ts", "webview/src/spec-viewer/types.ts", "webview/src/spec-viewer/__tests__/messageHandlers.test.ts", "webview/src/spec-viewer/__tests__/stepInFlight.test.ts", "webview/src/spec-viewer/components/FooterActions*", "webview/src/spec-viewer/components/__tests__/FooterActions*"]
+    spec: webview/src/spec-viewer/viewer-ui-state.spec.md
+  - name: viewer-ui-document
+    match: ["webview/src/spec-viewer/markdown/**", "webview/src/spec-viewer/editor/**", "webview/src/spec-viewer/highlighting.ts", "webview/src/spec-viewer/components/InlineComment*", "webview/src/spec-viewer/components/InlineEditor*", "webview/src/spec-viewer/components/TaskLine*", "webview/src/spec-viewer/components/__tests__/Inline*"]
+    spec: webview/src/spec-viewer/viewer-ui-document.spec.md
+  - name: viewer-ui-shell
+    match: ["webview/src/spec-viewer/App.tsx", "webview/src/spec-viewer/index.tsx", "webview/src/spec-viewer/elements.ts", "webview/src/spec-viewer/actions.ts", "webview/src/spec-viewer/toc.ts", "webview/src/spec-viewer/FullViewer.stories.tsx", "webview/src/spec-viewer/__fixtures__/**", "webview/src/spec-viewer/__tests__/tocRequirements.test.ts", "webview/src/spec-viewer/components/index.ts", "webview/src/spec-viewer/components/NavigationBar*", "webview/src/spec-viewer/components/StepTab*", "webview/src/spec-viewer/components/PageChrome*", "webview/src/spec-viewer/components/StaleBanner*", "webview/src/spec-viewer/components/Toc.stories.tsx", "webview/src/spec-viewer/components/__stories__/**", "webview/src/spec-viewer/components/__tests__/NavigationBar*", "webview/src/spec-viewer/components/__tests__/StepTab*"]
+    spec: webview/src/spec-viewer/viewer-ui-shell.spec.md
+  - name: viewer-ui-activity
+    match: ["webview/src/spec-viewer/activityHeroModel.ts", "webview/src/spec-viewer/elapsedFormat.ts", "webview/src/spec-viewer/relativeTime.ts", "webview/src/spec-viewer/overviewModel.ts", "webview/src/spec-viewer/timelineEvents.ts", "webview/src/spec-viewer/__tests__/activityModels.test.ts", "webview/src/spec-viewer/__tests__/elapsedFormat.test.ts", "webview/src/spec-viewer/__tests__/relativeTime.test.ts", "webview/src/spec-viewer/__tests__/timelineEvents.test.ts", "webview/src/spec-viewer/components/cards/**", "webview/src/spec-viewer/components/ActivityPanel*", "webview/src/spec-viewer/components/ActivityErrorBoundary.tsx", "webview/src/spec-viewer/components/ElapsedTimer.tsx", "webview/src/spec-viewer/components/OverviewDossier.tsx", "webview/src/spec-viewer/components/RunStrip*", "webview/src/spec-viewer/components/TimelineEvent.tsx", "webview/src/spec-viewer/components/__tests__/OverviewDossier*"]
+    spec: webview/src/spec-viewer/viewer-ui-activity.spec.md
+  - name: viewer-ui-living-spec
+    match: ["webview/src/spec-viewer/components/footer/**", "webview/src/spec-viewer/components/SpecHeader*", "webview/src/spec-viewer/components/__tests__/SpecHeader*"]
+    spec: webview/src/spec-viewer/viewer-ui-living-spec.spec.md
+  - name: viewer-ui-presentation
+    match: ["webview/src/spec-viewer/__stories__/**", "webview/src/spec-viewer/TechyButtons.stories.tsx", "webview/src/spec-viewer/TechyCards.stories.tsx"]
+    spec: webview/src/spec-viewer/viewer-ui-presentation.spec.md
 
 # House rules, written once here instead of retyped into chat on every run.
 # `spec` reaches the specify step, `plan` reaches the plan step, and neither
@@ -50,3 +192,16 @@ rules:
   plan:
     - "Name the capability each decision belongs to, so the fold knows where it goes"
     - "Prefer extending the file that already owns a concern over adding a new one"
+
+# Requirements dropped when the oversized specs were split (2026-09-07), each
+# because a test already enforces it. Kept here so the decision is greppable.
+#
+#   companion-commands  The prompting contract is held by a static gate, not by convention
+#                       → speckit-extension/tests/test_check_quality.py
+#   extension-services  Reconciling the companion's command family is add-only and idempotent
+#   extension-services  An install-state gate keys on the signal that actually implies the capability
+#                       → src/features/settings/companionPresetReconciler.test.ts
+#   ai-providers        The preamble's schema block is generated from the canonical contract
+#   steering            A provider's label and its mark resolve from one decision
+#   steering            A file the view creates lands where the view watches and reads
+

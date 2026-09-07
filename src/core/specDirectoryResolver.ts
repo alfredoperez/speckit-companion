@@ -208,8 +208,8 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
         results.push({ name, path: relativePath });
     }
 
-    // Also look for spec.md directly (legacy support)
-    const specFilePattern = new vscode.RelativePattern(workspaceRoot, `${pattern}/spec.md`);
+    // Also look for the feature spec directly (`<name>.spec.md`, or the stock `spec.md`)
+    const specFilePattern = new vscode.RelativePattern(workspaceRoot, `${pattern}/{spec.md,*.spec.md}`);
     const specFiles = await vscode.workspace.findFiles(specFilePattern, '**/node_modules/**');
     for (const file of specFiles) {
         const dir = path.dirname(file.fsPath);

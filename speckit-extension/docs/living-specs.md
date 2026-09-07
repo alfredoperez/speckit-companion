@@ -56,7 +56,7 @@ python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --orphans
 python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed src/checkout/cart/x.ts --json
 ```
 
-**Both layouts are scanned.** A colocated spec (`src/billing/billing.spec.md`) and a central one (`capabilities/billing/spec.md`) are equally visible to discovery, so an unregistered central spec shows up as an orphan instead of quietly belonging to nothing. This matters most during adoption: a capability whose match globs span several directories has no single folder to colocate into, so it gets a central spec by necessity.
+**Both layouts are scanned.** A colocated spec (`src/billing/billing.spec.md`) and a central one (`capabilities/billing/checkout.spec.md`) are equally visible to discovery, so an unregistered central spec shows up as an orphan instead of quietly belonging to nothing. This matters most during adoption: a capability whose match globs span several directories has no single folder to colocate into, so it gets a central spec by necessity.
 
 An orphan is a spec that no capability claims **and** that does not live inside a configured capability's spec directory, so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
 
@@ -70,9 +70,9 @@ This stays opt-in by presence and never blocks a run: with no registry or `enabl
 
 ## Folding feature deltas back into the living spec on completion
 
-A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. At completion, Companion asks the assistant to write a delta section for each capability the feature loaded **and** changed, and those deltas **fold into each capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.) Because the deltas are written by the assistant into the feature's `spec.md`, they land in the feature's PR diff, so the change to the durable spec is reviewed alongside the code, not applied blindly.
+A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. At completion, Companion asks the assistant to write a delta section for each capability the feature loaded **and** changed, and those deltas **fold into each capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.) Because the deltas are written by the assistant into the feature's spec file (`<short-name>.spec.md`), they land in the feature's PR diff, so the change to the durable spec is reviewed alongside the code, not applied blindly.
 
-The deltas are top-level sections in the feature's `spec.md`, using the requirement-and-scenario shape, one section per changed capability with a `<!-- capability: <name> -->` marker so each routes to the right spec:
+The deltas are top-level sections in the feature's spec file (`<short-name>.spec.md`), using the requirement-and-scenario shape, one section per changed capability with a `<!-- capability: <name> -->` marker so each routes to the right spec:
 
 ```markdown
 ## ADDED Requirements
@@ -117,6 +117,8 @@ It checks every registered living spec, and the delta sections of every active f
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
 | `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
 | `unmatched-touches-glob` | warning | A file marker names a pattern matching nothing on disk. |
+| `spec-too-large` | warning | A capability spec passes 8 requirements or 160 lines. Split it into `capabilities/<capability>/<concern>.spec.md`, one file per concern, each with its own registry entry. |
+| `added-heading-near-existing` | warning | An ADDED heading restates one the target spec already has, which folds as a second requirement for one behaviour. Use MODIFIED with the existing heading. |
 | `unbalanced-fence` | warning | A code fence is opened and never closed, so everything after it is invisible to every reader. |
 
 Severity answers exactly one question: whether the fold stops. **The fold runs these same checks before writing anything**, per capability, and refuses to apply a capability whose deltas carry an error-level finding, naming the finding it refused on. A warning never stops anything — `delta-heading-not-found` is a warning because the fold promotes an unmatched MODIFIED into an addition, which is a defined outcome rather than damage, though a typo'd heading quietly becoming a near-duplicate requirement is still worth saying out loud.

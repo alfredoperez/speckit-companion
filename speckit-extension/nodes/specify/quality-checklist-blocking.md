@@ -6,7 +6,7 @@ command: specify
 writes: checklists/requirements.md
 reads: [draft-spec]
 ---
-4. **Spec quality checklist, run as a gate.** Write `<feature_directory>/checklists/requirements.md` using the template below, then validate and **loop**: grade each item pass/fail, fix the fails in `spec.md`, and re-run the validation. Up to **three** iterations.
+4. **Spec quality checklist, run as a gate.** Write `<feature_directory>/checklists/requirements.md` using the template below, then validate and **loop**: grade each item pass/fail, fix the fails in `<short-name>.spec.md`, and re-run the validation. Up to **three** iterations.
 
    After the third — or sooner, if what remains needs a decision only the user can make — **stop and ask.** Present the unresolved items as a numbered table with the options for each, and wait for an answer before continuing:
 
@@ -23,7 +23,7 @@ reads: [draft-spec]
 
    **Purpose**: Validate specification completeness before planning
    **Created**: [DATE]
-   **Feature**: [Link to spec.md]
+   **Feature**: [Link to the feature spec]
 
    ## Content Quality
 

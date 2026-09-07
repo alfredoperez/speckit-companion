@@ -1,60 +1,37 @@
 ## Pre-Execution Checks — stock spec-kit extension hooks
 
-Companion runs **on top of** stock spec-kit, so a project's installed spec-kit **extensions** (git, and any others registered in `.specify/extensions.yml`) must still fire on a Companion run exactly as they do on a stock `/speckit.*` run. This is separate from Companion's own node-hooks (`.specify/companion.yml`): both fire. Like the rest of the pipeline, checking these hooks must **never fail the host command** — if anything is missing or malformed, skip silently and continue.
+Companion runs **on top of** stock spec-kit, so a project's installed spec-kit **extensions** (git, and any others registered in `.specify/extensions.yml`) must still fire on a Companion run exactly as they do on a stock `/speckit.*` run. That is separate from Companion's own node-hooks in `.specify/companion.yml`; both fire. Like the rest of the pipeline this must **never fail the host command** — anything missing or malformed is skipped silently.
 
-Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`.
+Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`. Run the pass twice — `hooks.before_<step>` **now, before any of the work below**, and `hooks.after_<step>` once this command's work is fully reported, before handing off.
 
-**Before-hooks — run these *now*, before any of the work below.**
-- Check whether `.specify/extensions.yml` exists in the project root. If it does not, skip silently — there are no hooks.
-- If it exists, read it and look for entries under `hooks.before_<step>`. If the YAML cannot be parsed, skip hook checking silently and continue normally.
-- Filter out hooks where `enabled` is explicitly `false` (no `enabled` field means enabled), **and hooks whose `extension` is `companion`** — those exist so a stock `/speckit.*` run still records its lifecycle, and this command records its own in its own body, so dispatching them here is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
-- Do **not** interpret or evaluate a hook's `condition` expression yourself: a hook with no `condition` (or a null/empty one) is executable; a hook with a non-empty `condition` is left to the HookExecutor — skip it here.
-- For each executable hook, emit one block based on its `optional` flag:
-  - **Optional** (`optional: true`):
-    ```
-    ## Extension Hooks
+- **Read `.specify/extensions.yml`.** Absent, unparseable, or carrying no entries for that anchor: skip silently, there is nothing to run.
+- **Skip a hook that is `enabled: false`** (no `enabled` field means enabled), **and any hook whose `extension` is `companion`** — those exist so a stock run records its lifecycle, and this command records its own in its own body, so dispatching them is a turn that rewrites what this step just wrote. Every other extension's hooks fire as normal.
+- **Leave `condition` to the HookExecutor.** A hook with no condition, or a null or empty one, is executable; one with a non-empty condition is skipped here and never evaluated by you.
+- **Emit one block per executable hook.** An optional hook (`optional: true`):
 
-    **Optional Pre-Hook**: {extension}
-    Command: `/{command}`
-    Description: {description}
+  ```
+  ## Extension Hooks
 
-    Prompt: {prompt}
-    To execute: `/{command}`
-    ```
-  - **Mandatory** (`optional: false`):
-    ```
-    ## Extension Hooks
+  **Optional Pre-Hook**: {extension}
+  Command: `/{command}`
+  Description: {description}
 
-    **Automatic Pre-Hook**: {extension}
-    Executing: `/{command}`
-    EXECUTE_COMMAND: {command}
+  Prompt: {prompt}
+  To execute: `/{command}`
+  ```
 
-    Wait for the result of the hook command before proceeding to the Outline.
-    ```
-- If no before-hooks are registered, skip silently.
+  A mandatory hook (`optional: false`) instead:
 
-**After-hooks — run these once this command's work is fully reported, before handing off.**
-- Re-check `.specify/extensions.yml`; if absent or unparseable, skip silently. Look under `hooks.after_<step>`, applying the same `enabled` / `condition` filtering as above.
-- For each executable hook, emit one block:
-  - **Optional** (`optional: true`):
-    ```
-    ## Extension Hooks
+  ```
+  ## Extension Hooks
 
-    **Optional Hook**: {extension}
-    Command: `/{command}`
-    Description: {description}
+  **Automatic Pre-Hook**: {extension}
+  Executing: `/{command}`
+  EXECUTE_COMMAND: {command}
 
-    Prompt: {prompt}
-    To execute: `/{command}`
-    ```
-  - **Mandatory** (`optional: false`):
-    ```
-    ## Extension Hooks
+  Wait for the result of the hook command before proceeding to the Outline.
+  ```
 
-    **Automatic Hook**: {extension}
-    Executing: `/{command}`
-    EXECUTE_COMMAND: {command}
-    ```
-- If no after-hooks are registered, skip silently.
+  Those are the **before** pass's labels. In the **after** pass drop `Pre-` from the label, and drop the closing wait line — there is nothing left to wait for.
 
-For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); spec directory and file creation are always handled by the command body itself.
+For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); the spec directory and its files are always created by the command body itself.

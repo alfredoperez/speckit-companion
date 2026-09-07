@@ -11,7 +11,12 @@ parts injected into every command. If most of the load is shared, then splitting
 into separate dispatches makes the problem worse rather than better, because each
 dispatch re-pays the shared half. Read the `own` column before designing around this.
 
-Read-only. Exit 0 unless --strict is given and a command is over the ceiling.
+Read-only. Exit 0 unless --strict is given and a command carries more directives
+than the recorded high-water mark beside this script. That mark is a ratchet, not a
+target: a body may always shed directives, and `--record` writes the lower number
+back. Gating on the ideal ceiling instead would fail every build from the first one,
+because the bodies are already over it, and a gate that is red on arrival gets
+switched off rather than fixed.
 """
 from __future__ import annotations
 
@@ -32,7 +37,12 @@ sys.path.insert(0, HERE)
 from _command_parts import PART_FENCE as _PART_FENCE  # noqa: E402
 
 #: Horthy's threshold, the point past which adherence is understood to diffuse.
+#: What the bodies should reach, and what --ceiling flags them against.
 DEFAULT_CEILING = 40
+
+#: Per-command high-water marks. `--strict` fails a command that exceeds its own
+#: entry, so the corpus can only get lighter. Regenerate with `--record`.
+HIGH_WATER = os.path.join(HERE, "instruction-budget.json")
 
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.S)
 _FENCED_CODE = re.compile(r"```.*?```", re.S)
@@ -67,8 +77,10 @@ def measure(path: str) -> dict:
     for m in _PART_FENCE.finditer(body):
         shared[m.group(1)] = directives(m.group(2))
     own = directives(_PART_FENCE.sub("", body))
+    words = len(_FRONTMATTER.sub("", body).split())
     return {
         "command": os.path.basename(path),
+        "words": words,
         "own": own,
         "shared": sum(shared.values()),
         "total": own + sum(shared.values()),
@@ -81,7 +93,9 @@ def main() -> int:
     ap.add_argument("--ceiling", type=int, default=DEFAULT_CEILING)
     ap.add_argument("--json", dest="as_json", action="store_true")
     ap.add_argument("--strict", action="store_true",
-                    help="exit non-zero when a command is over the ceiling")
+                    help="exit non-zero when a command carries more directives than its recorded mark")
+    ap.add_argument("--record", action="store_true",
+                    help="write the current counts back as the high-water marks")
     args = ap.parse_args()
 
     rows = [measure(os.path.join(COMMANDS, f))
@@ -92,22 +106,62 @@ def main() -> int:
         import json
         print(json.dumps({"ceiling": args.ceiling, "commands": rows}, indent=2))
     else:
-        print(f"{'command':46} {'own':>5} {'shared':>7} {'total':>6}  over?")
+        print(f"{'command':46} {'own':>5} {'shared':>7} {'total':>6}  {'words':>6}  over?")
         for r in rows:
             flag = "  ⚠" if r["total"] > args.ceiling else ""
-            print(f"{r['command']:46} {r['own']:>5} {r['shared']:>7} {r['total']:>6}{flag}")
+            print(f"{r['command']:46} {r['own']:>5} {r['shared']:>7} {r['total']:>6}  {r['words']:>6}{flag}")
         worst = rows[0]
         if worst["shared"] > worst["own"]:
             print(f"\nMost of {worst['command']}'s load is shared, not its own: "
                   f"{worst['shared']} of {worst['total']}. Splitting its nodes into separate "
                   f"dispatches would re-pay the shared half each time.")
 
-    over = [r for r in rows if r["total"] > args.ceiling]
-    if args.strict and over:
-        print(f"\n{len(over)} command(s) over the {args.ceiling}-directive ceiling.",
-              file=sys.stderr)
-        return 1
-    return 0
+    import json
+    marks, word_marks = {}, {}
+    if os.path.exists(HIGH_WATER):
+        with open(HIGH_WATER, encoding="utf-8") as fh:
+            stored = json.load(fh)
+        marks, word_marks = stored.get("commands", {}), stored.get("words", {})
+
+    if args.record:
+        with open(HIGH_WATER, "w", encoding="utf-8") as fh:
+            json.dump({"ceiling": DEFAULT_CEILING,
+                       "commands": {r["command"]: r["total"] for r in sorted(
+                           rows, key=lambda r: r["command"])},
+                       "words": {r["command"]: r["words"] for r in sorted(
+                           rows, key=lambda r: r["command"])}}, fh, indent=2)
+            fh.write("\n")
+        print(f"\nRecorded {len(rows)} high-water marks in {os.path.basename(HIGH_WATER)}.")
+        return 0
+
+    if not args.strict:
+        return 0
+
+    risen = [(r, marks[r["command"]]) for r in rows
+             if r["command"] in marks and r["total"] > marks[r["command"]]]
+    new = [r for r in rows if r["command"] not in marks and r["total"] > args.ceiling]
+    for r, mark in risen:
+        print(f"{r['command']}: {r['total']} directives, up from {mark}. "
+              f"Shed one elsewhere or run --record deliberately.", file=sys.stderr)
+    # Words ratchet too, with a little slack: a directive is a rule, a word is
+    # only weight, and one rewritten sentence should not fail a build. Five
+    # percent is under what any of the diet's cuts moved.
+    heavier = [(r, word_marks[r["command"]]) for r in rows
+               if r["command"] in word_marks and r["words"] > word_marks[r["command"]] * 1.05]
+    for r, mark in heavier:
+        print(f"{r['command']}: {r['words']} words, up from {mark}. "
+              f"Cut elsewhere or run --record deliberately.", file=sys.stderr)
+    risen = risen + heavier
+    for r in new:
+        print(f"{r['command']}: new command at {r['total']} directives, over the "
+              f"{args.ceiling} ceiling.", file=sys.stderr)
+    lowered = [(r, marks[r["command"]]) for r in rows
+               if r["command"] in marks and r["total"] < marks[r["command"]]]
+    if lowered and not risen and not new:
+        print("\nLighter than recorded: "
+              + ", ".join(f"{r['command']} {mark}->{r['total']}" for r, mark in lowered)
+              + ". Run --record to lock it in.")
+    return 1 if (risen or new) else 0
 
 
 if __name__ == "__main__":

@@ -280,8 +280,15 @@ def _is_placeholder(title: str) -> bool:
     return bool(_PLACEHOLDER.match(title))
 
 
+def feature_spec_path(feature_dir: Path) -> Path:
+    """The feature spec: `<short-name>.spec.md` when Companion wrote it, else the
+    stock `spec.md` (returned even when absent, so a writer knows the old name)."""
+    named = sorted(p for p in Path(feature_dir).glob("*.spec.md") if p.is_file())
+    return named[0] if named else Path(feature_dir) / "spec.md"
+
+
 def _spec_name(feature_dir: Path) -> str:
-    spec_md = feature_dir / "spec.md"
+    spec_md = feature_spec_path(feature_dir)
     if spec_md.is_file():
         try:
             for line in spec_md.read_text(encoding="utf-8").splitlines():

@@ -1142,6 +1142,23 @@ class FoldLivingSpecTests(unittest.TestCase):
         self.assertIn("### Due dates", self._living(root))
         self.assertEqual(self._ctx(fdir)["livingSpecs"]["synced"], ["todos"])
 
+    def test_a_warning_is_printed_before_the_fold_applies_it(self) -> None:
+        # A warning does not block, but dropping it silently is how a run folded
+        # two near-duplicate headings and only noticed afterwards.
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        existing = [l[4:] for l in TODOS_LIVING.splitlines() if l.startswith("### ")][0]
+        restated = "A user is able to " + existing[0].lower() + existing[1:]
+        fdir = _write_feature(root, "001-feat",
+            f"# Feat\n\n## ADDED Requirements\n\n### {restated}\n\n"
+            "#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            result = wc.fold_living_spec(fdir, "ai")
+        self.assertIsNotNone(result)
+        self.assertIn("added-heading-near-existing", buf.getvalue())
+        self.assertIn(existing, buf.getvalue())
+
     def test_a_scenario_with_no_outcome_is_refused_and_named(self) -> None:
         # The write is what damages the record: a scenario nobody can check
         # becomes permanent the moment it is folded.

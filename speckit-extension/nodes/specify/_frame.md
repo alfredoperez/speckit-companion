@@ -1,5 +1,5 @@
 ---
-description: "Companion specify — spec.md with prioritized user stories"
+description: "Companion specify — a feature spec with prioritized user stories"
 ---
 
 ## User Input
@@ -15,6 +15,10 @@ $ARGUMENTS
 <!-- speckit-companion:part speckit-hooks -->
 
 <!-- /speckit-companion:part speckit-hooks -->
+
+<!-- speckit-companion:part smallest-thing -->
+
+<!-- /speckit-companion:part smallest-thing -->
 
 ## Outline
 

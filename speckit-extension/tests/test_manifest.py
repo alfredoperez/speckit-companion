@@ -47,7 +47,7 @@ class TheManifestDescribesTheAssembledPipeline(unittest.TestCase):
 
     def test_the_author_nodes_declarations_are_all_present(self):
         specify = manifest_mod.artifacts_for(self.manifest, "specify")
-        self.assertIn("spec.md", specify)
+        self.assertIn("<short-name>.spec.md", specify)
         self.assertIn("checklists/requirements.md", specify)
         self.assertIn("plan.md", manifest_mod.artifacts_for(self.manifest, "plan"))
         self.assertIn("tasks.md", manifest_mod.artifacts_for(self.manifest, "tasks"))
@@ -60,7 +60,7 @@ class TheManifestDescribesTheAssembledPipeline(unittest.TestCase):
         trimmed = manifest_mod.build(orders={"specify": without})
         self.assertNotIn("checklists/requirements.md",
                          manifest_mod.artifacts_for(trimmed, "specify"))
-        self.assertIn("spec.md", manifest_mod.artifacts_for(trimmed, "specify"))
+        self.assertIn("<short-name>.spec.md", manifest_mod.artifacts_for(trimmed, "specify"))
 
 
 class AnUnmetDeclarationIsReported(unittest.TestCase):
@@ -69,7 +69,7 @@ class AnUnmetDeclarationIsReported(unittest.TestCase):
         with tempfile.TemporaryDirectory() as empty:
             missing = manifest_mod.unproduced(manifest, "specify", empty)
         names = {m["artifact"] for m in missing}
-        self.assertIn("spec.md", names)
+        self.assertIn("<short-name>.spec.md", names)
         report = manifest_mod.render_unproduced("specify", missing)
         self.assertIn("draft-spec", report)
         self.assertIn("did not produce", report)
@@ -78,7 +78,7 @@ class AnUnmetDeclarationIsReported(unittest.TestCase):
         manifest = manifest_mod.build()
         with tempfile.TemporaryDirectory() as produced:
             root = Path(produced)
-            (root / "spec.md").write_text("x", encoding="utf-8")
+            (root / "offline-queue.spec.md").write_text("x", encoding="utf-8")
             (root / "checklists").mkdir()
             (root / "checklists" / "requirements.md").write_text("x", encoding="utf-8")
             self.assertEqual(manifest_mod.unproduced(manifest, "specify", str(root)), [])

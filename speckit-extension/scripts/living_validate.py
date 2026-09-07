@@ -22,12 +22,21 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path  # noqa: E402
+from spec_context import feature_spec_path  # noqa: E402
+
+import companion_config as cc  # noqa: E402 — reached through the path above
 
 _REQ_RE = re.compile(r"^###(?!#)\s+(.+?)\s*$")
 _SCENARIO_RE = re.compile(r"^####(?!#)\s+Scenario\s*:\s*(.+?)\s*$", re.IGNORECASE)
 _SECTION_RE = re.compile(r"^##(?!#)\s+(.+?)\s*$")
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
+#: Past these a spec is a folder's worth of concerns in one file. Warnings, not
+#: gates — see `spec-too-large`.
+MAX_REQUIREMENTS = 8
+MAX_LINES = 160
+
 _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$",
                               re.IGNORECASE)
 #: Any markdown bullet, ordered or not. `+` is a bullet and a numbered list is
@@ -198,6 +207,22 @@ def fences_are_balanced(text: str) -> bool:
     return opened % 2 == 0
 
 
+def _split_advice(path: str) -> str:
+    """Where this spec's siblings go, which depends on how it is stored."""
+    if _posix_path(path).startswith(f"{cc.DEFAULT_CAPABILITY_ROOT}/"):
+        folder = _posix_path(path).rsplit("/", 1)[0]
+        return (f"Split it into granular specs in {folder}/, one per concern — "
+                f"`<concern>.spec.md` — and give each its own registry entry.")
+    folder, name = _posix_path(path).rsplit("/", 1)
+    stem = name[: -len(".spec.md")] if name.endswith(".spec.md") else name
+    return (f"Split it into sibling specs in {folder}/, one per concern — "
+            f"`{stem}-<concern>.spec.md` — and give each its own registry entry.")
+
+
+def _posix_path(p: str) -> str:
+    return p.replace(os.sep, "/")
+
+
 def check_living_spec(text: str, path: str, root: str | None = ".",
                       capability: str | None = None, offset: int = 0) -> list:
     """Every shape finding in one living spec, ordered by line.
@@ -275,6 +300,18 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                     "Point the marker at the files this requirement describes, or remove it.",
                     capability))
         i = j
+
+    reqs = sum(1 for i in range(len(lines)) if is_req(i))
+    if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
+        # A capability with a wide surface is one folder, not one file. Warning
+        # only: splitting is a judgement about where the seams are, and a gate
+        # that blocks on it would just teach people to write fewer scenarios.
+        findings.append(_finding(
+            WARNING, "spec-too-large", path, 1,
+            f"{reqs} requirements over {len(lines)} lines — past "
+            f"{MAX_REQUIREMENTS} requirements or {MAX_LINES} lines a spec stops "
+            f"being something a reader holds in their head.",
+            _split_advice(path), capability))
 
     if not fences_are_balanced(text):
         # Reported first and at line 1, because everything below the unclosed
@@ -367,12 +404,26 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
             findings.extend(check_living_spec(
                 body, path, root=None, capability=cap, offset=block["start"]))
 
-        if block["verb"] not in ("MODIFIED", "REMOVED"):
-            continue
         target = target_texts.get(cap) if cap else None
         if target is None:
             continue
         present = {s["heading"] for s in _requirement_headings(target)}
+        if block["verb"] == "ADDED":
+            # An addition that restates an existing heading in other words is
+            # that requirement changed, and belongs under MODIFIED. Folded as
+            # ADDED it becomes a second requirement for one behaviour, which is
+            # the way a spec grows without anything having been decided.
+            for heading, line in block["headings"]:
+                near = _nearest_heading(heading, present)
+                if near:
+                    findings.append(_finding(
+                        WARNING, "added-heading-near-existing", path, line,
+                        f'ADDED "{heading}" reads like "{near}", which {cap}\'s spec already has.',
+                        "If it is the same requirement changed, put it under MODIFIED with the existing heading.",
+                        cap))
+            continue
+        if block["verb"] not in ("MODIFIED", "REMOVED"):
+            continue
         for heading, line in block["headings"]:
             if heading in present:
                 continue
@@ -388,6 +439,40 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
                 cap))
     findings.sort(key=lambda f: (f["line"], f["code"]))
     return findings
+
+
+_STOP = {"a", "an", "the", "is", "are", "to", "of", "and", "or", "in", "on", "for", "with",
+         "its", "it", "their", "this", "that"}
+
+
+def _words(heading: str) -> set:
+    # A crude stem — "pages"/"page", "delegated"/"delegate" — is enough here; a
+    # real stemmer is a dependency for a warning.
+    return {re.sub(r"(ing|ed|es|e|s|d)$", "", w) if len(w) > 3 else w
+            for w in re.findall(r"[a-z0-9]+", heading.lower()) if w not in _STOP}
+
+
+def _nearest_heading(heading: str, present: set):
+    """The existing heading this one mostly restates, or None.
+
+    Word overlap, nothing cleverer: two headings sharing most of their content
+    words are the same requirement said twice. An exact match is not "near",
+    it is the case the MODIFIED check already handles.
+    """
+    mine = _words(heading)
+    if not mine:
+        return None
+    for other in present:
+        if other == heading:
+            continue
+        theirs = _words(other)
+        if not theirs:
+            continue
+        overlap = len(mine & theirs) / len(mine | theirs)
+        if overlap >= 0.6 or (min(len(mine), len(theirs)) >= 3
+                              and (mine <= theirs or theirs <= mine)):
+            return other
+    return None
 
 
 def _requirement_headings(text: str) -> list:
@@ -411,7 +496,7 @@ def _active_feature_specs(root: str) -> list:
         return []
     out = []
     for name in sorted(os.listdir(specs_dir)):
-        spec_md = os.path.join(specs_dir, name, "spec.md")
+        spec_md = str(feature_spec_path(Path(specs_dir) / name))
         if not os.path.isfile(spec_md):
             continue
         ctx = os.path.join(specs_dir, name, ".spec-context.json")
