@@ -111,6 +111,8 @@ Produce a feature specification: prioritized user stories with acceptance scenar
 
    - **Honor the project's authored spec rules.** The same call carries a `rules` object: `rules.spec` is a short list of one-line house rules the project wrote once in its registry rather than retyping into chat on every run. Read **only** `rules.spec` here — `rules.plan` belongs to the plan step and must not leak into the draft — and treat each line as an instruction while writing `spec.md`. An empty list is the normal case: say nothing about rules and draft as usual. These lines shape *how* the spec is written; they never add requirements or override anything in this command body.
 
+**Where the request names two or more code areas and you have a subagent tool, dispatch one read-only worker per area first**, each returning the files that area exposes and the conventions it follows, never file contents; those findings are what you record as `context` below and what plan reads. One area, or no subagent tool: look yourself.
+
 2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
    - **User Scenarios & Testing** *(mandatory)* — the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:
