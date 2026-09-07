@@ -126,10 +126,14 @@ from living_spec_fold import (  # noqa: E402,F401
 
 def update_context(
     feature_dir: Path, step: str, status: str | None, by: str, kind: str = "start",
-    substep: str | None = None,
+    substep: str | None = None, at: str | None = None,
 ) -> Path | None:
     target = feature_dir / ".spec-context.json"
-    now = _now_iso()
+    # `at` carries the dispatcher's own clock for a start it already decided —
+    # the GUI sends a dispatch time and asks for it verbatim, and until this
+    # existed the only way to honour that was to hand-write the file, which is
+    # exactly what every other rule forbids. Everything else stamps live.
+    now = at or _now_iso()
     branch = _git_branch(_repo_root_for(feature_dir)) or "main"
 
     ctx = read_ctx(target)
@@ -330,6 +334,11 @@ def _main() -> int:
     parser.add_argument("--status", default=None)
     parser.add_argument("--by", default="extension")
     parser.add_argument("--kind", default="start", choices=["start", "complete"])
+    parser.add_argument(
+        "--at", default=None, metavar="ISO8601",
+        help="Timestamp for a step START the dispatcher already decided (the GUI's "
+             "dispatch time). Refused for anything else: a hand-chosen clock on a "
+             "finish is the batched-timestamp defect the doctor exists to catch.")
     parser.add_argument(
         "--substep", default=None,
         help="Tag the step-level start/complete with a substep (e.g. 'fast-path' "
@@ -537,6 +546,12 @@ def _main() -> int:
             _record_outcome(False, str(exc))
             return 2
 
+    if args.at and args.kind != "start":
+        msg = "--at applies only to a step start; every other boundary is stamped live."
+        print(f"[companion] {msg}", file=sys.stderr)
+        _record_outcome(False, msg)
+        return 2
+
     if args.batch:
         try:
             _parsed_batch(args.batch)
@@ -726,7 +741,7 @@ def _main() -> int:
             else:
                 target = journal_task_finish(feature_dir, args.task, args.by, did, files)
         else:
-            target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep)
+            target = update_context(feature_dir, args.step, args.status, args.by, args.kind, args.substep, args.at)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped .spec-context.json write: {exc}", file=sys.stderr)
         _record_outcome(False, f"skipped .spec-context.json write: {exc}")

@@ -5,10 +5,10 @@
     "speckit.companion.after-plan.md": 4,
     "speckit.companion.after-specify.md": 4,
     "speckit.companion.after-tasks.md": 4,
-    "speckit.companion.auto.md": 37,
+    "speckit.companion.auto.md": 39,
     "speckit.companion.classify.md": 6,
     "speckit.companion.doctor.md": 13,
-    "speckit.companion.implement.md": 47,
+    "speckit.companion.implement.md": 56,
     "speckit.companion.living-adopt.md": 36,
     "speckit.companion.living-coverage.md": 3,
     "speckit.companion.living-drift.md": 4,
@@ -17,10 +17,10 @@
     "speckit.companion.living-sync.md": 12,
     "speckit.companion.living-validate.md": 3,
     "speckit.companion.mark-complete.md": 5,
-    "speckit.companion.plan.md": 54,
+    "speckit.companion.plan.md": 62,
     "speckit.companion.resume.md": 12,
-    "speckit.companion.specify.md": 71,
+    "speckit.companion.specify.md": 79,
     "speckit.companion.status.md": 6,
-    "speckit.companion.tasks.md": 56
+    "speckit.companion.tasks.md": 64
   }
 }

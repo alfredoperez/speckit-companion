@@ -26,6 +26,8 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
+**Pass the dispatcher's clock when you were given one.** A GUI or harness that dispatched this step already stamped the moment it did so and prints it as a dispatch time. Add `--at "<that timestamp>"` and the entry carries it; with no dispatch time given, omit the flag and the script stamps now. `--at` is refused on anything but a start, because a hand-chosen clock on a finish is the batching defect the doctor looks for.
+
 Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
@@ -98,6 +100,24 @@ Produce a feature specification: prioritized user stories with acceptance scenar
      The leaf capability is the **primary** frame for this change, a parent capability is the surrounding **context**. These are background you must honor while drafting — they describe how the area already behaves.
 
    - **Honor the project's authored spec rules.** The same call carries a `rules` object: `rules.spec` is a short list of one-line house rules the project wrote once in its registry rather than retyping into chat on every run. Read **only** `rules.spec` here — `rules.plan` belongs to the plan step and must not leak into the draft — and treat each line as an instruction while writing `spec.md`. An empty list is the normal case: say nothing about rules and draft as usual. These lines shape *how* the spec is written; they never add requirements or override anything in this command body.
+
+<!-- speckit-companion:part least-code -->
+## Least code — the smallest thing that actually works
+
+Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail), which measured 54% fewer lines, 22% fewer tokens and 27% less time across twelve feature tasks with safety held at 100%.
+
+**Climb this ladder and stop at the first rung that holds.** Does it need to exist at all; is it already in this codebase; does the standard library do it; does the platform do it, a date input over a picker library, CSS over JavaScript, a constraint over application code; does a dependency the project already has; can it be one line; only then, the minimum code that works.
+
+**Fix the cause, not the symptom.** A report names one caller and the fix usually belongs where they all pass through, which is both the smaller change and the only one that leaves no sibling broken.
+
+**Delete rather than add, and boring rather than clever.** No interface with one implementation, no factory for one product, no configuration for a value that never changes, no scaffolding for a later that can scaffold itself.
+
+**The same ladder governs what you write, not just what you build.** A spec, plan, research note, data model, contract or task list is only worth its length if a reader acts on it. Do not restate what another artifact in this feature already says, do not write a requirement for what a type or a test already enforces, and do not add a third acceptance scenario unless it covers a failure the first two miss. A section with nothing to say is removed, never filled with "N/A" — and the recorded size is the budget, so a `simple` change gets the tasks without the ceremony around them.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. This shortens the solution, never the reading: understand the whole path before choosing a rung.
+
+**Name a corner you cut on purpose** with `// simplified: <the ceiling>, <what to do when it binds>` in the code, and one matching `concerns` entry in this step's capture, so "later" has somewhere to be found.
+<!-- /speckit-companion:part least-code -->
 
 2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
@@ -208,7 +228,7 @@ The two constants (5 files / 10 tasks) are the same guardrail the old `complexit
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --classification '{"projectedFiles": <n>, "projectedTasks": <n>, "scopeSignal": "<larger|smaller|none>", "verdict": "<simple|normal|oversized>"}'
    ```
-6. **Branch on the verdict.**
+7. **Branch on the verdict.**
 
    - **`simple` — minimal mode.** Write **three lean files** in this one pass so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold — never a single combined `spec.md`:
      - Append an **Approach** section to the already-written `spec.md` — the files to touch and any dependencies, in a few bullets (the plan content, inline; this stays the plan source-of-truth).
@@ -312,6 +332,8 @@ This is one step in the Companion pipeline. How the run continues depends on the
 ## Node hooks — run the project's `before`/`after` inserts
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
+
+**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
 
 **Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 

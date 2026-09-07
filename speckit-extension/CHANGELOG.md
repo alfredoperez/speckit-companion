@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **The pipeline now builds the smallest thing that works, and writes the shortest document that helps.** Specify, plan, tasks and implement share one rule: check whether the thing needs to exist at all, then whether the codebase, the standard library, the platform or an existing dependency already does it, before writing anything new. The same test applies to the documents a run produces — a section nobody acts on is removed rather than filled in, a requirement is not written for what a type or a test already enforces, and a third acceptance scenario has to cover a failure the first two miss. A corner cut on purpose is named in the code and recorded as a concern, so it can be found later. Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail).
+- **A run can now record the moment it was dispatched, not the moment the script noticed.** Where an editor or a harness starts a step and tells the command when it did so, that timestamp is what the step's start carries. Only a start accepts one; every other boundary is still stamped as it happens.
+
+### Fixed
+- **An empty pipeline config is treated as no config.** A project that ran `specify init` and declared no hooks yet has a zero-byte file, which was neither absent nor malformed; it now means what it says.
+- **Two steps of the specify command were both numbered six.**
+
 ### Changed
 - **The pipeline stops doing work nobody asked for.** Closing a task was two calls to the same script, one to record it and one to make it visible; it is now one, and the script had shipped that one-call form for months with nothing using it. Specify's wrap-up was about eleven separate writes of the same file and is now a single one. Every step re-read the workflow definition to learn which step came next, which is a constant, so each step now names its successor outright. Companion's own lifecycle hooks fired on Companion runs and rewrote what the step had just written; they still serve stock runs and are skipped on a Companion one. And completion was written three ways at the end of implement — the step's own final node is the only one that writes it now. Nothing about what gets recorded changes, only how many times the run stops to record it.
 

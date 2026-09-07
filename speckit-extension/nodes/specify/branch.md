@@ -5,7 +5,7 @@ kind: control
 command: specify
 reads: [classify-size]
 ---
-6. **Branch on the verdict.**
+7. **Branch on the verdict.**
 
    - **`simple` — minimal mode.** Write **three lean files** in this one pass so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold — never a single combined `spec.md`:
      - Append an **Approach** section to the already-written `spec.md` — the files to touch and any dependencies, in a few bullets (the plan content, inline; this stays the plan source-of-truth).

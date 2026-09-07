@@ -26,6 +26,8 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
+**Pass the dispatcher's clock when you were given one.** A GUI or harness that dispatched this step already stamped the moment it did so and prints it as a dispatch time. Add `--at "<that timestamp>"` and the entry carries it; with no dispatch time given, omit the flag and the script stamps now. `--at` is refused on anything but a start, because a hand-chosen clock on a finish is the batching defect the doctor looks for.
+
 Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
@@ -81,6 +83,24 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
 2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other (any order is safe), and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done** before starting the next. Halt on a failed task and report the cause.
 
+<!-- speckit-companion:part least-code -->
+## Least code — the smallest thing that actually works
+
+Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail), which measured 54% fewer lines, 22% fewer tokens and 27% less time across twelve feature tasks with safety held at 100%.
+
+**Climb this ladder and stop at the first rung that holds.** Does it need to exist at all; is it already in this codebase; does the standard library do it; does the platform do it, a date input over a picker library, CSS over JavaScript, a constraint over application code; does a dependency the project already has; can it be one line; only then, the minimum code that works.
+
+**Fix the cause, not the symptom.** A report names one caller and the fix usually belongs where they all pass through, which is both the smaller change and the only one that leaves no sibling broken.
+
+**Delete rather than add, and boring rather than clever.** No interface with one implementation, no factory for one product, no configuration for a value that never changes, no scaffolding for a later that can scaffold itself.
+
+**The same ladder governs what you write, not just what you build.** A spec, plan, research note, data model, contract or task list is only worth its length if a reader acts on it. Do not restate what another artifact in this feature already says, do not write a requirement for what a type or a test already enforces, and do not add a third acceptance scenario unless it covers a failure the first two miss. A section with nothing to say is removed, never filled with "N/A" — and the recorded size is the budget, so a `simple` change gets the tasks without the ceremony around them.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. This shortens the solution, never the reading: understand the whole path before choosing a rung.
+
+**Name a corner you cut on purpose** with `// simplified: <the ceiling>, <what to do when it binds>` in the code, and one matching `concerns` entry in this step's capture, so "later" has somewhere to be found.
+<!-- /speckit-companion:part least-code -->
+
 3. **Hand each user-story phase to a worker where your host has one; build everything else yourself.** Setup, Foundational and Polish stay with you — Setup is trivial, Foundational blocks every story, Polish is cross-cutting. A **story phase** is the unit worth handing off, because it is minutes of work and pages of reading, and every file you open is context you then carry for the rest of the run: on one measured run, reading was 87% of everything the implementing agent took in. Never fan out per *task* — a task is seconds of work against a comparable startup, so it saves nothing and it was tried.
 
    **Only dispatch story phases whose files are disjoint.** Every task line names its exact file, so compare the file names across the phases before dispatching: two phases naming the same file are not independent whatever the story numbering says, and those run one after another in priority order. Give each worker its phase's task lines, that user story from `spec.md`, and the plan's Structure Decision — then ask it to read what it needs, write the code **and that story's tests**, run the suite, and return only a distilled result: what it built, the files it touched, and any test still failing. A worker that returns file contents has defeated the point.
@@ -109,6 +129,8 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    - **A test file that does not compile counts as failing.** Check the suite actually ran, not merely that the command exited.
    - **If you genuinely cannot run them** — no test script exists, or the environment forbids it — say so explicitly in the summary and record it as a concern below. Do not describe a read-through as though it were a run.
 
+   **Then read your own diff once more and ask what can be deleted.** A helper with one caller, a branch no input reaches, a wrapper that only forwards, a test asserting what the type already guarantees. Deleting it now costs nothing; deleting it in six months costs an argument.
+
    Then report a short summary of what was built and anything left undone.
 
 7. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
@@ -116,7 +138,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
      "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
      "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
-     "concerns":   [{"note": "<friction/workaround/residual risk>", "step": "implement"}],
+     "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling you left in the code>", "step": "implement"}],
      "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
      "step_summary": {"summary": "<what shipped in one line>"},
      "last_action": "<final breadcrumb, e.g. all tasks done — 18/18 tests pass>"
@@ -222,6 +244,8 @@ This is one step in the Companion pipeline. How the run continues depends on the
 ## Node hooks — run the project's `before`/`after` inserts
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
+
+**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
 
 **Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 

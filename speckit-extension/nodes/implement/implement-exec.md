@@ -10,6 +10,10 @@ reads: []
 
 2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other (any order is safe), and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done** before starting the next. Halt on a failed task and report the cause.
 
+<!-- speckit-companion:part least-code -->
+
+<!-- /speckit-companion:part least-code -->
+
 3. **Hand each user-story phase to a worker where your host has one; build everything else yourself.** Setup, Foundational and Polish stay with you — Setup is trivial, Foundational blocks every story, Polish is cross-cutting. A **story phase** is the unit worth handing off, because it is minutes of work and pages of reading, and every file you open is context you then carry for the rest of the run: on one measured run, reading was 87% of everything the implementing agent took in. Never fan out per *task* — a task is seconds of work against a comparable startup, so it saves nothing and it was tried.
 
    **Only dispatch story phases whose files are disjoint.** Every task line names its exact file, so compare the file names across the phases before dispatching: two phases naming the same file are not independent whatever the story numbering says, and those run one after another in priority order. Give each worker its phase's task lines, that user story from `spec.md`, and the plan's Structure Decision — then ask it to read what it needs, write the code **and that story's tests**, run the suite, and return only a distilled result: what it built, the files it touched, and any test still failing. A worker that returns file contents has defeated the point.
@@ -38,6 +42,8 @@ reads: []
    - **A test file that does not compile counts as failing.** Check the suite actually ran, not merely that the command exited.
    - **If you genuinely cannot run them** — no test script exists, or the environment forbids it — say so explicitly in the summary and record it as a concern below. Do not describe a read-through as though it were a run.
 
+   **Then read your own diff once more and ask what can be deleted.** A helper with one caller, a branch no input reaches, a wrapper that only forwards, a test asserting what the type already guarantees. Deleting it now costs nothing; deleting it in six months costs an argument.
+
    Then report a short summary of what was built and anything left undone.
 
 7. **Capture what was verified and decided** — the audit trail a resume/handoff needs, recorded the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
@@ -45,7 +51,7 @@ reads: []
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
      "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
      "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
-     "concerns":   [{"note": "<friction/workaround/residual risk>", "step": "implement"}],
+     "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling you left in the code>", "step": "implement"}],
      "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
      "step_summary": {"summary": "<what shipped in one line>"},
      "last_action": "<final breadcrumb, e.g. all tasks done — 18/18 tests pass>"

@@ -26,6 +26,8 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
+**Pass the dispatcher's clock when you were given one.** A GUI or harness that dispatched this step already stamped the moment it did so and prints it as a dispatch time. Add `--at "<that timestamp>"` and the entry carries it; with no dispatch time given, omit the flag and the script stamps now. `--at` is refused on anything but a start, because a hand-chosen clock on a finish is the batching defect the doctor looks for.
+
 Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
@@ -120,6 +122,8 @@ If a project has no checkpoint hooks, `unattended: true` simply has nothing to a
 ## Node hooks — run the project's `before`/`after` inserts
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
+
+**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
 
 **Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
