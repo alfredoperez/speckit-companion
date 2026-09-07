@@ -7,11 +7,11 @@ drift) call instead of re-interpreting the project's capability registry
 
   - membership:  a file belongs to a capability if it matches any `match` glob
                  and no `exclude` glob.
-  - path:        centralized -> `capabilities/<name>/spec.md` (default), or the
+  - path:        centralized -> `capabilities/<name>/<name>.spec.md` (default), or the
                  explicit `spec` path (colocated).
   - discovery:   union of configured capabilities and the on-disk scan of both
                  layouts (colocated `*.spec.md` and centralized
-                 `capabilities/<name>/spec.md`), de-duped by resolved spec path
+                 `capabilities/<name>/<name>.spec.md`), de-duped by resolved spec path
                  and by name.
   - boundary:    a subdirectory with its own capability registry (or legacy
                  `.specify/companion.yml`) is a separate project — the scan stops
@@ -277,7 +277,7 @@ def _location(cap: dict) -> str:
     """Centralized means "under the capability root", not one exact filename.
 
     A capability folder holds one spec or several granular ones, so equality
-    with `capabilities/<name>/spec.md` called every split spec colocated and
+    with `capabilities/<name>/<name>.spec.md` called every split spec colocated and
     sent `living-move` the wrong way.
     """
     spec = _posix(cap.get("spec") or "")

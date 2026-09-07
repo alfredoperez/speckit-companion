@@ -498,6 +498,8 @@ def validate_reads(active_meta: dict, stands_in: dict = None):
 # Living Specs accessor (opt-in capability registry)
 # --------------------------------------------------------------------------- #
 DEFAULT_CAPABILITY_ROOT = "capabilities"
+#: A spec is named for what it describes, so every living spec ends in this.
+SPEC_SUFFIX = ".spec.md"
 DEFAULT_EXEMPT_GLOBS = ["*.config.*", "*.test.*", "**/migrations/**"]
 
 # At the project root, outside `.specify/`, which routine cleanup restores wholesale.
@@ -560,7 +562,7 @@ def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
     Returns {"enabled": bool, "exempt": [glob], "capabilities": [{name, match, exclude, spec}]}.
     `enabled` defaults to False (opt-in). `exempt` is the drift exempt-glob list,
     defaulting to DEFAULT_EXEMPT_GLOBS when unset. Each capability normalizes `match`/`exclude`
-    to string lists and defaults `spec` to `capabilities/<name>/spec.md`. A capability
+    to string lists and defaults `spec` to `capabilities/<name>/<name>.spec.md`. A capability
     whose `spec` is declared but empty keeps "" so the resolver can flag the bad path.
 
     A mapping carrying a `livingSpecs` key is unwrapped, so the registry file accepts
@@ -587,16 +589,23 @@ def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
         if not name:
             continue
         name = str(name)
-        if "spec" in entry:
+        declared = "spec" in entry
+        if declared:
             spec = "" if entry.get("spec") in (None, "") else str(entry["spec"])
         else:
-            spec = f"{DEFAULT_CAPABILITY_ROOT}/{name}/spec.md"
+            # A spec is named for what it describes, so `spec.md` is never a name
+            # this writes. `resolve_living_specs` falls back to the legacy name for
+            # a registry written before the rename, because it can see the disk.
+            spec = f"{DEFAULT_CAPABILITY_ROOT}/{name}/{name}{SPEC_SUFFIX}"
         capabilities.append(
             {
                 "name": name,
                 "match": _as_list(entry.get("match")),
                 "exclude": _as_list(entry.get("exclude")),
                 "spec": spec,
+                # Only a defaulted path may be reinterpreted against the disk; a
+                # declared one is what its author asked for.
+                "spec_defaulted": not declared,
                 # Emptying a capability's spec is a deliberate act. Absent is
                 # false, which is every capability that never says otherwise.
                 "retire": entry.get("retire") is True,
@@ -613,6 +622,29 @@ def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
 # --------------------------------------------------------------------------- #
 # Where the capability registry lives (the one answer both writers and readers use)
 # --------------------------------------------------------------------------- #
+LEGACY_CENTRAL_SPEC = "spec.md"
+
+
+def _settle_default_specs(living: dict, root: str) -> dict:
+    """Point a capability with no declared `spec` at whichever central file exists.
+
+    The central path used to be `capabilities/<name>/<name>.spec.md` and is now
+    `capabilities/<name>/<name>.spec.md`. A registry written before the rename
+    declares no path at all, so the only way to keep it reading is to look.
+    Neither present means nothing to read either way, and the new name stands so
+    that whatever writes next writes the current shape.
+    """
+    for cap in living.get("capabilities", []):
+        if not cap.get("spec_defaulted") or not cap.get("spec"):
+            continue
+        if os.path.exists(os.path.join(root, cap["spec"])):
+            continue
+        legacy = f"{DEFAULT_CAPABILITY_ROOT}/{cap['name']}/{LEGACY_CENTRAL_SPEC}"
+        if os.path.exists(os.path.join(root, legacy)):
+            cap["spec"] = legacy
+    return living
+
+
 def resolve_living_specs(root: str):
     """Return (living, meta) for a project root.
 
@@ -647,7 +679,7 @@ def resolve_living_specs(root: str):
                 "errors": [error],
             }
         rule_warnings = []
-        living = load_living_specs_block(doc, rule_warnings)
+        living = _settle_default_specs(load_living_specs_block(doc, rule_warnings), root)
         warnings = list(rule_warnings)
         if legacy_has_block:
             warnings.append(
@@ -663,7 +695,7 @@ def resolve_living_specs(root: str):
         }
 
     if legacy_has_block:
-        return load_living_specs(legacy_cfg), {
+        return _settle_default_specs(load_living_specs(legacy_cfg), root), {
             "origin": "legacy",
             "path": LEGACY_CONFIG_REL,
             "legacy_stale": False,

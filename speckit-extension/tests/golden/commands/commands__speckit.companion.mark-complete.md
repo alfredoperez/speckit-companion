@@ -63,7 +63,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spe
 ```
 
 This parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and
-applies each to the resolved `capabilities/<name>/spec.md` — the changed-files-matched capability for
+applies each to the resolved `capabilities/<name>/<name>.spec.md` — the changed-files-matched capability for
 unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest, so each
 capability spec receives only its own requirements. It is **opt-in** (only acts when
 `living-specs.yml` sets `enabled: true`), a **clean no-op** when the spec carries

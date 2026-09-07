@@ -55,7 +55,7 @@ For each proposed capability, derive:
 
 Living specs support two layouts, and the choice is the developer's:
 
-- **central** — every spec under `capabilities/<name>/spec.md`. One folder holds the whole record; easy to read end to end, and the spec stays put when code moves.
+- **central** — every spec under `capabilities/<capability>/<name>.spec.md`, one folder per capability holding one spec or several granular ones. Easy to read end to end, and the spec stays put when code moves.
 - **colocated** — the spec sits next to the code it describes, at `<area root>/<name>.spec.md`. Ownership is obvious, the spec travels with the code in a move, and it shows up in the same folder a developer already has open.
 
 If the invocation named a layout, use it. **Otherwise ask before proposing anything**, since the layout determines the spec paths shown at the review gate. Offer central, colocated, or per-capability, and say plainly that it can be changed later.
@@ -124,7 +124,7 @@ For each confirmed capability, register it so the shipped resolver recognizes it
 python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match "<glob>" [--match "<glob>" …] [--exclude "<glob>"] [--spec <path>]
 ```
 
-**Pass `--spec` for every capability**, central or colocated, with the same path you drafted the spec to. A spec is named for what it describes, so `spec.md` is never a filename you write and six open tabs stay tellable apart. The registry's own default is still the older `capabilities/<name>/spec.md`, which is why `--spec` is not optional. The helper emits `spec` only when it differs from that default, which keeps the config terse.
+**Pass `--spec` for every capability**, central or colocated, with the same path you drafted the spec to. A spec is named for what it describes, so `spec.md` is never a filename you write and six open tabs stay tellable apart. The helper emits `spec` only when it differs from the registry's default, `capabilities/<name>/<name>.spec.md`, which keeps the config terse.
 
 The registry lives at the project root, deliberately outside `.specify/`, so a routine `git restore … .specify/` can never wipe it. Commit `living-specs.yml` along with the specs it registers. If this project still keeps its capabilities in the older `.specify/companion.yml`, the helper moves them across on its first write and says so — nothing is lost and nothing needs doing by hand.
 
@@ -146,7 +146,7 @@ Summarize, in plain language: which capabilities you proposed and registered, th
 
 ## Boundaries
 
-- **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates `capabilities/<name>/spec.md` files and appends to the capability registry.
+- **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates spec files and appends to the capability registry.
 - **The layout is the developer's call.** Never assume central because it is the default. Ask when it was not specified, and show the resulting spec paths before writing anything.
 - **Only what was named.** Adopt the areas the developer named or chose, and nothing else. Several areas in one run is fine; silently widening past the agreed scope is not.
 - **Specify, don't transcribe.** A requirement that a prop rename would falsify is a bug in the draft, not a detail. Fewer, durable requirements beat an exhaustive inventory of the code.

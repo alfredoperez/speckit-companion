@@ -25,7 +25,7 @@ python3 .specify/extensions/companion/scripts/drift.py
 
 The script reads the capability registry (`living-specs.yml`), reuses the
 resolver for capability membership, and uses git to find what changed since each
-capability's `capabilities/<name>/spec.md` was last committed. Each drifted file
+capability's `capabilities/<name>/<name>.spec.md` was last committed. Each drifted file
 is classified:
 
 - **`tracked`** — the file went through the Companion pipeline (it appears in a

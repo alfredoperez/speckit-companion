@@ -2,7 +2,7 @@
 """Detect code that drifted from its Companion living spec.
 
 For each configured capability, report the source files that changed SINCE the
-capability's living spec (`capabilities/<name>/spec.md`) was last committed, and
+capability's living spec (`capabilities/<name>/<name>.spec.md`) was last committed, and
 classify each:
 
   - `tracked`   — the file appears in a `specs/*/.spec-context.json` recorded

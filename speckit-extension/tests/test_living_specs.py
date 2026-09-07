@@ -93,9 +93,27 @@ class ConfigReaderTests(unittest.TestCase):
         self.assertEqual(living["capabilities"], [])
 
     def test_centralized_spec_defaults_to_capabilities_path(self) -> None:
+        # A spec is named for what it describes, so the default carries the
+        # capability's name. `spec.md` is a legacy path this never writes.
         living = cc.load_living_specs(cc.load_yaml(CHECKOUT_YAML))
         cap = next(c for c in living["capabilities"] if c["name"] == "checkout")
+        self.assertEqual(cap["spec"], "capabilities/checkout/checkout.spec.md")
+        self.assertTrue(cap["spec_defaulted"])
+
+    def test_a_registry_written_before_the_rename_still_reads(self) -> None:
+        # The only signal is the disk: a capability that declares no path and has
+        # the legacy file beside it is pointed at the file that exists.
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/checkout/spec.md"])
+        living, _ = cc.resolve_living_specs(str(root))
+        cap = next(c for c in living["capabilities"] if c["name"] == "checkout")
         self.assertEqual(cap["spec"], "capabilities/checkout/spec.md")
+
+    def test_a_declared_path_is_never_reinterpreted(self) -> None:
+        root = make_repo(CHECKOUT_YAML, spec_files=["capabilities/checkout/spec.md"])
+        living, _ = cc.resolve_living_specs(str(root))
+        for cap in living["capabilities"]:
+            if not cap["spec_defaulted"]:
+                self.assertNotEqual(cap["spec"], "capabilities/checkout/spec.md")
 
     def test_explicit_spec_is_kept_as_colocated_path(self) -> None:
         yaml = (
@@ -383,7 +401,7 @@ class DiscoveryConsistencyTests(unittest.TestCase):
         allres = rsp.discover_all(living, str(root))
         checkout = [e for e in allres if e["name"] == "checkout"]
         self.assertEqual(len(checkout), 1)
-        self.assertEqual(checkout[0]["spec"], "capabilities/checkout/spec.md")
+        self.assertEqual(checkout[0]["spec"], "capabilities/checkout/checkout.spec.md")
 
 
 class CentralSpecDiscoveryTests(unittest.TestCase):
@@ -1592,7 +1610,7 @@ class FoldLivingSpecTests(unittest.TestCase):
             "# Feat\n\n## ADDED Requirements\n\n### Due dates\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n")
         result = wc.fold_living_spec(fdir, "ai")
         self.assertIsNotNone(result)
-        created = self._living(root)
+        created = self._living(root, "capabilities/todos/todos.spec.md")
         self.assertIn("# Todos — Living Spec", created)
         self.assertIn("## Requirements", created)
         self.assertIn("### Due dates", created)
@@ -1607,7 +1625,7 @@ class FoldLivingSpecTests(unittest.TestCase):
         fdir2 = _write_feature(root, "002-feat",
             "# Feat2\n\n## ADDED Requirements\n\n### Reminders\n\n#### Scenario: s\n- **WHEN** b\n- **THEN** c\n")
         wc.fold_living_spec(fdir2, "ai")
-        body = self._living(root)
+        body = self._living(root, "capabilities/todos/todos.spec.md")
         self.assertEqual(body.count("# Todos — Living Spec"), 1)
         self.assertEqual(body.count("## Requirements"), 1)
         self.assertIn("### Due dates", body)

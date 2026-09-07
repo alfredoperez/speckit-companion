@@ -182,7 +182,7 @@ def main(argv=None) -> int:
     ap.add_argument("--name", required=True, help="capability name (idempotency key)")
     ap.add_argument("--match", action="append", default=[], help="membership glob (repeatable)")
     ap.add_argument("--exclude", action="append", default=[], help="exclusion glob (repeatable)")
-    ap.add_argument("--spec", default=None, help="spec path (default: capabilities/<name>/spec.md)")
+    ap.add_argument("--spec", default=None, help="spec path (default: capabilities/<name>/<name>.spec.md)")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--replaces", action="append", default=[],
                     help="a capability this one supersedes — its entry is removed (repeatable)")

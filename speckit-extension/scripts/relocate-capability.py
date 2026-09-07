@@ -41,7 +41,7 @@ import companion_config as cc  # noqa: E402
 
 CONFIG_REL = cc.LIVING_SPECS_REL
 LEGACY_CONFIG_REL = cc.LEGACY_CONFIG_REL
-SPEC_SUFFIX = ".spec.md"
+SPEC_SUFFIX = cc.SPEC_SUFFIX
 
 
 def _load_sibling(module_name: str, filename: str):
@@ -169,7 +169,7 @@ def _target_spec(root: str, cap: dict, to: str, spec_override: str | None) -> st
     if to == "central":
         # `capabilities/<capability>/<name>.spec.md`, the shape adoption writes
         # and `living-move`'s own doc promises. `_default_spec` still answers the
-        # legacy `capabilities/<name>/spec.md` so a registry written before the
+        # legacy `capabilities/<name>/<name>.spec.md` so a registry written before the
         # rename keeps resolving; moving a capability is not the place to keep it.
         return f"{cc.DEFAULT_CAPABILITY_ROOT}/{cap['name']}/{cap['name']}{SPEC_SUFFIX}"
     return f"{_area_root(root, cap)}/{cap['name']}{SPEC_SUFFIX}"
