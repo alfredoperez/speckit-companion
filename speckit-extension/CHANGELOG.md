@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **A requirement's file marker survives a markdown formatter.** The marker is read from the first line under the heading that is not blank, rather than strictly the next line, so a formatter's blank line no longer unmarks every requirement in a spec and sends every load back to reading the file whole.
 
 ### Fixed
+- **A run stops handing work to helpers that would only re-read what it already has.** Implement dispatches a worker per user story so the files each story needs are read once, in the worker, and never carried by the main run. At the end of an auto run that saving is already gone: specify, plan and tasks opened the code in the same session, so a helper would read it a second time for nothing. The rule now says which case it is in, and a run that keeps a story to itself says so in its summary. A run invoked as its own step still hands off every story, as it always did.
 - **Central living specs are described the same way everywhere.** Half the commands and docs still called the central path `capabilities/<name>/spec.md` while `living-move` wrote and documented `capabilities/<capability>/<name>.spec.md`, so the first thing a new reader learned about central layout was a filename the tooling no longer writes. The registry's own default has moved to the current shape too. A project written before the rename keeps working: a capability that declares no path is pointed at whichever of the two files is actually on disk.
 
 ### Added
