@@ -141,3 +141,51 @@ describe('SpecKitDetector', () => {
         });
     });
 });
+
+/**
+ * `/speckit.constitution` writes a Sync Impact Report at the top of the file, an
+ * HTML comment listing every placeholder it replaced. A finished constitution
+ * therefore still contains the words `[PRINCIPLE_1_NAME]`, and the sidebar kept
+ * offering Configure Constitution to projects that had already configured one.
+ */
+describe('constitution placeholder detection', () => {
+    const fs = require('fs');
+
+    const FINISHED = `<!--
+Sync Impact Report
+Modified principles: all five placeholders replaced with concrete project principles
+  [PRINCIPLE_1_NAME] → I. Downward-Only Layer Dependencies
+  [PRINCIPLE_2_NAME] → II. Slice File Naming
+-->
+
+# Conduit Constitution
+
+## I. Downward-Only Layer Dependencies
+An entity imports only from shared.
+`;
+
+    const UNFILLED = `# [PROJECT_NAME] Constitution
+
+## [PRINCIPLE_1_NAME]
+Describe it here.
+`;
+
+    beforeEach(() => {
+        (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = [
+            { uri: { fsPath: '/repo' }, name: 'repo', index: 0 },
+        ];
+        (fs.existsSync as jest.Mock).mockReturnValue(true);
+    });
+
+    it('does not read the report of a replacement as the placeholder itself', async () => {
+        (fs.readFileSync as jest.Mock).mockReturnValue(FINISHED);
+        (SpecKitDetector as unknown as { instance?: unknown }).instance = undefined;
+        expect(await SpecKitDetector.getInstance().checkConstitutionSetup()).toBe(false);
+    });
+
+    it('still catches a constitution nobody has filled in', async () => {
+        (fs.readFileSync as jest.Mock).mockReturnValue(UNFILLED);
+        (SpecKitDetector as unknown as { instance?: unknown }).instance = undefined;
+        expect(await SpecKitDetector.getInstance().checkConstitutionSetup()).toBe(true);
+    });
+});

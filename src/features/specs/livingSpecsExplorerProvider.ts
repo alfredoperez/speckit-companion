@@ -122,9 +122,11 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                     message = 'Living Specs are off';
                     tooltip = 'Set enabled: true in living-specs.yml to track capability specs.';
                 } else {
-                    message = 'No living specs in this project';
-                    tooltip = 'Set up living specs to create the registry, then adopt a code area '
-                        + 'to write the first one.';
+                    // A project with no registry gets welcome content with a button:
+                    // install the spec-kit extension, or set living specs up. VS Code
+                    // only renders that when the tree is EMPTY, so a row here — even a
+                    // helpful one — is what hides the only action a new user has.
+                    return notices;
                 }
                 return [...notices, LivingSpecItem.info(message, tooltip)];
             }

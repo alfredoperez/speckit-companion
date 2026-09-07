@@ -60,9 +60,10 @@ describe('LivingSpecsExplorerProvider', () => {
         expect((roots[0].iconPath as vscode.ThemeIcon).id).toBe('info');
     });
 
-    it('a project with no registry is told how to make one, not to flip a flag', async () => {
-        // `specify init` writes no living-specs.yml, so "set enabled: true in
-        // living-specs.yml" pointed at a file that does not exist.
+    it('leaves the root empty with no registry, so the welcome buttons can show', async () => {
+        // `specify init` writes no living-specs.yml. VS Code renders viewsWelcome
+        // only for an EMPTY tree, so a row here — however helpful its wording —
+        // is what hides Install and Set up, the only actions a new user has.
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: false,
             capabilities: [],
@@ -70,11 +71,21 @@ describe('LivingSpecsExplorerProvider', () => {
             configured: false,
         });
 
+        expect(await provider.getChildren()).toEqual([]);
+    });
+
+    it('still speaks up when a registry exists', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: false,
+            capabilities: [],
+            orphans: [],
+            configured: true,
+        });
+
         const roots = await provider.getChildren();
 
         expect(roots).toHaveLength(1);
-        expect(roots[0].label).toBe('No living specs in this project');
-        expect(String(roots[0].tooltip)).toContain('Set up living specs');
+        expect(roots[0].label).toBe('Living Specs are off');
     });
 
     it('says the registry is unreadable instead of claiming living specs are off', async () => {
@@ -124,10 +135,12 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(roots[0].tooltip).toContain('living-specs.yml');
     });
 
-    it('never returns a blank root', async () => {
+    it('never returns a blank root once a registry exists', async () => {
+        // Blank is correct only where welcome content covers it, which is the
+        // no-registry case. With a registry there is always something to say.
         for (const listing of [
-            { enabled: false, capabilities: [], orphans: [] },
-            { enabled: true, capabilities: [], orphans: [] },
+            { enabled: false, capabilities: [], orphans: [], configured: true },
+            { enabled: true, capabilities: [], orphans: [], configured: true },
         ]) {
             (readLivingSpecs as jest.Mock).mockReturnValue(listing);
             provider = createProvider();

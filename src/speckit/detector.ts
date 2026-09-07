@@ -132,8 +132,11 @@ export class SpecKitDetector {
 
         try {
             const content = fs.readFileSync(constitutionPath, 'utf-8');
-            // Check for common placeholder tokens
-            const hasPlaceholders = /\[PROJECT_NAME\]|\[PRINCIPLE_\d+_NAME\]|\[PLACEHOLDER\]/.test(content);
+            // The Sync Impact Report `/speckit.constitution` writes at the top is an
+            // HTML comment listing every placeholder it replaced, so a finished
+            // constitution still contains the words. Read the body only.
+            const body = content.replace(/<!--[\s\S]*?-->/g, '');
+            const hasPlaceholders = /\[PROJECT_NAME\]|\[PRINCIPLE_\d+_NAME\]|\[PLACEHOLDER\]/.test(body);
             this._constitutionNeedsSetup = hasPlaceholders;
             this.log(`Constitution needs setup: ${hasPlaceholders}`);
             await setContextKey(CONTEXT_KEYS.constitutionNeedsSetup, hasPlaceholders);
