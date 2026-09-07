@@ -26,9 +26,7 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
-**Pass the dispatcher's clock when you were given one.** A GUI or harness that dispatched this step already stamped the moment it did so and prints it as a dispatch time. Add `--at "<that timestamp>"` and the entry carries it; with no dispatch time given, omit the flag and the script stamps now. `--at` is refused on anything but a start, because a hand-chosen clock on a finish is the batching defect the doctor looks for.
-
-Two things keep this honest:
+Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the script stamps now. Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
 - **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
@@ -74,6 +72,16 @@ Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`
 For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); the spec directory and its files are always created by the command body itself.
 <!-- /speckit-companion:part speckit-hooks -->
 
+<!-- speckit-companion:part smallest-thing -->
+## The smallest thing that works
+
+**Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later.
+
+**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
+<!-- /speckit-companion:part smallest-thing -->
+
 ## Outline
 
 Produce a dependency-ordered task list organized **by user story** into phases (Setup → Foundational → one phase per story → Polish), so each story is an independently testable increment.
@@ -88,24 +96,6 @@ Produce a dependency-ordered task list organized **by user story** into phases (
   - Keep every task line precise (the `T###`, the exact file, the requirement) — trim the framing, never the tasks themselves.
 
 This budget governs the step that follows. Where it would produce something the budget skips, omit it.
-<!-- speckit-companion:part least-code -->
-## Least code — the smallest thing that actually works
-
-Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail), which measured 54% fewer lines, 22% fewer tokens and 27% less time across twelve feature tasks with safety held at 100%.
-
-**Climb this ladder and stop at the first rung that holds.** Does it need to exist at all; is it already in this codebase; does the standard library do it; does the platform do it, a date input over a picker library, CSS over JavaScript, a constraint over application code; does a dependency the project already has; can it be one line; only then, the minimum code that works.
-
-**Fix the cause, not the symptom.** A report names one caller and the fix usually belongs where they all pass through, which is both the smaller change and the only one that leaves no sibling broken.
-
-**Delete rather than add, and boring rather than clever.** No interface with one implementation, no factory for one product, no configuration for a value that never changes, no scaffolding for a later that can scaffold itself.
-
-**The same ladder governs what you write, not just what you build.** A spec, plan, research note, data model, contract or task list is only worth its length if a reader acts on it. Do not restate what another artifact in this feature already says, do not write a requirement for what a type or a test already enforces, and do not add a third acceptance scenario unless it covers a failure the first two miss. A section with nothing to say is removed, never filled with "N/A" — and the recorded size is the budget, so a `simple` change gets the tasks without the ceremony around them.
-
-**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. This shortens the solution, never the reading: understand the whole path before choosing a rung.
-
-**Name a corner you cut on purpose** with `// simplified: <the ceiling>, <what to do when it binds>` in the code, and one matching `concerns` entry in this step's capture, so "later" has somewhere to be found.
-<!-- /speckit-companion:part least-code -->
-
 1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
 2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `- [ ] **T###** [P?] [US#] Description · exact/file/path`:
@@ -204,9 +194,7 @@ Idempotent, and a required deterministic write — skip only if `python3` is gen
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
 
-**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
-
-**Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
+**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn — an empty file is a project that declared nothing, not a broken one. Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
 **Hook types:**
 

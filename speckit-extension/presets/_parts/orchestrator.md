@@ -2,9 +2,7 @@
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
 
-**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
-
-**Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
+**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn — an empty file is a project that declared nothing, not a broken one. Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
 **Hook types:**
 

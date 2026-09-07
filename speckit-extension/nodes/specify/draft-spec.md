@@ -6,10 +6,6 @@ command: specify
 writes: spec.md
 reads: [resolve-dir]
 ---
-<!-- speckit-companion:part least-code -->
-
-<!-- /speckit-companion:part least-code -->
-
 2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder — plain language first, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
    - **User Scenarios & Testing** *(mandatory)* — the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:

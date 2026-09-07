@@ -26,9 +26,7 @@ In both cases the call is the same:
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step <step> --status <status> --kind start --by extension
 ```
 
-**Pass the dispatcher's clock when you were given one.** A GUI or harness that dispatched this step already stamped the moment it did so and prints it as a dispatch time. Add `--at "<that timestamp>"` and the entry carries it; with no dispatch time given, omit the flag and the script stamps now. `--at` is refused on anything but a start, because a hand-chosen clock on a finish is the batching defect the doctor looks for.
-
-Two things keep this honest:
+Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the script stamps now. Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
 - **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
@@ -74,6 +72,16 @@ Let `<step>` be this command's phase: `specify`, `plan`, `tasks`, or `implement`
 For `specify`, branch creation is normally one of these `before_specify` hooks (the git extension); the spec directory and its files are always created by the command body itself.
 <!-- /speckit-companion:part speckit-hooks -->
 
+<!-- speckit-companion:part smallest-thing -->
+## The smallest thing that works
+
+**Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later.
+
+**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
+
+**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
+<!-- /speckit-companion:part smallest-thing -->
+
 ## Outline
 
 Produce an implementation plan and its design artifacts in phases: load context → write `plan.md` (Summary, Constitution Check, Project Structure) → Phase 0 research → Phase 1 design (data model, contracts).
@@ -92,7 +100,7 @@ This budget governs every step that follows. Where a later step would produce so
 
 Then **investigate the codebase** to understand where this feature attaches: the patterns it must follow (state/store, routing, persistence, component and test conventions) and the exact files it will touch. Read inline by default. **The exception worth parallelizing:** a *large or unfamiliar* codebase with several **independent areas** to map — there, reading is genuinely heavy (each area means opening many files), so when your host has subagents, dispatch one read-only subagent per area in a single message, each returning a **distilled finding** (the pattern to copy, the concrete file paths, the conventions to match) rather than a dump of file contents. That is the case where a separate worker pays for its startup. For a small or familiar codebase, just read the areas yourself in turn — identical result, less overhead. Collect the findings as the research basis for the plan.
 
-   **Reuse the living specs already loaded, and read them by requirement (best-effort, opt-in, read-only).** If `specify` loaded living specs for this feature, it recorded them on `.spec-context.json` under `livingSpecs.loaded` — **reuse that record instead of re-resolving** — with one addition: specify recorded against the files it knew before drafting, and this plan usually names more. When the files you now know would touch a capability the record does not list, run `python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <all files this change touches>` once; it is additive and de-duplicated, so the record only ever widens, and the completion node then holds you to the full list. Read `<feature_directory>/.spec-context.json`; if `livingSpecs.loaded` lists capability names, ask the resolver what each should contribute for the files this change touches:
+   **Reuse the living specs already loaded, and read them by requirement (best-effort, opt-in, read-only).** If `specify` loaded living specs for this feature, it recorded them on `.spec-context.json` under `livingSpecs.loaded` — **reuse that record instead of re-resolving**. Specify recorded against the files it knew before drafting and this plan names more, so when they reach a capability the record misses, run `record-living-specs.py --feature-dir <feature_directory> --changed <every file this change touches>` once — additive and de-duped, so the record only widens. Read `<feature_directory>/.spec-context.json`; if `livingSpecs.loaded` lists capability names, ask the resolver what each should contribute for the files this change touches:
    ```bash
    python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <files…> --requirements-for --json
    ```
@@ -101,24 +109,6 @@ Then **investigate the codebase** to understand where this feature attaches: the
    **Honor the project's authored plan rules.** That same call carries a `rules` object: `rules.plan` is a short list of one-line house rules the project wrote once in its registry instead of retyping them into chat on every run. Read **only** `rules.plan` here — `rules.spec` belongs to the specify step — and treat each line as an instruction while writing the plan and its design artifacts. An empty list is the normal case: say nothing about rules and plan as usual. These lines shape *how* the plan is written; they never add requirements or override anything in this command body.
 
    **Pull the architecture tier ONLY for an architecture-significant plan (lazy, opt-in, read-only).** A capability's living spec ships a cold sibling — `<spec>.arch.md` (structure, diagrams, the decisions behind the area's shape) — that the hot `.spec.md` deliberately leaves out. Load it **only when this plan is architecture-significant**, judged by the same recorded size signal the budget above uses: read `.spec-context.json` → `size` and load the arch tier when it is **`normal` or `oversized`**, and **never** when it is **`simple`** (a small fast-path change must not pay to pull the cold tier). Do not hardcode the `.arch.md` filename — ask the resolver for each loaded capability's tier paths and read the `arch` one when it exists: `python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --all --json` returns each capability's `tiers.arch.path` and `tiers.arch.exists`. For every capability you loaded above, if `tiers.arch.exists` is true read `tiers.arch.path` into context as the structural frame for the plan; skip any whose arch tier is absent. This is best-effort and read-only exactly like the spec load — a missing config, missing tier, or unavailable resolver is skipped silently and never blocks or fails the plan, and you never write an `.arch.md` from here.
-<!-- speckit-companion:part least-code -->
-## Least code — the smallest thing that actually works
-
-Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail), which measured 54% fewer lines, 22% fewer tokens and 27% less time across twelve feature tasks with safety held at 100%.
-
-**Climb this ladder and stop at the first rung that holds.** Does it need to exist at all; is it already in this codebase; does the standard library do it; does the platform do it, a date input over a picker library, CSS over JavaScript, a constraint over application code; does a dependency the project already has; can it be one line; only then, the minimum code that works.
-
-**Fix the cause, not the symptom.** A report names one caller and the fix usually belongs where they all pass through, which is both the smaller change and the only one that leaves no sibling broken.
-
-**Delete rather than add, and boring rather than clever.** No interface with one implementation, no factory for one product, no configuration for a value that never changes, no scaffolding for a later that can scaffold itself.
-
-**The same ladder governs what you write, not just what you build.** A spec, plan, research note, data model, contract or task list is only worth its length if a reader acts on it. Do not restate what another artifact in this feature already says, do not write a requirement for what a type or a test already enforces, and do not add a third acceptance scenario unless it covers a failure the first two miss. A section with nothing to say is removed, never filled with "N/A" — and the recorded size is the budget, so a `simple` change gets the tasks without the ceremony around them.
-
-**Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. This shortens the solution, never the reading: understand the whole path before choosing a rung.
-
-**Name a corner you cut on purpose** with `// simplified: <the ceiling>, <what to do when it binds>` in the code, and one matching `concerns` entry in this step's capture, so "later" has somewhere to be found.
-<!-- /speckit-companion:part least-code -->
-
 2. Create `<feature_directory>/plan.md` with these sections, in order (this is the full, `normal`/`oversized` shape — the **size budget above governs**: at `simple` size it keeps only the Summary and skips the rest unless genuinely needed). Lead each with prose; reserve `inline code` for real identifiers (paths, types, packages), not ordinary nouns — a sentence that is mostly code spans is a rewrite.
    - **Summary** — 2–4 plain-language sentences: the primary requirement plus the technical approach. If a stack choice genuinely isn't obvious from the codebase (a new language, a newly-added dependency, a non-default storage or test setup), name it in a sentence here; otherwise don't restate the project's known stack.
    - **Project Structure** — the concrete source layout this feature touches, as a short tree of real directories/files, plus a one-line **Structure Decision**. Use the actual paths; do not leave placeholder option-trees in the output. *(Skipped at `simple` size per the budget — the task list already names every file.)*
@@ -207,9 +197,7 @@ Idempotent, and a required deterministic write — skip only if `python3` is gen
 
 This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
 
-**An empty or absent `.specify/companion.yml` means no hooks — skip silently.** A zero-byte file is a project that has the file and has declared nothing, which is the common case on a fresh `specify init`; it is not malformed and must not warn.
-
-**Find the hooks for this command.** Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
+**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn — an empty file is a project that declared nothing, not a broken one. Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
 **Hook types:**
 

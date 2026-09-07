@@ -5,10 +5,10 @@
     "speckit.companion.after-plan.md": 4,
     "speckit.companion.after-specify.md": 4,
     "speckit.companion.after-tasks.md": 4,
-    "speckit.companion.auto.md": 39,
+    "speckit.companion.auto.md": 37,
     "speckit.companion.classify.md": 6,
     "speckit.companion.doctor.md": 13,
-    "speckit.companion.implement.md": 56,
+    "speckit.companion.implement.md": 51,
     "speckit.companion.living-adopt.md": 42,
     "speckit.companion.living-coverage.md": 3,
     "speckit.companion.living-drift.md": 4,
@@ -17,21 +17,21 @@
     "speckit.companion.living-sync.md": 13,
     "speckit.companion.living-validate.md": 3,
     "speckit.companion.mark-complete.md": 5,
-    "speckit.companion.plan.md": 62,
+    "speckit.companion.plan.md": 57,
     "speckit.companion.resume.md": 12,
-    "speckit.companion.specify.md": 79,
+    "speckit.companion.specify.md": 74,
     "speckit.companion.status.md": 6,
-    "speckit.companion.tasks.md": 64
+    "speckit.companion.tasks.md": 59
   },
   "words": {
     "speckit.companion.after-implement.md": 290,
     "speckit.companion.after-plan.md": 294,
     "speckit.companion.after-specify.md": 249,
     "speckit.companion.after-tasks.md": 294,
-    "speckit.companion.auto.md": 2391,
+    "speckit.companion.auto.md": 2313,
     "speckit.companion.classify.md": 296,
     "speckit.companion.doctor.md": 1215,
-    "speckit.companion.implement.md": 4526,
+    "speckit.companion.implement.md": 4247,
     "speckit.companion.living-adopt.md": 2874,
     "speckit.companion.living-coverage.md": 327,
     "speckit.companion.living-drift.md": 506,
@@ -40,10 +40,10 @@
     "speckit.companion.living-sync.md": 863,
     "speckit.companion.living-validate.md": 512,
     "speckit.companion.mark-complete.md": 566,
-    "speckit.companion.plan.md": 4588,
+    "speckit.companion.plan.md": 4305,
     "speckit.companion.resume.md": 370,
-    "speckit.companion.specify.md": 5649,
+    "speckit.companion.specify.md": 5391,
     "speckit.companion.status.md": 306,
-    "speckit.companion.tasks.md": 3638
+    "speckit.companion.tasks.md": 3380
   }
 }

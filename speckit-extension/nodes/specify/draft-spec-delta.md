@@ -6,10 +6,6 @@ command: specify
 writes: spec.md
 reads: [resolve-dir]
 ---
-<!-- speckit-companion:part least-code -->
-
-<!-- /speckit-companion:part least-code -->
-
 2. Create `<feature_directory>/spec.md` describing **only what changes**. This is the brownfield shape: the system already behaves some way, and a full specification of behaviour that is not moving buries the part that is. Write for a business stakeholder — plain language, **what** and **why**, not **how**. Reserve `inline code` for literal identifiers a reader would copy.
 
    Read the current behaviour before writing. If living specs or prior specs describe this area, they are what you are proposing to change; a delta written without reading them is a guess.

@@ -6,10 +6,6 @@ command: tasks
 writes: tasks.md
 reads: []
 ---
-<!-- speckit-companion:part least-code -->
-
-<!-- /speckit-companion:part least-code -->
-
 1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load `plan.md` and `spec.md` (required), plus `data-model.md`, `contracts/`, and `research.md` if present.
 
 2. Create `<feature_directory>/tasks.md` organized **by user story**, so each story can be implemented, tested, and delivered as an independent increment. Use the line format `- [ ] **T###** [P?] [US#] Description · exact/file/path`:

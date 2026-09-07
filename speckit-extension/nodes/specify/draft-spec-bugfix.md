@@ -6,10 +6,6 @@ command: specify
 writes: spec.md
 reads: [resolve-dir]
 ---
-<!-- speckit-companion:part least-code -->
-
-<!-- /speckit-companion:part least-code -->
-
 2. Create `<feature_directory>/spec.md` as a **fix contract**: three statements of behaviour rather than a set of user stories. A fix is not a feature — nobody wants it, they want the defect gone — and the story shape makes people invent a journey to hold a bug.
 
    Reproduce it before writing. A contract written from the report rather than from the behaviour describes the report.
