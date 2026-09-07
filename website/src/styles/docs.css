@@ -206,8 +206,11 @@ body {
   line-height: var(--lh-prose);
 }
 
+/* The gap between two paragraphs has to beat the gap between two lines inside
+   one, or a run of them reads as a single block of grey. Line height is 1.65,
+   so the block margin sits just above it. */
 .sl-markdown-content :is(p, ul, ol) {
-  margin-block: 0.7em;
+  margin-block: 1.7em;
 }
 
 /* The line length. Only running text is held to it, so a figure, a reference
@@ -422,6 +425,18 @@ main > .content-panel:last-child {
   margin-inline: 0;
 }
 
+/* The grid, capped and centred. Starlight sizes the content pane as the column
+   plus half of whatever the viewport has spare, so on a wide screen the pane
+   keeps growing while the column stays 660px and the difference opens as dead
+   space between the last word and the contents rail. Cap the pair and there is
+   no spare to hand out: column and rail stay adjacent, and the grid centres. */
+@media (min-width: 72rem) {
+  .main-frame > div {
+    max-width: 62rem;
+    margin-inline: auto;
+  }
+}
+
 /* Sidebar. Quiet by default, with group labels as small tracked caps so the
    eye finds the section without the links themselves getting louder. With the
    guides split into groups, the row height is what decides whether the whole
@@ -461,12 +476,25 @@ starlight-menu-button + * a,
 
 /* Right rail. Reference furniture, so it stays the quietest text on the page. */
 starlight-toc a {
+  --pad-inline: 0.6rem;
   font-size: var(--fs-ui-sm);
   padding-block: 0.24rem;
   line-height: 1.4;
   color: var(--text-muted);
+  border-inline-start: 2px solid transparent;
+  margin-inline-start: -1px;
+  border-radius: 0;
+}
+
+/* Where you are. A hairline runs the length of the list and the current section
+   fills its own segment of it, so the position reads at a glance rather than
+   from a colour change alone. */
+starlight-toc nav > ul {
+  border-inline-start: 1px solid var(--rule);
 }
 
 starlight-toc a[aria-current='true'] {
   color: var(--accent);
+  border-inline-start-color: var(--accent);
+  font-weight: var(--fw-semibold);
 }
