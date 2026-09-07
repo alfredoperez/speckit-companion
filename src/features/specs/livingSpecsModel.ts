@@ -421,17 +421,19 @@ function isProjectRoot(dir: string): boolean {
 }
 
 /**
- * True for `<capability root>/<name>/spec.md` — the centralized layout, whose
- * filename is exactly `spec.md` and so never ends in `.spec.md`.
+ * True for a spec under the capability root — `<root>/<capability>/<name>.spec.md`,
+ * one file or several granular ones in the same folder. The legacy `spec.md`
+ * filename is still accepted so a project that has not migrated keeps working.
  */
 function isCentralSpec(rel: string): boolean {
     const parts = rel.split('/');
-    return parts.length === 3 && parts[0] === DEFAULT_CAPABILITY_ROOT && parts[2] === 'spec.md';
+    return parts.length === 3 && parts[0] === DEFAULT_CAPABILITY_ROOT
+        && (parts[2] === 'spec.md' || parts[2].endsWith('.spec.md'));
 }
 
 /**
  * Repo-relative POSIX paths of every living spec belonging to this project —
- * colocated `*.spec.md` and centralized `<capability root>/<name>/spec.md`.
+ * colocated `*.spec.md` and centralized `<capability root>/<capability>/<name>.spec.md`.
  * A subdirectory carrying its own registry or legacy config is a separate
  * project and is pruned; `root`'s own config is not a boundary against itself.
  */

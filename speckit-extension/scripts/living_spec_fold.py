@@ -290,7 +290,7 @@ def _deltas_for(deltas: dict, cap_name: str, is_default: bool) -> dict:
 
 
 def _initial_living_spec(capability_name: str) -> str:
-    """A minimal well-formed living-spec scaffold for a capability whose spec.md
+    """A minimal well-formed living-spec scaffold for a capability whose spec file
     doesn't exist yet, so the first ADDED fold creates a titled, sectioned spec
     (the accumulation story LS·4 relies on) rather than a headerless fragment.
     The slug is humanized into a title; ADDED requirements append under
@@ -468,7 +468,7 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
     Opt-in (livingSpecs.enabled) and best-effort: any miss (feature off, no
     config, no resolver, no delta block, no spec file) is a clean no-op that
     returns None and writes nothing. On a real fold, applies the deltas to each
-    target's capabilities/<name>/spec.md, records the synced names onto
+    target's registered spec path, records the synced names onto
     livingSpecs.synced, logs a one-line per-capability summary, and returns the
     updated .spec-context.json path. Idempotent: re-running folds nothing new."""
     root = _repo_root_for(feature_dir)

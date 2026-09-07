@@ -33,12 +33,16 @@ capabilities:
     spec: speckit-extension/scripts/capture-runtime.spec.md
   - name: companion-commands
     match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]
+    spec: capabilities/companion-commands/companion-commands.spec.md
   - name: extension-services
     match: ["src/features/agents/**", "src/features/skills/**", "src/features/settings/**", "src/features/permission/**"]
+    spec: capabilities/extension-services/extension-services.spec.md
   - name: webview-shared
     match: ["webview/src/markdown/**", "webview/src/render/**", "webview/src/shared/**", "webview/src/ui/**"]
+    spec: capabilities/webview-shared/webview-shared.spec.md
   - name: workflows
     match: ["src/features/workflows/**", "src/features/workflow-editor/**", "speckit-extension/workflows/**"]
+    spec: capabilities/workflows/workflows.spec.md
 
 # House rules, written once here instead of retyped into chat on every run.
 # `spec` reaches the specify step, `plan` reaches the plan step, and neither

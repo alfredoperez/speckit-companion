@@ -135,6 +135,10 @@ The exact required structure:
 6. **`[NEEDS CLARIFICATION: …]`** — append this marker inline to any requirement you are genuinely unsure about (an ambiguous name, an inferred behavior you could not confirm). Use it sparingly — it flags the low-confidence items for a human to resolve, and step 3 walks them.
 7. **`## Uncovered`** — a section listing every file you could **not** read (unreadable or over budget), one per line, so the draft's coverage is honest. If you read everything, write `_None — every file in the area was read._`
 
+**Cut where the architecture's rules live, and read `CLAUDE.md` first to find out where that is.** A layered codebase keeps its load-bearing rules *between* layers — imports go one way, a slice never reaches sideways — so a cut by business noun has nowhere to put them: measured once, a by-noun cut of a Feature-Sliced app lost three of its five layering rules. Cut by layer there, by bounded context in a domain-shaped codebase.
+
+**A capability is a folder, not a file.** Past 8 requirements or 160 lines, split it at the review gate — `capabilities/<capability>/<concern>.spec.md`, or `<area>/<capability>-<concern>.spec.md` colocated — one registry entry each.
+
 **Write less than the code would let you.** Adoption over-describes by default — one adopted spec came out at 508 lines — and every line is context a later run carries. Four rules hold it down:
 
 - **One requirement per observable SHALL.** A heading states one thing the area guarantees. Two guarantees are two headings; a heading that needs "and" is usually two.
@@ -170,7 +174,7 @@ For each confirmed capability, register it so the shipped resolver recognizes it
 python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match "<glob>" [--match "<glob>" …] [--exclude "<glob>"] [--spec <path>]
 ```
 
-**Pass `--spec` for every colocated capability**, with the same path you drafted the spec to. Omit it for central ones — the helper emits `spec` only when it differs from the centralized default, which keeps the config terse.
+**Pass `--spec` for every capability**, central or colocated, with the same path you drafted the spec to. A spec is named for what it describes, so `spec.md` is never a filename you write and six open tabs stay tellable apart. The registry's own default is still the older `capabilities/<name>/spec.md`, which is why `--spec` is not optional. The helper emits `spec` only when it differs from that default, which keeps the config terse.
 
 The registry lives at the project root, deliberately outside `.specify/`, so a routine `git restore … .specify/` can never wipe it. Commit `living-specs.yml` along with the specs it registers. If this project still keeps its capabilities in the older `.specify/companion.yml`, the helper moves them across on its first write and says so — nothing is lost and nothing needs doing by hand.
 

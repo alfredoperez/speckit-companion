@@ -23,11 +23,18 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import companion_config as cc  # noqa: E402 — reached through the path above
+
 _REQ_RE = re.compile(r"^###(?!#)\s+(.+?)\s*$")
 _SCENARIO_RE = re.compile(r"^####(?!#)\s+Scenario\s*:\s*(.+?)\s*$", re.IGNORECASE)
 _SECTION_RE = re.compile(r"^##(?!#)\s+(.+?)\s*$")
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
+#: Past these a spec is a folder's worth of concerns in one file. Warnings, not
+#: gates — see `spec-too-large`.
+MAX_REQUIREMENTS = 8
+MAX_LINES = 160
+
 _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$",
                               re.IGNORECASE)
 #: Any markdown bullet, ordered or not. `+` is a bullet and a numbered list is
@@ -198,6 +205,22 @@ def fences_are_balanced(text: str) -> bool:
     return opened % 2 == 0
 
 
+def _split_advice(path: str) -> str:
+    """Where this spec's siblings go, which depends on how it is stored."""
+    if _posix_path(path).startswith(f"{cc.DEFAULT_CAPABILITY_ROOT}/"):
+        folder = _posix_path(path).rsplit("/", 1)[0]
+        return (f"Split it into granular specs in {folder}/, one per concern — "
+                f"`<concern>.spec.md` — and give each its own registry entry.")
+    folder, name = _posix_path(path).rsplit("/", 1)
+    stem = name[: -len(".spec.md")] if name.endswith(".spec.md") else name
+    return (f"Split it into sibling specs in {folder}/, one per concern — "
+            f"`{stem}-<concern>.spec.md` — and give each its own registry entry.")
+
+
+def _posix_path(p: str) -> str:
+    return p.replace(os.sep, "/")
+
+
 def check_living_spec(text: str, path: str, root: str | None = ".",
                       capability: str | None = None, offset: int = 0) -> list:
     """Every shape finding in one living spec, ordered by line.
@@ -275,6 +298,18 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                     "Point the marker at the files this requirement describes, or remove it.",
                     capability))
         i = j
+
+    reqs = sum(1 for i in range(len(lines)) if is_req(i))
+    if reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES:
+        # A capability with a wide surface is one folder, not one file. Warning
+        # only: splitting is a judgement about where the seams are, and a gate
+        # that blocks on it would just teach people to write fewer scenarios.
+        findings.append(_finding(
+            WARNING, "spec-too-large", path, 1,
+            f"{reqs} requirements over {len(lines)} lines — past "
+            f"{MAX_REQUIREMENTS} requirements or {MAX_LINES} lines a spec stops "
+            f"being something a reader holds in their head.",
+            _split_advice(path), capability))
 
     if not fences_are_balanced(text):
         # Reported first and at line 1, because everything below the unclosed
