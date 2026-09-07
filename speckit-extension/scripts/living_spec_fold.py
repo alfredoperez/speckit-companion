@@ -457,7 +457,16 @@ def _shape_errors(spec_text: str, spec_rel: str, targets: list, root: Path,
     out: dict = {}
     for f in findings:
         if f["severity"] != ERROR:
-            continue  # a warning describes untidiness, not damage
+            # Not a block, but not silence either: a warning here is the one
+            # chance to say "this ADDED heading restates one the spec already
+            # has" BEFORE it becomes a permanent second requirement. A run that
+            # folded two near-duplicates never saw this, because it was dropped.
+            print(
+                f"[companion] Living-spec fold: warning at {f['path']}:{f['line']} "
+                f"[{f['code']}] {f['message']} {f['fix']}",
+                file=sys.stderr,
+            )
+            continue
         out.setdefault(f.get("capability"), []).append(f)
     return out
 
