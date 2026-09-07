@@ -32,7 +32,7 @@
     ],
     "specify": [
       {
-        "artifact": "spec.md",
+        "artifact": "<short-name>.spec.md",
         "node": "draft-spec",
         "conditional": false
       },

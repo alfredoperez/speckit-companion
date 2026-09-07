@@ -21,12 +21,14 @@ import importlib
 import json
 import os
 import sys
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from _command_parts import decomposed_commands, read_node  # noqa: E402
+from spec_context import feature_spec_path  # noqa: E402
 
 MANIFEST_PATH = os.path.join(EXT, "commands", ".manifest.json")
 
@@ -100,6 +102,8 @@ def unproduced(manifest: dict, command: str, feature_dir: str) -> list:
         if entry.get("conditional"):
             continue
         target = os.path.join(feature_dir, entry["artifact"])
+        if entry["artifact"].endswith(".spec.md"):
+            target = str(feature_spec_path(Path(feature_dir)))
         if not os.path.isfile(target):
             missing.append(entry)
     return missing

@@ -5,7 +5,7 @@ kind: control
 command: specify
 reads: [branch]
 ---
-**Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, `spec.md` additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in `spec.md`); in **normal** mode, `spec.md` holds the four sections only and no `plan.md` / `tasks.md` are written here.
+**Output**: `<feature_directory>/<short-name>.spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode, the spec additionally carries an **Approach** section, and two lean files are emitted alongside it — `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec); in **normal** mode, the spec holds the four sections only and no `plan.md` / `tasks.md` are written here.
 
 **Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity. Five volleys used to be about eleven round-trips; batched, they are one write of the shared file.
 
@@ -19,9 +19,9 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 
 Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context` when there is nothing worth recording and `expectations` when the spec declares no non-goals — never invent either. **`workflow` is the one field that is not optional**: without it the shared writer defaults to `speckit`, and a later footer advance dispatches the stock command.
 
-**On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline as the `## Approach` section of `spec.md` and never reaches `plan`, which is where a full run records it. So when `verdict == "simple"`, put it in the `set` map alongside the rest — `"approach": "<one-line summary of the Approach section>"` — rather than paying a second call for it.
+**On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline as the `## Approach` section of the spec and never reaches `plan`, which is where a full run records it. So when `verdict == "simple"`, put it in the `set` map alongside the rest — `"approach": "<one-line summary of the Approach section>"` — rather than paying a second call for it.
 
-**Record completion.** After `spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
+**Record completion.** After `<short-name>.spec.md` is written, close the specify step — the extension stamps the real end (do **not** hand-write an `ai` complete for specify):
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```

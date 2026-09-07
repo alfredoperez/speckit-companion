@@ -1,5 +1,5 @@
 ---
-description: "Companion specify — spec.md with prioritized user stories"
+description: "Companion specify — a feature spec with prioritized user stories"
 ---
 
 ## User Input

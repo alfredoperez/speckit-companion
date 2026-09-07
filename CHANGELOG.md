@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **A feature spec is named for its feature.** Companion now writes `specs/012-offline-queue/offline-queue.spec.md` instead of `spec.md`, so three open specs read as three features in the tab bar rather than `spec.md` three times. The Specs tree, the viewer, step completion, and the living-spec checks find either name, so specs written before this and specs a stock `/speckit.specify` writes next to them keep working unchanged.
+
 ### Fixed
 - **The Living Specs panel stops telling you to flip a switch that isn't there.** A project with no living-specs registry — which is every project straight after `specify init` — was told to set `enabled: true` in a file that does not exist. It now says there are none in this project and points at the command that writes the first one.
 - **A living spec stored in a capability folder is shown as centrally stored again.** Specs named for their capability were being grouped as if they sat next to the code.

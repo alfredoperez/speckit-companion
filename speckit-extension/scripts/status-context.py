@@ -26,7 +26,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 wc = importlib.import_module("write-context")
 dff = importlib.import_module("derive-from-files")
-from spec_context import STEP_COMPLETED_STATUS, TERMINAL_STATUSES  # noqa: E402
+from spec_context import STEP_COMPLETED_STATUS, TERMINAL_STATUSES, feature_spec_path  # noqa: E402
 
 # Canonical forward pipeline (clarify/analyze are optional and not part of the
 # default next-action path). Mirrors src/core/types/specContext.ts STEP_NAMES.
@@ -92,7 +92,8 @@ def _should_prefer_disk(feature_dir: Path, rec_step: str, disk_step: str) -> boo
     if rec_step not in PIPELINE_ORDER:
         return True
     req = REQUIRED_FILE.get(rec_step)
-    if req and not (feature_dir / req).is_file():
+    req_path = feature_spec_path(feature_dir) if req == "spec.md" else feature_dir / req
+    if req and not req_path.is_file():
         return True
     return PIPELINE_ORDER.get(disk_step, -1) > PIPELINE_ORDER[rec_step]
 

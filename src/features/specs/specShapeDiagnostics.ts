@@ -61,14 +61,14 @@ export function findingsFor(
     return checkLivingSpec(text, rel, { capability });
 }
 
-/** The feature-spec half: a `spec.md` under `specs/`, checked for its deltas. */
+/** The feature-spec half: a `<name>.spec.md` (or stock `spec.md`) under `specs/`, checked for its deltas. */
 export function deltaFindingsFor(
     workspaceRoot: string,
     file: string,
     text: string
 ): Finding[] {
     const rel = path.relative(workspaceRoot, file).split(path.sep).join('/');
-    if (!/^specs\/[^/]+\/spec\.md$/.test(rel)) return [];
+    if (!/^specs\/[^/]+\/([^/]+\.)?spec\.md$/.test(rel)) return [];
     let listing;
     try {
         listing = readLivingSpecs(workspaceRoot, { withOrphans: false });

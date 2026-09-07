@@ -12,6 +12,7 @@ import {
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps, ConfigKeys } from '../../core/constants';
 import { readSpecContextSync } from './specContextManager';
+import { isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
 import { deriveDocumentState } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
 import { specStatusLabel, documentStateLabel, DocumentStatus } from './specStatusLabel';
@@ -374,7 +375,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      * Returns files that are not spec.md, plan.md, or tasks.md
      */
     private getRelatedDocs(specFullPath: string): string[] {
-        const mainDocs = ['spec.md', 'plan.md', 'tasks.md'];
+        const mainDocs = ['plan.md', 'tasks.md'];
         const results: string[] = [];
 
         const scanDir = (dirPath: string, relativePath: string = '') => {
@@ -392,7 +393,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                         scanDir(path.join(dirPath, entry.name), entryRelativePath);
                     } else if (entry.isFile() && entry.name.endsWith('.md')) {
                         // Skip core docs at root level
-                        if (!relativePath && mainDocs.includes(entry.name)) {
+                        if (!relativePath && (mainDocs.includes(entry.name) || isFeatureSpecFile(entry.name))) {
                             continue;
                         }
                         results.push(entryRelativePath);
@@ -559,7 +560,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
         }
-        const stepFiles = new Set(steps.map(s => getStepFile(s)));
+        const stepFiles = new Set(steps.map(s => resolveStepFile(specFullPath, s)));
 
         // Collect all sub-file paths across all steps so they can be excluded from related docs
         const allSubFiles = new Set<string>();
@@ -578,7 +579,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         const items: SpecItem[] = [];
 
         for (const step of steps) {
-            const file = getStepFile(step);
+            const file = resolveStepFile(specFullPath, step);
             const label = this.getStepLabel(step);
 
             // Try specFullPath first, then changeRoot for the file

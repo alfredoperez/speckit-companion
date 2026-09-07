@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Two steps of the specify command were both numbered six.**
 
 ### Changed
+- **The spec file is named for the feature.** `/speckit.companion.specify` now writes `<name>.spec.md` — `specs/012-offline-queue/offline-queue.spec.md` — instead of `spec.md`, so a tab bar with several specs open says which is which. Every later step, the status and doctor reports, and the living-spec fold read whichever name a spec was written with, so a stock `/speckit.plan` run on the same project and specs written before this change keep working as they are.
 - **The pipeline stops doing work nobody asked for.** Closing a task was two calls to the same script, one to record it and one to make it visible; it is now one, and the script had shipped that one-call form for months with nothing using it. Specify's wrap-up was about eleven separate writes of the same file and is now a single one. Every step re-read the workflow definition to learn which step came next, which is a constant, so each step now names its successor outright. Companion's own lifecycle hooks fired on Companion runs and rewrote what the step had just written; they still serve stock runs and are skipped on a Companion one. And completion was written three ways at the end of implement — the step's own final node is the only one that writes it now. Nothing about what gets recorded changes, only how many times the run stops to record it.
 
 ### Fixed
