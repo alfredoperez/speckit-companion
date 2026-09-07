@@ -3651,3 +3651,77 @@ It does the second thing.
         picked = rsp.requirements_for_change(rsp.requirement_slices(half), ["src/elsewhere.ts"])
         self.assertEqual([s["heading"] for s in picked], ["The second thing"],
                          "the unmarked requirement survives a change that matches nothing")
+
+
+# LS·8 — adoption is a claim; a run that builds against it is the confirmation.
+#
+# Adoption transcribes rules from a project's own conventions, and nothing has
+# checked that what it wrote is true. Marking each transcribed requirement makes
+# that visible, and the fold removes the mark the first time a real feature folds
+# a change onto that requirement. Nobody decides; using it is what promotes it.
+class AdoptedRequirementsArePromotedByUse(unittest.TestCase):
+    ADOPTED = """## Purpose
+
+Why this exists.
+
+## Requirements
+
+### An entity imports downward only
+<!-- touches: src/entities/** -->
+<!-- adopted: CLAUDE.md:18 -->
+
+An entity SHALL import only from shared.
+
+### Feeds are addressed by URL
+<!-- adopted: developer -->
+
+A feed is a URL.
+"""
+
+    def _fold(self, deltas):
+        import living_spec_fold as fold
+        return fold.apply_deltas(self.ADOPTED, deltas)
+
+    @staticmethod
+    def _deltas(modified=(), added=(), removed=(), renamed=()):
+        return {"added": list(added), "modified": list(modified),
+                "removed": list(removed), "renamed": list(renamed)}
+
+    def test_a_modified_requirement_loses_its_adopted_marker(self):
+        out, applied = self._fold(self._deltas(modified=[
+            ("An entity imports downward only",
+             "### An entity imports downward only\n\nAn entity imports only from shared.\n")]))
+        self.assertNotIn("adopted: CLAUDE.md:18", out)
+        self.assertEqual(applied["confirmed"], 1)
+
+    def test_the_file_marker_still_survives_the_promotion(self):
+        out, _ = self._fold(self._deltas(modified=[
+            ("An entity imports downward only",
+             "### An entity imports downward only\n\nAn entity imports only from shared.\n")]))
+        self.assertIn("<!-- touches: src/entities/** -->", out)
+
+    def test_untouched_requirements_keep_their_marker(self):
+        out, _ = self._fold(self._deltas(modified=[
+            ("An entity imports downward only",
+             "### An entity imports downward only\n\nChanged.\n")]))
+        self.assertIn("adopted: developer", out)
+
+    def test_a_rename_is_not_a_confirmation(self):
+        out, applied = self._fold(self._deltas(
+            renamed=[("Feeds are addressed by URL", "Feeds are addressed by their URL")]))
+        self.assertIn("adopted: developer", out)
+        self.assertEqual(applied["confirmed"], 0)
+
+    def test_a_delta_cannot_claim_adoption_for_itself(self):
+        out, _ = self._fold(self._deltas(modified=[
+            ("Feeds are addressed by URL",
+             "### Feeds are addressed by URL\n<!-- adopted: made-up.md:1 -->\n\nChanged.\n")]))
+        self.assertNotIn("made-up.md", out)
+
+    def test_the_marker_is_read_from_either_line_under_the_heading(self):
+        from living_validate import adopted_sources
+        self.assertEqual(
+            adopted_sources(["### R", "<!-- touches: a/** -->", "<!-- adopted: CLAUDE.md:1 -->"]),
+            "CLAUDE.md:1")
+        self.assertEqual(adopted_sources(["### R", "<!-- adopted: developer -->"]), "developer")
+        self.assertIsNone(adopted_sources(["### R", "<!-- touches: a/** -->", "body"]))

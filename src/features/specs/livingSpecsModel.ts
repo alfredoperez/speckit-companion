@@ -711,12 +711,22 @@ export interface RequirementSlice {
     heading: string;
     /** The marker's globs, absent when the requirement carries none. */
     touches?: string[];
+    /**
+     * Where adoption transcribed this requirement from, absent once a run has
+     * confirmed it. Adoption reads a project's conventions and writes what it
+     * finds; nothing has checked that it is true, and the fold clears this the
+     * first time a real change folds onto the requirement.
+     */
+    adopted?: string;
     /** Lines after the heading, up to the next `###`, the next `##`, or the end. */
     body: string[];
 }
 
 /** `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading. */
 const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+
+/** `<!-- adopted: CLAUDE.md:18 -->` — sits with the touches marker, under the heading. */
+const ADOPTED_RE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
 
 /** True for every line inside a fenced block, and for the fences themselves. */
 function fenceFlags(lines: string[]): boolean[] {
@@ -777,19 +787,38 @@ export function requirementSlices(specText: string): RequirementSlice[] {
         // every requirement in the spec (#690). Still only the first non-blank
         // line, so a marker discussed further
         // down is body, because a spec may legitimately discuss a marker.
-        const first = body.find(ln => ln.trim().length > 0);
-        const marker = first !== undefined ? first.match(TOUCHES_RE) : null;
+        // Two markers may sit here, `touches` then `adopted`, in either order and
+        // with blank lines anywhere among them. Both are parser metadata; handing
+        // either to a reader as prose is a leak, not a fact about the requirement.
+        let touchesMarker: RegExpMatchArray | null = null;
+        let adoptedMarker: RegExpMatchArray | null = null;
+        let cut = 0;
+        for (let k = 0; k < body.length; k++) {
+            if (body[k].trim().length === 0) {
+                continue;
+            }
+            const t = body[k].match(TOUCHES_RE);
+            const a = body[k].match(ADOPTED_RE);
+            if (!t && !a) {
+                break;
+            }
+            if (t && !touchesMarker) touchesMarker = t;
+            if (a && !adoptedMarker) adoptedMarker = a;
+            cut = k + 1;
+        }
         // An empty list is `undefined`, not `[]`: `<!-- touches: , -->` names no
         // file, so the requirement is unmarked. An empty array is truthy in TS
         // and would have made this half narrow where the Python half does not.
-        const globs = marker
-            ? marker[1].split(',').map((g) => g.trim()).filter(Boolean)
+        const globs = touchesMarker
+            ? touchesMarker[1].split(',').map((g) => g.trim()).filter(Boolean)
             : [];
         const touches = globs.length > 0 ? globs : undefined;
-        // The marker is parser metadata; handing it to a reader as prose is a
-        // leak, not a fact about the requirement.
-        if (marker) body = body.slice(1);
-        out.push(touches ? { heading: head[1], touches, body } : { heading: head[1], body });
+        const adopted = adoptedMarker ? adoptedMarker[1] : undefined;
+        if (cut > 0) body = body.slice(cut);
+        const slice: RequirementSlice = { heading: head[1], body };
+        if (touches) slice.touches = touches;
+        if (adopted) slice.adopted = adopted;
+        out.push(slice);
         i = j;
     }
     return out;

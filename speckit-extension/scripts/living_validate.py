@@ -34,6 +34,25 @@ _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
 #: Past these a spec is a folder's worth of concerns in one file; under the floor
 #: it is a paragraph with its own tab. Warnings, not gates.
+#: `<!-- adopted: CLAUDE.md:18 -->` — this requirement was transcribed by adoption
+#: and no run has confirmed it yet. It sits under the heading, after the `touches`
+#: marker so the resolver still finds that one on the first non-blank line.
+ADOPTED_LINE = re.compile(r"^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$")
+
+
+def adopted_sources(section: list[str]) -> str | None:
+    """Where a requirement was transcribed from, or None once a run has confirmed it.
+
+    Read from the two lines under the heading, because `touches` claims the first
+    of them and only one of the pair is ever mandatory.
+    """
+    for line in section[1:3]:
+        m = ADOPTED_LINE.match(line)
+        if m:
+            return m.group(1)
+    return None
+
+
 MAX_REQUIREMENTS = 8
 MAX_LINES = 160
 MIN_REQUIREMENTS = 3
@@ -343,7 +362,17 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             f"{reqs} requirement(s) beside its siblings is a paragraph with its own file, "
             f"not a spec a reader searches for.",
             "Merge it into the sibling it belongs with, and drop its registry entry.", capability))
-    if root is not None and capability and any(l.startswith("> [DRAFT]") and "rules are transcribed" in l for l in lines[:6]):
+    _draft_banner = any(l.startswith("> [DRAFT]") and "rules are transcribed" in l for l in lines[:6])
+    if root is not None and _draft_banner and not any(ADOPTED_LINE.match(l) for l in lines):
+        # The banner summarises the per-requirement markers under it. Every one of
+        # them has been confirmed by a run that folded a change onto it, so the
+        # banner is now the only thing still calling this spec unreviewed.
+        findings.append(_finding(
+            WARNING, "draft-banner-stale", path, 1,
+            "Every adopted requirement in this spec has been confirmed by a run, "
+            "but the draft banner still says the whole spec is unreviewed.",
+            "Remove the `> [DRAFT]` line.", capability))
+    if root is not None and capability and _draft_banner:
         # Adoption transcribes the rules that hold between files, and a rule about
         # a boundary carries the boundary's own glob as its marker. A draft with
         # none was read from the code, which is the way both measured attempts

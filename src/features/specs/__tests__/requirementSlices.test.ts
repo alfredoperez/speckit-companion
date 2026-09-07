@@ -116,3 +116,67 @@ describe('a requirement body is what a load step reads', () => {
         }
     });
 });
+
+/**
+ * Adoption stamps each requirement it transcribes with where it came from, and
+ * the fold clears that stamp the first time a change folds onto the requirement.
+ * The slicer has to see the stamp and keep it out of the body, exactly as it
+ * already does for the file marker.
+ */
+describe('the adopted marker', () => {
+    const spec = [
+        '## Requirements',
+        '',
+        '### An entity imports downward only',
+        '<!-- touches: src/entities/** -->',
+        '<!-- adopted: CLAUDE.md:18 -->',
+        '',
+        'An entity imports only from shared.',
+        '',
+        '### Feeds are addressed by URL',
+        '<!-- adopted: developer -->',
+        '',
+        'A feed is a URL.',
+        '',
+        '### Already confirmed',
+        '<!-- touches: src/shared/** -->',
+        '',
+        'Nothing adopted this.',
+    ].join('\n');
+
+    it('reads the source it was transcribed from', () => {
+        const [entity, feed, confirmed] = requirementSlices(spec);
+        expect(entity.adopted).toBe('CLAUDE.md:18');
+        expect(feed.adopted).toBe('developer');
+        expect(confirmed.adopted).toBeUndefined();
+    });
+
+    it('keeps both markers out of the body', () => {
+        for (const slice of requirementSlices(spec)) {
+            expect(slice.body.join('\n')).not.toContain('adopted:');
+            expect(slice.body.join('\n')).not.toContain('touches:');
+        }
+    });
+
+    it('still finds the file marker when an adopted marker sits beside it', () => {
+        const [entity] = requirementSlices(spec);
+        expect(entity.touches).toEqual(['src/entities/**']);
+    });
+
+    it('reads both markers whichever order they are written in', () => {
+        const flipped = spec
+            .replace('<!-- touches: src/entities/** -->\n<!-- adopted: CLAUDE.md:18 -->',
+                     '<!-- adopted: CLAUDE.md:18 -->\n<!-- touches: src/entities/** -->');
+        const [entity] = requirementSlices(flipped);
+        expect(entity.adopted).toBe('CLAUDE.md:18');
+        expect(entity.touches).toEqual(['src/entities/**']);
+    });
+
+    it('survives a formatter putting a blank line under the heading', () => {
+        const spaced = spec.replace('### Feeds are addressed by URL\n<!-- adopted',
+                                    '### Feeds are addressed by URL\n\n<!-- adopted');
+        const feed = requirementSlices(spaced)[1];
+        expect(feed.adopted).toBe('developer');
+        expect(feed.body.join('\n')).not.toContain('adopted:');
+    });
+});
