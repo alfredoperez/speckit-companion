@@ -69,3 +69,7 @@ Writing a workflow selection SHALL read-modify-write the spec's context, and SHA
 ### The spec-context file name is declared once
 
 The name of the per-spec context file SHALL be declared by the module that reads it and re-exported everywhere else it is needed, rather than restated as a second literal.
+
+#### Scenario: a second module needs the file name
+- **WHEN** code outside the reader module needs the context file's name
+- **THEN** it imports the reader's constant, and no second string literal for that name exists in the tree
