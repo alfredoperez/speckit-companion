@@ -6,7 +6,7 @@ import { AIProviders } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { getPermissionFlagForProvider } from './permissionValidation';
 
 const execAsync = promisify(exec);
@@ -140,7 +140,7 @@ export class GeminiCliProvider implements IAIProvider {
     async executeSlashCommand(command: string, title: string = 'SpecKit - Gemini'): Promise<vscode.Terminal> {
         await this.ensureInstalled();
         // Ensure command starts with /
-        const slashCommand = command.startsWith('/') ? command : `/${command}`;
+        const slashCommand = toSlashCommand(command);
         return this.executeInTerminal(slashCommand, title);
     }
 }

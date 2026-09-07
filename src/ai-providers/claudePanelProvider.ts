@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { splitContextPreamble, cleanCommandArg } from './promptBuilder';
 
 /** Extension id of the Claude Code GUI extension. */
@@ -158,7 +158,7 @@ export class ClaudePanelProvider implements IAIProvider {
      * text to the panel like any other prompt. Returns `undefined`.
      */
     async executeSlashCommand(command: string, _title?: string, _autoExecute?: boolean): Promise<vscode.Terminal | undefined> {
-        await this.dispatchToPanel(command);
+        await this.dispatchToPanel(toSlashCommand(command));
         return undefined;
     }
 }

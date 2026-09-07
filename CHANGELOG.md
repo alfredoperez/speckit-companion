@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Living Specs explains itself on a project that has never used it.** The panel used to disappear entirely when the Companion spec-kit extension was missing, so there was nothing to discover and nothing to click. It now stays put and shows what to do next: install the extension when it is absent, or set living specs up when it is there. Setting up asks one question — whether specs live next to the code or all under one folder — writes the registry itself, and offers to adopt a first code area. Nobody hand-writes that file any more.
+- **Adopt Code Area asks which area.** The wand in the Living Specs title bar used to start adopting the moment it was clicked, with no way to say what to adopt. It now offers the directories in your project, takes a typed path for anything not on the list, and passes your answer through, so adoption works on the part you meant.
+- **You are told when this project's spec-kit extension is behind.** The update banner only ever compared against the copy bundled in the editor extension, so a project running an old spec-kit extension stayed quiet until the editor extension itself updated. It now checks what has actually been published.
+
+### Fixed
+- **Claude gets command names it recognises.** Claude Code registers Companion's commands with dashes, and several of the buttons dispatched them with dots instead, which resolves to nothing at all. Every command the extension sends now carries the spelling the assistant actually registered. Cursor and Antigravity had a narrower version of the same bug, where only the first dot was converted.
+- **A capability with no coverage file says so.** It used to render exactly like a fully covered one — both showed nothing — so "we have no number for this" read as "nothing to report". The three states now look like three states.
+
 ### Fixed
 - **A living spec keeps its file markers after a formatter has been near it.** A requirement says which files it describes on the line below its heading, and a markdown formatter puts a blank line there. That blank line used to erase the marker as far as the extension was concerned, so a run quietly read whole specs while reporting that it was reading only the parts it needed. Any project whose pre-commit hooks format markdown had this.
 
@@ -12,7 +21,7 @@ All notable changes to this project will be documented in this file.
 - **A feature spec is named for its feature.** Companion now writes `specs/012-offline-queue/offline-queue.spec.md` instead of `spec.md`, so three open specs read as three features in the tab bar rather than `spec.md` three times. The Specs tree, the viewer, step completion, and the living-spec checks find either name, so specs written before this and specs a stock `/speckit.specify` writes next to them keep working unchanged.
 
 ### Fixed
-- **The Living Specs panel stops telling you to flip a switch that isn't there.** A project with no living-specs registry — which is every project straight after `specify init` — was told to set `enabled: true` in a file that does not exist. It now says there are none in this project and points at the command that writes the first one.
+- **The Living Specs panel stops telling you to flip a switch that isn't there.** A project with no living-specs registry — which is every project straight after `specify init` — was told to set `enabled: true` in a file that does not exist. It now offers to set living specs up instead.
 - **A living spec stored in a capability folder is shown as centrally stored again.** Specs named for their capability were being grouped as if they sat next to the code.
 
 - **A hook is drawn once on the pipeline board, even when its anchor name means two things.** A name can be a phase and a node at the same time — the `auto` step ships one, `orchestrate` — and the board tested the two independently, so a hook that runs once got two chips and the header's tally counted it twice. It is now drawn on the single boundary the built command actually places it at, and the count agrees with what you are looking at. Parked hooks follow the same rule. ([#608](https://github.com/alfredoperez/speckit-companion/issues/608))

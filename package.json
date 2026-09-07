@@ -68,7 +68,7 @@
           "id": "speckit.views.livingSpecs",
           "name": "Living Specs",
           "visibility": "collapsed",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.companion.installed"
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0)"
         },
         {
           "id": "speckit.views.steering",
@@ -109,6 +109,16 @@
         "view": "speckit.views.explorer",
         "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
         "when": "speckit.specs.filterActive && speckit.specs.noFilterMatch"
+      },
+      {
+        "view": "speckit.views.livingSpecs",
+        "contents": "Living specs describe what your code does now, and stay true as it changes.\n\nThey need the Companion spec-kit extension in this project.\n\n[$(cloud-download) Install SpecKit Companion](command:speckit.companion.installSpecKitExtension)",
+        "when": "!speckit.companion.installed"
+      },
+      {
+        "view": "speckit.views.livingSpecs",
+        "contents": "Living specs aren't set up in this project yet.\n\nSetting up asks one question — where the specs should live — and writes the registry for you.\n\n[$(rocket) Set up living specs](command:speckit.livingSpecs.init)",
+        "when": "speckit.companion.installed && !speckit.livingSpecs.configured"
       },
       {
         "view": "speckit.views.steering",
@@ -488,6 +498,11 @@
         "icon": "$(checklist)"
       },
       {
+        "command": "speckit.livingSpecs.init",
+        "title": "Set Up Living Specs",
+        "category": "SpecKit"
+      },
+      {
         "command": "speckit.livingSpecs.adopt",
         "title": "Adopt Code Area…",
         "category": "SpecKit",
@@ -620,12 +635,12 @@
         },
         {
           "command": "speckit.livingSpecs.adopt",
-          "when": "view == speckit.views.livingSpecs",
+          "when": "view == speckit.views.livingSpecs && speckit.livingSpecs.configured",
           "group": "navigation@2"
         },
         {
           "command": "speckit.livingSpecs.sync",
-          "when": "view == speckit.views.livingSpecs",
+          "when": "view == speckit.views.livingSpecs && speckit.livingSpecs.configured",
           "group": "navigation@3"
         }
       ],

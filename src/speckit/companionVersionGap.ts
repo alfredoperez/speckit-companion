@@ -78,12 +78,42 @@ export function computeCompanionGap(
     return { state: 'current' };
 }
 
-/** Compare the workspace's installed spec-kit extension against the version bundled in this build. Local files only, no network. */
+let lastGap: { key: string; gap: CompanionGap } | undefined;
+let publishedVersion: string | undefined;
+
+/**
+ * Record the newest published `speckit-ext-v*` release, learned by the update checker.
+ *
+ * Without it the only yardstick is the copy bundled in this build, so a user whose VS Code
+ * extension is current but whose spec-kit extension is months behind is told nothing until
+ * the VS Code extension itself updates.
+ */
+export function notePublishedCompanionVersion(version: string | undefined): void {
+    if (version === publishedVersion) {
+        return;
+    }
+    publishedVersion = version;
+    lastGap = undefined;
+}
+
+/** The version this build expects: whichever of the bundled and published copies is newer. */
+function expectedCompanionVersion(extensionPath: string): string | undefined {
+    const bundled = readBundledCompanionVersion(extensionPath);
+    if (!bundled) {
+        return publishedVersion;
+    }
+    if (!publishedVersion) {
+        return bundled;
+    }
+    return isNewerVersion(bundled, publishedVersion) ? publishedVersion : bundled;
+}
+
+/** Compare the workspace's installed spec-kit extension against the newest version we know of. No network here. */
 export function resolveCompanionGap(workspaceRoot: string, extensionPath: string): CompanionGap {
     return computeCompanionGap(
         isCompanionInstalled(workspaceRoot),
         readInstalledCompanionVersion(workspaceRoot),
-        readBundledCompanionVersion(extensionPath)
+        expectedCompanionVersion(extensionPath)
     );
 }
 
@@ -104,7 +134,6 @@ export function clearInstallInFlight(): void {
     installDeadline = 0;
 }
 
-let lastGap: { key: string; gap: CompanionGap } | undefined;
 
 const gapKey = (workspaceRoot: string, extensionPath: string): string => `${workspaceRoot}\u0000${extensionPath}`;
 

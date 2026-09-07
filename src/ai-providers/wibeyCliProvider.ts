@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { AIProviders } from '../core/constants';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { waitForShellReady } from '../core/utils/terminalUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
 import { splitContextPreamble } from './promptBuilder';
@@ -153,7 +153,7 @@ export class WibeyCliProvider implements IAIProvider {
         _title?: string,
         _autoExecute?: boolean,
     ): Promise<vscode.Terminal> {
-        const slashCommand = command.startsWith('/') ? command : `/${command}`;
+        const slashCommand = toSlashCommand(command);
         return this.dispatch(slashCommand);
     }
 
