@@ -187,7 +187,10 @@ export class IdeChatProvider implements IAIProvider {
      */
     private formatCommandForHost(cmd: string, host: HostIde): string {
         if (!HOST_PROFILES[host].dashCommands) return cmd;
-        return cmd.replace(/^(\/?)speckit\./, '$1speckit-');
+        const space = cmd.indexOf(' ');
+        const name = space === -1 ? cmd : cmd.slice(0, space);
+        if (!/^\/?speckit\./.test(name)) return cmd;
+        return name.replace(/\./g, '-') + (space === -1 ? '' : cmd.slice(space));
     }
 
     /** Warn that the host chat won't recognize `/speckit.*` until spec-kit is set up. */

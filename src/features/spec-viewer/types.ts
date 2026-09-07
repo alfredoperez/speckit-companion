@@ -44,8 +44,8 @@ export interface ViewerPanelConfig {
  */
 export const EMPTY_STATE_MESSAGES: Record<CoreDocumentType, string> = {
     spec: 'No specification file found. Create one to define requirements.',
-    plan: 'No implementation plan found. Run /speckit.plan to generate.',
-    tasks: 'No tasks file found. Run /speckit.tasks to generate.'
+    plan: 'No implementation plan found. Run the plan step to generate one.',
+    tasks: 'No tasks file found. Run the tasks step to generate one.'
 };
 
 /**

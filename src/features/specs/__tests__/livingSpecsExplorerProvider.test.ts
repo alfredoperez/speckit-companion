@@ -74,7 +74,7 @@ describe('LivingSpecsExplorerProvider', () => {
 
         expect(roots).toHaveLength(1);
         expect(roots[0].label).toBe('No living specs in this project');
-        expect(String(roots[0].tooltip)).toContain('living-adopt');
+        expect(String(roots[0].tooltip)).toContain('Set up living specs');
     });
 
     it('says the registry is unreadable instead of claiming living specs are off', async () => {
@@ -221,7 +221,7 @@ describe('LivingSpecsExplorerProvider', () => {
         const caps = await childrenOf(provider, byLabel(roots, 'src'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-drifted');
-        expect(caps[0].description).toBe('drift');
+        expect(caps[0].description).toBe('no coverage file · drift');
     });
 
     it('leaves a clean capability at the plain context value with no location badge', async () => {
@@ -237,7 +237,7 @@ describe('LivingSpecsExplorerProvider', () => {
         const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability');
-        expect(caps[0].description).toBeUndefined();
+        expect(caps[0].description).toBe('no coverage file');
         expect(caps[0].relPath).toBe('capabilities/auth/spec.md');
     });
 

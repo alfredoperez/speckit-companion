@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { BaseTreeDataProvider } from '../../core/providers';
+import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import {
     readLivingSpecs,
     readCapabilityHealth,
@@ -63,6 +64,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             this.log('Failed to read living specs');
             this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false };
         }
+        void setContextKey(CONTEXT_KEYS.livingSpecsConfigured, this.cached.configured);
         return this.cached;
     }
 
@@ -121,8 +123,8 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                     tooltip = 'Set enabled: true in living-specs.yml to track capability specs.';
                 } else {
                     message = 'No living specs in this project';
-                    tooltip = 'Run /speckit.companion.living-adopt on a code area to write the first one '
-                        + 'and create living-specs.yml.';
+                    tooltip = 'Set up living specs to create the registry, then adopt a code area '
+                        + 'to write the first one.';
                 }
                 return [...notices, LivingSpecItem.info(message, tooltip)];
             }
@@ -233,6 +235,13 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (health?.coverage) {
             suffixes.push(`${health.coverage.covered}/${health.coverage.total} covered`);
             tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
+        } else if (cap.exists) {
+            // Without this, a spec with no coverage tier renders exactly like a
+            // fully covered one — both show no suffix at all, and "we have no
+            // number" reads as "nothing to report".
+            suffixes.push('no coverage file');
+            tooltipLines.push('No coverage tier next to this spec, so no requirement is mapped to a test yet');
+            tooltipLines.push('Check Requirement Coverage on this row writes one');
         }
         if (health?.drifted) {
             suffixes.push('drift');

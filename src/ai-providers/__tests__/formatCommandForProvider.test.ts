@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { formatCommandForProvider, PROVIDER_PATHS } from '../aiProvider';
+import { formatCommandForProvider, toSlashCommand, PROVIDER_PATHS } from '../aiProvider';
 import { AIProviders } from '../../core/constants';
 
 describe('formatCommandForProvider', () => {
@@ -81,6 +81,33 @@ describe('formatCommandForProvider', () => {
 
         it('should use dot notation for Qwen', () => {
             expect(formatCommandForProvider(command, AIProviders.QWEN)).toBe('speckit.specify');
+        });
+    });
+
+    describe('toSlashCommand', () => {
+        it('adds the slash and converts every dot for a dash host', () => {
+            expect(toSlashCommand('speckit.companion.living-adopt', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-living-adopt');
+        });
+
+        it('converts a command that already carries its slash', () => {
+            expect(toSlashCommand('/speckit.companion.living-sync', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-living-sync');
+        });
+
+        it('leaves the argument alone, dots and all', () => {
+            expect(toSlashCommand('/speckit.companion.plan specs/172-nodes/plan.md', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-plan specs/172-nodes/plan.md');
+        });
+
+        it('keeps dot form on a host that registers dots', () => {
+            expect(toSlashCommand('speckit.companion.plan', AIProviders.GEMINI))
+                .toBe('/speckit.companion.plan');
+        });
+
+        it('is idempotent, so a caller that already formatted is not mangled', () => {
+            expect(toSlashCommand('/speckit-companion-plan', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-plan');
         });
     });
 });

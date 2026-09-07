@@ -22,6 +22,8 @@ If the argument is **empty**, do not fall back to scanning the whole repo. List 
 
 If the argument names **several areas**, adopt them in one run: propose the full capability tree across all of them, and bring the whole tree to the single review gate in step 1. Do not silently expand beyond what was named.
 
+If the argument is `.`, the developer asked for the **whole project**. Read the conventions as always, then propose the tree for the whole source tree. Say at the gate how many capabilities and how many spec files that comes to, and offer a coarser cut (one spec per area) and a finer one (a spec per concern within an area) with the count each would give, so the size of the thing is a choice rather than a surprise. Nothing is written until they pick.
+
 <!-- speckit-companion:part smallest-thing -->
 ## The smallest thing that works
 
@@ -74,13 +76,14 @@ Show the proposed capability tree to the developer — names, match globs, and t
 Each spec, at the path chosen at the review gate:
 
 1. **Title** — `# <Capability> — Living Spec`.
-2. **Draft banner** — the line under the title, `[DRAFT]` first: `> [DRAFT] Adopted from the project's conventions and the code's shape — the rules are transcribed, the behaviours arrive by fold-back. Review before trusting.`
+2. **Draft banner** — the line under the title, `[DRAFT]` first: `> [DRAFT] Adopted from the project's conventions and the code's shape — the rules are transcribed, the behaviours arrive by fold-back. Review before trusting.` The banner is a summary of the per-requirement markers below it, so it goes when the last one does.
 3. **`## Purpose`** — one or two sentences on why this capability exists and what would go wrong without it.
 4. **`## Requirements`** — the transcribed rules, each in the requirement shape the fold and the resolver both read:
 
    ```markdown
    ### An entity imports downward only
    <!-- touches: src/entities/** -->
+   <!-- adopted: CLAUDE.md:18 -->
 
    An entity SHALL import only from `src/shared`. Stated in `CLAUDE.md:18`, enforced by `.dependency-cruiser.js`.
 
@@ -88,6 +91,8 @@ Each spec, at the path chosen at the review gate:
    - **WHEN** an entity needs another entity's data
    - **THEN** the two are composed in a feature, widget or page, because a sibling import makes both undeletable
    ```
+
+   **Every requirement carries an `adopted` marker saying where you transcribed it from**, under `touches`: a file and line, or `developer` when the answer came from the question above. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears the marker the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
 
    Three things are load-bearing. The **marker is the whole layer glob**, never a file, because the rule is about the boundary and not about anything inside it. The **WHEN is a future edit**, not a runtime event — "when two actions need the same helper" — because the rule is read by whoever writes the next import. The **THEN says where the code goes instead**, not that the import is forbidden. And every rule **cites its source**: the file and line it was transcribed from, and the tool that enforces it where one does. "Nothing for what a test already enforces" does not apply here — a linter rejects an import, it cannot redirect one, and the citation is what makes this a transcription rather than a guess.
 

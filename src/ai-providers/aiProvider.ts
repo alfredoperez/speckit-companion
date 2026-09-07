@@ -507,6 +507,19 @@ function toDashCommand(command: string): string {
 }
 
 /**
+ * Leading-slash form of a command, with the provider's dot-or-dash convention
+ * already applied to the name. Arguments are left alone — a path argument can
+ * carry dots that must survive.
+ */
+export function toSlashCommand(command: string, providerType?: AIProviderType): string {
+    const body = command.startsWith('/') ? command.slice(1) : command;
+    const space = body.indexOf(' ');
+    const name = space === -1 ? body : body.slice(0, space);
+    const rest = space === -1 ? '' : body.slice(space);
+    return `/${formatCommandForProvider(name, providerType)}${rest}`;
+}
+
+/**
  * Check if the AI provider has been explicitly configured by the user.
  * Returns true if the setting exists at global, workspace, or folder level.
  * @returns True if provider has been explicitly set, false if using default

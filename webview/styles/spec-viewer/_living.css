@@ -94,6 +94,14 @@
   text-transform: lowercase;
 }
 
+/* Adopted means transcribed from the project's conventions and not yet confirmed
+ * by a run. The review hue, because that is exactly what it is asking for. */
+#markdown-content .living-req-confidence--adopted {
+  color: var(--review-ink);
+  background: var(--review-subtle);
+  text-transform: lowercase;
+}
+
 #markdown-content .living-req-coverage {
   color: var(--success);
   background: var(--success-subtle);

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
-import { AIProviderType, AIExecutionResult, IAIProvider, buildPromptDispatchCommand } from './aiProvider';
+import { AIProviderType, AIExecutionResult, IAIProvider, buildPromptDispatchCommand, toSlashCommand } from './aiProvider';
 import { Timing } from '../core/constants';
 import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
@@ -121,7 +121,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
     }
 
     async executeSlashCommand(command: string, title?: string, autoExecute: boolean = true): Promise<vscode.Terminal> {
-        const slashCommand = command.startsWith('/') ? command : `/${command}`;
+        const slashCommand = toSlashCommand(command);
         return this.runVisible(
             { mode: 'slash', prompt: slashCommand, slashCommand },
             title ?? this.defaultTerminalTitle,

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import type { GitHubRelease } from '../core/types/config';
+import { notePublishedCompanionVersion } from './companionVersionGap';
 
 /** True when `latest` is a higher `major.minor.patch` than `current`. */
 export function isNewerVersion(current: string, latest: string): boolean {
@@ -98,6 +99,12 @@ export class UpdateChecker {
             const releases = await response.json() as GitHubRelease[];
             const latest = this.selectLatestVsCodeRelease(releases);
             this.outputChannel.appendLine(`[UpdateChecker] Latest VS Code release: ${latest?.tag_name || 'none'}`);
+
+            // Both products publish into this one list, so the spec-kit extension's
+            // newest version is already in hand — no second request for it.
+            const latestExt = selectLatestSpecKitExtRelease(releases);
+            notePublishedCompanionVersion(latestExt ?? undefined);
+            this.outputChannel.appendLine(`[UpdateChecker] Latest spec-kit extension release: ${latestExt || 'none'}`);
             return latest;
         } catch (error) {
             this.outputChannel.appendLine(`[UpdateChecker] ERROR: Failed to fetch releases: ${error}`);
@@ -173,4 +180,26 @@ export class UpdateChecker {
     async clearSkipVersion(): Promise<void> {
         await this.context.globalState.update(UpdateChecker.SKIP_VERSION_KEY, undefined);
     }
+}
+
+/**
+ * Highest published `speckit-ext-v<major>.<minor>.<patch>` version in the shared releases list,
+ * or null. Drafts and prereleases are excluded for the same reason the VS Code selector excludes
+ * them: `/releases` returns unpublished builds that `/releases/latest` never did.
+ */
+export function selectLatestSpecKitExtRelease(releases: GitHubRelease[]): string | null {
+    if (!Array.isArray(releases)) {
+        return null;
+    }
+    let latest: string | null = null;
+    for (const release of releases) {
+        if (release.draft || release.prerelease || !/^speckit-ext-v\d+\.\d+\.\d+$/.test(release.tag_name)) {
+            continue;
+        }
+        const version = release.tag_name.replace(/^speckit-ext-v/, '');
+        if (!latest || isNewerVersion(latest, version)) {
+            latest = version;
+        }
+    }
+    return latest;
 }

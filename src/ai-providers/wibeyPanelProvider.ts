@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
-import { IAIProvider, AIExecutionResult } from './aiProvider';
+import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { splitContextPreamble, cleanCommandArg } from './promptBuilder';
 
 /** Extension ID of the Wibey VS Code extension. */
@@ -164,7 +164,7 @@ export class WibeyPanelProvider implements IAIProvider {
     }
 
     async executeSlashCommand(command: string, _title?: string, _autoExecute?: boolean): Promise<vscode.Terminal | undefined> {
-        await this.dispatchToPanel(command);
+        await this.dispatchToPanel(toSlashCommand(command));
         return undefined;
     }
 }

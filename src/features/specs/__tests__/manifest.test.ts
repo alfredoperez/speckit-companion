@@ -47,10 +47,22 @@ describe('sidebar contributions', () => {
             });
         });
 
-        it('keeps the living-specs view gated on the companion extension and collapsed', () => {
+        it('shows the living-specs view whenever a folder is open, so it can explain itself', () => {
             const living = views.find(v => v.id === 'speckit.views.livingSpecs')!;
             expect(living.visibility).toBe('collapsed');
-            expect(living.when).toContain('speckit.companion.installed');
+            // Gating the view on the companion extension meant a user without it
+            // saw the section vanish rather than learn how to get it.
+            expect(living.when).not.toContain('speckit.companion.installed');
+        });
+
+        it('offers install and set-up as the two living-specs first-run states', () => {
+            const welcome = (manifest.contributes.viewsWelcome as { view: string; contents: string; when?: string }[])
+                .filter(w => w.view === 'speckit.views.livingSpecs');
+            expect(welcome).toHaveLength(2);
+            expect(welcome[0].when).toBe('!speckit.companion.installed');
+            expect(welcome[0].contents).toContain('speckit.companion.installSpecKitExtension');
+            expect(welcome[1].when).toBe('speckit.companion.installed && !speckit.livingSpecs.configured');
+            expect(welcome[1].contents).toContain('speckit.livingSpecs.init');
         });
     });
 

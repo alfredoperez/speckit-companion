@@ -188,6 +188,8 @@ const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 
 /** `<!-- touches: a/**, b.ts -->` — the marker sits directly under the heading. */
 const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
+/** `<!-- adopted: CLAUDE.md:18 -->` — adoption transcribed this and no run has confirmed it. */
+const ADOPTED_LINE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
 
 function buildRequirementCard(
     heading: string,
@@ -208,11 +210,26 @@ function buildRequirementCard(
         inferred = true;
         title = heading.replace(STRIP_INFERRED, ' ').replace(/[ \t]+$/, '').trim();
     }
+    // Both markers sit at the top of the block, in either order. Only lines up
+    // to the first ordinary one are considered: filtering the whole block would
+    // delete a line further down that the outline's count, and both slicers,
+    // still read as prose.
+    let adoptedFrom = '';
+    let markerLines = 0;
+    for (const line of blockLines) {
+        if (line.trim().length === 0) {
+            markerLines++;
+            continue;
+        }
+        const a = line.match(ADOPTED_LINE);
+        if (!a && !TOUCHES_LINE.test(line)) {
+            break;
+        }
+        if (a && !adoptedFrom) adoptedFrom = a[1];
+        markerLines++;
+    }
     const body = blockLines
-        // Only the first line, matching what every slicer treats as the marker.
-        // Filtering all of them deletes a line further down that the outline's
-        // count, and both slicers, still read as ordinary prose.
-        .filter((line, i) => !(i === 0 && TOUCHES_LINE.test(line)))
+        .filter((_line, i) => i >= markerLines)
         .map((line) => {
         if (HAS_INFERRED.test(line)) {
             inferred = true;
@@ -222,6 +239,16 @@ function buildRequirementCard(
     });
 
     const badges: string[] = [];
+    // Adoption transcribed this requirement from the project's own conventions
+    // and nothing has checked it since. The badge names the source so a reader
+    // can go and confirm it, and it disappears the first run that folds a change
+    // onto this requirement.
+    if (adoptedFrom) {
+        badges.push(
+            '<span class="living-req-confidence living-req-confidence--adopted">'
+            + `adopted from ${escapeHtml(adoptedFrom)}</span>`,
+        );
+    }
     if (inferred) {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
@@ -242,9 +269,12 @@ function buildRequirementCard(
     const covAttr = cov != null && String(cov).trim() !== '' && String(cov).trim() !== '0'
         ? ` data-req-coverage="${escapeHtml(String(cov))}"` : '';
     const filesAttr = files > 0 ? ` data-req-patterns="${files}"` : '';
+    // A bare flag, never the source string: this is an attribute, and the
+    // viewer's escapeHtml does not escape attribute quotes.
+    const adoptedAttr = adoptedFrom ? ' data-req-adopted' : '';
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
-        + ` data-req="${escapeHtml(title)}"${covAttr}${filesAttr}>`,
+        + ` data-req="${escapeHtml(title)}"${covAttr}${filesAttr}${adoptedAttr}>`,
         `### ${title}`,
         ...metaLine,
         ...body,

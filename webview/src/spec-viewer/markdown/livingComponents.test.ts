@@ -547,3 +547,44 @@ describe('a touches marker is never prose (#672 Wave 1)', () => {
         expect(out).toContain('touches:');
     });
 });
+
+/**
+ * An adopted requirement was transcribed from the project's own conventions and
+ * nothing has checked it. The card says so, and names the source, so a reader can
+ * go and confirm it rather than taking the spec's word for it.
+ */
+describe('the adopted badge', () => {
+    const spec = [
+        '## Requirements',
+        '',
+        '### An entity imports downward only',
+        '<!-- touches: src/entities/** -->',
+        '<!-- adopted: CLAUDE.md:18 -->',
+        '',
+        'An entity imports only from shared.',
+        '',
+        '### Already confirmed',
+        '<!-- touches: src/shared/** -->',
+        '',
+        'A run folded onto this one.',
+    ].join('\n');
+
+    it('names where the requirement was transcribed from', () => {
+        expect(preprocessLivingRequirements(spec)).toContain('adopted from CLAUDE.md:18');
+    });
+
+    it('leaves a confirmed requirement unbadged', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out.split('Already confirmed')[1]).not.toContain('living-req-confidence--adopted');
+    });
+
+    it('never leaks either marker into the visible prose', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).not.toContain('<!-- adopted:');
+        expect(out).not.toContain('<!-- touches:');
+    });
+
+    it('flags the card as data so the outline agrees with the badge', () => {
+        expect(preprocessLivingRequirements(spec)).toContain('data-req-adopted');
+    });
+});

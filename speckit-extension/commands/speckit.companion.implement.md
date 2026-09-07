@@ -32,6 +32,9 @@ Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the scri
 - **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
 <!-- /speckit-companion:part step-start -->
 
+<!-- speckit-companion:part command-spelling -->
+<!-- /speckit-companion:part command-spelling -->
+
 <!-- speckit-companion:part speckit-hooks -->
 ## Pre-Execution Checks — stock spec-kit extension hooks
 

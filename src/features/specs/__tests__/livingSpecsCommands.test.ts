@@ -67,6 +67,8 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.coverage',
             'speckit.livingSpecs.delete',
             'speckit.livingSpecs.drift',
+            'speckit.livingSpecs.init',
+            'speckit.livingSpecs.move',
             'speckit.livingSpecs.refresh',
             'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
@@ -105,13 +107,126 @@ describe('registerLivingSpecsCommands', () => {
     });
 
     describe('adopt', () => {
-        it('dispatches the bare adopt command (the wizard prompts for the area)', async () => {
+        it('asks which area to adopt and passes the answer to the command', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([
+                ['src', vscode.FileType.Directory],
+                ['README.md', vscode.FileType.File],
+                ['node_modules', vscode.FileType.Directory],
+            ]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([{ label: 'src' }]);
+
             await handlers['speckit.livingSpecs.adopt']();
+
             expect(executeSlashCommand).toHaveBeenCalledWith(
-                '/speckit.companion.living-adopt',
+                '/speckit.companion.living-adopt src',
                 'SpecKit - Adopt Code Area',
                 true
             );
+        });
+
+        it('adopts several areas in one run', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([
+                { label: 'src/pages' },
+                { label: 'src/features' },
+            ]);
+
+            await handlers['speckit.livingSpecs.adopt']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt src/pages src/features',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
+        it('collapses the whole-project choice to the repository root', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([
+                { label: '$(globe) The whole project' },
+                { label: 'src' },
+            ]);
+
+            await handlers['speckit.livingSpecs.adopt']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt .',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
+        it('dispatches nothing when the area prompt is dismissed', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue(undefined);
+
+            await handlers['speckit.livingSpecs.adopt']();
+
+            expect(executeSlashCommand).not.toHaveBeenCalled();
+        });
+
+        it('carries the layout through when setup already chose one', async () => {
+            (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([{ label: 'src/pages' }]);
+
+            await handlers['speckit.livingSpecs.adopt']({ layout: 'colocated' });
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt src/pages --layout colocated',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+    });
+
+    describe('move', () => {
+        it('asks where the capability should live and dispatches the answer', async () => {
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'Central' });
+
+            await handlers['speckit.livingSpecs.move']({ capability: { name: 'billing' } });
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-move billing to central',
+                'SpecKit - Move Living Specs',
+                true
+            );
+        });
+
+        it('moves every spec when invoked without a capability', async () => {
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({ label: 'Next to the code' });
+
+            await handlers['speckit.livingSpecs.move']();
+
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-move everything to colocated',
+                'SpecKit - Move Living Specs',
+                true
+            );
+        });
+    });
+
+    describe('init', () => {
+        it('writes a registry at the chosen layout and refreshes the view', async () => {
+            (vscode.workspace.fs.stat as jest.Mock).mockRejectedValue(new Error('ENOENT'));
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValue({
+                label: 'Next to the code — each spec sits in the folder it describes',
+            });
+            (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue(undefined);
+
+            await handlers['speckit.livingSpecs.init']();
+
+            const write = (vscode.workspace.fs.writeFile as jest.Mock).mock.calls[0];
+            expect(write[0].fsPath).toContain('living-specs.yml');
+            expect(Buffer.from(write[1]).toString('utf8')).toContain('enabled: true');
+            expect(provider.refresh).toHaveBeenCalled();
+        });
+
+        it('never overwrites a registry that already exists', async () => {
+            (vscode.workspace.fs.stat as jest.Mock).mockResolvedValue({});
+
+            await handlers['speckit.livingSpecs.init']();
+
+            expect(vscode.workspace.fs.writeFile).not.toHaveBeenCalled();
         });
     });
 

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { AIProviders } from '../core/constants';
 import { waitForShellReady } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
-import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult } from './aiProvider';
+import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { splitContextPreamble } from './promptBuilder';
@@ -104,7 +104,7 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
         autoExecute: boolean = true,
     ): Promise<vscode.Terminal> {
         try {
-            const slashCommand = command.startsWith('/') ? command : `/${command}`;
+            const slashCommand = toSlashCommand(command);
             const firstSpace = slashCommand.indexOf(' ');
             const slashName = firstSpace === -1 ? slashCommand : slashCommand.slice(0, firstSpace);
             const args = firstSpace === -1 ? '' : slashCommand.slice(firstSpace + 1).trimStart();

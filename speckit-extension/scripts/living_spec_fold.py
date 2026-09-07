@@ -20,7 +20,8 @@ from pathlib import Path, PurePosixPath
 
 from capture import set_living_specs_synced
 from spec_context import _repo_root_for, feature_spec_path, read_ctx
-from living_validate import (ERROR, _fence_flags, check_feature_deltas,
+from living_validate import (ADOPTED_LINE, ERROR, _fence_flags,
+                             adopted_sources, check_feature_deltas,
                              fences_are_balanced)
 from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
 
@@ -48,11 +49,14 @@ def _keep_marker(old: list[str], new: list[str]) -> list[str]:
     # heading left to hang a marker under.
     if not new:
         return new
+    # A delta comes from a feature spec, which never adopts anything. Stripping
+    # here means the only adopted markers in a living spec are the ones adoption
+    # wrote, and a fold onto a requirement always clears them.
+    rest = [ln for ln in new[1:] if not ADOPTED_LINE.match(ln)]
     globs = _touches_globs(old)
     globs += [g for g in _touches_globs(new) if g not in globs]
     if not globs:
-        return new
-    rest = new[1:]
+        return [new[0]] + rest
     if rest and _TOUCHES_LINE.match(rest[0]):
         rest = rest[1:]
     return [new[0], f"<!-- touches: {', '.join(globs)} -->"] + rest
@@ -210,7 +214,8 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
 
     Returns the updated text and the per-verb count of what was applied."""
     lines = living_text.splitlines()
-    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0, "promoted": 0, "promoted_present": 0}
+    applied = {"added": 0, "modified": 0, "removed": 0, "renamed": 0, "promoted": 0, "promoted_present": 0,
+               "confirmed": 0}
     renames = _rename_map(deltas)
     modified_bodies = {head: section for head, section in deltas["modified"]}
 
@@ -240,7 +245,15 @@ def apply_deltas(living_text: str, deltas: dict) -> tuple[str, dict]:
     for head, section in deltas["modified"]:
         span = _living_requirement_span(lines, head)
         if span:
-            body = _keep_marker(lines[span[0]:span[1]], section.rstrip("\n").splitlines())
+            old_body = lines[span[0]:span[1]]
+            body = _keep_marker(old_body, section.rstrip("\n").splitlines())
+            # A requirement adoption transcribed is a claim about the code that
+            # nothing has checked. A run that folds a delta onto it has now built
+            # against it, so the claim is confirmed and the marker goes. `touches`
+            # is carried across deliberately; everything else comes from the delta,
+            # which is what promotes this one by dropping it.
+            if adopted_sources(old_body) and not adopted_sources(body):
+                applied["confirmed"] += 1
             if span[1] < len(lines):
                 body.append("")  # keep the blank line separating the next requirement
             lines[span[0]:span[1]] = body
@@ -663,6 +676,10 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
         if applied["promoted"]:
             reasons.append(
                 f"{applied['promoted']} added (MODIFIED with no existing match)"
+            )
+        if applied["confirmed"]:
+            reasons.append(
+                f"{applied['confirmed']} confirmed (adopted, and this run built against it)"
             )
         if unmatched:
             reasons.append(f"{unmatched} change(s) skipped: no matching requirement heading")
