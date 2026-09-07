@@ -32,7 +32,7 @@ capabilities:
 
 `living-specs.yml` sits at the project root on purpose: it is yours, it belongs in version control alongside the specs it registers, and keeping it out of `.specify/` means the routine cleanup that re-creates that folder can never wipe your registrations. If your project still keeps capabilities in the older `.specify/companion.yml`, they keep working as they are, and the next time you register or move a capability they are carried across for you.
 
-Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, an optional `retire`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<name>/spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
+Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, an optional `retire`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<capability>/<name>.spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
 
 ## The resolver
 
@@ -85,7 +85,7 @@ The deltas are top-level sections in the feature's spec file (`<short-name>.spec
 - THEN the todo shows the due date
 ```
 
-Four section types are recognized: `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, each section applies to its capability's `capabilities/<name>/spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. A feature that changed several capabilities **folds into each of them, and each spec receives only its own requirements**: a section marked for `checkout` never lands in `billing`. An unmarked section folds into the capability the changed files resolved to.
+Four section types are recognized: `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` (a rename reads `### Old name -> New name`). At completion, each section applies to its capability's `capabilities/<capability>/<name>.spec.md`: adds append, modifies replace, removes delete, renames rewrite the heading. A feature that changed several capabilities **folds into each of them, and each spec receives only its own requirements**: a section marked for `checkout` never lands in `billing`. An unmarked section folds into the capability the changed files resolved to.
 
 This stays safe: with living specs off there is no fold. A feature spec with no delta section writes nothing (a purely additive change leaves the living spec byte-for-byte unchanged), and re-running completion folds nothing already there; it's idempotent. The synced capability names are recorded on the spec's context under `livingSpecs.synced` (additive metadata, never a lifecycle field). The whole step is best-effort and never fails completion.
 
@@ -242,7 +242,7 @@ It ends with a report of what was synced and what was skipped (with reasons: a c
 
 ## Coverage and architecture tiers
 
-A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<name>/spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name: an **architecture** file (`spec.arch.md` / `<base>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`spec.coverage.md` / `<base>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
+A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<capability>/<name>.spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name: an **architecture** file (`spec.arch.md` / `<base>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`spec.coverage.md` / `<base>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
 
 **Architecture loads lazily, only when the change warrants it.** When you plan a change, Companion already reads the requirements of the capabilities it touches. For an architecture-significant change (a `normal` or `oversized` plan, not a small fast-path one) it *also* pulls those capabilities' `.arch.md` files into context, so the plan is briefed on how the area is built. A small change never drags in the cold architecture tier. The resolver derives the tier paths, so you never hardcode a filename, and a capability with no `.arch.md` is simply skipped.
 

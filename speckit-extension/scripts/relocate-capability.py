@@ -167,7 +167,11 @@ def _target_spec(root: str, cap: dict, to: str, spec_override: str | None) -> st
     if spec_override:
         return _posix(spec_override)
     if to == "central":
-        return _default_spec(cap["name"])
+        # `capabilities/<capability>/<name>.spec.md`, the shape adoption writes
+        # and `living-move`'s own doc promises. `_default_spec` still answers the
+        # legacy `capabilities/<name>/spec.md` so a registry written before the
+        # rename keeps resolving; moving a capability is not the place to keep it.
+        return f"{cc.DEFAULT_CAPABILITY_ROOT}/{cap['name']}/{cap['name']}{SPEC_SUFFIX}"
     return f"{_area_root(root, cap)}/{cap['name']}{SPEC_SUFFIX}"
 
 

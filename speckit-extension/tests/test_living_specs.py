@@ -2902,10 +2902,12 @@ class RelocateCapabilityTests(unittest.TestCase):
         )
         root = make_repo(yaml, spec_files=["src/features/billing/billing.spec.md"])
         relocate.relocate(str(root), "central", name="billing")
-        self.assertTrue((root / "capabilities/billing/spec.md").is_file())
+        # Central is `capabilities/<capability>/<name>.spec.md`, so the path is
+        # written out: it no longer matches the registry's legacy default, which
+        # stays `capabilities/<name>/spec.md` for projects written before the rename.
+        self.assertTrue((root / "capabilities/billing/billing.spec.md").is_file())
         self.assertFalse((root / "src/features/billing/billing.spec.md").exists())
-        # Terse by default: the resolver fills the centralized path itself.
-        self.assertNotIn("spec:", _read_registry(root))
+        self.assertIn("spec: capabilities/billing/billing.spec.md", _read_registry(root))
 
     def test_resolver_agrees_with_the_config_after_a_move(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
@@ -3137,9 +3139,9 @@ class RelocateCapabilityTests(unittest.TestCase):
         ])
         relocate.relocate(str(root), "colocated", every=True)
         relocate.relocate(str(root), "central", every=True)
-        self.assertTrue((root / "capabilities/alpha/spec.md").is_file())
-        self.assertTrue((root / "capabilities/beta/spec.md").is_file())
-        self.assertNotIn("spec:", _read_registry(root))
+        self.assertTrue((root / "capabilities/alpha/alpha.spec.md").is_file())
+        self.assertTrue((root / "capabilities/beta/beta.spec.md").is_file())
+        self.assertIn("spec: capabilities/alpha/alpha.spec.md", _read_registry(root))
 
     def test_a_failed_config_write_rolls_the_files_back(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=[
@@ -3231,7 +3233,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         )
         root = make_repo(yaml)
         result = relocate.relocate(str(root), "central", name="broken")
-        self.assertEqual(result["relocated"][0]["spec"], "capabilities/broken/spec.md")
+        self.assertEqual(result["relocated"][0]["spec"], "capabilities/broken/broken.spec.md")
         self.assertEqual(rsp.main(["--root", str(root), "--all"]), 0)
 
     def test_unrelated_config_blocks_survive_the_rewrite(self) -> None:
