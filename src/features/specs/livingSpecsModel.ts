@@ -1019,15 +1019,64 @@ async function computeDriftedFiles(
             .map(f => f.trim())
             .filter(Boolean);
         const ownFiles = new Set([cap.spec, ...tierPaths(cap.spec, root).map(t => t.path)]);
+        const vouched = filesAccountedFor(root, cap.name);
         return changed.filter(file =>
             cap.match.some(g => globMatches(g, file)) &&
             !cap.exclude.some(g => globMatches(g, file)) &&
             !isExempt(DEFAULT_EXEMPT_GLOBS, file) &&
-            !ownFiles.has(posix(file))
+            !ownFiles.has(posix(file)) &&
+            !vouched.has(posix(file))
         );
     } catch {
         return undefined; // no git, not a repo, timeout — silently absent
     }
+}
+
+/**
+ * Files a completed run changed while accounting for this capability, by
+ * folding into it or recording an explicit skip. Either is the run vouching
+ * that the spec still describes the code, so those files are not drift. A
+ * file changed by hand, with no run behind it, still is.
+ */
+function filesAccountedFor(root: string, capName: string): Set<string> {
+    const out = new Set<string>();
+    const specsDir = path.join(root, 'specs');
+    let dirs: string[] = [];
+    try {
+        dirs = fs.readdirSync(specsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
+    } catch {
+        return out;
+    }
+    for (const dir of dirs) {
+        let ctx: unknown;
+        try {
+            ctx = JSON.parse(fs.readFileSync(path.join(specsDir, dir, '.spec-context.json'), 'utf8'));
+        } catch {
+            continue;
+        }
+        if (!ctx || typeof ctx !== 'object') continue;
+        const living = (ctx as { livingSpecs?: { synced?: unknown; skipped?: unknown } }).livingSpecs;
+        const synced = Array.isArray(living?.synced) ? living!.synced as unknown[] : [];
+        const skipped = Array.isArray(living?.skipped) ? living!.skipped as unknown[] : [];
+        const names = new Set<string>([
+            ...synced.filter((n): n is string => typeof n === 'string'),
+            ...skipped.map(s => (typeof s === 'string' ? s : (s as { name?: unknown })?.name))
+                .filter((n): n is string => typeof n === 'string'),
+        ]);
+        if (!names.has(capName)) continue;
+        const history = (ctx as { history?: unknown }).history;
+        for (const entry of Array.isArray(history) ? history : []) {
+            const files = (entry as { files?: unknown })?.files;
+            for (const f of Array.isArray(files) ? files : []) {
+                if (typeof f === 'string') out.add(posix(f));
+            }
+        }
+        const modified = (ctx as { files_modified?: unknown }).files_modified;
+        for (const f of Array.isArray(modified) ? modified : []) {
+            if (typeof f === 'string') out.add(posix(f));
+        }
+    }
+    return out;
 }
 
 async function readDrifted(

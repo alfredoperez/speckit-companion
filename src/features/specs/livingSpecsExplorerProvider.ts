@@ -207,6 +207,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
     }
 
+    private coverageInUse(): boolean {
+        return (this.cached?.capabilities ?? []).some(c => c.tiers.some(t => t.kind === 'coverage'));
+    }
+
     private capabilityItem(
         cap: ResolvedCapability,
         health?: CapabilityHealth,
@@ -241,10 +245,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (health?.coverage) {
             suffixes.push(`${health.coverage.covered}/${health.coverage.total} covered`);
             tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
-        } else if (cap.exists) {
-            // Without this, a spec with no coverage tier renders exactly like a
-            // fully covered one — both show no suffix at all, and "we have no
-            // number" reads as "nothing to report".
+        } else if (cap.exists && this.coverageInUse()) {
+            // Once any capability has a coverage tier, one without it is a gap
+            // worth a word. Before that it is just how the project is, and the
+            // suffix on every row was the first thing a new user read.
             suffixes.push('no coverage file');
             tooltipLines.push('No coverage tier next to this spec, so no requirement is mapped to a test yet');
             tooltipLines.push('Check Requirement Coverage on this row writes one');

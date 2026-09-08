@@ -199,6 +199,37 @@ def _tracked_files_since(root: str, commit: str, working: bool = False) -> set[s
     return out
 
 
+def _vouched_files_since(root: str, commit: str, cap_name: str, working: bool = False) -> set[str]:
+    """Files changed by a run that accounted for `cap_name` — folded into it, or
+    recorded an explicit skip for it — since the spec's last commit. Either is
+    the run saying the spec still describes the code, so those files are not
+    drift. A file changed by hand, with no run behind it, still is."""
+    out: set[str] = set()
+    rels = _changed_since(root, commit, "specs/", working=working)
+    if working:
+        rels += _untracked(root, "specs/")
+    for rel in rels:
+        rel = rsp._posix(rel)
+        if not rel.endswith("/.spec-context.json"):
+            continue
+        try:
+            with open(os.path.join(root, rel), encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        living = data.get("livingSpecs") if isinstance(data, dict) else None
+        if not isinstance(living, dict):
+            continue
+        names = {n for n in (living.get("synced") or []) if isinstance(n, str)}
+        for s_ in living.get("skipped") or []:
+            n = s_ if isinstance(s_, str) else (s_.get("name") if isinstance(s_, dict) else None)
+            if isinstance(n, str):
+                names.add(n)
+        if cap_name in names:
+            out |= _read_context_files(os.path.join(root, rel))
+    return out
+
+
 def _is_own_spec_doc(fp: str, spec_posix: str) -> bool:
     """True for the capability's own living-spec documents — the spec itself or a
     reserved-tier sibling (`.arch.md` / `.coverage.md`) in the spec's directory.
@@ -343,6 +374,7 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
 
         spec_posix = rsp._posix(spec)
         tracked = _tracked_files_since(root, commit, working=working)
+        vouched = _vouched_files_since(root, commit, cap["name"], working=working)
         changed = _changed_since(root, commit, working=working)
         if working:
             changed += untracked
@@ -358,6 +390,8 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
             if not rsp.matches(cap, fp):
                 continue
             if _exempt(fp, exempt_globs):
+                continue
+            if fp in vouched:
                 continue
             severity = "tracked" if fp in tracked else "unspeced"
             drifted.append({"file": fp, "severity": severity})

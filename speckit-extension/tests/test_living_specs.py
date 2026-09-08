@@ -3096,15 +3096,36 @@ class RelocateCapabilityTests(unittest.TestCase):
             relocate.main(["--root", str(root), "--name", "wide", "--to", "colocated"]), 2
         )
 
-    def test_sibling_globs_use_the_shallowest_common_directory(self) -> None:
+    def test_sibling_globs_stay_central_rather_than_landing_in_the_shared_parent(self) -> None:
+        # `src/` is nobody's folder: it belongs to a and b equally. A spec placed
+        # there sits next to nothing it describes, so the move keeps it central.
         yaml = (
             "livingSpecs:\n  enabled: true\n  capabilities:\n"
             "    - name: wide\n      match: [\"src/a/**\", \"src/b/**\"]\n"
         )
         root = make_repo(yaml, spec_files=["capabilities/wide/spec.md"])
         result = relocate.relocate(str(root), "colocated", name="wide")
-        self.assertEqual(result["relocated"][0]["spec"], "src/wide.spec.md")
-        self.assertTrue((root / "src/wide.spec.md").is_file())
+        self.assertEqual(result["relocated"][0]["spec"], "capabilities/wide/wide.spec.md")
+        self.assertFalse((root / "src/wide.spec.md").exists())
+
+    def test_a_layer_capability_stays_central_when_others_live_inside_it(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: pages\n      match: [\"src/pages/**\"]\n"
+            "    - name: reading\n      match: [\"src/pages/article/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=["capabilities/pages/spec.md", "capabilities/reading/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="pages")
+        self.assertEqual(result["relocated"][0]["spec"], "capabilities/pages/pages.spec.md")
+
+    def test_a_single_area_still_goes_next_to_its_code(self) -> None:
+        yaml = (
+            "livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: reading\n      match: [\"src/pages/article/**\"]\n"
+        )
+        root = make_repo(yaml, spec_files=["capabilities/reading/spec.md"])
+        result = relocate.relocate(str(root), "colocated", name="reading")
+        self.assertEqual(result["relocated"][0]["spec"], "src/pages/article/reading.spec.md")
 
     def test_spec_override_beats_the_derivation(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=["capabilities/billing/spec.md"])
@@ -3765,3 +3786,44 @@ class ADeltaWithNoHomeIsReported(unittest.TestCase):
         self.assertIn("reminders", err.getvalue())
         self.assertIn("not a registered capability", err.getvalue())
         self.assertIn("register-capability.py", err.getvalue())
+
+
+# LS·10 — a run that accounted for a capability is not drift. It folded into the
+# spec, or it read the spec and recorded that nothing there changed. Either way
+# the run vouched for the spec against those files. Only a change with no run
+# behind it is drift.
+class ARunThatAccountedForTheCapabilityIsNotDrift(unittest.TestCase):
+    def _repo(self):
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/todos.spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        return root
+
+    def _finish_run_touching(self, root, rel_file, skipped_names):
+        import json, subprocess
+        (root / rel_file).write_text("// changed by a run\n")
+        fdir = root / "specs" / "001-feat"; fdir.mkdir(parents=True, exist_ok=True)
+        (fdir / ".spec-context.json").write_text(json.dumps({
+            "status": "completed",
+            "history": [{"step": "implement", "files": [rel_file]}],
+            "livingSpecs": {"loaded": ["todos"], "synced": [], "skipped": [{"name": n, "reason": "nothing changed"} for n in skipped_names]},
+        }))
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "run"], cwd=root, check=True, capture_output=True)
+
+    def test_a_file_the_run_skipped_the_capability_over_is_not_drift(self):
+        import drift as d
+        root = self._repo()
+        self._finish_run_touching(root, "src/todos/list.ts", skipped_names=["todos"])
+        living, _ = cc.resolve_living_specs(str(root))
+        result = d.compute_drift(str(root), living)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertTrue(todos["inSync"], todos)
+
+    def test_a_file_no_run_vouched_for_is_still_drift(self):
+        import drift as d
+        root = self._repo()
+        self._finish_run_touching(root, "src/todos/list.ts", skipped_names=["something-else"])
+        living, _ = cc.resolve_living_specs(str(root))
+        result = d.compute_drift(str(root), living)
+        todos = next(c for c in result["capabilities"] if c["name"] == "todos")
+        self.assertFalse(todos["inSync"], todos)

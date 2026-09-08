@@ -666,6 +666,21 @@ def build_report(root: str = ".") -> dict:
         checked += 1
         target_texts[name] = text
         findings.extend(check_living_spec(text, rel, root=root, capability=name))
+        # The rules tier is plain bullets, one per rule, and the only thing that
+        # can go wrong with it is having none. A file with a banner and no rule
+        # is a stub someone will trust.
+        rules_rel = rsp.tier_paths(rel, root).get("rules") or {}
+        if rules_rel.get("exists"):
+            try:
+                with open(os.path.join(root, rules_rel["path"]), encoding="utf-8") as fh:
+                    rules_text = fh.read()
+            except (OSError, UnicodeDecodeError):
+                rules_text = ""
+            if not any(ln.lstrip().startswith(("- ", "* ")) for ln in rules_text.splitlines()):
+                findings.append(_finding(
+                    WARNING, "rules-empty", rules_rel["path"], 1,
+                    "This rules file holds no rule.",
+                    "Add one bullet per convention, or delete the file.", name))
 
     for spec_md in _active_feature_specs(root):
         rel = os.path.relpath(spec_md, root).replace(os.sep, "/")

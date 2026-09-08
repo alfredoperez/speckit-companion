@@ -172,7 +172,46 @@ def _target_spec(root: str, cap: dict, to: str, spec_override: str | None) -> st
         # legacy `capabilities/<name>/<name>.spec.md` so a registry written before the
         # rename keeps resolving; moving a capability is not the place to keep it.
         return f"{cc.DEFAULT_CAPABILITY_ROOT}/{cap['name']}/{cap['name']}{SPEC_SUFFIX}"
-    return f"{_area_root(root, cap)}/{cap['name']}{SPEC_SUFFIX}"
+    area = _area_root(root, cap)
+    why = _needs_central(root, cap, area)
+    if why:
+        # Colocated would put this spec in a folder full of other capabilities'
+        # code. Adoption already sends such a capability central; moving it
+        # must not undo that.
+        print(f"[relocate] {cap['name']} stays central: {why}", file=sys.stderr)
+        return f"{cc.DEFAULT_CAPABILITY_ROOT}/{cap['name']}/{cap['name']}{SPEC_SUFFIX}"
+    return f"{area}/{cap['name']}{SPEC_SUFFIX}"
+
+
+def _needs_central(root: str, cap: dict, area: str) -> str | None:
+    """Why a colocated home would be wrong for this capability, or None.
+
+    Two shapes have no folder of their own: globs over several sibling
+    directories (the common parent belongs to all of them), and a glob over a
+    whole area that other capabilities live inside (the layer capability)."""
+    dirs = set()
+    for pat in cap.get("match") or []:
+        lit = _posix(rsp._literal_prefix(pat))
+        if lit and os.path.isfile(os.path.join(root, lit)):
+            lit = _posix(os.path.dirname(lit))
+        if lit:
+            dirs.add(lit)
+    if len(dirs) > 1:
+        return f"its globs cover {len(dirs)} sibling directories, so {area}/ is nobody's folder"
+    try:
+        others, _ = cc.resolve_living_specs(root)
+    except Exception:  # noqa: BLE001 — best-effort; a bad registry is reported elsewhere
+        return None
+    for other in others.get("capabilities") or []:
+        if other.get("name") == cap.get("name"):
+            continue
+        try:
+            inner = _area_root(root, other)
+        except RelocateError:
+            continue
+        if inner != area and inner.startswith(area + "/"):
+            return f"{other['name']} lives inside {area}/, which makes this the layer's capability"
+    return None
 
 
 # --------------------------------------------------------------------------- #

@@ -87,11 +87,23 @@ Show the proposed capability tree to the developer — names, match globs, and t
 
 **`<name>.spec.md` — the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects, which are the area's surface and are stable. Two measured attempts at reading *implementation* produced 447 and 732 lines against a hand-written 255, so the guard is this: **a requirement that names a function, a hook, a component or a file is not observable, and belongs in the rules file or nowhere.** Say what happens, not what calls what.
 
-**`<name>.rules.md` — the cold tier, read only when a plan is large enough to care.** The conventions you transcribed in step 1, each with the file and line it came from and the tool that enforces it where one does. This is where a layering rule lives. Nothing here is read by an ordinary run, which is the point: it is true, it is rarely needed, and it costs nothing to keep.
+**`<name>.rules.md` — the cold tier, read only when a plan is large enough to care.** The conventions you transcribed in step 1, as **plain bullets**. Not a spec: no headings per rule, no SHALL, no scenarios. One line per rule, in this order: the rule, where it is stated, what enforces it or `unenforced`. Written the way `CLAUDE.md` says it, because that is where it came from.
+
+```markdown
+# Pages — Rules
+
+> [DRAFT] Adopted from the project's conventions. Review before trusting.
+
+- A page imports downward only: widgets, features, entities, shared. Never app, never a sibling page. `CLAUDE.md:18`, unenforced.
+- Route paths come from `pathKeys`, never a string literal. `CLAUDE.md:48`, unenforced.
+- Files are named `<slice>.<segment>.<ext>`. `CLAUDE.md:31`, unenforced.
+```
+
+The file has no per-rule markers; its `[DRAFT]` line alone says it is unreviewed, and approving the spec clears it.
 
 Both files, at the paths chosen at the review gate:
 
-1. **Title** — `# <Capability> — Living Spec` and `# <Capability> — Rules`.
+1. **Title** — `# <Capability> — Living Spec`; the rules file is `# <Capability> — Rules`.
 2. **Draft banner** on each, `[DRAFT]` first: `> [DRAFT] Adopted from the code's surface and the project's conventions. Review before trusting.` The banner summarises the per-requirement markers below it, so it goes when the last one does.
 3. **`## Purpose`** — one or two sentences on why this capability exists and what would go wrong without it.
 4. **`## Requirements`** — in the shape the fold and the resolver both read. A spec requirement:
@@ -108,11 +120,9 @@ Both files, at the paths chosen at the review gate:
    - **THEN** they are sent to the 404 screen, because an article without a slug is not a screen
    ```
 
-   A rules requirement is the same shape, and its WHEN is a **future edit** rather than something a user does: "when two pages need the same helper". Its THEN says where the code goes instead, never that something is forbidden.
+   **Every spec requirement carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
 
-   **Every requirement in both files carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
-
-   The `touches` marker for an arch rule is the **whole layer glob**, because the rule is about the boundary. For a spec requirement it is the files that produce that behaviour.
+   The `touches` marker on a spec requirement names the files that produce that behaviour. The rules file carries none.
 
 5. **`## Uncovered`** — rules with no owner and areas with no capability. Not files nobody opened.
 

@@ -34,13 +34,9 @@ billing        capabilities/billing/billing.spec.md  →  src/billing/billing.sp
 billing-tax    capabilities/billing/tax.spec.md  →  src/billing/tax/billing-tax.spec.md
 ```
 
-Call out anything the developer would not predict:
+Add one line only where something would surprise them: a display name that changes (colocated names come from the file stem), a capability that stays central because its globs cover several folders or the whole area, and any `.rules.md` or `.coverage.md` that travels with the spec.
 
-- **A changed display name.** A colocated capability is named from its filename stem, so moving `speckit-extension-capture` to `capture.spec.md` makes the sidebar show `capture`. Say so, and offer to keep the stem matching the name instead.
-- **No obvious home.** A capability whose match globs span unrelated directories has no single area root. Propose the shallowest common directory; if there isn't a sensible one, say so and suggest leaving that capability central, or take an explicit path from the developer.
-- **Tier files.** If the capability has `.rules.md` or `.coverage.md` siblings, they move too. Name them.
-
-Pause for confirmation. This is the one review gate.
+Then ask. One question, one word back. This is the only pause.
 
 ### 2. Run the relocation
 
