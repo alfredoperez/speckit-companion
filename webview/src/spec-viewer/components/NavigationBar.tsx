@@ -12,21 +12,34 @@ export function NavigationBar() {
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
         currentStep, stepHistory, stalenessMap } = ns;
 
-    // Living-spec mode: no workflow phases to step through — render only a
-    // flat tier tab strip (Spec / Architecture / Coverage).
+    // Living-spec mode: no phases, just Overview then the tier strip (Spec / Rules / Coverage).
     if (ns.livingMode) {
         const tiers = coreDocs.filter(d => d.exists);
-        if (tiers.length <= 1) return null;
+        const onOverview = showingOverview.value;
         return (
             <div class="step-children" aria-label="Living spec tiers">
                 <div class="step-children-tabs">
+                    <button
+                        class={`step-child ${onOverview ? 'active' : ''}`}
+                        data-doc="overview"
+                        aria-current={onOverview ? 'page' : undefined}
+                        onClick={() => {
+                            viewerMode.value = 'overview';
+                            vscode.postMessage({ type: 'overviewChosen' });
+                        }}
+                    >
+                        Overview
+                    </button>
                     {tiers.map(doc => (
                         <button
                             key={doc.type}
-                            class={`step-child ${doc.type === currentDoc ? 'active' : ''}`}
+                            class={`step-child ${!onOverview && doc.type === currentDoc ? 'active' : ''}`}
                             data-doc={doc.type}
-                            aria-current={doc.type === currentDoc ? 'page' : undefined}
-                            onClick={() => vscode.postMessage({ type: 'switchDocument', documentType: doc.type })}
+                            aria-current={!onOverview && doc.type === currentDoc ? 'page' : undefined}
+                            onClick={() => {
+                                viewerMode.value = 'document';
+                                vscode.postMessage({ type: 'switchDocument', documentType: doc.type });
+                            }}
                         >
                             {doc.label}
                         </button>

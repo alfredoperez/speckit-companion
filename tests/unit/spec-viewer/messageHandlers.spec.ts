@@ -3,6 +3,9 @@
  */
 
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import type { MessageHandlerDependencies } from "../../../src/features/spec-viewer/messageHandlers";
 import { createMessageHandlers } from "../../../src/features/spec-viewer/messageHandlers";
 import type { SpecViewerState } from "../../../src/features/spec-viewer/types";
@@ -330,5 +333,103 @@ describe("livingAdopt", () => {
     await handler({ type: "livingAdopt" } as any);
 
     expect(vscode.commands.executeCommand).toHaveBeenCalledWith("speckit.livingSpecs.adopt");
+  });
+});
+
+describe("a living spec in the viewer", () => {
+  const banner = "> [DRAFT] Adopted from the code's surface and the project's conventions. Review before trusting.";
+  const adopted = [
+    "# Todos",
+    "",
+    banner,
+    "",
+    "## Requirements",
+    "",
+    "### Keeps order",
+    "<!-- adopted: CLAUDE.md:3 -->",
+    "",
+    "Body.",
+    "",
+    "### Already confirmed",
+    "",
+    "Body.",
+  ].join("\n");
+  let root: string;
+  let specFile: string;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "living-"));
+    specFile = path.join(root, "src", "todos.spec.md");
+    fs.mkdirSync(path.dirname(specFile), { recursive: true });
+    fs.writeFileSync(specFile, adopted);
+    (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: root } }];
+  });
+
+  afterEach(() => {
+    (vscode.workspace as any).workspaceFolders = undefined;
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  function livingDeps(overrides: Partial<MessageHandlerDependencies> = {}) {
+    return makeDeps(
+      [makeSpecDocument("spec", "todos.spec.md", specFile, true)],
+      overrides,
+      { living: true, currentDocument: "spec", livingSourcePath: specFile },
+    );
+  }
+
+  it("approving one requirement removes only its adopted marker", async () => {
+    const deps = livingDeps();
+    await createMessageHandlers(path.dirname(specFile), deps)({ type: "approveRequirement", heading: "Keeps order" } as any);
+
+    const after = fs.readFileSync(specFile, "utf-8");
+    expect(after).not.toContain("adopted:");
+    expect(after).not.toContain("[DRAFT]");
+    expect(after).toContain("### Keeps order");
+    expect(deps.updateContent).toHaveBeenCalled();
+  });
+
+  it("approving the spec clears every marker and the banner", async () => {
+    await createMessageHandlers(path.dirname(specFile), livingDeps())({ type: "approveSpec" } as any);
+
+    const after = fs.readFileSync(specFile, "utf-8");
+    expect(after).not.toContain("adopted:");
+    expect(after).not.toContain("[DRAFT]");
+  });
+
+  it("refuses to approve a file that is not a living tier", async () => {
+    const other = path.join(root, "src", "notes.md");
+    fs.writeFileSync(other, adopted);
+    const deps = makeDeps(
+      [makeSpecDocument("spec", "notes.md", other, true)],
+      {},
+      { living: true, currentDocument: "spec" },
+    );
+    await createMessageHandlers(path.dirname(other), deps)({ type: "approveSpec" } as any);
+
+    expect(fs.readFileSync(other, "utf-8")).toBe(adopted);
+    expect(deps.updateContent).not.toHaveBeenCalled();
+  });
+
+  it("refines from the comments the webview sent, against the living file's path", async () => {
+    const deps = livingDeps();
+    await createMessageHandlers(path.dirname(specFile), deps)({
+      type: "runDocRefinement",
+      doc: "spec",
+      comments: [{ lineNum: 10, lineContent: "Body.", comment: "Say which order" }],
+    } as any);
+
+    const prompt = (deps.executeInTerminal as jest.Mock).mock.calls[0][0] as string;
+    expect(prompt).toContain("Edit src/todos.spec.md in place");
+    expect(prompt).toContain("Say which order");
+    expect(prompt).toContain('in section "Keeps order"');
+  });
+
+  it("refines nothing when the webview sent no comments", async () => {
+    const deps = livingDeps();
+    await createMessageHandlers(path.dirname(specFile), deps)({ type: "runDocRefinement", doc: "spec" } as any);
+
+    expect(deps.executeInTerminal).not.toHaveBeenCalled();
   });
 });

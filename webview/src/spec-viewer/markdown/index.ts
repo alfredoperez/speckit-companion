@@ -6,7 +6,7 @@
 export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './renderer';
 export {
     setLivingCoverage,
-    preprocessLivingDraftNotice,
+    stripLivingDraftBanner,
     preprocessLivingPurpose,
     preprocessLivingScenarios,
     preprocessLivingRequirements,

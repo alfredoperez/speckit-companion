@@ -10,7 +10,7 @@
 
 import {
     safe,
-    preprocessLivingDraftNotice,
+    stripLivingDraftBanner,
     preprocessLivingPurpose,
     preprocessLivingScenarios,
     preprocessLivingRequirements,
@@ -46,31 +46,31 @@ describe('safe() — per-region fallback (FR-002, FR-003)', () => {
     });
 });
 
-describe('preprocessLivingDraftNotice (FR-006)', () => {
-    it('renders a draft notice from a top-window [DRAFT] marker', () => {
-        const md = '# Some Capability\n\n> [DRAFT] Surface-first draft — review before trusting.\n\n## Purpose\n\nWhy it exists.';
-        const out = preprocessLivingDraftNotice(md);
-        expect(out).toContain('living-draft-notice');
-    });
+describe('stripLivingDraftBanner', () => {
+    const banner = '> [DRAFT] Adopted from the code\'s surface and the project\'s conventions. Review before trusting.';
 
-    it('leaves the authored banner line intact (FR-006)', () => {
-        const md = '# Cap\n\n> [DRAFT] Surface-first draft — review before trusting.\n';
-        const out = preprocessLivingDraftNotice(md);
-        expect(out).toContain('> [DRAFT] Surface-first draft — review before trusting.');
-    });
-
-    it('renders no notice for a non-draft document', () => {
-        const md = '# Cap\n\n## Purpose\n\nWhy it exists.';
-        const out = preprocessLivingDraftNotice(md);
-        expect(out).toBe(md);
+    it('drops the banner from the body — the header badge already says DRAFT', () => {
+        const md = `# Cap\n\n${banner}\n\n## Purpose\n\nWhy it exists.`;
+        const out = stripLivingDraftBanner(md);
+        expect(out).not.toContain('[DRAFT]');
         expect(out).not.toContain('living-draft-notice');
+        expect(out).toContain('## Purpose');
+    });
+
+    it('keeps the line count so comment anchors below it do not move', () => {
+        const md = `# Cap\n\n${banner}\n\n## Purpose`;
+        expect(stripLivingDraftBanner(md).split('\n')).toHaveLength(md.split('\n').length);
+    });
+
+    it('leaves a non-draft document untouched', () => {
+        const md = '# Cap\n\n## Purpose\n\nWhy it exists.';
+        expect(stripLivingDraftBanner(md)).toBe(md);
     });
 
     it('does not count the word "draft" deep in the body (windowed)', () => {
         const body = Array.from({ length: 20 }, (_, i) => `line ${i}`).join('\n');
         const md = `# Cap\n\n${body}\n\n> [DRAFT] a late marker`;
-        const out = preprocessLivingDraftNotice(md);
-        expect(out).not.toContain('living-draft-notice');
+        expect(stripLivingDraftBanner(md)).toBe(md);
     });
 });
 
@@ -586,5 +586,12 @@ describe('the adopted badge', () => {
 
     it('flags the card as data so the outline agrees with the badge', () => {
         expect(preprocessLivingRequirements(spec)).toContain('data-req-adopted');
+    });
+
+    it('offers Approve beside the badge, and only there', () => {
+        const out = preprocessLivingRequirements(spec);
+        const [adoptedCard, confirmedCard] = out.split('### Already confirmed');
+        expect(adoptedCard).toContain('data-req-approve');
+        expect(confirmedCard).not.toContain('data-req-approve');
     });
 });

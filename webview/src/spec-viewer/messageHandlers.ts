@@ -12,7 +12,7 @@
 
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
-import { navState, viewerState, historyEntries } from './signals';
+import { navState, viewerState, historyEntries, viewerMode } from './signals';
 import { setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
@@ -90,6 +90,7 @@ export function buildHandlers(
         },
 
         revealRequirement: message => {
+            viewerMode.value = 'document';
             revealRequirement(message.heading);
         },
     };

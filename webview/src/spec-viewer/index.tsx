@@ -9,7 +9,7 @@ import { navState, markdownHtml } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
+import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
@@ -113,6 +113,7 @@ function init(): void {
     setupLineActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupApproveRequirement();
     restoreScrollPosition();
 
     // Handle initial raw content from template

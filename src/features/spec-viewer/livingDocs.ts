@@ -167,7 +167,7 @@ const DRAFT_BANNER_SCAN_LINES = 10;
  * `> [DRAFT] Surface-first draft from existing code — review before trusting.`
  * and the plain-line variants of it.
  */
-const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
+export const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
 
 /**
  * True when a living spec's markdown declares itself a draft.
@@ -191,6 +191,62 @@ export function isLivingDraft(content: string): boolean {
     return lines
         .slice(0, DRAFT_BANNER_SCAN_LINES)
         .some(line => DRAFT_BANNER_LINE.test(line));
+}
+
+/** The body of `## Purpose`, verbatim, or '' when the spec has none. */
+export function livingPurposeBody(content: string): string {
+    const lines = content.split(/\r?\n/);
+    const start = lines.findIndex(line => /^##\s+Purpose\s*$/.test(line));
+    if (start === -1) return '';
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i++) {
+        if (/^##(?!#)\s+/.test(lines[i])) { end = i; break; }
+    }
+    return lines.slice(start + 1, end).join('\n').trim();
+}
+
+const ADOPTED_MARKER = /^\s*<!--\s*adopted:\s*.+?\s*-->\s*$/;
+const INFERRED_TAG = /\s*\[inferred\]\s*/gi;
+
+/** A heading as the card keys it: tag-stripped, whitespace-trimmed. */
+function cardHeading(text: string): string {
+    return text.replace(INFERRED_TAG, ' ').trim();
+}
+
+/** Drop the `adopted` marker on one requirement (by heading) or all, then the `[DRAFT]` banner once none remain; null when nothing changed. */
+export function approveLivingText(content: string, heading?: string): string | null {
+    const lines = content.split(/\r?\n/);
+    const wanted = heading === undefined ? undefined : cardHeading(heading);
+    let inFence = false;
+    let inTarget = wanted === undefined;
+    let removed = false;
+    const kept: string[] = [];
+    for (const line of lines) {
+        if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
+        if (!inFence && wanted !== undefined) {
+            const head = /^###(?!#)\s+(.+?)\s*$/.exec(line);
+            if (head) inTarget = cardHeading(head[1]) === wanted;
+            else if (/^##(?!#)\s+/.test(line)) inTarget = false;
+        }
+        if (!inFence && inTarget && ADOPTED_MARKER.test(line)) {
+            removed = true;
+            continue;
+        }
+        kept.push(line);
+    }
+    if (!removed) return null;
+    if (!kept.some(line => ADOPTED_MARKER.test(line))) {
+        let from = 0;
+        if (kept[0]?.trim() === '---') {
+            const close = kept.findIndex((line, i) => i > 0 && line.trim() === '---');
+            if (close > 0) from = close + 1;
+        }
+        const banner = kept.findIndex((line, i) => i >= from && i < from + DRAFT_BANNER_SCAN_LINES && DRAFT_BANNER_LINE.test(line));
+        if (banner !== -1) {
+            kept.splice(banner, kept[banner + 1]?.trim() === '' ? 2 : 1);
+        }
+    }
+    return kept.join('\n');
 }
 
 /** Read a tier document, tolerating missing files. */

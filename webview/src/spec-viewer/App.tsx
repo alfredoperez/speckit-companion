@@ -5,6 +5,7 @@ import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
+import { LivingOverview } from './components/LivingOverview';
 import { markdownHtml, navState, showingOverview, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 
@@ -76,7 +77,14 @@ export function App({ specStatus }: AppProps) {
                             dangerouslySetInnerHTML={{ __html: html }}
                             hidden={showOverview}
                         />
-                        {hasMountedActivity && (
+                        {living && showOverview && (
+                            <div class="overview-pane">
+                                <ActivityErrorBoundary>
+                                    <LivingOverview />
+                                </ActivityErrorBoundary>
+                            </div>
+                        )}
+                        {!living && hasMountedActivity && (
                             <div class="overview-pane" hidden={!showOverview}>
                                 <ActivityErrorBoundary>
                                     <ActivityPanel />

@@ -43,26 +43,14 @@ export function setLivingCoverage(map: Record<string, string> | null): void {
 const DRAFT_BANNER_SCAN_LINES = 10;
 const DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
 
-/**
- * Draft notice: when a `[DRAFT]` marker sits in the top window, prepend
- * an announced trust-boundary banner. The authored banner line stays intact in
- * the flow — the notice is added, not a replacement.
- */
-export function preprocessLivingDraftNotice(markdown: string): string {
+/** The `[DRAFT]` banner feeds the header badge, not the prose: blank the line (kept, so comment anchors hold). */
+export function stripLivingDraftBanner(markdown: string): string {
     return safe(markdown, (md) => {
-        const isDraft = md
-            .split('\n')
-            .slice(0, DRAFT_BANNER_SCAN_LINES)
-            .some((line) => DRAFT_BANNER_LINE.test(line));
-        if (!isDraft) return md;
-
-        const notice =
-            '<div class="living-draft-notice" role="note" aria-describedby="living-draft-desc">' +
-            '<span class="living-draft-notice__label">Draft</span>' +
-            '<span class="living-draft-notice__text">Surface-first draft — a starting point, not a verified record.</span>' +
-            '<span id="living-draft-desc" class="sr-only">This living spec was adopted from existing code and has not been individually verified against tests. Review before trusting it.</span>' +
-            '</div>';
-        return `${notice}\n\n${md}`;
+        const lines = md.split('\n');
+        const at = lines.findIndex((line, i) => i < DRAFT_BANNER_SCAN_LINES && DRAFT_BANNER_LINE.test(line));
+        if (at === -1) return md;
+        lines[at] = '';
+        return lines.join('\n');
     });
 }
 
@@ -246,7 +234,9 @@ function buildRequirementCard(
     if (adoptedFrom) {
         badges.push(
             '<span class="living-req-confidence living-req-confidence--adopted">'
-            + `adopted from ${escapeHtml(adoptedFrom)}</span>`,
+            + `adopted from ${escapeHtml(adoptedFrom)}</span>`
+            + '<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
+            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>',
         );
     }
     if (inferred) {

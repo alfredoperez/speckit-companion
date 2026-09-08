@@ -32,7 +32,8 @@ export const viewerMode = signal<'overview' | 'document' | null>(null);
 export const overviewAvailable = computed(() => {
     const ns = navState.value;
     const vs = viewerState.value;
-    return (ns?.activityPanelEnabled ?? true) && !ns?.livingMode && !!vs && hasAnyData(vs);
+    if (ns?.livingMode) return true;
+    return (ns?.activityPanelEnabled ?? true) && !!vs && hasAnyData(vs);
 });
 
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */
@@ -48,7 +49,8 @@ export const showingOverview = computed(() => {
     // rule derived a default from recorded activity, and that default was the
     // Overview for every spec that had ever run, so every document row in the
     // tree lost to it.
-    const landing = navState.value?.landing ?? 'document';
+    // A living spec opens on its Overview unless a document or requirement was asked for.
+    const landing = navState.value?.landing ?? (navState.value?.livingMode ? 'overview' : 'document');
     return (viewerMode.value ?? landing) === 'overview';
 });
 
