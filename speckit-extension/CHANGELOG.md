@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+- **The commands say the same things in plainer words.** Every pipeline command carried the reasoning behind its own rules: the measurements that justified them, the runs that went wrong before them, the case for why they exist. That was written for whoever maintains them, and it was shipped to every run. The rules are unchanged and none was dropped. What went is the argument for them.
+
 ### Fixed
+- **The rule about how to name a command reaches the commands again.** It was added to every step earlier today and shipped as an empty section, so nothing that reads a command ever saw it.
 - **Moving a capability to the shared folder now puts it where adoption would.** `living-move` wrote the older `capabilities/<name>/spec.md` while its own documentation promised `capabilities/<capability>/<name>.spec.md`, so a spec moved centrally landed somewhere the docs said it would not be.
 - **A requirement's file marker survives a markdown formatter.** The marker is read from the first line under the heading that is not blank, rather than strictly the next line, so a formatter's blank line no longer unmarks every requirement in a spec and sends every load back to reading the file whole.
 
