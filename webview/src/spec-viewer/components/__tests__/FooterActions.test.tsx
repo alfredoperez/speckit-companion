@@ -168,3 +168,61 @@ describe('FooterActions — single source (viewerState)', () => {
         }
     });
 });
+
+describe('FooterActions — living spec', () => {
+    const living = (drifted: boolean) =>
+        ({
+            livingMode: true,
+            livingMeta: {
+                capabilityName: 'auth',
+                specPath: 'specs/auth/spec.md',
+                location: 'centralized',
+                match: ['src/auth/**'],
+                drifted,
+            },
+            enhancementButtons: [],
+        }) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    afterEach(() => {
+        navState.value = null;
+        viewerState.value = null;
+    });
+
+    it('shows only Adopt when nothing has drifted', () => {
+        navState.value = living(false);
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Adopt an area']);
+            expect(container.querySelector('.footer-context')).toBeNull();
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('adds the drift notice and both update actions once drift is found', () => {
+        navState.value = living(true);
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Adopt an area', 'Update all drifted', 'Update this spec']);
+            expect(container.querySelector('.footer-context')?.textContent).toContain('Source files changed');
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('Adopt posts livingAdopt and leaves the area choice to the extension', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = { postMessage };
+        navState.value = living(false);
+
+        const container = renderInto();
+        try {
+            container.querySelector('button')?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'livingAdopt' });
+        } finally {
+            cleanup(container);
+        }
+    });
+});

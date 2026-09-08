@@ -162,9 +162,11 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
     },
     livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
-    livingCheckDrift: (_msg, dir, deps) => handleLivingCheckDrift(dir, deps),
     livingSyncAll: async () => {
       await vscode.commands.executeCommand("speckit.livingSpecs.sync");
+    },
+    livingAdopt: async () => {
+      await vscode.commands.executeCommand("speckit.livingSpecs.adopt");
     },
     revealGlob: async (msg) => {
       const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -752,20 +754,6 @@ async function handleLivingUpdate(
   const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
   if (!capabilitySpecPath) return;
   await vscode.commands.executeCommand("speckit.livingSpecs.update", { capabilitySpecPath });
-}
-
-/**
- * Re-check this capability against the code. The Update action only exists once
- * drift has been found, which left the header with nothing to do in the state a
- * reader is in most of the time.
- */
-async function handleLivingCheckDrift(
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
-  if (!capabilitySpecPath) return;
-  await vscode.commands.executeCommand("speckit.livingSpecs.drift", { capabilitySpecPath });
 }
 
 /**
