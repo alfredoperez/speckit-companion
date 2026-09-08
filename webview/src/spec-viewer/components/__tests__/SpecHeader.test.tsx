@@ -289,3 +289,32 @@ describe('the spec location', () => {
         cleanup(container);
     });
 });
+
+describe('the Approve spec button', () => {
+    it('sits beside the DRAFT badge on an adopted living spec', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            badgeText: 'DRAFT',
+            livingMeta: livingMeta(),
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-title .spec-badge--draft')).not.toBeNull();
+        expect(container.querySelector('.spec-header-approve')?.textContent).toContain('Approve spec');
+
+        cleanup(container);
+    });
+
+    it('is absent once the spec is no longer a draft', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            badgeText: 'LIVING',
+            livingMeta: livingMeta(),
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-approve')).toBeNull();
+
+        cleanup(container);
+    });
+});

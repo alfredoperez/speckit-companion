@@ -5,7 +5,7 @@
 
 import { render, h } from 'preact';
 import type { Refinement, ReviewComment, VSCodeApi } from '../types';
-import { pendingRefinements } from '../signals';
+import { navState, pendingRefinements } from '../signals';
 import { detectLineType } from './lineActions';
 import { currentDoc } from './currentDoc';
 import { closeInlineEditor, openInlineEditor } from './editorHost';
@@ -241,7 +241,11 @@ export function submitAllRefinements(): void {
     if (!doc) return;
 
     // Comments are already persisted on add; the extension dispatches the doc's pending ones and marks them applied, and the refreshed context re-restores the cards cleared below.
-    vscode.postMessage({ type: 'runDocRefinement', doc });
+    // A living spec has nowhere to persist them, so they travel with the request.
+    const comments = navState.value?.livingMode
+        ? refinements.map(({ lineNum, lineContent, comment }) => ({ lineNum, lineContent, comment }))
+        : undefined;
+    vscode.postMessage({ type: 'runDocRefinement', doc, comments });
 
     clearAllRefinements();
 }

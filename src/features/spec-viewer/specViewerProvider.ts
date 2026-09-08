@@ -53,7 +53,8 @@ import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading } from "./livingDocs";
+import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody } from "./livingDocs";
+import { requirementSlices } from "../specs/livingSpecsModel";
 import { buildLivingHeaderMeta, resolveLivingHealth } from "./livingHeaderMeta";
 import type { LivingHeaderMeta } from "./types";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
@@ -291,13 +292,14 @@ export class SpecViewerProvider {
         ...existing.state,
         livingSourcePath: filePath,
         specName: livingCapabilityName(filePath),
+        landing: requirement ? 'document' : existing.state.landing,
       };
       await this.updateLivingContent(specDirectory, documentType);
       existing.panel.reveal(vscode.ViewColumn.One);
       this.revealRequirement(specDirectory, requirement);
       return;
     }
-    await this.createPanel(specDirectory, documentType, { living: true, sourcePath: filePath });
+    await this.createPanel(specDirectory, documentType, { living: true, sourcePath: filePath }, requirement ? 'document' : undefined);
     this.revealRequirement(specDirectory, requirement);
   }
 
@@ -608,6 +610,10 @@ export class SpecViewerProvider {
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.
     const isDraft = isLivingDraft(content);
+    const overview = {
+      purpose: livingPurposeBody(specTierContent),
+      requirements: requirementSlices(specTierContent).map(r => ({ heading: r.heading, adopted: !!r.adopted })),
+    };
 
     instance.state = {
       ...instance.state,
@@ -648,6 +654,8 @@ export class SpecViewerProvider {
       true,          // livingMode
       meta,
       heading !== null,
+      instance.state.landing,
+      overview,
     );
 
     this.outputChannel.appendLine(

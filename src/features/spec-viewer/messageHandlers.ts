@@ -47,7 +47,7 @@ import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
-import { livingTierDocuments } from "./livingDocs";
+import { approveLivingText, livingTierDocuments } from "./livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
@@ -58,7 +58,7 @@ import {
 } from "./reviewComments";
 import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
-import type { ReviewCommentDoc } from "../../core/types/specContext";
+import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
   SpecViewerState,
@@ -148,7 +148,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       handleAddComment(dir, msg.id, msg.doc, msg.lineNum, msg.lineContent, msg.comment, deps),
     removeComment: (msg, dir, deps) => handleRemoveComment(dir, msg.id, deps),
     editComment: (msg, dir, deps) => handleEditComment(dir, msg.id, msg.comment, deps),
-    runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps),
+    runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps, msg.comments),
     completeSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
     archiveSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
     reactivateSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ACTIVE, deps),
@@ -185,9 +185,15 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       const instance = deps.getInstance(dir);
       if (instance) instance.state.landing = undefined;
     },
+    documentChosen: async (_msg, dir, deps) => {
+      const instance = deps.getInstance(dir);
+      if (instance) instance.state.landing = "document";
+    },
+    approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
+    approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
-      handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps),
+      handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(
         `[SpecViewer] Webview error (${msg.source}): ${msg.message}` +
@@ -252,6 +258,7 @@ async function handleSwitchDocument(
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
+  if (instance.state.living) instance.state.landing = "document";
 
   // Debounce rapid clicks
   if (instance.debounceTimer) {
@@ -765,6 +772,7 @@ async function handleOpenLivingSpec(
   suppliedPath: string | undefined,
   capabilityName: string,
   deps: MessageHandlerDependencies,
+  requirement?: string,
 ): Promise<void> {
   const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!root) return;
@@ -799,7 +807,39 @@ async function handleOpenLivingSpec(
   const absPath = path.join(root, specPath);
   await vscode.commands.executeCommand("speckit.viewSpecDocument", absPath, {
     living: true,
+    requirement,
   });
+}
+
+const LIVING_TIER_FILE = /(^|\.)spec\.md$|\.rules\.md$/;
+
+/** Approve one requirement or a whole tier: only ever deletes `adopted` markers and, with the last one, the `[DRAFT]` banner. */
+async function handleLivingApprove(
+  specDirectory: string,
+  documentType: DocumentType | undefined,
+  heading: string | undefined,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const instance = deps.getInstance(specDirectory);
+  if (!instance?.state.living) return;
+  const type = documentType ?? instance.state.currentDocument;
+  const doc = instance.state.availableDocuments.find((d) => d.type === type && d.exists);
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!doc || !root) return;
+  const rel = path.relative(root, doc.filePath);
+  if (!isPathWithinRoot(root, rel) || !LIVING_TIER_FILE.test(path.basename(doc.filePath))) {
+    deps.outputChannel.appendLine(`[SpecViewer] Approve refused: not a living tier in the workspace: ${doc.filePath}`);
+    return;
+  }
+  const before = await fs.promises.readFile(doc.filePath, "utf-8");
+  const after = approveLivingText(before, heading);
+  if (after === null) {
+    deps.outputChannel.appendLine(`[SpecViewer] Approve: nothing adopted on ${heading ?? doc.fileName}`);
+    return;
+  }
+  await fs.promises.writeFile(doc.filePath, after, "utf-8");
+  deps.outputChannel.appendLine(`[SpecViewer] Approved ${heading ?? doc.fileName}`);
+  await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 
 /**
@@ -972,6 +1012,62 @@ async function handleRemoveComment(
   deps.outputChannel.appendLine(`[SpecViewer] Removed comment ${id}`);
 }
 
+function refinementPrompt(target: string, pending: ReviewComment[]): string {
+  const blockquote = (text: string) =>
+    text
+      .split("\n")
+      .map((l) => `> ${l}`)
+      .join("\n");
+  const promptRefinementText = pending
+    .map((c) => {
+      const where = c.anchor.heading
+        ? `Line ${c.anchor.line} in section "${c.anchor.heading}"`
+        : `Line ${c.anchor.line}`;
+      const indented = blockquote(c.anchor.blockText).replace(/^/gm, "  ");
+      return `- ${where}: ${c.comment}\n${indented}`;
+    })
+    .join("\n\n");
+  return [
+    `Edit ${target} in place to apply ONLY these line-specific refinements.`,
+    `DO NOT regenerate from any template.`,
+    `DO NOT run any setup script (e.g. setup-spec.sh, setup-plan.sh, setup-tasks.sh).`,
+    `DO NOT replace the file — make targeted edits only.`,
+    ``,
+    `Refinements requested:`,
+    promptRefinementText,
+  ].join("\n");
+}
+
+/** A living spec has no `.spec-context.json`, so the webview sends its comments with the request and the same prompt targets the tier file. */
+async function dispatchLivingRefinement(
+  specDirectory: string,
+  doc: ReviewCommentDoc,
+  inline: { lineNum: number; lineContent: string; comment: string }[],
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const instance = deps.getInstance(specDirectory);
+  const sourceDoc = instance?.state.availableDocuments.find((d) => d.type === doc && d.exists);
+  if (!sourceDoc || inline.length === 0) {
+    deps.outputChannel.appendLine(`[SpecViewer] No pending comments for ${doc} — nothing to refine`);
+    return;
+  }
+  let sourceLines: string[] | null = null;
+  try {
+    sourceLines = (await fs.promises.readFile(sourceDoc.filePath, "utf-8")).split("\n");
+  } catch {
+    sourceLines = null;
+  }
+  const pending = inline.map((c, i) =>
+    buildReviewComment(doc, c.lineNum, c.lineContent, sourceLines, c.comment, `living-${i}`),
+  );
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const target = root ? path.relative(root, sourceDoc.filePath).replace(/\\/g, "/") : sourceDoc.filePath;
+  deps.outputChannel.appendLine(
+    `[SpecViewer] Dispatching ${pending.length} refinement(s) for living ${target} (direct edit)`,
+  );
+  await deps.executeInTerminal(refinementPrompt(target, pending));
+}
+
 /**
  * Dispatch a document's pending comments to the AI as a direct-edit prompt,
  * then mark them `applied` (kept as history). Used by both the inline Refine
@@ -984,9 +1080,13 @@ async function dispatchDocRefinement(
   specDirectory: string,
   doc: ReviewCommentDoc,
   deps: MessageHandlerDependencies,
+  inline?: { lineNum: number; lineContent: string; comment: string }[],
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
+  if (instance.state.living) {
+    return dispatchLivingRefinement(specDirectory, doc, inline ?? [], deps);
+  }
   let ctx: SpecContext | null = null;
   try {
     ctx = await readSpecContext(specDirectory);
@@ -1015,31 +1115,7 @@ async function dispatchDocRefinement(
   );
   const filename = sourceDoc?.fileName ?? `${doc}.md`;
   const targetPath = instance.state.changeRoot || specDirectory;
-
-  const blockquote = (text: string) =>
-    text
-      .split("\n")
-      .map((l) => `> ${l}`)
-      .join("\n");
-  const promptRefinementText = pending
-    .map((c) => {
-      const where = c.anchor.heading
-        ? `Line ${c.anchor.line} in section "${c.anchor.heading}"`
-        : `Line ${c.anchor.line}`;
-      const indented = blockquote(c.anchor.blockText).replace(/^/gm, "  ");
-      return `- ${where}: ${c.comment}\n${indented}`;
-    })
-    .join("\n\n");
-
-  const prompt = [
-    `Edit ${targetPath}/${filename} in place to apply ONLY these line-specific refinements.`,
-    `DO NOT regenerate from any template.`,
-    `DO NOT run any setup script (e.g. setup-spec.sh, setup-plan.sh, setup-tasks.sh).`,
-    `DO NOT replace the file — make targeted edits only.`,
-    ``,
-    `Refinements requested:`,
-    promptRefinementText,
-  ].join("\n");
+  const prompt = refinementPrompt(`${targetPath}/${filename}`, pending);
 
   deps.outputChannel.appendLine(
     `[SpecViewer] Dispatching ${pending.length} refinement(s) for ${doc} (direct edit)`,

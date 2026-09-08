@@ -239,6 +239,13 @@ export interface LivingHeaderMeta {
     drifted?: boolean;
 }
 
+/** What the living-spec Overview lists, parsed from the spec tier once on the extension side. */
+export interface LivingOverview {
+    /** The `## Purpose` body, verbatim markdown. */
+    purpose: string;
+    requirements: { heading: string; adopted: boolean }[];
+}
+
 // ============================================
 // Message Protocols
 // ============================================
@@ -256,6 +263,8 @@ export interface NavState {
     livingMode?: boolean;
     /** Capability facts for the header; living-spec mode only. */
     livingMeta?: LivingHeaderMeta | null;
+    /** The Overview's material; living-spec mode only. */
+    livingOverview?: LivingOverview | null;
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
     /** Core documents with existence state */
@@ -453,6 +462,8 @@ export type ViewerToExtensionMessage =
     | {
           type: 'runDocRefinement';
           doc: ReviewCommentDoc;
+          /** A living spec has no `.spec-context.json` to persist to, so its comments ride along. */
+          comments?: { lineNum: number; lineContent: string; comment: string }[];
       }
     // Lifecycle actions
     | {
@@ -494,6 +505,20 @@ export type ViewerToExtensionMessage =
     | {
           type: 'overviewChosen';
       }
+    // The reader left the Overview for the document, for the same reason.
+    | {
+          type: 'documentChosen';
+      }
+    // Living-spec approval: drop the `adopted` marker on one requirement, or all of them
+    | {
+          type: 'approveRequirement';
+          heading: string;
+      }
+    | {
+          type: 'approveSpec';
+          /** Which tier to approve; the one on screen when absent. */
+          documentType?: DocumentType;
+      }
     // File reference click
     | {
           type: 'openFile';
@@ -504,6 +529,8 @@ export type ViewerToExtensionMessage =
           type: 'openLivingSpec';
           capabilityName: string;
           specPath?: string;
+          /** A requirement heading to land on, verbatim. */
+          requirement?: string;
       }
     // Webview render-time error (reported by error boundaries)
     | {

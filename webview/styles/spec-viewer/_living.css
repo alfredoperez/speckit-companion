@@ -6,35 +6,103 @@
  * and reduced-motion modes without owning any raw color.
  */
 
-/* ── Draft notice ───────────────────────────────────────────────────── */
-/* Added trust boundary at the top of a draft living spec. The authored banner
- * line stays in the flow below; this makes the draft status impossible to miss. */
-/* Present, never louder than the content it qualifies. A spec adopted from code
- * carries this for most of its life, and a permanent warning is one people learn
- * to scroll past — including on the specs where it matters. It was a filled,
- * bordered warning panel: the heaviest thing on the page, and what a reader met
- * before Purpose. */
-#markdown-content .living-draft-notice {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-5);
-  padding: 0 0 0 var(--space-3);
-  border-left: 2px solid var(--border);
-}
-
-#markdown-content .living-draft-notice__label {
-  flex: none;
+/* ── Approve ────────────────────────────────────────────────────────── */
+/* Beside the adopted badge: small, secondary, the review hue marks it. */
+#markdown-content .living-req-approve,
+.spec-header-approve {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  padding: 0 var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--review-ink);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--review) 35%, transparent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
 }
 
-#markdown-content .living-draft-notice__text {
+#markdown-content .living-req-approve:hover,
+.spec-header-approve:hover {
+  background: var(--review-subtle);
+}
+
+.spec-header-title .spec-header-approve {
+  margin-left: var(--space-3);
+  vertical-align: 0.25em;
+  font-size: var(--text-xs);
+}
+
+/* ── Overview ───────────────────────────────────────────────────────── */
+.living-overview__purpose {
+  margin: var(--space-2) 0 0;
   color: var(--text-body);
+  line-height: var(--leading-relaxed);
+}
+
+.living-overview .spec-header-where {
+  margin-top: var(--space-2);
+}
+
+.living-overview__health {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--text-body);
+}
+
+.living-overview__drift {
+  color: var(--warning);
+}
+
+.living-overview__adopted {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.living-overview__ink {
+  color: var(--review-ink);
+}
+
+.living-overview__reqs {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.living-overview__req {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.living-overview__req:hover {
+  color: var(--accent);
+}
+
+.living-overview__pip {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--review);
 }
 
 /* ── Purpose callout ────────────────────────────────────────────────── */

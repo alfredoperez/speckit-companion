@@ -22,6 +22,15 @@ export function setupFileRefClickHandler(): void {
     });
 }
 
+/** A requirement card's Approve button posts the heading the card is keyed on. */
+export function setupApproveRequirement(): void {
+    document.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-req-approve]');
+        const heading = btn?.closest<HTMLElement>('.living-req-card')?.dataset.req;
+        if (heading) vscode.postMessage({ type: 'approveRequirement', heading });
+    });
+}
+
 /**
  * Setup checkbox toggle handler for task items
  */

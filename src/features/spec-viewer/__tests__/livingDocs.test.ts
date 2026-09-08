@@ -7,6 +7,8 @@ import {
     livingTierDocuments,
     isLivingDraft,
     livingSpecTitle,
+    livingPurposeBody,
+    approveLivingText,
 } from '../livingDocs';
 
 describe('livingTierType', () => {
@@ -181,5 +183,66 @@ describe('isLivingDraft', () => {
 
     it('is false for empty content', () => {
         expect(isLivingDraft('')).toBe(false);
+    });
+});
+
+describe('livingPurposeBody', () => {
+    it('returns the Purpose section body verbatim, and nothing past it', () => {
+        const content = '# Cap\n\n## Purpose\n\nWhy it **exists**.\n\nSecond paragraph.\n\n## Requirements\n\n### A';
+        expect(livingPurposeBody(content)).toBe('Why it **exists**.\n\nSecond paragraph.');
+    });
+
+    it('is empty when there is no Purpose', () => {
+        expect(livingPurposeBody('# Cap\n\n## Requirements')).toBe('');
+    });
+});
+
+describe('approveLivingText', () => {
+    const banner = '> [DRAFT] Adopted from the code\'s surface and the project\'s conventions. Review before trusting.';
+    const spec = [
+        '# Cap',
+        '',
+        banner,
+        '',
+        '## Requirements',
+        '',
+        '### First rule [inferred]',
+        '<!-- touches: src/a/** -->',
+        '<!-- adopted: CLAUDE.md:18 -->',
+        '',
+        'Body one.',
+        '',
+        '### Second rule',
+        '<!-- adopted: docs/x.md -->',
+        '',
+        'Body two.',
+    ].join('\n');
+
+    it('approves one requirement by its card heading and keeps touches', () => {
+        const out = approveLivingText(spec, 'First rule')!;
+        expect(out).toContain('<!-- touches: src/a/** -->');
+        expect(out).not.toContain('CLAUDE.md:18');
+        expect(out).toContain('<!-- adopted: docs/x.md -->');
+        expect(out).toContain('[DRAFT]');
+    });
+
+    it('drops the banner and its blank line with the last marker', () => {
+        const out = approveLivingText(approveLivingText(spec, 'First rule')!, 'Second rule')!;
+        expect(out).not.toContain('adopted:');
+        expect(out).not.toContain('[DRAFT]');
+        expect(out.startsWith('# Cap\n\n## Requirements')).toBe(true);
+    });
+
+    it('approves the whole spec at once', () => {
+        const out = approveLivingText(spec)!;
+        expect(out).not.toContain('adopted:');
+        expect(out).not.toContain('[DRAFT]');
+        expect(out).toContain('Body one.');
+        expect(out).toContain('Body two.');
+    });
+
+    it('returns null when nothing matched', () => {
+        expect(approveLivingText(spec, 'No such rule')).toBeNull();
+        expect(approveLivingText('# Cap\n\n## Requirements\n\n### A\n\nBody.')).toBeNull();
     });
 });

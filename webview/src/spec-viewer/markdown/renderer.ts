@@ -21,7 +21,7 @@ import {
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
 import {
-    preprocessLivingDraftNotice,
+    stripLivingDraftBanner,
     preprocessLivingPurpose,
     preprocessLivingScenarios,
     preprocessLivingRequirements,
@@ -234,7 +234,7 @@ export function renderMarkdown(markdown: string): string {
     // Living-spec components run only in living mode; a feature spec never
     // touches this path, so its output stays byte-identical (FR-001, SC-001).
     if (livingMode) {
-        markdown = preprocessLivingDraftNotice(markdown);
+        markdown = stripLivingDraftBanner(markdown);
         markdown = preprocessLivingPurpose(markdown);
         markdown = preprocessLivingScenarios(markdown);
         markdown = preprocessLivingRequirements(markdown);

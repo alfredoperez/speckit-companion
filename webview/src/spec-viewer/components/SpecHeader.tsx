@@ -57,7 +57,7 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
     return facts.length > 0 ? <div class="spec-header-living">{facts}</div> : null;
 }
 
-function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
+export function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
     const shown = meta.match.slice(0, GLOBS_SHOWN);
     const rest = meta.match.slice(GLOBS_SHOWN);
 
@@ -108,6 +108,21 @@ function LivingCovers({ meta }: { meta: LivingHeaderMeta }) {
     );
 }
 
+/** Drops every `adopted` marker in the tier on screen, and the DRAFT banner with them. */
+export function ApproveSpecButton({ documentType }: { documentType?: string } = {}) {
+    return (
+        <button
+            type="button"
+            class="secondary spec-header-approve"
+            title="Approve every adopted requirement and clear the draft banner"
+            onClick={() => vscode.postMessage({ type: 'approveSpec', documentType })}
+        >
+            <span class="codicon codicon-check" aria-hidden="true"></span>
+            Approve spec
+        </button>
+    );
+}
+
 // Visible-label overrides for canonical status keys whose default
 // hyphen-split capitalization isn't the friendliest reading. Keeps
 // on-disk `.spec-context.json` keys unchanged.
@@ -152,6 +167,7 @@ export function SpecHeader() {
                                 <span class="spec-badge spec-badge--draft">DRAFT</span>
                             )}
                             {ns.specContextName}
+                            {meta && badgeText === 'DRAFT' && <ApproveSpecButton />}
                         </h1>
                     )}
                     {(badgeText || ns.branch || ns.createdDate || meta) && (

@@ -88,4 +88,19 @@ describe('showingOverview — the viewer owns the landing decision', () => {
             expect(showingOverview.value).toBe(true);
         });
     });
+
+    describe('a living spec', () => {
+        it('lands on its Overview with no run recorded', () => {
+            navState.value = { livingMode: true, activityPanelEnabled: false } as any;
+            viewerState.value = null;
+
+            expect(showingOverview.value).toBe(true);
+        });
+
+        it('lands on the document when a document or requirement was asked for', () => {
+            navState.value = { livingMode: true, landing: 'document' } as any;
+
+            expect(showingOverview.value).toBe(false);
+        });
+    });
 });
