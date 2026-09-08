@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Added
 
-- Implement now ends by handing the requirements and the diff to a worker that was told nothing about how the work was done, and asking which requirements are met, missing, or at risk of being undone by other code in the same change. A run that checks its own reasoning agrees with itself; this one cannot.
+- A new optional implement step hands the requirements and the diff to a worker that was told nothing about how the work was done, and asks which are met, missing, or at risk of being undone by other code in the same change. Off by default while it is measured; turn it on from the pipeline builder.
 
 ### Changed
 - **The commands say the same things in plainer words.** Every pipeline command carried the reasoning behind its own rules: the measurements that justified them, the runs that went wrong before them, the case for why they exist. That was written for whoever maintains them, and it was shipped to every run. The rules are unchanged and none was dropped. What went is the argument for them.
