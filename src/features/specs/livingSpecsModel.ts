@@ -738,6 +738,8 @@ export interface RequirementSlice {
      * first time a real change folds onto the requirement.
      */
     adopted?: string;
+    /** `capability#Heading` references this requirement aligns with, absent when none. */
+    aligns?: string[];
     /** Lines after the heading, up to the next `###`, the next `##`, or the end. */
     body: string[];
 }
@@ -747,6 +749,8 @@ const TOUCHES_RE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
 
 /** `<!-- adopted: CLAUDE.md:18 -->` — sits with the touches marker, under the heading. */
 const ADOPTED_RE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
+/** `<!-- aligns: session-access#Heading -->` — a rule under another capability this one depends on. */
+const ALIGNS_RE = /^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$/;
 
 /** True for every line inside a fenced block, and for the fences themselves. */
 function fenceFlags(lines: string[]): boolean[] {
@@ -812,6 +816,7 @@ export function requirementSlices(specText: string): RequirementSlice[] {
         // either to a reader as prose is a leak, not a fact about the requirement.
         let touchesMarker: RegExpMatchArray | null = null;
         let adoptedMarker: RegExpMatchArray | null = null;
+        let alignsMarker: RegExpMatchArray | null = null;
         let cut = 0;
         for (let k = 0; k < body.length; k++) {
             if (body[k].trim().length === 0) {
@@ -819,11 +824,13 @@ export function requirementSlices(specText: string): RequirementSlice[] {
             }
             const t = body[k].match(TOUCHES_RE);
             const a = body[k].match(ADOPTED_RE);
-            if (!t && !a) {
+            const al = body[k].match(ALIGNS_RE);
+            if (!t && !a && !al) {
                 break;
             }
             if (t && !touchesMarker) touchesMarker = t;
             if (a && !adoptedMarker) adoptedMarker = a;
+            if (al && !alignsMarker) alignsMarker = al;
             cut = k + 1;
         }
         // An empty list is `undefined`, not `[]`: `<!-- touches: , -->` names no
@@ -834,10 +841,14 @@ export function requirementSlices(specText: string): RequirementSlice[] {
             : [];
         const touches = globs.length > 0 ? globs : undefined;
         const adopted = adoptedMarker ? adoptedMarker[1] : undefined;
+        const aligns = alignsMarker
+            ? alignsMarker[1].split(',').map((g) => g.trim()).filter(Boolean)
+            : [];
         if (cut > 0) body = body.slice(cut);
         const slice: RequirementSlice = { heading: head[1], body };
         if (touches) slice.touches = touches;
         if (adopted) slice.adopted = adopted;
+        if (aligns.length > 0) slice.aligns = aligns;
         out.push(slice);
         i = j;
     }

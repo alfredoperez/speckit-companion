@@ -133,6 +133,12 @@ def _glob_matches(pat: str, f: str) -> bool:
 
 #: `<!-- touches: a/**, b.ts -->` — recognised only directly under a heading.
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+#: `<!-- adopted: CLAUDE.md:18 -->` — written by adoption, cleared by the fold.
+_ADOPTED_RE = re.compile(r"^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$")
+#: `<!-- aligns: session-access#Writing requires being signed in -->` — a
+#: requirement that constrains this one but lives under another capability.
+#: Every other edge points at code; this is the one that points at a rule.
+_ALIGNS_RE = re.compile(r"^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$")
 
 
 def requirement_slices(spec_text: str) -> list:
@@ -182,15 +188,31 @@ def requirement_slices(spec_text: str) -> list:
         # in a spec and every load quietly fell back to reading it whole (#690).
         # Still only the first non-blank line, so a marker discussed further
         # down is body, because a spec may legitimately discuss a marker.
-        first = next((ln for ln in body if ln.strip()), None)
-        marker = _TOUCHES_RE.match(first) if first is not None else None
-        touches = None
-        if marker:
-            touches = [g.strip() for g in marker.group(1).split(",") if g.strip()] or None
-            # The marker is parser metadata; handing it to a reader as prose is
-            # a leak, not a fact about the requirement.
-            body = body[1:]
-        out.append({"heading": head.group(1), "touches": touches, "body": body})
+        # Up to three markers may sit here, in any order, with blank lines among
+        # them. All are parser metadata: handing any of them to a reader as prose
+        # is a leak. Reading only the first line let the second marker leak.
+        touches = adopted = aligns = None
+        cut = 0
+        for k, ln in enumerate(body):
+            if not ln.strip():
+                continue
+            t = _TOUCHES_RE.match(ln); a = _ADOPTED_RE.match(ln); al = _ALIGNS_RE.match(ln)
+            if not (t or a or al):
+                break
+            if t and touches is None:
+                touches = [g.strip() for g in t.group(1).split(",") if g.strip()] or None
+            if a and adopted is None:
+                adopted = a.group(1).strip()
+            if al and aligns is None:
+                aligns = [g.strip() for g in al.group(1).split(",") if g.strip()] or None
+            cut = k + 1
+        body = body[cut:]
+        item = {"heading": head.group(1), "touches": touches, "body": body}
+        if adopted:
+            item["adopted"] = adopted
+        if aligns:
+            item["aligns"] = aligns
+        out.append(item)
         i = j
     return out
 
@@ -520,7 +542,49 @@ def render_human(result: dict) -> str:
     return _fmt_list(result.get("orphans", []))
 
 
-def requirements_for_changed(files: list, living: dict, root: str) -> list:
+def _follow_aligns(out: list, living: dict, root: str) -> list:
+    """One hop along `aligns` edges. A requirement the file match found may name
+    a rule under another capability; add that rule to that capability's entry,
+    creating the entry if the files never touched it. One hop, never the
+    targets' own targets, so a load stays bounded.
+    """
+    wanted: dict = {}
+    for item in out:
+        for req in item.get("requirements") or []:
+            for ref in req.get("aligns") or []:
+                cap_name, _, heading = ref.partition("#")
+                if cap_name and heading:
+                    wanted.setdefault(cap_name.strip(), set()).add(heading.strip())
+    if not wanted:
+        return out
+    by_name = {i["name"]: i for i in out}
+    caps = {c.get("name"): c for c in living.get("capabilities") or []}
+    for cap_name, headings in wanted.items():
+        cap = caps.get(cap_name)
+        if not cap:
+            continue
+        spec_rel = _resolve_spec(cap)
+        try:
+            with open(os.path.join(root, spec_rel), encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        item = by_name.get(cap_name)
+        if item is None:
+            item = {"name": cap_name, "spec": spec_rel, "exists": True, "whole": False,
+                    "purpose": purpose_section(text) or None, "requirements": []}
+            out.append(item); by_name[cap_name] = item
+        have = {r["heading"] for r in item["requirements"]}
+        for sl in requirement_slices(text):
+            if sl["heading"] in headings and sl["heading"] not in have:
+                item["requirements"].append({
+                    "heading": sl["heading"], "matched": False, "via": "aligns",
+                    "body": "\n".join(sl.get("body") or []).strip(),
+                })
+    return out
+
+
+def requirements_for_changed(files: list, living: dict, root: str, follow_aligns: bool = False) -> list:
     """What a load should contribute, per capability, for a set of changed files.
 
     A capability whose spec carries no marker anywhere is reported `whole`, and
@@ -565,11 +629,12 @@ def requirements_for_changed(files: list, living: dict, root: str) -> list:
                 "heading": s["heading"],
                 "matched": bool(s.get("touches")),
                 "body": "\n".join(s.get("body") or []).strip(),
+                **({"aligns": s["aligns"]} if s.get("aligns") else {}),
             }
             for s in picked
         ]
         out.append(item)
-    return out
+    return _follow_aligns(out, living, root) if follow_aligns else out
 
 
 def capability_names(living: dict) -> list:
@@ -736,6 +801,8 @@ def main(argv=None) -> int:
     ap.add_argument("--changed", nargs="*", help="changed files -> capabilities in scope")
     ap.add_argument("--all", action="store_true", help="every capability (union) + orphans")
     ap.add_argument("--orphans", action="store_true", help="orphan spec files (either layout)")
+    ap.add_argument("--follow-aligns", action="store_true",
+                    help="with --requirements-for: also load each requirement a matched one aligns with (one hop)")
     ap.add_argument("--requirements-for", action="store_true",
                     help="with --changed: what each capability should contribute, sliced by requirement")
     ap.add_argument("--headings", metavar="CAPABILITY",
@@ -809,7 +876,7 @@ def main(argv=None) -> int:
             files = args.changed or []
             # The rules ride along so a load step never spawns a second process.
             result = {"changed": files,
-                      "capabilities": requirements_for_changed(files, living, root),
+                      "capabilities": requirements_for_changed(files, living, root, follow_aligns=args.follow_aligns),
                       "rules": living.get("rules") or cc.load_rules(None)}
         else:
             files = args.changed or []

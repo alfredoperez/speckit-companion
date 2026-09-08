@@ -3853,3 +3853,62 @@ class StatusOrderIsPublishedForDrivers(unittest.TestCase):
                              capture_output=True, text=True).stdout.split()
         import spec_context as sc
         self.assertEqual(tuple(out), sc.STATUS_ORDER)
+
+
+# LS·11 — a requirement can point at a rule under another capability. Every
+# other edge points at code, so a spec was reachable only through the files
+# you touched; a rule that constrains this change but lives elsewhere was never
+# loaded. One hop along `aligns` reaches it. One hop only.
+class AnAlignsEdgeReachesOneHop(unittest.TestCase):
+    YAML = ("livingSpecs:\n  enabled: true\n  capabilities:\n"
+            "    - name: editor\n      match: [\"src/editor/**\"]\n      spec: capabilities/editor/editor.spec.md\n"
+            "    - name: session\n      match: [\"src/session/**\"]\n      spec: capabilities/session/session.spec.md\n"
+            "    - name: audit\n      match: [\"src/audit/**\"]\n      spec: capabilities/audit/audit.spec.md\n")
+    EDITOR = ("# Editor\n\n## Requirements\n\n### Writing requires being signed in\n"
+              "<!-- touches: src/editor/** -->\n<!-- adopted: route.ts:3 -->\n"
+              "<!-- aligns: session#A signed-out visitor is sent to login -->\n\nBody one.\n")
+    SESSION = ("# Session\n\n## Requirements\n\n### A signed-out visitor is sent to login\n"
+               "<!-- touches: src/session/** -->\n<!-- aligns: audit#Every redirect is logged -->\n\nBody two.\n\n"
+               "### Unrelated session rule\n<!-- touches: src/session/other/** -->\n\nBody three.\n")
+    AUDIT = "# Audit\n\n## Requirements\n\n### Every redirect is logged\n<!-- touches: src/audit/** -->\n\nBody four.\n"
+
+    def _repo(self):
+        return make_repo(self.YAML, spec_files=[], contents={
+            "capabilities/editor/editor.spec.md": self.EDITOR,
+            "capabilities/session/session.spec.md": self.SESSION,
+            "capabilities/audit/audit.spec.md": self.AUDIT,
+        }) if "contents" in make_repo.__code__.co_varnames else None
+
+    def _load(self, follow):
+        import tempfile, pathlib
+        root = pathlib.Path(tempfile.mkdtemp())
+        (root / ".specify").mkdir()
+        (root / "living-specs.yml").write_text(self.YAML.replace("livingSpecs:\n  ", "").replace("\n  ", "\n"))
+        for rel, txt in (("capabilities/editor/editor.spec.md", self.EDITOR),
+                         ("capabilities/session/session.spec.md", self.SESSION),
+                         ("capabilities/audit/audit.spec.md", self.AUDIT)):
+            (root / rel).parent.mkdir(parents=True, exist_ok=True); (root / rel).write_text(txt)
+        living = rsp.load_living(str(root))
+        return {i["name"]: i for i in rsp.requirements_for_changed(["src/editor/page.ts"], living, str(root), follow_aligns=follow)}
+
+    def test_every_leading_marker_is_stripped_from_the_body(self):
+        sl = rsp.requirement_slices(self.EDITOR)[0]
+        self.assertEqual(sl["touches"], ["src/editor/**"])
+        self.assertEqual(sl.get("adopted"), "route.ts:3")
+        self.assertEqual(sl.get("aligns"), ["session#A signed-out visitor is sent to login"])
+        self.assertNotIn("<!--", "\n".join(sl["body"]))
+
+    def test_without_the_flag_the_file_match_alone_decides(self):
+        out = self._load(False)
+        self.assertIn("editor", out); self.assertNotIn("session", out)
+
+    def test_one_hop_brings_the_named_rule_and_nothing_else_from_that_spec(self):
+        out = self._load(True)
+        self.assertIn("session", out)
+        heads = [r["heading"] for r in out["session"]["requirements"]]
+        self.assertEqual(heads, ["A signed-out visitor is sent to login"])
+        self.assertEqual(out["session"]["requirements"][0]["via"], "aligns")
+
+    def test_the_hop_is_not_transitive(self):
+        out = self._load(True)
+        self.assertNotIn("audit", out, "session's own aligns must not be followed")
