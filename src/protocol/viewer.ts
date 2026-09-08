@@ -475,13 +475,13 @@ export type ViewerToExtensionMessage =
     | {
           type: 'livingUpdate';
       }
-    // Re-check this capability against the code — the header's action when nothing has drifted
-    | {
-          type: 'livingCheckDrift';
-      }
     // Update every drifted living spec from the current changes — the footer's second action
     | {
           type: 'livingSyncAll';
+      }
+    // Adopt another code area as a living spec; the command asks which
+    | {
+          type: 'livingAdopt';
       }
     // A Covers glob was clicked: reveal its folder in the Explorer
     | {

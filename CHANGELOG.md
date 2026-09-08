@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - **An adopted requirement says where it came from, until something proves it.** Adoption reads your project's own conventions and writes down what it finds, and nothing has checked that what it wrote is true. Each of those requirements now carries an `adopted from` badge in the viewer naming the file it was transcribed from. The badge goes on its own the first time a real feature change updates that requirement, because building against a rule is what confirms it.
 
 - **The Living Specs panel points at your first adoption.** Once living specs are on and nothing is adopted yet, the panel offers to adopt a code area, rather than a row saying there is nothing here and leaving the wand icon to be discovered.
+- **Adopt an area from inside a living spec.** The bar at the bottom of every living spec now carries an Adopt an area button, so the moment a spec makes you want another one you can ask for it without going back to the sidebar. It asks which area, the same way the sidebar's wand does.
 
 ### Changed
 - **A capability's second file is called Rules, not Architecture.** It holds the conventions for writing code in that area, and the old name promised structure and diagrams. Projects with the old filename keep working and the viewer still opens it.
@@ -25,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - **A finished constitution stops being asked to configure itself.** Writing a constitution leaves a summary at the top of the file listing every placeholder it filled in, and the sidebar was reading that summary as the placeholders still being there. Any project whose constitution was written by the assistant saw Configure Constitution forever.
 - **Claude gets command names it recognises.** Claude Code registers Companion's commands with dashes, and several of the buttons dispatched them with dots instead, which resolves to nothing at all. Every command the extension sends now carries the spelling the assistant actually registered. Cursor and Antigravity had a narrower version of the same bug, where only the first dot was converted.
 - **A capability with no coverage file says so.** It used to render exactly like a fully covered one — both showed nothing — so "we have no number for this" read as "nothing to report". The three states now look like three states.
+- **A living spec that matches its code no longer offers drift actions.** Every living spec used to show "In step with the code" beside Update all drifted and Check for drift, even when there was nothing to update. The drift notice and its actions now appear only once drift has been found.
 
 ### Fixed
 - **The empty grey bar under the workflow picker is gone.** Create New Spec used to leave a blank filled strip between the workflow picker and the Feature Brief whenever there was nothing to say about the selected workflow. The space now closes up, and the workflow blurb still appears when there is one.

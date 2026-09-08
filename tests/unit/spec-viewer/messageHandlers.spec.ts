@@ -322,3 +322,13 @@ describe("handleApprove — custom workflow with interleaved action-only steps",
     }
   });
 });
+
+describe("livingAdopt", () => {
+  it("runs the sidebar's adopt command and lets it ask for the area", async () => {
+    const handler = createMessageHandlers(SPEC_DIR, makeDeps([]));
+
+    await handler({ type: "livingAdopt" } as any);
+
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith("speckit.livingSpecs.adopt");
+  });
+});
