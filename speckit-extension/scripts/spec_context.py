@@ -35,6 +35,18 @@ STEP_COMPLETED_STATUS = {
 # fires after an earlier step (e.g. after_specify re-resolving to a shipped spec).
 TERMINAL_STATUSES = {"implemented", "completed", "archived"}
 
+#: Every status a spec passes through, in the order it passes through them. The
+#: in-progress form of each step comes before the completed form. Anything that
+#: waits on a step (a driver, a hook, the panel) should rank statuses against this
+#: rather than keep its own list; a hand-kept copy went wrong three times in one day.
+STATUS_ORDER = (
+    "specifying", "specified",
+    "planning", "planned",
+    "tasking", "ready-to-implement",
+    "implementing", "implemented",
+    "completed", "archived",
+)
+
 
 def known_steps(feature_dir=None) -> set:
     """The canonical steps, plus any step this project actually declares.
@@ -870,3 +882,9 @@ def _has_complete(log: list, step: str, task: object = None) -> bool:
         and _entry_kind(e) == "complete"
         for e in log
     )
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    if "--status-order" in _sys.argv:
+        print(" ".join(STATUS_ORDER))

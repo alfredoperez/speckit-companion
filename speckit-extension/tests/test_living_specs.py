@@ -3827,3 +3827,29 @@ class ARunThatAccountedForTheCapabilityIsNotDrift(unittest.TestCase):
         result = d.compute_drift(str(root), living)
         todos = next(c for c in result["capabilities"] if c["name"] == "todos")
         self.assertFalse(todos["inSync"], todos)
+
+
+# The order a driver ranks statuses against comes from here, not from a list it
+# keeps. Pinning it means a renamed or inserted status breaks this test instead of
+# a bench round.
+class StatusOrderIsPublishedForDrivers(unittest.TestCase):
+    def test_every_completed_status_is_in_the_published_order(self):
+        import spec_context as sc
+        for step, done in sc.STEP_COMPLETED_STATUS.items():
+            self.assertIn(done, sc.STATUS_ORDER, step)
+
+    def test_in_progress_precedes_completed_for_each_step(self):
+        import spec_context as sc
+        order = list(sc.STATUS_ORDER)
+        for step, done in sc.STEP_COMPLETED_STATUS.items():
+            live = step + "ing" if step != "specify" else "specifying"
+            live = {"tasks": "tasking", "plan": "planning", "implement": "implementing"}.get(step, live)
+            self.assertLess(order.index(live), order.index(done), step)
+
+    def test_the_flag_prints_the_same_order(self):
+        import subprocess, sys, os
+        here = os.path.dirname(os.path.abspath(__file__))
+        out = subprocess.run([sys.executable, os.path.join(here, "..", "scripts", "spec_context.py"), "--status-order"],
+                             capture_output=True, text=True).stdout.split()
+        import spec_context as sc
+        self.assertEqual(tuple(out), sc.STATUS_ORDER)
