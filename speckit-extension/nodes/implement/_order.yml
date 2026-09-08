@@ -2,6 +2,7 @@
 # nodes: [...] replaces this list.
 order:
   - implement-exec
+  - check-requirements
   - complete
   - handoff
 
@@ -13,6 +14,8 @@ order:
 phases:
   - name: execute
     nodes: [implement-exec]
+  - name: check
+    nodes: [check-requirements]
   - name: wrap-up
     nodes: [complete, handoff]
 

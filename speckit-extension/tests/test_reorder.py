@@ -119,14 +119,16 @@ class ALockMeansHeldByADependency(unittest.TestCase):
             for n, why in assemble.movability(cmd, assemble.default_order(cmd)).items()
             if why
         ]
-        # Two boxed in by `reads:`, plus every step's handoff, which is held
+        # Three boxed in by `reads:`, plus every step's handoff, which is held
         # last because it dispatches the next step. `finalize` joins them for
         # the same reason: with the handoff pinned, the one slot it could
         # otherwise have taken was after it — recording the spec complete once
-        # the next step had already been told to start.
+        # the next step had already been told to start. `implement-exec` is
+        # held because `check-requirements` reads it: the check has to see
+        # finished work, so the work cannot move after the check.
         self.assertEqual(
             sorted(locked),
-            ["finalize"] + ["handoff"] * 5 + ["plan-doc", "resolve-dir"])
+            ["finalize"] + ["handoff"] * 5 + ["implement-exec", "plan-doc", "resolve-dir"])
 
 
 class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
