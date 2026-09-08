@@ -46,8 +46,12 @@ import companion_config as cc  # noqa: E402
 # Map a tier key to the sibling suffix that replaces the hot `.spec.md` tail.
 # Single source of truth for the reserved-tier filenames — RESERVED_TIERS (the
 # orphan/drift exemption set) derives from it so the suffixes live in one place.
-TIER_SUFFIXES = {"arch": ".arch.md", "coverage": ".coverage.md"}
-RESERVED_TIERS = tuple(TIER_SUFFIXES.values())
+#: The rules tier was called `.arch.md`, which promised structure and diagrams
+#: and delivered a lint policy. `.rules.md` says what is in it. The old name
+#: still resolves, so a project written before the rename keeps working.
+TIER_SUFFIXES = {"rules": ".rules.md", "coverage": ".coverage.md"}
+LEGACY_TIER_SUFFIXES = {"rules": ".arch.md"}
+RESERVED_TIERS = tuple(TIER_SUFFIXES.values()) + tuple(LEGACY_TIER_SUFFIXES.values())
 
 
 def load_living(root: str) -> dict:
@@ -298,11 +302,11 @@ def _resolve_spec(cap: dict) -> str:
 def tier_paths(spec: str, root: str | None = None) -> dict:
     """Derive a capability's reserved-tier sibling paths from its `spec` path.
 
-    `capabilities/x/spec.md` -> arch `capabilities/x/spec.arch.md`,
+    `capabilities/x/spec.md` -> rules `capabilities/x/spec.rules.md`,
     coverage `capabilities/x/spec.coverage.md`. Each entry carries the POSIX path
     and (when `root` is given) on-disk existence. Single source of truth for the
     tier filenames — the plan node and coverage checker reuse this rather than
-    re-deriving `.arch.md`/`.coverage.md`.
+    re-deriving `.rules.md`/`.coverage.md`.
     """
     spec = _posix(spec)
     # `<base>.spec.md` -> `<base>` (colocated `billing.spec.md` -> `billing`);
@@ -320,6 +324,13 @@ def tier_paths(spec: str, root: str | None = None) -> dict:
         entry = {"path": path}
         if root is not None:
             entry["exists"] = os.path.isfile(os.path.join(root, path))
+            # A project written before the rename has the old name on disk, and
+            # the tier it holds is the one being asked for.
+            legacy = LEGACY_TIER_SUFFIXES.get(key)
+            if legacy and not entry["exists"]:
+                legacy_path = base + legacy
+                if os.path.isfile(os.path.join(root, legacy_path)):
+                    entry = {"path": legacy_path, "exists": True}
         out[key] = entry
     return out
 
@@ -767,7 +778,7 @@ def main(argv=None) -> int:
         elif args.orphans:
             result = {"orphans": []}
         elif args.all:
-            result = {"capabilities": [], "orphans": []}
+            result = {"layout": "central", "capabilities": [], "orphans": []}
         elif args.requirements_for:
             result = {"changed": args.changed or [], "capabilities": [],
                       "rules": cc.load_rules(None)}
@@ -789,7 +800,10 @@ def main(argv=None) -> int:
             result = {"orphans": find_orphans(living, root)}
         elif args.all:
             orphans = find_orphans(living, root)
-            result = {"capabilities": discover_all(living, root, orphans),
+            # The layout rides along so adoption can read the answer the developer
+            # already gave at set-up instead of asking a second time.
+            result = {"layout": living.get("layout") or "central",
+                      "capabilities": discover_all(living, root, orphans),
                       "orphans": orphans}
         elif args.requirements_for:
             files = args.changed or []

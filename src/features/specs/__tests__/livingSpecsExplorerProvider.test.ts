@@ -107,18 +107,15 @@ describe('LivingSpecsExplorerProvider', () => {
         expect((roots[0].iconPath as vscode.ThemeIcon).id).toBe('error');
     });
 
-    it('renders one informative row when enabled but empty', async () => {
+    it('leaves the root empty when enabled with nothing adopted, so Adopt can show', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,
             capabilities: [],
             orphans: [],
+            configured: true,
         });
 
-        const roots = await provider.getChildren();
-
-        expect(roots).toHaveLength(1);
-        expect(roots[0].label).toBe('No living specs yet');
-        expect(roots[0].tooltip).toContain('Adopt');
+        expect(await provider.getChildren()).toEqual([]);
     });
 
     it('surfaces a notice when capabilities still linger in the legacy config', async () => {
@@ -140,7 +137,7 @@ describe('LivingSpecsExplorerProvider', () => {
         // no-registry case. With a registry there is always something to say.
         for (const listing of [
             { enabled: false, capabilities: [], orphans: [], configured: true },
-            { enabled: true, capabilities: [], orphans: [], configured: true },
+            { enabled: true, capabilities: [{ name: 'billing', spec: 'capabilities/billing/billing.spec.md', match: [], location: 'central', exists: true }], orphans: [], configured: true },
         ]) {
             (readLivingSpecs as jest.Mock).mockReturnValue(listing);
             provider = createProvider();
@@ -263,7 +260,7 @@ describe('LivingSpecsExplorerProvider', () => {
                     spec: 'capabilities/auth/spec.md',
                     location: 'centralized',
                     exists: true,
-                    tiers: [{ kind: 'arch', path: 'capabilities/auth/architecture.md' }],
+                    tiers: [{ kind: 'rules', path: 'capabilities/auth/architecture.md' }],
                     match: [],
                     exclude: [],
                 },
@@ -277,7 +274,7 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
 
         const tiers = await childrenOf(provider, caps[0]);
-        expect(tiers.map(t => t.label)).toEqual(['Spec', 'Architecture']);
+        expect(tiers.map(t => t.label)).toEqual(['Spec', 'Rules']);
         expect(tiers[0].relPath).toBe('capabilities/auth/spec.md');
     });
 });

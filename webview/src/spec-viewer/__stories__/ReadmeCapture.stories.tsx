@@ -291,7 +291,7 @@ function LivingViewerPanel() {
     navState.value = mockNavState({
         coreDocs: [
             mockDoc('spec', true, 'Spec'),
-            mockDoc('arch', true, 'Architecture'),
+            mockDoc('rules', true, 'Architecture'),
             mockDoc('coverage', true, 'Coverage'),
         ],
         relatedDocs: [],
@@ -540,7 +540,7 @@ function LivingHeaderPanel() {
     navState.value = mockNavState({
         coreDocs: [
             mockDoc('spec', true, 'Spec'),
-            mockDoc('arch', true, 'Architecture'),
+            mockDoc('rules', true, 'Architecture'),
             mockDoc('coverage', true, 'Coverage'),
         ],
         relatedDocs: [],

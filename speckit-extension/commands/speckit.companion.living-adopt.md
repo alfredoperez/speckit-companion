@@ -48,7 +48,7 @@ If no conventions doc and no enforcement config names a constraint, ask once, be
 
 Cutting by directory was tried on a nine-directory `src/pages`: it gave ten capabilities, nine of which said "this slice carries no rule of its own" and nothing else. **If a proposed capability's spec would have no requirement a person outside the team could read, it is not a capability.**
 
-**Propose the layer as one capability of its own**, named for the layer, carrying the whole layer glob and the conventions you transcribed. This is the one that gets an `.arch.md`. Every behaviour capability beside it shares the same coarse membership, so a file is claimed by both and the narrowing happens at the requirement.
+**Propose the layer as one capability of its own**, named for the layer, carrying the whole layer glob and the conventions you transcribed. This is the one that gets an `.rules.md`. Every behaviour capability beside it shares the same coarse membership, so a file is claimed by both and the narrowing happens at the requirement.
 
 Bring the whole list to the developer before writing anything: each capability's name, one line on what it covers, the directories it draws from, and roughly how many requirements you expect. Offer a coarser and a finer cut with the count each would give. **This is where the shape gets decided, and it is theirs to decide.**
 
@@ -57,21 +57,27 @@ For each capability the developer keeps, derive:
 - a **match** glob covering every directory it draws from,
 - a **spec** path, which depends on the storage layout chosen below.
 
-#### Choose the storage layout
+#### Where the specs go
 
-Living specs support two layouts, and the choice is the developer's:
+**The project already answered this. Do not ask again.** Read it:
 
-- **central** — every spec under `capabilities/<capability>/<name>.spec.md`, one folder per capability holding one spec or several granular ones. Easy to read end to end, and the spec stays put when code moves.
-- **colocated** — the spec sits next to the code it describes, at `<area root>/<name>.spec.md`. Ownership is obvious, the spec travels with the code in a move, and it shows up in the same folder a developer already has open.
+```bash
+python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --all --json
+```
 
-If the invocation named a layout, use it. **Otherwise ask before proposing anything**, since the layout determines the spec paths shown at the review gate. Offer central, colocated, or per-capability, and say plainly that it can be changed later.
+The `layout` field is `central` or `colocated`, set when living specs were turned on. An explicit `--layout` in this invocation overrides it; nothing else does. Asking a second time is how a developer answers "central" at set-up and ends up with colocated specs.
 
-Deriving a **colocated** path: take the capability's match glob, strip the trailing `/**`, and place `<name>.spec.md` in that directory — `src/features/spec-viewer/**` → `src/features/spec-viewer/spec-viewer.spec.md`.
+- **central** — `capabilities/<capability>/<name>.spec.md`. One folder per capability. The spec stays put when code moves.
+- **colocated** — `<area>/<name>.spec.md`, in the directory the capability covers. The spec travels with the code and shows up in a folder the developer already has open.
 
-Two consequences to state out loud when proposing colocated paths, because both surprise people:
+Deriving a **colocated** path: take the capability's match glob, strip the trailing `/**`, and put `<name>.spec.md` in that directory — `src/pages/article/**` → `src/pages/article/article-reading.spec.md`.
 
-1. **The filename stem becomes the capability's display name.** A capability named `speckit-extension-capture` colocated as `capture.spec.md` shows as `capture` in the sidebar. Either keep the stem equal to the name, or tell the developer the name it will display as.
-2. **A capability whose match globs span unrelated directories has no obvious home.** If a capability matches `speckit-extension/commands/**` *and* `speckit-extension/nodes/**`, there is no single area root. Propose the shallowest common directory, and if there isn't a sensible one, say so and propose central for that capability specifically — a mix is fine.
+**A capability spanning sibling directories goes central even in a colocated project.** Its shallowest common parent is a directory full of other capabilities' code, so a spec placed there sits next to nothing it describes and clutters a folder for everyone. A capability matching `src/pages/login/**`, `src/pages/register/**` and `src/pages/settings/**` has no home under `src/pages/`; it belongs at `capabilities/session-access/session-access.spec.md`. The same goes for a layer capability whose glob is the whole area. A mix is normal and is not worth remarking on.
+
+Two consequences of colocated placement to state out loud, because both surprise people:
+
+1. **The filename stem becomes the capability's display name.** A capability named `speckit-extension-capture` colocated as `capture.spec.md` shows as `capture` in the sidebar. Keep the stem equal to the name, or say what it will display as.
+2. **The rules file sits beside its spec**, same stem, `<name>.rules.md`.
 
 Show the proposed capability tree to the developer — names, match globs, and the resolved spec path for each — and pause for confirmation before drafting and registering. This is the one review gate in this command.
 
@@ -79,13 +85,13 @@ Show the proposed capability tree to the developer — names, match globs, and t
 
 **A spec says what the area does. It is not a style guide.** Import direction, file naming, barrels and path helpers are real rules and they are worth keeping, but they describe how the code is written, not what the software does, and a reader who opens a spec to learn what a screen shows should not find a linting policy. Living specs already ship two tiers for exactly this split, and adoption writes both.
 
-**`<name>.spec.md` — the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects, which are the area's surface and are stable. Two measured attempts at reading *implementation* produced 447 and 732 lines against a hand-written 255, so the guard is this: **a requirement that names a function, a hook, a component or a file is not observable, and belongs in the arch tier or nowhere.** Say what happens, not what calls what.
+**`<name>.spec.md` — the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects, which are the area's surface and are stable. Two measured attempts at reading *implementation* produced 447 and 732 lines against a hand-written 255, so the guard is this: **a requirement that names a function, a hook, a component or a file is not observable, and belongs in the rules file or nowhere.** Say what happens, not what calls what.
 
-**`<name>.arch.md` — the cold tier, read only when a plan is architecture-significant.** The conventions you transcribed in step 1, each with the file and line it came from and the tool that enforces it where one does. This is where a layering rule lives. Nothing here is read by an ordinary run, which is the point: it is true, it is rarely needed, and it costs nothing to keep.
+**`<name>.rules.md` — the cold tier, read only when a plan is large enough to care.** The conventions you transcribed in step 1, each with the file and line it came from and the tool that enforces it where one does. This is where a layering rule lives. Nothing here is read by an ordinary run, which is the point: it is true, it is rarely needed, and it costs nothing to keep.
 
 Both files, at the paths chosen at the review gate:
 
-1. **Title** — `# <Capability> — Living Spec` and `# <Capability> — Architecture`.
+1. **Title** — `# <Capability> — Living Spec` and `# <Capability> — Rules`.
 2. **Draft banner** on each, `[DRAFT]` first: `> [DRAFT] Adopted from the code's surface and the project's conventions. Review before trusting.` The banner summarises the per-requirement markers below it, so it goes when the last one does.
 3. **`## Purpose`** — one or two sentences on why this capability exists and what would go wrong without it.
 4. **`## Requirements`** — in the shape the fold and the resolver both read. A spec requirement:
@@ -102,7 +108,7 @@ Both files, at the paths chosen at the review gate:
    - **THEN** they are sent to the 404 screen, because an article without a slug is not a screen
    ```
 
-   An arch requirement is the same shape, and its WHEN is a **future edit** rather than something a user does: "when two pages need the same helper". Its THEN says where the code goes instead, never that something is forbidden.
+   A rules requirement is the same shape, and its WHEN is a **future edit** rather than something a user does: "when two pages need the same helper". Its THEN says where the code goes instead, never that something is forbidden.
 
    **Every requirement in both files carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
 

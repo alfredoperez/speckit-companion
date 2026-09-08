@@ -109,16 +109,16 @@ describe('readLivingSpecs', () => {
         const root = ws(
             {
                 'capabilities/checkout/spec.md': '# checkout',
-                'capabilities/checkout/spec.arch.md': '# arch',
+                'capabilities/checkout/spec.rules.md': '# arch',
                 // no coverage sibling
             },
             'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
         );
         const cap = readLivingSpecs(root).capabilities[0];
         const kinds = cap.tiers.map(t => t.kind);
-        expect(kinds).toContain('arch');
+        expect(kinds).toContain('rules');
         expect(kinds).not.toContain('coverage');
-        expect(cap.tiers.find(t => t.kind === 'arch')!.path).toBe('capabilities/checkout/spec.arch.md');
+        expect(cap.tiers.find(t => t.kind === 'rules')!.path).toBe('capabilities/checkout/spec.rules.md');
     });
 
     it('derives colocated tier siblings from a *.spec.md base', () => {
@@ -147,7 +147,7 @@ describe('readLivingSpecs', () => {
             {
                 // claimed centralized spec + a reserved tier sibling
                 'capabilities/checkout/spec.md': '# checkout',
-                'capabilities/checkout/spec.arch.md': '# arch',
+                'capabilities/checkout/spec.rules.md': '# arch',
                 // another file inside the owned capability dir — not an orphan
                 'capabilities/checkout/legacy.spec.md': '# legacy',
                 // a feature spec under specs/ — never an orphan

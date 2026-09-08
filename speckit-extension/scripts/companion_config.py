@@ -574,11 +574,18 @@ def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
     if not isinstance(block, dict):
         return {
             "enabled": False,
+            "layout": "central",
             "exempt": list(DEFAULT_EXEMPT_GLOBS),
             "capabilities": [],
             "rules": load_rules(None),
         }
     enabled = bool(block.get("enabled", False))
+    # Where this project keeps its specs, chosen once at set-up. Adoption reads it
+    # instead of asking again, which is what made a developer answer twice and get
+    # a layout they had not chosen.
+    layout = str(block.get("layout") or "central").strip().lower()
+    if layout not in ("central", "colocated"):
+        layout = "central"
     exempt = _as_list(block.get("exempt")) if "exempt" in block else list(DEFAULT_EXEMPT_GLOBS)
     raw = block.get("capabilities") or []
     capabilities = []
@@ -613,6 +620,7 @@ def load_living_specs_block(block, rule_warnings: list | None = None) -> dict:
         )
     return {
         "enabled": enabled,
+        "layout": layout,
         "exempt": exempt,
         "capabilities": capabilities,
         "rules": load_rules(block.get("rules"), rule_warnings),

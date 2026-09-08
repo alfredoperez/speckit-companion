@@ -12,10 +12,10 @@ import {
 describe('livingTierType', () => {
     it.each([
         ['spec.md', 'spec'],
-        ['spec.arch.md', 'arch'],
+        ['spec.rules.md', 'rules'],
         ['spec.coverage.md', 'coverage'],
         ['todos.spec.md', 'spec'],
-        ['todos.arch.md', 'arch'],
+        ['todos.rules.md', 'rules'],
         ['todos.coverage.md', 'coverage'],
     ])('%s → %s', (file, tier) => {
         expect(livingTierType(file)).toBe(tier);
@@ -29,7 +29,7 @@ describe('livingCapabilityName', () => {
     });
     it('uses the file stem for the colocated layout', () => {
         expect(livingCapabilityName('/w/src/store/todos.spec.md')).toBe('todos');
-        expect(livingCapabilityName('/w/src/lib/storage.arch.md')).toBe('storage');
+        expect(livingCapabilityName('/w/src/lib/storage.rules.md')).toBe('storage');
     });
 });
 
@@ -107,18 +107,18 @@ describe('livingTierDocuments', () => {
         const dir = path.join(root, 'src', 'store');
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, 'todos.spec.md'), '# s');
-        fs.writeFileSync(path.join(dir, 'todos.arch.md'), '# a');
+        fs.writeFileSync(path.join(dir, 'todos.rules.md'), '# a');
         const docs = livingTierDocuments(path.join(dir, 'todos.spec.md'));
-        expect(docs.map(d => d.fileName)).toEqual(['todos.spec.md', 'todos.arch.md']);
+        expect(docs.map(d => d.fileName)).toEqual(['todos.spec.md', 'todos.rules.md']);
     });
 
     it('anchoring on a tier sibling still resolves the whole family', () => {
         const dir = path.join(root, 'capabilities', 'billing');
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, 'spec.md'), '# s');
-        fs.writeFileSync(path.join(dir, 'spec.arch.md'), '# a');
-        const docs = livingTierDocuments(path.join(dir, 'spec.arch.md'));
-        expect(docs.map(d => d.type)).toEqual(['spec', 'arch']);
+        fs.writeFileSync(path.join(dir, 'spec.rules.md'), '# a');
+        const docs = livingTierDocuments(path.join(dir, 'spec.rules.md'));
+        expect(docs.map(d => d.type)).toEqual(['spec', 'rules']);
     });
 });
 

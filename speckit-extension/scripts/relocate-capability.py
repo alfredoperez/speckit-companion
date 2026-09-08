@@ -103,7 +103,7 @@ def _display_name(spec: str) -> str:
     a capability can silently rename it in the UI."""
     base = os.path.basename(_posix(spec))
     stem = base
-    for suffix in (SPEC_SUFFIX, ".arch.md", ".coverage.md", ".md"):
+    for suffix in (SPEC_SUFFIX, ".rules.md", ".arch.md", ".coverage.md", ".md"):
         if stem.endswith(suffix):
             stem = stem[: -len(suffix)]
             break

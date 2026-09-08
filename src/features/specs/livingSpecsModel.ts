@@ -21,13 +21,23 @@ export const LEGACY_CONFIG_REL = path.join('.specify', 'companion.yml');
 
 /** Reserved tier siblings, keyed by kind. Single source of truth for suffixes. */
 const TIER_SUFFIXES: Record<TierKind, string> = {
-    arch: '.arch.md',
+    rules: '.rules.md',
     coverage: '.coverage.md',
 };
 
-const RESERVED_TIER_SUFFIXES = Object.values(TIER_SUFFIXES);
+/**
+ * The rules tier was `.arch.md`, a name that promised structure and diagrams and
+ * held a lint policy. A project written before the rename keeps its file, and
+ * that file is still the rules tier.
+ */
+const LEGACY_TIER_SUFFIXES: Partial<Record<TierKind, string>> = { rules: '.arch.md' };
 
-export type TierKind = 'arch' | 'coverage';
+const RESERVED_TIER_SUFFIXES = [
+    ...Object.values(TIER_SUFFIXES),
+    ...Object.values(LEGACY_TIER_SUFFIXES),
+];
+
+export type TierKind = 'rules' | 'coverage';
 
 export interface Tier {
     kind: TierKind;
@@ -373,8 +383,8 @@ function capLocation(cap: RawCapability): 'centralized' | 'colocated' {
 
 /**
  * Derive a capability's reserved-tier sibling paths from its spec path.
- * `capabilities/x/spec.md` -> `capabilities/x/spec.arch.md` / `.coverage.md`;
- * colocated `billing.spec.md` -> `billing.arch.md` / `billing.coverage.md`.
+ * `capabilities/x/spec.md` -> `capabilities/x/spec.rules.md` / `.coverage.md`;
+ * colocated `billing.spec.md` -> `billing.rules.md` / `billing.coverage.md`.
  */
 function tierPaths(spec: string, root: string): Tier[] {
     const sp = posix(spec);
@@ -388,7 +398,17 @@ function tierPaths(spec: string, root: string): Tier[] {
     }
     return (Object.keys(TIER_SUFFIXES) as TierKind[]).map(kind => {
         const tierPath = base + TIER_SUFFIXES[kind];
-        return { kind, path: tierPath, exists: fileExists(root, tierPath) };
+        if (fileExists(root, tierPath)) {
+            return { kind, path: tierPath, exists: true };
+        }
+        const legacySuffix = LEGACY_TIER_SUFFIXES[kind];
+        if (legacySuffix) {
+            const legacyPath = base + legacySuffix;
+            if (fileExists(root, legacyPath)) {
+                return { kind, path: legacyPath, exists: true };
+            }
+        }
+        return { kind, path: tierPath, exists: false };
     });
 }
 

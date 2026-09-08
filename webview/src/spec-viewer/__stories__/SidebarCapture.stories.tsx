@@ -273,7 +273,7 @@ const livingSpecsRows: SidebarRow[] = [
  *                       claims, appended after the tree
  *
  * A capability row is a LEAF: `capabilityItem` gives it a twistie only when it
- * has a tier sibling, and nothing in the product generates `.arch.md` or
+ * has a tier sibling, and nothing in the product generates `.rules.md` or
  * `.coverage.md`, so none is drawn here.
  */
 const livingWorkTreeRows: SidebarRow[] = [

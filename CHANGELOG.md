@@ -13,6 +13,13 @@ All notable changes to this project will be documented in this file.
 - **Living specs can be moved without a terminal.** Right-click a capability and pick **Move Living Spec…** to send it next to its code or into the central folder. Invoked from the command palette it moves every spec at once. The layout you pick at set-up is no longer a decision you are stuck with.
 - **An adopted requirement says where it came from, until something proves it.** Adoption reads your project's own conventions and writes down what it finds, and nothing has checked that what it wrote is true. Each of those requirements now carries an `adopted from` badge in the viewer naming the file it was transcribed from. The badge goes on its own the first time a real feature change updates that requirement, because building against a rule is what confirms it.
 
+- **The Living Specs panel points at your first adoption.** Once living specs are on and nothing is adopted yet, the panel offers to adopt a code area, rather than a row saying there is nothing here and leaving the wand icon to be discovered.
+
+### Changed
+- **A capability's second file is called Rules, not Architecture.** It holds the conventions for writing code in that area, and the old name promised structure and diagrams. Projects with the old filename keep working and the viewer still opens it.
+- **Where specs live is asked once.** The answer is stored when living specs are set up, and adoption reads it, so a project set up as central no longer gets colocated specs because a second prompt was answered differently.
+- **A capability covering several folders is stored centrally, even in a colocated project.** Its shallowest common parent is a folder full of other capabilities' code, so a spec placed there sat next to nothing it described.
+
 ### Fixed
 - **The Living Specs panel shows its buttons on a project that has never used it.** It was drawing a row that said there were no living specs, and a row is enough to make the panel look occupied, so the Install and Set up buttons behind it never appeared. The panel now steps out of the way and lets them show.
 - **A finished constitution stops being asked to configure itself.** Writing a constitution leaves a summary at the top of the file listing every placeholder it filled in, and the sidebar was reading that summary as the placeholders still being there. Any project whose constitution was written by the assistant saw Configure Constitution forever.

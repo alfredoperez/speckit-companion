@@ -83,6 +83,7 @@ export function initialRegistry(layout: SpecLayout): string {
         `# Specs go at ${where}.`,
         '# Adopt a code area to add the first capability.',
         'enabled: true',
+        `layout: ${layout}`,
         'exempt: ["*.config.*", "*.test.*", "**/migrations/**"]',
         'capabilities: []',
         '',

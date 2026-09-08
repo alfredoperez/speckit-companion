@@ -381,7 +381,7 @@ export const D5Sidebar: Story = {
 // tree to see it in.
 //
 // Deliberately NOT filmed: the Architecture and Coverage tiers. The resolver
-// recognizes `.arch.md` / `.coverage.md` siblings but nothing generates them,
+// recognizes `.rules.md` / `.coverage.md` siblings but nothing generates them,
 // and this repo's own registered capabilities have none. A capability with only
 // a spec on disk is a leaf row and shows only its spec, which is what E3 shows.
 

@@ -228,7 +228,7 @@ class AllAndOrphanTests(unittest.TestCase):
         root = make_repo(
             CHECKOUT_YAML,
             spec_files=["capabilities/checkout/spec.md",
-                        "capabilities/checkout/spec.arch.md",
+                        "capabilities/checkout/spec.rules.md",
                         "capabilities/checkout/spec.coverage.md"],
         )
         living = rsp.load_living(str(root))
@@ -2259,7 +2259,7 @@ class DriftTests(unittest.TestCase):
 
     def test_colocated_spec_tier_siblings_are_not_drift(self) -> None:
         # A colocated capability's `match` globs claim its own area, so an edit to
-        # its spec.md / reserved-tier sibling (.arch.md / .coverage.md) must NOT be
+        # its spec.md / reserved-tier sibling (.rules.md / .coverage.md) must NOT be
         # reported as drifted CODE — the spec documents ARE the spec.
         yaml = (
             "livingSpecs:\n  enabled: true\n  capabilities:\n"
@@ -2268,10 +2268,10 @@ class DriftTests(unittest.TestCase):
         )
         root = _bake_drift_repo(yaml)
         _write(root, "src/billing/billing.spec.md", "# billing\n")
-        _write(root, "src/billing/billing.arch.md", "# arch\n")
+        _write(root, "src/billing/billing.rules.md", "# arch\n")
         _write(root, "src/billing/charge.ts", "// code\n")
         _commit_all(root, "baseline")
-        _write(root, "src/billing/billing.arch.md", "# arch\n# v2\n")
+        _write(root, "src/billing/billing.rules.md", "# arch\n# v2\n")
         _write(root, "src/billing/charge.ts", "// code\n// edited\n")
         _commit_all(root, "edits")
 
@@ -2567,16 +2567,16 @@ class TierPathTests(unittest.TestCase):
 
     def test_tier_paths_derive_from_spec(self) -> None:
         tiers = rsp.tier_paths("capabilities/billing/spec.md")
-        self.assertEqual(tiers["arch"]["path"], "capabilities/billing/spec.arch.md")
+        self.assertEqual(tiers["rules"]["path"], "capabilities/billing/spec.rules.md")
         self.assertEqual(
             tiers["coverage"]["path"], "capabilities/billing/spec.coverage.md"
         )
         # no root → no existence probe
-        self.assertNotIn("exists", tiers["arch"])
+        self.assertNotIn("exists", tiers["rules"])
 
     def test_tier_paths_colocated_spec(self) -> None:
         tiers = rsp.tier_paths("src/billing/billing.spec.md")
-        self.assertEqual(tiers["arch"]["path"], "src/billing/billing.arch.md")
+        self.assertEqual(tiers["rules"]["path"], "src/billing/billing.rules.md")
         self.assertEqual(
             tiers["coverage"]["path"], "src/billing/billing.coverage.md"
         )
@@ -2585,16 +2585,17 @@ class TierPathTests(unittest.TestCase):
         root = make_repo(
             CHECKOUT_YAML,
             spec_files=["capabilities/checkout/spec.md",
-                        "capabilities/checkout/spec.arch.md"],
+                        "capabilities/checkout/spec.rules.md"],
         )
         tiers = rsp.tier_paths("capabilities/checkout/spec.md", str(root))
-        self.assertTrue(tiers["arch"]["exists"])
+        self.assertTrue(tiers["rules"]["exists"])
         self.assertFalse(tiers["coverage"]["exists"])
 
     def test_reserved_tiers_derive_from_tier_suffixes(self) -> None:
         # RESERVED_TIERS (orphan/drift exemption) and TIER_SUFFIXES (tier_paths)
         # must stay in lockstep — the suffix literals live in one place.
-        self.assertEqual(set(rsp.RESERVED_TIERS), set(rsp.TIER_SUFFIXES.values()))
+        self.assertEqual(set(rsp.RESERVED_TIERS),
+                         set(rsp.TIER_SUFFIXES.values()) | set(rsp.LEGACY_TIER_SUFFIXES.values()))
         for entry in rsp.tier_paths("capabilities/x/spec.md").values():
             self.assertTrue(any(entry["path"].endswith(t) for t in rsp.RESERVED_TIERS))
 
@@ -2602,15 +2603,15 @@ class TierPathTests(unittest.TestCase):
         root = make_repo(
             CHECKOUT_YAML,
             spec_files=["capabilities/checkout/spec.md",
-                        "capabilities/checkout/spec.arch.md"],
+                        "capabilities/checkout/spec.rules.md"],
         )
         living = rsp.load_living(str(root))
         entry = next(e for e in rsp.discover_all(living, str(root))
                      if e["name"] == "checkout")
         self.assertIn("tiers", entry)
-        self.assertTrue(entry["tiers"]["arch"]["exists"])
+        self.assertTrue(entry["tiers"]["rules"]["exists"])
         self.assertEqual(
-            entry["tiers"]["arch"]["path"], "capabilities/checkout/spec.arch.md"
+            entry["tiers"]["rules"]["path"], "capabilities/checkout/spec.rules.md"
         )
 
 
@@ -2938,22 +2939,22 @@ class RelocateCapabilityTests(unittest.TestCase):
     def test_tier_siblings_move_with_the_hot_spec(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=[
             "capabilities/billing/spec.md",
-            "capabilities/billing/spec.arch.md",
+            "capabilities/billing/spec.rules.md",
             "capabilities/billing/spec.coverage.md",
         ])
         relocate.relocate(str(root), "colocated", name="billing")
         area = root / "src/features/billing"
         self.assertTrue((area / "billing.spec.md").is_file())
-        self.assertTrue((area / "billing.arch.md").is_file())
+        self.assertTrue((area / "billing.rules.md").is_file())
         self.assertTrue((area / "billing.coverage.md").is_file())
 
     def test_absent_tier_sibling_is_simply_not_moved(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=[
-            "capabilities/billing/spec.md", "capabilities/billing/spec.arch.md",
+            "capabilities/billing/spec.md", "capabilities/billing/spec.rules.md",
         ])
         relocate.relocate(str(root), "colocated", name="billing")
         area = root / "src/features/billing"
-        self.assertTrue((area / "billing.arch.md").is_file())
+        self.assertTrue((area / "billing.rules.md").is_file())
         self.assertFalse((area / "billing.coverage.md").exists())
 
     def test_rerun_in_the_target_layout_is_a_clean_no_op(self) -> None:
@@ -3163,7 +3164,7 @@ class RelocateCapabilityTests(unittest.TestCase):
 
     def test_a_failed_config_write_rolls_the_files_back(self) -> None:
         root = make_repo(CENTRAL_YAML, spec_files=[
-            "capabilities/billing/spec.md", "capabilities/billing/spec.arch.md",
+            "capabilities/billing/spec.md", "capabilities/billing/spec.rules.md",
         ])
         before = _read_config(root)
         original_write = relocate._write_config
@@ -3176,7 +3177,7 @@ class RelocateCapabilityTests(unittest.TestCase):
         # Config and disk still agree — on the ORIGINAL layout.
         self.assertEqual(_read_config(root), before)
         self.assertTrue((root / "capabilities/billing/spec.md").is_file())
-        self.assertTrue((root / "capabilities/billing/spec.arch.md").is_file())
+        self.assertTrue((root / "capabilities/billing/spec.rules.md").is_file())
         self.assertFalse((root / "src/features/billing/billing.spec.md").exists())
         entry = rsp.discover_all(rsp.load_living(str(root)), str(root))[0]
         self.assertEqual(entry["location"], "centralized")

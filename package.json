@@ -121,6 +121,11 @@
         "when": "speckit.companion.installed && !speckit.livingSpecs.configured"
       },
       {
+        "view": "speckit.views.livingSpecs",
+        "contents": "Living specs are on, and nothing is adopted yet.\n\nPick a part of your code and Companion works out what it does, proposes the capabilities it finds, and waits for you before writing anything.\n\n[$(wand) Adopt your first code area](command:speckit.livingSpecs.adopt)",
+        "when": "speckit.companion.installed && speckit.livingSpecs.configured && !speckit.livingSpecs.hasCapabilities"
+      },
+      {
         "view": "speckit.views.steering",
         "contents": "[$(globe) Create User Rule](command:speckit.steering.createUserRule)\n\n[$(root-folder) Create Project Rule](command:speckit.steering.createProjectRule)"
       }

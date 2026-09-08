@@ -3,8 +3,8 @@
  *
  * A capability's living spec comes in up to three tier files that follow the
  * resolver's naming convention (see speckit-extension/scripts/resolve-spec-paths.py):
- *   centralized  capabilities/<name>/spec.md            → spec.arch.md / spec.coverage.md
- *   colocated    <anywhere>/<stem>.spec.md              → <stem>.arch.md / <stem>.coverage.md
+ *   centralized  capabilities/<name>/spec.md            → spec.rules.md / spec.coverage.md
+ *   colocated    <anywhere>/<stem>.spec.md              → <stem>.rules.md / <stem>.coverage.md
  * The tiers become the viewer's tab strip; there is no workflow, no phases,
  * and no `.spec-context.json` involved.
  */
@@ -13,18 +13,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { SpecDocument, DocumentType } from './types';
 
-export type LivingTier = 'spec' | 'arch' | 'coverage';
+export type LivingTier = 'spec' | 'rules' | 'coverage';
 
 const TIER_LABELS: Record<LivingTier, string> = {
     spec: 'Spec',
-    arch: 'Architecture',
+    rules: 'Rules',
     coverage: 'Coverage',
 };
 
 /** Tier of a living-spec file, by name. */
 export function livingTierType(fileName: string): LivingTier {
     if (fileName.endsWith('.coverage.md')) return 'coverage';
-    if (fileName.endsWith('.arch.md')) return 'arch';
+    if (fileName.endsWith('.rules.md')) return 'rules';
     return 'spec';
 }
 
@@ -37,6 +37,7 @@ export function livingCapabilityName(sourcePath: string): string {
     const name = path.basename(sourcePath);
     const stem = name
         .replace(/\.spec\.md$/, '')
+        .replace(/\.rules\.md$/, '')
         .replace(/\.arch\.md$/, '')
         .replace(/\.coverage\.md$/, '')
         .replace(/\.md$/, '');
@@ -105,6 +106,7 @@ export function livingTierDocuments(sourcePath: string): SpecDocument[] {
     // Normalize to the tier-file stem: '' means the centralized `spec.*` family.
     let stem = name
         .replace(/\.coverage\.md$/, '')
+        .replace(/\.rules\.md$/, '')
         .replace(/\.arch\.md$/, '')
         .replace(/\.spec\.md$/, '')
         .replace(/\.md$/, '');
@@ -118,9 +120,22 @@ export function livingTierDocuments(sourcePath: string): SpecDocument[] {
     };
 
     const docs: SpecDocument[] = [];
-    for (const tier of ['spec', 'arch', 'coverage'] as LivingTier[]) {
-        const fileName = fileFor(tier);
-        const filePath = path.join(dir, fileName);
+    for (const tier of ['spec', 'rules', 'coverage'] as LivingTier[]) {
+        let fileName = fileFor(tier);
+        let filePath = path.join(dir, fileName);
+        // The rules tier was `.arch.md`. A project written before the rename
+        // still has that file, and it is still the rules tier.
+        if (tier === 'rules') {
+            try {
+                if (!fs.existsSync(filePath)) {
+                    const legacy = stem === '' ? 'spec.arch.md' : `${stem}.arch.md`;
+                    if (fs.existsSync(path.join(dir, legacy))) {
+                        fileName = legacy;
+                        filePath = path.join(dir, legacy);
+                    }
+                }
+            } catch { /* unreadable dir — fall through to the new name */ }
+        }
         let exists = false;
         try {
             exists = fs.existsSync(filePath);

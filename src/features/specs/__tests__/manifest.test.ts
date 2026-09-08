@@ -55,14 +55,19 @@ describe('sidebar contributions', () => {
             expect(living.when).not.toContain('speckit.companion.installed');
         });
 
-        it('offers install and set-up as the two living-specs first-run states', () => {
+        it('walks the three living-specs first-run states, each to its one next action', () => {
             const welcome = (manifest.contributes.viewsWelcome as { view: string; contents: string; when?: string }[])
                 .filter(w => w.view === 'speckit.views.livingSpecs');
-            expect(welcome).toHaveLength(2);
+            expect(welcome).toHaveLength(3);
             expect(welcome[0].when).toBe('!speckit.companion.installed');
             expect(welcome[0].contents).toContain('speckit.companion.installSpecKitExtension');
             expect(welcome[1].when).toBe('speckit.companion.installed && !speckit.livingSpecs.configured');
             expect(welcome[1].contents).toContain('speckit.livingSpecs.init');
+            // Set-up leaves an empty registry, and the only thing to do next is
+            // adopt — behind an unlabelled wand until this said so.
+            expect(welcome[2].when).toBe(
+                'speckit.companion.installed && speckit.livingSpecs.configured && !speckit.livingSpecs.hasCapabilities');
+            expect(welcome[2].contents).toContain('speckit.livingSpecs.adopt');
         });
     });
 

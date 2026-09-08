@@ -375,7 +375,7 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             "but the draft banner still says the whole spec is unreviewed.",
             "Remove the `> [DRAFT]` line.", capability))
     if (root is not None and capability and _draft_banner and reqs > 0
-            and str(path).endswith(".arch.md")):
+            and str(path).endswith((".rules.md", ".arch.md"))):
         # Adoption transcribes the rules that hold between files, and a rule about
         # a boundary carries the boundary's own glob as its marker. A draft with
         # none was read from the code, which is the way both measured attempts

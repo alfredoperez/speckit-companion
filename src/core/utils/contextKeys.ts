@@ -47,6 +47,9 @@ export const CONTEXT_KEYS = {
      * first-run affordances.
      */
     livingSpecsConfigured: 'speckit.livingSpecs.configured',
+    /** True once the registry holds at least one capability. Separates "on, but
+     *  nothing adopted" from "on, with specs", which need different affordances. */
+    livingSpecsHasCapabilities: 'speckit.livingSpecs.hasCapabilities',
     /**
      * True once the user dismisses the intrusive empty-state install nudge. Gates
      * only that welcome block's `when`; ambient surfaces (badge, pinned row) ignore it.
@@ -108,5 +111,6 @@ export async function resetAllContextKeys(logger?: ContextKeyLogger): Promise<vo
         setContextKey(CONTEXT_KEYS.specsSelectionMixed, false, logger),
         setContextKey(CONTEXT_KEYS.companionInstalled, false, logger),
         setContextKey(CONTEXT_KEYS.livingSpecsConfigured, false, logger),
+        setContextKey(CONTEXT_KEYS.livingSpecsHasCapabilities, false, logger),
     ]);
 }

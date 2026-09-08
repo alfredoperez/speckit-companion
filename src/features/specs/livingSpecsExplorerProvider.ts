@@ -65,6 +65,8 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             this.cached = { enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false };
         }
         void setContextKey(CONTEXT_KEYS.livingSpecsConfigured, this.cached.configured);
+        void setContextKey(CONTEXT_KEYS.livingSpecsHasCapabilities,
+            this.cached.capabilities.length > 0 || this.cached.orphans.length > 0);
         return this.cached;
     }
 
@@ -116,8 +118,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 let message: string;
                 let tooltip: string;
                 if (listing.enabled) {
-                    message = 'No living specs yet';
-                    tooltip = 'Adopt a code area to create and register your first living spec.';
+                    // Set-up leaves a registry with nothing in it, and a row saying
+                    // so is a dead end: the one thing to do next is adopt, and the
+                    // wand that does it is an unlabelled icon in the title bar.
+                    return notices;
                 } else if (listing.configured) {
                     message = 'Living Specs are off';
                     tooltip = 'Set enabled: true in living-specs.yml to track capability specs.';
@@ -277,8 +281,8 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             LivingSpecItem.leaf('Spec', 'living-specs-tier', 'book', cap.spec, this.openCommand(cap.spec))
         );
         for (const tier of cap.tiers) {
-            const label = tier.kind === 'arch' ? 'Architecture' : 'Coverage';
-            const icon = tier.kind === 'arch' ? 'type-hierarchy' : 'checklist';
+            const label = tier.kind === 'rules' ? 'Rules' : 'Coverage';
+            const icon = tier.kind === 'rules' ? 'law' : 'checklist';
             children.push(
                 LivingSpecItem.leaf(label, 'living-specs-tier', icon, tier.path, this.openCommand(tier.path))
             );

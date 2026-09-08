@@ -146,12 +146,17 @@ export function SpecHeader() {
                 <div class="spec-header-main">
                     {ns.specContextName && (
                         <h1 class="spec-header-title">
+                            {/* A living spec's draft state qualifies its title, so it reads
+                                as part of the name rather than as a fact filed under it. */}
+                            {meta && badgeText === 'DRAFT' && (
+                                <span class="spec-badge spec-badge--draft">DRAFT</span>
+                            )}
                             {ns.specContextName}
                         </h1>
                     )}
                     {(badgeText || ns.branch || ns.createdDate || meta) && (
                         <div class="spec-header-badges">
-                            {badgeText && (
+                            {badgeText && !(meta && badgeText === 'DRAFT') && (
                                 <span
                                     class={`spec-badge${statusClass ? ` spec-badge--${statusClass}` : ''}`}
                                     title={ns.createdDate ? `${badgeText} · ${ns.createdDate}` : undefined}

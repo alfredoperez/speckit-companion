@@ -236,6 +236,17 @@ body[data-has-spec-context="true"] .meta-branch {
 
 /* Title is the page anchor: largest type, page-level weight, sits above the
    metadata cluster so the eye lands on the spec name first, not on the badge. */
+/* The draft badge leads the title, so a reader learns the spec is unverified
+   in the same glance as its name. The review hue, because that is what it asks
+   for; the status badges below stay in their own colours. */
+.spec-header-title .spec-badge--draft {
+    margin-right: 0.5em;
+    vertical-align: 0.18em;
+    color: var(--review-ink);
+    background: var(--review-subtle);
+    border-color: color-mix(in srgb, var(--review) 35%, transparent);
+}
+
 .spec-header-title {
     margin: 0;
     font-size: 1.6rem;
