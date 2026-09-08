@@ -13,6 +13,7 @@ $ARGUMENTS
 <!-- /speckit-companion:part step-start -->
 
 <!-- speckit-companion:part command-spelling -->
+
 <!-- /speckit-companion:part command-spelling -->
 
 <!-- speckit-companion:part speckit-hooks -->

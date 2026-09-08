@@ -5,7 +5,7 @@ kind: control
 command: specify
 reads: [draft-spec]
 ---
-5. **Classify the change — right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below — the same one the standalone size step uses, so the small/large bar is authored in exactly one place. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals — a change is never under-planned by accident.
+5. **Classify the change, to right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals.
 
 <!-- speckit-companion:part sizing -->
 
@@ -30,5 +30,4 @@ reads: [draft-spec]
      [companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline as <normal|oversized>.
      ```
 
-     Exactly-at-threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling — it does **not** warn and stays eligible for `simple`.
-
+     Exactly at the threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling: it does **not** warn and stays eligible for `simple`.

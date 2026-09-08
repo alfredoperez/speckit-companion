@@ -7,9 +7,9 @@ reads: [implement-exec]
 ---
 **Stop and have a person use it.** Before this step is called done, write the click-through and hand it over.
 
-Green tests are not the same claim as working software. A run can finish with every test passing, every review clean, and a button that does nothing — because the tests assert what the code does and nobody opened the thing. That is the failure this node exists for, and it is common enough to be worth a stop.
+Green tests are not the same claim as working software. A run can finish with every test passing, every review clean, and a button that does nothing, because the tests assert what the code does and nobody opened the thing.
 
-Write `<feature_directory>/verify.md` — one check per acceptance scenario in the spec, in the order a person would actually do them:
+Write `<feature_directory>/verify.md`, one check per acceptance scenario in the spec, in the order a person would actually do them:
 
 ```markdown
 # Verify by hand: [FEATURE NAME]
@@ -36,7 +36,7 @@ Rules for writing it:
 - **Start every path from a state the reader can reach**, not from where the implementation happened to be.
 - **Include the boring ones.** The dead button is always on the path somebody assumed was fine.
 
-Then **stop and ask the person to run it.** Do not mark the spec complete on your own reading of the code — the point of this node is the pair of eyes that is not yours. When they report back, record what they found:
+Then **stop and ask the person to run it.** Do not mark the spec complete on your own reading of the code. When they report back, record what they found:
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --concerns "<what failed the click-through, or 'verified by hand'>"

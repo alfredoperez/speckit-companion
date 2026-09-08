@@ -5,13 +5,13 @@ kind: control
 command: specify
 reads: [classify-size]
 ---
-6. **Persist the size verdict** so the later steps (`plan`, `tasks`) can right-size their output without re-deciding it. Right after classifying, record the verdict on the spec's context from the repository root:
+6. **Persist the size verdict** so `plan` and `tasks` can right-size their output without re-deciding it. Right after classifying, record the verdict on the spec's context from the repository root:
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --set size=<simple|normal|oversized>
    ```
-   Write `simple` when the change is the small, fast-trackable size; `oversized` when it crossed the guardrail; otherwise `normal`. This only writes a plain `size` field — it never touches the lifecycle log. Best-effort: if `python3` is unavailable, skip without failing the command.
+   Write `simple` when the change is the small, fast-trackable size; `oversized` when it crossed the guardrail; otherwise `normal`. This writes a plain `size` field and never touches the lifecycle log. Best-effort: if `python3` is unavailable, skip without failing the command.
 
-   Also record the classification's **inputs**, not just its verdict, so a later resume can judge whether the call was borderline or clear-cut (same best-effort rule):
+   Also record the classification's **inputs**, so a later resume can judge whether the call was borderline or clear-cut (same best-effort rule):
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --classification '{"projectedFiles": <n>, "projectedTasks": <n>, "scopeSignal": "<larger|smaller|none>", "verdict": "<simple|normal|oversized>"}'
    ```

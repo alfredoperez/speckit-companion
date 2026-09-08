@@ -8,7 +8,7 @@ reads: [draft-spec]
 ---
 4. **Spec quality checklist, run as a gate.** Write `<feature_directory>/checklists/requirements.md` using the template below, then validate and **loop**: grade each item pass/fail, fix the fails in `<short-name>.spec.md`, and re-run the validation. Up to **three** iterations.
 
-   After the third — or sooner, if what remains needs a decision only the user can make — **stop and ask.** Present the unresolved items as a numbered table with the options for each, and wait for an answer before continuing:
+   After the third, or sooner if what remains needs a decision only the user can make, **stop and ask.** Present the unresolved items as a numbered table with the options for each, and wait for an answer before continuing:
 
    | # | What is unresolved | Options |
    |---|---|---|
@@ -16,7 +16,7 @@ reads: [draft-spec]
 
    **Your choice**: _[wait for the user's response]_
 
-   Do not proceed to the next step on an unanswered table. This is the fork with the advisory checklist: that one records what it could not settle and moves on, deferring to `clarify`; this one holds the step until the spec is clean. Pick it when a wrong spec is more expensive than a slow one.
+   Do not proceed to the next step on an unanswered table. The advisory checklist records what it could not settle and moves on, deferring to `clarify`; this one holds the step until the spec is clean. Pick it when a wrong spec is more expensive than a slow one.
 
    ```markdown
    # Specification Quality Checklist: [FEATURE NAME]

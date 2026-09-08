@@ -9,16 +9,16 @@ $ARGUMENTS
 ```
 
 <!-- speckit-companion:part step-start -->
-## Record this step's start — before anything else runs
+## Record this step's start: before anything else runs
 
-A step's recorded window has to contain the work it claims. Stamping the start partway down the body means the extension hooks, and any node above the stamp, ran outside the window the step later reports — on one measured run half the elapsed clock belonged to no step at all. So this is the first instruction in the command, ahead of the hooks.
+A step's recorded window has to contain the work it claims. Stamping the start partway down the body leaves the extension hooks, and any node above the stamp, outside the window the step later reports. So this is the first instruction in the command, ahead of the hooks.
 
 Let `<step>` be this command's phase and `<status>` its in-progress status: `specify`/`specifying`, `plan`/`planning`, `tasks`/`tasking`, `implement`/`implementing`.
 
 **Which feature directory this step stamps against decides when it stamps.**
 
-- **A step that mints its own feature directory** — any fresh-spec entry point, `specify` and `auto` among them — has nothing to stamp against yet. `.specify/feature.json` is this step's *output*: it still points at the **previous** spec, so stamping now would write this run's status onto finished work. Resolve the directory first, then stamp the instant it exists and before any other work in the step.
-- **Every other step** reads the feature directory it was given — from the invocation, or from `.specify/feature.json`, which by then points at this spec. Stamp immediately, before the extension hooks and before any node.
+- **A step that mints its own feature directory**, meaning any fresh-spec entry point such as `specify` or `auto`, has nothing to stamp against yet. `.specify/feature.json` is this step's *output*: it still points at the **previous** spec, so stamping now would write this run's status onto finished work. Resolve the directory first, then stamp the instant it exists, before any other work in the step.
+- **Every other step** reads the feature directory it was given, from the invocation or from `.specify/feature.json`, which by then points at this spec. Stamp immediately, before the extension hooks and before any node.
 
 In both cases the call is the same:
 
@@ -29,15 +29,18 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the script stamps now. Two things keep this honest:
 
 - **Run it, never hand-write it.** The script stamps the real clock and writes atomically. A hand-authored entry in `.spec-context.json` is what corrupts the file.
-- **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it is what loses the window.
+- **A second start is refused, not reconciled.** History is append-only, so if the extension already seeded this step's start, this call appends nothing and the earlier timestamp stands. Running it is always safe; skipping it loses the window.
 <!-- /speckit-companion:part step-start -->
 
 <!-- speckit-companion:part command-spelling -->
+## Name every command the way this project registers it
+
+Commands are written in dot form throughout this body, `/speckit.companion.plan`, because that is their canonical id. Several hosts register them with dashes instead: Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
 <!-- /speckit-companion:part command-spelling -->
 
 ## Outline
 
-Run the **entire** Companion pipeline end-to-end and unattended. Walk every step in order — specify → plan → tasks → implement → mark-complete — dispatching the same per-step `/speckit.companion.*` commands, never pausing for approval in between, and finish the spec at `status: completed`.
+Run the **entire** Companion pipeline end-to-end and unattended. Walk every step in order, specify → plan → tasks → implement → mark-complete, dispatching the same per-step `/speckit.companion.*` commands, never pausing for approval in between, and finish the spec at `status: completed`.
 <!-- speckit-companion:phase gather -->
 <!-- speckit-companion:node resolve-dir -->
 1. **Resolve the feature directory — mint a fresh dir for new work.** Auto is a fresh-spec entry point, exactly like specify. `.specify/feature.json` is an **output**, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
@@ -78,9 +81,9 @@ Run the full Companion pipeline by **invoking each per-step command for real**, 
 <!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
-## Timing — keep `.spec-context.json` honest
+## Timing: keep `.spec-context.json` honest
 
-Record every boundary by **running the writer script**, never by editing `.spec-context.json` yourself — a hand-authored edit is what corrupts the file. The model is **finish-only**: one finish per task and per substep, its duration the gap back to the previous finish. Never a `start`+`complete` pair for either, which stamps a `0s` tick and measures nothing.
+Record every boundary by **running the writer script**. Never edit `.spec-context.json` yourself; a hand-authored edit is what corrupts the file. The model is **finish-only**: one finish per task and per substep, its duration the gap back to the previous finish. Never a `start`+`complete` pair for either, which stamps a `0s` tick and measures nothing.
 
 - **Close your own step**, as the last thing you do, after emitting any mandatory after-hook block:
 
@@ -88,9 +91,9 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --advance --by ai
   ```
 
-  `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step — and when the hook was *printed* rather than dispatched, which is indistinguishable downstream, it is the only thing that closes it. One run sat at `status: tasking` for eight minutes that way. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; and **implement** runs neither, because its own final node writes `completed`, which closes the step in the same write.
+  `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step, and it is the only thing that closes the step when that hook was printed rather than dispatched. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; **implement** runs neither, because its own final node writes `completed` and closes the step in the same write.
 
-- **One finish per substep, the moment it ends** — plan records `research` and `design`, tasks records `generate`. Never two in one batch, never a separate start.
+- **One finish per substep, the moment it ends.** Plan records `research` and `design`, tasks records `generate`. Never two in one batch, never a separate start.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai
@@ -102,7 +105,7 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --close-task <TaskID> --by ai --did "<one line>" --files "<files>"
   ```
 
-  One call appends the finish with its own real clock, folds it into the panel, and flips that task's box in `tasks.md`. Never hand-edit that box or hand-author per-task JSON, and never write a per-task start. Re-closing is safe. **Batching is a defect the doctor catches**: it names any cluster of finishes stamped seconds apart, because those timestamps record when the batch was written, and history is append-only so it cannot be repaired afterwards. The per-task summaries and their order are what is trustworthy; the timestamps are best-effort, and that is fine.
+  One call appends the finish with its own real clock, folds it into the panel, and flips that task's box in `tasks.md`. Never hand-edit that box or hand-author per-task JSON, and never write a per-task start. Re-closing is safe. **Batching is a defect the doctor catches**: it names any cluster of finishes stamped seconds apart, because those timestamps record when the batch was written, and history is append-only so it cannot be repaired afterwards. Trust the per-task summaries and their order; the timestamps are best-effort.
 
   **A fanned-out worker appends only**, because folding is a read-modify-write and two folders contend:
 
@@ -112,46 +115,46 @@ Record every boundary by **running the writer script**, never by editing `.spec-
 
   The MAIN agent folds each returned result with `--materialize`, one at a time, and once more at a wave join as a backstop.
 
-- **Never write the next step's start.** The next command owns it; writing it here renders a phantom "Generating <next>…".
+- **Never write the next step's start.** The next command owns it. Writing it here renders a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 
 <!-- speckit-companion:part unattended -->
-## Unattended — the "don't pause" signal
+## Unattended: the "don't pause" signal
 
 This run is **unattended**: a human is not watching it and cannot answer a prompt. The orchestrator records this by setting `unattended: true` in the dispatched prompt and in `.spec-context.json`, and every step you dispatch carries it forward.
 
 What `unattended: true` means for hooks:
 
-- **Checkpoint `prompt` hooks read it.** A project checkpoint hook ("Continue / Fix / Stop") is authored to check the flag: *if `unattended`, record the checkpoint and continue; otherwise ask the human to proceed.* The hook stays declarative — it does not need to know it is in auto, only that the run is unattended. A hook may still log one line such as `[hook] checkpoint recorded, continuing (unattended)`.
-- **Background hooks still fire.** A `background: true` hook (tests, builds, notifications) runs exactly as it would in a manual run — unattended skips the *human pause*, not the side-effects.
+- **Checkpoint `prompt` hooks read it.** A project checkpoint hook ("Continue / Fix / Stop") is authored to check the flag: *if `unattended`, record the checkpoint and continue; otherwise ask the human to proceed.* The hook stays declarative: it does not need to know it is in auto, only that the run is unattended. A hook may still log one line such as `[hook] checkpoint recorded, continuing (unattended)`.
+- **Background hooks still fire.** A `background: true` hook (tests, builds, notifications) runs exactly as it would in a manual run. Unattended skips the *human pause*, not the side-effects.
 - **Review / PR hooks still run.** Anything that produces an artifact or a review still happens; only the wait-for-a-person gate is bypassed.
 
-If a project has no checkpoint hooks, `unattended: true` simply has nothing to act on — set it anyway so any hook added later inherits the contract.
+If a project has no checkpoint hooks, `unattended: true` has nothing to act on. Set it anyway so any hook added later inherits the contract.
 <!-- /speckit-companion:part unattended -->
 <!-- /speckit-companion:node handoff -->
 <!-- /speckit-companion:phase wrap-up -->
 
 <!-- speckit-companion:part orchestrator -->
-## Node hooks — run the project's `before`/`after` inserts
+## Node hooks: run the project's `before`/`after` inserts
 
-This command is assembled from ordered **nodes**. A project can attach its own work at the boundary *before* or *after* any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file (if present) and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command** — degrade and continue.
+This command is assembled from ordered **nodes**. A project can attach its own work before or after any node by declaring it in `.specify/companion.yml`. You are the runtime: read that file if it is there and run those hooks at the right moments. Like the rest of the pipeline, this must **never fail the host command**. Degrade and continue.
 
-**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn — an empty file is a project that declared nothing, not a broken one. Look up `commands.<this-command>.hooks` in `.specify/companion.yml`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
+**Find the hooks for this command.** An absent or empty `.specify/companion.yml` means no hooks: skip silently, and never warn. Look up `commands.<this-command>.hooks`. It has two anchors, `before` and `after`, each keyed by a node id from this command's order. Run a node's `before` hooks immediately before that node's work, and its `after` hooks immediately after. When several hooks sit at one anchor, run them **top to bottom, in declared order**.
 
 **Hook types:**
 
-- `{ type: command, run: "<shell>" }` — run the shell command with your terminal/Bash tool, then continue. *If you have no terminal tool* (some chat-only providers), do not pretend to: report the command you would have run and continue.
-- `{ type: prompt, text: "<instruction>" }` — treat the text as an inline instruction and act on it before moving on.
-- `{ type: node, ref: <id> }` — read `.specify/companion/nodes/<id>.md` and carry out its body as if it were part of this command.
+- `{ type: command, run: "<shell>" }`: run the shell command with your terminal/Bash tool, then continue. *If you have no terminal tool* (some chat-only providers), don't pretend to: report the command you would have run and continue.
+- `{ type: prompt, text: "<instruction>" }`: treat the text as an inline instruction and act on it before moving on.
+- `{ type: node, ref: <id> }`: read `.specify/companion/nodes/<id>.md` and carry out its body as if it were part of this command.
 
-**Background hooks.** Any hook may add `background: true`. Kick it off and continue the pipeline immediately without waiting for it to finish — it must not hold the spec prisoner. Use it for slow, independent side-effects (a test run, a build, a notification): for a `command`, launch it detached (e.g. append `&` or use `nohup … &`); for a `node`/`prompt`, do its work without blocking the next step. Report its result whenever it lands, but never block on it. **Do not** mark a `background` hook on anything that writes `.spec-context.json` (the timing/capture calls): those are fast already and run a read-modify-write on the shared file, so two of them racing in the background can lose an update. Background is for side-effects, not bookkeeping.
+**Background hooks.** Any hook may add `background: true`. Kick it off and continue immediately, without waiting for it to finish. Use it for slow, independent side-effects such as a test run, a build or a notification: for a `command`, launch it detached (e.g. append `&` or use `nohup … &`); for a `node`/`prompt`, do its work without blocking the next step. Report its result whenever it lands, but never block on it. **Do not** mark `background` on anything that writes `.spec-context.json`, meaning the timing and capture calls: those run a read-modify-write on a shared file, so two racing in the background can lose an update. Background is for side-effects, not bookkeeping.
 
 **Failure handling (never abort the host command):**
 
 - **No `.specify/companion.yml`** → there are no hooks; run the command exactly as written. Do not warn.
-- **The file is malformed / unparseable** → ignore it, note one short warning, and run the shipped command unchanged.
+- **The file is malformed or unparseable** → ignore it, note one short warning, and run the shipped command unchanged.
 - **A hook is anchored to a node that isn't in this run's order** (e.g. a recipe dropped it) → warn once and skip that anchor's hooks.
-- **A `type: node` hook's `ref` file is missing** → this is a real misconfiguration: report it clearly and stop before doing damage, rather than silently skipping.
+- **A `type: node` hook's `ref` file is missing** → a real misconfiguration: report it clearly and stop before doing damage, rather than silently skipping.
 
-If a hook's own work fails (a `command` exits non-zero, a `node` can't complete), report it and — unless the failure clearly makes the rest unsafe — continue the pipeline. The host command's own output is never blocked by a hook.
+If a hook's own work fails (a `command` exits non-zero, a `node` can't complete), report it and continue the pipeline, unless the failure clearly makes the rest unsafe. A hook never blocks the host command's own output.
 <!-- /speckit-companion:part orchestrator -->

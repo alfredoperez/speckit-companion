@@ -17,12 +17,10 @@ edit any spec files; it only reports a size.
 Estimate the scope of the change from `spec.md` (and `plan.md`/`tasks.md` if they already exist):
 
 <!-- speckit-companion:part sizing -->
-- **small** — the change plausibly touches **≤ 5 files** and decomposes into **≤ 10 tasks**.
-- **oversized** — the change clearly exceeds the small bar by a wide margin (broad multi-subsystem
+- **small**: the change plausibly touches **≤ 5 files** and decomposes into **≤ 10 tasks**.
+- **oversized**: the change clearly exceeds the small bar by a wide margin (broad multi-subsystem
   work, many new files, or a long task list).
-- **normal** — anything in between (the default).
-
-The two constants (5 files / 10 tasks) are the same guardrail the old `complexityFastPath` used.
+- **normal**: anything in between (the default).
 <!-- /speckit-companion:part sizing -->
 When unsure, prefer `normal` — the routing step's safe default is the full pipeline, so an
 ambiguous estimate never skips a phase.
@@ -41,7 +39,7 @@ Expose the same value as structured output `size` (so a `switch` node can read
 <!-- speckit-companion:part routing -->
 - `simple` → the workflow folds toward implement (less ceremony). `simple` is the verdict
   every reader of the recorded size expects; `small` names the *bar*, never the verdict.
-- `oversized` → the workflow prints a visible warning and still runs the **full** pipeline — it
+- `oversized` → the workflow prints a visible warning and still runs the **full** pipeline. It
   never silently skips a phase.
 - `normal` (and any unresolved value) → the full pipeline.
 <!-- /speckit-companion:part routing -->

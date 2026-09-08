@@ -253,9 +253,9 @@ After reporting, check if `.specify/extensions.yml` exists in the project root.
 
 
 <!-- speckit-companion:part timing -->
-## Timing — keep `.spec-context.json` honest
+## Timing: keep `.spec-context.json` honest
 
-Record every boundary by **running the writer script**, never by editing `.spec-context.json` yourself — a hand-authored edit is what corrupts the file. The model is **finish-only**: one finish per task and per substep, its duration the gap back to the previous finish. Never a `start`+`complete` pair for either, which stamps a `0s` tick and measures nothing.
+Record every boundary by **running the writer script**. Never edit `.spec-context.json` yourself; a hand-authored edit is what corrupts the file. The model is **finish-only**: one finish per task and per substep, its duration the gap back to the previous finish. Never a `start`+`complete` pair for either, which stamps a `0s` tick and measures nothing.
 
 - **Close your own step**, as the last thing you do, after emitting any mandatory after-hook block:
 
@@ -263,9 +263,9 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --advance --by ai
   ```
 
-  `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step — and when the hook was *printed* rather than dispatched, which is indistinguishable downstream, it is the only thing that closes it. One run sat at `status: tasking` for eight minutes that way. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; and **implement** runs neither, because its own final node writes `completed`, which closes the step in the same write.
+  `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step, and it is the only thing that closes the step when that hook was printed rather than dispatched. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; **implement** runs neither, because its own final node writes `completed` and closes the step in the same write.
 
-- **One finish per substep, the moment it ends** — plan records `research` and `design`, tasks records `generate`. Never two in one batch, never a separate start.
+- **One finish per substep, the moment it ends.** Plan records `research` and `design`, tasks records `generate`. Never two in one batch, never a separate start.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai
@@ -277,7 +277,7 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --close-task <TaskID> --by ai --did "<one line>" --files "<files>"
   ```
 
-  One call appends the finish with its own real clock, folds it into the panel, and flips that task's box in `tasks.md`. Never hand-edit that box or hand-author per-task JSON, and never write a per-task start. Re-closing is safe. **Batching is a defect the doctor catches**: it names any cluster of finishes stamped seconds apart, because those timestamps record when the batch was written, and history is append-only so it cannot be repaired afterwards. The per-task summaries and their order are what is trustworthy; the timestamps are best-effort, and that is fine.
+  One call appends the finish with its own real clock, folds it into the panel, and flips that task's box in `tasks.md`. Never hand-edit that box or hand-author per-task JSON, and never write a per-task start. Re-closing is safe. **Batching is a defect the doctor catches**: it names any cluster of finishes stamped seconds apart, because those timestamps record when the batch was written, and history is append-only so it cannot be repaired afterwards. Trust the per-task summaries and their order; the timestamps are best-effort.
 
   **A fanned-out worker appends only**, because folding is a read-modify-write and two folders contend:
 
@@ -287,5 +287,5 @@ Record every boundary by **running the writer script**, never by editing `.spec-
 
   The MAIN agent folds each returned result with `--materialize`, one at a time, and once more at a wave join as a backstop.
 
-- **Never write the next step's start.** The next command owns it; writing it here renders a phantom "Generating <next>…".
+- **Never write the next step's start.** The next command owns it. Writing it here renders a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
