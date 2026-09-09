@@ -35,12 +35,12 @@ Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the scri
 <!-- speckit-companion:part command-spelling -->
 ## Name every command the way this project registers it
 
-Commands are written in dot form throughout this body, `/speckit.companion.plan`, because that is their canonical id. Several hosts register them with dashes instead: Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
+Commands are named in dot form throughout this body, `speckit.companion.plan`, because that is their canonical id, and without a leading slash, because the spelling a host actually registers is not always this one. Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
 <!-- /speckit-companion:part command-spelling -->
 
 ## Outline
 
-Run the **entire** Companion pipeline end-to-end and unattended. Walk every step in order, specify → plan → tasks → implement → mark-complete, dispatching the same per-step `/speckit.companion.*` commands, never pausing for approval in between, and finish the spec at `status: completed`.
+Run the **entire** Companion pipeline end-to-end and unattended. Walk every step in order, specify → plan → tasks → implement → mark-complete, dispatching the same per-step `speckit.companion.*` commands, never pausing for approval in between, and finish the spec at `status: completed`.
 1. **Resolve the feature directory — mint a fresh dir for new work.** Auto is a fresh-spec entry point, exactly like specify. `.specify/feature.json` is an **output**, not an input to reuse: it points at the *previous* spec (frequently already completed), so reusing it would clobber finished work. Pick the target:
    - If the request explicitly names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
    - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. The spec file is `<feature_directory>/<short-name>.spec.md` (for a named target, `<short-name>` is its directory name without the numeric prefix). **Never write into a directory that already contains a feature spec (`*.spec.md`, or an older `spec.md`)** — that's a stale pointer to a prior spec, not this feature.
@@ -50,7 +50,7 @@ Run the **entire** Companion pipeline end-to-end and unattended. Walk every step
 
 Run the full Companion pipeline by **invoking each per-step command for real**, in order, without pausing for approval between them. You are the **conductor, not the author**: each step's behavior is defined by its own command body — do **not** write the spec, plan, design docs, task list, or code yourself from scratch. Invoke the command and let *it* do the step the way it's defined.
 
-**This is the rule that makes auto faithful.** A standalone `/speckit.companion.tasks` run produces a size-classified spec, a slim plan with its design artifacts (`research.md`, `data-model.md`, `contracts/`), and a wave-structured task list — because those behaviors live *inside* each command. If you improvise the artifacts here instead of invoking the commands, auto silently drops all of that (no sizing, no design docs, a flat task list) and stops matching the manual flow. So: **invoke, don't reproduce.**
+**This is the rule that makes auto faithful.** A standalone `speckit.companion.tasks` run produces a size-classified spec, a slim plan with its design artifacts (`research.md`, `data-model.md`, `contracts/`), and a wave-structured task list — because those behaviors live *inside* each command. If you improvise the artifacts here instead of invoking the commands, auto silently drops all of that (no sizing, no design docs, a flat task list) and stops matching the manual flow. So: **invoke, don't reproduce.**
 
 1. **Mark the run unattended.** This run has no human watching it. Set `unattended: true` so project checkpoint hooks record-and-continue instead of asking (see the unattended convention below) — write it into `.spec-context.json`:
    ```bash
@@ -58,16 +58,16 @@ Run the full Companion pipeline by **invoking each per-step command for real**, 
    ```
    Carry `unattended` forward to every step you dispatch.
 
-2. **Invoke each command in order — actually run it, don't re-enact it.** Use your command/skill invocation tool (the same `/speckit.companion.*` command a person would type) for each step, waiting for its full work to finish before starting the next. Each command does its *own* size-classification, artifact generation, and capture — your job is only to call them in sequence and not stop:
-   - `/speckit.companion.specify <feature description>` — runs the real specify command: classifies size, writes the full spec, persists the size.
-   - `/speckit.companion.plan` — runs the real plan command: the slim plan **plus** `research.md`, `data-model.md`, and `contracts/` (right-sized by the recorded size).
-   - `/speckit.companion.tasks` — runs the real tasks command: the wave-structured, dependency-ordered task list.
-   - `/speckit.companion.implement` — runs the real implement command: executes the tasks and journals each finish.
+2. **Invoke each command in order — actually run it, don't re-enact it.** Use your command/skill invocation tool (the same `speckit.companion.*` command a person would type) for each step, waiting for its full work to finish before starting the next. Each command does its *own* size-classification, artifact generation, and capture — your job is only to call them in sequence and not stop:
+   - `speckit.companion.specify <feature description>` — runs the real specify command: classifies size, writes the full spec, persists the size.
+   - `speckit.companion.plan` — runs the real plan command: the slim plan **plus** `research.md`, `data-model.md`, and `contracts/` (right-sized by the recorded size).
+   - `speckit.companion.tasks` — runs the real tasks command: the wave-structured, dependency-ordered task list.
+   - `speckit.companion.implement` — runs the real implement command: executes the tasks and journals each finish.
    If your host has no way to invoke another command mid-session, fall back to following each command's body faithfully (read it and do exactly what it specifies — same artifacts, same sizing, same structure); never substitute a quicker improvised version.
 
 3. **Do not pause at review gates.** Where the manual flow would stop and wait for a person at a `gate` (review-spec, review-plan, …), auto instead **records the checkpoint and continues**. Background hooks still fire and review/PR hooks still run — only the human pause is skipped. This is the one behavioral difference from a manual run.
 
-4. **End at `completed`.** Implement's own final node writes it, through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented`. So the run ends when implement ends — do not dispatch `/speckit.companion.mark-complete` as a fifth step. There is exactly one writer of `completed`; never introduce a second.
+4. **End at `completed`.** Implement's own final node writes it, through `write-context.py --mark-complete`, which refuses unless the spec is already `implemented`. So the run ends when implement ends — do not dispatch `speckit.companion.mark-complete` as a fifth step. There is exactly one writer of `completed`; never introduce a second.
 
 5. **Degrade gracefully on a one-shot environment.** Auto needs an agent that keeps acting after each step finishes. If your environment runs one command and then stops (a plain / one-shot terminal), you cannot chain the steps yourself: run the first step, record its progress, and stop. The run stays valid and resumable — the remaining steps are triggered the normal one-step-at-a-time way (by the developer or the companion panel). No error; auto simply behaves like the manual flow there.
 <!-- speckit-companion:part timing -->

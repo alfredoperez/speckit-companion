@@ -24,12 +24,19 @@ export function isNewerVersion(current: string, latest: string): boolean {
 export class UpdateChecker {
     private static readonly SKIP_VERSION_KEY = ConfigKeys.globalState.skipVersion;
     private static readonly LAST_CHECK_KEY = ConfigKeys.globalState.lastUpdateCheck;
+    private static readonly PUBLISHED_COMPANION_KEY = ConfigKeys.globalState.companionPublishedVersion;
     private static readonly CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
     
     constructor(
         private context: vscode.ExtensionContext,
         private outputChannel: vscode.OutputChannel
-    ) {}
+    ) {
+        // The one point where the published version enters a session. The daily check below only ever
+        // writes to storage, so this seed is what makes the out-of-date warning reachable at all.
+        notePublishedCompanionVersion(
+            this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY)
+        );
+    }
     
     /**
      * Check for updates
@@ -73,6 +80,18 @@ export class UpdateChecker {
         }
     }
     
+    /** Remember the newest published spec-kit extension version, for the next session to compare against. Forward-only: a check finds no ext tag once older ones fall off the shared releases page, and accepting that would erase it. */
+    private async rememberPublishedCompanionVersion(latest: string | null): Promise<void> {
+        if (!latest) {
+            return;
+        }
+        const known = this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY);
+        if (known && !isNewerVersion(known, latest)) {
+            return;
+        }
+        await this.context.globalState.update(UpdateChecker.PUBLISHED_COMPANION_KEY, latest);
+    }
+
     /**
      * Get current extension version
      */
@@ -103,7 +122,7 @@ export class UpdateChecker {
             // Both products publish into this one list, so the spec-kit extension's
             // newest version is already in hand — no second request for it.
             const latestExt = selectLatestSpecKitExtRelease(releases);
-            notePublishedCompanionVersion(latestExt ?? undefined);
+            await this.rememberPublishedCompanionVersion(latestExt);
             this.outputChannel.appendLine(`[UpdateChecker] Latest spec-kit extension release: ${latestExt || 'none'}`);
             return latest;
         } catch (error) {

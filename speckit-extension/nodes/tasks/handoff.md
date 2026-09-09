@@ -10,7 +10,7 @@ last: true
 
 <!-- /speckit-companion:part timing -->
 
-**The next step is `implement`.** Dispatch `/speckit.companion.implement <feature_dir>`.
+**The next step is `implement`.** Dispatch `speckit.companion.implement <feature_dir>`.
 
 <!-- speckit-companion:part self-advance -->
 

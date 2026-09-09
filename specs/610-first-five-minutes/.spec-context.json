@@ -1,0 +1,344 @@
+{
+  "workflow": "companion",
+  "specName": "Finish the first five minutes",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-09T15:02:19.871Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:02:52.110Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:03:22.480Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:06:46.284Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:14:56.427Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-09T15:15:11.179Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-09T15:15:16.448Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-09T15:15:16.544Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-09T15:15:16.642Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.394Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.489Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.589Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.686Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.784Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.879Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:24.971Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:25.062Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-09T15:15:25.082Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "specs-commands",
+      "specs-lifecycle",
+      "specs-living-model",
+      "specs-living-view",
+      "specs-pipeline-build",
+      "specs-state-record",
+      "ai-providers-config",
+      "ai-providers-dispatch",
+      "ai-providers-prompt"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "specs-living-model": [
+        "A source file reports the living specs that claim it, in the editor's own process",
+        "Requirement slicing lives beside the requirement-id parser and counts the same headings",
+        "The registry carries a capability's retirement declaration"
+      ],
+      "ai-providers-config": [
+        "A stale or unknown provider setting never breaks activation"
+      ],
+      "ai-providers-dispatch": [
+        "Dispatch is one-way and unobservable",
+        "Every assistant is reached through one provider contract",
+        "Terminal CLIs share one dispatch lifecycle",
+        "The prompt is never pasted into visible terminal scrollback",
+        "Dispatch targets are probed at dispatch time, not assumed",
+        "Commands are not auto-submitted into a surface that cannot resolve them"
+      ],
+      "ai-providers-prompt": [
+        "Bookkeeping instructions travel separately from the user-facing command",
+        "Arguments are reshaped for the surface that will display them"
+      ]
+    }
+  },
+  "last_action": "living specs loaded (specs-commands, specs-lifecycle, specs-living-model, specs-living-view, specs-pipeline-build, specs-state-record, ai-providers-config, ai-providers-dispatch, ai-providers-prompt)",
+  "coverage": {
+    "FR-001": {
+      "title": "Persist the newest published spec-kit extension version the extension learns"
+    },
+    "FR-002": {
+      "title": "Seed the comparison from the persisted version at startup, before the warning decision"
+    },
+    "FR-003": {
+      "title": "Compare against the newer of bundled and persisted, falling back to bundled alone"
+    },
+    "FR-004": {
+      "title": "Ignore an unreadable persisted value rather than breaking activation"
+    },
+    "FR-005": {
+      "title": "Cover the published-version selector and the expected-version comparison with tests"
+    },
+    "FR-006": {
+      "title": "Name a pipeline command without a leading slash in shipped node and preset prose"
+    },
+    "FR-007": {
+      "title": "Keep both spellings in the part that teaches how commands are spelled"
+    },
+    "FR-008": {
+      "title": "Regenerate the built commands and goldens to match the reworded sources"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 8,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "the five #703 defects already fixed on main",
+    "raising the stale-extension warning mid-session rather than on the next start",
+    "changing the canonical dotted command ids or filenames"
+  ],
+  "context": [
+    "living spec: ai-providers-dispatch",
+    "living spec: ai-providers-prompt",
+    "area: src/speckit (update check and version gap)",
+    "area: speckit-extension/nodes (shipped prose)",
+    "constraint: a feature must not branch on which assistant is configured"
+  ],
+  "intent": "Finish the two parts of #703 that were never actually delivered: a stale-extension warning that can fire, and prose that never prints an untypeable command name",
+  "approach": "Persist and seed the published spec-kit extension version so the comparison survives the daily gate, and drop the leading slash from nineteen prose command names",
+  "currentTask": "T008",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the companionPublishedVersion global-storage key",
+      "files": [
+        "src/core/constants.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Filtered the published-version setter through the module's own version check and exposed what it holds",
+      "files": [
+        "src/speckit/companionVersionGap.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Persisted the accepted version on a successful check and seeded from storage in the constructor",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Covered the setter's filtering and bundled-versus-published, with the module state reset between cases",
+      "files": [
+        "src/speckit/companionVersionGap.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Covered the storage round trip, the constructor seed, a non-version stored value, and a list with no ext tag",
+      "files": [
+        "src/speckit/updateChecker.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Dropped the leading slash from all nineteen prose command names, keeping command-spelling's own examples",
+      "files": [
+        "speckit-extension/nodes",
+        "speckit-extension/presets/_parts/self-advance.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Reassembled the bodies, rebuilt the commands and refroze the goldens; all four extension gates clean",
+      "files": [
+        "speckit-extension/commands",
+        "speckit-extension/tests/golden/commands"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Corrected the getting-started claim that the check never needs the network and wrote both changelogs",
+      "files": [
+        "docs/getting-started.md",
+        "CHANGELOG.md",
+        "speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "The whole JS suite passes with the new persistence and tests",
+      "command": "npm test",
+      "result": "173 suites, 2918 tests passed"
+    },
+    {
+      "what": "The spec-kit extension test suite passes after the prose rewording and golden refreeze",
+      "command": "python3 -m pytest speckit-extension/tests -q",
+      "result": "1385 passed, 8 skipped"
+    },
+    {
+      "what": "The four spec-kit extension gates stay clean",
+      "command": "check-shape-parity.py; package-manifest.py --check; check-command-emissions.py; instruction-budget.py --strict",
+      "result": "14 bodies match, 22 scripts, 21 commands agree, budget exit 0"
+    },
+    {
+      "what": "TypeScript compiles with the new global-storage key and setter signature",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "All nineteen prose command names lost the leading slash and command-spelling kept its own examples",
+      "command": "grep -rn backtick-slash-speckit.companion across nodes and presets",
+      "result": "zero matches outside command-spelling.md"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Two lifecycle capture calls failed early in this run: a shell function wrapping write-context.py did not resolve, so the calls exited without recording. Both were immediately re-run successfully. History is append-only, so the failed pair cannot be removed.",
+      "step": "implement",
+      "kind": "self-inflicted"
+    },
+    {
+      "note": "The doctor reports real drift on nine capabilities (specs-state-record, the seven viewer-ui-* files, ai-providers-*) against baseline 9b00a320. None of it was caused by this run; it predates the branch and belongs to the living-specs fold backlog, not to this spec.",
+      "step": "implement",
+      "kind": "pre-existing"
+    },
+    {
+      "note": "The stale-extension warning is raised on the next start rather than mid-session. When a check learns a newer published version during a session that had already decided not to warn, nothing re-syncs the surfaces. This is a deliberate scope call recorded in the spec assumptions.",
+      "step": "implement",
+      "kind": "deliberate"
+    }
+  ]
+}

@@ -13,9 +13,15 @@ import {
     markInstallInFlight,
     clearInstallInFlight,
     isInstallInFlight,
+    notePublishedCompanionVersion,
+    publishedCompanionVersion,
 } from './companionVersionGap';
 
 describe('companionVersionGap', () => {
+    // `publishedVersion` is module state, so a case that sets it would otherwise be the yardstick
+    // for every case after it.
+    afterEach(() => notePublishedCompanionVersion(undefined));
+
     describe('parseManifestVersion', () => {
         it('reads extension.version from a manifest body', () => {
             expect(parseManifestVersion('extension:\n  id: companion\n  version: "0.21.0"\n')).toBe('0.21.0');
@@ -38,6 +44,20 @@ describe('companionVersionGap', () => {
             expect(parseRegistryVersion('{"extensions":{"git":{"version":"1.0.0"}}}')).toBeUndefined();
             expect(parseRegistryVersion('{"extensions":{"companion":{"version":42}}}')).toBeUndefined();
             expect(parseRegistryVersion('not json')).toBeUndefined();
+        });
+    });
+
+    describe('notePublishedCompanionVersion', () => {
+        it('keeps a version and forgets anything that is not one', () => {
+            notePublishedCompanionVersion('0.22.0');
+            expect(publishedCompanionVersion()).toBe('0.22.0');
+
+            notePublishedCompanionVersion('latest');
+            expect(publishedCompanionVersion()).toBeUndefined();
+
+            notePublishedCompanionVersion('0.22.0');
+            notePublishedCompanionVersion(undefined);
+            expect(publishedCompanionVersion()).toBeUndefined();
         });
     });
 
@@ -129,6 +149,24 @@ describe('companionVersionGap', () => {
             expect(readInstalledCompanionVersion(dir)).toBe('0.20.2');
             write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
             expect(readInstalledCompanionVersion(dir)).toBe('0.21.0');
+        });
+
+        it('judges against the published version once it is newer than the bundled one', () => {
+            // A build whose own bundled copy is current still has to report a workspace that is behind.
+            write('speckit-extension/extension.yml', 'extension:\n  version: "0.21.0"\n');
+            write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
+            expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'current' });
+
+            notePublishedCompanionVersion('0.22.0');
+            expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'outdated', installed: '0.21.0', expected: '0.22.0' });
+        });
+
+        it('keeps the bundled version as the yardstick when it is the newer of the two', () => {
+            write('speckit-extension/extension.yml', 'extension:\n  version: "0.21.0"\n');
+            write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.20.2"\n');
+
+            notePublishedCompanionVersion('0.20.0');
+            expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'outdated', installed: '0.20.2', expected: '0.21.0' });
         });
 
         it('resolves the three states from real files', () => {

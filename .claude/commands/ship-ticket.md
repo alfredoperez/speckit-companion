@@ -53,7 +53,9 @@ Run `/code-review` on the branch diff vs `main` at **high** effort, apply findin
 
 **Log who found what.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md` — date, branch or PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, and whether it changed code. This is the only record of whether the second reviewer earns its place, so it gets written on every run, including the runs where Codex found nothing.
 
-**Re-review the fix.** If your applied fixes themselves changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate, a DOM/lifecycle refactor), **re-run `/code-review` on the new commit** — the fix you just wrote is the least-reviewed code in the PR. Repeat until a pass surfaces nothing new worth a code change. Docs/CSS/label-only fixes don't need the second pass. Convergence ≠ zero findings; it's "no new finding worth a code change."
+**Re-review the fix, once.** If your applied fixes themselves changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate, a DOM/lifecycle refactor), **re-run `/code-review` on the new commit** — the fix you just wrote is the least-reviewed code in the PR. Docs/CSS/label-only fixes don't need it.
+
+**Two passes is the ceiling.** One review, one re-review, then ship. If the second pass still finds something real, fix it and open a follow-up issue for anything it raises beyond that rather than starting a third. An unbounded loop finds real things and costs more than they are worth: on PR #720 the third pass found a genuine dispatch bug, and the fourth found nothing while the branch sat unmerged. Convergence is a budget, not a proof.
 
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.

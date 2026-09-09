@@ -72,6 +72,8 @@ export const ConfigKeys = {
         installBannerDismissed: 'speckit.installBannerDismissed',
         /** The user chose stock SpecKit at the Create-Spec modal. Asked once, then honoured. */
         companionDeclinedAtCreate: 'speckit.companionDeclinedAtCreate',
+        /** Newest published spec-kit extension version the update check has seen. Cached so the once-a-day check is not the only thing that can raise the out-of-date warning. */
+        companionPublishedVersion: 'speckit.companionPublishedVersion',
         companionUpdateSkippedVersion: 'speckit.companionUpdateSkippedVersion',
         companionUpdateNotifiedFor: 'speckit.companionUpdateNotifiedFor',
         companionUpdateAttempted: 'speckit.companionUpdateAttempted',

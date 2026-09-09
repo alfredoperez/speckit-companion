@@ -35,7 +35,7 @@ Add `--at "<dispatch time>"` when the dispatcher printed one; otherwise the scri
 <!-- speckit-companion:part command-spelling -->
 ## Name every command the way this project registers it
 
-Commands are written in dot form throughout this body, `/speckit.companion.plan`, because that is their canonical id. Several hosts register them with dashes instead: Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
+Commands are named in dot form throughout this body, `speckit.companion.plan`, because that is their canonical id, and without a leading slash, because the spelling a host actually registers is not always this one. Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
 <!-- /speckit-companion:part command-spelling -->
 
 <!-- speckit-companion:part speckit-hooks -->
@@ -232,8 +232,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 
      Put the task checklist **only** in `tasks.md`. A second copy in the spec would drift. `<short-name>.spec.md` keeps the Approach; `tasks.md` owns the tasks.
 
-     Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `/speckit.companion.plan` or `/speckit.companion.tasks`: the three lean files plus the lifecycle fold below record those steps as satisfied.
-   - **`normal`, full pipeline.** Write `<short-name>.spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
+     Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `speckit.companion.plan` or `speckit.companion.tasks`: the three lean files plus the lifecycle fold below record those steps as satisfied.
+   - **`normal`, full pipeline.** Write `<short-name>.spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `speckit.companion.plan` and `speckit.companion.tasks` runs.
 **Output**: `<feature_directory>/<short-name>.spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode the spec additionally carries an **Approach** section, and two lean files sit alongside it: `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec). In **normal** mode the spec holds the four sections only, and no `plan.md` / `tasks.md` are written here.
 
 **Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
@@ -307,16 +307,16 @@ Record every boundary by **running the writer script**. Never edit `.spec-contex
 - **Never write the next step's start.** The next command owns it. Writing it here renders a phantom "Generating <next>…".
 <!-- /speckit-companion:part timing -->
 
-**The next step is `plan`**: dispatch `/speckit.companion.plan <feature_dir>`. Unless this spec was classified `simple`, in which case plan and tasks are already folded and the next step is `implement`: `/speckit.companion.implement <feature_dir>`.
+**The next step is `plan`**: dispatch `speckit.companion.plan <feature_dir>`. Unless this spec was classified `simple`, in which case plan and tasks are already folded and the next step is `implement`: `speckit.companion.implement <feature_dir>`.
 
 <!-- speckit-companion:part self-advance -->
 ## Self-advance: hand off to the next step
 
 This is one step in the Companion pipeline. How the run continues depends on the environment you are running in; do not invoke a separate headless/deterministic run command for the everyday flow.
 
-- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, dispatch the next step's `/speckit.companion.*` command and keep going. The order is fixed and this step's own handoff names its successor, so there is no file to open to find out.
-- **Pause at every review gate, and name the command that continues.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. When you stop, **name the next command literally**: "approve and run `/speckit.companion.plan <feature_dir>`", not "approve to move to plan". Only continue once the gate is approved.
-- **Nothing follows implement.** Implement's own final node writes `completed` through `write-context.py --mark-complete`, so the spec is already finished when this step ends. Do not dispatch `/speckit.companion.mark-complete` afterwards: it is the manual recovery command and the workflow engine's terminal step, not a step a run adds for itself. There is exactly one writer of `completed`; never introduce a second.
+- **On an agentic CLI that keeps acting after a step finishes:** once this step's work is complete, dispatch the next step's `speckit.companion.*` command and keep going. The order is fixed and this step's own handoff names its successor, so there is no file to open to find out.
+- **Pause at every review gate, and name the command that continues.** Where the workflow marks a `gate` (e.g. review-spec, review-plan), stop and wait for approval rather than running past it. When you stop, **name the next command literally**: "approve and run `speckit.companion.plan <feature_dir>`", not "approve to move to plan". Only continue once the gate is approved.
+- **Nothing follows implement.** Implement's own final node writes `completed` through `write-context.py --mark-complete`, so the spec is already finished when this step ends. Do not dispatch `speckit.companion.mark-complete` afterwards: it is the manual recovery command and the workflow engine's terminal step, not a step a run adds for itself. There is exactly one writer of `completed`; never introduce a second.
 - **Degrade gracefully on a one-shot environment.** If your environment runs one step and then stops, the handoff simply does not fire: finish this step, record its progress, and stop. The run stays valid and resumable, and the next step is triggered manually, by the developer or the companion panel. Completion likewise stays a manual action there.
 <!-- /speckit-companion:part self-advance -->
 

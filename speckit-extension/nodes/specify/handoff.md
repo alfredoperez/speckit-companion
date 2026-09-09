@@ -10,7 +10,7 @@ last: true
 
 <!-- /speckit-companion:part timing -->
 
-**The next step is `plan`**: dispatch `/speckit.companion.plan <feature_dir>`. Unless this spec was classified `simple`, in which case plan and tasks are already folded and the next step is `implement`: `/speckit.companion.implement <feature_dir>`.
+**The next step is `plan`**: dispatch `speckit.companion.plan <feature_dir>`. Unless this spec was classified `simple`, in which case plan and tasks are already folded and the next step is `implement`: `speckit.companion.implement <feature_dir>`.
 
 <!-- speckit-companion:part self-advance -->
 

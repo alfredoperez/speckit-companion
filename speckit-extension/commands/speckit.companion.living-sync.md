@@ -36,7 +36,7 @@ Run the drift detector in working-tree mode from the repository root:
 python3 .specify/extensions/companion/scripts/drift.py --working --json
 ```
 
-This is the same engine `/speckit.companion.living-drift` uses — resolver membership, exempt globs, per-capability baselines, skip reasons — with `--working` widening each capability's changed set to the working tree (baseline→worktree diff plus untracked files). Its JSON output **is** the sync plan; do not regroup the files yourself with ad-hoc git commands.
+This is the same engine `speckit.companion.living-drift` uses — resolver membership, exempt globs, per-capability baselines, skip reasons — with `--working` widening each capability's changed set to the working tree (baseline→worktree diff plus untracked files). Its JSON output **is** the sync plan; do not regroup the files yourself with ad-hoc git commands.
 
 Read the result:
 
@@ -67,7 +67,7 @@ Work through the capabilities one at a time. If one capability's update fails (u
 
 Report every entry in the plan's `skipped` list with its reason, verbatim. In particular:
 
-- `spec.md not yet committed` — the capability has no committed baseline to diff against. Do **not** draft or redraft its spec here; that is bootstrap work, and `/speckit.companion.living-adopt` owns it. Say so.
+- `spec.md not yet committed` — the capability has no committed baseline to diff against. Do **not** draft or redraft its spec here; that is bootstrap work, and `speckit.companion.living-adopt` owns it. Say so.
 - Git/shallow-clone reasons — nothing to do but state them.
 
 ### 4. Report — and leave the edits uncommitted
