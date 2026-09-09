@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import type { GitHubRelease } from '../core/types/config';
-import { notePublishedCompanionVersion, publishedCompanionVersion } from './companionVersionGap';
+import { notePublishedCompanionVersion } from './companionVersionGap';
 
 /** True when `latest` is a higher `major.minor.patch` than `current`. */
 export function isNewerVersion(current: string, latest: string): boolean {
@@ -31,10 +31,8 @@ export class UpdateChecker {
         private context: vscode.ExtensionContext,
         private outputChannel: vscode.OutputChannel
     ) {
-        // The check below runs at most once a day and resolves after activation has already decided whether
-        // to warn, so on its own it can never raise the out-of-date warning: what it learns is gone by the
-        // time anything asks. Seeding from what an earlier run stored is what makes the warning reachable,
-        // and it happens here because the gap is first resolved later in the same activation.
+        // The one point where the published version enters a session. The daily check below only ever
+        // writes to storage, so this seed is what makes the out-of-date warning reachable at all.
         notePublishedCompanionVersion(
             this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY)
         );
@@ -83,6 +81,29 @@ export class UpdateChecker {
     }
     
     /**
+     * Remember the newest published spec-kit extension version, for the next session to compare against.
+     *
+     * Forward-only on purpose. Both products publish into one releases list, so once the combined count
+     * passes a page the older `speckit-ext-v*` tags fall off it and a check legitimately finds none. Writing
+     * that absence back would erase a known-good version and silence the warning until some later check
+     * happened to succeed.
+     *
+     * It is also deliberately not applied to the running session: the gap was already resolved and the
+     * surfaces drawn before this resolves, and feeding it in now would leave the status bar holding the old
+     * answer while anything that re-resolves reports the new one. One session, one yardstick.
+     */
+    private async rememberPublishedCompanionVersion(latest: string | null): Promise<void> {
+        if (!latest) {
+            return;
+        }
+        const known = this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY);
+        if (known && !isNewerVersion(known, latest)) {
+            return;
+        }
+        await this.context.globalState.update(UpdateChecker.PUBLISHED_COMPANION_KEY, latest);
+    }
+
+    /**
      * Get current extension version
      */
     private getCurrentVersion(): string | undefined {
@@ -112,12 +133,7 @@ export class UpdateChecker {
             // Both products publish into this one list, so the spec-kit extension's
             // newest version is already in hand — no second request for it.
             const latestExt = selectLatestSpecKitExtRelease(releases);
-            notePublishedCompanionVersion(latestExt ?? undefined);
-            // Store what was accepted rather than the raw tag, so a malformed one never becomes the yardstick.
-            void this.context.globalState.update(
-                UpdateChecker.PUBLISHED_COMPANION_KEY,
-                publishedCompanionVersion()
-            );
+            await this.rememberPublishedCompanionVersion(latestExt);
             this.outputChannel.appendLine(`[UpdateChecker] Latest spec-kit extension release: ${latestExt || 'none'}`);
             return latest;
         } catch (error) {

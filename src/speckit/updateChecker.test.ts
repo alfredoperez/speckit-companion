@@ -173,13 +173,36 @@ describe('UpdateChecker', () => {
             expect(publishedCompanionVersion()).toBeUndefined();
         });
 
-        it('stores nothing when the releases list carries no spec-kit extension tag', async () => {
-            const { context, store } = buildContextWithStore();
+        it('keeps the remembered version when a later check finds no spec-kit extension tag', async () => {
+            // Both products publish into one releases list, so older ext tags fall off the first page once
+            // the combined count grows. Writing that absence back would erase a known-good version.
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
             mockReleases([{ tag_name: 'v0.32.0' }]);
 
             await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
 
-            expect(store.get('speckit.companionPublishedVersion')).toBeUndefined();
+            expect(store.get('speckit.companionPublishedVersion')).toBe('0.22.0');
+        });
+
+        it('never moves the remembered version backwards', async () => {
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
+            mockReleases([{ tag_name: 'v0.32.0' }, { tag_name: 'speckit-ext-v0.21.0' }]);
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBe('0.22.0');
+        });
+
+        it('leaves the running session on the yardstick it started with', async () => {
+            // The gap is resolved and the surfaces drawn before this check resolves. Applying what it learns
+            // now would leave the status bar on the old answer while anything that re-resolves used the new
+            // one, so the learned version is stored for the next session and not fed into this one.
+            const { context } = buildContextWithStore();
+            mockReleases([{ tag_name: 'v0.32.0' }, { tag_name: 'speckit-ext-v0.22.0' }]);
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(publishedCompanionVersion()).toBeUndefined();
         });
     });
 });

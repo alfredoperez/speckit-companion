@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
-- Every command names the pipeline's own commands the way you would say them, without a leading slash. A slash in front of a dotted name is a name that resolves to nothing on an assistant that registered the dashed spelling, and nineteen worked examples were quietly outvoting the rule that says to use the spelling your project installed.
+- Every command names the pipeline's own commands the way you would say them, without a leading slash. A slash in front of a dotted name is a name that resolves to nothing on an assistant that registered the dashed spelling, and twenty-five worked examples were quietly outvoting the rule that says to use the spelling your project installed.
 - Plan reads the living specs for the area it is about to touch before it sends anyone to investigate the code, and each investigator now carries its own slice. It was the other way round, so a worker relearned from source what a requirement already stated, and the two could disagree with nothing to reconcile them.
 
 ### Removed

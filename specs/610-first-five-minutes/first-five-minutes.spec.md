@@ -91,7 +91,7 @@ The pipeline's own instructions still tell the assistant to "dispatch `/speckit.
 ## Assumptions
 
 - Persisting to the extension's own global storage is the right home for the published version: it is a cache of something public, not user data, and it should survive a window reload.
-- Raising the warning mid-session, immediately after the network call lands, is deliberately out of scope. It would mean threading a refresh through activation for a case that resolves itself on the next start, and the next start is soon.
+- A version the daily check learns is stored for the next session and deliberately not applied to the running one. Threading a refresh through activation would be work for a case the next start resolves anyway, and feeding the value in without that refresh is worse than waiting: the status bar keeps the answer activation drew while anything that re-resolves reports the new one, so one fact yields two derivations inside a single session.
 - The prose rewording drops the leading slash and keeps the dotted name, because the dotted name is the canonical command id and only the slash invites a verbatim copy.
 
 ## Verbatim Constraints

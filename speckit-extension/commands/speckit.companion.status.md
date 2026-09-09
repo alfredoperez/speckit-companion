@@ -54,7 +54,7 @@ Next: <action>  →  <command|—>
 - No state and no spec files → `Nothing to summarize (no spec files or recorded state found).`
 
 The script also emits a final `RESOLUTION: { … }` JSON line. It is for
-`/speckit.companion.resume` and tests — you do not need to surface it to the user.
+`speckit.companion.resume` and tests — you do not need to surface it to the user.
 
 ## Graceful Degradation
 
