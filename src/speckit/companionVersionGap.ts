@@ -89,11 +89,20 @@ let publishedVersion: string | undefined;
  * the VS Code extension itself updates.
  */
 export function notePublishedCompanionVersion(version: string | undefined): void {
-    if (version === publishedVersion) {
+    // Both callers hand this straight on: one from a GitHub tag, one from global storage written by an
+    // older build. Neither is guaranteed to be a version, and a bad value here would silently become the
+    // yardstick every workspace is judged against, so it is filtered at the one point both pass through.
+    const next = asSemver(version);
+    if (next === publishedVersion) {
         return;
     }
-    publishedVersion = version;
+    publishedVersion = next;
     lastGap = undefined;
+}
+
+/** The published version currently in hand, so a caller can persist what a check just learned. */
+export function publishedCompanionVersion(): string | undefined {
+    return publishedVersion;
 }
 
 /** The version this build expects: whichever of the bundled and published copies is newer. */

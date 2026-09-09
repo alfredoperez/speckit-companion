@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import type { GitHubRelease } from '../core/types/config';
-import { notePublishedCompanionVersion } from './companionVersionGap';
+import { notePublishedCompanionVersion, publishedCompanionVersion } from './companionVersionGap';
 
 /** True when `latest` is a higher `major.minor.patch` than `current`. */
 export function isNewerVersion(current: string, latest: string): boolean {
@@ -24,12 +24,21 @@ export function isNewerVersion(current: string, latest: string): boolean {
 export class UpdateChecker {
     private static readonly SKIP_VERSION_KEY = ConfigKeys.globalState.skipVersion;
     private static readonly LAST_CHECK_KEY = ConfigKeys.globalState.lastUpdateCheck;
+    private static readonly PUBLISHED_COMPANION_KEY = ConfigKeys.globalState.companionPublishedVersion;
     private static readonly CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
     
     constructor(
         private context: vscode.ExtensionContext,
         private outputChannel: vscode.OutputChannel
-    ) {}
+    ) {
+        // The check below runs at most once a day and resolves after activation has already decided whether
+        // to warn, so on its own it can never raise the out-of-date warning: what it learns is gone by the
+        // time anything asks. Seeding from what an earlier run stored is what makes the warning reachable,
+        // and it happens here because the gap is first resolved later in the same activation.
+        notePublishedCompanionVersion(
+            this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY)
+        );
+    }
     
     /**
      * Check for updates
@@ -104,6 +113,11 @@ export class UpdateChecker {
             // newest version is already in hand — no second request for it.
             const latestExt = selectLatestSpecKitExtRelease(releases);
             notePublishedCompanionVersion(latestExt ?? undefined);
+            // Store what was accepted rather than the raw tag, so a malformed one never becomes the yardstick.
+            void this.context.globalState.update(
+                UpdateChecker.PUBLISHED_COMPANION_KEY,
+                publishedCompanionVersion()
+            );
             this.outputChannel.appendLine(`[UpdateChecker] Latest spec-kit extension release: ${latestExt || 'none'}`);
             return latest;
         } catch (error) {

@@ -14,5 +14,5 @@ reads: [classify-size]
 
      Put the task checklist **only** in `tasks.md`. A second copy in the spec would drift. `<short-name>.spec.md` keeps the Approach; `tasks.md` owns the tasks.
 
-     Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `/speckit.companion.plan` or `/speckit.companion.tasks`: the three lean files plus the lifecycle fold below record those steps as satisfied.
-   - **`normal`, full pipeline.** Write `<short-name>.spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `/speckit.companion.plan` and `/speckit.companion.tasks` runs.
+     Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `speckit.companion.plan` or `speckit.companion.tasks`: the three lean files plus the lifecycle fold below record those steps as satisfied.
+   - **`normal`, full pipeline.** Write `<short-name>.spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `speckit.companion.plan` and `speckit.companion.tasks` runs.

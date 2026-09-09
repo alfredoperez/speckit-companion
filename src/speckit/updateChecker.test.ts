@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { UpdateChecker } from './updateChecker';
+import { notePublishedCompanionVersion, publishedCompanionVersion } from './companionVersionGap';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
@@ -22,6 +23,7 @@ describe('UpdateChecker', () => {
     };
 
     afterEach(() => {
+        notePublishedCompanionVersion(undefined);
         jest.restoreAllMocks();
         require('vscode').window.showInformationMessage.mockClear();
         require('vscode').env.openExternal.mockClear();
@@ -134,5 +136,50 @@ describe('UpdateChecker', () => {
         await new Promise(r => setImmediate(r));
 
         expect(require('vscode').env.openExternal).not.toHaveBeenCalled();
+    });
+    describe('the published spec-kit extension version', () => {
+        const buildContextWithStore = (seed: Record<string, unknown> = {}) => {
+            const mock = createMockExtensionContext(seed);
+            return {
+                context: { ...mock.context, extension: { packageJSON: { version: '0.32.0' } } } as any,
+                store: mock.store,
+            };
+        };
+
+        it('stores what a check learns, so the next window does not need the network', async () => {
+            const { context, store } = buildContextWithStore();
+            mockReleases([{ tag_name: 'v0.32.0' }, { tag_name: 'speckit-ext-v0.22.0' }]);
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBe('0.22.0');
+        });
+
+        it('seeds itself from that store at construction, before anything asks for the gap', () => {
+            // This is the whole defect: the check runs at most once a day and resolves after activation has
+            // decided whether to warn, so without the seed the warning is unreachable on almost every start.
+            const { context } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
+
+            new UpdateChecker(context, buildOutputChannel());
+
+            expect(publishedCompanionVersion()).toBe('0.22.0');
+        });
+
+        it('ignores a stored value that is not a version rather than making it the yardstick', () => {
+            const { context } = buildContextWithStore({ 'speckit.companionPublishedVersion': 'latest' });
+
+            new UpdateChecker(context, buildOutputChannel());
+
+            expect(publishedCompanionVersion()).toBeUndefined();
+        });
+
+        it('stores nothing when the releases list carries no spec-kit extension tag', async () => {
+            const { context, store } = buildContextWithStore();
+            mockReleases([{ tag_name: 'v0.32.0' }]);
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBeUndefined();
+        });
     });
 });
