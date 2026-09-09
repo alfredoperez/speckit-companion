@@ -25,8 +25,11 @@ import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
  * behind by one of them paints the next render in a stale mode.
  */
 export function applyNavState(next: NavState): void {
-    navState.value = next;
+    // Cleared before the new state lands, not after: a render triggered by `navState` would
+    // otherwise read the previous echo and answer with it.
     viewerMode.value = null;
+    navState.value = next;
+    console.log(`[viewer-nav] received landing=${next.landing ?? 'unset'}, currentDoc=${next.currentDoc}`);
     if (next.currentTask !== undefined) setCurrentTask(next.currentTask);
     setHasSpecContext(!!(next.specContextName || next.badgeText));
     setLivingMode(!!next.livingMode);

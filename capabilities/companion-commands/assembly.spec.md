@@ -76,6 +76,20 @@ The commands under the never-halts contract — the four lifecycle hooks, the li
 - **WHEN** the clarify-type command body no longer contains an ask instruction
 - **THEN** the quality gate fails — asking is that command's purpose
 
+### A shipped body never names a command in a spelling the host cannot resolve
+
+Commands have one canonical id in dot form, and several hosts register them dashed instead. A shipped body SHALL therefore name a command without a leading slash, so the name reads as an id to translate rather than as something to type verbatim, and every body that prints or dispatches a name SHALL carry the rule that says to use the spelling the project installed. The part that teaches that rule is the one place both spellings appear, because they are its subject. This SHALL be held by a scan over the shipped bodies rather than by review: the rule competes with every worked example around it, and three hand sweeps each left a residue in a file nobody thought to check — including the command names held as data in the status script, which are both printed to the user and dispatched on their behalf.
+
+#### Scenario: a body names a command behind a slash
+
+- **WHEN** the scan reads the shipped commands, nodes and presets
+- **THEN** it fails naming the file and the line
+
+#### Scenario: the part that teaches the rule
+
+- **WHEN** the scan reaches it
+- **THEN** its examples of both spellings are left alone
+
 ### Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them
 
 A switch that adds instruction text to command bodies MUST change which bodies get rendered, not toggle a passage inside them. With the switch off the text MUST be absent from the assembled body entirely, so an off render stays byte-identical to the frozen baseline and the parity gate keeps its meaning. The switch SHALL be declared in the project's own configuration and read through the existing loader, inheriting its failure table, and it MUST NOT introduce a second mechanism for changing command text. Because a body is a static file the agent reads, the switch necessarily affects the next dispatched command and never one already in flight.

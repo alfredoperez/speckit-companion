@@ -38,7 +38,10 @@ export const overviewAvailable = computed(() => {
 
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */
 export const showingOverview = computed(() => {
-    if (!overviewAvailable.value) return false;
+    if (!overviewAvailable.value) {
+        console.log('[viewer-nav] showing document: this spec has no Overview to land on');
+        return false;
+    }
     // Three sources, most specific first: the reader's own click inside the
     // viewer, then what the entry point asked for (a tree click on a document is
     // a request for that document), then the default for a spec opened as a
@@ -51,7 +54,9 @@ export const showingOverview = computed(() => {
     // tree lost to it.
     // A living spec opens on its Overview unless a document or requirement was asked for.
     const landing = navState.value?.landing ?? (navState.value?.livingMode ? 'overview' : 'document');
-    return (viewerMode.value ?? landing) === 'overview';
+    const answer = (viewerMode.value ?? landing) === 'overview';
+    console.log(`[viewer-nav] showing ${answer ? 'overview' : 'document'}: viewerMode=${viewerMode.value ?? 'null'}, landing=${landing}`);
+    return answer;
 });
 
 /** History array mirrored from viewerState for the timeline panel. */
