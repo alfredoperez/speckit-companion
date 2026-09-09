@@ -11,12 +11,16 @@ This capability covers what the extension tells the user about things it observe
 ### Two products share one release list and must never be confused
 <!-- touches: src/speckit/updateChecker.ts -->
 
-This repository publishes two independently-versioned products into a single releases list. Any release lookup SHALL filter to the tag shape belonging to the product being asked about, and MUST reject drafts and prereleases. A lookup that resolves "the latest release" across both namespaces is a defect shape that has shipped before and MUST NOT be reintroduced anywhere — including links opened for the user.
+This repository publishes two independently-versioned products into a single releases list. Any release lookup SHALL filter to the tag shape belonging to the product being asked about, and MUST reject drafts and prereleases. A lookup that resolves "the latest release" across both namespaces is a defect shape that has shipped before and MUST NOT be reintroduced anywhere — including links opened for the user. One fetch SHALL answer for both products, since the list already holds them, and a second request for the other product is waste. Sharing the list has a cost the filters must respect: only the first page is fetched, so a product whose releases are older than the other's can be absent from it entirely, and finding none of a product's tags means the page did not reach them, never that the product has no releases.
 
 #### Scenario: an update check runs
 - **WHEN** releases are enumerated
 - **THEN** only tags matching the editor extension's own shape are considered, and the highest version among them wins
 - **AND** the other product's releases, drafts, and prereleases are ignored
+
+#### Scenario: the page holds no release for one of the products
+- **WHEN** that product's tag shape matches nothing
+- **THEN** it is read as unknown, and nothing that was already known about it is discarded
 
 #### Scenario: the user opens the changelog for an offered update
 - **WHEN** the update notification's changelog action is chosen

@@ -27,7 +27,7 @@ export function generateNonce(): string {
 // `fileNameToDocType` lives in `core/utils/fileNaming.ts`.
 // Imported locally so `getDocumentTypeFromPath` below can use them; not
 // re-exported (callers import from `core/utils/fileNaming` directly).
-import { fileNameToDocType } from '../../core/utils/fileNaming';
+import { fileNameToDocType, relativePathToDocType } from '../../core/utils/fileNaming';
 
 /**
  * Check if a file path is a spec document
@@ -71,7 +71,13 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
         }
     }
 
-    // Related document
+    // Related document. A nested one is typed by its path under the spec, because that is how
+    // the scan stored it: `checklists/requirements.md` is `checklists/requirements`, and typing
+    // it as `requirements` finds no document, so the click does nothing at all.
+    const rel = path.relative(getSpecDirectoryFromPath(filePath), filePath);
+    if (rel && !rel.startsWith('..') && /[\\/]/.test(rel)) {
+        return relativePathToDocType(rel);
+    }
     return fileNameToDocType(fileName);
 }
 

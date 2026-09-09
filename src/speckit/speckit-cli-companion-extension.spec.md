@@ -69,7 +69,7 @@ Activation SHALL NOT show an install prompt for the companion extension. The act
 ### The installed companion extension is compared against the version this build ships
 <!-- touches: src/speckit/companionVersionGap.ts, src/speckit/updateChecker.ts -->
 
-The workspace's spec-kit extension SHALL be resolved to one of three answers — missing, current, or out of date with both versions named — from local files only, with no network call. The expected version comes from the manifest bundled inside this build, read once per install path; the installed version comes from the workspace's own installed manifest first, so a development symlink reads as current, and from the CLI's registry as a fallback. The comparison MUST be the same `major.minor.patch` comparison the editor's own update check uses, and a version that cannot be read on either side MUST resolve to *current* rather than out of date — an unreadable file is not evidence of a gap, and treating it as one would nag every user whose layout this code does not recognize. The answer SHALL be resolved once per tick and remembered per workspace, and re-resolved when the workspace changes rather than serving another folder's answer.
+The workspace's spec-kit extension SHALL be resolved to one of three answers — missing, current, or out of date with both versions named — without a network call of its own. The expected version is whichever is newer of the manifest bundled inside this build, read once per install path, and the newest version actually published, because a build whose own bundled copy is current still has to report a workspace that is behind what shipped. The published version is learned by the update check and MUST be remembered across sessions: that check runs at most once a day and resolves after the surfaces have already been drawn, so a value held only in memory can never raise the warning it exists for. It MUST only ever move forward — both products publish into one release list, so a check legitimately finds no extension release once the older tags fall off the first page, and accepting that absence would erase what the next session compares against. What a check learns applies from the next session, not the one that learned it, so a single session has one yardstick rather than two disagreeing derivations. The installed version comes from the workspace's own installed manifest first, so a development symlink reads as current, and from the CLI's registry as a fallback. The comparison MUST be the same `major.minor.patch` comparison the editor's own update check uses, and a version that cannot be read on either side MUST resolve to *current* rather than out of date — an unreadable file is not evidence of a gap, and treating it as one would nag every user whose layout this code does not recognize. The answer SHALL be resolved once per tick and remembered per workspace, and re-resolved when the workspace changes rather than serving another folder's answer.
 
 #### Scenario: neither version can be read
 - **WHEN** the gap is computed
@@ -77,7 +77,19 @@ The workspace's spec-kit extension SHALL be resolved to one of three answers —
 
 #### Scenario: the installed version is ahead of the bundled one
 - **WHEN** the gap is computed
-- **THEN** the answer is "current" — only a bundled version strictly newer than the installed one counts as a gap
+- **THEN** the answer is "current" — only an expected version strictly newer than the installed one counts as a gap
+
+#### Scenario: this build's bundled copy is current but a newer one has been published
+- **WHEN** the gap is computed
+- **THEN** the workspace is reported out of date against the published version
+
+#### Scenario: a later check finds no extension release at all
+- **WHEN** the remembered published version is written
+- **THEN** it is left as it was, and the warning it raises survives
+
+#### Scenario: the check learns a newer version mid-session
+- **WHEN** the surfaces are asked what the gap is
+- **THEN** they answer with the version this session started on, and the new one applies from the next
 
 #### Scenario: the editor moves to another workspace folder
 - **WHEN** the gap is asked for again

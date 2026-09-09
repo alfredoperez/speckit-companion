@@ -11,7 +11,7 @@ import {
     CORE_DOCUMENT_FILES,
     CORE_DOCUMENT_LABELS
 } from './types';
-import { fileNameToDocType, fileNameToDisplayName } from '../../core/utils/fileNaming';
+import { fileNameToDocType, fileNameToDisplayName, relativePathToDocType } from '../../core/utils/fileNaming';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { featureSpecName, resolveStepFile } from '../specs/featureSpecPath';
 
@@ -43,14 +43,6 @@ function nestedFileToDisplayName(relativePath: string): string {
     return parts
         .map(part => part.replace(/[-_]/g, ' ').replace(/\b\w/g, char => char.toUpperCase()))
         .join(': ');
-}
-
-/**
- * Convert nested file path to document type
- * e.g., "contracts/webview-messages.md" -> "contracts/webview-messages"
- */
-function nestedFileToDocType(relativePath: string): string {
-    return relativePath.replace(/\.md$/i, '').toLowerCase();
 }
 
 /**
@@ -269,7 +261,7 @@ export async function scanDocuments(
                 const isNested = relativePath.includes('/') || relativePath.includes(path.sep);
 
                 documents.push({
-                    type: isNested ? nestedFileToDocType(relativePath) : fileNameToDocType(fileName),
+                    type: isNested ? relativePathToDocType(relativePath) : fileNameToDocType(fileName),
                     label: isNested ? nestedFileToDisplayName(relativePath) : fileNameToDisplayName(fileName),
                     fileName: relativePath,
                     filePath: fullPath,

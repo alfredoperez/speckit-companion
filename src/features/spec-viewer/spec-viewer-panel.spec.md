@@ -88,6 +88,18 @@ Which spec-kit-extension nudge belongs on screen — none, an install, or an upd
 - **THEN** only the version pair the banner named is silenced
 - **AND** the panel refreshes without the banner
 
+### A document is addressed by its path under the spec
+
+A document MUST be identified by its path relative to the spec directory, so one that lives in a subfolder keeps that folder in its identity. Every path that names a document — the scan that lists them, a click that opens one — MUST derive that identity the same way, from one shared derivation. Two derivations of the same identity is not a cosmetic duplication here: a click whose identity does not match the stored one resolves to no document, the render returns early, and the panel keeps whatever it was already showing, so the click reads as having opened the wrong document rather than as having failed.
+
+#### Scenario: a document in a subfolder is opened
+- **WHEN** the reader opens a document nested under the spec directory
+- **THEN** that document is what renders
+
+#### Scenario: a click names a document the scan never listed
+- **WHEN** the identity resolves to nothing
+- **THEN** the panel says so rather than silently keeping the previous document
+
 ### Opening a spec can name the requirement to bring into view
 
 The viewer's open command SHALL accept an optional requirement heading and, once the spec renders, bring the matching requirement into view. A heading matching nothing SHALL leave the document where it is rather than failing the open.

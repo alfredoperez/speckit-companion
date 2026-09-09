@@ -1084,7 +1084,10 @@ export class SpecViewerProvider {
     // chosen core doc doesn't exist but a sub-spec under it does.
     const doc = resolveTabClickDocument(instance.state.availableDocuments, documentType);
     if (!doc) {
+      // Returning quietly leaves the previous document on screen, so the click reads as having
+      // opened the wrong thing rather than as having failed. That hid a real bug for a long time.
       this.outputChannel.appendLine(`[SpecViewer] Document not found: ${documentType}`);
+      void vscode.window.showWarningMessage(`This spec has no document named "${documentType}".`);
       return null;
     }
     const resolvedType = doc.type;

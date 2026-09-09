@@ -31,3 +31,14 @@ export function fileNameToDisplayName(fileName: string): string {
 export function fileNameToDocType(fileName: string): string {
     return fileName.replace(/\.md$/i, '').toLowerCase();
 }
+
+/**
+ * A document's type from its path relative to the spec directory.
+ *
+ * A nested file keeps its folder: `checklists/requirements.md` is `checklists/requirements`.
+ * The scan and the click both come through here, because typing the same file two ways is
+ * how a click resolves to nothing and the panel silently keeps whatever it was showing.
+ */
+export function relativePathToDocType(relativePath: string): string {
+    return relativePath.split(/[\\/]/).join('/').replace(/\.md$/i, '').toLowerCase();
+}
