@@ -34,9 +34,9 @@ build = importlib.import_module("build-pipeline")
 
 # plan/gather holds two nodes that read nothing from each other, so it is the
 # one phase in the shipped pipeline a reorder can legally touch.
-PLAN_DEFAULT = ["size-budget", "gather-context", "plan-doc",
+PLAN_DEFAULT = ["size-budget", "load-living-specs", "gather-context", "plan-doc",
                 "constitution-check", "side-files", "handoff"]
-PLAN_SWAPPED = ["gather-context", "size-budget", "plan-doc",
+PLAN_SWAPPED = ["gather-context", "load-living-specs", "size-budget", "plan-doc",
                 "constitution-check", "side-files", "handoff"]
 
 
@@ -47,7 +47,7 @@ class AReorderInsideAPhaseIsHonoured(unittest.TestCase):
     def test_the_phase_lists_the_nodes_in_the_order_that_was_asked_for(self):
         gather = next(p for p in assemble.phases_for("plan", PLAN_SWAPPED)
                       if p["name"] == "gather")
-        self.assertEqual(gather["nodes"], ["gather-context", "size-budget"])
+        self.assertEqual(gather["nodes"], ["gather-context", "load-living-specs", "size-budget"])
 
     def test_the_body_actually_changes(self):
         before = assemble.assemble_command("plan", order=PLAN_DEFAULT)
