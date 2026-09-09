@@ -31,7 +31,7 @@ The canonical order of pipeline steps and the document types the protocol names 
 
 ### Overview and documents are one selection axis
 
-The overview MUST be a destination alongside the documents, not a mode layered over them, so selection can never get stuck between the two. Which one is shown on open is decided by the entry point, not by the data: the Overview only when the spec itself was opened, its document for any document, step or artifact row — a data-derived default resolved to the Overview for every spec that had ever run, and every document row in the tree lost to it. The reader's pick wins after that, and a pick of the Overview is reported to the extension, because a re-render resets the shell and would otherwise undo it. The overview MUST mount lazily on first reveal so it never delays the first document render, and MUST NOT be offered at all for a spec with no recorded run or when the reader has turned it off.
+The overview MUST be a destination alongside the documents, not a mode layered over them, so selection can never get stuck between the two. Which one is shown on open is decided by the entry point, not by the data: the Overview only when the spec itself was opened, its document for any document, step or artifact row — a data-derived default resolved to the Overview for every spec that had ever run, and every document row in the tree lost to it. The reader's pick wins after that, and a pick of the Overview is reported to the extension **as the Overview**, not as an absence of choice: a cleared field falls back to the document for any spec that has run, which is the same silent default this requirement exists to prevent. The entry point's decision MUST outrank a pick the reader made earlier, so a later click on the spec name lands on the Overview even in a panel that has already been used to read documents. There is one record of which is showing, held by the extension; anything the webview keeps is an optimistic echo of it and MUST be dropped whenever a fresh decision arrives, or the first document a panel showed becomes its answer for the panel's whole life. The overview MUST mount lazily on first reveal so it never delays the first document render, and MUST NOT be offered at all for a spec with no recorded run or when the reader has turned it off.
 
 #### Scenario: a spec with only a work log
 - **WHEN** the viewer opens
@@ -50,6 +50,10 @@ The overview MUST be a destination alongside the documents, not a mode layered o
 #### Scenario: the spec itself is opened
 - **WHEN** the viewer opens
 - **THEN** it lands on the Overview
+
+#### Scenario: the spec name is clicked after documents have been read in that panel
+- **WHEN** the spec itself is opened again
+- **THEN** it lands on the Overview, not on the document last read
 
 ### The pipeline rail lists document-producing steps only
 
