@@ -53,7 +53,7 @@ For changes that are **small and already understood** — a wrong regex, a stale
 | Fix | SpecKit Companion pipeline (`specify → plan → tasks → implement`), writes `specs/NNN-*/` | **direct fix**, no spec folder |
 | Execution | strictly sequential | **parallel worktree subagents** |
 | `install-local` | before every ticket | **once, at the end** |
-| Code review | `/code-review` high, applied; re-run on logic-changing fixes | **unchanged** |
+| Code review | `/code-review` high + `/codex:review` in parallel, applied, findings logged to the Review Ledger; re-run on logic-changing fixes | **unchanged** |
 | Learnings | distill per ticket | **one distill** for the batch |
 | Report | themed HTML brief | **chat summary** |
 
@@ -112,7 +112,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 If a subagent returns `escalate` — the task was bigger than it looked — **do not merge it**. Leave the branch, report it, and re-run it through the full loop.
 
 ### L2. Review — one subagent per branch
-`/code-review` at **high** effort on each branch's diff vs `main`, apply findings, commit, re-run tests. Same as the full loop; this step is not lightened.
+`/code-review` at **high** effort on each branch's diff vs `main`, with `/codex:review --base main --scope branch` in parallel, apply findings, commit, re-run tests, log each finding to the Review Ledger. Same as the full loop; this step is not lightened.
 
 ### L3. PR — main loop
 Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`. (The review already happened in L2; if an L2 fix changed real logic, re-run `/code-review` on it before opening the PR.)
@@ -180,8 +180,12 @@ Subagent prompt must include:
 
 Capture this result. If the subagent reports it could not produce a passing fix, **skip merge** for this ticket, record it as "needs attention," and continue to the next ticket.
 
-#### 3. Code review — **subagent (or `/code-review` inline)**
+#### 3. Code review — **subagent (`/code-review` + `/codex:review`)**
 Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 6). Commit and re-run `npm test` if code changed.
+
+**Run Codex side by side.** Launch `/codex:review --base main --scope branch` on the same diff, in parallel with `/code-review`, before applying anything. Two reviewers over one diff, then reconcile: a finding either reviewer raises gets addressed, and where they disagree the tie-breaker is a test, not an argument.
+
+**Log who found what.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md` — date, branch or PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, and whether it changed code. This is the only record of whether the second reviewer earns its place, so it gets written on every run, including the runs where Codex found nothing.
 
 **Re-review the fix — loop until clean.** A fix commit is the least-reviewed code in the PR: it wasn't seen by the review that prompted it, and it lands under time pressure. If a fix changed real **LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, a DOM/lifecycle refactor) → **re-run `/code-review` on the new commit and address anything new, then repeat** — the fix you just wrote is now itself the unreviewed commit. Merge only on a pass that returns nothing new worth a code change. Docs/CSS/label-only fixes skip the extra pass. **Don't budget for exactly one extra pass** — #433 needed four, and each found something real (pass 3's top finding was a regression introduced by pass 2's fix). The trigger ("did the fix change logic?") is right; the count is not bounded. **Settle a framework-semantics dispute with a test, not an argument** — on #433 the review reasoned confidently about Preact input handling and was wrong; the real bug (Preact forces the DOM back to the vnode's `value`, so an open editor silently reverted and Save wrote the *old* text) was found only by writing the assertion.
 

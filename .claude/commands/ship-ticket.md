@@ -46,8 +46,12 @@ git status --porcelain                        # work should be committed; a clea
 - Confirm the spec is in a shippable state: `specs/<NNN>-<slug>/` committed, tasks checked, `.spec-context.json` `specName` real (not a `[FEATURE NAME]` placeholder).
 - If anything is red, **stop and report** — don't ship a broken branch.
 
-### 1. Code review — subagent (or `/code-review` inline)
+### 1. Code review — subagent (`/code-review` + `/codex:review`)
 Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 4).
+
+**Run Codex side by side.** Launch `/codex:review --base main --scope branch` on the same diff, in parallel with `/code-review`, before applying anything. Two reviewers over one diff, then reconcile: a finding either reviewer raises gets addressed, and where they disagree the tie-breaker is a test, not an argument.
+
+**Log who found what.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md` — date, branch or PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, and whether it changed code. This is the only record of whether the second reviewer earns its place, so it gets written on every run, including the runs where Codex found nothing.
 
 **Re-review the fix.** If your applied fixes themselves changed real LOGIC (control flow, a migration, a data-shape writer, an availability/auth gate, a DOM/lifecycle refactor), **re-run `/code-review` on the new commit** — the fix you just wrote is the least-reviewed code in the PR. Repeat until a pass surfaces nothing new worth a code change. Docs/CSS/label-only fixes don't need the second pass. Convergence ≠ zero findings; it's "no new finding worth a code change."
 
