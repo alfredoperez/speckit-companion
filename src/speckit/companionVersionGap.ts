@@ -99,7 +99,7 @@ export function notePublishedCompanionVersion(version: string | undefined): void
     lastGap = undefined;
 }
 
-/** The published version currently in hand. Read by tests; production only ever writes it. */
+/** The published version currently in hand. A test observable; production has no caller. */
 export function publishedCompanionVersion(): string | undefined {
     return publishedVersion;
 }

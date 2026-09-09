@@ -80,10 +80,7 @@ export class UpdateChecker {
         }
     }
     
-    // simplified: forward-only, so a retracted release stays the yardstick until the user skips that
-    // version. Both products share one releases list, so a check legitimately finds no ext tag once the
-    // older ones fall off the first page, and accepting that would erase what the next session compares to.
-    /** Remember the newest published spec-kit extension version, for the next session to compare against. */
+    /** Remember the newest published spec-kit extension version, for the next session to compare against. Forward-only: a check finds no ext tag once older ones fall off the shared releases page, and accepting that would erase it. */
     private async rememberPublishedCompanionVersion(latest: string | null): Promise<void> {
         if (!latest) {
             return;

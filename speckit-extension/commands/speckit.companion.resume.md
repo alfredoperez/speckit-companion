@@ -6,10 +6,14 @@ description: "Continue the spec-driven pipeline from the last completed step, ca
 
 Pick the pipeline back up where it stopped. This command reads the active
 feature's recorded state, resolves the next step — carrying the recorded
-`decisions` into scope — and dispatches the next `/speckit.*` command. Inside the
+`decisions` into scope — and dispatches the next `speckit.*` command. Inside the
 implement step it continues at the next unchecked task.
 
-Command names here, and the `nextCommand` this returns, are canonical dot form. Name and dispatch them in the spelling this project actually installed, under the agent's own commands or skills directory: Claude Code registers `speckit-companion-plan`, and a dotted name resolves to nothing there.
+<!-- speckit-companion:part command-spelling -->
+## Name every command the way this project registers it
+
+Commands are named in dot form throughout this body, `speckit.companion.plan`, because that is their canonical id, and without a leading slash, because the spelling a host actually registers is not always this one. Claude Code installs `/speckit-companion-plan`. Look at how the commands are installed in this project, under the agent's own commands or skills directory, and use that spelling every time you name one to the developer or dispatch one yourself. A dotted name typed into a host that registered dashes resolves to nothing at all.
+<!-- /speckit-companion:part command-spelling -->
 
 ## Prerequisites
 
@@ -52,7 +56,7 @@ Command names here, and the `nextCommand` this returns, are canonical dot form. 
 
 ## Dispatch note
 
-Resume dispatches the **already-installed** `/speckit.*` commands. It does not
+Resume dispatches the **already-installed** `speckit.*` commands. It does not
 require a `specify workflow resume` CLI subcommand, so it works on the stock
 installed spec-kit version. The dispatched command runs its own `after_*` capture
 hook, which writes the resulting `history[]` entry — resume itself writes no state.
@@ -66,7 +70,7 @@ Decisions in scope:
 Next: <action>  →  dispatching <command>
 ```
 
-- Tasks/implement step → `Next: Continue implementation at <task>  →  dispatching /speckit.implement`.
+- Tasks/implement step → `Next: Continue implementation at <task>  →  dispatching speckit.implement`.
 - No decisions recorded → omit the "Decisions in scope" block.
 
 ## Graceful Degradation
