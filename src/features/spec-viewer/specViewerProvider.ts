@@ -264,9 +264,6 @@ export class SpecViewerProvider {
   public async showSpec(specDirectory: string): Promise<void> {
     reportSpecOpened(specDirectory);
     const existing = this.panels.get(specDirectory);
-    this.outputChannel.appendLine(
-      `[viewer-nav] spec name clicked; panel ${existing ? 'reused' : 'created'} for ${specDirectory}`,
-    );
     if (existing) {
       existing.state.landing = 'overview';
       await this.updateContent(specDirectory, existing.state.currentDocument);
@@ -833,9 +830,6 @@ export class SpecViewerProvider {
         instance.state.landing,
       );
 
-      this.outputChannel.appendLine(
-        `[viewer-nav] sending landing=${instance.state.landing ?? 'unset'} with doc=${doc?.type ?? 'unknown'}`,
-      );
       this.outputChannel.appendLine(
         `[SpecViewer] Updated content: ${specName}/${doc?.type || "unknown"}`,
       );
