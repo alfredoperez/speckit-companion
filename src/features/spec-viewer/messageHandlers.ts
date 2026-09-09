@@ -183,7 +183,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     },
     overviewChosen: async (_msg, dir, deps) => {
       const instance = deps.getInstance(dir);
-      if (instance) instance.state.landing = undefined;
+      if (instance) instance.state.landing = 'overview';
     },
     documentChosen: async (_msg, dir, deps) => {
       const instance = deps.getInstance(dir);

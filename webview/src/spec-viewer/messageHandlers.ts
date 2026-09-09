@@ -26,6 +26,7 @@ import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
  */
 export function applyNavState(next: NavState): void {
     navState.value = next;
+    viewerMode.value = null;
     if (next.currentTask !== undefined) setCurrentTask(next.currentTask);
     setHasSpecContext(!!(next.specContextName || next.badgeText));
     setLivingMode(!!next.livingMode);
