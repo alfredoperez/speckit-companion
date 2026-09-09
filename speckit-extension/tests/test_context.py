@@ -647,7 +647,7 @@ class StatusResolveTests(unittest.TestCase):
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "state")
         self.assertEqual(res["currentStep"], "plan")
-        self.assertEqual(res["nextCommand"], "/speckit.tasks")
+        self.assertEqual(res["nextCommand"], "speckit.tasks")
         self.assertEqual(res["decisions"], ["Use the existing dispatch path", "No new schema field"])
 
     def test_entry_form_decisions_render_their_decision_text(self) -> None:
@@ -731,9 +731,9 @@ class StatusResolveTests(unittest.TestCase):
 
     def test_companion_workflow_resolves_the_companion_command_family(self) -> None:
         rows = {
-            ("specify", "specified"): "/speckit.companion.plan",
-            ("plan", "planned"): "/speckit.companion.tasks",
-            ("tasks", "ready-to-implement"): "/speckit.companion.implement",
+            ("specify", "specified"): "speckit.companion.plan",
+            ("plan", "planned"): "speckit.companion.tasks",
+            ("tasks", "ready-to-implement"): "speckit.companion.implement",
         }
         for (step, status), expected in rows.items():
             wc.update_context(self.fd, step, status, "extension")
@@ -749,7 +749,7 @@ class StatusResolveTests(unittest.TestCase):
         ctx = _ctx(self.fd)
         self.assertEqual(ctx["workflow"], "speckit")
         res = status_mod.resolve(self.fd)
-        self.assertEqual(res["nextCommand"], "/speckit.plan")
+        self.assertEqual(res["nextCommand"], "speckit.plan")
 
     def test_legacy_turbo_profile_still_resolves_the_companion_family(self) -> None:
         wc.update_context(self.fd, "specify", "specified", "extension")
@@ -757,13 +757,13 @@ class StatusResolveTests(unittest.TestCase):
         ctx["profile"] = "turbo"
         (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
         res = status_mod.resolve(self.fd)
-        self.assertEqual(res["nextCommand"], "/speckit.companion.plan")
+        self.assertEqual(res["nextCommand"], "speckit.companion.plan")
 
     def test_next_step_rows(self) -> None:
         rows = {
-            ("specify", "specified"): "/speckit.plan",
-            ("plan", "planned"): "/speckit.tasks",
-            ("tasks", "ready-to-implement"): "/speckit.implement",
+            ("specify", "specified"): "speckit.plan",
+            ("plan", "planned"): "speckit.tasks",
+            ("tasks", "ready-to-implement"): "speckit.implement",
         }
         for (step, status), expected in rows.items():
             wc.update_context(self.fd, step, status, "extension")
@@ -779,7 +779,7 @@ class StatusResolveTests(unittest.TestCase):
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "state")
         self.assertEqual(res["nextStep"], "plan")
-        self.assertEqual(res["nextCommand"], "/speckit.plan")
+        self.assertEqual(res["nextCommand"], "speckit.plan")
         self.assertFalse(res["complete"])
 
     def test_derive_fallback_when_state_missing(self) -> None:
@@ -788,7 +788,7 @@ class StatusResolveTests(unittest.TestCase):
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "derived")
         self.assertEqual(res["currentStep"], "plan")
-        self.assertEqual(res["nextCommand"], "/speckit.tasks")
+        self.assertEqual(res["nextCommand"], "speckit.tasks")
 
     def test_tasks_step_next_unchecked_task(self) -> None:
         (self.fd / "tasks.md").write_text(
@@ -797,7 +797,7 @@ class StatusResolveTests(unittest.TestCase):
         wc.update_context(self.fd, "implement", "implementing", "extension")
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["nextTask"], "T002")
-        self.assertEqual(res["nextCommand"], "/speckit.implement")
+        self.assertEqual(res["nextCommand"], "speckit.implement")
         self.assertFalse(res["complete"])
 
     def test_implement_all_done_is_complete(self) -> None:
@@ -834,7 +834,7 @@ class StatusResolveTests(unittest.TestCase):
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "derived")
         self.assertEqual(res["currentStep"], "tasks")
-        self.assertEqual(res["nextCommand"], "/speckit.implement")
+        self.assertEqual(res["nextCommand"], "speckit.implement")
 
     def test_fr011_prefers_disk_when_recorded_artifact_missing(self) -> None:
         # State says plan/planned, but plan.md is absent — recorded is impossible.
@@ -843,7 +843,7 @@ class StatusResolveTests(unittest.TestCase):
         res = status_mod.resolve(self.fd)
         self.assertEqual(res["source"], "derived")
         self.assertEqual(res["currentStep"], "specify")
-        self.assertEqual(res["nextCommand"], "/speckit.plan")
+        self.assertEqual(res["nextCommand"], "speckit.plan")
 
     def test_fr011_keeps_recorded_when_artifacts_agree(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")

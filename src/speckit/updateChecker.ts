@@ -80,18 +80,10 @@ export class UpdateChecker {
         }
     }
     
-    /**
-     * Remember the newest published spec-kit extension version, for the next session to compare against.
-     *
-     * Forward-only on purpose. Both products publish into one releases list, so once the combined count
-     * passes a page the older `speckit-ext-v*` tags fall off it and a check legitimately finds none. Writing
-     * that absence back would erase a known-good version and silence the warning until some later check
-     * happened to succeed.
-     *
-     * It is also deliberately not applied to the running session: the gap was already resolved and the
-     * surfaces drawn before this resolves, and feeding it in now would leave the status bar holding the old
-     * answer while anything that re-resolves reports the new one. One session, one yardstick.
-     */
+    // simplified: forward-only, so a retracted release stays the yardstick until the user skips that
+    // version. Both products share one releases list, so a check legitimately finds no ext tag once the
+    // older ones fall off the first page, and accepting that would erase what the next session compares to.
+    /** Remember the newest published spec-kit extension version, for the next session to compare against. */
     private async rememberPublishedCompanionVersion(latest: string | null): Promise<void> {
         if (!latest) {
             return;

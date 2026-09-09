@@ -9,6 +9,8 @@ feature's recorded state, resolves the next step — carrying the recorded
 `decisions` into scope — and dispatches the next `/speckit.*` command. Inside the
 implement step it continues at the next unchecked task.
 
+Command names here, and the `nextCommand` this returns, are canonical dot form. Name and dispatch them in the spelling this project actually installed, under the agent's own commands or skills directory: Claude Code registers `speckit-companion-plan`, and a dotted name resolves to nothing there.
+
 ## Prerequisites
 
 - Verify Python is available by running `python3 --version`.
@@ -39,10 +41,10 @@ implement step it continues at the next unchecked task.
    - **`empty: true`** (no recorded state and no spec files) → print
      `Nothing to resume (no spec files or recorded state found).` and stop.
    - **`nextTask` is set** (inside the implement step) → continue implementation at
-     `nextTask`: invoke `/speckit.implement`, instructing it to resume at the next
+     `nextTask`: invoke `speckit.implement`, instructing it to resume at the next
      unchecked task.
-   - **otherwise** → invoke `nextCommand` (e.g. `/speckit.plan`, `/speckit.tasks`,
-     `/speckit.implement`).
+   - **otherwise** → invoke `nextCommand` (e.g. `speckit.plan`, `speckit.tasks`,
+     `speckit.implement`).
 
 4. When you dispatch, state the recorded `decisions[]` as in-scope context for the
    step you are running, so prior decisions carry forward and the user does not

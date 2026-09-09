@@ -152,8 +152,7 @@ describe('companionVersionGap', () => {
         });
 
         it('judges against the published version once it is newer than the bundled one', () => {
-            // The point of the published version: a build whose own bundled copy is current still has to
-            // tell a workspace that is behind what has actually shipped.
+            // A build whose own bundled copy is current still has to report a workspace that is behind.
             write('speckit-extension/extension.yml', 'extension:\n  version: "0.21.0"\n');
             write('.specify/extensions/companion/extension.yml', 'extension:\n  version: "0.21.0"\n');
             expect(resolveCompanionGap(dir, dir)).toEqual({ state: 'current' });

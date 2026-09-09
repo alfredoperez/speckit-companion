@@ -6,6 +6,8 @@ description: "Report where the active spec stands — current step, status, reco
 
 Summarize the active feature's position in the spec-driven pipeline so you can see, at a glance, the current step, its status, the decisions recorded so far, and what to do next. **Read-only** — this command never writes `.spec-context.json`.
 
+Command names here, and the `nextCommand` this returns, are canonical dot form. Name and dispatch them in the spelling this project actually installed, under the agent's own commands or skills directory: Claude Code registers `speckit-companion-plan`, and a dotted name resolves to nothing there.
+
 ## Prerequisites
 
 - Verify Python is available by running `python3 --version`.

@@ -89,9 +89,8 @@ let publishedVersion: string | undefined;
  * the VS Code extension itself updates.
  */
 export function notePublishedCompanionVersion(version: string | undefined): void {
-    // Both callers hand this straight on: one from a GitHub tag, one from global storage written by an
-    // older build. Neither is guaranteed to be a version, and a bad value here would silently become the
-    // yardstick every workspace is judged against, so it is filtered at the one point both pass through.
+    // What arrives is whatever an older build wrote to global storage, so it is filtered before it can
+    // become the yardstick every workspace is judged against.
     const next = asSemver(version);
     if (next === publishedVersion) {
         return;
@@ -100,7 +99,7 @@ export function notePublishedCompanionVersion(version: string | undefined): void
     lastGap = undefined;
 }
 
-/** The published version currently in hand, so a caller can persist what a check just learned. */
+/** The published version currently in hand. Read by tests; production only ever writes it. */
 export function publishedCompanionVersion(): string | undefined {
     return publishedVersion;
 }

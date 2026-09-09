@@ -156,8 +156,7 @@ describe('UpdateChecker', () => {
         });
 
         it('seeds itself from that store at construction, before anything asks for the gap', () => {
-            // This is the whole defect: the check runs at most once a day and resolves after activation has
-            // decided whether to warn, so without the seed the warning is unreachable on almost every start.
+            // Without the seed the warning is unreachable on almost every start.
             const { context } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
 
             new UpdateChecker(context, buildOutputChannel());
@@ -174,8 +173,7 @@ describe('UpdateChecker', () => {
         });
 
         it('keeps the remembered version when a later check finds no spec-kit extension tag', async () => {
-            // Both products publish into one releases list, so older ext tags fall off the first page once
-            // the combined count grows. Writing that absence back would erase a known-good version.
+            // Older ext tags fall off the first page once the shared releases list grows.
             const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
             mockReleases([{ tag_name: 'v0.32.0' }]);
 
@@ -194,9 +192,7 @@ describe('UpdateChecker', () => {
         });
 
         it('leaves the running session on the yardstick it started with', async () => {
-            // The gap is resolved and the surfaces drawn before this check resolves. Applying what it learns
-            // now would leave the status bar on the old answer while anything that re-resolves used the new
-            // one, so the learned version is stored for the next session and not fed into this one.
+            // The gap is resolved and the surfaces drawn before this check resolves.
             const { context } = buildContextWithStore();
             mockReleases([{ tag_name: 'v0.32.0' }, { tag_name: 'speckit-ext-v0.22.0' }]);
 

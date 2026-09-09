@@ -40,20 +40,20 @@ NEXT_STEP = {
 }
 
 STEP_COMMAND = {
-    "specify": "/speckit.specify",
-    "plan": "/speckit.plan",
-    "tasks": "/speckit.tasks",
-    "implement": "/speckit.implement",
+    "specify": "speckit.specify",
+    "plan": "speckit.plan",
+    "tasks": "speckit.tasks",
+    "implement": "speckit.implement",
 }
 
 # Companion family — mirrors STEP_COMMAND's keys. Status reports and resume
 # dispatches these when the spec records the companion workflow, so the command
 # family matches the flow the spec has been running.
 COMPANION_STEP_COMMAND = {
-    "specify": "/speckit.companion.specify",
-    "plan": "/speckit.companion.plan",
-    "tasks": "/speckit.companion.tasks",
-    "implement": "/speckit.companion.implement",
+    "specify": "speckit.companion.specify",
+    "plan": "speckit.companion.plan",
+    "tasks": "speckit.companion.tasks",
+    "implement": "speckit.companion.implement",
 }
 
 def _is_companion(ctx: dict) -> bool:
