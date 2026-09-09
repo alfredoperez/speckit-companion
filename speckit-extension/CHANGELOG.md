@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 - Plan reads the living specs for the area it is about to touch before it sends anyone to investigate the code, and each investigator now carries its own slice. It was the other way round, so a worker relearned from source what a requirement already stated, and the two could disagree with nothing to reconcile them.
 
+### Removed
+
+- Nothing loads a capability's `.rules.md` any more. Plan pulled it on larger changes and implement handed it to each worker, and neither could be shown to change what got built. The files are untouched; only the instructions to read them are gone, until there is a reason to put them back.
+
 ### Added
 
 - A new optional implement step hands the requirements and the diff to a worker that was told nothing about how the work was done, and asks which are met, missing, or at risk of being undone by other code in the same change. Off by default while it is measured; turn it on from the pipeline builder.
