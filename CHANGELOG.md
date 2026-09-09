@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - **Adopted requirements can be approved.** Each requirement an adoption transcribed carries an Approve control beside its badge, and the header has Approve spec for the whole file. Approving removes the marker that says a requirement is unconfirmed, and once the last one goes the draft banner goes with it; nothing is written into the spec, only taken out.
 
 ### Fixed
+- **Clicking a document in a subfolder opens it.** Requirements, contracts and anything else nested under a spec did nothing when clicked: the viewer stored them under their folder and the click looked them up without it, found nothing, and left whatever was already on screen. It read as though the click had opened the Specification.
 - **Clicking a spec's name opens its Overview again.** Once a panel had been used to read any document, it answered with that document for the rest of its life: every later click on the spec name was overruled by what you had opened first. Clicking a document, step or artifact still opens what it names.
 - **Refine works on a living spec.** Inline comments on a living spec could be added but Refine did nothing, because comments are stored in the feature spec's context file and a living spec has none. Refine now sends the comments in the open viewer straight to the AI as the same in-place edit a feature spec gets.
 - **A draft living spec says so once.** The header badge, an injected notice, and the raw banner line all said DRAFT; the badge is the one that stays.
