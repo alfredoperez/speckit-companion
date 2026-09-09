@@ -54,7 +54,7 @@ Bring the whole list to the developer before writing anything: each capability's
 
 For each capability the developer keeps, derive:
 - a **name** (a short slug for what it does, e.g. `article-reading`),
-- a **match** glob covering every directory it draws from,
+- a **match** glob covering every directory the behaviour's own code lives in, which is not always where you first met it: a capability found through a page is usually implemented somewhere else, and a glob naming the page claims none of the files a change to that behaviour actually edits. Follow each behaviour to the code that implements it and name that, then check the result against the requirements you are about to write — if a requirement's files sit outside the glob, the glob is wrong, and nothing will resolve this capability when that area changes,
 - a **spec** path, which depends on the storage layout below.
 
 #### Where the specs go

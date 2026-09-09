@@ -48,6 +48,19 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 - **WHEN** the delta replaces that requirement's section
 - **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
 
+
+### A capability's membership must reach the files its own requirements name
+
+A capability's match globs are what the resolver uses to claim a file, so a capability whose globs never reach the code its requirements describe resolves to nothing: a change in that area is told about no capability at all, and the run proceeds as if nothing had been written down. Adoption SHALL therefore name the code a behaviour is implemented in rather than the surface it was found through — a capability discovered through a page usually lives elsewhere — and validation SHALL report a capability whose every requirement names files outside its own membership. Both halves are individually valid in that case, the requirement's files exist and the capability's glob matches files too, which is why nothing else catches it.
+
+#### Scenario: adoption names the page instead of the implementation
+- **WHEN** the specs are validated
+- **THEN** the capability is reported, naming a requirement's files and the membership that excludes them
+
+#### Scenario: the membership is broader than the requirement
+- **WHEN** a capability claims a parent directory of the files its requirements name
+- **THEN** nothing is reported, because the resolver reaches them
+
 ### The shape check is a command, and it reports rather than gates
 <!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
 

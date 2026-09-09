@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import fnmatch
 import re
 import sys
 
@@ -241,6 +242,30 @@ def _capability_globs(root: str, capability: str) -> set:
     return set()
 
 
+def _covered_by_capability(marker_glob: str, cap_globs: set) -> bool:
+    """Whether a capability's membership reaches the files a requirement cites.
+
+    The comparison is between two patterns, not a pattern and a file: a requirement says
+    `src/features/article/create-article/**` and the capability says `src/pages/editor/**`,
+    and no file on disk decides that. A capability covers a marker when one of its globs
+    is a prefix of it, or matches it as a pattern.
+    """
+    marker = marker_glob.strip().replace(os.sep, "/")
+    if not marker:
+        return False
+    for g in cap_globs:
+        g = g.strip()
+        if not g:
+            continue
+        if g == marker or fnmatch.fnmatch(marker, g):
+            return True
+        # `src/features/**` covers `src/features/article/create-article/**`.
+        stem = g.rstrip("*").rstrip("/")
+        if stem and (marker == stem or marker.startswith(stem + "/")):
+            return True
+    return False
+
+
 def _marker_glob_in(line: str, globs: set) -> bool:
     m = _TOUCHES_RE.match(line)
     if not m:
@@ -287,6 +312,8 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
     fenced = _fence_flags(lines)
     findings: list = []
     seen: dict = {}
+
+    cited: list = []
 
     def is_req(i):
         return not fenced[i] and _REQ_RE.match(lines[i])
@@ -350,7 +377,26 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                     f"This marker names {', '.join(missing)}, which matches nothing on disk.",
                     "Point the marker at the files this requirement describes, or remove it.",
                     capability))
+            cited.extend((g, i + 2) for g in globs)
         i = j
+
+    # The capability's own membership is what the resolver uses to claim a file. A requirement
+    # can name files on disk that its capability's globs never reach, and then nothing resolves:
+    # a run touching those files is told about no capability at all. That is invisible to every
+    # other check here, because both halves are individually valid.
+    if root is not None and capability and cited:
+        cap_globs = _capability_globs(root, capability)
+        if cap_globs:
+            orphaned = [(g, ln) for g, ln in cited if not _covered_by_capability(g, cap_globs)]
+            if orphaned and len(orphaned) == len(cited):
+                g, ln = orphaned[0]
+                findings.append(_finding(
+                    WARNING, "requirements-outside-capability", path, ln,
+                    f"Every requirement here names files this capability does not claim: "
+                    f"{g} is outside {', '.join(sorted(cap_globs))}.",
+                    "Widen the capability's match in the registry to the code the behaviour "
+                    "actually lives in, or point the requirements at the files it does claim.",
+                    capability))
 
     reqs = sum(1 for i in range(len(lines)) if is_req(i))
     # Thin only when it sits beside siblings: a capability that is genuinely small
