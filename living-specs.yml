@@ -144,6 +144,9 @@ capabilities:
   - name: capture-runtime-living-resolve
     match: ["speckit-extension/scripts/resolve-spec-paths.py", "speckit-extension/scripts/record-living-specs.py", "speckit-extension/scripts/register-capability.py", "speckit-extension/scripts/relocate-capability.py"]
     spec: speckit-extension/scripts/capture-runtime-living-resolve.spec.md
+  - name: capture-runtime-drift
+    match: ["speckit-extension/scripts/drift.py", "speckit-extension/scripts/doctor_drift.py"]
+    spec: speckit-extension/scripts/capture-runtime-drift.spec.md
   - name: capture-runtime-reports
     match: ["speckit-extension/scripts/drift.py", "speckit-extension/scripts/check-coverage.py", "speckit-extension/scripts/doctor.py", "speckit-extension/scripts/doctor_checks.py", "speckit-extension/scripts/doctor_bleed.py", "speckit-extension/scripts/doctor_chat.py", "speckit-extension/scripts/doctor_drift.py"]
     spec: speckit-extension/scripts/capture-runtime-reports.spec.md

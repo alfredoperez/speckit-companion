@@ -274,7 +274,8 @@ def _exempt(file: str, exempt_globs: list[str]) -> bool:
     )
 
 
-def compute_drift(root: str, living: dict, working: bool = False) -> dict:
+def compute_drift(root: str, living: dict, working: bool = False,
+                  since: str | None = None) -> dict:
     """The drift result object. Inert (empty) when living specs are disabled.
     `working` widens each changed set to the working tree (uncommitted +
     untracked); the default path issues exactly the same git commands as before.
@@ -286,7 +287,7 @@ def compute_drift(root: str, living: dict, working: bool = False) -> dict:
 
     _started = _time.monotonic()
     try:
-        result = _compute_drift(root, living, working)
+        result = _compute_drift(root, living, working, since)
     except Exception as exc:  # noqa: BLE001
         _trace_drift(root, living, working, None, exc,
                      int((_time.monotonic() - _started) * 1000))
@@ -351,7 +352,8 @@ def _record_drift_verdict(root: str, verdict: dict) -> None:
         pass
 
 
-def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
+def _compute_drift(root: str, living: dict, working: bool = False,
+                   since: str | None = None) -> dict:
     if not living["enabled"]:
         return {"enabled": False, "working": working, "checked": 0,
                 "capabilities": [], "skipped": []}
@@ -386,6 +388,14 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
             skipped.append({"name": cap["name"], "reason": SKIP_UNREADABLE})
             continue
         state, commit = _spec_commit(root, spec)
+        if since:
+            # Branch-scoped: measure from where this work started rather than from each
+            # spec's own last commit. Whole-repo drift only ever gets read once it is a
+            # backlog; this answers the question while the change is still in hand — which
+            # capabilities did I touch, and did I fold any of them.
+            merge_base = _git(root, ["merge-base", since, "HEAD"])[1].strip()
+            if merge_base:
+                state, commit = "ok", merge_base
         if state != "ok":
             unreadable = state == "unreadable" and has_commits
             reason = SKIP_UNREADABLE if unreadable else SKIP_UNCOMMITTED
@@ -402,6 +412,7 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
         if working:
             changed += untracked
         drifted = []
+        folded_here = False
         seen: set[str] = set()
         for f in changed:
             fp = rsp._posix(f)
@@ -409,6 +420,7 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
                 continue
             seen.add(fp)
             if _is_own_spec_doc(fp, spec_posix) or _is_any_spec_doc(fp, spec_dirs):
+                folded_here = folded_here or _is_own_spec_doc(fp, spec_posix)
                 continue
             if not rsp.matches(cap, fp):
                 continue
@@ -419,6 +431,9 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
             severity = "tracked" if fp in tracked else "unspeced"
             drifted.append({"file": fp, "severity": severity})
         drifted.sort(key=lambda d: (d["severity"], d["file"]))
+        if since and folded_here:
+            # The spec was written on this branch, so its code changing is the fold, not drift.
+            drifted = []
         caps_out.append({
             "name": cap["name"],
             "spec": spec_posix,
@@ -565,6 +580,9 @@ def main(argv=None) -> int:
     ap.add_argument("--working", action="store_true",
                     help="also count working-tree changes (uncommitted edits, "
                          "deletions, and untracked files) as drift")
+    ap.add_argument("--since", metavar="REF",
+                    help="measure from the merge base with REF instead of each spec's own "
+                         "last commit, so the report is about this branch's work alone")
     ap.add_argument("--accept", metavar="CAPABILITY", action="append", default=[],
                     help="record that this capability's spec was read against the code and "
                          "found still true; repeatable. Commit the spec to move its baseline")
@@ -573,7 +591,7 @@ def main(argv=None) -> int:
     living = rsp.load_living(args.root)
     if args.accept:
         return accept(args.root, living, args.accept)
-    result = compute_drift(args.root, living, working=args.working)
+    result = compute_drift(args.root, living, working=args.working, since=args.since)
     if args.json:
         print(json.dumps(result, indent=2))
     else:

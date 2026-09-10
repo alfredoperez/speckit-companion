@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
+- The drift report can be asked about one branch: `living-drift --since main` names only the capabilities your own work touched without saying anything about them. Measured across a whole project, drift is only ever read once it has piled up, and by then it is on nearly everything and tells you nothing. A capability whose spec you also wrote reports nothing, because that is the loop closing.
+
 - A living spec that is still correct can now say so. Drift is measured from the moment a spec was last written, so a spec nobody needed to change drifted further every week and there was no way to record that someone had read it and found it right. `living-drift --accept <capability>` writes down the version it was checked against. Nothing records that for you: reviewing is a claim you make.
 
 - Implementing a feature no longer hands every piece of work to its own agent. A small phase costs more to hand out than to build, so only the substantial ones are, and the run says which it did which way. On a feature with small phases this halves the cost and changes nothing else; on one with large phases the parallel work still saves you minutes.
