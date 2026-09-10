@@ -274,6 +274,17 @@ def _files_for(pattern: str, paths: list, rsp) -> set:
     return {f for f in paths if rsp._glob_matches(pattern, f)}
 
 
+def _only_files(paths: set, root: str) -> set:
+    """Drop the directories.
+
+    `repo_paths` carries the folders too, because a marker naming a directory does mean
+    something on disk. Membership is a different question: nobody changes a directory, so
+    a registry glob covering a parent folder its requirements never name as a folder would
+    otherwise read as uncovered code, on every project that has one.
+    """
+    return {p for p in paths if os.path.isfile(os.path.join(root, p))}
+
+
 def _marker_glob_in(line: str, globs: set) -> bool:
     m = _TOUCHES_RE.match(line)
     if not m:
@@ -421,6 +432,7 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             claimed |= _files_for(g, paths, rsp)
         for ex in cap.get("exclude") or []:
             claimed -= _files_for(ex, paths, rsp)
+        claimed = _only_files(claimed, root)
 
         # Only judge markers that name something real. One that names nothing is
         # `unmatched-touches-glob`'s finding, and calling it orphaned too names one fault twice.
@@ -447,7 +459,8 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                 described = set()
                 for _, _, files in real:
                     described |= files
-                dark = [g for g in cap_globs if _files_for(g, paths, rsp) - described]
+                dark = [g for g in cap_globs
+                        if _only_files(_files_for(g, paths, rsp), root) - described]
                 if dark and len(dark) < len(cap_globs):
                     findings.append(_finding(
                         WARNING, "capability-claims-undescribed-code", path, 1,
