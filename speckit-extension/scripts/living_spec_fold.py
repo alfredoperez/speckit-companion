@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 
-from capture import set_living_specs_synced
+from capture import append_capture_entries, set_living_specs_synced
 from spec_context import _repo_root_for, feature_spec_path, read_ctx
 from living_validate import (ADOPTED_LINE, ERROR, _fence_flags,
                              adopted_sources, check_feature_deltas,
@@ -122,6 +122,27 @@ def _accountability_gap(feature_dir: Path, synced) -> list[str]:
         return []
     accounted = set(synced) | _synced_capability_names(feature_dir) | _skipped_capability_names(feature_dir)
     return [c for c in loaded if c not in accounted]
+
+
+def _note_nothing_loaded(feature_dir: Path, root: Path) -> None:
+    """Record, where a human will see it, that a configured project resolved nothing.
+
+    stderr is where this used to end and end quietly. The doctor reads concerns and the
+    panel shows them, so the one run that produced no living-spec work at all stops looking
+    identical to one that had none to do. Silent on a project that does not use living
+    specs, and best-effort throughout: this must never fail the host command.
+    """
+    try:
+        if not (root / "living-specs.yml").exists():
+            return
+        append_capture_entries(feature_dir, "concerns", "note", [
+            "This change resolved no living-spec capability, so nothing was loaded before it "
+            "and nothing was folded after it. Either the areas it touched belong to no "
+            "capability yet, or a capability claims them and no requirement describes them "
+            "— `living-validate` names which."
+        ])
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _living_requirement_span(living_lines: list[str], heading: str) -> tuple[int, int] | None:
@@ -576,11 +597,16 @@ def fold_living_spec(feature_dir: Path, by: str) -> Path | None:
                     file=sys.stderr,
                 )
         else:
+            # Nothing loaded is not the same as nothing to do. On a configured project it
+            # means the run was briefed on nothing and wrote nothing back, which is exactly
+            # the state living specs exist to prevent — and the one state the accountability
+            # check above cannot see, because it has no loaded capability to hold to account.
             print(
                 "[companion] Living-spec fold: this feature's spec carries no delta "
                 "block and loaded no capabilities; nothing to fold.",
                 file=sys.stderr,
             )
+            _note_nothing_loaded(feature_dir, root)
         return None  # additive case — no delta block
 
     try:

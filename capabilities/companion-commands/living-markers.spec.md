@@ -62,6 +62,12 @@ A capability's match globs are what the resolver uses to claim a file, so a capa
 - **WHEN** a capability claims an area no marked requirement describes
 - **THEN** nothing is reported, because an unmarked requirement is always contributed
 
+#### Scenario: several capabilities claim the same membership
+- **WHEN** they split one area's behaviour between them
+- **THEN** none is reported, because whether a file is described is a question about the group
+
+The registry's own exempt list applies here as it does everywhere else, so a capability spanning its own test folder is not asked to describe it.
+
 ### Both readers of a spec must agree on where a marker can sit
 
 A marker may sit under a blank line: a formatter puts one between a heading and its comment. Every reader of a living spec SHALL skip blank lines when looking for one, and a reader that stops at the line directly under the heading is a defect, not a strictness. It fails silently and in the safe-looking direction — the spec reads as carrying no markers, so a validator passes it and a load quietly falls back to reading the file whole. This has shipped twice: once in the resolver as #690, and once in the validator, where it left both membership checks above dead on every formatted spec in the repository that had them.

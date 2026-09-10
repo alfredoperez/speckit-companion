@@ -1,5 +1,5 @@
 enabled: true
-exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts"]
 capabilities:
   - name: spec-editor
     match: ["src/features/spec-editor/**"]
@@ -21,6 +21,7 @@ capabilities:
     spec: src/core/core-spec-discovery.spec.md
   - name: core-spec-context
     match: ["src/core/types/**"]
+    exclude: ["src/core/types/config.ts"]
     spec: src/core/core-spec-context.spec.md
   - name: core-telemetry
     match: ["src/core/telemetry.ts", "src/core/__tests__/**"]
