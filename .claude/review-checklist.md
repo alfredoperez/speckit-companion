@@ -14,6 +14,8 @@ The review subagent in `/ship-ticket` and `/fix-tickets` reads this **before** r
 - **Comments.** Flag added comments — **including Python docstrings and test docstrings** — that restate the code, narrate a fix's history ("""The #432 regression itself…"""), carry a spec/PR/finding id (`// per #182`), or run past one line. Default is no comment. (#432)
 - **Diagnostic logs.** Flag `console.log`/bracket-tag debug lines left in; structural `logError`/catch-block logging stays.
 
+- **Unfolded living-spec changes.** Run `python3 speckit-extension/scripts/drift.py --since main --working` on the branch. Flag any capability it names: the branch changed code that capability claims and said nothing about it. Fold it, or `--accept` the spec when it is genuinely still true. Whole-repo drift is only ever read once it is a backlog, and by then it is on everything and means nothing. (#723)
+
 ## Capture / `.spec-context.json`
 
 - **Terminal status is `implemented`, never `completed`.** `completed` is the user's Mark-Completed action only; the capture script refuses to write it. Flag any code/doc that forces `completed` on autonomous finish. (#208, #244)

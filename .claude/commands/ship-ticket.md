@@ -57,6 +57,9 @@ Run `/code-review` on the branch diff vs `main` at **high** effort, apply findin
 
 **Two passes is the ceiling.** One review, one re-review, then ship. If the second pass still finds something real, fix it and open a follow-up issue for anything it raises beyond that rather than starting a third. An unbounded loop finds real things and costs more than they are worth: on PR #720 the third pass found a genuine dispatch bug, and the fourth found nothing while the branch sat unmerged. Convergence is a budget, not a proof.
 
+### 1b. Did the branch say what it changed? — main loop
+`python3 speckit-extension/scripts/drift.py --since main --working`. Anything it names is code this branch changed inside a capability, with nothing said about it. Fold it into that spec, or `--accept` the capability when the spec is genuinely still true. Neither is bookkeeping: the first is the loop closing, the second is a review someone actually did.
+
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.
 ```bash
