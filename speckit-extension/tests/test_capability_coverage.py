@@ -175,6 +175,18 @@ class MembershipAndRequirementsMustDescribeTheSameCode(unittest.TestCase):
         self.assertIn("unmatched-touches-glob", codes(found))
         self.assertNotIn("requirements-outside-capability", codes(found))
 
+    def test_a_parent_directory_in_the_membership_is_not_uncovered_code(self):
+        # `src/features/**` reaches the `src/features/article` folder itself, which no marker
+        # names as a folder and nobody can change. Counting it made this fire on every project
+        # whose registry claims a parent directory.
+        (self.root / "src/features/article/create-article").mkdir(parents=True, exist_ok=True)
+        (self.root / "src/features/article/create-article/index.ts").write_text("export {};\n")
+        self._registry("src/features/article/**")
+        found = self._check(spec_with(REQ.format(
+            heading="An article is written",
+            glob="src/features/article/create-article/**", verb="accept a draft")))
+        self.assertNotIn("capability-claims-undescribed-code", codes(found))
+
     def test_no_registry_entry_means_nothing_to_judge(self):
         (self.root / "living-specs.yml").write_text("enabled: true\ncapabilities: []\n", encoding="utf-8")
         found = self._check(spec_with(REQ.format(
