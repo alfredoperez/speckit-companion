@@ -48,6 +48,18 @@ The drift script SHALL accept a working-tree mode that widens each capability's 
 - **WHEN** drift runs without the flag and then with it
 - **THEN** the default run reads the capability as in sync and the working-tree run reports the file as drifted
 
+### A file a run already accounted for is not drift
+
+Drift is code that changed with nobody saying whether the spec still describes it, and a run that folded a delta into a capability, or recorded a reasoned skip for it, has said exactly that. The detector SHALL therefore drop from a capability's drifted set every file changed by such a run, read from the runs' own records rather than from anything the report keeps for itself. Reporting them anyway tells a developer to review work they finished on the run that changed the file, which is how a drift report becomes a list people scroll past. A file changed by hand, with no run behind it, is drift as before, and the accounting is per capability: a run that settled one capability vouches for nothing in another.
+
+#### Scenario: a completed run folded into this capability
+- **WHEN** drift runs afterwards
+- **THEN** the files that run changed are not reported, while a hand edit since is
+
+#### Scenario: a run recorded a reasoned skip
+- **WHEN** drift runs afterwards
+- **THEN** that run's files are not reported either, because a skip is the run saying the spec still holds
+
 ### The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence
 
 A run that cannot write into its spec directory can still complete captures while the trace line recording them fails to append. That run leaves a marker and no trace file. The check SHALL read the marker first, so the single failure mode that produces no trace at all is reportable rather than indistinguishable from a spec that has simply captured nothing yet.

@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
+- A living spec that is still correct can now say so. Drift is measured from the moment a spec was last written, so a spec nobody needed to change drifted further every week and there was no way to record that someone had read it and found it right. `living-drift --accept <capability>` writes down the version it was checked against. Nothing records that for you: reviewing is a claim you make.
+
 - Implementing a feature no longer hands every piece of work to its own agent. A small phase costs more to hand out than to build, so only the substantial ones are, and the run says which it did which way. On a feature with small phases this halves the cost and changes nothing else; on one with large phases the parallel work still saves you minutes.
 
 - Planning now reads a rule that governs your change but lives somewhere you are not editing. A requirement can point at a rule under another capability, and until now nothing asked for that link to be followed, so it was written down and never read. Adoption also proposes those links while it reads an area, since that is the one moment anyone can see them.

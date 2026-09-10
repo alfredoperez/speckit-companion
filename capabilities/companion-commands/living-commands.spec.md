@@ -49,6 +49,18 @@ The command that checks living-spec shape SHALL act only when the project has op
 - **WHEN** it reports
 - **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off
 
+### A spec that is still true can say so, and stop drifting
+
+Drift is measured from the moment the spec was last committed, so a spec nobody needs to change drifts further every week and there is no way to record that someone read it against the code and found it correct. Left alone every capability ends up flagged, and a flag on everything is a flag on nothing. The drift report SHALL therefore take an explicit acceptance, per capability, which writes the commit it was read against into the spec itself. The record lives in the spec because committing it is what moves the baseline: kept anywhere else it would need its own bookkeeping to stay true, which is the problem it exists to solve. Nothing writes it on its own — reviewing is a claim a person makes, and a report that recorded its own review would be worth exactly as much as no report.
+
+#### Scenario: a spec is read and found correct
+- **WHEN** its capability is accepted
+- **THEN** the spec carries the commit it was read against, and its requirements are untouched
+
+#### Scenario: the report runs
+- **WHEN** drift is computed
+- **THEN** no acceptance is recorded, because nobody read anything
+
 ### A living spec is readable one slice at a time, from a terminal
 
 A command SHALL print a capability's requirement headings, one named requirement with its scenarios, or the requirements whose file markers describe a given path, using the same requirement parser the load steps use. It SHALL be read-only, and every outcome — including an unregistered capability, a missing spec file, a name matching nothing, an ambiguous name, and a file nothing claims — SHALL exit successfully with the alternatives named.

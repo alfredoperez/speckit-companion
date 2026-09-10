@@ -24,7 +24,7 @@ Persisted comments MUST be restored inline on every render and after every state
 
 ### Comment mutations are posted to the extension, which owns the record
 
-Adding, editing, or removing a comment MUST post the change to the extension rather than write anything itself; the local card is a rendering of the record, not the record. An edit that changes nothing, or that resolves to no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them, so what is shown after the round trip is what was actually persisted.
+Adding, editing, or removing a comment MUST post the change to the extension rather than write anything itself; the local card is a rendering of the record, not the record. An edit that changes nothing, or that resolves to no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them, so what is shown after the round trip is what was actually persisted. A living spec is the exception, because it has no run record to hold its comments: there the dispatch MUST carry the document's pending comments with it, or the request arrives naming a document and asking for nothing.
 
 The line-level structural actions (remove a story, scenario, task, section, or line) are likewise requests the webview posts, not edits it performs. They MUST be labelled as suggestions rather than as direct removals, so the reader is never told a click deletes content the webview does not itself remove.
 
@@ -32,6 +32,11 @@ The line-level structural actions (remove a story, scenario, task, section, or l
 - **WHEN** the reader deletes a card
 - **THEN** the removal is posted, the card unmounts, and focus returns to the line's own control
 - **AND** the pending count updates
+
+#### Scenario: refinement is dispatched for a living spec
+- **WHEN** the reader submits the document's comments
+- **THEN** the comments travel with the request rather than being looked up from a record that does not exist
+- **AND** the local cards are cleared as they are for any other document
 
 #### Scenario: a reader picks a structural line action
 - **WHEN** the reader chooses to remove a story, scenario, task, section, or line from its menu

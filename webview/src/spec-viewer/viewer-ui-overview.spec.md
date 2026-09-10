@@ -71,6 +71,22 @@ The activity panel MUST lead with the run's lifecycle signal and durable context
 - **THEN** the touched capabilities appear as links inside the intent, not as a separate card
 - **AND** selecting one opens that capability by name
 
+### A living spec's overview is the capability itself, not a run
+
+A living spec has no run to summarise, so in living mode the overview pane MUST render the capability instead of the activity panel: its purpose as authored, the paths it covers, its health, and its requirements in document order. Health reads as sentences rather than figures — how many requirements have a mapped test, whether the source has moved since the spec was last updated, and how many requirements are still adopted but unconfirmed, with the tier's "Approve spec" control beside that count. A requirement row opens that requirement: within the spec tier it switches the pane to the document and reveals it, and from another tier it asks the extension to open the spec there. This pane renders behind the same failure boundary as the run overview, so one bad section cannot take the reading surface down.
+
+#### Scenario: a living spec is opened
+- **WHEN** the overview pane renders
+- **THEN** it shows purpose, covers, health and one row per requirement, and no run-log cards
+
+#### Scenario: every requirement has been confirmed
+- **WHEN** the health section renders
+- **THEN** it says so plainly and offers no approval control, because there is nothing left to approve
+
+#### Scenario: a requirement row is chosen from a tier other than the spec
+- **WHEN** the reader selects it
+- **THEN** the extension is asked to open the spec at that requirement, rather than the pane scrolling a document it is not showing
+
 ## Uncovered
 
 The following files were not read in full by the original adoption — their exported surface and role were established, but their bodies were not reviewed line by line:

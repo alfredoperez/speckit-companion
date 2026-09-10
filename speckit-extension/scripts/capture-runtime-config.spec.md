@@ -90,6 +90,18 @@ The structure a panel draws SHALL carry, beside it, every hook command the proje
 - **WHEN** the structure is emitted
 - **THEN** that key alone is skipped, both here and where the board reads the same registry, because guarding the whole walk instead made the result depend on where in the file the bad key sat and made the two disagree
 
+### The registry's defaults hold for a real tree, and the layout is asked once
+
+The living-specs registry has defaults that stand in for what a project never wrote, and a default that quietly matches nothing is worse than no default: the exempt list is read as "test and config files are not code anyone is asked to describe", so a pattern that only ever matched a file sitting at the repository root left every project's tests being reported as undescribed code. An exemption SHALL therefore be written to match at any depth. Where a project keeps its specs is likewise a decision made once, at set-up, and SHALL be recorded in the registry and read back from it — adoption that asks a second time is how a developer answers twice and gets a layout they did not choose. An unrecognised answer SHALL fall back to the central layout rather than being carried through as itself.
+
+#### Scenario: a project with tests below the root and no exempt list of its own
+- **WHEN** the defaults are applied
+- **THEN** those test files are exempt, rather than the exemption reaching only the repository root
+
+#### Scenario: a project already recorded where its specs live
+- **WHEN** adoption runs again
+- **THEN** it reads the recorded layout instead of asking a second time
+
 ### A hook's anchor resolves to exactly one boundary, by one shared definition
 
 An anchor name MAY match the step's own name, a phase name, and a node id at once, so something SHALL pick one: the step's name first, then a node, then a phase. That precedence SHALL live in one place, and both the body assembly and the structure a panel draws from SHALL read it, so the place a hook is drawn is always the place it runs. A name that matches nothing SHALL keep being warned about and skipped, and a phase and a node MAY continue to share a name.

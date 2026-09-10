@@ -54,6 +54,26 @@ The resolver SHALL report, for each capability a change matches, either that its
 - **WHEN** a load resolves it
 - **THEN** it is reported as read whole, byte-identical to the behaviour before markers existed
 
+A marker is the first non-blank line under its heading, not the line immediately under it, and several markers MAY sit there in any order. Requiring the very next line is what a markdown formatter breaks — one puts a blank line between a heading and an HTML comment — and a spec that came back from a pre-commit hook with every requirement silently unmarked is read whole by every load afterwards, which looks like a working load and is a spec nobody is slicing. Every marker in that run of lines is parser metadata and SHALL be kept out of the prose a reader is handed, since a reader given a marker as prose cannot tell it was never part of the requirement.
+
+#### Scenario: a formatter puts a blank line under the heading
+- **WHEN** a load slices that requirement
+- **THEN** the marker is still read, and none of the markers reach the reader as prose
+
+Every other edge in a living spec points at code, so a file match finds it. A rule that constrains a requirement but lives under another capability is reachable by nothing: no file the change touched belongs to it, and the run is briefed without the constraint it is about to break. A requirement SHALL therefore be able to name such a rule by capability and heading, and a caller SHALL be able to ask a load to follow those names — adding each named requirement to its own capability's entry, creating that entry when the changed files never reached it, and marking it as arriving by the edge rather than by a file match. The walk SHALL be one hop and never the targets' own edges, so a load stays bounded and a spec cannot pull the whole registry in behind it. Following SHALL be asked for rather than assumed, because a load that silently widens is a load nobody can predict the size of.
+
+#### Scenario: a matched requirement names a rule under a capability the change did not touch
+- **WHEN** a load is asked to follow the edges
+- **THEN** that capability appears in the load carrying only the named requirement, marked as reached by the edge
+
+#### Scenario: the named requirement names an edge of its own
+- **WHEN** the same load runs
+- **THEN** the second edge is not followed
+
+#### Scenario: the load is not asked to follow
+- **WHEN** it runs
+- **THEN** it contributes exactly what the file match resolved, and nothing else
+
 ### Which requirements a run read is recorded beside which capabilities it loaded
 
 The capture runtime SHALL record the requirement headings a run read, per capability, as a sibling of the existing loaded-capability list rather than as a change to it — that list is a plain list of names several readers already consume, including the completion accounting that requires every loaded capability to end with a delta or a recorded skip. A capability read whole receives no entry, because naming all of its requirements would say nothing the capability record does not. The write is additive and idempotent, and a failure to record it MUST NEVER fail the host command.
@@ -73,6 +93,18 @@ The capture runtime SHALL record the requirement headings a run read, per capabi
 #### Scenario: a capability consulted whose markers all missed
 - **WHEN** the recorder runs
 - **THEN** it records that capability with an empty requirement list, because "consulted and contributed nothing" and "read whole" are different facts and only the second is the absent entry
+
+### Colocating a capability with no folder of its own leaves it central
+
+A colocated spec sits in the folder its capability's code lives in, which assumes there is such a folder. Two shapes have none: a capability whose globs span sibling directories, where the common parent belongs to all of them, and a capability over a whole area that other capabilities live inside, where the folder is the layer's rather than this one's. Adoption already sends both central, so a relocation SHALL make the same judgement rather than undo it — keeping the capability central, and saying why, instead of dropping its spec into a folder full of other capabilities' code.
+
+#### Scenario: a capability whose globs cover sibling directories is moved to colocated
+- **WHEN** the relocation resolves the target
+- **THEN** the spec stays central and the reason is reported
+
+#### Scenario: another capability lives inside this one's area
+- **WHEN** the relocation resolves the target
+- **THEN** it is treated as the layer's capability and stays central
 
 ### The registry carries per-step guidance, normalized to one shape
 

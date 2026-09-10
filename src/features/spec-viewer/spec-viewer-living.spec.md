@@ -10,7 +10,13 @@ Living mode presents a capability rather than a run: its tiers, its verified cov
 
 ### A living spec is presented as a capability, not a run
 
-A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, and there is always one: update this spec when it has drifted, otherwise a drift re-check, and beside either an update of every drifted spec. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, and there is always one: adopting another area is offered whatever the capability's state, and the two drift actions — update this spec, and update every drifted spec — only once drift has been found, since a re-check offered on a spec in step with its code is a button whose answer is already on screen. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
+
+A tier is resolved by the naming convention the resolver writes, and a convention that has been renamed SHALL still resolve the file a project already has: where the rules tier's current name is absent, its previous name is accepted in its place and shown as that tier.
+
+#### Scenario: the project predates the rules tier's rename
+- **WHEN** the capability's rules file still carries the old suffix
+- **THEN** it is listed as the rules tier rather than reported missing
 
 #### Scenario: the architecture tier is selected
 - **WHEN** a non-spec tier is displayed
@@ -24,7 +30,7 @@ A living-spec panel MUST drop the workflow machinery entirely — no run state, 
 
 #### Scenario: the capability has not drifted
 - **WHEN** the panel renders
-- **THEN** the footer offers a drift re-check and the update of every drifted spec, so the bar is never empty
+- **THEN** the footer offers adoption of another area and nothing else, so the bar is never empty and never offers work with no subject
 
 #### Scenario: a covers glob is activated
 - **WHEN** the reader clicks it
@@ -34,6 +40,19 @@ A living-spec panel MUST drop the workflow machinery entirely — no run state, 
 - **WHEN** the spec declares itself a draft
 - **THEN** the header badges it as a draft
 - **AND** the in-document banner is left intact
+
+### Approving an adopted requirement only ever removes what adoption claimed
+
+An adopted requirement was transcribed from the code and nothing has checked it since, so approval is the reader saying they have. Approving SHALL delete the `adopted` marker — for one requirement by its heading, or for every requirement in the tier on screen — and change nothing else in the document, since the reader is confirming the text, not editing it. When the last marker in the file goes, the `[DRAFT]` banner goes with it, because a document with nothing left unconfirmed is no longer a draft. A request that would write outside the workspace, or to a file that is not a living tier, MUST be refused and logged, and a request that finds nothing to remove MUST leave the file untouched rather than rewrite it identically.
+
+#### Scenario: the last adopted requirement in a tier is approved
+- **WHEN** the reader approves it
+- **THEN** that requirement's marker is removed along with the document's draft banner
+- **AND** the panel re-renders without the DRAFT badge
+
+#### Scenario: approval is asked for a document that is not a living tier
+- **WHEN** the request names a file outside the workspace root, or one that is not a tier file
+- **THEN** nothing is written and the refusal is logged
 
 ### Living specs surfaced in the run log are compact chips that hand off to their own viewer
 

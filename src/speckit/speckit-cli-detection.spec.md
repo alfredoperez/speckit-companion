@@ -36,6 +36,13 @@ Whether the CLI is installed on the machine and whether the open workspace has b
 - **WHEN** the canonical scaffolding directory is absent
 - **THEN** initialization is still detected from the per-assistant command files the CLI emits
 
+The placeholder check SHALL read the constitution's body only. The CLI writes a report at the top of a finished constitution listing every placeholder it replaced, so a check that reads the whole file finds those names in the report and keeps telling the user to set up a constitution they already wrote.
+
+#### Scenario: a finished constitution still names its placeholders in a comment
+- **WHEN** the placeholder check runs over it
+- **THEN** commented-out content is excluded before the check
+- **AND** the constitution reports as set up
+
 ### The extension drives the CLI through a visible terminal, never silently
 <!-- touches: src/speckit/cliCommands.ts, src/speckit/detector.ts -->
 

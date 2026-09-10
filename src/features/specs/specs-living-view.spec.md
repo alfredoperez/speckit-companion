@@ -10,7 +10,7 @@ This capability is how living specs show up in the editor: the Living Specs tree
 
 ### Living-spec listings are read-only, bounded, and honest about what they could not compute
 
-The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. [inferred] — how the listing is *presented* as tree rows is taken from the model and command surfaces; the view provider itself was not read. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded.
+The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
 
 #### Scenario: a capability's document has never been committed
 - **WHEN** drift is computed
@@ -20,6 +20,14 @@ The living-specs listing SHALL read the project's capability configuration witho
 - **WHEN** the listing resolves it
 - **THEN** the entry is dropped rather than read
 
+#### Scenario: no capability in the project has a coverage file
+- **WHEN** the rows are drawn
+- **THEN** none of them says anything about coverage, because that is how the project is rather than a gap in any one capability
+
+#### Scenario: one capability has a coverage file and another does not
+- **WHEN** the rows are drawn
+- **THEN** the one without it reads as having no coverage file, and its tooltip names the action that writes one
+
 ### A drifted row is told apart by shape and repaired from the row
 
 A drifted row SHALL differ from a healthy one by icon *shape*, not by tint alone, and its tooltip names the repair. The repair — update to match code — SHALL be an inline hover action on the row and remain in the context menu. Refresh, which redraws the tree, and the actions that dispatch an AI run and rewrite spec files SHALL NOT share a glyph. The per-capability drift check resolves a capability from its spec path the same way update does, so a viewer that only knows the path can scope it.
@@ -27,6 +35,27 @@ A drifted row SHALL differ from a healthy one by icon *shape*, not by tint alone
 #### Scenario: a capability has drifted
 - **WHEN** the reader hovers its row
 - **THEN** the update action is on the row, and still in the right-click menu
+
+### An empty view is a way in, not a row saying there is nothing here
+<!-- touches: src/features/specs/livingSpecsExplorerProvider.ts, src/features/specs/livingSpecsCommands.ts -->
+
+A project with no registry, and a registry with nothing adopted yet, SHALL leave the tree empty so the view's welcome content — which the editor renders only over an empty tree — is what the reader sees. An informational row in either case is a dead end that hides the only action available. What the welcome content offers SHALL be decided from the workspace, not guessed: whether a registry exists and whether anything is adopted are published as editor context. Setting up living specs SHALL ask once where specs live, write the registry with that layout and nothing adopted, and offer adoption straight after; adoption SHALL then ask which areas to adopt — offering the project's own directories, the whole project, or a typed path — and carry the layout already chosen so the same question is not asked twice.
+
+#### Scenario: the project has no registry
+- **WHEN** the Living Specs view is drawn
+- **THEN** the tree is empty and the welcome content offers set-up, rather than a row explaining that there is nothing
+
+#### Scenario: set-up runs
+- **WHEN** the reader answers where specs should live
+- **THEN** a registry is written enabled with that layout and no capabilities, and adoption is offered next
+
+#### Scenario: adoption is started from set-up
+- **WHEN** the areas are chosen
+- **THEN** the dispatched command names those areas and the layout already answered for
+
+#### Scenario: the reader backs out of the area prompt
+- **WHEN** nothing is chosen
+- **THEN** nothing is dispatched and nothing is written
 
 ### The Living Specs view offers a one-pass sync action
 
@@ -46,5 +75,4 @@ A status bar item SHALL show how many living specs claim the active editor's fil
 
 ## Uncovered
 
-- `livingSpecsExplorerProvider.ts` — not read; its contract is inferred here from `livingSpecsModel.ts` and `livingSpecsCommands.ts`.
 - All files under `__tests__/` were listed but not read.

@@ -24,11 +24,19 @@ The header MUST render the title exactly as supplied and MUST NOT re-case it or 
 ### A living spec's actions sit in the footer bar; its header carries facts only
 <!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
 
-In living mode the footer MUST render the capability's two actions — update this spec when drifted, otherwise a drift re-check, and beside either an update of every drifted spec — in the same bar every other state uses, with a context line saying whether the code has moved. The header MUST NOT carry buttons: it shows a DRAFT badge only when the document is a draft, the drift marker, coverage, and where the capability applies and where its file lives, each once. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders whichever nudge the extension sent — an install, or an update naming the installed and expected versions — from the one frame the protocol layer builds, taking its classes, its label, its body and the prompt it carries in `data-*` from there rather than deciding any of them itself.
+In living mode the footer MUST offer adoption of another area at all times, and the two drift actions — update this spec, and update every drifted spec at once — only once drift has been found, beside a context line saying the code has moved. A spec in step with its code therefore carries neither the drift actions nor a status line nobody asked for. The header MUST NOT carry buttons except the draft's own approval: while the document is still a draft, DRAFT reads as part of the title rather than as a badge filed under it, with an "Approve spec" control beside it that clears every adopted marker in the tier on screen. Otherwise the header shows the drift marker, coverage, and where the capability applies and where its file lives, each once. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders whichever nudge the extension sent — an install, or an update naming the installed and expected versions — from the one frame the protocol layer builds, taking its classes, its label, its body and the prompt it carries in `data-*` from there rather than deciding any of them itself.
 
 #### Scenario: a drifted living spec is open
 - **WHEN** the footer renders
-- **THEN** it offers "Update this spec" and "Update all drifted", and the header shows the drift marker without a button
+- **THEN** it offers "Adopt an area", "Update all drifted" and "Update this spec", and the header shows the drift marker without a button
+
+#### Scenario: a living spec in step with its code
+- **WHEN** the footer renders
+- **THEN** "Adopt an area" is the only action, and no context line reports a state nobody asked about
+
+#### Scenario: an adopted living spec is still a draft
+- **WHEN** the header renders
+- **THEN** DRAFT sits inside the title with "Approve spec" beside it, and no separate DRAFT badge is filed among the facts
 
 #### Scenario: a glob longer than the header row
 - **WHEN** it renders

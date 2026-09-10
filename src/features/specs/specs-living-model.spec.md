@@ -26,7 +26,7 @@ The extension SHALL resolve, for a workspace-relative path, the capabilities who
 
 ### Requirement slicing lives beside the requirement-id parser and counts the same headings
 
-The extension SHALL parse a living spec into requirement slices — heading, optional file marker, body — next to the existing requirement-id parser, stripping fenced blocks with the same rule so an example in a snippet is never counted. Both parsers SHALL count requirements across the whole document rather than within a named section: fold-back appends to the end of the file, so a spec that has been folded into more than once carries requirements past its uncovered-files section, and scoping the slicer to a section is precisely how it comes to see fewer requirements than the denominator counts. The parser exists in two runtimes because neither can call the other, so both SHALL be held to one shared set of fixtures, and a fixture exercised by only one of them SHALL fail the build.
+The extension SHALL parse a living spec into requirement slices — heading, optional markers, body — next to the existing requirement-id parser, stripping fenced blocks with the same rule so an example in a snippet is never counted. Both parsers SHALL count requirements across the whole document rather than within a named section: fold-back appends to the end of the file, so a spec that has been folded into more than once carries requirements past its uncovered-files section, and scoping the slicer to a section is precisely how it comes to see fewer requirements than the denominator counts. A requirement's markers are the run of marker lines under its heading, in any order and with blank lines among them — the file list a requirement `touches`, the `adopted` note saying where adoption transcribed the requirement from and that nothing has confirmed it yet, and the `aligns` references naming rules under other capabilities. Requiring the marker on the line immediately after the heading is what a markdown formatter breaks, so the run starts at the first non-blank line and ends at the first line that is not a marker; every marker in it is stripped from the body. The parser exists in two runtimes because neither can call the other, so both SHALL be held to one shared set of fixtures, and a fixture exercised by only one of them SHALL fail the build.
 
 #### Scenario: a heading inside a fenced block
 - **WHEN** either parser reads the spec
@@ -44,6 +44,14 @@ The extension SHALL parse a living spec into requirement slices — heading, opt
 - **WHEN** either parser slices a marked requirement
 - **THEN** the marker is not part of the body, since handing parser metadata to a reader as prose is a leak rather than a fact about the requirement
 
+#### Scenario: a markdown formatter puts a blank line between the heading and the marker
+- **WHEN** either parser slices the requirement
+- **THEN** the marker is still read, because a requirement must not silently lose its file list to a reformat
+
+#### Scenario: a marker further down in the prose
+- **WHEN** either parser slices the requirement
+- **THEN** it is body, because a spec may legitimately discuss what a marker looks like
+
 #### Scenario: a marker that names no file
 - **WHEN** either parser reads a marker whose glob list is empty
 - **THEN** the requirement reads as unmarked, so an empty marker widens the load rather than narrowing it to nothing
@@ -51,6 +59,23 @@ The extension SHALL parse a living spec into requirement slices — heading, opt
 #### Scenario: a fixture is added
 - **WHEN** only one runtime's suite exercises it
 - **THEN** the drift guard fails, because that is a case where the two are free to disagree
+
+### Drift is the code a run never accounted for
+<!-- touches: src/features/specs/livingSpecsModel.ts -->
+
+A capability drifts on the files that changed under its globs without a run standing behind them. The drift computation SHALL discount every file a completed run recorded while accounting for this capability — whether the run folded the change into the spec or recorded an explicit skip — because either is the run vouching that the spec still describes that code. A file edited by hand, with no run behind it, still drifts. The capability's own spec and tier files, the project's exemptions, and its excluded globs are discounted as before, and when the change list cannot be read at all drift stays absent rather than empty.
+
+#### Scenario: a run folded a change into this capability
+- **WHEN** drift is next computed
+- **THEN** the files that run recorded do not read as drift, because the spec has already been brought level with them
+
+#### Scenario: a run skipped this capability on purpose
+- **WHEN** drift is next computed
+- **THEN** its files are discounted too, since a deliberate skip is a decision about the spec rather than an omission
+
+#### Scenario: a claimed file is edited outside any run
+- **WHEN** drift is next computed
+- **THEN** the capability reads as drifted, which is the whole point of the check
 
 ### The editor checks a spec's shape on save, in its own process
 <!-- touches: src/features/specs/specShapeCheck.ts, src/features/specs/specShapeDiagnostics.ts -->
