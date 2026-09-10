@@ -15,7 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 # Where a rule from another capability can still change the work. Specify is deliberately
 # absent: it writes a feature spec, and a hop into another capability's rules there widens
 # the brief without changing what gets written.
-LOADS_WITH_THE_HOP = ["commands/speckit.companion.plan.md"]
+LOADS_WITH_THE_HOP = [
+    "commands/speckit.companion.plan.md",
+    # A worker gets a phase-scoped slice, not the plan's context, so the agent actually
+    # writing the guarded code never sees the rule the plan read without this.
+    "commands/speckit.companion.implement.md",
+]
 
 RESOLVER_CALL = re.compile(r"resolve-spec-paths\.py[^\n`]*--requirements-for[^\n`]*")
 
@@ -27,10 +32,13 @@ class AShippedCommandAsksForTheHop(unittest.TestCase):
                 text = (ROOT / rel).read_text(encoding="utf-8")
                 calls = RESOLVER_CALL.findall(text)
                 self.assertTrue(calls, f"{rel} makes no --requirements-for call at all")
-                self.assertTrue(
-                    any("--follow-aligns" in c for c in calls),
+                # Every call, not any: a body with one flagged call and one unflagged
+                # passes an `any` while the live path is the unflagged one.
+                unflagged = [c for c in calls if "--follow-aligns" not in c]
+                self.assertEqual(
+                    unflagged, [],
                     f"{rel} resolves requirements without --follow-aligns, so the edge never fires:\n"
-                    + "\n".join(calls),
+                    + "\n".join(unflagged),
                 )
 
     def test_the_flag_the_commands_pass_is_the_one_the_resolver_accepts(self):

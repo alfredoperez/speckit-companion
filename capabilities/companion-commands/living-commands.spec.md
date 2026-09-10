@@ -49,6 +49,14 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 - **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
 
 
+### A fold carries every marker across, not only the one it knows about
+
+A delta comes from a feature spec and carries no markers of its own, so a marker survives a fold only by being carried across deliberately. The `aligns` edge SHALL be carried the same way `touches` is. It is the marker that most needs it and the one least likely to be missed: no file match can reach an edge, so it would be deleted the first time any feature folded onto that requirement and nothing would ever notice — the capability would simply stop being reachable, silently, exactly as if the edge had never been written.
+
+#### Scenario: a feature folds onto a requirement carrying an edge
+- **WHEN** the fold rewrites that requirement
+- **THEN** the edge is still there afterwards
+
 ### Adoption proposes the links between capabilities, because only it can see them
 
 A requirement's `aligns` marker names a rule under another capability that constrains this behaviour, and nobody writes those by hand: at the moment you are editing one capability you cannot see what governs it from elsewhere. Adoption reads a whole area in one pass and SHALL propose these where the code shows the constraint — a guard, a check, a redirect that a rule elsewhere explains — bringing each to the developer with both headings side by side before writing. The marker is matched by heading text, so a proposal MUST name a heading that exists: a mistyped one is a dead link that reads as a working edge and sends every future run to load nothing.
@@ -72,6 +80,22 @@ A capability's match globs are what the resolver uses to claim a file, so a capa
 #### Scenario: the membership is broader than the requirement
 - **WHEN** a capability claims a parent directory of the files its requirements name
 - **THEN** nothing is reported, because the resolver reaches them
+
+#### Scenario: a capability claims an area no requirement describes
+- **WHEN** the specs are validated
+- **THEN** that area is reported, because a change there resolves the capability and is handed nothing
+
+#### Scenario: one requirement carries no marker
+- **WHEN** a capability claims an area no marked requirement describes
+- **THEN** nothing is reported, because an unmarked requirement is always contributed
+
+### Both readers of a spec must agree on where a marker can sit
+
+A marker may sit under a blank line: a formatter puts one between a heading and its comment. Every reader of a living spec SHALL skip blank lines when looking for one, and a reader that stops at the line directly under the heading is a defect, not a strictness. It fails silently and in the safe-looking direction — the spec reads as carrying no markers, so a validator passes it and a load quietly falls back to reading the file whole. This has shipped twice: once in the resolver as #690, and once in the validator, where it left both membership checks above dead on every formatted spec in the repository that had them.
+
+#### Scenario: a formatter separates a heading from its marker
+- **WHEN** the spec is read
+- **THEN** the marker is found, and every check that depends on it runs
 
 ### The shape check is a command, and it reports rather than gates
 <!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->

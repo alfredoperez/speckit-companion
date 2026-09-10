@@ -32,6 +32,10 @@ _REQ_RE = re.compile(r"^###(?!#)\s+(.+?)\s*$")
 _SCENARIO_RE = re.compile(r"^####(?!#)\s+Scenario\s*:\s*(.+?)\s*$", re.IGNORECASE)
 _SECTION_RE = re.compile(r"^##(?!#)\s+(.+?)\s*$")
 _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+# The other two leading markers. Only their shape matters here: they may sit above or below
+# `touches`, and stopping the scan at one would hide the marker underneath it.
+_ADOPTED_RE = re.compile(r"^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$")
+_ALIGNS_RE = re.compile(r"^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
 #: Past these a spec is a folder's worth of concerns in one file; under the floor
 #: it is a paragraph with its own tab. Warnings, not gates.
@@ -242,28 +246,32 @@ def _capability_globs(root: str, capability: str) -> set:
     return set()
 
 
-def _covered_by_capability(marker_glob: str, cap_globs: set) -> bool:
-    """Whether a capability's membership reaches the files a requirement cites.
+def _capability_claims(root: str, capability: str) -> dict:
+    """The capability's registry entry, so `exclude` is read alongside `match`.
 
-    The comparison is between two patterns, not a pattern and a file: a requirement says
-    `src/features/article/create-article/**` and the capability says `src/pages/editor/**`,
-    and no file on disk decides that. A capability covers a marker when one of its globs
-    is a prefix of it, or matches it as a pattern.
+    Membership is `match` minus `exclude`. Reading only `match` gets the one shape this
+    check exists for exactly backwards: a capability matching `src/**` while excluding
+    `src/pages/**` claims none of the pages, which is the Conduit failure.
     """
-    marker = marker_glob.strip().replace(os.sep, "/")
-    if not marker:
-        return False
-    for g in cap_globs:
-        g = g.strip()
-        if not g:
-            continue
-        if g == marker or fnmatch.fnmatch(marker, g):
-            return True
-        # `src/features/**` covers `src/features/article/create-article/**`.
-        stem = g.rstrip("*").rstrip("/")
-        if stem and (marker == stem or marker.startswith(stem + "/")):
-            return True
-    return False
+    rsp = _load_resolver()
+    if rsp is None:
+        return {}
+    try:
+        caps = (rsp.load_living(root) or {}).get("capabilities") or []
+    except Exception:  # noqa: BLE001
+        return {}
+    for c in caps:
+        if c.get("name") == capability:
+            return c
+    return {}
+
+
+def _files_for(pattern: str, paths: list, rsp) -> set:
+    """Every real path the pattern reaches, by the resolver's own glob rule."""
+    pattern = pattern.strip().replace("\\", "/")
+    if not pattern:
+        return set()
+    return {f for f in paths if rsp._glob_matches(pattern, f)}
 
 
 def _marker_glob_in(line: str, globs: set) -> bool:
@@ -314,6 +322,7 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
     seen: dict = {}
 
     cited: list = []
+    unmarked = False
 
     def is_req(i):
         return not fenced[i] and _REQ_RE.match(lines[i])
@@ -367,36 +376,86 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                 "Give the scenario both halves: a WHEN bullet and a THEN bullet.",
                 capability))
 
-        marker = _TOUCHES_RE.match(lines[i + 1]) if i + 1 < j else None
+        # Blank lines are skipped the way the resolver skips them: prettier puts one between a
+        # heading and its comment, and reading only the next line made every check below silently
+        # pass on a formatted spec — the same shape as #690, where a hook unmarked a whole spec
+        # and every load quietly fell back to reading it whole. The two readers must agree.
+        marker = None
+        marker_line = i + 1
+        for k in range(i + 1, j):
+            if not lines[k].strip():
+                continue
+            m = _TOUCHES_RE.match(lines[k])
+            if m:
+                marker, marker_line = m, k
+                break
+            if not (_ADOPTED_RE.match(lines[k]) or _ALIGNS_RE.match(lines[k])):
+                break
         if marker and root is not None:
             globs = [g.strip() for g in marker.group(1).split(",") if g.strip()]
             missing = [g for g in globs if not _glob_matches_anything(g, root)]
             if missing and len(missing) == len(globs):
                 findings.append(_finding(
-                    WARNING, "unmatched-touches-glob", path, i + 2,
+                    WARNING, "unmatched-touches-glob", path, marker_line + 1,
                     f"This marker names {', '.join(missing)}, which matches nothing on disk.",
                     "Point the marker at the files this requirement describes, or remove it.",
                     capability))
-            cited.extend((g, i + 2) for g in globs)
+            cited.extend((g, marker_line + 1) for g in globs)
+        elif root is not None:
+            unmarked = True
         i = j
 
-    # The capability's own membership is what the resolver uses to claim a file. A requirement
-    # can name files on disk that its capability's globs never reach, and then nothing resolves:
-    # a run touching those files is told about no capability at all. That is invisible to every
-    # other check here, because both halves are individually valid.
-    if root is not None and capability and cited:
-        cap_globs = _capability_globs(root, capability)
-        if cap_globs:
-            orphaned = [(g, ln) for g, ln in cited if not _covered_by_capability(g, cap_globs)]
-            if orphaned and len(orphaned) == len(cited):
+    # Membership is what the resolver uses to claim a file, and both halves of this can be
+    # individually valid while nothing resolves. Both directions are decided on real files
+    # rather than by comparing patterns: `src/app/[locale]/**` is a character class to fnmatch
+    # and `**/*.md` is broader than the glob it should match, so a pattern comparison reports
+    # correct registries and gets itself switched off. Expanding through the resolver's own
+    # matcher agrees with the resolver by construction.
+    rsp = _load_resolver() if (root is not None and capability and cited) else None
+    if rsp is not None:
+        cap = _capability_claims(root, capability)
+        cap_globs = [g for g in (cap.get("match") or [])]
+        paths = repo_paths(root) if cap_globs else []
+        claimed = set()
+        for g in cap_globs:
+            claimed |= _files_for(g, paths, rsp)
+        for ex in cap.get("exclude") or []:
+            claimed -= _files_for(ex, paths, rsp)
+
+        # Only judge markers that name something real. One that names nothing is
+        # `unmatched-touches-glob`'s finding, and calling it orphaned too names one fault twice.
+        real = [(g, ln, _files_for(g, paths, rsp)) for g, ln in cited]
+        real = [(g, ln, f) for g, ln, f in real if f]
+
+        if claimed and real:
+            orphaned = [(g, ln) for g, ln, files in real if not (files & claimed)]
+            if orphaned and len(orphaned) == len(real):
                 g, ln = orphaned[0]
                 findings.append(_finding(
                     WARNING, "requirements-outside-capability", path, ln,
-                    f"Every requirement here names files this capability does not claim: "
+                    f"Every file marker in this spec names code this capability does not claim: "
                     f"{g} is outside {', '.join(sorted(cap_globs))}.",
                     "Widen the capability's match in the registry to the code the behaviour "
                     "actually lives in, or point the requirements at the files it does claim.",
                     capability))
+
+            # The other direction, and the one that actually bit: the capability claims code no
+            # requirement describes. It still resolves for a change there and then contributes
+            # nothing, so the run is handed an empty list and reads as briefed. Only when every
+            # requirement is marked, since an unmarked one is always contributed and cannot starve.
+            if not unmarked:
+                described = set()
+                for _, _, files in real:
+                    described |= files
+                dark = [g for g in cap_globs if _files_for(g, paths, rsp) - described]
+                if dark and len(dark) < len(cap_globs):
+                    findings.append(_finding(
+                        WARNING, "capability-claims-undescribed-code", path, 1,
+                        f"This capability claims {', '.join(dark)}, which no requirement here "
+                        f"describes, so a change there resolves this capability and gets nothing.",
+                        "Write a requirement for that area, point an existing requirement's "
+                        "marker at it, or drop it from the capability's match in the registry.",
+                        capability))
 
     reqs = sum(1 for i in range(len(lines)) if is_req(i))
     # Thin only when it sits beside siblings: a capability that is genuinely small
