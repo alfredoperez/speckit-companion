@@ -64,6 +64,18 @@ The vocabulary MUST be the same everywhere. Every step that records a size, and 
 - **WHEN** the standalone classification step reports a size
 - **THEN** the value it records is one every reader of the recorded size understands
 
+### A step dispatches to avoid reading, or to get a second pair of eyes, never for parallelism itself
+
+Handing work out is only ever worth its startup for one of two reasons: the worker reads something the main agent would otherwise carry to the end of the run, or it brings a perspective the main agent cannot hold at the same time as its own. A step that reads nothing but the artifacts the pipeline just wrote has no reading to offload, so its authoring pass stays inline however long it takes. This is why specify dispatches when a request names two or more code areas and plan dispatches per area, while tasks does not: tasks reads the plan, the spec and the design artifacts, all of them small, all of them already in hand, and none of them source. The second reason is what the optional adversarial review of the task list is for, and it is a panel of distinct lenses rather than a split of files.
+
+#### Scenario: a step's only inputs are the artifacts already written
+- **WHEN** it authors its own artifact
+- **THEN** it stays inline, because there is nothing to avoid reading
+
+#### Scenario: a step wants breadth rather than reading
+- **WHEN** it dispatches
+- **THEN** each worker carries a different lens over the same material, not a different slice of it
+
 ### Implement dispatches on how much a phase carries, not on every phase
 
 A worker pays the same startup whatever it is handed, so a phase small enough to read in passing costs more to hand out than to build. Implement SHALL dispatch a story phase only when it owns roughly five files or more, and build the rest inline in phase order, saying which it did which way. Setup, Foundational and Polish are never dispatched: Setup is trivial, Foundational blocks every story, Polish is cross-cutting.
