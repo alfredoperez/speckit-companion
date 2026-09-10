@@ -231,6 +231,20 @@ def _vouched_files_since(root: str, commit: str, cap_name: str, working: bool = 
     return out
 
 
+def _is_any_spec_doc(fp: str, spec_dirs: set) -> bool:
+    """True for any registered capability's living-spec documents, not only this one's.
+
+    Colocated capabilities sit beside the code they describe, so one capability's `match`
+    routinely claims the directory its *siblings* keep their specs in. Without this, editing
+    a neighbour's spec is reported as drifted code here — which is how a directory holding
+    six colocated capabilities flags all six every time any one of them is written.
+    """
+    if not any(fp.endswith(t) for t in rsp.RESERVED_TIERS) and not fp.endswith(".spec.md"):
+        return False
+    file_dir = fp.rsplit("/", 1)[0] if "/" in fp else ""
+    return file_dir in spec_dirs
+
+
 def _is_own_spec_doc(fp: str, spec_posix: str) -> bool:
     """True for the capability's own living-spec documents — the spec itself or a
     reserved-tier sibling (`.arch.md` / `.coverage.md`) in the spec's directory.
@@ -343,6 +357,14 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
                 "capabilities": [], "skipped": []}
 
     exempt_globs = living.get("exempt") or []
+    # Every directory a registered spec lives in. A colocated capability's globs claim the
+    # directory its siblings keep their specs in, and a spec is not code that drifts.
+    spec_dirs = set()
+    for _c in living.get("capabilities") or []:
+        _s = _c.get("spec")
+        if _s:
+            _sp = rsp._posix(_s)
+            spec_dirs.add(_sp.rsplit("/", 1)[0] if "/" in _sp else "")
     git_ok = _is_git_repo(root)
     boundaries = _shallow_boundaries(root) if git_ok else frozenset()
     graft_state_unknown = boundaries is None
@@ -386,7 +408,7 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
             if fp in seen:
                 continue
             seen.add(fp)
-            if _is_own_spec_doc(fp, spec_posix):
+            if _is_own_spec_doc(fp, spec_posix) or _is_any_spec_doc(fp, spec_dirs):
                 continue
             if not rsp.matches(cap, fp):
                 continue

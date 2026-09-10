@@ -60,6 +60,15 @@ Drift is code that changed with nobody saying whether the spec still describes i
 - **WHEN** drift runs afterwards
 - **THEN** that run's files are not reported either, because a skip is the run saying the spec still holds
 
+
+### A living spec is not code that drifts, whoever wrote it
+
+A capability's own spec documents are already excluded from its drift. That is not enough where capabilities sit beside the code they describe: one capability's membership routinely claims the directory its siblings keep their specs in, so writing one spec reports every neighbour as having drifted code. Any registered capability's spec documents SHALL therefore be excluded from every capability's drift, not only from its own.
+
+#### Scenario: two colocated capabilities share a directory
+- **WHEN** one of their specs is written
+- **THEN** the other reports no drift from it
+
 ### The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence
 
 A run that cannot write into its spec directory can still complete captures while the trace line recording them fails to append. That run leaves a marker and no trace file. The check SHALL read the marker first, so the single failure mode that produces no trace at all is reportable rather than indistinguishable from a spec that has simply captured nothing yet.
