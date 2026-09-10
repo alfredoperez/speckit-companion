@@ -32,22 +32,6 @@ The living-spec family SHALL include a sync command that, in a single pass, grou
 - **WHEN** the sync runs with living specs disabled or absent
 - **THEN** it reports nothing to do and exits successfully
 
-### Adoption and sync write the file markers, so nobody maintains them by hand
-
-Adoption SHALL write a marker under each requirement it produces, naming the files that requirement was derived from. A sync SHALL write or widen the marker of each requirement it updates, as the union of what the marker already named and the files it folded in — never narrowing, since a requirement that keeps claiming a file it no longer touches costs a run one extra requirement, where narrowing could cost it a needed one.
-
-#### Scenario: a capability is adopted
-- **WHEN** its requirements are written
-- **THEN** each carries a marker naming the files it was derived from
-
-#### Scenario: a sync updates a requirement
-- **WHEN** the update is written
-- **THEN** that requirement's marker names the changed files as well as what it already named
-
-#### Scenario: fold-back rewrites a requirement that already carries a marker
-- **WHEN** the delta replaces that requirement's section
-- **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
-
 ### The shape check is a command, and it reports rather than gates
 <!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
 

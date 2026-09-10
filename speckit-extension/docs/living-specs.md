@@ -117,6 +117,8 @@ It checks every registered living spec, and the delta sections of every active f
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |
 | `delta-heading-not-found` | warning | A MODIFIED or REMOVED entry names a heading the target spec does not carry. |
 | `unmatched-touches-glob` | warning | A file marker names a pattern matching nothing on disk. |
+| `requirements-outside-capability` | warning | Every file marker in a spec names code the capability's own membership does not claim, so a change to the behaviour resolves nothing at all. Both halves look valid on their own: the markers name real files and the membership matches real files, just not the same ones. |
+| `capability-claims-undescribed-code` | warning | A capability claims code no requirement describes. A change there resolves the capability and is handed zero requirements, so the run is briefed with an empty list and reads as briefed. Not reported when any requirement is unmarked, since an unmarked one is always contributed. |
 | `spec-too-thin` | warning | A spec carries fewer than 3 requirements while siblings sit beside it — a paragraph given its own file by a split that cut too finely. Merge it into the sibling it belongs with. A capability that is genuinely small, alone in its folder, is never flagged. |
 | `spec-too-large` | warning | A capability spec passes 8 requirements or 160 lines. Split it into `capabilities/<capability>/<concern>.spec.md`, one file per concern, each with its own registry entry. |
 | `added-heading-near-existing` | warning | An ADDED heading restates one the target spec already has, which folds as a second requirement for one behaviour. Use MODIFIED with the existing heading. |

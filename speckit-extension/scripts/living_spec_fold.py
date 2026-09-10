@@ -27,6 +27,9 @@ from spec_deltas import _REQ_HEADING_RE, _has_deltas, parse_spec_deltas
 
 
 _TOUCHES_LINE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
+#: An edge to a rule under another capability. A delta never carries one, so it
+#: survives a fold only by being carried across deliberately.
+_ALIGNS_LINE = re.compile(r"^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$")
 
 
 def _touches_globs(lines: list[str]) -> list[str]:
@@ -53,13 +56,19 @@ def _keep_marker(old: list[str], new: list[str]) -> list[str]:
     # here means the only adopted markers in a living spec are the ones adoption
     # wrote, and a fold onto a requirement always clears them.
     rest = [ln for ln in new[1:] if not ADOPTED_LINE.match(ln)]
+    # An `aligns` edge points at a rule under another capability, so no file match can
+    # reach it and nothing would ever notice it going missing. A delta never carries one,
+    # so dropping it here deletes it for good the first time a feature folds onto this
+    # requirement — silently retiring the one edge the file match cannot rediscover.
+    aligns = [ln for ln in old if _ALIGNS_LINE.match(ln)]
+    rest = [ln for ln in rest if not _ALIGNS_LINE.match(ln)]
     globs = _touches_globs(old)
     globs += [g for g in _touches_globs(new) if g not in globs]
     if not globs:
-        return [new[0]] + rest
+        return [new[0]] + aligns + rest
     if rest and _TOUCHES_LINE.match(rest[0]):
         rest = rest[1:]
-    return [new[0], f"<!-- touches: {', '.join(globs)} -->"] + rest
+    return [new[0], f"<!-- touches: {', '.join(globs)} -->"] + aligns + rest
 
 
 def _loaded_capabilities(feature_dir: Path) -> list[str]:

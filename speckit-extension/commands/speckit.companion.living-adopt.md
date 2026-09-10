@@ -54,7 +54,7 @@ Bring the whole list to the developer before writing anything: each capability's
 
 For each capability the developer keeps, derive:
 - a **name** (a short slug for what it does, e.g. `article-reading`),
-- a **match** glob covering every directory it draws from,
+- a **match** glob covering every directory the behaviour's own code lives in, which is not always where you first met it: a capability found through a page is usually implemented somewhere else, and a glob naming the page claims none of the files a change to that behaviour actually edits. Follow each behaviour to the code that implements it and name that, then check the result against the requirements you are about to write — if a requirement's files sit outside the glob, the glob is wrong, and nothing will resolve this capability when that area changes,
 - a **spec** path, which depends on the storage layout below.
 
 #### Where the specs go
@@ -122,7 +122,7 @@ Both files, at the paths chosen at the review gate:
 
    **Every spec requirement carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
 
-   The `touches` marker on a spec requirement names the files that produce that behaviour. The rules file carries none.
+   The `touches` marker on a spec requirement names the files that produce that behaviour. The rules file carries none. Where the code shows a behaviour constrained by a rule under **another** capability — a guard, a check, a redirect that something elsewhere explains — that requirement also takes `<!-- aligns: session-access#Writing an article requires being signed in -->`, in its marker block under the heading, blank lines allowed but before any prose: a marker in the body is body text. Reading the whole area at once is the only moment anyone can see these, and a later run follows the edge one hop to reach a rule living where nobody editing this behaviour would look. Both halves are matched by name, so bring each proposed edge to the developer with both headings side by side. A capability that was drafted but never registered, or a heading off by a word, is a dead link that reads as a working one and sends every future run to read nothing.
 
 5. **`## Uncovered`**: rules with no owner and areas with no capability. Not files nobody opened.
 
