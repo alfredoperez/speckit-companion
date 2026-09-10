@@ -500,7 +500,11 @@ def validate_reads(active_meta: dict, stands_in: dict = None):
 DEFAULT_CAPABILITY_ROOT = "capabilities"
 #: A spec is named for what it describes, so every living spec ends in this.
 SPEC_SUFFIX = ".spec.md"
-DEFAULT_EXEMPT_GLOBS = ["*.config.*", "*.test.*", "**/migrations/**"]
+# `*` does not cross a directory separator, so a bare `*.test.*` only ever matched a
+# test file sitting at the repository root — which is to say, nothing. Every project
+# that never overrode this list has been carrying its test files as tracked code.
+DEFAULT_EXEMPT_GLOBS = ["**/*.config.*", "**/*.test.*", "**/__tests__/**",
+                        "**/migrations/**"]
 
 # At the project root, outside `.specify/`, which routine cleanup restores wholesale.
 LIVING_SPECS_REL = "living-specs.yml"

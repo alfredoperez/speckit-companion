@@ -187,6 +187,23 @@ class MembershipAndRequirementsMustDescribeTheSameCode(unittest.TestCase):
             glob="src/features/article/create-article/**", verb="accept a draft")))
         self.assertNotIn("capability-claims-undescribed-code", codes(found))
 
+    def test_a_capability_sharing_its_membership_is_not_judged_alone(self):
+        # Several capabilities routinely claim one coarse glob and split the behaviour
+        # between them. Whether a file is described is then a question about the group,
+        # and reporting each member names one fault once per sibling.
+        (self.root / "living-specs.yml").write_text(
+            "enabled: true\nlayout: central\ncapabilities:\n"
+            "  - name: article-authoring\n    match:\n      - src/pages/editor/**\n"
+            f"    spec: {self.SPEC_REL}\n"
+            "  - name: article-sibling\n    match:\n      - src/pages/editor/**\n"
+            "    spec: capabilities/article-sibling/article-sibling.spec.md\n",
+            encoding="utf-8")
+        (self.root / "src/pages/editor/other.ts").write_text("export {};\n")
+        found = self._check(spec_with(REQ.format(
+            heading="An article is written", glob="src/pages/editor/index.ts",
+            verb="accept a draft")))
+        self.assertNotIn("capability-claims-undescribed-code", codes(found))
+
     def test_no_registry_entry_means_nothing_to_judge(self):
         (self.root / "living-specs.yml").write_text("enabled: true\ncapabilities: []\n", encoding="utf-8")
         found = self._check(spec_with(REQ.format(

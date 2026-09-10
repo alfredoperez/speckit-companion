@@ -53,6 +53,19 @@ The completion step (both the implement-time close and the terminal `mark-comple
 - **WHEN** a name in `livingSpecs.loaded` gets neither a delta block nor a recorded skip
 - **THEN** the fold flags it loudly as a hole
 
+
+### A run that loaded nothing says so, because that is the one silence nothing else catches
+
+Accounting for every loaded capability answers nothing when none was loaded, and returns "all accounted for" by definition. On a project with living specs turned on, loading nothing means the change was briefed on nothing and wrote nothing back, which is the state living specs exist to prevent. Completion SHALL record that outcome as a concern on the run, where the doctor reads it and the panel shows it, rather than only on the error stream. The note SHALL name both causes, because they look identical from here and their fixes differ: the area may belong to no capability yet, or a capability may claim it while no requirement describes it. A project not using living specs records nothing.
+
+#### Scenario: a configured project resolves no capability for the change
+- **WHEN** completion runs
+- **THEN** the run carries a concern saying so, naming both causes
+
+#### Scenario: the project does not use living specs
+- **WHEN** completion runs
+- **THEN** nothing is recorded
+
 ### The tasks Polish phase validates the spec's Success Criteria in exactly one place
 
 The tasks command's final Polish phase generates a task to validate the result against the spec's Success Criteria. The deferral is gated on an explicit marker, not the mere presence of a hook: only when a hook entry under `commands.implement.hooks.after.implement-exec` (in `.specify/companion.yml`) carries `owns: validation` does that hook own the run, so the Polish phase MUST defer to it rather than generate a second suite run. Presence of an unmarked hook does not defer — the same anchor also hosts review, PR, and deploy hooks, so keying on presence would silently drop validation for any project with a ship tail. With no marked hook the Polish phase owns validation and generates the run itself. Validation ownership therefore lives in exactly one place, and a project that owns its own run never executes the suites twice.

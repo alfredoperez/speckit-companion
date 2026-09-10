@@ -246,6 +246,28 @@ def _capability_globs(root: str, capability: str) -> set:
     return set()
 
 
+def _shares_membership(root: str, capability: str, cap_globs: list) -> bool:
+    """Whether another capability claims any of the same globs."""
+    mine = {g.strip() for g in cap_globs}
+    for cap in (_load_living(root) or {}).get("capabilities") or []:
+        if cap.get("name") == capability:
+            continue
+        if mine & {str(g).strip() for g in (cap.get("match") or [])}:
+            return True
+    return False
+
+
+def _load_living(root: str) -> dict:
+    """The registry as the resolver reads it, or an empty mapping."""
+    rsp = _load_resolver()
+    if rsp is None:
+        return {}
+    try:
+        return rsp.load_living(root) or {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 def _capability_claims(root: str, capability: str) -> dict:
     """The capability's registry entry, so `exclude` is read alongside `match`.
 
@@ -432,6 +454,12 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             claimed |= _files_for(g, paths, rsp)
         for ex in cap.get("exclude") or []:
             claimed -= _files_for(ex, paths, rsp)
+        # The registry's own exempt list too, not only the capability's exclude. Drift and
+        # the resolver both honour it, so a file it names is not code anyone is asked to
+        # describe — tests and config, usually — and counting it would fire on every project
+        # whose capability happens to span its own test folder.
+        for ex in (_load_living(root) or {}).get("exempt") or []:
+            claimed -= _files_for(ex, paths, rsp)
         claimed = _only_files(claimed, root)
 
         # Only judge markers that name something real. One that names nothing is
@@ -459,8 +487,18 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                 described = set()
                 for _, _, files in real:
                     described |= files
-                dark = [g for g in cap_globs
-                        if _only_files(_files_for(g, paths, rsp), root) - described]
+                # Only a capability that owns its membership outright can be judged this way.
+                # Several capabilities routinely share one coarse glob and split the behaviour
+                # between them — three claim `src/ai-providers/**` here — and then whether a
+                # file is described is a question about the group, not about any one spec.
+                # Reporting each member names one fault once per sibling, which is how a
+                # useful check becomes noise and gets turned off.
+                shared = _shares_membership(root, capability, cap_globs)
+                dark = [] if shared else [
+                    g for g in cap_globs
+                    if (_only_files(_files_for(g, paths, rsp), root) & claimed) - described]
+                # Every glob dark means the requirements describe somewhere else entirely,
+                # which `requirements-outside-capability` already names. One fault, once.
                 if dark and len(dark) < len(cap_globs):
                     findings.append(_finding(
                         WARNING, "capability-claims-undescribed-code", path, 1,
