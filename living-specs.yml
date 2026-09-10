@@ -83,6 +83,9 @@ capabilities:
   - name: commands-completion
     match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]
     spec: capabilities/companion-commands/completion.spec.md
+  - name: commands-living-markers
+    match: ["speckit-extension/scripts/living_validate.py", "speckit-extension/scripts/living_spec_fold.py"]
+    spec: capabilities/companion-commands/living-markers.spec.md
   - name: commands-living
     match: ["speckit-extension/commands/**", "speckit-extension/nodes/**", "speckit-extension/presets/**"]
     spec: capabilities/companion-commands/living-commands.spec.md
