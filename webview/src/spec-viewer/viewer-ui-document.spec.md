@@ -76,11 +76,27 @@ A living spec SHALL be navigable by requirement from the viewer's existing docum
 
 ### The viewer can be told which requirement to bring into view
 
-The viewer SHALL accept a requirement heading from the extension and scroll the matching requirement into view, honouring the reader's reduced-motion preference. A heading matching no rendered requirement SHALL leave the scroll position untouched.
+The viewer SHALL accept a requirement heading from the extension and scroll the matching requirement into view, honouring the reader's reduced-motion preference. A heading matching no rendered requirement SHALL leave the scroll position untouched. Being told to reveal a requirement is also a decision about which pane is showing: the document comes to the front, because scrolling a document the reader cannot see reveals nothing.
 
 #### Scenario: the named requirement is on the page
 - **WHEN** the viewer is told to reveal it
 - **THEN** that requirement is scrolled into view
+
+#### Scenario: the overview is showing when a requirement is revealed
+- **WHEN** the extension names a requirement
+- **THEN** the pane switches to the document before the requirement is brought into view
+
+### An adopted requirement says where it came from, and can be approved in place
+
+A requirement carrying an `adopted:` marker was transcribed by adoption from the project's own conventions and nothing has checked it since. Its card MUST say so and name the source it was transcribed from, so a reader can go and confirm it, and MUST offer an approval control that drops the marker for that requirement alone. The marker sits with the file marker at the top of the block in either order, and only the run of markers before the first ordinary line is consumed — filtering the whole block would delete a line further down that the outline's count, and both slicers, still read as prose. What reaches the card's attributes is a bare flag, never the transcribed source string, because the escaping used for element content does not escape attribute quotes.
+
+#### Scenario: a requirement was transcribed by adoption
+- **WHEN** its card renders
+- **THEN** it names the source it was adopted from and offers an approval control for that requirement
+
+#### Scenario: an adopted requirement is approved
+- **WHEN** the reader picks that control
+- **THEN** the heading it is keyed on is posted to the extension, which owns the change to the file
 
 #### Scenario: the heading matches nothing rendered
 - **WHEN** the viewer is told to reveal it

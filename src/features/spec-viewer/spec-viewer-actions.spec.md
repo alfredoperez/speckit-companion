@@ -85,6 +85,13 @@ An inline comment MUST be persisted to the spec's record the moment it is added,
 - **THEN** the prompt asks for targeted in-place edits and explicitly forbids regenerating the document from a template
 - **AND** the dispatched comments are marked applied rather than deleted
 
+A living spec has no record to persist into, so in living mode the comments travel with the refinement request itself and the same prompt is built against the tier file's own path. The prompt SHALL be assembled once and shared by both paths — a second copy is how one of them quietly stops forbidding a regeneration.
+
+#### Scenario: refinement is dispatched from a living spec
+- **WHEN** the reader refines a capability's tier document
+- **THEN** the comments supplied with the request are used, since none were persisted
+- **AND** the prompt names the tier file and carries the same in-place-edit instructions as a run's document
+
 ## Uncovered
 
 _None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._

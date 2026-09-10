@@ -79,6 +79,14 @@ Any path that sets a spec's status MUST check that the spec has not already move
 - **WHEN** a generic field write names a lifecycle key
 - **THEN** the write is refused and the refusal is reported
 
+### The order a spec's statuses run in is published, not copied
+
+Anything that has to know whether a spec has reached a step — a driver waiting on one, a hook, the panel — needs the statuses in the order a run passes through them, and every copy of that order is a copy that goes stale on the day a status is added. The runtime SHALL hold the order once, beside the statuses themselves, with the in-progress form of each step before its completed form, and SHALL make it readable from outside the module so a caller in another language ranks statuses against the same list rather than keeping its own.
+
+#### Scenario: a caller needs to rank two statuses
+- **WHEN** it asks the runtime for the status order
+- **THEN** it is given every status in the order a run passes through them, rather than maintaining its own copy
+
 ### Timing is stamped by a script, never hand-authored
 
 Durations are only meaningful if a clock produced them. Every timing entry SHALL be written by running a writer script that reads the real clock at write time; no caller — human or AI — writes timing into the context by editing the file. This is the runtime's central reliability lever: running a command is something an AI does faithfully, while pausing mid-work to hand-author a timestamped JSON entry is not. It is also what keeps the file structurally valid, since hand-editing is what corrupted it in practice.

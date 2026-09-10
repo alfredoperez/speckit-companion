@@ -1,5 +1,7 @@
 # Capture runtime build — Living Spec
 
+<!-- reviewed: a9c0b02b -->
+
 > [DRAFT] Re-adopted on 2026-09-07 from the single capture-runtime living spec, requirements moved verbatim, every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose

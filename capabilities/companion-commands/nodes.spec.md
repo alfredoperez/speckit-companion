@@ -32,6 +32,20 @@ Each node SHALL carry a human-readable name for the panel, and a step's declarat
 - **WHEN** the run is checked against what it should have produced
 - **THEN** the folded documents are not counted as missing
 
+### A node can ship without running, so a project can be offered it rather than told about it
+
+A step's order SHALL be able to name nodes it does not run by default. Those nodes stay in the tree, assemble like any other once a recipe names them, and are what the builder can offer from a list instead of a free-text box. This is how a behaviour whose value is not yet settled ships without being imposed: the alternative is either forcing it on every project or leaving it out of the tree, and the second means the decision has to be made before anyone can try it.
+
+A node listed this way is off, not absent, and the distinction matters in both directions: it must not run unasked, and it must not quietly rot either, since it assembles with the rest and the same gates hold it to the same shape.
+
+#### Scenario: a step declares a node it does not run
+- **WHEN** the command is assembled with the default order
+- **THEN** that node contributes nothing to the body
+
+#### Scenario: a recipe names it
+- **WHEN** the command is assembled
+- **THEN** it assembles in like any other node
+
 ### A step's branch points are declared as data beside its node order
 
 Where a step's node makes a routing decision, that decision SHALL be declared alongside the step's node order: which node decides, the verdicts it can reach, the steps each verdict folds away, and the notice each verdict prints. Stated only as prose — in the routing part, the workflow file, and the classifier's own instructions — the routing was changeable in none of them and drawable from none of them.

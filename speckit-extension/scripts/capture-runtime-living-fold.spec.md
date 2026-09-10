@@ -38,6 +38,12 @@ A feature spec may declare a delta block per capability, each marked `<!-- capab
 
 A capability recorded on `livingSpecs.loaded` is a promise the run will settle it. Completion MUST close that loop for each loaded capability: either fold a requirement delta into its spec, or record an explicit skip note saying why it was left untouched. The runtime SHALL provide a skip writer (`--living-spec-skip "<name>: <reason>"`) that appends `{name, reason}` to `livingSpecs.skipped`, de-duped on the name with the first reason winning. A skip MUST both name a capability and justify it — an entry with a blank reason is dropped and warned about on stderr, so an unexplained skip never counts as accountability and the capability stays unaccounted. The fold's backstop then computes, in BOTH its no-delta branch and its partial-fold branch, the loaded capabilities that are neither folded (this run or on a prior run) nor skipped, and reports that gap loudly and actionably; when every loaded capability is accounted for it says so out loud — "correctly nothing," visibly distinct from the silently-nothing gap.
 
+The accounting has one blind spot it must cover separately: a run that loaded nothing has no loaded capability to hold to account, so it passes in silence while being exactly the state living specs exist to prevent — briefed on nothing, writing nothing back. On a project that has a registry at all, a fold that finds neither a delta block nor a loaded capability SHALL record that as a concern on the run rather than a line on stderr, so it reaches the doctor and the panel and stops looking like a run with nothing to do. It stays silent on a project that does not use living specs, and, like every capture, never fails the host command.
+
+#### Scenario: a configured project resolves no capability at all
+- **WHEN** the fold runs with no delta block and nothing loaded
+- **THEN** a concern is recorded on the run saying the change was briefed on nothing and folded nothing
+
 #### Scenario: a loaded capability the change didn't alter
 - **WHEN** completion records a reasoned skip for a loaded capability
 - **THEN** the note lands on `livingSpecs.skipped` and the fold treats that capability as accounted
@@ -67,10 +73,22 @@ A requirement authored under `## MODIFIED Requirements` that matches no existing
 - **WHEN** the same delta set is folded a second time
 - **THEN** the already-present requirement is left in place and nothing is duplicated
 
+### A fold carries a requirement's markers across, and clears the one the run has answered
+
+A delta comes from a feature spec, so it carries none of the markers a living requirement holds, and replacing a requirement's body with it would silently retire them. A fold SHALL therefore carry the existing markers across: the file marker, merged with any the delta brought, and the edge naming a rule under another capability, which no file match can rediscover — nothing would ever notice that one going missing. The exception is the marker recording that adoption transcribed the requirement and nothing has checked it: a run that folded a delta onto it has now built against it, so the fold SHALL let that marker go and count the requirement as confirmed, which is what turns a transcription into a claim the codebase stands behind.
+
+#### Scenario: a fold rewrites a requirement carrying an edge to another capability's rule
+- **WHEN** the delta is applied
+- **THEN** the edge is still under the heading afterwards, together with the file marker
+
+#### Scenario: a fold lands on a requirement adoption transcribed
+- **WHEN** the delta is applied
+- **THEN** the transcription marker is gone and the fold reports the requirement as confirmed
+
 ### A living spec's shape is checkable, and the fold refuses to write a break
 <!-- touches: speckit-extension/scripts/living_validate.py, speckit-extension/scripts/living_spec_fold.py -->
 
-The capture runtime SHALL provide a read-only check over every registered living spec and over the delta sections of active feature specs, reporting a requirement carrying no scenario, a scenario missing its condition or its outcome, two requirements sharing a heading inside one capability, a delta block marked for a capability the registry does not list, a delta entry naming a heading the target spec does not carry, and a file marker matching nothing on disk. Each finding SHALL carry a severity, a stable code, the path, the line, a sentence and a one-line fix, and the check SHALL always exit successfully — a report that can fail the shell it runs in is a gate wearing a report's clothes. Severity SHALL answer exactly one question, whether the fold stops, so error means the durable record would be damaged and warning means it would be untidy. The fold SHALL run the same check in-process before writing anything and refuse, per capability, on an error-level finding, naming it; a correctness gate that a missing interpreter or a subprocess failing for its own reasons can turn into "no findings" is not a gate. A refusal for one capability SHALL NOT prevent another's sound delta from being applied in the same run.
+The capture runtime SHALL provide a read-only check over every registered living spec and over the delta sections of active feature specs, reporting a requirement carrying no scenario, a scenario missing its condition or its outcome, two requirements sharing a heading inside one capability, a delta block marked for a capability the registry does not list, a delta entry naming a heading the target spec does not carry, and a file marker matching nothing on disk. It SHALL also report the two ways a spec and its capability's membership can each be valid and still not meet: a spec whose every file marker names code the capability does not claim, and a capability that claims code no requirement here describes — the second being the one that reads as briefed, because a change there resolves the capability and is handed nothing. Both SHALL be decided by expanding globs to the real files on disk through the resolver's own matcher, never by comparing one pattern against another, and neither SHALL fire where the answer is not this spec's to give: code the registry's own exemptions cover, a membership several capabilities share, or a spec whose markers all miss, which the marker finding already names. A marker SHALL be found the way the resolver finds it — the first non-blank line under the heading, with the sibling markers that may sit beside it skipped over — because a check that reads only the line under the heading passes silently on every spec a markdown formatter has touched. Each finding SHALL carry a severity, a stable code, the path, the line, a sentence and a one-line fix, and the check SHALL always exit successfully — a report that can fail the shell it runs in is a gate wearing a report's clothes. Severity SHALL answer exactly one question, whether the fold stops, so error means the durable record would be damaged and warning means it would be untidy. The fold SHALL run the same check in-process before writing anything and refuse, per capability, on an error-level finding, naming it; a correctness gate that a missing interpreter or a subprocess failing for its own reasons can turn into "no findings" is not a gate. A refusal for one capability SHALL NOT prevent another's sound delta from being applied in the same run.
 
 #### Scenario: a delta would fold in a scenario nobody can check
 - **WHEN** the fold runs
@@ -91,6 +109,14 @@ The capture runtime SHALL provide a read-only check over every registered living
 #### Scenario: a block is marked for a capability nobody registered
 - **WHEN** the fold runs
 - **THEN** the refusal is reported naming that capability, because an unregistered name is never one of the fold's targets and a refusal filed under it would be unreachable — the block would be dropped and the author told nothing
+
+#### Scenario: a capability claims an area no requirement describes
+- **WHEN** the check runs on a spec whose every requirement is marked, over a capability claiming a second area none of those markers reaches
+- **THEN** it names that area, because a change there would load this capability and receive nothing
+
+#### Scenario: a formatter separates a heading from its marker
+- **WHEN** the check reads a spec whose markers sit under a blank line
+- **THEN** it reads them as markers, exactly as the resolver does, rather than passing because it found none
 
 #### Scenario: the check runs on a delta rather than on a whole spec
 - **WHEN** the requirement shapes are checked

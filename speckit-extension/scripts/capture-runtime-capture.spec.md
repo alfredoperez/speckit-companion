@@ -64,6 +64,12 @@ Every script in this runtime returns success on failure by design, printing its 
 
 A spec's context records which workflow drives it, and every next-step command that status and resume resolution emit MUST come from that workflow's command family: the companion commands when the context records `workflow: companion`, the stock commands otherwise. Handing a run a command from the other family mid-pipeline would silently switch its capture and completion behavior, so the recorded workflow is the single signal for the choice. Contexts written before the workflow field existed carried a retired marker instead (`profile: turbo`); resolution SHALL keep honoring that marker as meaning the companion workflow, so older specs resume on the flow they started rather than being demoted to the stock family.
 
+A command name is held and emitted as its dotted id alone, with no leading slash. The slash is one assistant's way of invoking a command and not part of the name: on an assistant that registered another spelling it resolves to nothing, so a user told the next step was `/speckit.companion.plan` typed it and got nothing, and resume dispatched the same dead name on their behalf. These are the two commands whose whole job is naming what runs next, so the name they hand out has to be the one the install actually carries.
+
+#### Scenario: status names the next step
+- **WHEN** resolution emits the command for the next step
+- **THEN** it is the dotted id with no leading slash, in both what is printed and what resume dispatches
+
 #### Scenario: a companion spec resumes
 - **WHEN** resolution computes the next command for a context recording the companion workflow
 - **THEN** the command is drawn from the companion family

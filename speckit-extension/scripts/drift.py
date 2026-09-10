@@ -44,6 +44,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -230,6 +231,20 @@ def _vouched_files_since(root: str, commit: str, cap_name: str, working: bool = 
     return out
 
 
+def _is_any_spec_doc(fp: str, spec_dirs: set) -> bool:
+    """True for any registered capability's living-spec documents, not only this one's.
+
+    Colocated capabilities sit beside the code they describe, so one capability's `match`
+    routinely claims the directory its *siblings* keep their specs in. Without this, editing
+    a neighbour's spec is reported as drifted code here — which is how a directory holding
+    six colocated capabilities flags all six every time any one of them is written.
+    """
+    if not any(fp.endswith(t) for t in rsp.RESERVED_TIERS) and not fp.endswith(".spec.md"):
+        return False
+    file_dir = fp.rsplit("/", 1)[0] if "/" in fp else ""
+    return file_dir in spec_dirs
+
+
 def _is_own_spec_doc(fp: str, spec_posix: str) -> bool:
     """True for the capability's own living-spec documents — the spec itself or a
     reserved-tier sibling (`.arch.md` / `.coverage.md`) in the spec's directory.
@@ -342,6 +357,14 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
                 "capabilities": [], "skipped": []}
 
     exempt_globs = living.get("exempt") or []
+    # Every directory a registered spec lives in. A colocated capability's globs claim the
+    # directory its siblings keep their specs in, and a spec is not code that drifts.
+    spec_dirs = set()
+    for _c in living.get("capabilities") or []:
+        _s = _c.get("spec")
+        if _s:
+            _sp = rsp._posix(_s)
+            spec_dirs.add(_sp.rsplit("/", 1)[0] if "/" in _sp else "")
     git_ok = _is_git_repo(root)
     boundaries = _shallow_boundaries(root) if git_ok else frozenset()
     graft_state_unknown = boundaries is None
@@ -385,7 +408,7 @@ def _compute_drift(root: str, living: dict, working: bool = False) -> dict:
             if fp in seen:
                 continue
             seen.add(fp)
-            if _is_own_spec_doc(fp, spec_posix):
+            if _is_own_spec_doc(fp, spec_posix) or _is_any_spec_doc(fp, spec_dirs):
                 continue
             if not rsp.matches(cap, fp):
                 continue
@@ -488,6 +511,52 @@ def render_human(result: dict) -> str:
     return "\n".join(lines)
 
 
+REVIEWED_RE = re.compile(r"^<!--\s*reviewed:\s*([0-9a-f]{7,40})\s*-->\s*$", re.M)
+
+
+def accept(root: str, living: dict, names: list) -> int:
+    """Record that a spec was read against the code and found still true.
+
+    The baseline is the spec's last commit, so a spec that is *correct* drifts further every
+    week and there is no way to say so. Left alone, every capability ends up flagged and the
+    flag stops meaning anything — which is the state that made this worth adding.
+
+    The record is a line in the spec rather than a field somewhere else, because committing
+    it is what moves the baseline: a note kept anywhere else would need its own bookkeeping
+    to stay true. Reviewing is a claim a person makes, so nothing here writes it on its own.
+    """
+    from pathlib import Path as _Path
+
+    caps = {c.get("name"): c for c in (living or {}).get("capabilities") or []}
+    head = _git(root, ["rev-parse", "--short", "HEAD"])[1].strip() or "unknown"
+    touched = 0
+    for name in names:
+        cap = caps.get(name)
+        if not cap or not cap.get("spec"):
+            print(f"[companion] No capability named {name!r} in the registry.", file=sys.stderr)
+            continue
+        path = _Path(root) / cap["spec"]
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as err:
+            print(f"[companion] Could not read {cap['spec']}: {err}", file=sys.stderr)
+            continue
+        line = f"<!-- reviewed: {head} -->"
+        if REVIEWED_RE.search(text):
+            text = REVIEWED_RE.sub(line, text, count=1)
+        else:
+            lines = text.splitlines()
+            at = 1 if lines and lines[0].startswith("# ") else 0
+            lines.insert(at, "" if at else line)
+            if at:
+                lines.insert(at + 1, line)
+            text = "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+        path.write_text(text, encoding="utf-8")
+        print(f"[companion] {name}: reviewed at {head}. Commit the spec to move its baseline.")
+        touched += 1
+    return 0 if touched else 1
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Report Companion living-spec drift.")
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
@@ -496,9 +565,14 @@ def main(argv=None) -> int:
     ap.add_argument("--working", action="store_true",
                     help="also count working-tree changes (uncommitted edits, "
                          "deletions, and untracked files) as drift")
+    ap.add_argument("--accept", metavar="CAPABILITY", action="append", default=[],
+                    help="record that this capability's spec was read against the code and "
+                         "found still true; repeatable. Commit the spec to move its baseline")
     args = ap.parse_args(argv)
 
     living = rsp.load_living(args.root)
+    if args.accept:
+        return accept(args.root, living, args.accept)
     result = compute_drift(args.root, living, working=args.working)
     if args.json:
         print(json.dumps(result, indent=2))

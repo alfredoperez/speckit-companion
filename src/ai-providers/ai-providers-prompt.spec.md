@@ -63,6 +63,20 @@ The implement preamble SHALL instruct that per-task journaling is performed by t
 - **THEN** the preamble instructs the AI to write that step's completion itself
 - **AND** the step reaches its finished status instead of sticking at its in-flight one
 
+### Command names are rewritten to whatever the target actually registered
+<!-- touches: src/ai-providers/aiProvider.ts, src/ai-providers/ideChatProvider.ts -->
+
+The canonical dotted command form SHALL be translated to the form the target assistant resolves — some tools register these commands with dots, others as dash-named skills — driven by per-target configuration and overridable by an explicit user setting. The rewrite MUST apply to the command name only, never to its argument, and MUST leave non-SpecKit commands untouched. Every dispatching provider SHALL reach that rewrite through one shared helper that also supplies the leading slash, because a provider that only adds the slash sends a name the host cannot resolve, and a rewrite written twice is a rewrite that stops at the first separator in one of them.
+
+#### Scenario: a namespaced command reaches a dash-form target
+- **WHEN** a multi-segment SpecKit command is dispatched to a target whose commands are dash-named
+- **THEN** every separator in the name becomes a hyphen, so the whole name matches the registered skill rather than only its first segment
+- **AND** an argument that carries dots of its own — a path to a spec document — survives unchanged
+
+#### Scenario: a caller already formatted the command
+- **WHEN** a command arrives carrying its leading slash, or already in the target's form
+- **THEN** the result is the same as for the bare dotted name, so passing through the helper twice cannot mangle it
+
 ### Arguments are reshaped for the surface that will display them
 <!-- touches: src/ai-providers/promptBuilder.ts, src/ai-providers/openCodeProvider.ts, src/ai-providers/claudePanelProvider.ts, src/ai-providers/ideChatProvider.ts -->
 
