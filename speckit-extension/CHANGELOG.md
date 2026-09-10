@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
+- Implementing a feature no longer hands every piece of work to its own agent. A small phase costs more to hand out than to build, so only the substantial ones are, and the run says which it did which way. On a feature with small phases this halves the cost and changes nothing else; on one with large phases the parallel work still saves you minutes.
+
 - Planning now reads a rule that governs your change but lives somewhere you are not editing. A requirement can point at a rule under another capability, and until now nothing asked for that link to be followed, so it was written down and never read. Adoption also proposes those links while it reads an area, since that is the one moment anyone can see them.
 - Adoption names the code a behaviour is actually implemented in, rather than the screen you found it through. A capability whose pattern points at the wrong place claims none of the files a change to it edits, so the run is told about no capability at all and proceeds as if nothing had been written down. Validation now reports that case.
 

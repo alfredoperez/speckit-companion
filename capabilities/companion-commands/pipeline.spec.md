@@ -64,6 +64,22 @@ The vocabulary MUST be the same everywhere. Every step that records a size, and 
 - **WHEN** the standalone classification step reports a size
 - **THEN** the value it records is one every reader of the recorded size understands
 
+### Implement dispatches on how much a phase carries, not on every phase
+
+A worker pays the same startup whatever it is handed, so a phase small enough to read in passing costs more to hand out than to build. Implement SHALL dispatch a story phase only when it owns roughly five files or more, and build the rest inline in phase order, saying which it did which way. Setup, Foundational and Polish are never dispatched: Setup is trivial, Foundational blocks every story, Polish is cross-cutting.
+
+Size is the second gate, not the only one. A run that did not watch specify, plan and tasks happen has not spent the reading, so the first question stays whether the pipeline ran in this same session.
+
+The threshold is measured, not assumed. Across ten replays of two features, a feature whose phases ran to four files and fewer gained no correctness and no wall-clock from fanning out and cost about twice as much; one whose phases ran to six and eight files saved about three minutes. This requirement replaced a rule stating the opposite in bold — that size was explicitly not a factor and a thin phase was dispatched anyway — so it is pinned by a test naming the overturned claims.
+
+#### Scenario: a story phase owns two files
+- **WHEN** implement reaches it
+- **THEN** it is built inline, and the summary says so
+
+#### Scenario: a story phase owns eight files and the pipeline did not run in this session
+- **WHEN** implement reaches it
+- **THEN** it is dispatched to its own worker
+
 ### A simple-verdict run captures the same context a full run would, on the fast path
 
 When the classify step returns `simple`, specify writes the plan inline as the spec's `## Approach` section and never reaches `plan` or `tasks`. To keep the viewer honest, that fast path SHALL still capture what a full run would: the one-line approach is persisted onto `.spec-context.json` so the Overview APPROACH card reads it; the living-spec load is run **again post-draft** when the pre-draft load recorded nothing (the touched files are known by then, and the record is skipped if already populated); and the folded `plan` and `tasks` boundaries are stamped `by: extension` at step level — not as AI substeps — so the timing display counts specify, plan, and tasks as measured phases. All of it is best-effort and skipped silently when the interpreter is unavailable, and no `completed` status is written — the terminal gate stays its own step.
