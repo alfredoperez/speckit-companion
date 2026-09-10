@@ -122,7 +122,7 @@ Both files, at the paths chosen at the review gate:
 
    **Every spec requirement carries an `adopted` marker** under `touches`, naming where it came from: a file and line for a transcribed rule, the source file for an observed behaviour, or `developer` when the answer came from the question in step 1. Adoption is a claim nothing has checked. The viewer badges it, and the fold clears it the first time a change folds onto that requirement, so using a requirement is what confirms it. An unmarked requirement reads as confirmed.
 
-   The `touches` marker on a spec requirement names the files that produce that behaviour. The rules file carries none.
+   The `touches` marker on a spec requirement names the files that produce that behaviour. The rules file carries none. Where the code shows a behaviour constrained by a rule under **another** capability — a guard, a check, a redirect that something elsewhere explains — add `<!-- aligns: session-access#Writing an article requires being signed in -->` beneath it, naming that capability and the exact heading. Reading the whole area at once is the only moment anyone can see these, and a later run follows the edge one hop to reach a rule living where nobody editing this behaviour would look. Bring each proposed edge to the developer with both headings side by side: it is matched by heading text, so a wrong or mistyped one is a silently dead link that sends every future run to read nothing, or the wrong thing.
 
 5. **`## Uncovered`**: rules with no owner and areas with no capability. Not files nobody opened.
 

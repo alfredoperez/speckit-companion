@@ -49,6 +49,18 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 - **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
 
 
+### Adoption proposes the links between capabilities, because only it can see them
+
+A requirement's `aligns` marker names a rule under another capability that constrains this behaviour, and nobody writes those by hand: at the moment you are editing one capability you cannot see what governs it from elsewhere. Adoption reads a whole area in one pass and SHALL propose these where the code shows the constraint — a guard, a check, a redirect that a rule elsewhere explains — bringing each to the developer with both headings side by side before writing. The marker is matched by heading text, so a proposal MUST name a heading that exists: a mistyped one is a dead link that reads as a working edge and sends every future run to load nothing.
+
+#### Scenario: a behaviour is guarded by a rule under another capability
+- **WHEN** adoption drafts the requirement
+- **THEN** it proposes the edge, naming the other capability and the exact heading, for the developer to confirm
+
+#### Scenario: nothing in the code shows the constraint
+- **WHEN** adoption drafts the requirement
+- **THEN** it proposes no edge, because an invented one costs every later run a wasted read
+
 ### A capability's membership must reach the files its own requirements name
 
 A capability's match globs are what the resolver uses to claim a file, so a capability whose globs never reach the code its requirements describe resolves to nothing: a change in that area is told about no capability at all, and the run proceeds as if nothing had been written down. Adoption SHALL therefore name the code a behaviour is implemented in rather than the surface it was found through — a capability discovered through a page usually lives elsewhere — and validation SHALL report a capability whose every requirement names files outside its own membership. Both halves are individually valid in that case, the requirement's files exist and the capability's glob matches files too, which is why nothing else catches it.

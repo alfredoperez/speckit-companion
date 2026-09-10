@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
+- Planning now reads a rule that governs your change but lives somewhere you are not editing. A requirement can point at a rule under another capability, and until now nothing asked for that link to be followed, so it was written down and never read. Adoption also proposes those links while it reads an area, since that is the one moment anyone can see them.
+- Adoption names the code a behaviour is actually implemented in, rather than the screen you found it through. A capability whose pattern points at the wrong place claims none of the files a change to it edits, so the run is told about no capability at all and proceeds as if nothing had been written down. Validation now reports that case.
+
 - Every command names the pipeline's own commands the way you would say them, without a leading slash. A slash in front of a dotted name is a name that resolves to nothing on an assistant that registered the dashed spelling, and worked examples throughout the shipped commands were quietly outvoting the rule that says to use the spelling your project installed. The status and resume commands were the sharp end of it: they printed a dotted name as the next thing to run, and resume dispatched it, so on Claude Code the pipeline told you to type something that resolves to nothing. Both now carry the spelling rule themselves.
 - Plan reads the living specs for the area it is about to touch before it sends anyone to investigate the code, and each investigator now carries its own slice. It was the other way round, so a worker relearned from source what a requirement already stated, and the two could disagree with nothing to reconcile them.
 
