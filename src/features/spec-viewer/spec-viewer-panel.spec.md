@@ -1,5 +1,7 @@
 # Spec Viewer Panel — Living Spec
 
+<!-- reviewed: d589a63e -->
+
 > [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose

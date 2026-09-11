@@ -1,7 +1,6 @@
 # Command Assembly — Living Spec
 
-<!-- reviewed: a34694b7 -->
-
+<!-- reviewed: d589a63e -->
 > [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose

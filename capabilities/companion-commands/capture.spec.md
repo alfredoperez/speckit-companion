@@ -1,6 +1,6 @@
 # Run Capture — Living Spec
 
-<!-- reviewed: a9c0b02b -->
+<!-- reviewed: d589a63e -->
 > [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
@@ -45,24 +45,6 @@ Each pipeline step's start SHALL be recorded by a script call placed **above the
 #### Scenario: the extension already seeded this step's start
 - **WHEN** the command body's own stamp runs after a dispatcher already recorded the step's start
 - **THEN** no second start entry is appended and the earlier timestamp stands
-
-### A check that can be run is run, not described
-
-A verification records what was checked and how it came out, and everything in that record was the running agent's own account — including the command, which was a string it typed rather than evidence anything ran. The viewer then drew a checkmark beside it. A check the pipeline can execute SHALL therefore be executed by the capture script, which keeps the exit code, the duration and a short tail of the output, and marks the entry as derived. A non-zero exit is recorded rather than dropped: a run that could not prove its work must say so where the reader looks, not omit the row and read as though nothing was checked.
-
-What genuinely cannot be run — a manual pass, a judgement about a warning — stays a claim and SHALL be recorded as one. Absence of provenance MUST keep meaning claimed, because every entry written before this existed was one, and only the exact derived marker may promote an entry, since the record is a file an agent writes into.
-
-#### Scenario: a suite is recorded
-- **WHEN** implement records it
-- **THEN** the command was run, and the entry carries the exit code it returned
-
-#### Scenario: the suite fails
-- **WHEN** it is recorded
-- **THEN** the entry is kept, carrying the failure
-
-#### Scenario: an entry written before provenance existed
-- **WHEN** it is read back
-- **THEN** it reads as a claim
 
 ### Task finishes are folded into the shared record one at a time, as they land
 
