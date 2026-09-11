@@ -169,6 +169,7 @@ export const workspace = {
     createFileSystemWatcher: jest.fn().mockImplementation(createMockFileSystemWatcher),
     getConfiguration: jest.fn().mockReturnValue({
         get: jest.fn().mockReturnValue(['specs']),
+        inspect: jest.fn().mockReturnValue(undefined),
     }),
 };
 
@@ -286,6 +287,7 @@ export const createMockExtensionContext = (seed: Record<string, unknown> = {}) =
         workspaceStore,
         context: {
             extensionPath: '/ext',
+            extensionUri: Uri.file('/ext'),
             subscriptions: [] as unknown[],
             globalState: {
                 get: (key: string, fallback?: unknown) => (store.has(key) ? store.get(key) : fallback),

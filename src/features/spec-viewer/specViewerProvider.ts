@@ -779,6 +779,7 @@ export class SpecViewerProvider {
 
       // Update state (I/O + cache)
       instance.state = {
+        ...instance.state,
         specName,
         specDirectory,
         changeRoot,
