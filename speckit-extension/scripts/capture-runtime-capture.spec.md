@@ -82,6 +82,24 @@ A command name is held and emitted as its dotted id alone, with no leading slash
 - **WHEN** a context names neither the workflow nor the retired marker
 - **THEN** resolution emits the stock command family
 
+### A check that can be run is run, not described
+
+A verification records what was checked and how it came out, and everything in that record was the running agent's own account — including the command, which was a string it typed rather than evidence anything ran. The viewer then drew a checkmark beside it. A check the pipeline can execute SHALL therefore be executed by the capture script, which keeps the exit code, the duration and a short tail of the output, and marks the entry as derived. A non-zero exit is recorded rather than dropped: a run that could not prove its work must say so where the reader looks, not omit the row and read as though nothing was checked.
+
+What genuinely cannot be run — a manual pass, a judgement about a warning — stays a claim and SHALL be recorded as one. Absence of provenance MUST keep meaning claimed, because every entry written before this existed was one, and only the exact derived marker may promote an entry, since the record is a file an agent writes into.
+
+#### Scenario: a suite is recorded
+- **WHEN** implement records it
+- **THEN** the command was run, and the entry carries the exit code it returned
+
+#### Scenario: the suite fails
+- **WHEN** it is recorded
+- **THEN** the entry is kept, carrying the failure
+
+#### Scenario: an entry written before provenance existed
+- **WHEN** it is read back
+- **THEN** it reads as a claim
+
 ### A reader of a captured list MUST accept every form its writer stores
 
 Capture writes decisions, verifications, and concerns as entries carrying an identity value plus supporting detail, while hand-authored and pre-coercion contexts carry bare strings for the same fields. Any reader of one of these lists SHALL accept both forms — a non-empty string reads as itself, an entry reads through its identity value, and its supporting detail stays reachable rather than being discarded at the boundary. A reader that recognizes only one form silently drops everything real runs record while continuing to pass on hand-authored fixtures, so its emptiness reads as a fact about the run rather than a defect in the reader. An entry with no usable identity value SHALL be skipped on its own, never taking the rest of the list with it. Widening such a reader MUST NOT change the shape of what it emits — only which entries reach it — because the machine-readable resolution other commands parse is part of that shape. Lists whose writer stores plain strings only are exempt: their readers are correct by construction, and a widened branch there would be unreachable.

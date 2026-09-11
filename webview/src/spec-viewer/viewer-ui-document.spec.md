@@ -1,5 +1,7 @@
 # Viewer UI Document — Living Spec
 
+<!-- reviewed: d589a63e -->
+
 > Adopted from existing code on 2026-07-19 and split by concern on 2026-09-07. Requirements describe observed behavior and have not been individually verified against tests.
 
 ## Purpose

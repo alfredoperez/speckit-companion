@@ -40,12 +40,16 @@ The viewer MUST derive a timing summary from the spec's recorded step history an
 
 ### One fact has exactly one derivation
 
-Any fact this feature shares with another surface — the sidebar tree, the Living Specs panel, task counting, in-flight detection — MUST be read from that fact's single owning module rather than recomputed here. Two independent derivations of the same fact will drift, and every time this repo has shipped one, the two surfaces eventually contradicted each other in front of the user.
+Any fact this feature shares with another surface — the sidebar tree, the Living Specs panel, task counting, in-flight detection — MUST be read from that fact's single owning module rather than recomputed here. Two independent derivations of the same fact will drift, and every time this repo has shipped one, the two surfaces eventually contradicted each other in front of the user. Where a fact decides whether something is evidence or an assertion, that judgement SHALL be made once as the state is derived and carried, never re-read from the raw record by whatever renders it: the record is a file an agent writes into, and a second reader applying a looser rule is how a claim comes to be drawn as proof.
 
 #### Scenario: a capability's coverage is shown in two places
 - **WHEN** the viewer header and the Living Specs tree both display a capability's coverage
 - **THEN** both obtain it from the same capability-health reader
 - **AND** the two numbers cannot disagree
+
+#### Scenario: a verification's provenance is read back
+- **WHEN** the state is derived
+- **THEN** only what the pipeline actually ran is marked as derived, and every other entry is carried as a claim
 
 #### Scenario: a requirement count and a coverage denominator are displayed together
 - **WHEN** the header shows both a requirement count and a covered-of-total ratio

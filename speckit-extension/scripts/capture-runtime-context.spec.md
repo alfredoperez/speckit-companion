@@ -89,7 +89,7 @@ Anything that has to know whether a spec has reached a step — a driver waiting
 
 ### Timing is stamped by a script, never hand-authored
 
-Durations are only meaningful if a clock produced them. Every timing entry SHALL be written by running a writer script that reads the real clock at write time; no caller — human or AI — writes timing into the context by editing the file. This is the runtime's central reliability lever: running a command is something an AI does faithfully, while pausing mid-work to hand-author a timestamped JSON entry is not. It is also what keeps the file structurally valid, since hand-editing is what corrupted it in practice.
+Durations are only meaningful if a clock produced them. Every timing entry SHALL be written by running a writer script that reads the real clock at write time; no caller — human or AI — writes timing into the context by editing the file. This is the runtime's central reliability lever: running a command is something an AI does faithfully, while pausing mid-work to hand-author a timestamped JSON entry is not. It is also what keeps the file structurally valid, since hand-editing is what corrupted it in practice. The same argument reaches past timing: where a check can be executed, the writer SHALL take the check and the command and run it, rather than take a sentence describing the outcome, and a pair it cannot read SHALL be named and skipped rather than recorded as a check nobody ran.
 
 #### Scenario: a step's work finishes
 - **WHEN** the step's own work ends and its completion must be recorded
@@ -98,6 +98,10 @@ Durations are only meaningful if a clock produced them. Every timing entry SHALL
 #### Scenario: an entry is de-duplicated
 - **WHEN** the same step completion is recorded twice
 - **THEN** history carries it once
+
+#### Scenario: a check is recorded with its command
+- **WHEN** the writer is given both
+- **THEN** it runs the command and records what came back, not what it was told
 
 ### A step a project declared is a real step; only a typo is refused
 
