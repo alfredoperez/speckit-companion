@@ -1,7 +1,6 @@
 # Spec Viewer State — Living Spec
 
-<!-- reviewed: a9c0b02b -->
-
+<!-- reviewed: 763a4a8b -->
 > [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose

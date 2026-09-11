@@ -1,5 +1,7 @@
 # Spec Viewer Actions — Living Spec
 
+<!-- reviewed: 763a4a8b -->
+
 > [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose

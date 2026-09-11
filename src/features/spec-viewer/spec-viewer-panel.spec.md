@@ -22,7 +22,7 @@ Opening any document of a spec MUST resolve to that spec's own panel. A second o
 - **THEN** its pending work and its per-spec notification state are discarded
 - **AND** reopening the spec starts from a clean panel
 
-The entry point's landing request rides with the panel. Opening a document asks to land on that document; opening the spec as a whole asks to land on the Overview. The request MUST be carried on the first render — the webview's own state does not survive the panel HTML being regenerated — and re-sent on every state update. The reader's later choice inside the viewer SHALL be recorded as itself, the Overview as the Overview and a document as that document, never as an absence of choice: an absent request falls back to the document for any spec that has run, so clearing it on an Overview click sent the reader back to the document on the next refresh — the exact bounce this rule exists to prevent.
+The entry point's landing request rides with the panel. Opening a document asks to land on that document; opening the spec as a whole asks to land on the Overview. The request MUST be carried on the first render — the webview's own state does not survive the panel HTML being regenerated — and re-sent on every state update. It lives on the panel's own state, so a render that rebuilds that state MUST carry the existing state forward rather than replace it; a rebuilt-from-scratch state drops the request before the render reads it, and the panel lands on the document the reader last had open. The reader's later choice inside the viewer SHALL be recorded as itself, the Overview as the Overview and a document as that document, never as an absence of choice: an absent request falls back to the document for any spec that has run, so clearing it on an Overview click sent the reader back to the document on the next refresh — the exact bounce this rule exists to prevent.
 
 #### Scenario: a document row is opened on a spec that has been run
 - **WHEN** the panel renders
@@ -31,6 +31,10 @@ The entry point's landing request rides with the panel. Opening a document asks 
 #### Scenario: the reader chooses the Overview, then a file in the spec changes
 - **WHEN** the panel re-renders
 - **THEN** it stays on the Overview
+
+#### Scenario: the spec name is clicked in a panel already used to read documents
+- **WHEN** the panel re-renders
+- **THEN** it lands on the Overview
 
 ### Every refresh ships a complete state snapshot from one builder
 <!-- touches: src/features/spec-viewer/specViewerProvider.ts -->
