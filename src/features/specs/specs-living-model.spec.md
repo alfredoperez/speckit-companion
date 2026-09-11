@@ -10,7 +10,7 @@ This capability reads the living-specs registry and parses spec files inside the
 
 ### A source file reports the living specs that claim it, in the editor's own process
 
-The extension SHALL resolve, for a workspace-relative path, the capabilities whose membership globs claim it — most-specific first, honouring exclusions and the registry's exempt list — and the requirements of each whose marker matches that path. The resolution SHALL happen in the extension process, never by dispatching a command, and SHALL order capabilities by the same specificity rule the resolver uses.
+The extension SHALL resolve, for a workspace-relative path, the capabilities whose membership globs claim it — most-specific first, honouring exclusions and the registry's exempt list, and the requirements of each whose marker matches that path. Drift SHALL follow the same rule: a changed file that a requirement in one capability names drifts that capability alone, and a sibling claiming the file only through a glob stays in sync for it. The resolution SHALL happen in the extension process, never by dispatching a command, and SHALL order capabilities by the same specificity rule the resolver uses.
 
 #### Scenario: two capabilities claim one file
 - **WHEN** the claims for that file are resolved
@@ -23,6 +23,11 @@ The extension SHALL resolve, for a workspace-relative path, the capabilities who
 #### Scenario: a claiming capability has no spec file
 - **WHEN** its claims are resolved
 - **THEN** the capability still appears with no requirements, so the claim is not lost
+
+
+#### Scenario: two capabilities share a folder and one requirement names the changed file
+- **WHEN** drift is computed for both
+- **THEN** only the capability whose requirement names it is drifted
 
 ### Requirement slicing lives beside the requirement-id parser and counts the same headings
 

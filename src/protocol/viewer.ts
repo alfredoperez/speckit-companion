@@ -520,6 +520,11 @@ export type ViewerToExtensionMessage =
           type: 'documentChosen';
       }
     // Living-spec approval: drop the `adopted` marker on one requirement, or all of them
+    // Delete one requirement from the living spec, by heading
+    | {
+          type: 'removeRequirement';
+          heading: string;
+      }
     | {
           type: 'approveRequirement';
           heading: string;

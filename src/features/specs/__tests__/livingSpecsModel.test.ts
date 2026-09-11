@@ -389,6 +389,25 @@ describe('readCapabilityHealth', () => {
         expect(health.coverage).toBeUndefined();
     });
 
+    it('leaves a sibling in sync when another capability\'s requirement names the changed file', async () => {
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': '# Checkout\n\n## Requirements\n\n### Refunds\n\nBody.\n',
+                'capabilities/cart/spec.md': '# Cart\n\n## Requirements\n\n### Adds\n<!-- touches: src/checkout/cart.ts -->\n\nBody.\n',
+            },
+            YML + '    - name: cart\n      match: ["src/checkout/**"]\n      spec: capabilities/cart/spec.md\n'
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log' ? 'abc123\n' : 'src/checkout/cart.ts\n';
+        const listing = readLivingSpecs(root);
+        const byName = (n: string) => listing.capabilities.find(c => c.name === n)!;
+        const checkout = await readCapabilityHealth(root, byName('checkout'), { git });
+        const cart = await readCapabilityHealth(root, byName('cart'), { git });
+        expect(checkout.drifted).toBe(false);
+        expect(cart.drifted).toBe(true);
+    });
+
     it('reports drift when a matched file changed since the spec commit', async () => {
         const root = makeWorkspace(
             { 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' },

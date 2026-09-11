@@ -160,12 +160,12 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(src.contextValue).toBe('living-specs-dir-group');
 
         const srcChildren = await childrenOf(provider, src);
-        expect(byLabel(srcChildren, 'core').contextValue).toBe('living-specs-capability');
+        expect(byLabel(srcChildren, 'Core').contextValue).toBe('living-specs-capability');
         const features = byLabel(srcChildren, 'features');
         expect(features.contextValue).toBe('living-specs-dir-group');
 
         const featuresChildren = await childrenOf(provider, features);
-        expect(byLabel(featuresChildren, 'specs').contextValue).toBe('living-specs-capability');
+        expect(byLabel(featuresChildren, 'Specs').contextValue).toBe('living-specs-capability');
     });
 
     it('shows orphans as a group after the capability tree', async () => {

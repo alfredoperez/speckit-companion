@@ -342,7 +342,8 @@
       "viewer-ui-chrome",
       "viewer-ui-document",
       "commands-living",
-      "capture-runtime-drift"
+      "capture-runtime-drift",
+      "specs-living-model"
     ]
   },
   "last_action": "all 16 tasks done, 2941/2941 tests pass",

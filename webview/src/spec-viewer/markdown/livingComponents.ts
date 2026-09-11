@@ -128,7 +128,7 @@ function buildScenario(title: string, steps: { kw: string; rest: string }[]): st
     const titleHtml = title
         ? `<div class="living-scenario-title line" data-line="0" data-list-id="${listId}">` +
           `<button class="line-add-btn" data-line="0" data-list-id="${listId}" title="Add comment to scenario title" aria-label="Add comment to scenario title">${COMMENT_ICON_SVG}</button>` +
-          `<div class="line-content">${parseInline(title)}</div>` +
+          `<div class="line-content">${parseInline(title.charAt(0).toUpperCase() + title.slice(1))}</div>` +
           `<div class="line-comment-slot"></div>` +
           `</div>`
         : '';
@@ -242,15 +242,13 @@ function buildRequirementCard(
     const state = livingDrifted.has(title) ? 'drifted' : adoptedFrom ? 'adopted' : 'confirmed';
     // The source sits in the tooltip, never on the face: a line number rots on the next edit to that file.
     if (state !== 'confirmed') {
-        const tooltip = state === 'adopted'
-            ? ` title="Adopted from ${escapeAttr(adoptedFrom)}. A run has not confirmed it yet."`
-            : ' title="A file this requirement touches changed since the spec was last updated"';
-        badges.push(`<span class="living-req-pill living-req-pill--${state}"${tooltip}>`
-            + `<span class="living-req-pill-dot" aria-hidden="true"></span>${state === 'adopted' ? 'Adopted' : 'Drifted'}</span>`);
-    }
-    if (adoptedFrom) {
-        badges.push('<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
-            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>');
+        const word = state === 'adopted' ? 'Adopted' : 'Drifted';
+        const why = state === 'adopted'
+            ? 'Written from the code by AI, not from a spec you approved. No run has confirmed it yet.'
+            : 'Code this requirement touches changed since the spec was last updated.';
+        badges.push(`<span class="living-req-pill living-req-pill--${state}">`
+            + `<span class="living-req-pill-dot" aria-hidden="true"></span>${word}</span>`
+            + `<span class="living-req-why">${why}</span>`);
     }
     if (inferred) {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
@@ -275,20 +273,34 @@ function buildRequirementCard(
     // A bare flag, never the source string: this is an attribute, and the
     // viewer's escapeHtml does not escape attribute quotes.
     const adoptedAttr = adoptedFrom ? ' data-req-adopted' : '';
+    // Under the title: the files this requirement is about, and where adoption transcribed it from.
     const globs = touchesGlobs(blockLines);
-    const touchesLine = globs.length
-        ? [`<div class="living-req-touches"><button type="button" data-reveal-glob="${escapeAttr(globs[0])}">`
-            + `touches ${globs.length} ${globs.length === 1 ? 'file' : 'files'}</button></div>`]
-        : [];
+    const fileBits = globs.map((g) =>
+        `<button type="button" class="living-req-file" data-reveal-glob="${escapeAttr(g)}" title="Reveal in Explorer">${escapeHtml(g)}</button>`);
+    if (adoptedFrom) {
+        fileBits.push(`<span class="living-req-file living-req-file--source" title="Adopted from this file">from ${escapeHtml(adoptedFrom)}</span>`);
+    }
+    const filesLine = fileBits.length ? [`<div class="living-req-files">${fileBits.join('')}</div>`] : [];
+    // Actions sit at the card's foot, left: Approve only while adopted, Remove always.
+    const actions = [
+        adoptedFrom
+            ? '<button type="button" class="living-req-approve" data-req-approve title="Confirm this requirement: removes the Adopted mark, changes nothing else">'
+                + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>'
+            : '',
+        `<button type="button" class="living-req-remove" data-req-remove title="Delete this requirement and its scenarios from the spec">`
+            + '<span class="codicon codicon-trash" aria-hidden="true"></span>Remove</button>',
+    ].join('');
+    const actionsLine = [`<div class="living-req-actions">${actions}</div>`];
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
         + ` data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}>`,
         '<div class="living-req-header">',
         ...metaLine,
         `### ${title}`,
+        ...filesLine,
+        ...actionsLine,
         '</div>',
         ...body,
-        ...touchesLine,
         '</div>',
     ];
 }

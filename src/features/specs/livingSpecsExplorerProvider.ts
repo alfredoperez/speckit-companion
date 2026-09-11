@@ -230,7 +230,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 ? 'living-specs-capability-drifted'
                 : 'living-specs-capability';
         const item = new LivingSpecItem(
-            cap.name,
+            readableName(cap.name),
             hasChildren
                 ? vscode.TreeItemCollapsibleState.Collapsed
                 : vscode.TreeItemCollapsibleState.None,
@@ -309,6 +309,11 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         return children;
     }
+}
+
+/** `commands-living-load` reads as `Commands Living Load`; the exact name stays in the tooltip. */
+function readableName(name: string): string {
+    return name.split(/[-_]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 class LivingSpecItem extends vscode.TreeItem {

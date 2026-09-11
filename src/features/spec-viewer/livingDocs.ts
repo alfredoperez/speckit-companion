@@ -249,6 +249,39 @@ export function approveLivingText(content: string, heading?: string): string | n
     return kept.join('\n');
 }
 
+/**
+ * Cut one requirement, heading to the next heading or section, out of a living spec.
+ * Null when no requirement carries that heading.
+ */
+export function removeLivingRequirement(content: string, heading: string): string | null {
+    const lines = content.split(/\r?\n/);
+    const wanted = cardHeading(heading);
+    let inFence = false;
+    let inTarget = false;
+    let removed = false;
+    const kept: string[] = [];
+    for (const line of lines) {
+        if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
+        if (!inFence) {
+            const head = /^###(?!#)\s+(.+?)\s*$/.exec(line);
+            if (head) inTarget = cardHeading(head[1]) === wanted;
+            else if (/^##(?!#)\s+/.test(line)) inTarget = false;
+        }
+        if (inTarget) {
+            removed = true;
+            continue;
+        }
+        kept.push(line);
+    }
+    return removed ? kept.join('\n').replace(/\n{3,}/g, '\n\n') : null;
+}
+
+/** Every `<!-- aligns: cap#Heading -->` in a spec text, as `cap#Heading` strings. */
+export function alignsIn(content: string): string[] {
+    return [...content.matchAll(/<!--\s*aligns:\s*(.+?)\s*-->/g)]
+        .flatMap(m => m[1].split(',').map(s => s.trim()).filter(Boolean));
+}
+
 /** Read a tier document, tolerating missing files. */
 export async function readLivingDoc(filePath: string): Promise<string> {
     try {

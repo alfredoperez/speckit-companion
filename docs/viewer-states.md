@@ -430,11 +430,11 @@ A living spec has no Overview and no tab strip: opening a capability lands on it
 | State | Edge | Word above the heading | Derived from |
 |---|---|---|---|
 | confirmed | `--accent` | none (no pill) | no marker, no drift |
-| adopted | `--review` | `Adopted` pill, source file in its tooltip, Approve beside it | `<!-- adopted: … -->` |
+| adopted | `--review` | `Adopted` pill with a one-line explainer; `from <file>` chip under the title; Approve at the card's foot | `<!-- adopted: … -->` |
 | drifted | `--warning` | `Drifted` pill | `driftedRequirements` from `livingHealthResolved`: headings whose touches marker matches a drifted file. Wins over adopted |
 | new | `--success` | `New` pill | reserved for new-in-this-branch detection |
 
-A card with a touches marker ends with a quiet `touches N files` link that reveals the first pattern. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate <capability>`, scoped to the open one), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action, which adopts the directories the capability already claims without asking.
+Under the title, one chip per `touches` pattern (click reveals it) and, when adopted, a `from <file>` chip naming the source. At the card's foot: **Approve** (adopted only; drops the marker) and **Remove** (deletes the requirement after a confirm; refused, naming them, while another capability's `aligns` points at it). Scenario titles render with a capital first letter. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate <capability>`, scoped to the open one), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action, which adopts the directories the capability already claims without asking.
 
 ### Key Files
 

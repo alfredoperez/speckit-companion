@@ -393,3 +393,42 @@ The living-specs listing SHALL read the project's capability configuration witho
 #### Scenario: the reader hovers a capability row
 - **WHEN** the tooltip shows
 - **THEN** its first line after the name is the purpose's first sentence
+
+## ADDED Requirements
+<!-- capability: spec-viewer-living -->
+
+### A requirement can be removed from the viewer, unless something still leans on it
+
+The viewer SHALL offer Remove on every requirement card. Removing deletes that requirement, heading to the next, from the spec file after the reader confirms. When another capability's `aligns` marker names the requirement, the removal SHALL be refused and the message SHALL name those capabilities.
+
+#### Scenario: nothing aligns to the requirement
+- **WHEN** the reader confirms Remove
+- **THEN** the requirement and its scenarios are gone from the file and the panel redraws
+
+#### Scenario: another capability aligns to it
+- **WHEN** the reader picks Remove
+- **THEN** nothing is written and the message names the capability that leans on it
+
+## MODIFIED Requirements
+<!-- capability: specs-living-model -->
+
+### A source file reports the living specs that claim it, in the editor's own process
+
+The extension SHALL resolve, for a workspace-relative path, the capabilities whose membership globs claim it — most-specific first, honouring exclusions and the registry's exempt list, and the requirements of each whose marker matches that path. Drift SHALL follow the same rule: a changed file that a requirement in one capability names drifts that capability alone, and a sibling claiming the file only through a glob stays in sync for it. The resolution SHALL happen in the extension process, never by dispatching a command, and SHALL order capabilities by the same specificity rule the resolver uses.
+
+#### Scenario: two capabilities claim one file
+- **WHEN** the claims for that file are resolved
+- **THEN** the more specific capability is first
+
+#### Scenario: the file is exempt
+- **WHEN** the path matches the registry's exempt globs
+- **THEN** no capability claims it
+
+#### Scenario: a claiming capability has no spec file
+- **WHEN** its claims are resolved
+- **THEN** the capability still appears with no requirements, so the claim is not lost
+
+
+#### Scenario: two capabilities share a folder and one requirement names the changed file
+- **WHEN** drift is computed for both
+- **THEN** only the capability whose requirement names it is drifted

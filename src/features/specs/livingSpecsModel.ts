@@ -1033,16 +1033,52 @@ async function computeDriftedFiles(
             .filter(Boolean);
         const ownFiles = new Set([cap.spec, ...tierPaths(cap.spec, root).map(t => t.path)]);
         const vouched = filesAccountedFor(root, cap.name);
+        const markers = markerGlobs(root);
         return changed.filter(file =>
             cap.match.some(g => globMatches(g, file)) &&
             !cap.exclude.some(g => globMatches(g, file)) &&
             !isExempt(DEFAULT_EXEMPT_GLOBS, file) &&
             !ownFiles.has(posix(file)) &&
-            !vouched.has(posix(file))
+            !vouched.has(posix(file)) &&
+            !namedElsewhere(posix(file), cap.name, markers)
         );
     } catch {
         return undefined; // no git, not a repo, timeout — silently absent
     }
+}
+
+/** Every `touches` glob in each registered spec, by capability name. */
+// ponytail: re-reads every spec per capability checked; cache on registry mtime if the tree refresh gets slow
+function markerGlobs(root: string): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    let caps: ResolvedCapability[] = [];
+    try {
+        caps = readLivingSpecs(root, { withOrphans: false }).capabilities;
+    } catch {
+        return out;
+    }
+    for (const c of caps) {
+        try {
+            const slices = requirementSlices(fs.readFileSync(path.join(root, c.spec), 'utf-8'));
+            out.set(c.name, slices.flatMap(s => s.touches ?? []));
+        } catch {
+            /* unreadable spec claims nothing */
+        }
+    }
+    return out;
+}
+
+/**
+ * A requirement in another capability names this file and none here does.
+ * Siblings routinely share one broad glob; the requirement that names the
+ * file is the claim, and a glob with no requirement behind it yields to it.
+ */
+function namedElsewhere(file: string, capName: string, markers: Map<string, string[]>): boolean {
+    if ((markers.get(capName) ?? []).some(g => globMatches(g, file))) return false;
+    for (const [name, globs] of markers) {
+        if (name !== capName && globs.some(g => globMatches(g, file))) return true;
+    }
+    return false;
 }
 
 /**

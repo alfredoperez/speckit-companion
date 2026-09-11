@@ -106,3 +106,15 @@ An open living-spec panel SHALL redraw when its capability's spec file is change
 #### Scenario: a drifted file matches one requirement's marker
 - **WHEN** health resolves
 - **THEN** only that requirement is named as drifted
+
+### A requirement can be removed from the viewer, unless something still leans on it
+
+The viewer SHALL offer Remove on every requirement card. Removing deletes that requirement, heading to the next, from the spec file after the reader confirms. When another capability's `aligns` marker names the requirement, the removal SHALL be refused and the message SHALL name those capabilities.
+
+#### Scenario: nothing aligns to the requirement
+- **WHEN** the reader confirms Remove
+- **THEN** the requirement and its scenarios are gone from the file and the panel redraws
+
+#### Scenario: another capability aligns to it
+- **WHEN** the reader picks Remove
+- **THEN** nothing is written and the message names the capability that leans on it
