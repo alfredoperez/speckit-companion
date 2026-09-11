@@ -75,12 +75,13 @@ import {
 } from './VideoCapture.stories';
 import { mockDoc, mockNavState } from '../components/__stories__/mockData';
 import { App } from '../App';
-import { navState, viewerState, markdownHtml, historyEntries } from '../signals';
+import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
 import {
     renderMarkdown,
     setCurrentTask,
     setHasSpecContext,
     setLivingCoverage,
+    setLivingDrifted,
     setLivingMode,
     setTaskSummaries,
 } from '../markdown';
@@ -280,9 +281,14 @@ const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm)
  * signals-in path index.tsx uses. Static on purpose: the capture needs one
  * deterministic frame, not navigation.
  */
+const DRIFTED_REQUIREMENT = 'Oversized uploads are rejected before the body is read';
+
 function LivingViewerPanel() {
     setLivingMode(true);
     setLivingCoverage(null);
+    setLivingDrifted([DRIFTED_REQUIREMENT]);
+    // The cards live on the Spec view; the capture is about them, not the Overview.
+    viewerMode.value = 'document';
     setHasSpecContext(true);
     setCurrentTask(null);
     setTaskSummaries(null);
@@ -322,6 +328,7 @@ function LivingViewerPanel() {
             scenarios: livingScenarioCount,
             coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
             drifted: true,
+            driftedRequirements: [DRIFTED_REQUIREMENT],
         },
     } as Partial<NavState>);
     markdownHtml.value = renderMarkdown(photoStorageLivingSpec);
@@ -339,6 +346,8 @@ function LivingViewerPanel() {
             cancelAnimationFrame(id);
             setLivingMode(false);
             setLivingCoverage(null);
+            setLivingDrifted([]);
+            viewerMode.value = null;
         };
     }, []);
 

@@ -174,6 +174,31 @@ describe('coverage and drift reuse', () => {
         spy.mockRestore();
     });
 
+    it('names the requirements whose touched files drifted, never an unmarked one', async () => {
+        const { resolveLivingHealth } = await import('../livingHeaderMeta');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'lhm-drift-'));
+        fs.mkdirSync(path.join(root, 'capabilities/todos'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'capabilities/todos/todos.spec.md'), [
+            '# Todos', '', '## Requirements', '',
+            '### Adds a todo', '<!-- touches: src/store/add.ts -->', 'Body.', '',
+            '### Lists todos', '<!-- touches: src/store/list.ts -->', 'Body.', '',
+            '### Unmarked', 'Body.',
+        ].join('\n'));
+        const spy = jest
+            .spyOn(model, 'readCapabilityHealth')
+            .mockResolvedValue({ drifted: true, driftedFiles: ['src/store/add.ts'] });
+
+        const health = await resolveLivingHealth(root, {
+            capabilityName: 'todos',
+            specPath: 'capabilities/todos/todos.spec.md',
+            location: 'centralized',
+            match: ['src/store/**'],
+        });
+
+        expect(health).toEqual({ drifted: true, driftedRequirements: ['Adds a todo'] });
+        spy.mockRestore();
+    });
+
     it('never rejects when the shared computation throws', async () => {
         const { resolveLivingHealth } = await import('../livingHeaderMeta');
         const spy = jest

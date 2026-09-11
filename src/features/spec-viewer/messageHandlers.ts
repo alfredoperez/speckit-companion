@@ -34,7 +34,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot } from "../specs/livingSpecsModel";
+import { isPathWithinRoot, readLivingSpecs, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -47,7 +47,7 @@ import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
-import { approveLivingText, livingTierDocuments } from "./livingDocs";
+import { alignsIn, approveLivingText, livingTierDocuments, removeLivingRequirement } from "./livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
@@ -165,8 +165,17 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     livingSyncAll: async () => {
       await vscode.commands.executeCommand("speckit.livingSpecs.sync");
     },
-    livingAdopt: async () => {
-      await vscode.commands.executeCommand("speckit.livingSpecs.adopt");
+    livingAdopt: async (msg, dir, deps) => {
+      const areas = msg.thisCapability ? livingCapabilityAreas(dir, deps) : undefined;
+      await (areas
+        ? vscode.commands.executeCommand("speckit.livingSpecs.adopt", { areas })
+        : vscode.commands.executeCommand("speckit.livingSpecs.adopt"));
+    },
+    livingValidate: async (_msg, dir, deps) => {
+      const capabilitySpecPath = livingCapabilitySpecPath(dir, deps);
+      await (capabilitySpecPath
+        ? vscode.commands.executeCommand("speckit.livingSpecs.validate", { capabilitySpecPath })
+        : vscode.commands.executeCommand("speckit.livingSpecs.validate"));
     },
     revealGlob: async (msg) => {
       const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -190,6 +199,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       if (instance) instance.state.landing = "document";
     },
     approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
+    removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
     approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
@@ -754,6 +764,18 @@ function livingCapabilitySpecPath(
   return path.relative(root, specTier.filePath).replace(/\\/g, "/");
 }
 
+/** The directories the open capability claims, from the literal part of each membership glob. */
+function livingCapabilityAreas(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): string[] | undefined {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const specPath = livingCapabilitySpecPath(specDirectory, deps);
+  const cap = root && specPath ? resolveCapabilityBySpecPath(root, specPath) : undefined;
+  const areas = cap?.match.map(g => g.split(/[*?[{]/)[0].replace(/\/+$/, "") || ".");
+  return areas?.length ? [...new Set(areas)] : undefined;
+}
+
 async function handleLivingUpdate(
   specDirectory: string,
   deps: MessageHandlerDependencies,
@@ -839,6 +861,53 @@ async function handleLivingApprove(
   }
   await fs.promises.writeFile(doc.filePath, after, "utf-8");
   deps.outputChannel.appendLine(`[SpecViewer] Approved ${heading ?? doc.fileName}`);
+  await deps.updateContent(specDirectory, instance.state.currentDocument);
+}
+
+/**
+ * Delete one requirement from the open living spec. Refused while another
+ * capability's `aligns` still names it: a dangling edge reads as a working one.
+ */
+async function handleLivingRemove(
+  specDirectory: string,
+  heading: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const instance = deps.getInstance(specDirectory);
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const specPath = livingCapabilitySpecPath(specDirectory, deps);
+  if (!instance?.state.living || !root || !specPath) return;
+  const cap = resolveCapabilityBySpecPath(root, specPath);
+  if (!cap) return;
+
+  const target = `${cap.name}#${heading}`;
+  const leaners: string[] = [];
+  for (const other of readLivingSpecs(root, { withOrphans: false }).capabilities) {
+    if (!other.exists) continue;
+    try {
+      const text = await fs.promises.readFile(path.join(root, other.spec), "utf-8");
+      if (alignsIn(text).includes(target)) leaners.push(other.name);
+    } catch { /* unreadable spec leans on nothing */ }
+  }
+  if (leaners.length) {
+    void vscode.window.showWarningMessage(
+      `Cannot remove "${heading}": ${leaners.join(", ")} still align${leaners.length === 1 ? "s" : ""} to it. Change those first.`,
+    );
+    return;
+  }
+
+  const choice = await vscode.window.showWarningMessage(
+    `Remove "${heading}" from ${cap.name}? The requirement and its scenarios are deleted from the spec file.`,
+    { modal: true },
+    "Remove",
+  );
+  if (choice !== "Remove") return;
+
+  const file = path.join(root, specPath);
+  const after = removeLivingRequirement(await fs.promises.readFile(file, "utf-8"), heading);
+  if (after === null) return;
+  await fs.promises.writeFile(file, after, "utf-8");
+  deps.outputChannel.appendLine(`[SpecViewer] Removed requirement "${heading}" from ${cap.name}`);
   await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 

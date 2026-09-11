@@ -402,6 +402,10 @@ export async function activate(context: vscode.ExtensionContext) {
             livingSpecsWatcher.onDidCreate(refreshLivingSpecs.call);
             livingSpecsWatcher.onDidChange(refreshLivingSpecs.call);
             livingSpecsWatcher.onDidDelete(refreshLivingSpecs.call);
+            // The viewer's own watcher only sees the spec directory, so an open capability would never redraw.
+            const refreshOpenLiving = (uri: vscode.Uri) => void specViewer.refreshIfDisplaying(uri.fsPath);
+            livingSpecsWatcher.onDidChange(refreshOpenLiving);
+            livingSpecsWatcher.onDidCreate(refreshOpenLiving);
             wiring.push(livingSpecsWatcher, refreshLivingSpecs);
         };
         wireCompanionSurfaces();

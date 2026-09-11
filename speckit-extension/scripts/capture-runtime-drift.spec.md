@@ -49,3 +49,15 @@ Measured across the whole repository, drift is only ever read once it has become
 #### Scenario: an unfolded change was already on the base
 - **WHEN** drift is measured from the branch point
 - **THEN** nothing is named, because this branch did not make it
+
+### A file one requirement names does not drift the capabilities that only share its folder
+
+When a requirement's marker in one capability names a changed file, the drift report SHALL attribute that change to that capability alone. A sibling capability whose membership glob also matches the file, but whose requirements never name it, SHALL NOT be reported as drifted for it. A changed file no requirement names anywhere still drifts every capability that claims it.
+
+#### Scenario: two capabilities claim one folder and a requirement names the changed file
+- **WHEN** drift is computed
+- **THEN** only the capability with that requirement is reported
+
+#### Scenario: a changed file no marker names
+- **WHEN** drift is computed
+- **THEN** every capability whose glob matches it is reported

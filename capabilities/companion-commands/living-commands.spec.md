@@ -35,11 +35,19 @@ The living-spec family SHALL include a sync command that, in a single pass, grou
 ### The shape check is a command, and it reports rather than gates
 <!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
 
-The command that checks living-spec shape SHALL act only when the project has opted in, SHALL make no edits, and SHALL never fail the run. Its output MUST state both what was examined and what was skipped with a reason, so a clean report can never be read as a verdict on files that were never examined. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding: fixing is the author's decision, made with the finding in front of them, and a command that quietly rewrites a spec to silence its own report is the opposite of a check.
+The command that checks living-spec shape SHALL act only when the project has opted in, SHALL make no edits, and SHALL never fail the run. Named a capability, it SHALL check only that capability's spec; unnamed, every living spec and every active feature spec's deltas. Its output MUST state both what was examined and what was skipped with a reason, so a clean report can never be read as a verdict on files that were never examined, and a capability name the registry does not list is a skip, never a clean result. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding: fixing is the author's decision, made with the finding in front of them.
 
 #### Scenario: the command runs on a project with findings
 - **WHEN** it reports
 - **THEN** it names each finding's file, line and fix, and edits nothing
+
+#### Scenario: the command is scoped to one capability
+- **WHEN** it runs
+- **THEN** only that capability's spec is counted as checked
+
+#### Scenario: the named capability is not registered
+- **WHEN** it reports
+- **THEN** it lists the name as skipped and checks nothing
 
 #### Scenario: living specs are off for the project
 - **WHEN** the command runs

@@ -260,6 +260,13 @@ aside.spec-toc.spec-toc--compact {
     border: 1px solid var(--border-hover);
 }
 
+/* A requirement row's pip takes its card's edge colour. */
+.spec-toc-cov[class*="spec-toc-cov--state-"] { border: 0; }
+.spec-toc-cov--state-confirmed { background: var(--accent); }
+.spec-toc-cov--state-adopted { background: var(--review); }
+.spec-toc-cov--state-drifted { background: var(--warning); }
+.spec-toc-cov--state-new { background: var(--success); }
+
 .spec-toc-patterns {
     flex: none;
     color: var(--text-secondary);

@@ -289,6 +289,11 @@ body[data-has-spec-context="true"] .meta-branch {
     margin-right: 0;
 }
 
+.spec-header-fact--adopted {
+    color: var(--review-ink);
+    font-weight: 600;
+}
+
 .spec-header-fact--drift {
     color: var(--vscode-list-warningForeground, var(--text-body));
     font-weight: 600;

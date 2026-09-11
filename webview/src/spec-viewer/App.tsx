@@ -5,9 +5,11 @@ import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { LivingOverview } from './components/LivingOverview';
 import { markdownHtml, navState, showingOverview, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
+import type { VSCodeApi } from './types';
+
+declare const vscode: VSCodeApi;
 
 export interface AppProps {
     specStatus: string;
@@ -21,7 +23,9 @@ export function App({ specStatus }: AppProps) {
     const reviewComments = vs?.reviewComments;
 
     const living = !!ns?.livingMode;
-    const showOverview = showingOverview.value;
+    // A registered capability whose spec file does not exist yet renders nothing but the call to adopt it.
+    const livingEmpty = living && !!ns?.livingMeta?.missing;
+    const showOverview = showingOverview.value && !livingEmpty;
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
@@ -60,11 +64,6 @@ export function App({ specStatus }: AppProps) {
     return (
         <>
             <PageChrome />
-            {living && (
-                <nav class="compact-nav">
-                    <NavigationBar />
-                </nav>
-            )}
             <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
                 {!living && <NavigationBar />}
                 <div class="main-column">
@@ -77,11 +76,12 @@ export function App({ specStatus }: AppProps) {
                             dangerouslySetInnerHTML={{ __html: html }}
                             hidden={showOverview}
                         />
-                        {living && showOverview && (
-                            <div class="overview-pane">
-                                <ActivityErrorBoundary>
-                                    <LivingOverview />
-                                </ActivityErrorBoundary>
+                        {livingEmpty && (
+                            <div class="living-empty">
+                                <p>This capability has no spec yet.</p>
+                                <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt', thisCapability: true })}>
+                                    Adopt this area
+                                </button>
                             </div>
                         )}
                         {!living && hasMountedActivity && (

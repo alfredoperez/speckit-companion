@@ -9,7 +9,7 @@ import { navState, markdownHtml } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler } from './actions';
+import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
@@ -36,7 +36,10 @@ function decodeBase64Utf8(base64: string): string {
     }
 }
 
+let lastContent = '';
+
 function updateContent(content: string): void {
+    lastContent = content;
     const decoded = decodeBase64Utf8(content);
     const html = renderMarkdown(decoded);
     markdownHtml.value = html;
@@ -56,7 +59,7 @@ function updateContent(content: string): void {
 // Message Handler
 // ============================================
 
-const handleMessage = createMessageRouter(updateContent);
+const handleMessage = createMessageRouter(updateContent, () => updateContent(lastContent));
 
 // ============================================
 // State Persistence
@@ -114,6 +117,8 @@ function init(): void {
     setupCheckboxToggle();
     setupFileRefClickHandler();
     setupApproveRequirement();
+    setupRevealGlob();
+    setupRemoveRequirement();
     restoreScrollPosition();
 
     // Handle initial raw content from template

@@ -338,7 +338,9 @@ export class SpecViewerProvider {
    * Refresh content if currently displaying the specified file
    */
   public async refreshIfDisplaying(filePath: string): Promise<void> {
-    const specDirectory = getSpecDirectoryFromPath(filePath);
+    const livingKey = path.dirname(filePath);
+    const living = this.panels.get(livingKey);
+    const specDirectory = living?.state.living ? livingKey : getSpecDirectoryFromPath(filePath);
     const instance = this.panels.get(specDirectory);
 
     if (!instance) {
@@ -603,9 +605,10 @@ export class SpecViewerProvider {
 
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     const specTierPath = specTier?.filePath ?? doc.filePath;
-    const meta = workspaceRoot
+    const built = workspaceRoot
       ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
       : null;
+    const meta = built && !specTier?.exists ? { ...built, missing: true } : built;
 
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.

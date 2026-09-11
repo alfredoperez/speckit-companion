@@ -88,19 +88,19 @@ The viewer SHALL accept a requirement heading from the extension and scroll the 
 
 ### An adopted requirement says where it came from, and can be approved in place
 
-A requirement carrying an `adopted:` marker was transcribed by adoption from the project's own conventions and nothing has checked it since. Its card MUST say so and name the source it was transcribed from, so a reader can go and confirm it, and MUST offer an approval control that drops the marker for that requirement alone. The marker sits with the file marker at the top of the block in either order, and only the run of markers before the first ordinary line is consumed — filtering the whole block would delete a line further down that the outline's count, and both slicers, still read as prose. What reaches the card's attributes is a bare flag, never the transcribed source string, because the escaping used for element content does not escape attribute quotes.
+A requirement carrying an `adopted:` marker was transcribed by adoption from the project's own conventions and nothing has checked it since. Its card MUST say so with the word adopted above its heading, name the source it was transcribed from in that word's tooltip rather than on the card face, where a line number would rot on the next edit to that file, and offer an approval control that drops the marker for that requirement alone. The marker sits with the file marker at the top of the block in either order, and only the run of markers before the first ordinary line is consumed. The marker MUST reach the requirement pass intact through the full rendering pipeline, never turned into a template disclosure first. Any transcribed text that reaches an attribute MUST have its quotes escaped, because the escaping used for element content does not escape them.
 
 #### Scenario: a requirement was transcribed by adoption
 - **WHEN** its card renders
-- **THEN** it names the source it was adopted from and offers an approval control for that requirement
+- **THEN** the word adopted sits above the heading with the source in its tooltip
 
 #### Scenario: an adopted requirement is approved
-- **WHEN** the reader picks that control
+- **WHEN** the reader picks the approval control
 - **THEN** the heading it is keyed on is posted to the extension, which owns the change to the file
 
-#### Scenario: the heading matches nothing rendered
-- **WHEN** the viewer is told to reveal it
-- **THEN** the document stays where the reader left it
+#### Scenario: the source contains a quote
+- **WHEN** the card renders
+- **THEN** the tooltip holds the whole source and no attribute is broken out of
 
 ## Uncovered
 
@@ -109,3 +109,19 @@ The following files were not read in full by the original adoption — their exp
 - `webview/src/spec-viewer/markdown/preprocessors.ts` (read partially; only the first ~60 lines and the export inventory)
 - `webview/src/spec-viewer/toc.ts`
 - `webview/src/spec-viewer/highlighting.ts`
+
+### A living requirement shows its state on its heading's left edge
+
+Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block holding a meta row and the title, with a 3px left edge in the state's colour: confirmed in the accent colour, adopted in the review colour, drifted in the warning colour, new in the success colour. Drifted wins over adopted. Only the non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour; a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
+
+#### Scenario: a requirement whose touched file changed
+- **WHEN** the extension reports it among the drifted requirements
+- **THEN** its card redraws with the warning edge and a Drifted pill
+
+#### Scenario: a confirmed requirement
+- **WHEN** its card renders
+- **THEN** its meta row holds no pill
+
+#### Scenario: a capability with a single requirement
+- **WHEN** it renders
+- **THEN** no outline is shown

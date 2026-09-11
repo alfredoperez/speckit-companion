@@ -10,7 +10,7 @@ This capability is how living specs show up in the editor: the Living Specs tree
 
 ### Living-spec listings are read-only, bounded, and honest about what they could not compute
 
-The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
+The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. A capability row's tooltip SHALL open with the first sentence of its spec's purpose, so the row says what the capability is about and not only where it lives. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
 
 #### Scenario: a capability's document has never been committed
 - **WHEN** drift is computed
@@ -27,6 +27,10 @@ The living-specs listing SHALL read the project's capability configuration witho
 #### Scenario: one capability has a coverage file and another does not
 - **WHEN** the rows are drawn
 - **THEN** the one without it reads as having no coverage file, and its tooltip names the action that writes one
+
+#### Scenario: the reader hovers a capability row
+- **WHEN** the tooltip shows
+- **THEN** its first line after the name is the purpose's first sentence
 
 ### A drifted row is told apart by shape and repaired from the row
 
@@ -76,3 +80,19 @@ A status bar item SHALL show how many living specs claim the active editor's fil
 ## Uncovered
 
 - All files under `__tests__/` were listed but not read.
+
+### A capability with no spec file opens to the call to adopt it
+
+A registered capability whose spec file does not exist yet SHALL still open from its row. The viewer SHALL show only one call to action, "Adopt this area", which starts adoption of the directories that capability already claims without asking for them again. A spec file that exists but is empty is not missing and SHALL NOT show it. The view's commands SHALL include one that validates living-spec shape through the active AI provider, scoped to the capability it was invoked from, and to every living spec when invoked from nowhere in particular.
+
+#### Scenario: the reader clicks a capability marked not created
+- **WHEN** the viewer opens
+- **THEN** it shows "Adopt this area" and no cards
+
+#### Scenario: the reader picks Adopt this area
+- **WHEN** adoption starts
+- **THEN** it adopts the capability's own directories without asking which
+
+#### Scenario: Validate is pressed in an open capability
+- **WHEN** the check is dispatched
+- **THEN** it names that capability

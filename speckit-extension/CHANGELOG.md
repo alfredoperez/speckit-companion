@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Drift no longer flags every capability that shares a folder.** When a requirement in one living spec names the changed file, sibling capabilities that only claim that folder through a broad pattern are not reported as drifted for it.
+
+### Added
+- **`/speckit.companion.living-validate` can check one capability.** Name a capability and only its spec is checked; with no name it checks every living spec and active feature spec as before. An unknown name is reported as skipped, never as a clean result.
+
 ### Changed
 
 - The drift report can be asked about one branch: `living-drift --since main` names only the capabilities your own work touched without saying anything about them. Measured across a whole project, drift is only ever read once it has piled up, and by then it is on nearly everything and tells you nothing. A capability whose spec you also wrote reports nothing, because that is the loop closing.
