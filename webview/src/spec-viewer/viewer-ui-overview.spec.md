@@ -71,6 +71,18 @@ The activity panel MUST lead with the run's lifecycle signal and durable context
 - **THEN** the touched capabilities appear as links inside the intent, not as a separate card
 - **AND** selecting one opens that capability by name
 
+### Evidence and assertion do not wear the same mark
+
+The Overview's verification section carries both what was checked and what the run says it did, and rendering them alike makes the most trustworthy-looking panel in the viewer the one asserting the most. A verification the pipeline derived SHALL keep the check mark and show what it actually got back; one the run merely reported SHALL be visibly quieter and grouped apart, and stay readable rather than being hidden — a run's account of its own work is worth reading, it just must not look like proof. The section's count SHALL say how many of each, because that is the number a reader wants when deciding whether to trust a finished spec.
+
+#### Scenario: a spec carries both kinds
+- **WHEN** the Overview renders
+- **THEN** the derived ones are marked and grouped apart from the reported ones, and the count names both
+
+#### Scenario: every entry predates provenance
+- **WHEN** the Overview renders
+- **THEN** they all read as reported, because that is what they are
+
 ### A living spec's overview is the capability itself, not a run
 
 A living spec has no run to summarise, so in living mode the overview pane MUST render the capability instead of the activity panel: its purpose as authored, the paths it covers, its health, and its requirements in document order. Health reads as sentences rather than figures — how many requirements have a mapped test, whether the source has moved since the spec was last updated, and how many requirements are still adopted but unconfirmed, with the tier's "Approve spec" control beside that count. A requirement row opens that requirement: within the spec tier it switches the pane to the document and reveals it, and from another tier it asks the extension to open the spec there. This pane renders behind the same failure boundary as the run overview, so one bad section cannot take the reading surface down.

@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - **A living spec opens on an Overview.** Clicking a capability used to drop you into the raw spec document. It now lands on an Overview, the same idea a feature spec gets: the purpose, what the spec covers and where it lives, its health (test coverage, drift, and how many requirements are still adopted and unconfirmed), and a list of its requirements you can click through to. A tab strip of Overview, Spec, Rules and Coverage sits above it, with the last two only when that file exists.
 - **Adopted requirements can be approved.** Each requirement an adoption transcribed carries an Approve control beside its badge, and the header has Approve spec for the whole file. Approving removes the marker that says a requirement is unconfirmed, and once the last one goes the draft banner goes with it; nothing is written into the spec, only taken out.
 
+### Changed
+- **The Overview tells a check apart from a claim.** Every row under "What was checked" used to carry a green tick, including the ones that were only the run saying it had done something — the command beside them was text it typed, not proof anything ran. Checks the pipeline runs now show the exit code and how long they took; anything the run merely reported sits below them, quieter, and still readable. The count says how many of each.
+
 ### Fixed
 - **A click that names no document now says so.** It used to return quietly and leave the previous document on screen, so a failed click looked like a click that opened the wrong thing.
 - **Clicking a document in a subfolder opens it.** Requirements, contracts and anything else nested under a spec did nothing when clicked: the viewer stored them under their folder and the click looked them up without it, found nothing, and left whatever was already on screen. It read as though the click had opened the Specification.

@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Changed
 
+- Implement now runs the checks it records instead of describing them. A suite, build or lint is captured by running it and keeping the exit code, so the Overview can show what actually happened rather than what the run says happened. Judgements that cannot be run — a manual pass, a warning you looked at and accepted — are still recorded, and are now marked as your account rather than as evidence.
+
 - The drift report can be asked about one branch: `living-drift --since main` names only the capabilities your own work touched without saying anything about them. Measured across a whole project, drift is only ever read once it has piled up, and by then it is on nearly everything and tells you nothing. A capability whose spec you also wrote reports nothing, because that is the loop closing.
 
 - A living spec that is still correct can now say so. Drift is measured from the moment a spec was last written, so a spec nobody needed to change drifted further every week and there was no way to record that someone had read it and found it right. `living-drift --accept <capability>` writes down the version it was checked against. Nothing records that for you: reviewing is a claim you make.

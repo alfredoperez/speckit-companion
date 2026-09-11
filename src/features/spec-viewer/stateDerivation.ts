@@ -130,11 +130,19 @@ function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
     const raw = pickEntryList<Record<string, unknown>>(ctx, 'verified', 'what');
     return raw?.map(e => {
         const warnings = coerceNameList(e.warnings);
+        // Only the exact string counts as derived. A context file is user-writable, and a
+        // truthy-ish value quietly promoting a claim into a receipt is the one failure this
+        // whole distinction exists to prevent.
+        const derived = e.source === 'derived';
         return {
             what: e.what as string,
             result: optString(e.result),
             command: optString(e.command),
             warnings: warnings.length > 0 ? warnings : undefined,
+            source: derived ? 'derived' as const : undefined,
+            exitCode: derived && typeof e.exitCode === 'number' ? e.exitCode : undefined,
+            durationSeconds:
+                derived && typeof e.durationSeconds === 'number' ? e.durationSeconds : undefined,
         };
     });
 }

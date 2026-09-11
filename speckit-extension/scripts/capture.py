@@ -276,6 +276,59 @@ def _coerce_entry(raw: str, identity_key: str) -> dict | None:
     return {identity_key: text}
 
 
+def run_verification(what: str, command: str, timeout: int = 900) -> dict:
+    """Run a command and record what actually happened, rather than what anyone says did.
+
+    This is the whole difference between a receipt and a claim. Everything in `verified[]`
+    until now was a sentence an agent typed, including the command, which was a string it
+    wrote rather than evidence anything ran. The Overview then drew a checkmark beside it.
+
+    The outcome is the exit code, because that is the part nobody can talk their way past.
+    Output is kept only as a tail: enough to recognise what happened, never enough to make
+    the context file a log.
+    """
+    import subprocess
+    import time
+
+    started = time.monotonic()
+    try:
+        proc = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=timeout)
+        code, out = proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+    except subprocess.TimeoutExpired:
+        code, out = 124, f"timed out after {timeout}s"
+    except Exception as err:  # noqa: BLE001
+        code, out = 127, f"could not run: {err}"
+    took = round(time.monotonic() - started, 1)
+
+    tail = [ln for ln in out.strip().splitlines() if ln.strip()][-3:]
+    entry = {
+        "what": what,
+        "command": command,
+        "source": "derived",
+        "exitCode": code,
+        "durationSeconds": took,
+        "result": " · ".join(tail) if tail else ("no output" if code == 0 else f"exit {code}"),
+    }
+    # A non-zero exit is the finding, not a failure to record. Recording it is the point:
+    # a run that could not prove its work should say so where the reader looks.
+    if code != 0:
+        entry["warnings"] = [f"exited {code}"]
+    return entry
+
+
+def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path | None, list[str]]:
+    """Run each `WHAT::COMMAND` and append what actually happened. Returns the target and any skips."""
+    entries, skipped = [], []
+    for spec in specs:
+        what, sep, command = spec.partition("::")
+        if not sep or not command.strip():
+            skipped.append(spec)
+            continue
+        entries.append(json.dumps(run_verification(what.strip(), command.strip())))
+    target = append_capture_entries(feature_dir, "verified", "what", entries) if entries else None
+    return target, skipped
+
+
 def _entry_identity(item, identity_key: str) -> str | None:
     """The de-dup key for a stored entry: dicts key on identity_key, bare strings on themselves."""
     if isinstance(item, dict):

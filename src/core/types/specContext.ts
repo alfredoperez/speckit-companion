@@ -275,6 +275,17 @@ export interface VerificationEntry {
     result?: string;
     command?: string;
     warnings?: string[];
+    /**
+     * Where the outcome came from. `derived` means something other than the agent produced it —
+     * the capture script ran the command and read its exit code. Absent means the agent said so,
+     * which is what every entry written before this field existed was, so absent must keep
+     * meaning claimed rather than being treated as unknown.
+     */
+    source?: 'derived';
+    /** Exit code, when the outcome was derived by running something. */
+    exitCode?: number;
+    /** Seconds the command took, when it was run rather than reported. */
+    durationSeconds?: number;
 }
 
 /** Traceability for one requirement: the tasks that build it, the tests that cover it. */
@@ -451,6 +462,10 @@ export interface ViewerVerification {
     result?: string;
     command?: string;
     warnings?: string[];
+    /** `derived` when something other than the agent produced the outcome; absent means claimed. */
+    source?: 'derived';
+    exitCode?: number;
+    durationSeconds?: number;
 }
 
 export interface ViewerCoverageRow {

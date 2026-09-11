@@ -1,4 +1,4 @@
-import type { ViewerState, ViewerCoverageRow } from '../types';
+import type { ViewerState, ViewerCoverageRow, ViewerVerification } from '../types';
 import { formatElapsed } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
@@ -203,37 +203,67 @@ export function ExpectationsSection({ state }: { state: ViewerState }) {
 export function VerifiedSection({ state }: { state: ViewerState }) {
     const items = state.verified;
     if (!items || items.length === 0) return null;
-    const warned = items.filter(v => v.warnings && v.warnings.length > 0).length;
+    // Derived means something other than the agent produced the outcome. Everything written
+    // before that field existed was the agent's own account, so an absent source is a claim
+    // rather than an unknown, and rendering the two alike is what let a sentence wear a check.
+    const checked = items.filter(v => v.source === 'derived');
+    const reported = items.filter(v => v.source !== 'derived');
+    const failed = checked.filter(v => v.exitCode !== undefined && v.exitCode !== 0).length;
+    const count = reported.length === 0
+        ? `${checked.length} checked`
+        : `${checked.length} checked · ${reported.length} reported`;
 
     return (
         <section class="dossier-section" aria-label="Verified">
             <SectionHead
                 kicker="Verified"
                 title="What was checked, and what happened"
-                count={warned > 0 ? `${items.length - warned} passed · ${warned} warned` : `${items.length} passed`}
-                tone={warned > 0 ? 'warn' : 'good'}
+                count={count}
+                tone={failed > 0 ? 'warn' : checked.length > 0 ? 'good' : undefined}
             />
-            <div class="dossier-evidence">
-                {items.map((v, i) => {
-                    const hasWarnings = !!(v.warnings && v.warnings.length > 0);
-                    return (
-                        <article class="dossier-evidence__row" key={i}>
-                            <span class={hasWarnings ? 'dossier-check dossier-check--warn' : 'dossier-check'} aria-hidden="true">
-                                {hasWarnings ? '⚠' : '✓'}
-                            </span>
-                            <div class="dossier-evidence__body">
-                                <h3>{v.what}</h3>
-                                {v.result && <p>{v.result}</p>}
-                                {hasWarnings && (
-                                    <p class="dossier-evidence__warnings">{v.warnings!.join('; ')}</p>
-                                )}
-                            </div>
-                            {v.command && <code>{v.command}</code>}
-                        </article>
-                    );
-                })}
-            </div>
+            {checked.length > 0 && <EvidenceRows items={checked} />}
+            {reported.length > 0 && (
+                <>
+                    {checked.length > 0 && (
+                        <p class="dossier-evidence__label">Reported — the run's own account</p>
+                    )}
+                    <EvidenceRows items={reported} />
+                </>
+            )}
         </section>
+    );
+}
+
+function EvidenceRows({ items }: { items: ViewerVerification[] }) {
+    return (
+        <div class="dossier-evidence">
+            {items.map((v, i) => {
+                const hasWarnings = !!(v.warnings && v.warnings.length > 0);
+                const claimed = v.source !== 'derived';
+                const mark = hasWarnings ? '⚠' : claimed ? '\u201D' : '✓';
+                const rowClass = claimed
+                    ? 'dossier-evidence__row dossier-evidence__row--claimed'
+                    : 'dossier-evidence__row';
+                const checkClass = hasWarnings
+                    ? 'dossier-check dossier-check--warn'
+                    : claimed
+                        ? 'dossier-check dossier-check--claimed'
+                        : 'dossier-check';
+                return (
+                    <article class={rowClass} key={i}>
+                        <span class={checkClass} aria-hidden="true">{mark}</span>
+                        <div class="dossier-evidence__body">
+                            <h3>{v.what}</h3>
+                            {v.result && <p>{v.result}</p>}
+                            {hasWarnings && (
+                                <p class="dossier-evidence__warnings">{v.warnings!.join('; ')}</p>
+                            )}
+                        </div>
+                        {v.command && <code>{v.command}</code>}
+                    </article>
+                );
+            })}
+        </div>
     );
 }
 
