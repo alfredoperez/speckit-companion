@@ -212,7 +212,7 @@ describe('LivingSpecsExplorerProvider', () => {
         const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-missing');
-        expect(caps[0].command).toBeUndefined();
+        expect(caps[0].command?.command).toBe('speckit.viewSpecDocument');
         expect(caps[0].description).toContain('not created');
         expect((caps[0].iconPath as vscode.ThemeIcon).id).toBe('circle-outline');
     });

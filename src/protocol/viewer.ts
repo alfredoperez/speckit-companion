@@ -237,6 +237,8 @@ export interface LivingHeaderMeta {
     scenarios?: number;
     coverage?: { covered: number; total: number };
     drifted?: boolean;
+    /** Headings whose touched files drifted; absent when drift is unknown. */
+    driftedRequirements?: string[];
 }
 
 /** What the living-spec Overview lists, parsed from the spec tier once on the extension side. */
@@ -493,6 +495,10 @@ export type ViewerToExtensionMessage =
     // Adopt another code area as a living spec; the command asks which
     | {
           type: 'livingAdopt';
+      }
+    // Check the open capability's spec against its code
+    | {
+          type: 'livingValidate';
       }
     // A Covers glob was clicked: reveal its folder in the Explorer
     | {

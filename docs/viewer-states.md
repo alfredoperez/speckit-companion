@@ -410,7 +410,7 @@ A living spec has no branch, created date, phases or task completion, so the hea
 | Element | Content | Source |
 |---------|---------|--------|
 | Title | The spec document's own H1, with a trailing `— Living Spec` stripped | `livingSpecHeading()` in `livingDocs.ts`; falls back to `livingCapabilityName()` |
-| Facts row | `N requirements`, `N scenarios`, `N/M covered`, `drift` | `countLivingFacts()`; coverage/drift from `readCapabilityHealth()` |
+| Facts row | `N requirements`, `X adopted, unconfirmed`, `N scenarios`, `N/M covered`, `Y drifted` (or `drift` when no requirement names a drifted file) | `countLivingFacts()`; adopted from the Overview payload; coverage/drift from `readCapabilityHealth()` |
 | Covers row | `Covers` + up to 3 claimed globs + `+N more` (rest on hover) | `match` from the capability's `.specify/companion.yml` entry |
 | Location | Repo-relative spec path, with the central/colocated explanation on hover | `location` + `spec` from the resolved capability |
 
@@ -422,6 +422,19 @@ Notes:
 - **The requirement count and the coverage denominator are one derivation.** Both call `requirementIds()` in `src/features/specs/livingSpecsModel.ts`, which ignores fenced code blocks, so `N requirements` and the `M` in `N/M covered` are counted off the same identifiers and cannot drift apart.
 - **Health is discarded if the panel moved on.** Colocated capabilities share a panel key, so a health result is dropped unless the panel's current spec tier is still the one the call was made for — otherwise a slow git check on one capability could land on another.
 - **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.
+
+### Living-spec requirement cards
+
+The spec tier renders one card per `###` requirement in a 760px column. State is the heading block's 3px left edge, never a badge:
+
+| State | Edge | Word above the heading | Derived from |
+|---|---|---|---|
+| confirmed | `--accent` | none | no marker, no drift |
+| adopted | `--review` | `adopted`, source file in its tooltip | `<!-- adopted: … -->` |
+| drifted | `--warning` | `drifted` | `driftedRequirements` from `livingHealthResolved`: headings whose touches marker matches a drifted file. Wins over adopted |
+| new | `--success` | `new` | reserved for new-in-this-branch detection |
+
+A card with a touches marker ends with a quiet `touches N files` link that reveals the first pattern. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate`), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action.
 
 ### Key Files
 

@@ -72,6 +72,7 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.refresh',
             'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
+            'speckit.livingSpecs.validate',
         ]);
     });
 
@@ -239,6 +240,17 @@ describe('registerLivingSpecsCommands', () => {
                 true
             );
             expect(executeInTerminal).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('validate', () => {
+        it('dispatches the shape check for the AI to run', async () => {
+            await handlers['speckit.livingSpecs.validate']();
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-validate',
+                'SpecKit - Validate Living Specs',
+                true
+            );
         });
     });
 

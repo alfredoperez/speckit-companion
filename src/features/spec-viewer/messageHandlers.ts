@@ -168,6 +168,9 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     livingAdopt: async () => {
       await vscode.commands.executeCommand("speckit.livingSpecs.adopt");
     },
+    livingValidate: async () => {
+      await vscode.commands.executeCommand("speckit.livingSpecs.validate");
+    },
     revealGlob: async (msg) => {
       const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
       if (!root) return;

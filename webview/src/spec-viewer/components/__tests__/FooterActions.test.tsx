@@ -15,7 +15,7 @@
 
 import { render } from 'preact';
 import { FooterActions } from '../FooterActions';
-import { navState, viewerState } from '../../signals';
+import { markdownHtml, navState, viewerState } from '../../signals';
 import type { ViewerState } from '../../types';
 
 // `<Toast>` reaches for a `vscode.postMessage` global at mount.
@@ -188,25 +188,45 @@ describe('FooterActions — living spec', () => {
         viewerState.value = null;
     });
 
-    it('shows only Adopt when nothing has drifted', () => {
+    it('offers Adopt and Validate, and says the capability is in sync, when nothing has drifted', () => {
+        navState.value = living(false);
+        markdownHtml.value = '<p>spec</p>';
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Adopt an area', 'Validate']);
+            expect(container.querySelector('.footer-context')?.textContent).toBe('In sync');
+        } finally {
+            cleanup(container);
+            markdownHtml.value = '';
+        }
+    });
+
+    it('adds Sync and counts the drifted requirements once drift is found', () => {
+        const drifted = living(true);
+        drifted.livingMeta.driftedRequirements = ['A', 'B'];
+        navState.value = drifted;
+        markdownHtml.value = '<p>spec</p>';
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Adopt an area', 'Validate', 'Sync']);
+            expect(container.querySelector('.footer-context')?.textContent).toBe('2 requirements drifted');
+        } finally {
+            cleanup(container);
+            markdownHtml.value = '';
+        }
+    });
+
+    it('Validate posts livingValidate', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = { postMessage };
         navState.value = living(false);
 
         const container = renderInto();
         try {
-            expect(labels(container)).toEqual(['Adopt an area']);
-            expect(container.querySelector('.footer-context')).toBeNull();
-        } finally {
-            cleanup(container);
-        }
-    });
-
-    it('adds the drift notice and both update actions once drift is found', () => {
-        navState.value = living(true);
-
-        const container = renderInto();
-        try {
-            expect(labels(container)).toEqual(['Adopt an area', 'Update all drifted', 'Update this spec']);
-            expect(container.querySelector('.footer-context')?.textContent).toContain('Source files changed');
+            container.querySelectorAll('button')[1]?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'livingValidate' });
         } finally {
             cleanup(container);
         }

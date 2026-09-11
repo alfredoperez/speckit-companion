@@ -31,6 +31,14 @@ export function setupApproveRequirement(): void {
     });
 }
 
+/** A card's touches link reveals the first path its marker names. */
+export function setupRevealGlob(): void {
+    document.addEventListener('click', (e) => {
+        const glob = (e.target as HTMLElement).closest<HTMLElement>('[data-reveal-glob]')?.dataset.revealGlob;
+        if (glob) vscode.postMessage({ type: 'revealGlob', glob });
+    });
+}
+
 /**
  * Setup checkbox toggle handler for task items
  */

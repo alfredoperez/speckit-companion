@@ -38,6 +38,17 @@ export function setLivingCoverage(map: Record<string, string> | null): void {
     livingCoverage = Object.assign(Object.create(null), map || {});
 }
 
+// Headings whose touched files drifted, as the extension computed them. Empty until health resolves.
+let livingDrifted = new Set<string>();
+
+/** Mark requirements drifted by exact heading. Returns whether the set changed. */
+export function setLivingDrifted(headings: string[] | null | undefined): boolean {
+    const next = new Set(headings ?? []);
+    const changed = next.size !== livingDrifted.size || [...next].some((h) => !livingDrifted.has(h));
+    livingDrifted = next;
+    return changed;
+}
+
 // How many top body lines can carry the draft banner — mirrors the extension's
 // isLivingDraft window so the notice keys on the same marker other features do.
 const DRAFT_BANNER_SCAN_LINES = 10;
@@ -227,18 +238,6 @@ function buildRequirementCard(
     });
 
     const badges: string[] = [];
-    // Adoption transcribed this requirement from the project's own conventions
-    // and nothing has checked it since. The badge names the source so a reader
-    // can go and confirm it, and it disappears the first run that folds a change
-    // onto this requirement.
-    if (adoptedFrom) {
-        badges.push(
-            '<span class="living-req-confidence living-req-confidence--adopted">'
-            + `adopted from ${escapeHtml(adoptedFrom)}</span>`
-            + '<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
-            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>',
-        );
-    }
     if (inferred) {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
@@ -262,20 +261,48 @@ function buildRequirementCard(
     // A bare flag, never the source string: this is an attribute, and the
     // viewer's escapeHtml does not escape attribute quotes.
     const adoptedAttr = adoptedFrom ? ' data-req-adopted' : '';
+    // Drifted wins the edge: it is the state that needs action first.
+    const state = livingDrifted.has(title) ? 'drifted' : adoptedFrom ? 'adopted' : 'confirmed';
+    // The source sits in the tooltip, never on the face: a line number rots on the next edit to that file.
+    const tooltip = adoptedFrom ? ` title="adopted from ${escapeAttr(adoptedFrom)}"` : '';
+    const approve = adoptedFrom
+        ? '<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
+            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>'
+        : '';
+    const stateLine = state === 'confirmed'
+        ? []
+        : [`<div class="living-req-state"${tooltip}>${state}${approve}</div>`];
+    const globs = touchesGlobs(blockLines);
+    const touchesLine = globs.length
+        ? [`<div class="living-req-touches"><button type="button" data-reveal-glob="${escapeAttr(globs[0])}">`
+            + `touches ${globs.length} ${globs.length === 1 ? 'file' : 'files'}</button></div>`]
+        : [];
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
-        + ` data-req="${escapeHtml(title)}"${covAttr}${filesAttr}${adoptedAttr}>`,
+        + ` data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}>`,
+        ...stateLine,
         `### ${title}`,
         ...metaLine,
         ...body,
+        ...touchesLine,
         '</div>',
     ];
 }
 
+/** `escapeHtml` leaves quotes alone, so an attribute value needs them escaped too. */
+function escapeAttr(value: string): string {
+    return escapeHtml(value).replace(/"/g, '&quot;');
+}
+
+/** The path patterns a requirement's marker names, empty when unmarked. */
+function touchesGlobs(blockLines: string[]): string[] {
+    const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
+    return m ? m[1].split(',').map((g) => g.trim()).filter(Boolean) : [];
+}
+
 /** How many path patterns a requirement's marker names, or 0 when unmarked. */
 function touchesCount(blockLines: string[]): number {
-    const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
-    return m ? m[1].split(',').map((g) => g.trim()).filter(Boolean).length : 0;
+    return touchesGlobs(blockLines).length;
 }
 
 

@@ -272,9 +272,8 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         item.tooltip = tooltipLines.join('\n');
         item.capability = cap;
         item.relPath = cap.spec;
-        if (cap.exists) {
-            item.command = this.openCommand(cap.spec);
-        }
+        // A missing spec still opens: the viewer's empty state is where adoption starts.
+        item.command = this.openCommand(cap.spec);
         return item;
     }
 

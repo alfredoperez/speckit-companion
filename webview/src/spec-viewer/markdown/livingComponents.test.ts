@@ -16,6 +16,7 @@ import {
     preprocessLivingRequirements,
     preprocessLivingUncovered,
     setLivingCoverage,
+    setLivingDrifted,
 } from './livingComponents';
 import { renderMarkdown, setLivingMode } from './renderer';
 
@@ -569,13 +570,43 @@ describe('the adopted badge', () => {
         'A run folded onto this one.',
     ].join('\n');
 
-    it('names where the requirement was transcribed from', () => {
-        expect(preprocessLivingRequirements(spec)).toContain('adopted from CLAUDE.md:18');
+    it('names the source in the state word tooltip, never on the card face', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('title="adopted from CLAUDE.md:18">adopted');
+        expect(out).not.toContain('>adopted from CLAUDE.md:18');
     });
 
-    it('leaves a confirmed requirement unbadged', () => {
+    it('leaves a confirmed requirement without a state word', () => {
         const out = preprocessLivingRequirements(spec);
-        expect(out.split('Already confirmed')[1]).not.toContain('living-req-confidence--adopted');
+        expect(out.split('Already confirmed')[1]).not.toContain('living-req-state');
+    });
+
+    it('carries the state on the card for the edge colour', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('data-req-state="adopted"');
+        expect(out).toContain('data-req-state="confirmed"');
+    });
+
+    it('escapes quotes in the adopted source so it cannot leave the attribute', () => {
+        const out = preprocessLivingRequirements(spec.replace('CLAUDE.md:18', 'a" onclick="x'));
+        expect(out).toContain('title="adopted from a&quot; onclick=&quot;x"');
+    });
+
+    it('gives a drifted requirement the drifted word, even when it is also adopted', () => {
+        setLivingDrifted(['An entity imports downward only']);
+        try {
+            const out = preprocessLivingRequirements(spec);
+            expect(out).toContain('data-req-state="drifted"');
+            expect(out).toContain('title="adopted from CLAUDE.md:18">drifted');
+        } finally {
+            setLivingDrifted([]);
+        }
+    });
+
+    it('ends a marked card with one quiet touches link', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('data-reveal-glob="src/entities/**">touches 1 file</button>');
+        expect(out.match(/living-req-touches/g)).toHaveLength(2);
     });
 
     it('never leaks either marker into the visible prose', () => {

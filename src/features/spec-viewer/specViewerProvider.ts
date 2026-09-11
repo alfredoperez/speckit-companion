@@ -338,7 +338,9 @@ export class SpecViewerProvider {
    * Refresh content if currently displaying the specified file
    */
   public async refreshIfDisplaying(filePath: string): Promise<void> {
-    const specDirectory = getSpecDirectoryFromPath(filePath);
+    const livingKey = path.dirname(filePath);
+    const living = this.panels.get(livingKey);
+    const specDirectory = living?.state.living ? livingKey : getSpecDirectoryFromPath(filePath);
     const instance = this.panels.get(specDirectory);
 
     if (!instance) {

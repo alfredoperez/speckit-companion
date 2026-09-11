@@ -74,6 +74,8 @@ export interface CapabilityHealth {
     coverage?: { covered: number; total: number };
     /** True when files matching the capability changed since its spec's last commit. */
     drifted?: boolean;
+    /** The files behind `drifted`; present exactly when `drifted` is. */
+    driftedFiles?: string[];
 }
 
 export interface LivingSpecsListing {
@@ -1090,15 +1092,6 @@ function filesAccountedFor(root: string, capName: string): Set<string> {
     return out;
 }
 
-async function readDrifted(
-    root: string,
-    cap: ResolvedCapability,
-    git: GitRunner,
-): Promise<boolean | undefined> {
-    const files = await computeDriftedFiles(root, cap, git);
-    return files === undefined ? undefined : files.length > 0;
-}
-
 /**
  * The source files that drifted a capability — those changed since its spec's
  * last commit, after membership/exempt filtering. Time-bounded like the health
@@ -1139,14 +1132,15 @@ export async function readCapabilityHealth(
     const timeoutMs = opts?.timeoutMs ?? 1500;
     // Typed loosely because tsc and ts-jest resolve setTimeout against different libs.
     let timer: unknown;
-    const drifted = await Promise.race([
-        readDrifted(workspaceRoot, cap, opts?.git ?? makeDefaultGitRunner(timeoutMs)),
+    const driftedFiles = await Promise.race([
+        computeDriftedFiles(workspaceRoot, cap, opts?.git ?? makeDefaultGitRunner(timeoutMs)),
         new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
     ])
         .catch(() => undefined)
         .finally(() => clearTimeout(timer as ReturnType<typeof setTimeout>));
-    if (drifted !== undefined) {
-        health.drifted = drifted;
+    if (driftedFiles !== undefined) {
+        health.drifted = driftedFiles.length > 0;
+        health.driftedFiles = driftedFiles;
     }
     return health;
 }

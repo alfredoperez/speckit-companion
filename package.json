@@ -526,6 +526,12 @@
         "icon": "$(sparkle)"
       },
       {
+        "command": "speckit.livingSpecs.validate",
+        "title": "Validate living specs",
+        "category": "SpecKit",
+        "icon": "$(checklist)"
+      },
+      {
         "command": "speckit.livingSpecs.forFile",
         "title": "Living Specs for This File",
         "category": "SpecKit",

@@ -12,7 +12,7 @@ Living mode presents a capability rather than a run: its tiers, its verified cov
 
 ### A living spec is presented as a capability, not a run
 
-A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, and there is always one: adopting another area is offered whatever the capability's state, and the two drift actions — update this spec, and update every drifted spec — only once drift has been found, since a re-check offered on a spec in step with its code is a button whose answer is already on screen. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, beside a line stating the capability's condition: adopting another area and validating living specs are offered whatever the capability's state, and syncing this spec to its code only once drift has been found. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
 
 A tier is resolved by the naming convention the resolver writes, and a convention that has been renamed SHALL still resolve the file a project already has: where the rules tier's current name is absent, its previous name is accepted in its place and shown as that tier.
 
@@ -32,7 +32,7 @@ A tier is resolved by the naming convention the resolver writes, and a conventio
 
 #### Scenario: the capability has not drifted
 - **WHEN** the panel renders
-- **THEN** the footer offers adoption of another area and nothing else, so the bar is never empty and never offers work with no subject
+- **THEN** the footer offers adoption and validation and no sync, so the bar never offers work with no subject
 
 #### Scenario: a covers glob is activated
 - **WHEN** the reader clicks it
@@ -105,3 +105,15 @@ A fact that costs real time to compute MUST NOT block the panel's first render. 
 ## Uncovered
 
 _None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._
+
+### An open living spec follows its file and names what drifted
+
+An open living-spec panel SHALL redraw when its capability's spec file is changed or created on disk, wherever the capability lives. Once drift resolves, the panel SHALL be told which requirements drifted: those whose touches marker matches a drifted file, computed from the same drift result the sidebar uses. A requirement with no touches marker never drifts, and when drift cannot be computed the list is absent rather than empty.
+
+#### Scenario: adoption writes the spec an empty panel was showing
+- **WHEN** the file appears on disk
+- **THEN** the open panel redraws with its cards
+
+#### Scenario: a drifted file matches one requirement's marker
+- **WHEN** health resolves
+- **THEN** only that requirement is named as drifted

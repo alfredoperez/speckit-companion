@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **A living spec reads as a list of requirement cards.** Each requirement is a card whose left edge tells you its state: the accent colour when confirmed, purple when adopted and not yet confirmed, amber when the code it describes has changed. The header counts them, the outline repeats each colour as a dot, and the bar at the bottom says whether the capability is in sync and offers Adopt an area, Validate, and Sync. A requirement names how many files it touches in one quiet link, and a capability with no spec yet opens straight to Adopt this area.
 - **A living spec opens on an Overview.** Clicking a capability used to drop you into the raw spec document. It now lands on an Overview, the same idea a feature spec gets: the purpose, what the spec covers and where it lives, its health (test coverage, drift, and how many requirements are still adopted and unconfirmed), and a list of its requirements you can click through to. A tab strip of Overview, Spec, Rules and Coverage sits above it, with the last two only when that file exists.
 - **Adopted requirements can be approved.** Each requirement an adoption transcribed carries an Approve control beside its badge, and the header has Approve spec for the whole file. Approving removes the marker that says a requirement is unconfirmed, and once the last one goes the draft banner goes with it; nothing is written into the spec, only taken out.
 
 ### Fixed
+- **Adopted requirements show as adopted in the viewer.** The marker that says a requirement came from adoption was being shown as a "Template Instructions" block instead of marking the requirement.
 - **A click that names no document now says so.** It used to return quietly and leave the previous document on screen, so a failed click looked like a click that opened the wrong thing.
 - **Clicking a document in a subfolder opens it.** Requirements, contracts and anything else nested under a spec did nothing when clicked: the viewer stored them under their folder and the click looked them up without it, found nothing, and left whatever was already on screen. It read as though the click had opened the Specification.
 - **Clicking a spec's name opens its Overview again.** Once a panel had been used to read any document, it answered with that document for the rest of its life: every later click on the spec name was overruled by what you had opened first. Clicking a document, step or artifact still opens what it names.

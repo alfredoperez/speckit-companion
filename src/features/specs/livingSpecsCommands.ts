@@ -308,6 +308,10 @@ export function registerLivingSpecsCommands(
             outputChannel.appendLine('[SpecKit] Living-spec sync from current changes dispatched');
             await getAIProvider().executeSlashCommand('/speckit.companion.living-sync', 'SpecKit - Sync Living Specs', true);
         }),
+        vscode.commands.registerCommand('speckit.livingSpecs.validate', async () => {
+            outputChannel.appendLine('[SpecKit] Living-spec shape check dispatched');
+            await getAIProvider().executeSlashCommand('/speckit.companion.living-validate', 'SpecKit - Validate Living Specs', true);
+        }),
         vscode.commands.registerCommand('speckit.livingSpecs.update', async (item?: LivingSpecNode) => {
             const root = workspaceRoot();
             let cap = item?.capability;

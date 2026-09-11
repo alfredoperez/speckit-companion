@@ -76,3 +76,11 @@ A status bar item SHALL show how many living specs claim the active editor's fil
 ## Uncovered
 
 - All files under `__tests__/` were listed but not read.
+
+### A capability with no spec file opens to the call to adopt it
+
+A registered capability whose spec file does not exist yet SHALL still open from its row. The viewer SHALL show only one call to action, "Adopt this area", which starts adoption. The view's commands SHALL include one that validates the shape of every living spec through the active AI provider.
+
+#### Scenario: the reader clicks a capability marked not created
+- **WHEN** the viewer opens
+- **THEN** it shows "Adopt this area" and no cards

@@ -13,7 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './markdown';
+import { setCurrentTask, setHasSpecContext, setLivingDrifted, setLivingMode, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
@@ -43,6 +43,7 @@ export function applyViewerState(next: ViewerState): void {
 
 export function buildHandlers(
     updateContent: (content: string) => void,
+    rerender: () => void = () => undefined,
 ): DispatcherMap<ExtensionToViewerMessage, []> {
     return {
         contentUpdated: message => {
@@ -59,6 +60,8 @@ export function buildHandlers(
             if (navState.value) {
                 navState.value = { ...navState.value, livingMeta: message.livingMeta };
             }
+            // Drift lands after the first paint, so the cards redraw to take their edge.
+            if (setLivingDrifted(message.livingMeta.driftedRequirements)) rerender();
         },
 
         viewerStateUpdated: message => {
@@ -101,8 +104,9 @@ export function buildHandlers(
 
 export function createMessageRouter(
     updateContent: (content: string) => void,
+    rerender?: () => void,
 ): (event: MessageEvent) => void {
-    const dispatch = createDispatcher(buildHandlers(updateContent));
+    const dispatch = createDispatcher(buildHandlers(updateContent, rerender));
     return event => {
         void dispatch(event.data as ExtensionToViewerMessage);
     };
