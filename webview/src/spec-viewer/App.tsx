@@ -25,7 +25,7 @@ export function App({ specStatus }: AppProps) {
 
     const living = !!ns?.livingMode;
     // A registered capability whose spec file does not exist yet renders nothing but the call to adopt it.
-    const livingEmpty = living && html.trim() === '';
+    const livingEmpty = living && !!ns?.livingMeta?.missing;
     const showOverview = showingOverview.value && !livingEmpty;
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
@@ -85,7 +85,7 @@ export function App({ specStatus }: AppProps) {
                         {livingEmpty && (
                             <div class="living-empty">
                                 <p>This capability has no spec yet.</p>
-                                <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt' })}>
+                                <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt', thisCapability: true })}>
                                     Adopt this area
                                 </button>
                             </div>

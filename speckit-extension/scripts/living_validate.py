@@ -769,8 +769,11 @@ def _registry_above(root: str):
             return candidate
 
 
-def build_report(root: str = ".") -> dict:
+def build_report(root: str = ".", capability: str = "") -> dict:
     """Every finding across the project's living specs and active feature specs.
+
+    Given a capability name, only that capability's spec is checked, and feature
+    deltas are left out: they belong to runs, not to one capability.
 
     Best-effort throughout: any file that cannot be read becomes a skip with its
     reason, never a crash and never a missing finding reported as a clean one.
@@ -808,7 +811,7 @@ def build_report(root: str = ".") -> dict:
         name = cap.get("name")
         rel = rsp._resolve_spec(cap) if hasattr(rsp, "_resolve_spec") else cap.get("spec")
         known.append(name)
-        if not rel:
+        if not rel or (capability and name != capability):
             continue
         full = os.path.join(root, rel)
         if not os.path.isfile(full):
@@ -838,7 +841,9 @@ def build_report(root: str = ".") -> dict:
                     "This rules file holds no rule.",
                     "Add one bullet per convention, or delete the file.", name))
 
-    for spec_md in _active_feature_specs(root):
+    if capability and capability not in known:
+        skipped.append({"path": "living-specs.yml", "reason": f"no capability named {capability}"})
+    for spec_md in ([] if capability else _active_feature_specs(root)):
         rel = os.path.relpath(spec_md, root).replace(os.sep, "/")
         try:
             with open(spec_md, encoding="utf-8") as fh:
@@ -893,9 +898,11 @@ def main(argv=None) -> int:
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--json", action="store_true",
                     help="emit the machine-readable object instead of the human list")
+    ap.add_argument("--capability", default="",
+                    help="check only this capability's spec")
     args = ap.parse_args(argv)
     try:
-        report = build_report(args.root)
+        report = build_report(args.root, args.capability)
     except Exception as err:  # noqa: BLE001
         # A report that can fail the shell it runs in is a gate wearing a
         # report's clothes. Say what broke and still exit 0.

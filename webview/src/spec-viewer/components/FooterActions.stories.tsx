@@ -241,3 +241,27 @@ export const InFlightImplementing: Story = {
         return <FooterActions initialSpecStatus="implementing" />;
     },
 };
+
+const livingNav = (overrides: Record<string, unknown>) =>
+    mockNavState({
+        livingMode: true,
+        livingMeta: { capabilityName: 'checkout', specPath: 'capabilities/checkout/checkout.spec.md', location: 'centralized', match: ['src/checkout/**'], ...overrides },
+    });
+
+export const LivingInSync: Story = {
+    name: 'Living — In sync',
+    render: () => {
+        navState.value = livingNav({ drifted: false });
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};
+
+export const LivingDrifted: Story = {
+    name: 'Living — Drifted',
+    render: () => {
+        navState.value = livingNav({ drifted: true, driftedRequirements: ['Adds a line item', 'Applies a discount'] });
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};

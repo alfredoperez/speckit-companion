@@ -79,8 +79,16 @@ A status bar item SHALL show how many living specs claim the active editor's fil
 
 ### A capability with no spec file opens to the call to adopt it
 
-A registered capability whose spec file does not exist yet SHALL still open from its row. The viewer SHALL show only one call to action, "Adopt this area", which starts adoption. The view's commands SHALL include one that validates the shape of every living spec through the active AI provider.
+A registered capability whose spec file does not exist yet SHALL still open from its row. The viewer SHALL show only one call to action, "Adopt this area", which starts adoption of the directories that capability already claims without asking for them again. A spec file that exists but is empty is not missing and SHALL NOT show it. The view's commands SHALL include one that validates living-spec shape through the active AI provider, scoped to the capability it was invoked from, and to every living spec when invoked from nowhere in particular.
 
 #### Scenario: the reader clicks a capability marked not created
 - **WHEN** the viewer opens
 - **THEN** it shows "Adopt this area" and no cards
+
+#### Scenario: the reader picks Adopt this area
+- **WHEN** adoption starts
+- **THEN** it adopts the capability's own directories without asking which
+
+#### Scenario: Validate is pressed in an open capability
+- **WHEN** the check is dispatched
+- **THEN** it names that capability

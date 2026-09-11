@@ -260,3 +260,50 @@ A tier is resolved by the naming convention the resolver writes, and a conventio
 - **WHEN** the spec declares itself a draft
 - **THEN** the header badges it as a draft
 - **AND** the in-document banner is left intact
+
+## MODIFIED Requirements
+<!-- capability: commands-living -->
+
+### The shape check is a command, and it reports rather than gates
+<!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
+
+The command that checks living-spec shape SHALL act only when the project has opted in, SHALL make no edits, and SHALL never fail the run. Named a capability, it SHALL check only that capability's spec; unnamed, every living spec and every active feature spec's deltas. Its output MUST state both what was examined and what was skipped with a reason, so a clean report can never be read as a verdict on files that were never examined, and a capability name the registry does not list is a skip, never a clean result. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding: fixing is the author's decision, made with the finding in front of them.
+
+#### Scenario: the command runs on a project with findings
+- **WHEN** it reports
+- **THEN** it names each finding's file, line and fix, and edits nothing
+
+#### Scenario: the command is scoped to one capability
+- **WHEN** it runs
+- **THEN** only that capability's spec is counted as checked
+
+#### Scenario: the named capability is not registered
+- **WHEN** it reports
+- **THEN** it lists the name as skipped and checks nothing
+
+#### Scenario: living specs are off for the project
+- **WHEN** the command runs
+- **THEN** it says so and exits successfully
+
+#### Scenario: the command is run from below the repository root
+- **WHEN** it reports
+- **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off
+
+## MODIFIED Requirements
+<!-- capability: specs-living-view -->
+
+### A capability with no spec file opens to the call to adopt it
+
+A registered capability whose spec file does not exist yet SHALL still open from its row. The viewer SHALL show only one call to action, "Adopt this area", which starts adoption of the directories that capability already claims without asking for them again. A spec file that exists but is empty is not missing and SHALL NOT show it. The view's commands SHALL include one that validates living-spec shape through the active AI provider, scoped to the capability it was invoked from, and to every living spec when invoked from nowhere in particular.
+
+#### Scenario: the reader clicks a capability marked not created
+- **WHEN** the viewer opens
+- **THEN** it shows "Adopt this area" and no cards
+
+#### Scenario: the reader picks Adopt this area
+- **WHEN** adoption starts
+- **THEN** it adopts the capability's own directories without asking which
+
+#### Scenario: Validate is pressed in an open capability
+- **WHEN** the check is dispatched
+- **THEN** it names that capability

@@ -304,7 +304,8 @@
       "spec-viewer-living",
       "specs-living-view",
       "viewer-ui-chrome",
-      "viewer-ui-document"
+      "viewer-ui-document",
+      "commands-living"
     ]
   },
   "last_action": "all 16 tasks done, 2941/2941 tests pass",

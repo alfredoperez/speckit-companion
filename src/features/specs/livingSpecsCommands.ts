@@ -282,13 +282,13 @@ export function registerLivingSpecsCommands(
                 await vscode.commands.executeCommand('speckit.livingSpecs.adopt', { layout });
             }
         }),
-        vscode.commands.registerCommand('speckit.livingSpecs.adopt', async (opts?: { layout?: SpecLayout }) => {
+        vscode.commands.registerCommand('speckit.livingSpecs.adopt', async (opts?: { layout?: SpecLayout; areas?: string[] }) => {
             const root = workspaceRoot();
             if (!root) {
                 vscode.window.showWarningMessage('Open a folder before adopting a code area.');
                 return;
             }
-            const areas = await pickCodeAreas(root);
+            const areas = opts?.areas?.length ? opts.areas : await pickCodeAreas(root);
             if (!areas) {
                 outputChannel.appendLine('[SpecKit] Living-spec adoption cancelled at the area prompt');
                 return;
@@ -308,9 +308,16 @@ export function registerLivingSpecsCommands(
             outputChannel.appendLine('[SpecKit] Living-spec sync from current changes dispatched');
             await getAIProvider().executeSlashCommand('/speckit.companion.living-sync', 'SpecKit - Sync Living Specs', true);
         }),
-        vscode.commands.registerCommand('speckit.livingSpecs.validate', async () => {
-            outputChannel.appendLine('[SpecKit] Living-spec shape check dispatched');
-            await getAIProvider().executeSlashCommand('/speckit.companion.living-validate', 'SpecKit - Validate Living Specs', true);
+        vscode.commands.registerCommand('speckit.livingSpecs.validate', async (item?: LivingSpecNode) => {
+            const root = workspaceRoot();
+            const cap = item?.capability
+                ?? (root && item?.capabilitySpecPath ? resolveCapabilityBySpecPath(root, item.capabilitySpecPath) : undefined);
+            outputChannel.appendLine(`[SpecKit] Living-spec shape check dispatched${cap ? ` for ${cap.name}` : ''}`);
+            await getAIProvider().executeSlashCommand(
+                `/speckit.companion.living-validate${cap ? ` ${cap.name}` : ''}`,
+                'SpecKit - Validate Living Specs',
+                true,
+            );
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.update', async (item?: LivingSpecNode) => {
             const root = workspaceRoot();

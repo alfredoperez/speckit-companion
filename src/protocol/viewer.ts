@@ -237,6 +237,8 @@ export interface LivingHeaderMeta {
     scenarios?: number;
     coverage?: { covered: number; total: number };
     drifted?: boolean;
+    /** True when the capability is registered but its spec file does not exist yet. */
+    missing?: boolean;
     /** Headings whose touched files drifted; absent when drift is unknown. */
     driftedRequirements?: string[];
 }
@@ -495,6 +497,8 @@ export type ViewerToExtensionMessage =
     // Adopt another code area as a living spec; the command asks which
     | {
           type: 'livingAdopt';
+          /** Adopt the open capability's own areas rather than asking for new ones. */
+          thisCapability?: boolean;
       }
     // Check the open capability's spec against its code
     | {

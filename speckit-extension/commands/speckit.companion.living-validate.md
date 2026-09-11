@@ -18,7 +18,7 @@ This is **opt-in**. With living specs disabled (or no config), it reports nothin
 
 ## Execution
 
-Run the checker from the repository root:
+Run the checker from the repository root. When the invocation names a capability, add `--capability <name>` so only that capability's spec is checked:
 
 ```bash
 python3 .specify/extensions/companion/scripts/living_validate.py

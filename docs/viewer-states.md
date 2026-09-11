@@ -434,7 +434,7 @@ The spec tier renders one card per `###` requirement in a 760px column. State is
 | drifted | `--warning` | `drifted` | `driftedRequirements` from `livingHealthResolved`: headings whose touches marker matches a drifted file. Wins over adopted |
 | new | `--success` | `new` | reserved for new-in-this-branch detection |
 
-A card with a touches marker ends with a quiet `touches N files` link that reveals the first pattern. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate`), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action.
+A card with a touches marker ends with a quiet `touches N files` link that reveals the first pattern. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate <capability>`, scoped to the open one), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action, which adopts the directories the capability already claims without asking.
 
 ### Key Files
 

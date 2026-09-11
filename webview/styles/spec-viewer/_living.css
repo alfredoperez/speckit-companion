@@ -141,7 +141,7 @@
 #markdown-content .living-req-card[data-req-state="drifted"] { --req-edge: var(--warning); --req-ink: var(--warning); }
 #markdown-content .living-req-card[data-req-state="new"] { --req-edge: var(--success); --req-ink: var(--success); }
 
-#markdown-content .living-req-card > h3 {
+#markdown-content .living-req-card h3 {
   margin: 0 0 var(--space-3);
   padding: var(--space-2) var(--space-3);
   background: var(--bg-secondary);

@@ -605,9 +605,10 @@ export class SpecViewerProvider {
 
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     const specTierPath = specTier?.filePath ?? doc.filePath;
-    const meta = workspaceRoot
+    const built = workspaceRoot
       ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
       : null;
+    const meta = built && !specTier?.exists ? { ...built, missing: true } : built;
 
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.

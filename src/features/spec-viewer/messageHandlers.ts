@@ -34,7 +34,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot } from "../specs/livingSpecsModel";
+import { isPathWithinRoot, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -165,11 +165,17 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     livingSyncAll: async () => {
       await vscode.commands.executeCommand("speckit.livingSpecs.sync");
     },
-    livingAdopt: async () => {
-      await vscode.commands.executeCommand("speckit.livingSpecs.adopt");
+    livingAdopt: async (msg, dir, deps) => {
+      const areas = msg.thisCapability ? livingCapabilityAreas(dir, deps) : undefined;
+      await (areas
+        ? vscode.commands.executeCommand("speckit.livingSpecs.adopt", { areas })
+        : vscode.commands.executeCommand("speckit.livingSpecs.adopt"));
     },
-    livingValidate: async () => {
-      await vscode.commands.executeCommand("speckit.livingSpecs.validate");
+    livingValidate: async (_msg, dir, deps) => {
+      const capabilitySpecPath = livingCapabilitySpecPath(dir, deps);
+      await (capabilitySpecPath
+        ? vscode.commands.executeCommand("speckit.livingSpecs.validate", { capabilitySpecPath })
+        : vscode.commands.executeCommand("speckit.livingSpecs.validate"));
     },
     revealGlob: async (msg) => {
       const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -755,6 +761,18 @@ function livingCapabilitySpecPath(
   const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
   if (!specTier) return undefined;
   return path.relative(root, specTier.filePath).replace(/\\/g, "/");
+}
+
+/** The directories the open capability claims, from the literal part of each membership glob. */
+function livingCapabilityAreas(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): string[] | undefined {
+  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const specPath = livingCapabilitySpecPath(specDirectory, deps);
+  const cap = root && specPath ? resolveCapabilityBySpecPath(root, specPath) : undefined;
+  const areas = cap?.match.map(g => g.split(/[*?[{]/)[0].replace(/\/+$/, "") || ".");
+  return areas?.length ? [...new Set(areas)] : undefined;
 }
 
 async function handleLivingUpdate(

@@ -15,7 +15,7 @@
 
 import { render } from 'preact';
 import { FooterActions } from '../FooterActions';
-import { markdownHtml, navState, viewerState } from '../../signals';
+import { navState, viewerState } from '../../signals';
 import type { ViewerState } from '../../types';
 
 // `<Toast>` reaches for a `vscode.postMessage` global at mount.
@@ -190,7 +190,6 @@ describe('FooterActions — living spec', () => {
 
     it('offers Adopt and Validate, and says the capability is in sync, when nothing has drifted', () => {
         navState.value = living(false);
-        markdownHtml.value = '<p>spec</p>';
 
         const container = renderInto();
         try {
@@ -198,7 +197,6 @@ describe('FooterActions — living spec', () => {
             expect(container.querySelector('.footer-context')?.textContent).toBe('In sync');
         } finally {
             cleanup(container);
-            markdownHtml.value = '';
         }
     });
 
@@ -206,7 +204,6 @@ describe('FooterActions — living spec', () => {
         const drifted = living(true);
         drifted.livingMeta.driftedRequirements = ['A', 'B'];
         navState.value = drifted;
-        markdownHtml.value = '<p>spec</p>';
 
         const container = renderInto();
         try {
@@ -214,7 +211,6 @@ describe('FooterActions — living spec', () => {
             expect(container.querySelector('.footer-context')?.textContent).toBe('2 requirements drifted');
         } finally {
             cleanup(container);
-            markdownHtml.value = '';
         }
     });
 

@@ -125,6 +125,17 @@ describe('registerLivingSpecsCommands', () => {
             );
         });
 
+        it('skips the question when the caller already names the areas', async () => {
+            await handlers['speckit.livingSpecs.adopt']({ areas: ['src/checkout'] });
+
+            expect(vscode.window.showQuickPick).not.toHaveBeenCalled();
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt src/checkout',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
         it('adopts several areas in one run', async () => {
             (vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue([]);
             (vscode.window.showQuickPick as jest.Mock).mockResolvedValue([
@@ -244,7 +255,16 @@ describe('registerLivingSpecsCommands', () => {
     });
 
     describe('validate', () => {
-        it('dispatches the shape check for the AI to run', async () => {
+        it('scopes the shape check to the capability it was invoked on', async () => {
+            await handlers['speckit.livingSpecs.validate']({ capability: { name: 'checkout' } });
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-validate checkout',
+                'SpecKit - Validate Living Specs',
+                true
+            );
+        });
+
+        it('checks every living spec when invoked without a capability', async () => {
             await handlers['speckit.livingSpecs.validate']();
             expect(executeSlashCommand).toHaveBeenCalledWith(
                 '/speckit.companion.living-validate',
