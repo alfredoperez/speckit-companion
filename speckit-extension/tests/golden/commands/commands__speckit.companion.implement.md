@@ -147,9 +147,9 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
    **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. Emit one `--batch`. Include only the keys you actually have: an empty list is not the same as an absent one, and on a clean run `concerns` is genuinely absent.
 
-   In `--verified`, record the command you ran and its real outcome, `"result": "142/142 pass"`, never a restatement of intent. If a check could not be run, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it.
+   Record a check that can be run with `--verify-run "<what>::<command>"`: it runs the command and keeps the exit code, rather than taking your word for it. Every suite, build, lint and script goes that way. `--verified` stays for what genuinely cannot be run — a manual pass, a judgement — and reads in the viewer as your account rather than as evidence, which is what it is. Never write a `--verified` describing a command you ran: that is the case `--verify-run` exists for, and a typed result is indistinguishable from an imagined one. If a check could not be run at all, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it.
 
-   One `--verified` per real check (tests, build, manual pass, including warnings you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
+   One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
 8. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
