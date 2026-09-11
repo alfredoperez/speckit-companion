@@ -298,6 +298,42 @@
       {
         "name": "specs-state-record",
         "reason": "state record untouched"
+      },
+      {
+        "name": "spec-viewer-actions",
+        "reason": "shares the spec-viewer glob; its requirements were not changed"
+      },
+      {
+        "name": "spec-viewer-panel",
+        "reason": "shares the spec-viewer glob; panel behaviour unchanged"
+      },
+      {
+        "name": "spec-viewer-state",
+        "reason": "shares the spec-viewer glob; state unchanged"
+      },
+      {
+        "name": "viewer-ui-comments",
+        "reason": "shares the webview glob; comments unchanged"
+      },
+      {
+        "name": "viewer-ui-navigation",
+        "reason": "shares the webview glob; navigation unchanged"
+      },
+      {
+        "name": "viewer-ui-overview",
+        "reason": "shares the webview glob; overview unchanged"
+      },
+      {
+        "name": "viewer-ui-state",
+        "reason": "shares the webview glob; state unchanged"
+      },
+      {
+        "name": "capture-runtime-living-fold",
+        "reason": "living_validate.py gained a filter; the fold is unchanged"
+      },
+      {
+        "name": "commands-living-markers",
+        "reason": "markers unchanged"
       }
     ],
     "synced": [
@@ -305,7 +341,8 @@
       "specs-living-view",
       "viewer-ui-chrome",
       "viewer-ui-document",
-      "commands-living"
+      "commands-living",
+      "capture-runtime-drift"
     ]
   },
   "last_action": "all 16 tasks done, 2941/2941 tests pass",
@@ -669,5 +706,6 @@
       "note": "Doctor: one capture call in this run resolved no spec and wrote nothing; could not attribute it to a specific call",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "598e88f9-1b94-4a24-a1d3-286ccc3e9ac0"
 }

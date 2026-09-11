@@ -307,3 +307,89 @@ A registered capability whose spec file does not exist yet SHALL still open from
 #### Scenario: Validate is pressed in an open capability
 - **WHEN** the check is dispatched
 - **THEN** it names that capability
+
+## ADDED Requirements
+<!-- capability: capture-runtime-drift -->
+
+### A file one requirement names does not drift the capabilities that only share its folder
+
+When a requirement's marker in one capability names a changed file, the drift report SHALL attribute that change to that capability alone. A sibling capability whose membership glob also matches the file, but whose requirements never name it, SHALL NOT be reported as drifted for it. A changed file no requirement names anywhere still drifts every capability that claims it.
+
+#### Scenario: two capabilities claim one folder and a requirement names the changed file
+- **WHEN** drift is computed
+- **THEN** only the capability with that requirement is reported
+
+#### Scenario: a changed file no marker names
+- **WHEN** drift is computed
+- **THEN** every capability whose glob matches it is reported
+
+## MODIFIED Requirements
+<!-- capability: spec-viewer-living -->
+
+### A living spec is presented as a capability, not a run
+
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and MUST NOT offer an Overview or a tier strip: opening a capability lands on its requirement cards, and the rules and coverage files open from the Living Specs tree. Its title comes from the capability's own spec document whichever tier is displayed. The header carries facts only: a DRAFT badge when the document declares itself a draft, the requirement counts by state, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, beside a line stating the capability's condition: adopting another area and validating living specs are offered whatever the capability's state, and syncing this spec to its code only once drift has been found. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands. A covers glob is a control that reveals that place in the Explorer.
+
+A tier is resolved by the naming convention the resolver writes, and a convention that has been renamed SHALL still resolve the file a project already has.
+
+#### Scenario: a capability is opened from the tree
+- **WHEN** the panel renders
+- **THEN** it shows the requirement cards, with no Overview and no tab strip
+
+#### Scenario: the project predates the rules tier's rename
+- **WHEN** the capability's rules file still carries the old suffix
+- **THEN** it is listed as the rules tier rather than reported missing
+
+#### Scenario: the reader asks to update a drifted living spec
+- **WHEN** the reader triggers the update from the footer bar
+- **THEN** the capability's spec-tier path is resolved from the panel's source anchor and routed through the same living-specs update command the sidebar uses
+
+#### Scenario: a covers glob is activated
+- **WHEN** the reader clicks it
+- **THEN** the glob's static prefix is confined to the workspace and revealed in the Explorer; a prefix that is not a real path falls back to a find-in-files scoped to the glob
+
+## MODIFIED Requirements
+<!-- capability: viewer-ui-document -->
+
+### A living requirement shows its state on its heading's left edge
+
+Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block holding a meta row and the title, with a 3px left edge in the state's colour: confirmed in the accent colour, adopted in the review colour, drifted in the warning colour, new in the success colour. Drifted wins over adopted. Only the non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour; a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
+
+#### Scenario: a requirement whose touched file changed
+- **WHEN** the extension reports it among the drifted requirements
+- **THEN** its card redraws with the warning edge and a Drifted pill
+
+#### Scenario: a confirmed requirement
+- **WHEN** its card renders
+- **THEN** its meta row holds no pill
+
+#### Scenario: a capability with a single requirement
+- **WHEN** it renders
+- **THEN** no outline is shown
+
+## MODIFIED Requirements
+<!-- capability: specs-living-view -->
+
+### Living-spec listings are read-only, bounded, and honest about what they could not compute
+
+The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. A capability row's tooltip SHALL open with the first sentence of its spec's purpose, so the row says what the capability is about and not only where it lives. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
+
+#### Scenario: a capability's document has never been committed
+- **WHEN** drift is computed
+- **THEN** drift is reported as unknown rather than as "no drift"
+
+#### Scenario: a configured document path points outside the workspace
+- **WHEN** the listing resolves it
+- **THEN** the entry is dropped rather than read
+
+#### Scenario: no capability in the project has a coverage file
+- **WHEN** the rows are drawn
+- **THEN** none of them says anything about coverage, because that is how the project is rather than a gap in any one capability
+
+#### Scenario: one capability has a coverage file and another does not
+- **WHEN** the rows are drawn
+- **THEN** the one without it reads as having no coverage file, and its tooltip names the action that writes one
+
+#### Scenario: the reader hovers a capability row
+- **WHEN** the tooltip shows
+- **THEN** its first line after the name is the purpose's first sentence

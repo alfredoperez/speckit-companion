@@ -10,7 +10,7 @@ This capability is how living specs show up in the editor: the Living Specs tree
 
 ### Living-spec listings are read-only, bounded, and honest about what they could not compute
 
-The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
+The living-specs listing SHALL read the project's capability configuration without executing any project tooling, resolving each capability's document path and confining every resolved path to the workspace. A capability row's tooltip SHALL open with the first sentence of its spec's purpose, so the row says what the capability is about and not only where it lives. Derived health — coverage counts, drift — MUST be reported as *absent* when it cannot be computed, never as zero or false: a missing count and a genuine zero mean opposite things to a reader. Any external call it makes to compute health MUST be time-bounded. A capability with no coverage file SHALL be called out as such only once some other capability in the project has one: before that, a project simply has not started mapping tests, and saying so on every row is the first thing a new reader is told.
 
 #### Scenario: a capability's document has never been committed
 - **WHEN** drift is computed
@@ -27,6 +27,10 @@ The living-specs listing SHALL read the project's capability configuration witho
 #### Scenario: one capability has a coverage file and another does not
 - **WHEN** the rows are drawn
 - **THEN** the one without it reads as having no coverage file, and its tooltip names the action that writes one
+
+#### Scenario: the reader hovers a capability row
+- **WHEN** the tooltip shows
+- **THEN** its first line after the name is the purpose's first sentence
 
 ### A drifted row is told apart by shape and repaired from the row
 

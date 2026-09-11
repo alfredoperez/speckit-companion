@@ -238,6 +238,20 @@ function buildRequirementCard(
     });
 
     const badges: string[] = [];
+    // Drifted wins the edge: it is the state that needs action first.
+    const state = livingDrifted.has(title) ? 'drifted' : adoptedFrom ? 'adopted' : 'confirmed';
+    // The source sits in the tooltip, never on the face: a line number rots on the next edit to that file.
+    if (state !== 'confirmed') {
+        const tooltip = state === 'adopted'
+            ? ` title="Adopted from ${escapeAttr(adoptedFrom)}. A run has not confirmed it yet."`
+            : ' title="A file this requirement touches changed since the spec was last updated"';
+        badges.push(`<span class="living-req-pill living-req-pill--${state}"${tooltip}>`
+            + `<span class="living-req-pill-dot" aria-hidden="true"></span>${state === 'adopted' ? 'Adopted' : 'Drifted'}</span>`);
+    }
+    if (adoptedFrom) {
+        badges.push('<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
+            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>');
+    }
     if (inferred) {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
@@ -261,17 +275,6 @@ function buildRequirementCard(
     // A bare flag, never the source string: this is an attribute, and the
     // viewer's escapeHtml does not escape attribute quotes.
     const adoptedAttr = adoptedFrom ? ' data-req-adopted' : '';
-    // Drifted wins the edge: it is the state that needs action first.
-    const state = livingDrifted.has(title) ? 'drifted' : adoptedFrom ? 'adopted' : 'confirmed';
-    // The source sits in the tooltip, never on the face: a line number rots on the next edit to that file.
-    const tooltip = adoptedFrom ? ` title="adopted from ${escapeAttr(adoptedFrom)}"` : '';
-    const approve = adoptedFrom
-        ? '<button type="button" class="living-req-approve" data-req-approve title="Approve: drop the adopted marker">'
-            + '<span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>'
-        : '';
-    const stateLine = state === 'confirmed'
-        ? []
-        : [`<div class="living-req-state"${tooltip}>${state}${approve}</div>`];
     const globs = touchesGlobs(blockLines);
     const touchesLine = globs.length
         ? [`<div class="living-req-touches"><button type="button" data-reveal-glob="${escapeAttr(globs[0])}">`
@@ -280,9 +283,10 @@ function buildRequirementCard(
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
         + ` data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}>`,
-        ...stateLine,
-        `### ${title}`,
+        '<div class="living-req-header">',
         ...metaLine,
+        `### ${title}`,
+        '</div>',
         ...body,
         ...touchesLine,
         '</div>',

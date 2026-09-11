@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Drift no longer flags every capability that shares a folder.** When a requirement in one living spec names the changed file, sibling capabilities that only claim that folder through a broad pattern are not reported as drifted for it.
+
 ### Added
 - **`/speckit.companion.living-validate` can check one capability.** Name a capability and only its spec is checked; with no name it checks every living spec and active feature spec as before. An unknown name is reported as skipped, never as a clean result.
 

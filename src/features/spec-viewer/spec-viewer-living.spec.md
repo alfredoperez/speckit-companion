@@ -12,36 +12,25 @@ Living mode presents a capability rather than a run: its tiers, its verified cov
 
 ### A living spec is presented as a capability, not a run
 
-A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and present the capability's tiers as the only navigation. Its title comes from the capability's own spec document whichever tier is displayed, so the title belongs to the capability rather than to the tab on screen. The header carries facts only: a DRAFT badge when the document declares itself a draft (a "living" badge says nothing the panel title does not), the drift marker, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, beside a line stating the capability's condition: adopting another area and validating living specs are offered whatever the capability's state, and syncing this spec to its code only once drift has been found. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands, so the panel and the sidebar build the same prompts. A covers glob is a place in the repository, so it is a control that reveals that place in the Explorer.
+A living-spec panel MUST drop the workflow machinery entirely — no run state, no phases, no workflow forward action — and MUST NOT offer an Overview or a tier strip: opening a capability lands on its requirement cards, and the rules and coverage files open from the Living Specs tree. Its title comes from the capability's own spec document whichever tier is displayed. The header carries facts only: a DRAFT badge when the document declares itself a draft, the requirement counts by state, coverage, what the capability covers and where its file lives — stated once each. Its actions sit in the same footer bar every other viewer state uses, beside a line stating the capability's condition: adopting another area and validating living specs are offered whatever the capability's state, and syncing this spec to its code only once drift has been found. Each resolves the capability's spec tier from the panel's own source anchor and hands off to the shared living-specs commands. A covers glob is a control that reveals that place in the Explorer.
 
-A tier is resolved by the naming convention the resolver writes, and a convention that has been renamed SHALL still resolve the file a project already has: where the rules tier's current name is absent, its previous name is accepted in its place and shown as that tier.
+A tier is resolved by the naming convention the resolver writes, and a convention that has been renamed SHALL still resolve the file a project already has.
+
+#### Scenario: a capability is opened from the tree
+- **WHEN** the panel renders
+- **THEN** it shows the requirement cards, with no Overview and no tab strip
 
 #### Scenario: the project predates the rules tier's rename
 - **WHEN** the capability's rules file still carries the old suffix
 - **THEN** it is listed as the rules tier rather than reported missing
 
-#### Scenario: the architecture tier is selected
-- **WHEN** a non-spec tier is displayed
-- **THEN** the header still shows the capability's title as authored in its spec tier
-- **AND** no workflow status or forward action appears
-
 #### Scenario: the reader asks to update a drifted living spec
 - **WHEN** the reader triggers the update from the footer bar
-- **THEN** the capability's spec-tier path is resolved from the panel's source anchor, not from the tab on screen
-- **AND** the request is routed through the same living-specs update command the sidebar uses, so both entry points fold back identically
-
-#### Scenario: the capability has not drifted
-- **WHEN** the panel renders
-- **THEN** the footer offers adoption and validation and no sync, so the bar never offers work with no subject
+- **THEN** the capability's spec-tier path is resolved from the panel's source anchor and routed through the same living-specs update command the sidebar uses
 
 #### Scenario: a covers glob is activated
 - **WHEN** the reader clicks it
 - **THEN** the glob's static prefix is confined to the workspace and revealed in the Explorer; a prefix that is not a real path falls back to a find-in-files scoped to the glob
-
-#### Scenario: the document carries a draft banner near its top
-- **WHEN** the spec declares itself a draft
-- **THEN** the header badges it as a draft
-- **AND** the in-document banner is left intact
 
 ### Approving an adopted requirement only ever removes what adoption claimed
 

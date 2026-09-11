@@ -352,6 +352,35 @@ def _record_drift_verdict(root: str, verdict: dict) -> None:
         pass
 
 
+def _marker_globs(root: str, living: dict) -> dict[str, list[str]]:
+    """Every `touches` glob in each capability's spec, by capability name."""
+    out: dict[str, list[str]] = {}
+    for cap in living.get("capabilities") or []:
+        spec = cap.get("spec")
+        if not spec:
+            continue
+        try:
+            with open(os.path.join(root, spec), encoding="utf-8") as fh:
+                slices = rsp.requirement_slices(fh.read())
+        except (OSError, UnicodeDecodeError):
+            continue
+        out[cap["name"]] = [g for s in slices for g in (s.get("touches") or [])]
+    return out
+
+
+def _named_elsewhere(fp: str, cap_name: str, markers: dict[str, list[str]]) -> bool:
+    """A requirement in another capability names this file, and none here does.
+
+    Sibling capabilities routinely share one broad glob, so a change one of them
+    describes would flag every other. The requirement that names the file is the
+    claim; a glob with no requirement behind it yields to it.
+    """
+    if any(rsp._glob_matches(g, fp) for g in markers.get(cap_name, [])):
+        return False
+    return any(rsp._glob_matches(g, fp)
+               for name, globs in markers.items() if name != cap_name for g in globs)
+
+
 def _compute_drift(root: str, living: dict, working: bool = False,
                    since: str | None = None) -> dict:
     if not living["enabled"]:
@@ -374,6 +403,7 @@ def _compute_drift(root: str, living: dict, working: bool = False,
     untracked = _untracked(root) if (working and git_ok) else []
     caps_out: list[dict] = []
     skipped: list[dict] = []
+    markers = _marker_globs(root, living)
 
     for cap in living["capabilities"]:
         spec = cap.get("spec")
@@ -427,6 +457,8 @@ def _compute_drift(root: str, living: dict, working: bool = False,
             if _exempt(fp, exempt_globs):
                 continue
             if fp in vouched:
+                continue
+            if _named_elsewhere(fp, cap["name"], markers):
                 continue
             severity = "tracked" if fp in tracked else "unspeced"
             drifted.append({"file": fp, "severity": severity})

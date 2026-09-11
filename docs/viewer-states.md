@@ -410,7 +410,7 @@ A living spec has no branch, created date, phases or task completion, so the hea
 | Element | Content | Source |
 |---------|---------|--------|
 | Title | The spec document's own H1, with a trailing `— Living Spec` stripped | `livingSpecHeading()` in `livingDocs.ts`; falls back to `livingCapabilityName()` |
-| Facts row | `N requirements`, `X adopted, unconfirmed`, `N scenarios`, `N/M covered`, `Y drifted` (or `drift` when no requirement names a drifted file) | `countLivingFacts()`; adopted from the Overview payload; coverage/drift from `readCapabilityHealth()` |
+| Facts row | `N requirements`, `X adopted, unconfirmed`, `N scenarios`, `N/M covered`, `Y drifted` (or `drift` when no requirement names a drifted file) | `countLivingFacts()`; adopted from the requirement list the extension parses; coverage/drift from `readCapabilityHealth()` |
 | Covers row | `Covers` + up to 3 claimed globs + `+N more` (rest on hover) | `match` from the capability's `.specify/companion.yml` entry |
 | Location | Repo-relative spec path, with the central/colocated explanation on hover | `location` + `spec` from the resolved capability |
 
@@ -425,14 +425,14 @@ Notes:
 
 ### Living-spec requirement cards
 
-The spec tier renders one card per `###` requirement in a 760px column. State is the heading block's 3px left edge, never a badge:
+A living spec has no Overview and no tab strip: opening a capability lands on its cards, and the Rules and Coverage files open from the tree. The spec tier renders one card per `###` requirement in a 760px column, each in the user-story card shape (bordered block, meta row, title). State is the block's 3px left edge, with a pill in the meta row for the non-resting states:
 
 | State | Edge | Word above the heading | Derived from |
 |---|---|---|---|
-| confirmed | `--accent` | none | no marker, no drift |
-| adopted | `--review` | `adopted`, source file in its tooltip | `<!-- adopted: … -->` |
-| drifted | `--warning` | `drifted` | `driftedRequirements` from `livingHealthResolved`: headings whose touches marker matches a drifted file. Wins over adopted |
-| new | `--success` | `new` | reserved for new-in-this-branch detection |
+| confirmed | `--accent` | none (no pill) | no marker, no drift |
+| adopted | `--review` | `Adopted` pill, source file in its tooltip, Approve beside it | `<!-- adopted: … -->` |
+| drifted | `--warning` | `Drifted` pill | `driftedRequirements` from `livingHealthResolved`: headings whose touches marker matches a drifted file. Wins over adopted |
+| new | `--success` | `New` pill | reserved for new-in-this-branch detection |
 
 A card with a touches marker ends with a quiet `touches N files` link that reveals the first pattern. The rail repeats each card's state as a pip and is hidden when the capability has one requirement or none. The bar states the condition (`In sync`, `Y requirements drifted`, `Drift unknown`, `No spec yet`) and offers **Adopt an area**, **Validate** (`/speckit.companion.living-validate <capability>`, scoped to the open one), and **Sync** only when drifted. A registered capability with no spec file opens to a single **Adopt this area** call to action, which adopts the directories the capability already claims without asking.
 

@@ -66,16 +66,9 @@ describe('what the viewer lands on', () => {
         expect(showingOverview.value).toBe(true);
     });
 
-    it('keeps a living spec on its Overview when no landing was asked for', () => {
+    it('opens a living spec on its cards, never an Overview', () => {
         applyViewerState(ranOnce());
-        applyNavState(nav({ livingMode: true }));
-
-        expect(showingOverview.value).toBe(true);
-    });
-
-    it('sends a living spec to the document when one was asked for', () => {
-        applyViewerState(ranOnce());
-        applyNavState(nav({ livingMode: true, landing: 'document' }));
+        applyNavState(nav({ livingMode: true, landing: 'overview' }));
 
         expect(showingOverview.value).toBe(false);
     });

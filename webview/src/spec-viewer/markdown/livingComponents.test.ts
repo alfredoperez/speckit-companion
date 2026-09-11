@@ -572,13 +572,13 @@ describe('the adopted badge', () => {
 
     it('names the source in the state word tooltip, never on the card face', () => {
         const out = preprocessLivingRequirements(spec);
-        expect(out).toContain('title="adopted from CLAUDE.md:18">adopted');
+        expect(out).toContain('living-req-pill--adopted" title="Adopted from CLAUDE.md:18. A run has not confirmed it yet."');
         expect(out).not.toContain('>adopted from CLAUDE.md:18');
     });
 
     it('leaves a confirmed requirement without a state word', () => {
         const out = preprocessLivingRequirements(spec);
-        expect(out.split('Already confirmed')[1]).not.toContain('living-req-state');
+        expect(out.split('Already confirmed')[1]).not.toContain('living-req-pill');
     });
 
     it('carries the state on the card for the edge colour', () => {
@@ -589,7 +589,7 @@ describe('the adopted badge', () => {
 
     it('escapes quotes in the adopted source so it cannot leave the attribute', () => {
         const out = preprocessLivingRequirements(spec.replace('CLAUDE.md:18', 'a" onclick="x'));
-        expect(out).toContain('title="adopted from a&quot; onclick=&quot;x"');
+        expect(out).toContain('title="Adopted from a&quot; onclick=&quot;x. A run has not confirmed it yet."');
     });
 
     it('gives a drifted requirement the drifted word, even when it is also adopted', () => {
@@ -597,7 +597,8 @@ describe('the adopted badge', () => {
         try {
             const out = preprocessLivingRequirements(spec);
             expect(out).toContain('data-req-state="drifted"');
-            expect(out).toContain('title="adopted from CLAUDE.md:18">drifted');
+            expect(out).toContain('living-req-pill--drifted');
+            expect(out).toContain('data-req-approve');
         } finally {
             setLivingDrifted([]);
         }

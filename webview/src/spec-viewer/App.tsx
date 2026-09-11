@@ -5,7 +5,6 @@ import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { LivingOverview } from './components/LivingOverview';
 import { markdownHtml, navState, showingOverview, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 import type { VSCodeApi } from './types';
@@ -65,11 +64,6 @@ export function App({ specStatus }: AppProps) {
     return (
         <>
             <PageChrome />
-            {living && (
-                <nav class="compact-nav">
-                    <NavigationBar />
-                </nav>
-            )}
             <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
                 {!living && <NavigationBar />}
                 <div class="main-column">
@@ -88,13 +82,6 @@ export function App({ specStatus }: AppProps) {
                                 <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt', thisCapability: true })}>
                                     Adopt this area
                                 </button>
-                            </div>
-                        )}
-                        {living && showOverview && (
-                            <div class="overview-pane">
-                                <ActivityErrorBoundary>
-                                    <LivingOverview />
-                                </ActivityErrorBoundary>
                             </div>
                         )}
                         {!living && hasMountedActivity && (

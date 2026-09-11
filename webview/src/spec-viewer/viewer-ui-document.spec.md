@@ -112,15 +112,15 @@ The following files were not read in full by the original adoption — their exp
 
 ### A living requirement shows its state on its heading's left edge
 
-Each requirement card SHALL carry exactly one state, drawn as the 3px left edge of its heading block: confirmed in the accent colour, adopted in the review colour, drifted in the warning colour, and new in the success colour. Drifted wins over adopted, because it is the state that needs action first. Only the non-resting states SHALL print a short word above the heading, in the matching ink; a confirmed card carries no word. A card whose requirement names files SHALL end with one quiet link counting them, which reveals the first pattern. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
+Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block holding a meta row and the title, with a 3px left edge in the state's colour: confirmed in the accent colour, adopted in the review colour, drifted in the warning colour, new in the success colour. Drifted wins over adopted. Only the non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour; a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
 
 #### Scenario: a requirement whose touched file changed
 - **WHEN** the extension reports it among the drifted requirements
-- **THEN** its card redraws with the warning edge and the word drifted
+- **THEN** its card redraws with the warning edge and a Drifted pill
 
 #### Scenario: a confirmed requirement
 - **WHEN** its card renders
-- **THEN** it shows no state word
+- **THEN** its meta row holds no pill
 
 #### Scenario: a capability with a single requirement
 - **WHEN** it renders
