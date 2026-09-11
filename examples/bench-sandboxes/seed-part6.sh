@@ -22,10 +22,15 @@ MODE="${1:-}"
 [ -n "$MODE" ] || { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "run this from inside a sandbox git repo" >&2; exit 2; }
 
+# The tag a walk starts from. Written once, on the first run, so a mode that commits
+# (drifted) can be wound all the way back rather than leaving its commits behind for
+# whoever walks next.
+BASE_TAG=part6-base
+
 reset_to_head() {
-  git checkout -- . 2>/dev/null || true
-  rm -rf capabilities living-specs.yml
-  git clean -fdq capabilities 2>/dev/null || true
+  git rev-parse -q --verify "refs/tags/$BASE_TAG" >/dev/null 2>&1 || git tag "$BASE_TAG"
+  git reset --hard -q "$BASE_TAG"
+  git clean -fdq
 }
 
 req() { # heading, touches glob, scenario name
@@ -139,6 +144,9 @@ capabilities:
     match: ["$AREA/**"]
     spec: capabilities/steady/steady.spec.md
 YML
+    # Committed because drift is measured from the spec's last commit: without one there
+    # is no baseline and nothing to drift from. Both commits are dropped by the next
+    # `reset_to_head`, so a sandbox is never left carrying a previous walk's history.
     git add -A >/dev/null && git commit -qm "seed: steady capability" >/dev/null
     find "$AREA" -name '*.ts' -o -name '*.tsx' | head -1 | while read -r f; do
       printf '\n// a change that does not alter what the spec says\n' >> "$f"
