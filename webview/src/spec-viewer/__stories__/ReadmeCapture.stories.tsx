@@ -283,7 +283,7 @@ const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm)
  */
 const DRIFTED_REQUIREMENT = 'Oversized uploads are rejected before the body is read';
 
-function LivingViewerPanel() {
+export function LivingViewerPanel() {
     setLivingMode(true);
     setLivingCoverage(null);
     setLivingDrifted([DRIFTED_REQUIREMENT]);

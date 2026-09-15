@@ -65,6 +65,8 @@ import {
 // ── The image list. Adding a documentation image is one line here. ────────
 // story: the Storybook story id (see http://localhost:6017/index.json)
 // out:   filename under docs/screenshots/generated/
+// theme (optional): a preview theme name (see .storybook/preview.tsx) the
+//   story is opened in, instead of the active capture palette.
 // annotate (optional): { selector, label, out } draws one measured callout
 //   box around `selector` with a short label, into a second file.
 const STORIES = [
@@ -195,6 +197,22 @@ const STORIES = [
         story: 'video-capture-readme-composites--c-10-inline-comments-wide',
         out: 'inline-comments-16x9.png',
     },
+
+    // ── Article figures (FigureCapture.stories.tsx) ───────────────────────
+    // One product surface inside the fixed figure frame, always in the violet
+    // palette (the story applies it on its own root). Shoot with
+    // `--only figure-`. Articles copy these into the vault under IMG- names.
+    { story: 'video-capture-figures--f-1-overview-intent', out: 'figure-overview-intent.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-2-overview-expectations', out: 'figure-overview-expectations.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-3-overview-verified', out: 'figure-overview-verified.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-4-overview-decisions', out: 'figure-overview-decisions.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-5-overview-coverage', out: 'figure-overview-coverage.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-6-mid-run', out: 'figure-mid-run.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-7-viewer-rows', out: 'figure-viewer-rows.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-8-inline-review', out: 'figure-inline-review.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-9-sidebar', out: 'figure-sidebar.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-10-living-specs', out: 'figure-living-specs.png', theme: 'violet' },
+    { story: 'video-capture-figures--f-11-builder', out: 'figure-builder.png', theme: 'violet' },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────
@@ -413,7 +431,7 @@ async function main() {
                 continue;
             }
             try {
-                await openStory(page, entry.story);
+                await openStory(page, entry.story, entry.theme ? { vscodeTheme: entry.theme } : {});
 
                 // The preview decorator gives capture stories an exact-pixel
                 // box as the root child; screenshotting that element IS the

@@ -2,6 +2,7 @@ import type { Preview } from '@storybook/preact';
 import { navState } from '../webview/src/spec-viewer/signals';
 import {
     activeCapturePalette,
+    constellationViolet,
     beardedMonokaiBlack,
     beardedVividLight,
     captureFontVars,
@@ -42,6 +43,12 @@ const themes: Record<string, StoryTheme> = {
         vars: deriveVscodeVars(beardedVividLight),
     },
     'high-contrast': { bodyClass: 'vscode-high-contrast', vars: highContrast },
+    // The dark cut of the brand. Article figures are always shot in it; the
+    // capture script selects it per entry (`theme: 'violet'`).
+    violet: {
+        bodyClass: constellationViolet.bodyClass,
+        vars: deriveVscodeVars(constellationViolet),
+    },
 };
 
 // Mock vscode API
@@ -63,6 +70,7 @@ const preview: Preview = {
                     { value: 'monokai-black', title: 'Bearded Monokai Black (dark)' },
                     { value: 'vivid-light', title: 'Bearded Vivid Light (light)' },
                     { value: 'high-contrast', title: 'VS Code High Contrast' },
+                    { value: 'violet', title: 'Constellation Violet (figures)' },
                 ],
                 dynamicTitle: true,
             },
