@@ -283,23 +283,27 @@ const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm)
  */
 const DRIFTED_REQUIREMENT = 'Oversized uploads are rejected before the body is read';
 
-export function LivingViewerPanel() {
+/** `specOnly` renders the common case, a capability with just its spec.md and
+ *  no architecture or coverage tiers, so no tier tabs appear in the header. */
+export function LivingViewerPanel({ specOnly = false }: { specOnly?: boolean } = {}) {
     setLivingMode(true);
     setLivingCoverage(null);
-    setLivingDrifted([DRIFTED_REQUIREMENT]);
+    setLivingDrifted(specOnly ? [] : [DRIFTED_REQUIREMENT]);
     // The cards live on the Spec view; the capture is about them, not the Overview.
     viewerMode.value = 'document';
-    setHasSpecContext(true);
+    setHasSpecContext(!specOnly);
     setCurrentTask(null);
     setTaskSummaries(null);
     viewerState.value = null;
     historyEntries.value = [];
     navState.value = mockNavState({
-        coreDocs: [
-            mockDoc('spec', true, 'Spec'),
-            mockDoc('rules', true, 'Architecture'),
-            mockDoc('coverage', true, 'Coverage'),
-        ],
+        coreDocs: specOnly
+            ? [mockDoc('spec', true, 'Spec')]
+            : [
+                  mockDoc('spec', true, 'Spec'),
+                  mockDoc('rules', true, 'Architecture'),
+                  mockDoc('coverage', true, 'Coverage'),
+              ],
         relatedDocs: [],
         currentDoc: 'spec',
         workflowPhase: 'spec',
@@ -328,7 +332,7 @@ export function LivingViewerPanel() {
             scenarios: livingScenarioCount,
             coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
             drifted: true,
-            driftedRequirements: [DRIFTED_REQUIREMENT],
+            ...(specOnly ? {} : { driftedRequirements: [DRIFTED_REQUIREMENT] }),
         },
     } as Partial<NavState>);
     markdownHtml.value = renderMarkdown(photoStorageLivingSpec);

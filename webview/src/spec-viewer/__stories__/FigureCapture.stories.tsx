@@ -109,10 +109,10 @@ const OVERVIEW = 'Spec Viewer · Overview';
 
 export const F1OverviewIntent: Story = {
     name: 'F1 · Overview: intent and the run',
-    parameters: { capture: { width: 800, height: 800 } },
+    parameters: { capture: { width: 800, height: 670 } },
     render: () => (
         <CaptureFrame>
-            <Figure compact zoom={1.12} windowName={OVERVIEW} marks={[{ selector: '.dossier-timing', kind: 'here', label: 'four phases, timed' }]}>
+            <Figure compact zoom={1.08} windowName={OVERVIEW} marks={[{ selector: '.dossier-timing', kind: 'here', label: 'four phases, timed' }]}>
                 <Dossier>
                     <IntentSection state={vsCompleted} />
                 </Dossier>
@@ -261,10 +261,10 @@ export const F8InlineReview: Story = {
 
 export const F9Sidebar: Story = {
     name: 'F9 · The sidebar',
-    parameters: { capture: { width: 480, height: 860 } },
+    parameters: { capture: { width: 400, height: 820 } },
     render: () => (
         <CaptureFrame>
-            <Figure compact zoom={1.2} windowName="Specs sidebar">
+            <Figure compact windowName="Specs sidebar">
                 <div style="height: 100%; overflow: hidden;">
                     <SidebarShell panes={[specsPane(true, false), livingSpecsPane(), steeringPane(true)]} />
                 </div>
@@ -308,7 +308,7 @@ function LivingSpecBody() {
             viewerMode.value = null;
         };
     }, []);
-    return <LivingViewerPanel />;
+    return <LivingViewerPanel specOnly />;
 }
 
 // ── The Pipeline Builder ──────────────────────────────────────────────────
