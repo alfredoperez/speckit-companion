@@ -327,3 +327,52 @@ export const P5Minimal: Story = {
         </CaptureFrame>
     ),
 };
+
+// ── Mobile-first: no baked caption, one region, zoomed, 800 wide ─────────
+
+function RailOnly() {
+    return (
+        <>
+            <style>{`.capture-stage .activity-panel { padding: 14px 20px; gap: 10px; max-width: none; } .capture-stage .dossier-intent__meta { display: none; }`}</style>
+            <div class="activity-panel dossier" style="height: 100%; overflow: hidden;">
+                <IntentSection state={vs} />
+            </div>
+        </>
+    );
+}
+
+export const M1Rail: Story = {
+    name: 'M1 · Mobile-first: the rail, zoomed',
+    parameters: { capture: { width: 800, height: 500 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure compact zoom={1.2} windowName="Spec Viewer · Overview" marks={[{ selector: '.dossier-timing', kind: 'here', label: 'four phases, timed' }]}>
+                <RailOnly />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const M2Verified: Story = {
+    name: 'M2 · Mobile-first: verified checks',
+    parameters: { capture: { width: 800, height: 720 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure compact zoom={1.25} windowName="Spec Viewer · Overview">
+                <Verified />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const M3Square: Story = {
+    name: 'M3 · Mobile-first: square, intent',
+    parameters: { capture: { width: 800, height: 800 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure compact zoom={1.12} windowName="Spec Viewer · Overview">
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};

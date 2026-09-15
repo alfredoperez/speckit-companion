@@ -169,6 +169,11 @@ interface FigureProps {
     windowName?: string;
     /** Lift the shot: lighter panel, accent-tinted border, soft glow. */
     lift?: boolean;
+    /** Mobile-first layout: no header, the window is the top edge, the
+     *  wordmark sits bottom right, and the caption is NOT baked in (it lives
+     *  in the article as text). `zoom` scales the surface with real glyphs. */
+    compact?: boolean;
+    zoom?: number;
     /** The point of the figure, one sentence. <b> lifts the key phrase. */
     caption: ComponentChildren;
     marks?: FigureMark[];
@@ -181,11 +186,35 @@ interface FigureProps {
 
 /** The frame. Header (title chip, wordmark), the shot, the caption with the
  *  mascot. The palette comes from the preview theme the entry is opened in. */
-export function Figure({ title, lead, caption, marks = [], shotPadding, mascot = 'pointing', chrome = 'none', windowName = 'Spec Viewer', lift = false, children }: FigureProps) {
+export function Figure({ title, lead, caption, marks = [], shotPadding, mascot = 'pointing', chrome = 'none', windowName = 'Spec Viewer', lift = false, compact = false, zoom = 1, children }: FigureProps) {
     useEffect(() => {
         document.fonts.load(`600 17px Geist`);
         document.fonts.load(`400 21px Geist`);
     }, []);
+    if (compact) {
+        return (
+            <div style={`display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 18px 18px 14px; gap: 12px; background: ${T.ground}; font-family: ${FIGURE_FONT}; color: ${T.textPrimary};`}>
+                <style>{GEIST_FACES}</style>
+                <div style={`position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid rgba(167, 139, 250, 0.6); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18), 0 0 60px rgba(139, 92, 246, 0.28), 0 20px 50px rgba(0, 0, 0, 0.55); background: #16132a;`}>
+                    <div style={`display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: #1c1834; border-bottom: 1px solid ${T.borderPanel}; flex-shrink: 0;`}>
+                        <span style="display: inline-flex; gap: 6px;">
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; display: block;" />
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e; display: block;" />
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #28c840; display: block;" />
+                        </span>
+                        <span style={`font: 500 13px/1 ${FIGURE_FONT}; color: ${T.textMuted};`}>{windowName}</span>
+                    </div>
+                    <div data-panel="shot" style={`position: relative; flex: 1; min-height: 0; overflow: hidden; ${shotPadding ? `padding: ${shotPadding};` : ''}`}>
+                        <div style={`zoom: ${zoom}; height: ${100 / zoom}%;`}>{children}</div>
+                        {marks.length > 0 && <Marks marks={marks} />}
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; flex-shrink: 0;">
+                    <Wordmark />
+                </div>
+            </div>
+        );
+    }
     return (
         <div style={`display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 22px 26px 24px; gap: 16px; background: ${T.ground}; border: 1px solid ${T.borderPanel}; border-radius: 14px; font-family: ${FIGURE_FONT}; color: ${T.textPrimary};`}>
             <style>{GEIST_FACES}</style>
