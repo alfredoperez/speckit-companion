@@ -1,9 +1,12 @@
 /**
  * ARTICLE FIGURES. NOT A COMPONENT CATALOG.
  * ─────────────────────────────────────────────────────────────────────────
- * A figure is a product screenshot that lives in an article: the real product
- * surface inside one fixed frame that names the screen, carries the site's
- * wordmark, makes its point in a caption, and may outline one or two regions.
+ * A figure is a product screenshot that lives in an article: one region of the
+ * real product inside the compact frame (window bar, strong edge, the site's
+ * wordmark bottom right), with outlines where a region needs pointing at. The
+ * caption is NOT baked in: it is text under the image in the article, so it
+ * stays readable on a phone when the image does not. Figures are 800 wide
+ * where the surface allows; the wide ones are illustrations on a phone.
  * Captured by `scripts/capture-docs-images.mjs --only figure-` into
  * `docs/screenshots/generated/figure-*.png`.
  *
@@ -79,23 +82,14 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-import { B, Figure, T } from './figure';
-
-// ── Sizes. Width is the article column at 2x; height follows the surface. ──
-const WIDE = { width: 1600, height: 900 };
-const DOSSIER_INTENT = { width: 1240, height: 640 };
-const DOSSIER_FENCE = { width: 1240, height: 520 };
-const DOSSIER_VERIFIED = { width: 1240, height: 720 };
-const DOSSIER_DECISIONS = { width: 1240, height: 760 };
-const DOSSIER_COVERAGE = { width: 1240, height: 560 };
-const PORTRAIT = { width: 900, height: 980 };
+import { Figure, T } from './figure';
 
 // ── The completed run every Overview figure is cut from. ──────────────────
 const ctxCompleted = JSON.parse(ctxCompletedRaw) as SpecContextData;
 const vsCompleted = vsFromContext(ctxCompleted, []);
 
 const DOSSIER_CSS = `
-    .capture-stage .activity-panel { padding: 18px 30px; gap: 12px; max-width: none; }
+    .capture-stage .activity-panel { padding: 14px 22px; gap: 10px; max-width: none; }
 `;
 
 function Dossier({ children }: { children: ComponentChildren }) {
@@ -109,24 +103,16 @@ function Dossier({ children }: { children: ComponentChildren }) {
     );
 }
 
+const OVERVIEW = 'Spec Viewer · Overview';
+
 // ── The Overview, one figure per part ─────────────────────────────────────
 
 export const F1OverviewIntent: Story = {
     name: 'F1 · Overview: intent and the run',
-    parameters: { capture: DOSSIER_INTENT },
+    parameters: { capture: { width: 800, height: 800 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Overview: why the spec exists"
-                caption={
-                    <>
-                        The reason in one sentence, then <B>how long each phase took</B>, then which living specs the run folded back into.
-                    </>
-                }
-                marks={[
-                    { selector: '.dossier-timing', kind: 'here', label: 'four phases, timed' },
-                ]}
-            >
+            <Figure compact zoom={1.12} windowName={OVERVIEW} marks={[{ selector: '.dossier-timing', kind: 'here', label: 'four phases, timed' }]}>
                 <Dossier>
                     <IntentSection state={vsCompleted} />
                 </Dossier>
@@ -137,17 +123,10 @@ export const F1OverviewIntent: Story = {
 
 export const F2OverviewExpectations: Story = {
     name: 'F2 · Overview: the fence',
-    parameters: { capture: DOSSIER_FENCE },
+    parameters: { capture: { width: 800, height: 620 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Overview: the fence around the work"
-                caption={
-                    <>
-                        What must stay true, and <B>what was deliberately left out</B>. The second list is the one that saves arguments later.
-                    </>
-                }
-            >
+            <Figure compact zoom={1.15} windowName={OVERVIEW}>
                 <Dossier>
                     <ExpectationsSection state={vsCompleted} />
                 </Dossier>
@@ -158,17 +137,10 @@ export const F2OverviewExpectations: Story = {
 
 export const F3OverviewVerified: Story = {
     name: 'F3 · Overview: what was checked',
-    parameters: { capture: DOSSIER_VERIFIED },
+    parameters: { capture: { width: 800, height: 740 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Overview: what was checked"
-                caption={
-                    <>
-                        Not "tests pass" as a sentence. <B>Five rows, each with the command that ran and what came back.</B>
-                    </>
-                }
-            >
+            <Figure compact zoom={1.1} windowName={OVERVIEW}>
                 <Dossier>
                     <VerifiedSection state={vsCompleted} />
                 </Dossier>
@@ -179,17 +151,10 @@ export const F3OverviewVerified: Story = {
 
 export const F4OverviewDecisions: Story = {
     name: 'F4 · Overview: decisions',
-    parameters: { capture: DOSSIER_DECISIONS },
+    parameters: { capture: { width: 800, height: 700 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Overview: decisions"
-                caption={
-                    <>
-                        Each decision carries its reason and <B>the alternative it rejected</B>, so nobody proposes the rejected option as if it were new.
-                    </>
-                }
-            >
+            <Figure compact zoom={1.1} windowName={OVERVIEW}>
                 <Dossier>
                     <DecisionsSection state={vsCompleted} />
                 </Dossier>
@@ -200,17 +165,10 @@ export const F4OverviewDecisions: Story = {
 
 export const F5OverviewCoverage: Story = {
     name: 'F5 · Overview: coverage',
-    parameters: { capture: DOSSIER_COVERAGE },
+    parameters: { capture: { width: 800, height: 580 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Overview: requirement to task to test"
-                caption={
-                    <>
-                        One row per requirement: the tasks that delivered it and the tests that cover it. <B>A requirement with no test shows up as a gap.</B>
-                    </>
-                }
-            >
+            <Figure compact zoom={1.1} windowName={OVERVIEW}>
                 <Dossier>
                     <CoverageSection state={vsCompleted} />
                 </Dossier>
@@ -223,18 +181,10 @@ export const F5OverviewCoverage: Story = {
 
 export const F6MidRun: Story = {
     name: 'F6 · Mid-run: plan in flight',
-    parameters: { capture: WIDE },
+    parameters: { capture: { width: 900, height: 760 } },
     render: () => (
         <CaptureFrame at={PLANNING_AT}>
-            <Figure
-                title="The same spec while the run is going"
-                caption={
-                    <>
-                        Two phases in. <B>The pipeline on the left ticks each document as it lands</B>; the header counts the phases timed so far.
-                    </>
-                }
-                marks={[{ selector: '.doc-rail', kind: 'here', label: 'the pipeline', pad: 4 }]}
-            >
+            <Figure compact windowName="Spec Viewer · Plan, running" marks={[{ selector: '.doc-rail', kind: 'here', label: 'the pipeline', pad: 4 }]}>
                 <InteractiveViewer
                     ctx={ctxPlanning}
                     docs={teamboardDocs(teamboardTasks, 'specify')}
@@ -263,17 +213,10 @@ export const F6MidRun: Story = {
 
 export const F7ViewerRows: Story = {
     name: 'F7 · The spec as rows',
-    parameters: { capture: WIDE },
+    parameters: { capture: { width: 900, height: 760 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="The specification, rendered"
-                caption={
-                    <>
-                        <B>Each requirement is a labeled row</B>, the section list on the right, the pipeline on the left.
-                    </>
-                }
-            >
+            <Figure compact windowName="Spec Viewer · Specification">
                 <ScrollTo headingId="requirements">
                     <InteractiveViewer
                         ctx={ctxSpecified}
@@ -299,28 +242,15 @@ export const F7ViewerRows: Story = {
 // ── Inline review ─────────────────────────────────────────────────────────
 
 const IC_CARD_WIDTH = 590;
-const IC_ZOOM = 1.7;
 
 export const F8InlineReview: Story = {
     name: 'F8 · Inline review',
-    parameters: { capture: WIDE },
+    parameters: { capture: { width: 800, height: 640 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Inline review comments"
-                caption={
-                    <>
-                        Each comment sits under the line it is about. <B>One pending, one applied, a third being written.</B>
-                    </>
-                }
-                shotPadding="26px 34px"
-            >
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                    <div style={`zoom: ${IC_ZOOM};`}>
-                        <div id="markdown-content" style={`width: ${IC_CARD_WIDTH}px;`}>
-                            {severalOnOneDocumentWithComposer()}
-                        </div>
-                    </div>
+            <Figure compact zoom={1.22} windowName="Spec Viewer · Review" shotPadding="18px 22px">
+                <div id="markdown-content" style={`width: ${IC_CARD_WIDTH}px;`}>
+                    {severalOnOneDocumentWithComposer()}
                 </div>
             </Figure>
         </CaptureFrame>
@@ -331,17 +261,10 @@ export const F8InlineReview: Story = {
 
 export const F9Sidebar: Story = {
     name: 'F9 · The sidebar',
-    parameters: { capture: PORTRAIT },
+    parameters: { capture: { width: 480, height: 860 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="The Specs sidebar"
-                caption={
-                    <>
-                        Grouped by lifecycle, <B>each document with its own state</B>: done, still being written, not created yet.
-                    </>
-                }
-            >
+            <Figure compact zoom={1.2} windowName="Specs sidebar">
                 <div style="height: 100%; overflow: hidden;">
                     <SidebarShell panes={[specsPane(true, false), livingSpecsPane(), steeringPane(true)]} />
                 </div>
@@ -352,19 +275,12 @@ export const F9Sidebar: Story = {
 
 export const F10LivingSpecs: Story = {
     name: 'F10 · Living specs',
-    parameters: { capture: WIDE },
+    parameters: { capture: { width: 1100, height: 760 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="Living Specs"
-                caption={
-                    <>
-                        Coverage per capability in the tree, and one capability open with <B>a requirement flagged as drifted</B>.
-                    </>
-                }
-            >
+            <Figure compact windowName="Living Specs · photo-storage">
                 <div style="display: flex; height: 100%;">
-                    <div style={`width: 360px; flex-shrink: 0; border-right: 1px solid ${T.borderPanel}; overflow: hidden;`}>
+                    <div style={`width: 340px; flex-shrink: 0; border-right: 1px solid ${T.borderPanel}; overflow: hidden;`}>
                         <SidebarShell
                             panes={[
                                 { ...specsPane(false), collapsed: true },
@@ -399,17 +315,10 @@ function LivingSpecBody() {
 
 export const F11Builder: Story = {
     name: 'F11 · The Pipeline Builder',
-    parameters: { capture: { width: 1600, height: 1040 } },
+    parameters: { capture: { width: 1200, height: 840 } },
     render: () => (
         <CaptureFrame>
-            <Figure
-                title="The Pipeline Builder"
-                caption={
-                    <>
-                        Four steps as columns. <B>The hooks under before and after, marked as this project's own</B>, are the customization.
-                    </>
-                }
-            >
+            <Figure compact windowName="Pipeline Builder">
                 <div style="height: 100%; overflow: hidden;">{(TheBoard.render as () => ComponentChildren)()}</div>
             </Figure>
         </CaptureFrame>
