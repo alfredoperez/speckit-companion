@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { Button } from './Button';
 
 const meta: Meta<typeof Button> = {
-    title: 'Primitives/Button',
+    title: 'VS Code Extension/Primitives/Button',
     component: Button,
     argTypes: {
         variant: { control: 'select', options: ['primary', 'secondary', 'ghost', 'enhancement'] },

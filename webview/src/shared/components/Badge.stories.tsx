@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { Badge } from './Badge';
 
 const meta: Meta<typeof Badge> = {
-    title: 'Primitives/Badge',
+    title: 'VS Code Extension/Primitives/Badge',
     component: Badge,
 };
 export default meta;

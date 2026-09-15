@@ -108,7 +108,7 @@ const pauseFooter = (forwardLabel: string): SerializedFooterAction[] => [
 ];
 
 const meta: Meta = {
-    title: 'Video Capture/Clip States',
+    title: 'Scenes/Clip States',
     parameters: {
         layout: 'fullscreen',
         docs: {

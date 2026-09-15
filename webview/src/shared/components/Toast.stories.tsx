@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { Toast, showToast } from './Toast';
 
 const meta: Meta<typeof Toast> = {
-    title: 'Primitives/Toast',
+    title: 'VS Code Extension/Primitives/Toast',
     component: Toast,
 };
 export default meta;

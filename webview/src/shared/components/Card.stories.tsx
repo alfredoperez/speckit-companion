@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { Badge } from './Badge';
 
 const meta: Meta<typeof Card> = {
-    title: 'Primitives/Card',
+    title: 'VS Code Extension/Primitives/Card',
     component: Card,
 };
 export default meta;

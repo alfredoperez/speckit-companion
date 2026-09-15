@@ -189,7 +189,7 @@ const TALL_DOSSIER_CSS = `
 `;
 
 const meta: Meta = {
-    title: 'Video Capture/Episode 1 · Teamboard',
+    title: 'Scenes/Teamboard Run',
     // Shared with ReadmeCapture.stories.tsx (the README hero composite), which
     // reuses the mid-plan Teamboard state rather than forking the fixtures.
     excludeStories: [

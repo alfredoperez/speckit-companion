@@ -18,7 +18,7 @@ import { IntentSection, VerifiedSection } from '../spec-viewer/components/Overvi
 import ctxCompletedRaw from '../spec-viewer/__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
 
 const meta: Meta = {
-    title: 'Style Guide/Figure',
+    title: 'Content/Figure',
     parameters: { layout: 'fullscreen' },
     // Figures are always violet; the toolbar can still switch it to see why.
     globals: { vscodeTheme: 'violet' },

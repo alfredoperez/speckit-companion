@@ -10,7 +10,7 @@ One caveat carried over from `docs/visual-assets.md`: the Specs view is a native
 
 ## Source captures
 
-One capture, no state changes. It comes from the `B4 · All three sections` story in `SidebarCapture.stories.tsx` (`video-capture-specs-sidebar-recreation--b-4-full-sidebar`), at 340 x 776 CSS px and DPR 2, so the file is 680 x 1552. It's byte-identical to the published `docs/screenshots/generated/specs-sidebar.png`: same md5, same story, same capture pass.
+One capture, no state changes. It comes from the `B4 · All three sections` story in `SidebarCapture.stories.tsx` (`vs-code-extension-sidebar--b-4-full-sidebar`), at 340 x 776 CSS px and DPR 2, so the file is 680 x 1552. It's byte-identical to the published `docs/screenshots/generated/specs-sidebar.png`: same md5, same story, same capture pass.
 
 | Shot | File | State on screen |
 |---|---|---|

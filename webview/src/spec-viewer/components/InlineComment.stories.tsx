@@ -4,7 +4,7 @@ import { InlineEditor } from './InlineEditor';
 import type { Refinement } from "../types";
 
 const meta: Meta<typeof InlineComment> = {
-  title: "Viewer/InlineComment",
+  title: "VS Code Extension/Spec Viewer/Inline comment",
   component: InlineComment,
   // `DocumentContext` and `severalOnOneDocument` are shared building blocks,
   // not stories: the inline-comments clip's two frames are captured from them

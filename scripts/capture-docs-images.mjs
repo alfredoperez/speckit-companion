@@ -71,15 +71,15 @@ import {
 //   box around `selector` with a short label, into a second file.
 const STORIES = [
     {
-        story: 'video-capture-episode-1-·-teamboard--a-1-b-requirements',
+        story: 'scenes-teamboard-run--a-1-b-requirements',
         out: 'spec-viewer.png',
     },
     {
-        story: 'viewer-inlinecomment--several-on-one-document',
+        story: 'vs-code-extension-spec-viewer-inline-comment--several-on-one-document',
         out: 'inline-comments.png',
     },
     {
-        story: 'video-capture-episode-1-·-teamboard--a-6-completed-overview',
+        story: 'scenes-teamboard-run--a-6-completed-overview',
         out: 'overview.png',
         annotate: {
             selector: '.dossier-timing',
@@ -88,26 +88,26 @@ const STORIES = [
         },
     },
     {
-        story: 'video-capture-specs-sidebar-recreation--b-4-full-sidebar',
+        story: 'vs-code-extension-sidebar--b-4-full-sidebar',
         out: 'specs-sidebar.png',
     },
     {
         // The landscape three-panel sidebar explainer the README embeds
         // (Specs / Steering / Living Specs as captioned cards).
-        story: 'video-capture-specs-sidebar-recreation--b-5-readme-triptych',
+        story: 'vs-code-extension-sidebar--b-5-readme-triptych',
         out: 'sidebar-triptych.png',
     },
     {
         // The root README hero: sidebar + viewer on one dark ground, mid-plan,
         // with the tagline set above (ReadmeCapture.stories.tsx C1).
-        story: 'video-capture-readme-composites--c-1-readme-hero',
+        story: 'scenes-readme-composites--c-1-readme-hero',
         out: 'hero.png',
     },
     {
         // The benchmark stat strip under "Pick a pipeline once, run it end to
         // end" (ReadmeCapture.stories.tsx C2). Numbers quoted from
         // docs/configuration.md#workflow-choice; change them there first.
-        story: 'video-capture-readme-composites--c-2-pipeline-stats',
+        story: 'scenes-readme-composites--c-2-pipeline-stats',
         out: 'pipeline-stats.png',
     },
     {
@@ -115,7 +115,7 @@ const STORIES = [
         // C3): the sidebar's Living Specs view beside the viewer's real living
         // mode, both on the photo-storage fixture capability. Also the
         // storyboard seed for the future Living Specs GIF.
-        story: 'video-capture-readme-composites--c-3-living-specs-pair',
+        story: 'scenes-readme-composites--c-3-living-specs-pair',
         out: 'living-specs-pair.png',
     },
     {
@@ -124,27 +124,27 @@ const STORIES = [
         // Fast path, and Living Specs, each panel a fixture-fed product
         // surface (run strip + verified rows, the companion.yml hooks shape,
         // the size verdict, the living header).
-        story: 'video-capture-readme-composites--c-4-benefits-strip',
+        story: 'scenes-readme-composites--c-4-benefits-strip',
         out: 'benefits-strip.png',
     },
     {
         // The og:image. Not referenced by either README: it is read from the
         // site's <head>, so it is the one generated still whose consumer is a
         // link preview rather than a page (ReadmeCapture.stories.tsx C7).
-        story: 'video-capture-readme-composites--c-7-social-card',
+        story: 'scenes-readme-composites--c-7-social-card',
         out: 'og-card.png',
     },
     {
         // Cross-promo banner in the ROOT README: "Install the other half",
         // inviting the Spec Kit engine extension (ReadmeCapture.stories.tsx
         // C5). Type over the mascot art from speckit-extension/assets.
-        story: 'video-capture-readme-composites--c-5-banner-install-engine',
+        story: 'scenes-readme-composites--c-5-banner-install-engine',
         out: 'banner-install-engine.png',
     },
     {
         // Cross-promo banner in speckit-extension/README.md: same frame,
         // inviting the VS Code extension (ReadmeCapture.stories.tsx C6).
-        story: 'video-capture-readme-composites--c-6-banner-install-vscode',
+        story: 'scenes-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
     // ── The pipeline builder guide (docs/pipeline-builder.md) ──
@@ -156,36 +156,36 @@ const STORIES = [
     // Four stories were renamed from "block" to "node" when the guide dropped
     // the word; they still write the files they always wrote, which is why
     // `builder-read-block.png` is fed by "reading a node".
-    { story: 'pipeline-builder-guide--two-lanes', out: 'builder-lanes.png' },
-    { story: 'pipeline-builder-guide--the-board', out: 'builder-board.png' },
-    { story: 'pipeline-builder-guide--a-step-header', out: 'builder-step.png' },
-    { story: 'pipeline-builder-guide--the-phase-menu', out: 'builder-phase-menu.png' },
-    { story: 'pipeline-builder-guide--what-changed', out: 'builder-changes.png' },
-    { story: 'pipeline-builder-guide--reading-a-node', out: 'builder-read-block.png' },
-    { story: 'pipeline-builder-guide--a-node-you-rewrote', out: 'builder-yours.png' },
-    { story: 'pipeline-builder-guide--the-way-back', out: 'builder-revert.png' },
-    { story: 'pipeline-builder-guide--replacing-a-node', out: 'builder-replace.png' },
-    { story: 'pipeline-builder-guide--adding-a-node', out: 'builder-add-node.png' },
-    { story: 'pipeline-builder-guide--changing-the-document', out: 'builder-template.png' },
-    { story: 'pipeline-builder-guide--work-attached-to-a-node', out: 'builder-hooks.png' },
-    { story: 'pipeline-builder-guide--attaching-work', out: 'builder-attach.png' },
-    { story: 'pipeline-builder-guide--starting-from-a-preset', out: 'builder-preset.png' },
-    { story: 'pipeline-builder-guide--adding-a-step', out: 'builder-new-step.png' },
-    { story: 'pipeline-builder-guide--a-step-of-your-own', out: 'builder-own-step.png' },
-    { story: 'pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
-    { story: 'pipeline-builder-guide--what-the-build-did', out: 'builder-built.png' },
-    { story: 'pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--two-lanes', out: 'builder-lanes.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--the-board', out: 'builder-board.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--a-step-header', out: 'builder-step.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--the-phase-menu', out: 'builder-phase-menu.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--what-changed', out: 'builder-changes.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--reading-a-node', out: 'builder-read-block.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--a-node-you-rewrote', out: 'builder-yours.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--the-way-back', out: 'builder-revert.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--replacing-a-node', out: 'builder-replace.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--adding-a-node', out: 'builder-add-node.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--changing-the-document', out: 'builder-template.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--work-attached-to-a-node', out: 'builder-hooks.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--attaching-work', out: 'builder-attach.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--starting-from-a-preset', out: 'builder-preset.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--adding-a-step', out: 'builder-new-step.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--a-step-of-your-own', out: 'builder-own-step.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--the-build-is-behind', out: 'builder-stale.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--what-the-build-did', out: 'builder-built.png' },
+    { story: 'vs-code-extension-pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
 
     // ── 16:9 article variants (ReadmeCapture.stories.tsx C8/C9/C10) ───────
     // 1600x900 CSS, so 3200x1800 at DPR 2. ADDITIONS, not replacements: the
     // names above are load-bearing for the published Marketplace README, so
     // the wide cuts take new `-16x9` names and nothing already here moves.
     {
-        story: 'video-capture-readme-composites--c-8-living-specs-pair-wide',
+        story: 'scenes-readme-composites--c-8-living-specs-pair-wide',
         out: 'living-specs-pair-16x9.png',
     },
     {
-        story: 'video-capture-readme-composites--c-9-overview-dossier-wide',
+        story: 'scenes-readme-composites--c-9-overview-dossier-wide',
         out: 'overview-16x9.png',
         annotate: {
             selector: '.dossier-timing',
@@ -194,7 +194,7 @@ const STORIES = [
         },
     },
     {
-        story: 'video-capture-readme-composites--c-10-inline-comments-wide',
+        story: 'scenes-readme-composites--c-10-inline-comments-wide',
         out: 'inline-comments-16x9.png',
     },
 
@@ -202,17 +202,17 @@ const STORIES = [
     // One product surface inside the fixed figure frame, always in the violet
     // palette (the story applies it on its own root). Shoot with
     // `--only figure-`. Articles copy these into the vault under IMG- names.
-    { story: 'video-capture-figures--f-1-overview-intent', out: 'figure-overview-intent.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-2-overview-expectations', out: 'figure-overview-expectations.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-3-overview-verified', out: 'figure-overview-verified.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-4-overview-decisions', out: 'figure-overview-decisions.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-5-overview-coverage', out: 'figure-overview-coverage.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-6-mid-run', out: 'figure-mid-run.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-7-viewer-rows', out: 'figure-viewer-rows.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-8-inline-review', out: 'figure-inline-review.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-9-sidebar', out: 'figure-sidebar.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-10-living-specs', out: 'figure-living-specs.png', theme: 'violet' },
-    { story: 'video-capture-figures--f-11-builder', out: 'figure-builder.png', theme: 'violet' },
+    { story: 'content-article-figures--f-1-overview-intent', out: 'figure-overview-intent.png', theme: 'violet' },
+    { story: 'content-article-figures--f-2-overview-expectations', out: 'figure-overview-expectations.png', theme: 'violet' },
+    { story: 'content-article-figures--f-3-overview-verified', out: 'figure-overview-verified.png', theme: 'violet' },
+    { story: 'content-article-figures--f-4-overview-decisions', out: 'figure-overview-decisions.png', theme: 'violet' },
+    { story: 'content-article-figures--f-5-overview-coverage', out: 'figure-overview-coverage.png', theme: 'violet' },
+    { story: 'content-article-figures--f-6-mid-run', out: 'figure-mid-run.png', theme: 'violet' },
+    { story: 'content-article-figures--f-7-viewer-rows', out: 'figure-viewer-rows.png', theme: 'violet' },
+    { story: 'content-article-figures--f-8-inline-review', out: 'figure-inline-review.png', theme: 'violet' },
+    { story: 'content-article-figures--f-9-sidebar', out: 'figure-sidebar.png', theme: 'violet' },
+    { story: 'content-article-figures--f-10-living-specs', out: 'figure-living-specs.png', theme: 'violet' },
+    { story: 'content-article-figures--f-11-builder', out: 'figure-builder.png', theme: 'violet' },
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────
@@ -232,37 +232,37 @@ const STORIES = [
 // SidebarCapture.stories.tsx (the B* sidebar recreation).
 const CLIP_CAPTURES = [
     // D · review (1224 x 776): the review loop on one document.
-    { clip: 'review', story: 'video-capture-clip-states--d-1-no-comments', out: 'cm-clean.png' },
-    { clip: 'review', story: 'video-capture-clip-states--d-2-pending', out: 'cm-pending.png' },
-    { clip: 'review', story: 'video-capture-clip-states--d-3-opened', out: 'cm-open.png' },
-    { clip: 'review', story: 'video-capture-clip-states--d-4-applied', out: 'cm-applied.png' },
+    { clip: 'review', story: 'scenes-clip-states--d-1-no-comments', out: 'cm-clean.png' },
+    { clip: 'review', story: 'scenes-clip-states--d-2-pending', out: 'cm-pending.png' },
+    { clip: 'review', story: 'scenes-clip-states--d-3-opened', out: 'cm-open.png' },
+    { clip: 'review', story: 'scenes-clip-states--d-4-applied', out: 'cm-applied.png' },
     // The closing shot: the same document with the Specs view open beside it,
     // so the clip ends where you would go looking for that spec later.
-    { clip: 'review', story: 'video-capture-clip-states--d-5-sidebar', out: 'cm-sidebar.png' },
+    { clip: 'review', story: 'scenes-clip-states--d-5-sidebar', out: 'cm-sidebar.png' },
 
     // E · living-specs (1564 x 992): the Living Specs work tree, a click on one
     // capability row, and that capability's spec open in the viewer.
-    { clip: 'living-specs', story: 'video-capture-clip-states--e-1-work-tree', out: 'ls-tree.png' },
-    { clip: 'living-specs', story: 'video-capture-clip-states--e-2-row-clicked', out: 'ls-click.png' },
-    { clip: 'living-specs', story: 'video-capture-clip-states--e-3-capability-open', out: 'ls-capability.png' },
+    { clip: 'living-specs', story: 'scenes-clip-states--e-1-work-tree', out: 'ls-tree.png' },
+    { clip: 'living-specs', story: 'scenes-clip-states--e-2-row-clicked', out: 'ls-click.png' },
+    { clip: 'living-specs', story: 'scenes-clip-states--e-3-capability-open', out: 'ls-capability.png' },
 
     // F · workflow-documents (1224 x 776). These stories were written to shoot the
     // footer's Other actions menu, but the footer falls outside this capture box and
     // F1 and F2 render identically, so the menu was never captured. See that
     // composition's STORYBOARD for what it films instead and what would unblock the
     // custom-command clip.
-    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-1-menu-closed', out: 'cc-closed.png' },
-    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-2-menu-open', out: 'cc-open-plan.png' },
-    { clip: 'workflow-documents', story: 'video-capture-clip-states--f-3-menu-open-tasks', out: 'cc-open-tasks.png' },
+    { clip: 'workflow-documents', story: 'scenes-clip-states--f-1-menu-closed', out: 'cc-closed.png' },
+    { clip: 'workflow-documents', story: 'scenes-clip-states--f-2-menu-open', out: 'cc-open-plan.png' },
+    { clip: 'workflow-documents', story: 'scenes-clip-states--f-3-menu-open-tasks', out: 'cc-open-tasks.png' },
 
     // G · own-workflow (1224 x 776): Create Spec, then the rail it built.
-    { clip: 'own-workflow', story: 'video-capture-clip-states--g-1-workflow-choice', out: 'ow-choice.png' },
-    { clip: 'own-workflow', story: 'video-capture-clip-states--g-2-custom-picked', out: 'ow-picked.png' },
-    { clip: 'own-workflow', story: 'video-capture-clip-states--g-3-step-rail', out: 'ow-rail.png' },
+    { clip: 'own-workflow', story: 'scenes-clip-states--g-1-workflow-choice', out: 'ow-choice.png' },
+    { clip: 'own-workflow', story: 'scenes-clip-states--g-2-custom-picked', out: 'ow-picked.png' },
+    { clip: 'own-workflow', story: 'scenes-clip-states--g-3-step-rail', out: 'ow-rail.png' },
 
     // H · inline-comments (918 x 594): one comment card, closed and open.
-    { clip: 'inline-comments', story: 'video-capture-clip-states--h-1-comments-collapsed', out: 'ic-collapsed.png' },
-    { clip: 'inline-comments', story: 'video-capture-clip-states--h-2-comment-expanded', out: 'ic-expanded.png' },
+    { clip: 'inline-comments', story: 'scenes-clip-states--h-1-comments-collapsed', out: 'ic-collapsed.png' },
+    { clip: 'inline-comments', story: 'scenes-clip-states--h-2-comment-expanded', out: 'ic-expanded.png' },
 
     // ── The clips built on the Teamboard lifecycle walk (A*) and the sidebar
     // recreation (B*). These compositions came first and read their captures
@@ -272,36 +272,36 @@ const CLIP_CAPTURES = [
 
     // step-rail + run-in-flight (1224 x 776): specified -> planned -> tasks ->
     // implementing, the four states the step rail moves through.
-    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-1-spec-just-specified', out: 'step-a1.png' },
-    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
-    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-4-tasks-none-checked', out: 'step-a4.png' },
-    { clip: 'step-rail', story: 'video-capture-episode-1-·-teamboard--a-5-implementing-three-of-six', out: 'step-a5.png' },
-    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-1-spec-just-specified', out: 'step-a1.png' },
-    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
-    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-4-tasks-none-checked', out: 'step-a4.png' },
-    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-5-implementing-three-of-six', out: 'step-a5.png' },
+    { clip: 'step-rail', story: 'scenes-teamboard-run--a-1-spec-just-specified', out: 'step-a1.png' },
+    { clip: 'step-rail', story: 'scenes-teamboard-run--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
+    { clip: 'step-rail', story: 'scenes-teamboard-run--a-4-tasks-none-checked', out: 'step-a4.png' },
+    { clip: 'step-rail', story: 'scenes-teamboard-run--a-5-implementing-three-of-six', out: 'step-a5.png' },
+    { clip: 'run-in-flight', story: 'scenes-teamboard-run--a-1-spec-just-specified', out: 'step-a1.png' },
+    { clip: 'run-in-flight', story: 'scenes-teamboard-run--a-3-planned-footer-reads-tasks', out: 'step-a3.png' },
+    { clip: 'run-in-flight', story: 'scenes-teamboard-run--a-4-tasks-none-checked', out: 'step-a4.png' },
+    { clip: 'run-in-flight', story: 'scenes-teamboard-run--a-5-implementing-three-of-six', out: 'step-a5.png' },
     // run-in-flight's last beat lands on the finished run's timing row, which
     // is the top of the same completed Overview.
-    { clip: 'run-in-flight', story: 'video-capture-episode-1-·-teamboard--a-6-completed-overview', out: 'overview-top.png' },
+    { clip: 'run-in-flight', story: 'scenes-teamboard-run--a-6-completed-overview', out: 'overview-top.png' },
 
     // coverage (1224 x 776): the same Overview, scrolled onto the coverage
     // table. A6b is A6 with the reading column parked, nothing else.
-    { clip: 'coverage', story: 'video-capture-episode-1-·-teamboard--a-6-b-overview-coverage', out: 'overview-coverage.png' },
+    { clip: 'coverage', story: 'scenes-teamboard-run--a-6-b-overview-coverage', out: 'overview-coverage.png' },
 
     // overview + overview-readme + overview-engine (1224 x 2430): ONE tall shot
     // of the whole dossier that all three clips pan a camera down. The rect
     // tables inlined in the three index.html files are measured in this exact
     // space, so the 2430 height is a contract for all of them.
-    { clip: 'overview', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
-    { clip: 'overview-readme', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
-    { clip: 'overview-engine', story: 'video-capture-episode-1-·-teamboard--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+    { clip: 'overview', story: 'scenes-teamboard-run--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+    { clip: 'overview-readme', story: 'scenes-teamboard-run--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
+    { clip: 'overview-engine', story: 'scenes-teamboard-run--a-6-c-overview-whole-dossier', out: 'overview-tall.png' },
 
     // spec-viewer (1224 x 776): the finished spec document, parked on the
     // requirements block its first beat names.
-    { clip: 'spec-viewer', story: 'video-capture-episode-1-·-teamboard--a-7-b-completed-spec-requirements', out: 'spec-a7.png' },
+    { clip: 'spec-viewer', story: 'scenes-teamboard-run--a-7-b-completed-spec-requirements', out: 'spec-a7.png' },
 
     // specs-sidebar (340 x 776): the sidebar recreation, all three sections open.
-    { clip: 'specs-sidebar', story: 'video-capture-specs-sidebar-recreation--b-4-full-sidebar', out: 'sb-b4.png' },
+    { clip: 'specs-sidebar', story: 'vs-code-extension-sidebar--b-4-full-sidebar', out: 'sb-b4.png' },
 ];
 
 const OUT_DIR = join(REPO_ROOT, 'docs', 'screenshots', 'generated');

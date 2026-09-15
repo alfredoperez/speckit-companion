@@ -124,7 +124,7 @@ const HEADER_ACTIONS = {
     onSelectWorkflow: noop, onNewWorkflow: noop,
 };
 
-const meta: Meta = { title: 'Pipeline Builder/Situations' };
+const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Situations' };
 export default meta;
 type Story = StoryObj;
 

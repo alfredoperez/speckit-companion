@@ -429,7 +429,7 @@ export const steeringPane = (fill = false): SidebarPane => ({
 });
 
 const meta: Meta = {
-    title: 'Video Capture/Specs Sidebar (Recreation)',
+    title: 'VS Code Extension/Sidebar',
     excludeStories: ['specsPane', 'livingSpecsPane', 'livingSpecsWorkTreePane', 'steeringPane'],
     parameters: {
         layout: 'fullscreen',

@@ -103,7 +103,7 @@ async function fromPhaseMenu(root: HTMLElement, at: number, label: string) {
     await new Promise(resolve => setTimeout(resolve, 0));
 }
 
-const meta: Meta = { title: 'Pipeline Builder/Interactions' };
+const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Interactions' };
 export default meta;
 type Story = StoryObj;
 

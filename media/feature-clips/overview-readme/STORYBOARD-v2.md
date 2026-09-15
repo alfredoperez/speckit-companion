@@ -19,7 +19,7 @@ Expectations, Verified, Decisions, Coverage.
 
 ## Ground truth
 
-The A6 story (`video-capture-episode-1-·-teamboard--a-6-completed-overview`)
+The A6 story (`scenes-teamboard-run--a-6-completed-overview`)
 now renders every section after the fixture extension in this commit. One
 still per section is in `storyboard-frames/` (captured at 2x device pixels of
 the 1224-wide story layout; the card shows the same pixels at 1.34x at rest

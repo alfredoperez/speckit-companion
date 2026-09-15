@@ -10,7 +10,7 @@ import checklist060 from '../../../../specs/060-spec-context-tracking/checklists
 
 /** Design-artifact files that hang off a step in the viewer's sub-rail. */
 const meta: Meta<typeof MarkdownDoc> = {
-    title: 'Viewer/Markdown Rendering/Artifacts',
+    title: 'VS Code Extension/Spec Viewer/Markdown Rendering/Artifacts',
     component: MarkdownDoc,
 };
 export default meta;

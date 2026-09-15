@@ -110,7 +110,7 @@ import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/
 import photoStorageLivingSpec from '../__fixtures__/teamboard/photo-storage.spec.md?raw';
 
 const meta: Meta = {
-    title: 'Video Capture/README Composites',
+    title: 'Scenes/README Composites',
     parameters: {
         layout: 'fullscreen',
         docs: {

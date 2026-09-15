@@ -18,7 +18,7 @@ import type { Meta, StoryObj } from "@storybook/preact";
 const TaskLineStub = () => null;
 
 const meta: Meta<typeof TaskLineStub> = {
-  title: "Viewer/TaskLine",
+  title: "VS Code Extension/Spec Viewer/Task line",
   component: TaskLineStub,
 };
 export default meta;

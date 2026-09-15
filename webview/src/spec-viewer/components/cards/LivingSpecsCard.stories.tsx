@@ -3,7 +3,7 @@ import { LivingSpecsCard } from './LivingSpecsCard';
 import type { ViewerState } from '../../types';
 
 const meta: Meta<typeof LivingSpecsCard> = {
-    title: 'Viewer/Activity/LivingSpecsCard',
+    title: 'VS Code Extension/Spec Viewer/Overview/Living specs card',
     component: LivingSpecsCard,
     decorators: [
         (Story) => (

@@ -3,7 +3,7 @@ import { EmptyState } from './EmptyState';
 import { Button } from './Button';
 
 const meta: Meta<typeof EmptyState> = {
-    title: 'Primitives/EmptyState',
+    title: 'VS Code Extension/Primitives/Empty state',
     component: EmptyState,
 };
 export default meta;

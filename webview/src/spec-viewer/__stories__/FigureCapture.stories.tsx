@@ -64,7 +64,7 @@ import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/t
 import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
 
 const meta: Meta = {
-    title: 'Video Capture/Figures',
+    title: 'Content/Article Figures',
     parameters: {
         layout: 'fullscreen',
         docs: {

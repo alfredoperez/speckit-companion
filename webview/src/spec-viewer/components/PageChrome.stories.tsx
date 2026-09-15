@@ -21,7 +21,7 @@ import { mockNavState } from './__stories__/mockData';
  */
 
 const meta: Meta<typeof PageChrome> = {
-    title: 'Viewer/Page Chrome',
+    title: 'VS Code Extension/Spec Viewer/Page chrome',
     component: PageChrome,
     parameters: { layout: 'fullscreen' },
 };

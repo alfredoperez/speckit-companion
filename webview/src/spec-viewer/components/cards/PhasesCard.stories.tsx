@@ -3,7 +3,7 @@ import { PhasesCard } from './PhasesCard';
 import type { ViewerState } from '../../types';
 
 const meta: Meta<typeof PhasesCard> = {
-    title: 'Viewer/Activity/PhasesCard',
+    title: 'VS Code Extension/Spec Viewer/Overview/Phases card',
     component: PhasesCard,
     decorators: [
         (Story) => (

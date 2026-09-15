@@ -3,7 +3,7 @@ import { MarkdownDoc } from './storyDoc';
 
 /** Individual Spec-page renderers, each shown in isolation (real excerpts). */
 const meta: Meta<typeof MarkdownDoc> = {
-    title: 'Viewer/Markdown Rendering/Spec/Components',
+    title: 'VS Code Extension/Spec Viewer/Markdown Rendering/Spec/Components',
     component: MarkdownDoc,
 };
 export default meta;

@@ -15,7 +15,7 @@ import heroB from '../../../docs/style-guide/hero-brush-ivory-2.jpg';
 import bannerArt from '../../../speckit-extension/assets/hero-draft-a.png';
 
 const meta: Meta = {
-    title: 'Style Guide/Hero',
+    title: 'Content/Post Images',
     parameters: { layout: 'fullscreen' },
 };
 export default meta;

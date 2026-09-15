@@ -65,7 +65,7 @@ function press(root: HTMLElement, selector: string) {
     (root.querySelector(selector) as HTMLButtonElement | null)?.click();
 }
 
-const meta: Meta = { title: 'Pipeline Builder/Guide' };
+const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Guide' };
 export default meta;
 type Story = StoryObj;
 

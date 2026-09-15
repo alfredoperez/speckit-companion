@@ -5,7 +5,7 @@ import type { ViewerState } from '../types';
 import { mockNavState } from './__stories__/mockData';
 
 const meta: Meta<typeof RunStrip> = {
-    title: 'Viewer/RunStrip',
+    title: 'VS Code Extension/Spec Viewer/Run strip',
     component: RunStrip,
     decorators: [(Story) => <div class="main-column" style="max-width: 900px;"><Story /></div>],
 };

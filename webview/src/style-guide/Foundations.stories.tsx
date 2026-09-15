@@ -23,7 +23,7 @@ import jetbrains from '../../../media/landing-video/hf/assets/fonts/JetBrainsMon
 import fraunces from '../../../media/landing-video/hf/assets/fonts/Fraunces-400.ttf';
 
 const meta: Meta = {
-    title: 'Style Guide/Foundations',
+    title: 'Core/Foundations',
     parameters: { layout: 'fullscreen' },
 };
 export default meta;

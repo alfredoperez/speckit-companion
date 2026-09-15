@@ -4,7 +4,7 @@ import { NavigationBar } from './NavigationBar';
 import { mockActionDoc, mockDoc, mockNavState, mockRelatedDoc, stalePlan } from './__stories__/mockData';
 
 const meta: Meta<typeof NavigationBar> = {
-    title: 'Viewer/NavigationBar',
+    title: 'VS Code Extension/Spec Viewer/Navigation bar',
     component: NavigationBar,
     decorators: [(Story) => <div style="max-width: 240px;"><Story /></div>],
 };

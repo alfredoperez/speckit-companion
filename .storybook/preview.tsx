@@ -81,17 +81,19 @@ const preview: Preview = {
     },
     parameters: {
         options: {
-            // Surface the Markdown Rendering catalog first under Viewer, grouped
-            // by the tab/artifact it appears in.
+            // One tree, four apps: Core (the brand), the extension, the website,
+            // content, then the scenes every capture is shot from. DESIGN.md.
             storySort: {
                 order: [
-                    'Viewer',
-                    ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts']],
-                    'Primitives',
-                    'SpecEditor',
-                    // Video capture stories sort last: they are frames for the
-                    // YouTube series, not a component catalog.
-                    'Video Capture',
+                    'Core',
+                    ['Foundations'],
+                    'VS Code Extension',
+                    ['Primitives', 'Create Spec', 'Spec Viewer', ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts'], 'Overview'], 'Living Spec Viewer', 'Sidebar', 'Pipeline Builder', 'Install Nudges'],
+                    'Website',
+                    'Content',
+                    ['Figure', 'Article Figures', 'Carousel', 'Post Images'],
+                    // Scenes are the fixture-fed states the captures reuse, not a catalog.
+                    'Scenes',
                 ],
             },
         },
