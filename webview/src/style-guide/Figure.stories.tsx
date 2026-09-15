@@ -232,3 +232,98 @@ export const TitleLengths: Story = {
         </CaptureFrame>
     ),
 };
+
+// ── Proposals for the "where does the screenshot start" problem ──────────
+// Same surface, same caption, so the frame is the only thing that changes.
+
+const TIGHT_CSS = `.capture-stage .activity-panel { padding: 12px 22px; gap: 10px; max-width: none; }`;
+
+function IntentTight() {
+    return (
+        <>
+            <style>{TIGHT_CSS}</style>
+            <div class="activity-panel dossier" style="height: 100%; overflow: hidden;">
+                <IntentSection state={vs} />
+            </div>
+        </>
+    );
+}
+
+const INTENT_CAPTION = (
+    <>
+        The reason in one sentence, then <B>how long each phase took</B>, then which living specs the run folded back into.
+    </>
+);
+const INTENT_MARK = [{ selector: '.dossier-timing', kind: 'here' as const, label: 'four phases, timed' }];
+
+export const P0Today: Story = {
+    name: 'P0 · Today',
+    parameters: { capture: { width: 1240, height: 640 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure title="Overview: why the spec exists" caption={INTENT_CAPTION} marks={INTENT_MARK}>
+                <Intent />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const P1Window: Story = {
+    name: 'P1 · Window chrome',
+    parameters: { capture: { width: 1240, height: 640 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure title="Overview: why the spec exists" caption={INTENT_CAPTION} marks={INTENT_MARK} chrome="window" windowName="Spec Viewer · Overview">
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const P2Lift: Story = {
+    name: 'P2 · Lifted shot',
+    parameters: { capture: { width: 1240, height: 640 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure title="Overview: why the spec exists" caption={INTENT_CAPTION} marks={INTENT_MARK} lift>
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const P3Lead: Story = {
+    name: 'P3 · No title chip, lead-in caption',
+    parameters: { capture: { width: 1240, height: 600 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure lead="Why the spec exists." caption={INTENT_CAPTION} marks={INTENT_MARK} chrome="window" windowName="Spec Viewer · Overview">
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const P4All: Story = {
+    name: 'P4 · Window, lifted, lead-in',
+    parameters: { capture: { width: 1240, height: 600 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure lead="Why the spec exists." caption={INTENT_CAPTION} marks={INTENT_MARK} chrome="window" windowName="Spec Viewer · Overview" lift>
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};
+
+export const P5Minimal: Story = {
+    name: 'P5 · Window, no outline, one line',
+    parameters: { capture: { width: 1240, height: 580 } },
+    render: () => (
+        <CaptureFrame>
+            <Figure lead="Why the spec exists." caption={<>Intent, the four timed phases, and the living specs it folded back into.</>} chrome="window" windowName="Spec Viewer · Overview" lift>
+                <IntentTight />
+            </Figure>
+        </CaptureFrame>
+    ),
+};

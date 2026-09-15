@@ -156,8 +156,19 @@ function Marks({ marks }: { marks: FigureMark[] }) {
 }
 
 interface FigureProps {
-    /** Names the screen, never the point: "What was checked". */
-    title: string;
+    /** Names the screen, never the point: "What was checked". Omit it and the
+     *  caption's `lead` carries the name instead, so only one text block sits
+     *  outside the shot. */
+    title?: string;
+    /** Bold opener of the caption when there is no title chip: "Why the spec exists." */
+    lead?: string;
+    /** `window` draws an app title bar on the shot (traffic dots, a tab), so the
+     *  reader sees an application window and not a texture. */
+    chrome?: 'none' | 'window';
+    /** The name in the window tab; defaults to "Spec Viewer". */
+    windowName?: string;
+    /** Lift the shot: lighter panel, accent-tinted border, soft glow. */
+    lift?: boolean;
     /** The point of the figure, one sentence. <b> lifts the key phrase. */
     caption: ComponentChildren;
     marks?: FigureMark[];
@@ -170,7 +181,7 @@ interface FigureProps {
 
 /** The frame. Header (title chip, wordmark), the shot, the caption with the
  *  mascot. The palette comes from the preview theme the entry is opened in. */
-export function Figure({ title, caption, marks = [], shotPadding, mascot = 'pointing', children }: FigureProps) {
+export function Figure({ title, lead, caption, marks = [], shotPadding, mascot = 'pointing', chrome = 'none', windowName = 'Spec Viewer', lift = false, children }: FigureProps) {
     useEffect(() => {
         document.fonts.load(`600 17px Geist`);
         document.fonts.load(`400 21px Geist`);
@@ -179,21 +190,43 @@ export function Figure({ title, caption, marks = [], shotPadding, mascot = 'poin
         <div style={`display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 22px 26px 24px; gap: 16px; background: ${T.ground}; border: 1px solid ${T.borderPanel}; border-radius: 14px; font-family: ${FIGURE_FONT}; color: ${T.textPrimary};`}>
             <style>{GEIST_FACES}</style>
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0;">
-                <div style={`font: 600 18px/1 ${FIGURE_FONT}; padding: 9px 14px; border-radius: 9px; background: rgba(139, 92, 246, 0.25); border: 1px solid rgba(167, 139, 250, 0.5); color: ${T.textPrimary}; white-space: nowrap;`}>
-                    {title}
-                </div>
+                {title ? (
+                    <div style={`font: 600 18px/1 ${FIGURE_FONT}; padding: 9px 14px; border-radius: 9px; background: rgba(139, 92, 246, 0.25); border: 1px solid rgba(167, 139, 250, 0.5); color: ${T.textPrimary}; white-space: nowrap;`}>
+                        {title}
+                    </div>
+                ) : (
+                    <span />
+                )}
                 <Wordmark />
             </div>
             <div
-                data-panel="shot"
-                style={`position: relative; flex: 1; min-height: 0; border: 2px solid ${T.borderStrong}; border-radius: 10px; overflow: hidden; background: ${T.panel}; ${shotPadding ? `padding: ${shotPadding};` : ''}`}
+                style={`position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; ${
+                    lift
+                        ? `border: 1px solid rgba(167, 139, 250, 0.5); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12), 0 24px 60px rgba(0, 0, 0, 0.55); background: #16132a;`
+                        : `border: 2px solid ${T.borderStrong}; background: ${T.panel};`
+                }`}
             >
-                {children}
-                {marks.length > 0 && <Marks marks={marks} />}
+                {chrome === 'window' && (
+                    <div style={`display: flex; align-items: center; gap: 14px; padding: 9px 14px; background: ${lift ? '#1c1834' : '#12101f'}; border-bottom: 1px solid ${T.borderPanel}; flex-shrink: 0;`}>
+                        <span style="display: inline-flex; gap: 6px;">
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; display: block;" />
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #febc2e; display: block;" />
+                            <i style="width: 10px; height: 10px; border-radius: 50%; background: #28c840; display: block;" />
+                        </span>
+                        <span style={`font: 500 12px/1 ${FIGURE_FONT}; color: ${T.textMuted}; letter-spacing: 0.01em;`}>{windowName}</span>
+                    </div>
+                )}
+                <div data-panel="shot" style={`position: relative; flex: 1; min-height: 0; ${shotPadding ? `padding: ${shotPadding};` : ''}`}>
+                    {children}
+                    {marks.length > 0 && <Marks marks={marks} />}
+                </div>
             </div>
             <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
                 {mascot && <img src={MASCOT_POSES[mascot]} alt="" style="width: 54px; height: 54px; flex: none; display: block;" />}
-                <div style={`font: 400 21px/1.4 ${FIGURE_FONT}; color: ${T.textBody};`}>{caption}</div>
+                <div style={`font: 400 21px/1.4 ${FIGURE_FONT}; color: ${T.textBody};`}>
+                    {lead && <span style={`font-weight: 600; color: ${T.textPrimary};`}>{lead} </span>}
+                    {caption}
+                </div>
             </div>
         </div>
     );
