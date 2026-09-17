@@ -31,6 +31,23 @@ export function setupApproveRequirement(): void {
     });
 }
 
+/** A card's Remove button posts the heading; the extension confirms and owns the delete. */
+export function setupRemoveRequirement(): void {
+    document.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-req-remove]');
+        const heading = btn?.closest<HTMLElement>('.living-req-card')?.dataset.req;
+        if (heading) vscode.postMessage({ type: 'removeRequirement', heading });
+    });
+}
+
+/** A card's file chips reveal the path they name. */
+export function setupRevealGlob(): void {
+    document.addEventListener('click', (e) => {
+        const glob = (e.target as HTMLElement).closest<HTMLElement>('[data-reveal-glob]')?.dataset.revealGlob;
+        if (glob) vscode.postMessage({ type: 'revealGlob', glob });
+    });
+}
+
 /**
  * Setup checkbox toggle handler for task items
  */

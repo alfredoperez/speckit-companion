@@ -72,6 +72,7 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.refresh',
             'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
+            'speckit.livingSpecs.validate',
         ]);
     });
 
@@ -119,6 +120,17 @@ describe('registerLivingSpecsCommands', () => {
 
             expect(executeSlashCommand).toHaveBeenCalledWith(
                 '/speckit.companion.living-adopt src',
+                'SpecKit - Adopt Code Area',
+                true
+            );
+        });
+
+        it('skips the question when the caller already names the areas', async () => {
+            await handlers['speckit.livingSpecs.adopt']({ areas: ['src/checkout'] });
+
+            expect(vscode.window.showQuickPick).not.toHaveBeenCalled();
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-adopt src/checkout',
                 'SpecKit - Adopt Code Area',
                 true
             );
@@ -239,6 +251,26 @@ describe('registerLivingSpecsCommands', () => {
                 true
             );
             expect(executeInTerminal).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('validate', () => {
+        it('scopes the shape check to the capability it was invoked on', async () => {
+            await handlers['speckit.livingSpecs.validate']({ capability: { name: 'checkout' } });
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-validate checkout',
+                'SpecKit - Validate Living Specs',
+                true
+            );
+        });
+
+        it('checks every living spec when invoked without a capability', async () => {
+            await handlers['speckit.livingSpecs.validate']();
+            expect(executeSlashCommand).toHaveBeenCalledWith(
+                '/speckit.companion.living-validate',
+                'SpecKit - Validate Living Specs',
+                true
+            );
         });
     });
 

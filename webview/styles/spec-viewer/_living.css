@@ -122,18 +122,133 @@
 /* Header-led editorial groups: a quiet boundary, then heading/meta/prose on
  * the page canvas. The wrapper preserves the component contract without
  * turning a long capability into nested card soup. */
+/* One reading column of cards. State is the heading block's left edge, not a badge. */
+#markdown-content:has(.living-req-card) {
+  max-width: 760px;
+}
+
 #markdown-content .living-req-card {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-3) 0 0;
+  --req-edge: var(--accent);
+  --req-ink: var(--text-secondary);
+  margin: 0 0 var(--space-6);
+  padding: 0;
   background: transparent;
   border: 0;
-  border-top: 1px solid var(--border);
   border-radius: 0;
 }
 
-#markdown-content .living-req-card > h3 {
-  margin-top: var(--space-1);
+#markdown-content .living-req-card[data-req-state="adopted"] { --req-edge: var(--review); --req-ink: var(--review-ink); }
+#markdown-content .living-req-card[data-req-state="drifted"] { --req-edge: var(--warning); --req-ink: var(--warning); }
+#markdown-content .living-req-card[data-req-state="new"] { --req-edge: var(--success); --req-ink: var(--success); }
+
+/* The same bounded card the specify step draws for a user story. */
+#markdown-content .living-req-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--req-edge);
+  border-radius: var(--radius-md);
+}
+
+#markdown-content .living-req-header h3 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
   overflow-wrap: anywhere;
+}
+
+#markdown-content .living-req-header .living-req-meta {
+  margin: 0;
+  align-items: center;
+}
+
+/* A state pill appears only on the non-resting states; its dot is the edge colour. */
+#markdown-content .living-req-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--req-ink);
+}
+
+#markdown-content .living-req-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--req-edge);
+}
+
+
+#markdown-content .living-req-why {
+  font-size: var(--text-xs);
+  color: var(--text-body);
+}
+
+/* Under the title: the files the requirement is about, then where it was transcribed from. */
+#markdown-content .living-req-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+#markdown-content .living-req-file {
+  min-height: 0;
+  padding: 1px var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-body);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+#markdown-content .living-req-file:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+#markdown-content .living-req-file--source {
+  cursor: default;
+  color: var(--review-ink);
+}
+
+/* Actions at the card's foot, left-aligned. */
+#markdown-content .living-req-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+#markdown-content .living-req-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+#markdown-content .living-req-remove:hover {
+  color: var(--error);
+  border-color: var(--error);
 }
 
 /* Confidence + coverage badges sit just under the heading. */
@@ -159,14 +274,6 @@
 #markdown-content .living-req-confidence--inferred {
   color: var(--warning);
   background: var(--warning-subtle);
-  text-transform: lowercase;
-}
-
-/* Adopted means transcribed from the project's conventions and not yet confirmed
- * by a run. The review hue, because that is exactly what it is asking for. */
-#markdown-content .living-req-confidence--adopted {
-  color: var(--review-ink);
-  background: var(--review-subtle);
   text-transform: lowercase;
 }
 
@@ -303,4 +410,17 @@
   #markdown-content .living-uncovered-group > summary::marker {
     transition: none;
   }
+}
+
+/* ── Empty capability ───────────────────────────────────────────────── */
+/* The one place the body carries a call to action. */
+.living-empty {
+  max-width: 760px;
+  margin: var(--space-8) auto;
+  text-align: center;
+  color: var(--text-body);
+}
+
+.living-empty p {
+  margin: 0 0 var(--space-4);
 }

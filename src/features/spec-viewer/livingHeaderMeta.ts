@@ -6,12 +6,15 @@
  * surfaces can never disagree.
  */
 
+import * as fs from 'fs';
 import * as path from 'path';
 import type { LivingHeaderMeta } from './types';
 import {
     readLivingSpecs,
     readCapabilityHealth,
     requirementIds,
+    requirementSlices,
+    requirementsForChange,
     CapabilityHealth,
 } from '../specs/livingSpecsModel';
 
@@ -97,9 +100,10 @@ export function buildLivingHeaderMeta(
 export async function resolveLivingHealth(
     workspaceRoot: string,
     meta: LivingHeaderMeta,
-): Promise<CapabilityHealth> {
+): Promise<Pick<LivingHeaderMeta, 'coverage' | 'drifted' | 'driftedRequirements'>> {
+    let health: CapabilityHealth;
     try {
-        return await readCapabilityHealth(workspaceRoot, {
+        health = await readCapabilityHealth(workspaceRoot, {
             name: meta.capabilityName,
             spec: meta.specPath,
             location: meta.location,
@@ -111,4 +115,19 @@ export async function resolveLivingHealth(
     } catch {
         return {};
     }
+    const { driftedFiles, ...rest } = health;
+    if (!driftedFiles) return rest;
+    return { ...rest, driftedRequirements: driftedHeadings(workspaceRoot, meta.specPath, driftedFiles) };
+}
+
+/** Requirements whose touches marker names a drifted file. An unmarked requirement never drifts. */
+function driftedHeadings(workspaceRoot: string, specPath: string, driftedFiles: string[]): string[] {
+    let text: string;
+    try {
+        text = fs.readFileSync(path.join(workspaceRoot, specPath), 'utf8');
+    } catch {
+        return [];
+    }
+    const marked = requirementSlices(text).filter((s) => s.touches);
+    return requirementsForChange(marked, driftedFiles).map((s) => s.heading.trim());
 }

@@ -16,6 +16,7 @@ import {
     preprocessLivingRequirements,
     preprocessLivingUncovered,
     setLivingCoverage,
+    setLivingDrifted,
 } from './livingComponents';
 import { renderMarkdown, setLivingMode } from './renderer';
 
@@ -227,7 +228,7 @@ describe('preprocessLivingScenarios (FR-012, FR-013)', () => {
         expect(out).toMatch(/<div class="living-scenario-title line" data-line="0" data-list-id="living-scenario-\d+">/);
         const titleIdx = out.indexOf('living-scenario-title');
         expect(out.slice(titleIdx)).toContain('line-add-btn');
-        expect(out).toContain('an edit is committed');
+        expect(out).toContain('An edit is committed');
     });
 
     it('renders a requirement with no scenarios cleanly, no empty scenario container (FR-013)', () => {
@@ -513,7 +514,7 @@ Beta, unmarked.
         const out = renderMarkdown(SPEC);
         expect(out).not.toContain('template-instructions');
         expect(out).not.toContain('touches:');
-        expect(out).not.toContain('src/alpha/extra.ts');
+        expect(out).toContain('data-reveal-glob="src/alpha/extra.ts"');
     });
 
     it('leaves the cards out when living mode is off', () => {
@@ -569,13 +570,47 @@ describe('the adopted badge', () => {
         'A run folded onto this one.',
     ].join('\n');
 
-    it('names where the requirement was transcribed from', () => {
-        expect(preprocessLivingRequirements(spec)).toContain('adopted from CLAUDE.md:18');
+    it('names the source in the state word tooltip, never on the card face', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('living-req-pill--adopted');
+        expect(out).toContain('title="Adopted from this file">from CLAUDE.md:18</span>');
+        expect(out).toContain('Written from the code by AI');
     });
 
-    it('leaves a confirmed requirement unbadged', () => {
+    it('leaves a confirmed requirement without a state word', () => {
         const out = preprocessLivingRequirements(spec);
-        expect(out.split('Already confirmed')[1]).not.toContain('living-req-confidence--adopted');
+        expect(out.split('Already confirmed')[1]).not.toContain('living-req-pill');
+    });
+
+    it('carries the state on the card for the edge colour', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('data-req-state="adopted"');
+        expect(out).toContain('data-req-state="confirmed"');
+    });
+
+    it('escapes quotes in the adopted source so it cannot leave the attribute', () => {
+        const out = preprocessLivingRequirements(spec.replace('CLAUDE.md:18', 'a" onclick="x'));
+        expect(out).not.toContain('onclick="x');
+        expect(out).toContain('from a&quot; onclick=&quot;x');
+    });
+
+    it('gives a drifted requirement the drifted word, even when it is also adopted', () => {
+        setLivingDrifted(['An entity imports downward only']);
+        try {
+            const out = preprocessLivingRequirements(spec);
+            expect(out).toContain('data-req-state="drifted"');
+            expect(out).toContain('living-req-pill--drifted');
+            expect(out).toContain('data-req-approve');
+        } finally {
+            setLivingDrifted([]);
+        }
+    });
+
+    it('lists the touched files under the title and offers Remove on every card', () => {
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('data-reveal-glob="src/entities/**" title="Reveal in Explorer">src/entities/**</button>');
+        expect(out.match(/data-req-remove/g)).toHaveLength(2);
+        expect(out.match(/data-req-approve/g)).toHaveLength(1);
     });
 
     it('never leaks either marker into the visible prose', () => {

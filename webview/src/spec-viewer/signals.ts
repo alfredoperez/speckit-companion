@@ -32,7 +32,8 @@ export const viewerMode = signal<'overview' | 'document' | null>(null);
 export const overviewAvailable = computed(() => {
     const ns = navState.value;
     const vs = viewerState.value;
-    if (ns?.livingMode) return true;
+    // A living spec is its cards; the requirement is the unit, not a page about the page.
+    if (ns?.livingMode) return false;
     return (ns?.activityPanelEnabled ?? true) && !!vs && hasAnyData(vs);
 });
 
@@ -49,8 +50,7 @@ export const showingOverview = computed(() => {
     // rule derived a default from recorded activity, and that default was the
     // Overview for every spec that had ever run, so every document row in the
     // tree lost to it.
-    // A living spec opens on its Overview unless a document or requirement was asked for.
-    const landing = navState.value?.landing ?? (navState.value?.livingMode ? 'overview' : 'document');
+    const landing = navState.value?.landing ?? 'document';
     return (viewerMode.value ?? landing) === 'overview';
 });
 

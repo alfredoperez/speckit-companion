@@ -77,6 +77,21 @@ describe('the webview routes every message the extension can send', () => {
         expect(updates).toEqual(['body']);
     });
 
+    it('redraws the cards once when drift names a requirement, and not again for the same list', () => {
+        let redraws = 0;
+        const handlers = buildHandlers(() => undefined, () => { redraws++; });
+        navState.value = nav({});
+        const msg = {
+            type: 'livingHealthResolved',
+            livingMeta: { capabilityName: 'c', specPath: 'c.spec.md', location: 'colocated', match: [], drifted: true, driftedRequirements: ['A'] },
+        } as Extract<ExtensionToViewerMessage, { type: 'livingHealthResolved' }>;
+
+        handlers.livingHealthResolved(msg);
+        handlers.livingHealthResolved(msg);
+
+        expect(redraws).toBe(1);
+    });
+
     it('replaces the whole navState on a state update, rather than merging', () => {
         const handlers = buildHandlers(() => undefined);
         navState.value = nav({ badgeText: 'stale' });

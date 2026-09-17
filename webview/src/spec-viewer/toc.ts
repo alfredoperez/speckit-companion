@@ -78,8 +78,12 @@ function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
     // Unknown coverage reads as unknown, never as zero: a missing count and a
     // genuine zero mean opposite things to a reader.
     dot.className = coverage ? 'spec-toc-cov' : 'spec-toc-cov spec-toc-cov--unknown';
+    // The pip repeats the card's edge colour, so the rail reads state at a glance.
+    const state = card.dataset.reqState;
+    if (state) dot.classList.add(`spec-toc-cov--state-${state}`);
     dot.setAttribute('aria-hidden', 'true');
     a.append(dot, label);
+    if (state && state !== 'confirmed') said.push(state);
     said.push(coverage ? `covered ${coverage}` : 'coverage unknown');
 
     const files = card.dataset.reqPatterns;
@@ -170,7 +174,9 @@ export function buildToc(
         ? allHeadings
         : allHeadings.filter(h => h.tagName.toLowerCase() === 'h2');
 
-    if (headings.length === 0) {
+    // A capability with one requirement or none has nothing to navigate between.
+    const lone = living && markdownRoot.querySelectorAll('.living-req-card').length <= 1;
+    if (headings.length === 0 || lone) {
         tocRoot.classList.add('spec-toc--empty');
         tocRoot.innerHTML = '';
         return;

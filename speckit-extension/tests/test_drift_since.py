@@ -105,3 +105,46 @@ class DriftSinceABranchPoint(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ASiblingSharingTheGlobDoesNotDrift(unittest.TestCase):
+    """Two capabilities claim one folder; a requirement in one names the changed file."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="drift-sibling-")
+        self.root = Path(self.tmp)
+        (self.root / "src" / "billing").mkdir(parents=True)
+        (self.root / "src" / "billing" / "charge.ts").write_text("export {};\n")
+        (self.root / "src" / "billing" / "refund.ts").write_text("export {};\n")
+        (self.root / "capabilities").mkdir()
+        (self.root / "capabilities" / "charge.spec.md").write_text(
+            SPEC.replace("src/billing/**", "src/billing/charge.ts"), encoding="utf-8")
+        (self.root / "capabilities" / "refund.spec.md").write_text(
+            "# Refund\n\n## Requirements\n\n### It refunds\n\nIt SHALL refund.\n", encoding="utf-8")
+        (self.root / "living-specs.yml").write_text(
+            "enabled: true\ncapabilities:\n"
+            "  - name: charge\n    match:\n      - src/billing/**\n    spec: capabilities/charge.spec.md\n"
+            "  - name: refund\n    match:\n      - src/billing/**\n    spec: capabilities/refund.spec.md\n",
+            encoding="utf-8")
+        git(self.tmp, "init", "-q")
+        git(self.tmp, "config", "user.email", "t@t")
+        git(self.tmp, "config", "user.name", "t")
+        git(self.tmp, "add", "-A")
+        git(self.tmp, "commit", "-qm", "baseline")
+        self.living = drift.rsp.load_living(str(self.root))
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def drifted(self):
+        report = drift._compute_drift(str(self.root), self.living, working=True)
+        return {c["name"] for c in report["capabilities"] if c["drifted"]}
+
+    def test_the_file_a_requirement_names_drifts_only_its_own_capability(self):
+        (self.root / "src" / "billing" / "charge.ts").write_text("export const x = 1;\n")
+        self.assertEqual(self.drifted(), {"charge"})
+
+    def test_a_file_no_requirement_names_still_drifts_every_claimant(self):
+        (self.root / "src" / "billing" / "refund.ts").write_text("export const y = 1;\n")
+        self.assertEqual(self.drifted(), {"charge", "refund"})

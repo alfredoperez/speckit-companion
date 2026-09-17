@@ -377,7 +377,7 @@ export function preprocessHtmlComments(markdown: string): string {
         // become a "Template Instructions" disclosure printing its own source,
         // and the requirement pass — which runs after this one — would never
         // see it. It passes through untouched and is dropped there.
-        if (/^touches:/i.test(trimmed)) return match;
+        if (/^(?:touches|adopted):/i.test(trimmed)) return match;
         return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
     });
 }

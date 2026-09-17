@@ -1,0 +1,712 @@
+{
+  "workflow": "companion",
+  "specName": "Living spec surface",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-11T01:45:38.542Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:47:03.118Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:47:17.334Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-11T01:47:17.747Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-11T01:47:25.592Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:49:43.124Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:49:43.228Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:50:06.996Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:50:07.367Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-11T01:50:22.709Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:50:56.597Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:50:57.204Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-11T01:51:05.123Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:51:26.636Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:52:56.827Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:52:56.941Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:52:57.048Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:54:35.191Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:54:35.302Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:55:38.786Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:56:58.175Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:58:20.538Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T01:58:47.867Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:00:06.355Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:00:06.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:00:06.580Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:00:40.578Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:01:20.033Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:04:17.484Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:04:17.508Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:04:17.615Z"
+    },
+    {
+      "step": "implement",
+      "substep": "capture",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-11T02:06:31.139Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "specs-commands",
+      "specs-lifecycle",
+      "specs-living-model",
+      "specs-living-view",
+      "specs-pipeline-build",
+      "specs-state-record"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "specs-living-model": [
+        "A source file reports the living specs that claim it, in the editor's own process",
+        "Requirement slicing lives beside the requirement-id parser and counts the same headings"
+      ],
+      "specs-living-view": [
+        "Living-spec listings are read-only, bounded, and honest about what they could not compute",
+        "A drifted row is told apart by shape and repaired from the row",
+        "The Living Specs view offers a one-pass sync action",
+        "The status bar names the living specs for the active file and reaches one requirement"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "specs-commands",
+        "reason": "no command-surface behaviour changed beyond the living view's own validate command"
+      },
+      {
+        "name": "specs-lifecycle",
+        "reason": "lifecycle untouched"
+      },
+      {
+        "name": "specs-living-model",
+        "reason": "health now keeps its drifted file list, plumbing only; no reader-visible rule changed"
+      },
+      {
+        "name": "specs-pipeline-build",
+        "reason": "pipeline build untouched"
+      },
+      {
+        "name": "specs-state-record",
+        "reason": "state record untouched"
+      },
+      {
+        "name": "spec-viewer-actions",
+        "reason": "shares the spec-viewer glob; its requirements were not changed"
+      },
+      {
+        "name": "spec-viewer-panel",
+        "reason": "shares the spec-viewer glob; panel behaviour unchanged"
+      },
+      {
+        "name": "spec-viewer-state",
+        "reason": "shares the spec-viewer glob; state unchanged"
+      },
+      {
+        "name": "viewer-ui-comments",
+        "reason": "shares the webview glob; comments unchanged"
+      },
+      {
+        "name": "viewer-ui-navigation",
+        "reason": "shares the webview glob; navigation unchanged"
+      },
+      {
+        "name": "viewer-ui-overview",
+        "reason": "shares the webview glob; overview unchanged"
+      },
+      {
+        "name": "viewer-ui-state",
+        "reason": "shares the webview glob; state unchanged"
+      },
+      {
+        "name": "capture-runtime-living-fold",
+        "reason": "living_validate.py gained a filter; the fold is unchanged"
+      },
+      {
+        "name": "commands-living-markers",
+        "reason": "markers unchanged"
+      }
+    ],
+    "synced": [
+      "spec-viewer-living",
+      "specs-living-view",
+      "viewer-ui-chrome",
+      "viewer-ui-document",
+      "commands-living",
+      "capture-runtime-drift",
+      "specs-living-model"
+    ]
+  },
+  "last_action": "all 16 tasks done, 2941/2941 tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Opening a capability from the tree shows the requirement surface",
+      "tasks": "T006,T014"
+    },
+    "FR-002": {
+      "title": "One card per requirement heading, in file order",
+      "tasks": "T006"
+    },
+    "FR-003": {
+      "title": "Card heading block with 3px coloured left edge",
+      "tasks": "T007"
+    },
+    "FR-004": {
+      "title": "Scenario keywords coloured",
+      "tasks": "T006"
+    },
+    "FR-005": {
+      "title": "At most one touches N files link",
+      "tasks": "T005,T006,T007",
+      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::ends a marked card with one quiet touches link"
+    },
+    "FR-006": {
+      "title": "Edge colour per state",
+      "tasks": "T007"
+    },
+    "FR-007": {
+      "title": "State word only on non-resting states",
+      "tasks": "T005,T006",
+      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::leaves a confirmed requirement without a state word"
+    },
+    "FR-008": {
+      "title": "Adopted tooltip names source",
+      "tasks": "T005,T006",
+      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::names the source in the state word tooltip, never on the card face"
+    },
+    "FR-009": {
+      "title": "Drifted when a touched file drifted",
+      "tasks": "T002,T004,T008",
+      "tests": "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts::names the requirements whose touched files drifted, never an unmarked one"
+    },
+    "FR-010": {
+      "title": "Header shows counts",
+      "tasks": "T010"
+    },
+    "FR-011": {
+      "title": "Rail pips; hidden for 0 or 1",
+      "tasks": "T009,T014",
+      "tests": "webview/src/spec-viewer/__tests__/tocRequirements.test.ts::colours each pip with its card state,shows no rail for a capability with a single requirement"
+    },
+    "FR-012": {
+      "title": "Bar condition and actions",
+      "tasks": "T012",
+      "tests": "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::adds Sync and counts the drifted requirements once drift is found"
+    },
+    "FR-013": {
+      "title": "Bar buttons dispatch tree commands",
+      "tasks": "T011,T013",
+      "tests": "src/features/specs/__tests__/livingSpecsCommands.test.ts::dispatches the shape check for the AI to run"
+    },
+    "FR-014": {
+      "title": "Adopt this area CTA",
+      "tasks": "T014"
+    },
+    "FR-015": {
+      "title": "Redraw on file change",
+      "tasks": "T003"
+    },
+    "FR-016": {
+      "title": "Readable tokens, review ink",
+      "tasks": "T007"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "LV-2 aligns both ways",
+    "LV-4 approve",
+    "LV-5 edit",
+    "LV-6 remove",
+    "LV-8 entry points beyond the tree",
+    "LV-9 retire living overview/footer",
+    "LV-10 new-in-branch detection",
+    "LV-11 ledger density and filters",
+    "rules tier (LV-3, LV-7)"
+  ],
+  "context": [
+    "living spec: specs-living-view",
+    "living spec: specs-living-model",
+    "area: webview/src/spec-viewer",
+    "area: src/features/spec-viewer",
+    "constraint: scenarios as WHEN/THEN with one outcome"
+  ],
+  "intent": "Render a living capability as requirement cards with state edges, header counts, rail pips and a capability action bar",
+  "decisions": [
+    {
+      "decision": "Reshape the viewer living mode into the requirement surface",
+      "why": "cards, scenario colouring, rail pips, footer and open path already exist there",
+      "rejected": "a new webview panel"
+    },
+    {
+      "decision": "Compute per-card drift in the extension and send drifted headings",
+      "why": "drifted files and the glob matcher already live there",
+      "rejected": "glob matching in the webview"
+    },
+    {
+      "decision": "Drifted wins the edge over adopted",
+      "why": "drift needs action first",
+      "rejected": "a combined edge"
+    },
+    {
+      "decision": "Add speckit.livingSpecs.validate dispatching living-validate",
+      "why": "no validate command exists in the extension",
+      "rejected": "reusing drift"
+    },
+    {
+      "decision": "Capability-file watcher refreshes an open viewer",
+      "why": "viewer watcher only matches the spec directory",
+      "rejected": "widening the spec-dir glob"
+    },
+    {
+      "decision": "Reshaped the viewer living mode instead of a new panel",
+      "why": "cards, scenario colouring, rail, footer and open path already existed",
+      "rejected": "a second webview"
+    },
+    {
+      "decision": "Drift is a renderer input (setLivingDrifted) plus one re-render when the list changes",
+      "why": "patching the DOM would be lost on the next content render",
+      "rejected": "marking cards in place after health resolves"
+    },
+    {
+      "decision": "readCapabilityHealth keeps driftedFiles; resolveLivingHealth maps them to headings via requirementsForChange over marked slices",
+      "why": "one git call, one glob matcher, one derivation shared with the tree",
+      "rejected": "a second readDriftedFiles call"
+    },
+    {
+      "decision": "Kept inferred and coverage badges on the card",
+      "why": "rare, existing, tested; the common card still carries none",
+      "rejected": "removing them in LV-1"
+    },
+    {
+      "decision": "Fixed adopted markers being turned into Template Instructions before the card pass",
+      "why": "without it the adopted state never reached a real card",
+      "rejected": "leaving it for a separate ticket"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: reshape living mode into state-edged cards with counts, pips, condition bar, Validate",
+      "key_finding": "Living mode already renders requirement cards; LV-1 is a reshape plus per-card drift and a watcher fix"
+    },
+    "tasks": {
+      "summary": "16 tasks: foundational (4), cards (3), state (3), bar (3), empty/single (1), polish (2)"
+    },
+    "implement": {
+      "summary": "Living spec cards with state edges, header counts, state pips, condition bar with Validate, empty-state CTA, live redraw"
+    }
+  },
+  "approach": "Reshape the spec viewer's living mode: state-edged requirement cards with a state word and touches link, header counts, state-coloured rail pips, and a footer that states the condition and offers Adopt, Validate, Sync. Per-card drift comes from the extension as drifted headings. The capability-file watcher now refreshes an open viewer.",
+  "currentTask": "T016",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "LivingHeaderMeta.driftedRequirements and livingValidate message",
+      "files": [
+        "src/protocol/viewer.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Drifted headings reuse requirementsForChange over marked slices; health keeps driftedFiles; test added",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts",
+        "src/features/spec-viewer/livingHeaderMeta.ts",
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Capability watcher refreshes an open living viewer; refreshIfDisplaying finds panels keyed by the file's dir",
+      "files": [
+        "src/extension.ts",
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "livingHealthResolved carries driftedRequirements via resolveLivingHealth",
+      "files": [
+        "src/features/spec-viewer/livingHeaderMeta.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tests: state attr, tooltip-only source, quote escape, touches link",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Card: data-req-state, state word with Approve, touches link revealing first glob, attribute-safe escaping (also data-req)",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts",
+        "webview/src/spec-viewer/actions.ts",
+        "webview/src/spec-viewer/index.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Card CSS: 760px column, heading block with 3px state edge, state word inks, quiet touches link",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Drift is a renderer input (setLivingDrifted); health message redraws cards once when the drifted list changes; tests",
+      "files": [
+        "webview/src/spec-viewer/index.tsx",
+        "webview/src/spec-viewer/messageHandlers.ts",
+        "webview/src/spec-viewer/markdown/livingComponents.ts",
+        "webview/src/spec-viewer/markdown/index.ts",
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Rail pip takes card state; lone card hides rail; adopted markers now survive the comment preprocessor (were rendered as Template Instructions)",
+      "files": [
+        "webview/src/spec-viewer/toc.ts",
+        "webview/styles/spec-viewer/_toc.css",
+        "webview/src/spec-viewer/__tests__/tocRequirements.test.ts",
+        "webview/src/spec-viewer/markdown/preprocessors.ts",
+        "webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Header facts: N requirements · X adopted, unconfirmed · Y drifted",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx",
+        "webview/styles/spec-viewer/_content.css"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "speckit.livingSpecs.validate dispatches living-validate; registered in package.json; test",
+      "files": [
+        "src/features/specs/livingSpecsCommands.ts",
+        "package.json",
+        "src/features/specs/__tests__/livingSpecsCommands.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Footer: condition words left; Adopt an area, Validate, Sync (drifted only) right; tests",
+      "files": [
+        "webview/src/spec-viewer/components/footer/LivingFooter.tsx",
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "livingValidate handler runs speckit.livingSpecs.validate",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Missing-spec tree row opens the viewer; empty living doc shows Adopt this area; lone-card rail handled in toc.ts",
+      "files": [
+        "webview/src/spec-viewer/App.tsx",
+        "webview/styles/spec-viewer/_living.css",
+        "src/features/specs/livingSpecsExplorerProvider.ts",
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Docs: viewer-states card section, sidebar missing-row behaviour, README clause, CHANGELOG Unreleased entries",
+      "files": [
+        "docs/viewer-states.md",
+        "docs/sidebar.md",
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "npx jest 2941/2941, tsc clean, webpack clean; no lint script in the repo",
+      "files": [
+        "(repo)"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "result": "176/176 suites, 2941/2941 tests pass"
+    },
+    {
+      "what": "extension type-check",
+      "command": "npm run compile",
+      "result": "clean"
+    },
+    {
+      "what": "webview build",
+      "command": "npm run compile-web",
+      "result": "webpack compiled successfully"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Validate runs living-validate across every living spec; the command takes no capability argument, so the bar button is not scoped to the open capability",
+      "step": "implement"
+    },
+    {
+      "note": "Adopt this area opens the existing adopt flow, which asks for code areas; it is not pre-filled with the capability match globs",
+      "step": "implement"
+    },
+    {
+      "note": "The empty state keys on an empty rendered document, so an existing but empty spec file also shows Adopt this area",
+      "step": "implement"
+    },
+    {
+      "note": "Header counts and the empty-state CTA have no automated test; verify in the running extension",
+      "step": "implement"
+    },
+    {
+      "note": "Webview UI changed; docs/screenshots/generated living-specs images are stale until scripts/capture-docs-images.mjs is re-run",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 6 task finishes journaled in 2 bursts (T002-T004, T011-T013 closed together); history is append-only so the durations for those tasks are not trustworthy",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: plan, tasks and implement closed by ai, as the command bodies instruct (--advance --by ai); the doctor expects the extension to stamp these",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: viewer-ui-* drift comes from commit 05026696 (#734) on main, not from this branch",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: ARTIFACT says specify closed without <short-name>.spec.md, but living-spec-surface.spec.md exists; looks like a doctor false positive",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: one capture call in this run resolved no spec and wrote nothing; could not attribute it to a specific call",
+      "step": "implement"
+    }
+  ],
+  "telemetryInstanceId": "598e88f9-1b94-4a24-a1d3-286ccc3e9ac0"
+}

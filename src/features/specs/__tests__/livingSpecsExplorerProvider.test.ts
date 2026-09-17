@@ -160,12 +160,12 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(src.contextValue).toBe('living-specs-dir-group');
 
         const srcChildren = await childrenOf(provider, src);
-        expect(byLabel(srcChildren, 'core').contextValue).toBe('living-specs-capability');
+        expect(byLabel(srcChildren, 'Core').contextValue).toBe('living-specs-capability');
         const features = byLabel(srcChildren, 'features');
         expect(features.contextValue).toBe('living-specs-dir-group');
 
         const featuresChildren = await childrenOf(provider, features);
-        expect(byLabel(featuresChildren, 'specs').contextValue).toBe('living-specs-capability');
+        expect(byLabel(featuresChildren, 'Specs').contextValue).toBe('living-specs-capability');
     });
 
     it('shows orphans as a group after the capability tree', async () => {
@@ -212,7 +212,7 @@ describe('LivingSpecsExplorerProvider', () => {
         const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-missing');
-        expect(caps[0].command).toBeUndefined();
+        expect(caps[0].command?.command).toBe('speckit.viewSpecDocument');
         expect(caps[0].description).toContain('not created');
         expect((caps[0].iconPath as vscode.ThemeIcon).id).toBe('circle-outline');
     });

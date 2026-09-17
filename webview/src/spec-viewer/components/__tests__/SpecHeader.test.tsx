@@ -156,6 +156,42 @@ describe('the living-spec facts row', () => {
         cleanup(container);
     });
 
+    it('counts adopted and drifted requirements beside the total', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta({ requirements: 3, drifted: true, driftedRequirements: ['B'] }),
+            livingOverview: {
+                purpose: '',
+                requirements: [
+                    { heading: 'A', adopted: true },
+                    { heading: 'B', adopted: false },
+                    { heading: 'C', adopted: false },
+                ],
+            },
+        });
+        const container = renderInto();
+        const facts = container.querySelector('.spec-header-living')?.textContent ?? '';
+
+        expect(facts).toContain('3 requirements');
+        expect(facts).toContain('1 adopted, unconfirmed');
+        expect(facts).toContain('1 drifted');
+
+        cleanup(container);
+    });
+
+    it('shows no adopted count when nothing is adopted', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta({ requirements: 1 }),
+            livingOverview: { purpose: '', requirements: [{ heading: 'A', adopted: false }] },
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-fact--adopted')).toBeNull();
+
+        cleanup(container);
+    });
+
     it('shows no drift marker when the capability has been checked and has not drifted', () => {
         navState.value = mockNavState({
             livingMode: true,

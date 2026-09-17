@@ -237,6 +237,10 @@ export interface LivingHeaderMeta {
     scenarios?: number;
     coverage?: { covered: number; total: number };
     drifted?: boolean;
+    /** True when the capability is registered but its spec file does not exist yet. */
+    missing?: boolean;
+    /** Headings whose touched files drifted; absent when drift is unknown. */
+    driftedRequirements?: string[];
 }
 
 /** What the living-spec Overview lists, parsed from the spec tier once on the extension side. */
@@ -493,6 +497,12 @@ export type ViewerToExtensionMessage =
     // Adopt another code area as a living spec; the command asks which
     | {
           type: 'livingAdopt';
+          /** Adopt the open capability's own areas rather than asking for new ones. */
+          thisCapability?: boolean;
+      }
+    // Check the open capability's spec against its code
+    | {
+          type: 'livingValidate';
       }
     // A Covers glob was clicked: reveal its folder in the Explorer
     | {
@@ -510,6 +520,11 @@ export type ViewerToExtensionMessage =
           type: 'documentChosen';
       }
     // Living-spec approval: drop the `adopted` marker on one requirement, or all of them
+    // Delete one requirement from the living spec, by heading
+    | {
+          type: 'removeRequirement';
+          heading: string;
+      }
     | {
           type: 'approveRequirement';
           heading: string;

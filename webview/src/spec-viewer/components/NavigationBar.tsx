@@ -12,42 +12,8 @@ export function NavigationBar() {
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
         currentStep, stepHistory, stalenessMap } = ns;
 
-    // Living-spec mode: no phases, just Overview then the tier strip (Spec / Rules / Coverage).
-    if (ns.livingMode) {
-        const tiers = coreDocs.filter(d => d.exists);
-        const onOverview = showingOverview.value;
-        return (
-            <div class="step-children" aria-label="Living spec tiers">
-                <div class="step-children-tabs">
-                    <button
-                        class={`step-child ${onOverview ? 'active' : ''}`}
-                        data-doc="overview"
-                        aria-current={onOverview ? 'page' : undefined}
-                        onClick={() => {
-                            viewerMode.value = 'overview';
-                            vscode.postMessage({ type: 'overviewChosen' });
-                        }}
-                    >
-                        Overview
-                    </button>
-                    {tiers.map(doc => (
-                        <button
-                            key={doc.type}
-                            class={`step-child ${!onOverview && doc.type === currentDoc ? 'active' : ''}`}
-                            data-doc={doc.type}
-                            aria-current={!onOverview && doc.type === currentDoc ? 'page' : undefined}
-                            onClick={() => {
-                                viewerMode.value = 'document';
-                                vscode.postMessage({ type: 'switchDocument', documentType: doc.type });
-                            }}
-                        >
-                            {doc.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+    // A living spec has no rail: its tiers open from the tree, and the cards are the page.
+    if (ns.livingMode) return null;
 
     // The rail lists documents only: action steps (Implement, Mark Complete,
     // any custom step without a document) never render as entries. Every

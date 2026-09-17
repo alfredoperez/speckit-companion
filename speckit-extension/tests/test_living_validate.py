@@ -114,6 +114,16 @@ class TheReportNeverGates(unittest.TestCase):
         for entry in report["skipped"]:
             self.assertTrue(entry["reason"].strip())
 
+    def test_one_capability_checks_only_its_spec(self):
+        report = lv.build_report(str(REPO), "specs-living-view")
+        self.assertEqual(report["checked"], 1)
+        self.assertTrue(all(f["path"].endswith("specs-living-view.spec.md") for f in report["findings"]))
+
+    def test_an_unknown_capability_is_a_skip_not_a_clean_report(self):
+        report = lv.build_report(str(REPO), "no-such-capability")
+        self.assertEqual(report["checked"], 0)
+        self.assertIn("no capability named no-such-capability", report["skipped"][-1]["reason"])
+
     def test_this_repository_is_checked_and_exits_zero(self):
         report = lv.build_report(str(REPO))
         self.assertTrue(report["enabled"])

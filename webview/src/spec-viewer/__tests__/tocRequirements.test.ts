@@ -108,10 +108,22 @@ describe('the living-spec outline (#672 Wave 1)', () => {
 
     it('keeps the full heading reachable when the row truncates', () => {
         const long = '### ' + 'A requirement with a very long heading indeed'.repeat(3);
-        const { toc } = mount(`## Requirements\n\n${long}\n\nProse.\n`);
+        const { toc } = mount(`## Requirements\n\n${long}\n\nProse.\n\n### Short\n\nProse.\n`);
         const a = rows(toc)[0];
         expect(a.title).toBe(a.querySelector('.spec-toc-text')!.textContent);
         expect(a.title.length).toBeGreaterThan(60);
+    });
+
+    it('shows no rail for a capability with a single requirement', () => {
+        const { toc } = mount('## Requirements\n\n### Only one\n\nProse.\n');
+        expect(toc.classList.contains('spec-toc--empty')).toBe(true);
+    });
+
+    it('colours each pip with its card state', () => {
+        const { toc } = mount('## Requirements\n\n### Plain\n\nProse.\n\n### Taken\n<!-- adopted: CLAUDE.md:1 -->\n\nProse.\n');
+        const pips = rows(toc).map(a => a.querySelector('.spec-toc-cov')!.className);
+        expect(pips[0]).toContain('spec-toc-cov--state-confirmed');
+        expect(pips[1]).toContain('spec-toc-cov--state-adopted');
     });
 
     it('leaves a feature spec with the outline it always had', () => {

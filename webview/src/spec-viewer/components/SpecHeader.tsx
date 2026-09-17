@@ -11,13 +11,20 @@ function plural(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
-function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
+function LivingFacts({ meta, adopted }: { meta: LivingHeaderMeta; adopted: number }) {
     const facts: JSX.Element[] = [];
 
     if (meta.requirements !== undefined) {
         facts.push(
             <span key="requirements" class="spec-header-fact">
                 {plural(meta.requirements, 'requirement')}
+            </span>
+        );
+    }
+    if (adopted > 0) {
+        facts.push(
+            <span key="adopted" class="spec-header-fact spec-header-fact--adopted">
+                {adopted} adopted, unconfirmed
             </span>
         );
     }
@@ -50,7 +57,7 @@ function LivingFacts({ meta }: { meta: LivingHeaderMeta }) {
                 title="Source files changed since the living spec's last commit"
                 aria-label="Source files changed since the living spec's last commit"
             >
-                drift
+                {meta.driftedRequirements?.length ? `${meta.driftedRequirements.length} drifted` : 'drift'}
             </span>
         );
     }
@@ -191,7 +198,7 @@ export function SpecHeader() {
                                     {ns.createdDate}
                                 </span>
                             )}
-                            {meta && <LivingFacts meta={meta} />}
+                            {meta && <LivingFacts meta={meta} adopted={ns.livingOverview?.requirements.filter(r => r.adopted).length ?? 0} />}
                         </div>
                     )}
                     {meta && <LivingCovers meta={meta} />}

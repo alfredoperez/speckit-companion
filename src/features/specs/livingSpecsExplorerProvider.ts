@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import * as path from 'path';
+import { livingPurposeBody } from '../spec-viewer/livingDocs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import {
@@ -228,7 +230,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 ? 'living-specs-capability-drifted'
                 : 'living-specs-capability';
         const item = new LivingSpecItem(
-            cap.name,
+            readableName(cap.name),
             hasChildren
                 ? vscode.TreeItemCollapsibleState.Collapsed
                 : vscode.TreeItemCollapsibleState.None,
@@ -241,7 +243,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         if (!cap.exists) {
             suffixes.push('not created');
         }
-        const tooltipLines = [`${cap.name} — ${cap.spec}`, locationSentence];
+        const tooltipLines = [`${cap.name} — ${cap.spec}`];
+        const purpose = this.purposeOf(cap);
+        if (purpose) tooltipLines.push(purpose);
+        tooltipLines.push(locationSentence);
         if (health?.coverage) {
             suffixes.push(`${health.coverage.covered}/${health.coverage.total} covered`);
             tooltipLines.push(`${health.coverage.covered} of ${health.coverage.total} requirements have a mapped test`);
@@ -272,10 +277,21 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         item.tooltip = tooltipLines.join('\n');
         item.capability = cap;
         item.relPath = cap.spec;
-        if (cap.exists) {
-            item.command = this.openCommand(cap.spec);
-        }
+        // A missing spec still opens: the viewer's empty state is where adoption starts.
+        item.command = this.openCommand(cap.spec);
         return item;
+    }
+
+    /** The first sentence of the spec's purpose, so a row says what it is about. */
+    private purposeOf(cap: ResolvedCapability): string | undefined {
+        const root = this.workspaceRoot;
+        if (!root || !cap.exists) return undefined;
+        try {
+            const body = livingPurposeBody(fs.readFileSync(path.join(root, cap.spec), 'utf-8'));
+            return body.split(/(?<=\.)\s/)[0]?.trim() || undefined;
+        } catch {
+            return undefined;
+        }
     }
 
     private tierChildren(cap: ResolvedCapability): LivingSpecItem[] {
@@ -293,6 +309,11 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         return children;
     }
+}
+
+/** `commands-living-load` reads as `Commands Living Load`; the exact name stays in the tooltip. */
+function readableName(name: string): string {
+    return name.split(/[-_]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 class LivingSpecItem extends vscode.TreeItem {
