@@ -222,6 +222,21 @@ describe('messageHandlers - living Approve all, Remove and Undo', () => {
         ]);
     });
 
+    it('records the removal when the restore itself cannot be written', async () => {
+        const { handler, token } = panel('alpha');
+        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
+        const write = jest.spyOn(fs.promises, 'writeFile').mockRejectedValueOnce(new Error('EROFS'));
+        warn.mockClear();
+
+        await handler({ type: 'undoLivingAction', token: token() });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('could not be written'));
+        expect(JSON.parse(fs.readFileSync(ctxOf('alpha'), 'utf-8')).history).toEqual([
+            expect.objectContaining({ kind: 'requirement-removed', requirement: 'Checks itself' }),
+        ]);
+        write.mockRestore();
+    });
+
     it('ignores a stale token', async () => {
         fs.writeFileSync(specOf('alpha'), ADOPTED);
         const { handler } = panel('alpha');

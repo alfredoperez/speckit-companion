@@ -219,6 +219,11 @@ class RemovedRequirements(unittest.TestCase):
             ]}), encoding="utf-8")
             self.assertEqual(rsp.removed_requirements(str(Path(tmp) / "todos.spec.md"), "todos"), {"Gone"})
 
+    def test_a_history_that_is_not_a_list_records_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps({"history": 1}), encoding="utf-8")
+            self.assertEqual(rsp.removed_requirements(str(Path(tmp) / "spec.md"), "todos"), set())
+
     def test_no_file_or_a_bad_file_records_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             spec = str(Path(tmp) / "spec.md")

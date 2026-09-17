@@ -269,7 +269,8 @@ describe('FooterActions — living Approve all and Undo', () => {
         try {
             expect(labels(container)[0]).toBe('Approve all 4');
             container.querySelector('button')?.click();
-            expect(postMessage).toHaveBeenCalledWith({ type: 'approveSpec' });
+            // The count is the spec tier's, so the action has to name that tier.
+            expect(postMessage).toHaveBeenCalledWith({ type: 'approveSpec', documentType: 'spec' });
         } finally {
             cleanup(container);
         }
@@ -307,6 +308,18 @@ describe('FooterActions — living Approve all and Undo', () => {
             await new Promise(resolve => setTimeout(resolve, 300));
             expect(container.querySelector('.undo-toast')).toBeNull();
             expect(postMessage).not.toHaveBeenCalled();
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('leaves Escape to the page, so cancelling an edit cannot undo a write', () => {
+        navState.value = living([], { token: 'tok-4', kind: 'approve', expiresAt: Date.now() + 5000 });
+        const container = renderInto();
+        try {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+            expect(postMessage).not.toHaveBeenCalled();
+            expect(container.querySelector('.undo-toast-button')?.hasAttribute('autofocus')).toBe(false);
         } finally {
             cleanup(container);
         }

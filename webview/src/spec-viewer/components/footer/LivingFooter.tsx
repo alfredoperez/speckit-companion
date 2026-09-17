@@ -32,8 +32,11 @@ export function LivingFooter() {
     if (!meta) return null;
     const drifted = !!meta.drifted;
     const adopted = ns?.livingOverview?.requirements.filter((r) => r.adopted).length ?? 0;
-    const post = (type: 'livingUpdate' | 'livingValidate' | 'livingAdopt' | 'approveSpec') => () =>
+    const post = (type: 'livingUpdate' | 'livingValidate' | 'livingAdopt') => () =>
         vscode.postMessage({ type });
+    // The count comes from the spec tier, so the action has to name it: on the
+    // Rules tab the handler would otherwise approve whatever is on screen.
+    const approveSpec = () => vscode.postMessage({ type: 'approveSpec', documentType: 'spec' });
 
     return (
         <footer class="actions">
@@ -44,7 +47,7 @@ export function LivingFooter() {
                         type="button"
                         class="secondary"
                         title="Approve every adopted requirement and clear the draft banner. You can undo for 5 seconds."
-                        onClick={post('approveSpec')}
+                        onClick={approveSpec}
                     >
                         <span class="codicon codicon-check" aria-hidden="true" />
                         Approve all {adopted}
@@ -86,6 +89,7 @@ export function LivingFooter() {
                     onElapse={onElapse}
                     onUndo={onUndo}
                     active={spent !== undo.token}
+                    captureKeyboard={false}
                 />
             )}
         </footer>

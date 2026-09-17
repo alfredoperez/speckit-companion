@@ -756,6 +756,8 @@ def removed_requirements(spec_path: str, capability: str) -> set:
             history = json.load(fh).get("history") or []
     except (OSError, ValueError, AttributeError):
         return set()
+    if not isinstance(history, list):
+        return set()
     return {
         e["requirement"] for e in history
         if isinstance(e, dict) and e.get("kind") == "requirement-removed"

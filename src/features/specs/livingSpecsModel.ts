@@ -970,6 +970,15 @@ export function hasNoMarkers(slices: RequirementSlice[]): boolean {
     return slices.every((s) => !s.touches);
 }
 
+/**
+ * The key every surface joins a requirement on: the heading with its
+ * `[inferred]` tag stripped, as the card renders it. The cards strip it, so a
+ * map keyed on the raw heading misses exactly the requirements that carry it.
+ */
+export function requirementKey(heading: string): string {
+    return heading.replace(/\s*\[inferred\]\s*/gi, ' ').trim();
+}
+
 /** A requirement's aligns links in both directions. */
 export interface RequirementLinks {
     leansOn: RequirementLink[];
@@ -999,26 +1008,31 @@ export function requirementLinks(workspaceRoot: string, capability: string): Map
     const resolve = (raw: string): RequirementLink => {
         const at = raw.indexOf('#');
         const name = (at === -1 ? raw : raw.slice(0, at)).trim();
-        const heading = at === -1 ? '' : raw.slice(at + 1).trim();
+        // Normalized, because the card the link opens is keyed on the stripped heading.
+        const heading = at === -1 ? '' : requirementKey(raw.slice(at + 1));
         const target = specs.get(name);
-        return target?.slices.some((s) => s.heading === heading)
+        return target?.slices.some((s) => requirementKey(s.heading) === heading)
             ? { capability: name, heading, raw, broken: false, specPath: target.spec }
             : { capability: name, heading, raw, broken: true };
     };
     for (const slice of own.slices) {
-        if (out.has(slice.heading)) continue;
-        const raws = own.slices.filter((s) => s.heading === slice.heading).flatMap((s) => s.aligns ?? []);
-        const target = `${capability}#${slice.heading}`;
+        const key = requirementKey(slice.heading);
+        if (out.has(key)) continue;
+        const raws = own.slices.filter((s) => requirementKey(s.heading) === key).flatMap((s) => s.aligns ?? []);
+        const target = `${capability}#${key}`;
         const leanedOnBy: RequirementLink[] = [];
         for (const [name, other] of specs) {
             if (name === capability) continue;
             for (const s of other.slices) {
-                if (s.aligns?.some((a) => a.replace(/\s*#\s*/, '#') === target)) {
-                    leanedOnBy.push({ capability: name, heading: s.heading, raw: `${name}#${s.heading}`, broken: false, specPath: other.spec });
+                if (s.aligns?.some((a) => {
+                    const at = a.indexOf('#');
+                    return at !== -1 && `${a.slice(0, at).trim()}#${requirementKey(a.slice(at + 1))}` === target;
+                })) {
+                    leanedOnBy.push({ capability: name, heading: requirementKey(s.heading), raw: `${name}#${requirementKey(s.heading)}`, broken: false, specPath: other.spec });
                 }
             }
         }
-        out.set(slice.heading, { leansOn: [...new Set(raws)].map(resolve), leanedOnBy });
+        out.set(key, { leansOn: [...new Set(raws)].map(resolve), leanedOnBy });
     }
     return out;
 }

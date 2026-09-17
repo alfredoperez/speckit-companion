@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     requirementSlices,
@@ -201,6 +202,29 @@ describe('requirementLinks — against the shared links fixture', () => {
         expect(same.specPath).toBe('capabilities/alpha/spec.md');
         expect(brokenHeading.specPath).toBeUndefined();
         expect(brokenCap).toMatchObject({ capability: 'gamma', heading: 'Anything', broken: true });
+    });
+
+    it('keys an [inferred] requirement the way the card does, so the refusal still sees it', () => {
+        // The card strips the tag before it posts a heading back, so a map keyed
+        // on the raw heading misses exactly the requirements that carry one.
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'links-inferred-'));
+        try {
+            fs.mkdirSync(path.join(root, 'capabilities', 'one'), { recursive: true });
+            fs.mkdirSync(path.join(root, 'capabilities', 'two'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'living-specs.yml'),
+                'enabled: true\ncapabilities:\n  - name: one\n    match: ["src/one/**"]\n  - name: two\n    match: ["src/two/**"]\n');
+            fs.writeFileSync(path.join(root, 'capabilities', 'one', 'spec.md'),
+                '## Requirements\n\n### Handles retries [inferred]\n\nBody.\n');
+            fs.writeFileSync(path.join(root, 'capabilities', 'two', 'spec.md'),
+                '## Requirements\n\n### Retries are bounded\n<!-- aligns: one#Handles retries -->\n\nBody.\n');
+
+            const links = requirementLinks(root, 'one');
+
+            expect([...links.keys()]).toEqual(['Handles retries']);
+            expect(links.get('Handles retries')!.leanedOnBy.map(l => l.raw)).toEqual(['two#Retries are bounded']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 
     it('an unregistered capability has no links', () => {

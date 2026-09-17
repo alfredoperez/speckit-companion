@@ -305,6 +305,17 @@ class RemovalRecordsSilenceMissingHeadings(unittest.TestCase):
     def test_the_same_heading_without_a_record_still_does(self):
         self.assertIn("delta-heading-not-found", self._codes([]))
 
+    def test_a_record_matches_a_delta_that_kept_the_inferred_tag(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps({"history": [
+                {"kind": "requirement-removed", "capability": "todos", "requirement": "Removed on purpose"}]}), encoding="utf-8")
+            removed = {"todos": lv._load_resolver().removed_requirements(str(Path(tmp) / "todos.spec.md"), "todos")}
+        delta = "## REMOVED Requirements\n<!-- capability: todos -->\n\n### Removed on purpose [inferred]\n"
+        found = lv.check_feature_deltas(delta, "spec.md", known_capabilities=["todos"],
+                                        target_texts={"todos": self.TARGET}, removed=removed)
+        self.assertNotIn("delta-heading-not-found", [f["code"] for f in found])
+
     def test_a_record_for_another_capability_in_the_shared_file_does_not_count(self):
         self.assertIn("delta-heading-not-found", self._codes([
             {"kind": "requirement-removed", "capability": "storage", "requirement": "Removed on purpose"}]))

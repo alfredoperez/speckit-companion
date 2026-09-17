@@ -34,7 +34,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot, requirementLinks, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
+import { isPathWithinRoot, requirementKey, requirementLinks, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -898,7 +898,7 @@ async function handleLivingRemove(
   const cap = resolveCapabilityBySpecPath(root, specPath);
   if (!cap) return;
 
-  const leaners = [...new Set((requirementLinks(root, cap.name).get(heading)?.leanedOnBy ?? []).map((l) => l.capability))];
+  const leaners = [...new Set((requirementLinks(root, cap.name).get(requirementKey(heading))?.leanedOnBy ?? []).map((l) => l.capability))];
   if (leaners.length) {
     void vscode.window.showWarningMessage(
       `Cannot remove "${heading}": ${leaners.join(", ")} still align${leaners.length === 1 ? "s" : ""} to it. Change those first.`,
@@ -936,18 +936,26 @@ async function handleLivingUndo(
   const action = deps.takeLivingUndo(specDirectory, token);
   if (!action) return;
   const current = await fs.promises.readFile(action.filePath, "utf-8").catch(() => undefined);
-  if (current === action.after) {
-    await fs.promises.writeFile(action.filePath, action.before, "utf-8");
-    deps.outputChannel.appendLine(`[SpecViewer] Undid ${action.kind} on ${path.basename(action.filePath)}`);
+  let restored = current === action.after;
+  if (restored) {
+    try {
+      await fs.promises.writeFile(action.filePath, action.before, "utf-8");
+      deps.outputChannel.appendLine(`[SpecViewer] Undid ${action.kind} on ${path.basename(action.filePath)}`);
+    } catch (err) {
+      // The undo is spent either way, so a failed restore leaves the action standing.
+      restored = false;
+      void vscode.window.showWarningMessage(`Undo failed: ${path.basename(action.filePath)} could not be written.`);
+      deps.outputChannel.appendLine(`[SpecViewer] Undo write failed on ${action.filePath}: ${err}`);
+    }
   } else {
     void vscode.window.showWarningMessage(
       `Undo skipped: ${path.basename(action.filePath)} changed after the ${action.kind === "remove" ? "removal" : "approval"}, and restoring it would overwrite that change.`,
     );
-    if (action.kind === "remove" && action.heading) {
-      await appendLivingRemoval(action.filePath, action.capability, action.heading).catch((err) =>
-        deps.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${action.heading}": ${err}`),
-      );
-    }
+  }
+  if (!restored && action.kind === "remove" && action.heading) {
+    await appendLivingRemoval(action.filePath, action.capability, action.heading).catch((err) =>
+      deps.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${action.heading}": ${err}`),
+    );
   }
   const instance = deps.getInstance(specDirectory);
   if (instance) await deps.updateContent(specDirectory, instance.state.currentDocument);

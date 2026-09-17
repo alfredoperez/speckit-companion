@@ -55,7 +55,7 @@ import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from ".
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody, appendLivingRemoval } from "./livingDocs";
-import { requirementLinks, requirementSlices } from "../specs/livingSpecsModel";
+import { requirementKey, requirementLinks, requirementSlices } from "../specs/livingSpecsModel";
 import { buildLivingHeaderMeta, resolveLivingHealth } from "./livingHeaderMeta";
 import type { LivingHeaderMeta } from "./types";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
@@ -295,7 +295,9 @@ export class SpecViewerProvider {
     if (existing?.state.living) {
       // Re-anchor: two colocated capabilities can share a directory (the
       // panel key), so the clicked file decides which family renders.
-      if (existing.state.livingSourcePath !== filePath) this.settleLivingUndo(specDirectory);
+      if (this.livingSpecTier(existing.state.livingSourcePath) !== this.livingSpecTier(filePath)) {
+        this.settleLivingUndo(specDirectory);
+      }
       existing.state = {
         ...existing.state,
         livingSourcePath: filePath,
@@ -579,6 +581,11 @@ export class SpecViewerProvider {
     );
   }
 
+  /** The spec tier a tier file belongs to: two tiers of one capability share it, two colocated capabilities do not. */
+  private livingSpecTier(sourcePath: string | undefined): string | undefined {
+    return sourcePath ? livingTierDocuments(sourcePath).find(d => d.type === 'spec')?.filePath : undefined;
+  }
+
   /** Hold an action as the panel's one Undo for LIVING_UNDO_MS; the action it replaces stands. */
   private offerLivingUndo(specDirectory: string, action: LivingUndoAction): void {
     this.settleLivingUndo(specDirectory);
@@ -658,10 +665,10 @@ export class SpecViewerProvider {
     const overview = {
       purpose: livingPurposeBody(specTierContent),
       requirements: requirementSlices(specTierContent).map(r => ({
-        heading: r.heading,
+        heading: requirementKey(r.heading),
         adopted: !!r.adopted,
-        leansOn: links?.get(r.heading)?.leansOn ?? [],
-        leanedOnBy: links?.get(r.heading)?.leanedOnBy ?? [],
+        leansOn: links?.get(requirementKey(r.heading))?.leansOn ?? [],
+        leanedOnBy: links?.get(requirementKey(r.heading))?.leanedOnBy ?? [],
       })),
     };
     const undo = this.livingUndos.get(specDirectory);

@@ -276,6 +276,14 @@ describe('appendLivingRemoval', () => {
         expect(ctx.workflow).toBeUndefined();
     });
 
+    it('keeps both records when two removals settle at once', async () => {
+        await Promise.all([
+            appendLivingRemoval(path.join(dir, 'one.spec.md'), 'one', 'First'),
+            appendLivingRemoval(path.join(dir, 'two.spec.md'), 'two', 'Second'),
+        ]);
+        expect(read().history.map((h: { requirement: string }) => h.requirement).sort()).toEqual(['First', 'Second']);
+    });
+
     it('never overwrites a file it cannot parse', async () => {
         fs.writeFileSync(ctxFile(), '{ not json');
         await expect(appendLivingRemoval(path.join(dir, 'spec.md'), 'todos', 'Gone')).rejects.toThrow();

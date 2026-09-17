@@ -674,7 +674,8 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
         if block["verb"] not in ("MODIFIED", "REMOVED"):
             continue
         for heading, line in block["headings"]:
-            if heading in present or heading in (removed or {}).get(cap, ()):
+            recorded = {_requirement_key(h) for h in (removed or {}).get(cap, ())}
+            if heading in present or _requirement_key(heading) in recorded:
                 continue
             # A warning, not an error: the fold promotes a MODIFIED with no
             # match into an addition and a REMOVED with no match removes
@@ -722,6 +723,17 @@ def _nearest_heading(heading: str, present: set):
                               and (mine <= theirs or theirs <= mine)):
             return other
     return None
+
+
+_INFERRED_TAG = re.compile(r"\s*\[inferred\]\s*", re.IGNORECASE)
+
+
+def _requirement_key(heading: str) -> str:
+    """The heading as the viewer keys it: `[inferred]` stripped, trimmed.
+
+    A removal record is written from the card, so it never carries the tag; a
+    delta copied out of the spec file does."""
+    return _INFERRED_TAG.sub(" ", heading).strip()
 
 
 def _requirement_headings(text: str) -> list:

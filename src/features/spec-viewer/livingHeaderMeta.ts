@@ -16,6 +16,7 @@ import {
     requirementSlices,
     requirementsForChange,
     readMainCopy,
+    requirementKey,
     CapabilityHealth,
 } from '../specs/livingSpecsModel';
 
@@ -131,8 +132,8 @@ async function newHeadings(workspaceRoot: string, specPath: string): Promise<str
     } catch {
         return undefined;
     }
-    const old = new Set(requirementSlices(onMain).map((s) => s.heading.trim()));
-    return [...new Set(requirementSlices(text).map((s) => s.heading.trim()).filter((h) => !old.has(h)))];
+    const old = new Set(requirementSlices(onMain).map((s) => requirementKey(s.heading)));
+    return [...new Set(requirementSlices(text).map((s) => requirementKey(s.heading)).filter((h) => !old.has(h)))];
 }
 
 /** Requirements whose touches marker names a drifted file. An unmarked requirement never drifts. */
@@ -144,5 +145,5 @@ function driftedHeadings(workspaceRoot: string, specPath: string, driftedFiles: 
         return [];
     }
     const marked = requirementSlices(text).filter((s) => s.touches);
-    return requirementsForChange(marked, driftedFiles).map((s) => s.heading.trim());
+    return requirementsForChange(marked, driftedFiles).map((s) => requirementKey(s.heading));
 }
