@@ -73,7 +73,7 @@ The activity panel MUST lead with the run's lifecycle signal and durable context
 
 ### Evidence and assertion do not wear the same mark
 
-The Overview's verification section carries both what was checked and what the run says it did, and rendering them alike makes the most trustworthy-looking panel in the viewer the one asserting the most. A verification the pipeline derived SHALL keep the check mark and show what it actually got back; one the run merely reported SHALL be visibly quieter and grouped apart, and stay readable rather than being hidden — a run's account of its own work is worth reading, it just must not look like proof. The section's count SHALL say how many of each, because that is the number a reader wants when deciding whether to trust a finished spec.
+A verification the pipeline derived SHALL keep the check mark and show what it actually got back. One the run merely reported SHALL be visibly quieter, grouped apart, and still readable, because a run's account is worth reading but must not look like proof. The section's count SHALL say how many of each.
 
 #### Scenario: a spec carries both kinds
 - **WHEN** the Overview renders

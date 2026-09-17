@@ -84,9 +84,9 @@ A command name SHALL be held and emitted as its dotted id alone, with no leading
 
 ### A check that can be run is run, not described
 
-A verification records what was checked and how it came out, and everything in that record was the running agent's own account — including the command, which was a string it typed rather than evidence anything ran. The viewer then drew a checkmark beside it. A check the pipeline can execute SHALL therefore be executed by the capture script, which keeps the exit code, the duration and a short tail of the output, and marks the entry as derived. A non-zero exit is recorded rather than dropped: a run that could not prove its work must say so where the reader looks, not omit the row and read as though nothing was checked.
+A check the pipeline can execute SHALL be executed by the capture script, which keeps the exit code, the duration and a short tail of the output, and marks the entry as derived. A non-zero exit SHALL be recorded, never dropped, so a run that could not prove its work says so. A command the agent only typed is not evidence that anything ran.
 
-What genuinely cannot be run — a manual pass, a judgement about a warning — stays a claim and SHALL be recorded as one. Absence of provenance MUST keep meaning claimed, because every entry written before this existed was one, and only the exact derived marker may promote an entry, since the record is a file an agent writes into.
+What cannot be run, such as a manual pass or a judgement about a warning, SHALL be recorded as a claim. An entry with no provenance MUST read as claimed, and only the exact derived marker may promote an entry, because the record is a file an agent writes into.
 
 #### Scenario: a suite is recorded
 - **WHEN** implement records it
