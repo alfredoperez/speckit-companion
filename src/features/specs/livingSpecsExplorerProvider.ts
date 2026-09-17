@@ -187,7 +187,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 return LivingSpecItem.dirGroup(node);
             }
             const health = await this.health(node.capability);
-            return this.capabilityItem(node.capability, health);
+            return this.capabilityItem(node.capability, node.label, health);
         }));
     }
 
@@ -215,6 +215,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
 
     private capabilityItem(
         cap: ResolvedCapability,
+        label: string,
         health?: CapabilityHealth,
     ): LivingSpecItem {
         // `tierChildren` always yields the Spec node, and a capability row has no
@@ -230,7 +231,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
                 ? 'living-specs-capability-drifted'
                 : 'living-specs-capability';
         const item = new LivingSpecItem(
-            readableName(cap.name),
+            label,
             hasChildren
                 ? vscode.TreeItemCollapsibleState.Collapsed
                 : vscode.TreeItemCollapsibleState.None,
@@ -269,12 +270,11 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
             // difference a reader can scan for, and it is nothing at all to someone
             // who cannot distinguish it.
             item.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'));
-        } else if (cap.exists) {
-            item.iconPath = new vscode.ThemeIcon('symbol-namespace');
-        } else {
+        } else if (!cap.exists) {
             item.iconPath = new vscode.ThemeIcon('circle-outline');
         }
         item.tooltip = tooltipLines.join('\n');
+        item.id = `living-specs-capability:${cap.spec}`;
         item.capability = cap;
         item.relPath = cap.spec;
         // A missing spec still opens: the viewer's empty state is where adoption starts.
@@ -309,11 +309,6 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
         }
         return children;
     }
-}
-
-/** `commands-living-load` reads as `Commands Living Load`; the exact name stays in the tooltip. */
-function readableName(name: string): string {
-    return name.split(/[-_]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 class LivingSpecItem extends vscode.TreeItem {
@@ -356,7 +351,7 @@ class LivingSpecItem extends vscode.TreeItem {
     }
 
     static dirGroup(node: CapabilityTreeGroup): LivingSpecItem {
-        const item = new LivingSpecItem(node.name, vscode.TreeItemCollapsibleState.Expanded, 'living-specs-dir-group');
+        const item = new LivingSpecItem(node.label, vscode.TreeItemCollapsibleState.Expanded, 'living-specs-dir-group');
         item.id = `living-specs-dir:${node.path}`;
         item.iconPath = new vscode.ThemeIcon('folder');
         item.treeChildren = node.children;

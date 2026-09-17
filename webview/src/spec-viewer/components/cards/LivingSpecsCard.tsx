@@ -1,4 +1,5 @@
 import type { ViewerState, VSCodeApi, CapabilityContentView, LivingSpecsView } from '../../types';
+import { readableName } from '../../../../../src/core/utils/capabilityNames';
 
 declare const vscode: VSCodeApi;
 
@@ -49,34 +50,40 @@ export function LivingSpecLinks({ livingSpecs }: { livingSpecs: LivingSpecsView 
         });
     };
 
+    const groups = [
+        { label: 'Updated by this run', chips: chips.filter(c => c.synced) },
+        { label: 'Read for context', chips: chips.filter(c => !c.synced) },
+    ].filter(g => g.chips.length > 0);
+
     return (
-        <ul class="living-specs-chips">
-            {chips.map(chip => (
-                <li key={chip.name} class="living-specs-chips__item">
-                    <button
-                        type="button"
-                        class="living-specs-chip living-specs-chip--link"
-                        title={`Open ${chip.name} in the Living Specs viewer`}
-                        aria-label={`Open ${chip.name} in the Living Specs viewer`}
-                        onClick={() => openSpec(chip)}
-                    >
-                        {chip.name}
-                    </button>
-                    {chip.synced && (
-                        <span class="living-specs-chip__synced" title="Folded back into the living spec">
-                            folded back
-                        </span>
-                    )}
-                </li>
+        <div class="living-specs-groups">
+            {groups.map(group => (
+                <div key={group.label} class="living-specs-group">
+                    <span class="living-specs-group__label">{group.label}</span>
+                    <ul class="living-specs-chips" aria-label={group.label}>
+                        {group.chips.map(chip => (
+                            <li key={chip.name} class="living-specs-chips__item">
+                                <button
+                                    type="button"
+                                    class="living-specs-chip living-specs-chip--link"
+                                    title={`Open ${chip.name} in the Living Specs viewer`}
+                                    aria-label={`Open ${readableName(chip.name)} in the Living Specs viewer`}
+                                    onClick={() => openSpec(chip)}
+                                >
+                                    {readableName(chip.name)}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             ))}
-        </ul>
+        </div>
     );
 }
 
 /**
  * Compact run-log surface for the living specs a feature touched (LS·7): one
- * chip per capability loaded into context (LS·2) or folded back at completion
- * (LS·3). The full capability content lives in the Living Specs viewer, so a
+ * chip per capability, grouped by whether the run updated it or only read it. The full capability content lives in the Living Specs viewer, so a
  * chip opens it there rather than reprinting it here. Hides itself when there's
  * no `livingSpecs` data, like every other card.
  */

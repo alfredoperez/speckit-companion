@@ -850,7 +850,7 @@ async function handleOpenLivingSpec(
 
 const LIVING_TIER_FILE = /(^|\.)spec\.md$|\.rules\.md$/;
 
-/** Approve one requirement or a whole tier: only ever deletes `adopted` markers and, with the last one, the `[DRAFT]` banner. */
+/** Approve one requirement or a whole tier: only ever deletes `adopted` markers and the `[DRAFT]` banner. */
 async function handleLivingApprove(
   specDirectory: string,
   documentType: DocumentType | undefined,
@@ -871,7 +871,7 @@ async function handleLivingApprove(
   const before = await fs.promises.readFile(doc.filePath, "utf-8");
   const after = approveLivingText(before, heading);
   if (after === null) {
-    deps.outputChannel.appendLine(`[SpecViewer] Approve: nothing adopted on ${heading ?? doc.fileName}`);
+    deps.outputChannel.appendLine(`[SpecViewer] Approve: nothing to approve on ${heading ?? doc.fileName}`);
     return;
   }
   await fs.promises.writeFile(doc.filePath, after, "utf-8");

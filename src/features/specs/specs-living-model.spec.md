@@ -130,3 +130,15 @@ The registry reader SHALL carry each capability's optional retirement declaratio
 #### Scenario: a link names an unregistered capability
 - **WHEN** its links are computed
 - **THEN** that link is marked broken with no spec path
+
+### The capability tree groups by folder and labels its rows as words
+
+A folder holding two or more capability specs SHALL be its own group, and a folder holding one SHALL collapse into its leaf. Group and leaf labels SHALL read as words, from the one naming rule the viewer's Overview also uses. Leaves in one group SHALL drop the leading words every sibling shares, keeping at least one word. The exact capability name stays on the leaf.
+
+#### Scenario: eight specs share one folder and one leading word
+- **WHEN** the tree is built
+- **THEN** the folder is one group and each leaf label omits the shared word
+
+#### Scenario: a folder holds a single spec
+- **WHEN** the tree is built
+- **THEN** the folder is not a group and the leaf sits under its parent

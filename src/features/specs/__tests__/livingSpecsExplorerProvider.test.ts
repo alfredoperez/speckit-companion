@@ -156,12 +156,12 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const src = byLabel(roots, 'src');
+        const src = byLabel(roots, 'Src');
         expect(src.contextValue).toBe('living-specs-dir-group');
 
         const srcChildren = await childrenOf(provider, src);
         expect(byLabel(srcChildren, 'Core').contextValue).toBe('living-specs-capability');
-        const features = byLabel(srcChildren, 'features');
+        const features = byLabel(srcChildren, 'Features');
         expect(features.contextValue).toBe('living-specs-dir-group');
 
         const featuresChildren = await childrenOf(provider, features);
@@ -179,7 +179,7 @@ describe('LivingSpecsExplorerProvider', () => {
 
         const roots = await provider.getChildren();
 
-        expect(roots.map(r => r.label)).toEqual(['capabilities', 'Orphans']);
+        expect(roots.map(r => r.label)).toEqual(['Capabilities', 'Orphans']);
     });
 
     it('gives an orphan row its exact path so reveal can resolve it', async () => {
@@ -209,7 +209,7 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
+        const caps = await childrenOf(provider, byLabel(roots, 'Capabilities'));
 
         expect(caps[0].command?.command).toBe('speckit.viewSpecDocument');
         expect(caps[0].command?.arguments).toEqual([`${WORKSPACE}/capabilities/billing/spec.md`, { living: true }]);
@@ -225,7 +225,7 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
+        const caps = await childrenOf(provider, byLabel(roots, 'Capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-missing');
         expect(caps[0].command?.command).toBe('speckit.viewSpecDocument');
@@ -244,10 +244,30 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const caps = await childrenOf(provider, byLabel(roots, 'src'));
+        const caps = await childrenOf(provider, byLabel(roots, 'Src'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability-drifted');
         expect(caps[0].description).toBe('drift');
+        expect((caps[0].iconPath as vscode.ThemeIcon).id).toBe('warning');
+    });
+
+    it('gives a healthy capability no icon, and keeps the exact name first in the tooltip', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'commands-nodes', spec: 'capabilities/companion-commands/nodes.spec.md', location: 'centralized', exists: true, tiers: [], match: [], exclude: [] },
+                { name: 'commands-capture', spec: 'capabilities/companion-commands/capture.spec.md', location: 'centralized', exists: true, tiers: [], match: [], exclude: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const commands = byLabel(await childrenOf(provider, byLabel(roots, 'Capabilities')), 'Companion Commands');
+        const nodes = byLabel(await childrenOf(provider, commands), 'Nodes');
+
+        expect(nodes.iconPath).toBeUndefined();
+        expect(String(nodes.tooltip).split('\n')[0]).toMatch(/^commands-nodes /);
+        expect((commands.iconPath as vscode.ThemeIcon).id).toBe('folder');
     });
 
     it('leaves a clean capability at the plain context value with no location badge', async () => {
@@ -260,7 +280,7 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
+        const caps = await childrenOf(provider, byLabel(roots, 'Capabilities'));
 
         expect(caps[0].contextValue).toBe('living-specs-capability');
         expect(caps[0].description).toBeUndefined();
@@ -285,7 +305,7 @@ describe('LivingSpecsExplorerProvider', () => {
         });
 
         const roots = await provider.getChildren();
-        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
+        const caps = await childrenOf(provider, byLabel(roots, 'Capabilities'));
 
         expect(caps[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
 

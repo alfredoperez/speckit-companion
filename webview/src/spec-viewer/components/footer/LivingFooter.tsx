@@ -15,7 +15,7 @@ export function livingCondition(meta: LivingHeaderMeta): string {
     return 'In sync';
 }
 
-/** The living spec's action bar: Approve all while anything is adopted, Adopt and Validate always, Sync only once drift is found. */
+/** The living spec's action bar: approve while the spec is a draft or anything is adopted, Adopt and Validate always, Sync only once drift is found. */
 export function LivingFooter() {
     const ns = navState.value;
     const meta = ns?.livingMeta;
@@ -32,6 +32,7 @@ export function LivingFooter() {
     if (!meta) return null;
     const drifted = !!meta.drifted;
     const adopted = ns?.livingOverview?.requirements.filter((r) => r.adopted).length ?? 0;
+    const isDraft = !!meta.draft;
     const post = (type: 'livingUpdate' | 'livingValidate' | 'livingAdopt') => () =>
         vscode.postMessage({ type });
     // The count comes from the spec tier, so the action has to name it: on the
@@ -42,15 +43,15 @@ export function LivingFooter() {
         <footer class="actions">
             <span class="footer-context">{livingCondition(meta)}</span>
             <div class="actions-right">
-                {adopted > 0 && (
+                {(adopted > 0 || isDraft) && (
                     <button
                         type="button"
                         class="secondary"
-                        title="Approve every adopted requirement and clear the draft banner. You can undo for 5 seconds."
+                        title={adopted > 0 ? 'Approve every adopted requirement and clear the draft banner. You can undo for 5 seconds.' : 'Clear the draft banner. You can undo for 5 seconds.'}
                         onClick={approveSpec}
                     >
                         <span class="codicon codicon-check" aria-hidden="true" />
-                        Approve all {adopted}
+                        {adopted > 0 ? `Approve all ${adopted}` : 'Approve spec'}
                     </button>
                 )}
                 <button
@@ -84,7 +85,7 @@ export function LivingFooter() {
             {undo && remaining > 0 && (
                 <UndoToast
                     key={undo.token}
-                    message={undo.kind === 'remove' ? 'Requirement removed' : 'Adopted requirements approved'}
+                    message={undo.kind === 'remove' ? 'Requirement removed' : 'Spec approved'}
                     countdownMs={remaining}
                     onElapse={onElapse}
                     onUndo={onUndo}

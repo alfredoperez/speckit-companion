@@ -185,52 +185,49 @@ function specsRows(expandProfilePhoto: boolean): SidebarRow[] {
 }
 
 /**
- * Living Specs. Directory groups carry `folder`; a capability carries
- * `symbol-namespace`, turning list.warningForeground with a "drift" suffix once
- * its sources moved on past the spec's last commit
+ * Living Specs. Directory groups carry `folder`; a healthy capability carries no
+ * icon, and a drifted one carries `warning` in list.warningForeground with a
+ * "drift" suffix once its sources moved on past the spec's last commit
  * (`livingSpecsExplorerProvider.ts`).
  */
 const livingSpecsRows: SidebarRow[] = [
-    { id: 'ls-capabilities', depth: 0, label: 'capabilities', icon: 'folder', twistie: 'expanded' },
+    { id: 'ls-capabilities', depth: 0, label: 'Capabilities', icon: 'folder', twistie: 'expanded' },
     {
         id: 'ls-member-profiles',
         depth: 1,
-        label: 'member-profiles',
+        label: 'Member Profiles',
         description: '9/9 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
     {
         id: 'ls-photo-storage',
         depth: 1,
-        label: 'photo-storage',
+        label: 'Photo Storage',
         description: '7/9 covered · drift',
-        icon: 'symbol-namespace',
+        icon: 'warning',
         tone: 'warning',
     },
     {
         id: 'ls-team-invites',
         depth: 1,
-        label: 'team-invites',
+        label: 'Team Invites',
         description: '4/4 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
-    { id: 'ls-src', depth: 0, label: 'src', icon: 'folder', twistie: 'expanded' },
+    { id: 'ls-src', depth: 0, label: 'Src', icon: 'folder', twistie: 'expanded' },
     {
         id: 'ls-directory-search',
         depth: 1,
-        label: 'directory-search',
+        label: 'Directory Search',
         description: '6/6 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
     {
         id: 'ls-avatar-rendering',
         depth: 1,
-        label: 'avatar-rendering',
+        label: 'Avatar Rendering',
         description: 'drift',
-        icon: 'symbol-namespace',
+        icon: 'warning',
         tone: 'warning',
     },
 ];
@@ -266,7 +263,7 @@ const livingSpecsRows: SidebarRow[] = [
  *
  * Every row type here is one the provider really renders:
  *   folder group        `folder`, expanded (LivingSpecItem.dirGroup)
- *   capability          `symbol-namespace`, coverage and drift joined with " · "
+ *   capability          no icon when healthy, `warning` when drifted; coverage and drift joined with " · "
  *   drifted capability  the same in list.warningForeground
  *   registered, unwritten  `circle-outline` and "not created" (cap.exists false)
  *   Orphans             a `question` group of `*.spec.md` files no capability
@@ -277,39 +274,36 @@ const livingSpecsRows: SidebarRow[] = [
  * `.coverage.md`, so none is drawn here.
  */
 const livingWorkTreeRows: SidebarRow[] = [
-    { id: 'lw-capabilities', depth: 0, label: 'capabilities', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-capabilities', depth: 0, label: 'Capabilities', icon: 'folder', twistie: 'expanded' },
     {
         id: 'lw-member-profiles',
         depth: 1,
-        label: 'member-profiles',
+        label: 'Member Profiles',
         description: '9/9 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
     {
         id: 'lw-photo-storage',
         depth: 1,
-        label: 'photo-storage',
+        label: 'Photo Storage',
         description: '7/9 covered · drift',
-        icon: 'symbol-namespace',
+        icon: 'warning',
         tone: 'warning',
     },
     {
         id: 'lw-team-invites',
         depth: 1,
-        label: 'team-invites',
+        label: 'Team Invites',
         description: '4/4 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
-    { id: 'lw-src', depth: 0, label: 'src', icon: 'folder', twistie: 'expanded' },
-    { id: 'lw-features', depth: 1, label: 'features', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-src', depth: 0, label: 'Src', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-features', depth: 1, label: 'Features', icon: 'folder', twistie: 'expanded' },
     {
         id: 'lw-directory-search',
         depth: 2,
-        label: 'directory-search',
+        label: 'Directory Search',
         description: '6/6 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
     {
@@ -321,30 +315,28 @@ const livingWorkTreeRows: SidebarRow[] = [
         description: 'not created',
         icon: 'circle-outline',
     },
-    { id: 'lw-jobs', depth: 1, label: 'jobs', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-jobs', depth: 1, label: 'Jobs', icon: 'folder', twistie: 'expanded' },
     {
         id: 'lw-thumbnail-queue',
         depth: 2,
-        label: 'thumbnail-queue',
+        label: 'Thumbnail Queue',
         description: '5/5 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
-    { id: 'lw-services', depth: 1, label: 'services', icon: 'folder', twistie: 'expanded' },
+    { id: 'lw-services', depth: 1, label: 'Services', icon: 'folder', twistie: 'expanded' },
     {
         id: 'lw-avatar-rendering',
         depth: 2,
-        label: 'avatar-rendering',
+        label: 'Avatar Rendering',
         description: 'drift',
-        icon: 'symbol-namespace',
+        icon: 'warning',
         tone: 'warning',
     },
     {
         id: 'lw-email-delivery',
         depth: 2,
-        label: 'email-delivery',
+        label: 'Email Delivery',
         description: '3/3 covered',
-        icon: 'symbol-namespace',
         tone: 'foreground',
     },
     { id: 'lw-orphans', depth: 0, label: 'Orphans', icon: 'question', twistie: 'expanded' },

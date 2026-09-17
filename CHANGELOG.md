@@ -11,9 +11,15 @@ All notable changes to this project will be documented in this file.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
 ### Fixed
+- **Approve works on a draft with nothing left to approve.** A living spec that still carried its draft banner but had no adopted requirements could never lose the DRAFT badge. The bar now offers Approve spec on any draft, and approving the whole spec always clears the banner.
+- **DRAFT shows once.** A spec that drift acceptance had stamped showed a grey Template Instructions bar and the draft banner under the badge. Both are gone.
 - **The coverage table shows the tests a run recorded.** Requirements whose tests were captured in one end-of-step write read as "No test linked", because the names were stored as one line of text and the table only read a list. The names were in the file the whole time; every spec already on disk now renders them.
 
 ### Changed
+- **The Living Specs tree groups by folder and reads as words.** A folder holding several specs is its own group, and rows inside it drop the words they all share, so Companion Commands holds Assembly, Capture, Nodes and so on. A healthy capability has no icon, so an icon always means "look here".
+- **The "On this page" rail marks only what needs attention.** A dot appears on adopted, drifted and new requirements. Confirmed rows are plain, without the left border.
+- **The Overview says what a run did to each living spec.** Capabilities sit under Updated by this run and Read for context, by readable name, in place of a FOLDED BACK stamp on each chip.
+- **Approve and Remove on a requirement card have room.** Remove is neutral until you point at it.
 - **Remove is remembered.** A requirement you remove and do not undo is recorded next to the spec as removed on purpose, so validation stops reporting a change that names it as missing. Remove now only refuses while a requirement in another spec still leans on the one you are removing.
 
 ## [0.33.0] - 2026-09-17

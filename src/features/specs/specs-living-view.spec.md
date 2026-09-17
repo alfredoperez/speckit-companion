@@ -108,3 +108,11 @@ A registered capability whose spec file does not exist SHALL still open from its
 #### Scenario: living specs are not set up
 - **WHEN** the command runs
 - **THEN** a message says so and nothing opens
+
+### An icon on a capability row means look here
+
+A healthy capability row SHALL have no icon. A drifted row keeps the warning icon, a row with no spec keeps the outline circle, and folder and tier rows keep theirs. The row's label is the tree's readable label, and its tooltip's first line starts with the exact capability name.
+
+#### Scenario: a healthy capability is drawn
+- **WHEN** its row renders
+- **THEN** it has no icon

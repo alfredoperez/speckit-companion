@@ -107,3 +107,15 @@ A task is a list item bearing a task id. The parser SHALL accept any markdown bu
 ## Uncovered
 
 _None. Every file in the area was read._
+
+### Capability names are made readable by one rule
+
+A capability or folder name SHALL be turned into words by one shared function, splitting on dashes and underscores and capitalising each word, so every surface that shows a capability agrees on its name. Sibling labels SHALL be shortened by dropping the leading words they all share, never past the shortest label's last word.
+
+#### Scenario: siblings share a leading word
+- **WHEN** `commands-living` and `commands-living-load` are labelled together
+- **THEN** they read as "Living" and "Living Load"
+
+#### Scenario: one label is a prefix of its sibling
+- **WHEN** `viewer-ui` and `viewer-ui-chrome` are labelled together
+- **THEN** they read as "Ui" and "Ui Chrome"

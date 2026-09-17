@@ -56,7 +56,7 @@ function requirementCard(heading: HTMLElement): HTMLElement | null {
 }
 
 /**
- * Coverage and file-count marks for one requirement row.
+ * State and file-count marks for one requirement row.
  *
  * Both are drawn, and both are hidden from assistive tech, because the row's
  * one accessible name says them in words instead. A dot carrying only a `title`
@@ -73,18 +73,22 @@ function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
     label.textContent = a.textContent;
     a.textContent = '';
 
+    // A dot means "look here": drifted, adopted or new. A confirmed row has none.
+    // Same precedence as the card's edge colour: drifted, then new, then adopted.
+    const cardState = card.dataset.reqState;
+    const state = cardState === 'drifted' ? 'drifted'
+        : card.dataset.reqNew !== undefined ? 'new'
+        : cardState === 'adopted' ? 'adopted' : null;
+    if (state) {
+        const dot = document.createElement('span');
+        dot.className = `spec-toc-cov spec-toc-cov--state-${state}`;
+        dot.setAttribute('aria-hidden', 'true');
+        a.appendChild(dot);
+        said.push(state);
+    }
+    a.appendChild(label);
     const coverage = card.dataset.reqCoverage;
-    const dot = document.createElement('span');
-    // Unknown coverage reads as unknown, never as zero: a missing count and a
-    // genuine zero mean opposite things to a reader.
-    dot.className = coverage ? 'spec-toc-cov' : 'spec-toc-cov spec-toc-cov--unknown';
-    // The pip repeats the card's edge colour, so the rail reads state at a glance.
-    const state = card.dataset.reqState;
-    if (state) dot.classList.add(`spec-toc-cov--state-${state}`);
-    dot.setAttribute('aria-hidden', 'true');
-    a.append(dot, label);
-    if (state && state !== 'confirmed') said.push(state);
-    said.push(coverage ? `covered ${coverage}` : 'coverage unknown');
+    if (coverage) said.push(`covered ${coverage}`);
 
     const files = card.dataset.reqPatterns;
     if (files) {

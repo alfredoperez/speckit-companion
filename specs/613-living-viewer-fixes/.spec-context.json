@@ -1,0 +1,976 @@
+{
+  "workflow": "companion",
+  "specName": "Living Viewer Fixes",
+  "branch": "613-living-viewer-fixes",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T20:27:51.540Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:28:45.949Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:30:07.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:30:19.972Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:30:20.281Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-17T20:30:29.394Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T20:30:36.023Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:31:58.962Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:32:27.226Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:32:48.261Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:33:14.886Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:33:15.258Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T20:33:25.743Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:33:25.872Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:20.240Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:20.844Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:20.969Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T20:34:28.082Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:40.933Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:50.279Z"
+    },
+    {
+      "step": "implement",
+      "substep": "foundational",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:34:50.397Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:35:08.128Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:35:38.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:35:42.027Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:35:45.373Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:35:55.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:36:12.811Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:36:24.373Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:36:28.267Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:36:47.606Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:37:07.047Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:37:32.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:37:54.805Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:38:18.705Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:38:28.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:38:51.250Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:39:09.794Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:39:11.641Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:39:56.330Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:40:16.058Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:40:23.874Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:40:33.522Z"
+    },
+    {
+      "step": "implement",
+      "substep": "stories",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:40:34.176Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:41:04.033Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:45:02.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:45:02.504Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T20:45:20.503Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "15763ba0-8bbc-4631-a0bf-6f65c6459b0b",
+  "selectedAt": "2026-09-17T20:27:51.540Z",
+  "livingSpecs": {
+    "loaded": [
+      "spec-viewer-actions",
+      "spec-viewer-living",
+      "spec-viewer-panel",
+      "spec-viewer-state",
+      "viewer-ui-chrome",
+      "viewer-ui-comments",
+      "viewer-ui-document",
+      "viewer-ui-navigation",
+      "viewer-ui-overview",
+      "viewer-ui-state",
+      "specs-commands",
+      "specs-lifecycle",
+      "specs-living-model",
+      "specs-living-view",
+      "specs-pipeline-build",
+      "specs-state-record"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "spec-viewer-panel": [
+        "One panel per spec, revealed rather than duplicated",
+        "The webview shell is generated under a locked-down policy",
+        "The viewer's message contract is declared once, for both sides",
+        "A document is addressed by its path under the spec",
+        "Opening a spec can name the requirement to bring into view"
+      ],
+      "viewer-ui-chrome": [
+        "The header renders the title it is given; casing is decided upstream",
+        "Presentation must stay legible and announced",
+        "The viewer's own microcopy reads as plain sentences"
+      ],
+      "specs-living-model": [
+        "A source file reports the living specs that claim it, in the editor's own process",
+        "Requirement slicing lives beside the requirement-id parser and counts the same headings",
+        "Drift is the code a run never accounted for",
+        "The registry carries a capability's retirement declaration",
+        "Requirement links are computed in-process over the requirement slicer"
+      ],
+      "specs-living-view": [
+        "Living-spec listings are read-only, bounded, and honest about what they could not compute",
+        "A drifted row is told apart by shape and repaired from the row",
+        "The Living Specs view offers a one-pass sync action",
+        "The status bar names the living specs for the active file and reaches one requirement",
+        "A capability with no spec file opens to the call to adopt it",
+        "Any requirement opens from the command palette"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "spec-viewer-actions",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "spec-viewer-panel",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "spec-viewer-state",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "viewer-ui-comments",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "viewer-ui-navigation",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "viewer-ui-state",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "specs-commands",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "specs-lifecycle",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "specs-pipeline-build",
+        "reason": "read for context, its behaviour did not change"
+      },
+      {
+        "name": "specs-state-record",
+        "reason": "read for context, its behaviour did not change"
+      }
+    ],
+    "synced": [
+      "spec-viewer-living",
+      "specs-living-model",
+      "specs-living-view",
+      "viewer-ui-chrome",
+      "viewer-ui-document",
+      "viewer-ui-overview",
+      "core-primitives"
+    ]
+  },
+  "last_action": "25/25 tasks done, 3019 tests pass, type check clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Approving a whole spec removes the draft banner even when no marker was removed",
+      "tasks": [
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Approval leaves the file untouched only when neither marker nor banner changed",
+      "tasks": [
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "The bar offers approve on any draft: Approve all N or Approve spec",
+      "tasks": [
+        "T004",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "FR-004": {
+      "title": "reviewed, aligns and capability markers never render as a disclosure or body text",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "A draft spec renders its draft state once, as the badge",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Approve and Remove are at least 24px tall, padded 2px by 10px, sans font",
+      "tasks": [
+        "T018",
+        "T019"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/livingCss.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Remove is neutral at rest and red on hover only",
+      "tasks": [
+        "T018",
+        "T019"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/livingCss.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Requirement rail rows drop the heading guide; feature-spec rails unchanged",
+      "tasks": [
+        "T015",
+        "T017"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/tocRequirements.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "A rail dot only for adopted, drifted or new",
+      "tasks": [
+        "T015",
+        "T016"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/tocRequirements.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "No unknown-coverage ring in the rail",
+      "tasks": [
+        "T015",
+        "T016",
+        "T017"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/tocRequirements.test.ts"
+      ]
+    },
+    "FR-011": {
+      "title": "A folder of two or more capability specs is its own group; one collapses",
+      "tasks": [
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsTree.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Leaf labels drop the leading words every sibling shares, keeping one",
+      "tasks": [
+        "T001",
+        "T002",
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "src/core/utils/__tests__/capabilityNames.test.ts",
+        "src/features/specs/__tests__/livingSpecsTree.test.ts"
+      ]
+    },
+    "FR-013": {
+      "title": "Labels read as words; exact name stays the tooltip first line",
+      "tasks": [
+        "T002",
+        "T012",
+        "T013",
+        "T014"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
+    },
+    "FR-014": {
+      "title": "A healthy capability row has no icon; others keep theirs",
+      "tasks": [
+        "T012",
+        "T014"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
+    },
+    "FR-015": {
+      "title": "The Overview card names capabilities by the same rule as the tree",
+      "tasks": [
+        "T020",
+        "T021"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx"
+      ]
+    },
+    "FR-016": {
+      "title": "Overview chips grouped Updated by this run and Read for context, no FOLDED BACK",
+      "tasks": [
+        "T020",
+        "T021",
+        "T022",
+        "T023"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx"
+      ]
+    },
+    "FR-017": {
+      "title": "Docs, changelog and generated screenshots match the new behaviour",
+      "tasks": [
+        "T024",
+        "T025"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 24,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No change to the markers written into spec files",
+    "No tree in the Overview card",
+    "Feature-spec rails stay untouched",
+    "Coverage stays in the header"
+  ],
+  "context": [
+    "living spec: spec-viewer-living (approve only removes what adoption claimed; run-log chips)",
+    "living spec: specs-living-view (drifted row told apart by shape; tooltip first line)",
+    "living spec: viewer-ui-overview (touched living specs render inside the intent)",
+    "living spec: viewer-ui-navigation",
+    "area: src/features/spec-viewer/livingDocs.ts",
+    "area: webview/src/spec-viewer/markdown/preprocessors.ts",
+    "area: src/features/specs/livingSpecsModel.ts",
+    "constraint: screenshots regenerate from the capture script, never hand-edited",
+    "constraint: purple words take --review-ink, --review is for rules and tints"
+  ],
+  "intent": "Fix the seven living spec viewer problems from the #744 review (issue #747)",
+  "decisions": [
+    {
+      "decision": "Whole-spec approve always drops the banner; null only when nothing changed",
+      "why": "approveLivingText has one caller, so every approve passes through the fix and Undo comes free",
+      "rejected": "A separate clear-draft message"
+    },
+    {
+      "decision": "Widen the marker regex in the preprocessor and the renderer skip to reviewed, aligns, capability",
+      "why": "The disclosure is what pushed the banner past the 10-line window",
+      "rejected": "Widening the scan window, which leaves the grey bar"
+    },
+    {
+      "decision": "The rail dot is a state mark only: drifted, adopted or new",
+      "why": "new never reached the rail and coverage already shows in the header",
+      "rejected": "A coverage dot beside the state dot"
+    },
+    {
+      "decision": "Grouping and labels live in buildCapabilityTree",
+      "why": "The model already has the sibling list and is testable without the VS Code mock",
+      "rejected": "Stripping prefixes in the provider"
+    },
+    {
+      "decision": "readableName moves to src/core/utils/capabilityNames.ts; Overview chips use the full readable name",
+      "why": "src/core is the one place both sides import from, and a chip has no siblings to share a prefix with",
+      "rejected": "Sending tree labels over the wire"
+    },
+    {
+      "decision": "Overview chips split by the existing synced flag into two labelled lists",
+      "why": "No data change needed",
+      "rejected": "A per-chip stamp"
+    },
+    {
+      "decision": "The bar reads draft state from badgeText, the same field the header badge uses",
+      "why": "No new protocol field",
+      "rejected": "A livingMeta.draft flag"
+    },
+    {
+      "decision": "Every tree group label is title-cased, so src reads as Src",
+      "why": "The issue asks that group labels read as words, and one rule beats a mixed tree",
+      "rejected": "Only re-labelling dashed folder names"
+    },
+    {
+      "decision": "The rail no longer says coverage unknown in a row accessible name",
+      "why": "It sat on every row of a project without coverage files, the same noise as the ring",
+      "rejected": "Keeping the phrase with no mark"
+    },
+    {
+      "decision": "Overview chips switched from the mono to the sans font",
+      "why": "They now show words, not identifiers",
+      "rejected": "Keeping mono"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Seven fixes across four areas, one new shared util, no protocol or stored-data change",
+      "key_finding": "Both bugs are single early-exit conditions; the banner window bug is a side effect of the missing marker pass-through"
+    },
+    "tasks": {
+      "summary": "25 tasks: foundational naming util, six file-disjoint story phases, polish with docs and screenshots"
+    },
+    "implement": {
+      "summary": "All seven fixes from issue 747 shipped with tests, docs, changelog and regenerated screenshots"
+    }
+  },
+  "approach": "Fix approve and marker pass-through where every caller passes through, restyle the card buttons and rail in CSS, move grouping and labels into the tree model backed by one shared naming util, and regroup the Overview chips by their existing synced flag.",
+  "currentTask": "T025",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Failing tests for readableName and stripSharedLeadingWords",
+      "files": [
+        "src/core/utils/__tests__/capabilityNames.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Shared naming util: readableName and stripSharedLeadingWords",
+      "files": [
+        "src/core/utils/capabilityNames.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Failing test: whole-spec approve drops the banner with zero markers",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests for Approve spec on a zero-adopted draft",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Whole-spec approve always drops the banner; null only when nothing changed",
+      "files": [
+        "src/features/spec-viewer/livingDocs.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Bar offers Approve spec on any draft",
+      "files": [
+        "webview/src/spec-viewer/components/footer/LivingFooter.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Story for Approve spec on a zero-adopted draft; the non-draft story stays",
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.stories.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Failing pipeline test: reviewed, aligns, capability markers render nothing",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "reviewed, aligns and capability markers pass through the comment preprocessor",
+      "files": [
+        "webview/src/spec-viewer/markdown/preprocessors.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Renderer drops reviewed, aligns and capability marker lines",
+      "files": [
+        "webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Failing tree test: Companion Commands group with stripped leaves, single-spec folder collapses",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsTree.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Failing provider tests: no healthy icon, exact name leads the tooltip, word group labels",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Tree groups multi-spec folders and labels groups and leaves as words",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Provider reads labels from the model; healthy rows have no icon",
+      "files": [
+        "src/features/specs/livingSpecsExplorerProvider.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Failing rail tests: dots only for adopted, drifted, new; guide cancelled; no ring",
+      "files": [
+        "webview/src/spec-viewer/__tests__/tocRequirements.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Rail dot only for drifted, adopted or new; coverage dot and unknown phrase removed",
+      "files": [
+        "webview/src/spec-viewer/toc.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Requirement rows drop the h3 guide; unknown ring and confirmed dot rules deleted",
+      "files": [
+        "webview/styles/spec-viewer/_toc.css"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Failing stylesheet test for the card button metrics",
+      "files": [
+        "webview/src/spec-viewer/__tests__/livingCss.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Card buttons get 24px height, 2px 10px padding, sans font; Remove label at body contrast",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Failing card tests: two labelled groups, readable names, no folded back stamp",
+      "files": [
+        "webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx",
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Overview chips grouped as Updated by this run and Read for context, named by readableName",
+      "files": [
+        "webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx",
+        "webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Group label style; synced stamp CSS deleted; chips in the sans font now that they are words",
+      "files": [
+        "webview/styles/spec-viewer/_activity.css"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Stories describe the two groups; figure annotation renamed",
+      "files": [
+        "webview/src/spec-viewer/components/cards/LivingSpecsCard.stories.tsx",
+        "webview/src/style-guide/Figure.stories.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Docs and changelog match: tree groups, rail dots, Overview groups, Approve spec, law and Rules tier",
+      "files": [
+        "docs/viewer-states.md",
+        "docs/sidebar.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Suite, type check and webview build pass; 13 affected screenshots regenerated, unrelated re-renders restored",
+      "files": [
+        "docs/screenshots/generated/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Full test suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 41.7,
+      "result": "Tests:       3019 passed, 3019 total · Snapshots:   0 total · Time:        40.95 s, estimated 41 s"
+    },
+    {
+      "what": "Extension type check",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.9,
+      "result": "no output"
+    },
+    {
+      "what": "Regenerated living-specs-pair.png shows a dot only on the drifted rail row, no healthy tree icons, a roomy Remove button",
+      "result": "looked at the image",
+      "warnings": [
+        "The capture re-rendered 39 images; 26 that this change cannot affect were restored as render noise"
+      ]
+    }
+  ],
+  "concerns": [
+    {
+      "note": "badgeText reflects the tier on screen, so on the Rules tab of a draft rules file the bar can offer Approve spec for a spec that is not a draft; the approve then changes nothing",
+      "step": "implement"
+    },
+    {
+      "note": "readableName title-cases each word, so viewer-ui reads as Viewer Ui",
+      "step": "implement"
+    },
+    {
+      "note": "T004 to T006 were edited in one pass and closed seconds apart, so their timestamps are not their durations",
+      "step": "implement"
+    },
+    {
+      "note": "No lint step exists in this repo, so none ran",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 10 capabilities drift from PR #746 (not this run); plan, tasks and implement were closed by ai; the artifact check reports a literal <short-name>.spec.md as missing although living-viewer-fixes.spec.md exists; its one problem is a failed drift call dated 2026-09-10 counted into this run. No issue opened: nothing failed in this run window.",
+      "step": "implement"
+    }
+  ]
+}

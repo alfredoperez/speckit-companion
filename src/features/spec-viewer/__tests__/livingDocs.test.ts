@@ -242,6 +242,15 @@ describe('approveLivingText', () => {
         expect(out).toContain('Body two.');
     });
 
+    it('drops the banner on a whole-spec approve with no adopted markers', () => {
+        const out = approveLivingText(['# Cap', '', banner, '', '## Requirements', '', '### A', '', 'Body.'].join('\n'))!;
+        expect(out).toBe('# Cap\n\n## Requirements\n\n### A\n\nBody.');
+    });
+
+    it('keeps the banner when a heading approve removes nothing', () => {
+        expect(approveLivingText(['# Cap', '', banner, '', '### A', '', 'Body.'].join('\n'), 'A')).toBeNull();
+    });
+
     it('returns null when nothing matched', () => {
         expect(approveLivingText(spec, 'No such rule')).toBeNull();
         expect(approveLivingText('# Cap\n\n## Requirements\n\n### A\n\nBody.')).toBeNull();

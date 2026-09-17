@@ -656,7 +656,8 @@ export class SpecViewerProvider {
     const built = workspaceRoot
       ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
       : null;
-    const meta = built && !specTier?.exists ? { ...built, missing: true } : built;
+    const withMissing = built && !specTier?.exists ? { ...built, missing: true } : built;
+    const meta = withMissing && isLivingDraft(specTierContent) ? { ...withMissing, draft: true } : withMissing;
 
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.

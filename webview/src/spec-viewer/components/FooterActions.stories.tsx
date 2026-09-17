@@ -289,6 +289,15 @@ export const LivingNothingAdopted: Story = {
     },
 };
 
+export const LivingDraftNothingAdopted: Story = {
+    name: 'Living — Approve spec (draft, nothing adopted)',
+    render: () => {
+        navState.value = { ...livingNav({ drifted: false, draft: true }), livingOverview: adoptedOverview([false, false]) };
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};
+
 export const LivingUndoPending: Story = {
     name: 'Living — Undo pending',
     render: () => {

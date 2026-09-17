@@ -64,12 +64,16 @@ A phase marked folded (a fast-path plan or tasks whose boundaries were stamped i
 
 ### Durable context leads the panel; the granular run history stays collapsed
 
-The activity panel MUST lead with the run's lifecycle signal and durable context (intent, run timing overview, touched living specs, verified proof, decisions, coverage) and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The touched living specs and the run timing overview render inline in the overview's intent, not as separate run-log cards. A living-spec chip is always a link that opens its capability by name, whether or not a stored spec path rides along.
+The activity panel MUST lead with the run's lifecycle signal and durable context (intent, run timing overview, touched living specs, verified proof, decisions, coverage) and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The touched living specs and the run timing overview render inline in the overview's intent, not as separate run-log cards. Touched living specs SHALL sit under two labels, "Updated by this run" for the synced ones and "Read for context" for the rest, with an empty group omitted and no per-chip stamp. A chip SHALL show the capability's readable name, by the same rule as the Living Specs tree. A living-spec chip is always a link that opens its capability by name, whether or not a stored spec path rides along.
 
 #### Scenario: a spec touched living specs
 - **WHEN** the overview renders
 - **THEN** the touched capabilities appear as links inside the intent, not as a separate card
 - **AND** selecting one opens that capability by name
+
+#### Scenario: a run synced one capability and only read two
+- **WHEN** the overview renders
+- **THEN** one chip sits under "Updated by this run" and two under "Read for context"
 
 ### Evidence and assertion do not wear the same mark
 

@@ -228,7 +228,7 @@ Document rows carry their **own** state, independent of the parent spec's lifecy
 
 ### Living Specs icons
 
-`folder` for a directory group in the capability tree, `question` for Orphans, `symbol-namespace` for a capability (in the warning color when it has drifted), `circle-outline` for a capability whose spec does not exist yet, `book` / `type-hierarchy` / `checklist` for the Spec, Architecture, and Coverage tiers, and `info` for the disabled and empty states.
+`folder` for a directory group in the capability tree, `question` for Orphans, `warning` (in the warning color) for a drifted capability, `circle-outline` for a capability whose spec does not exist yet, `book` / `law` / `checklist` for the Spec, Rules, and Coverage tiers, and `info` for the disabled and empty states. A healthy capability has no icon, so an icon on a capability row always means "look here".
 
 ### Steering icons
 
@@ -259,7 +259,7 @@ The monochrome brand marks ship light/dark variants so they stay legible on both
 
 The **Living Specs** view (formerly *Spec Explorer*) is a project-wide home for *living specs* — the long-lived capability documents that describe how a part of your codebase behaves, separate from the per-feature specs in the Specs view above. It appears in the SpecKit activity-bar container whenever a folder is open, and starts collapsed. It used to be hidden until the companion spec-kit extension was installed, which left a new user with nothing to discover and nothing to click.
 
-**A directory tree, not a flat list.** Capabilities are grouped into a folder tree that mirrors where their specs actually live, so the shape matches the codebase — a capability whose spec sits at `src/features/specs/specs.spec.md` shows up as a `specs` leaf under a `src` → `features` folder path, and siblings in the same area sit together. Each folder group is a plain directory node; the capability leaves carry the row health and every action. This replaces the old flat list where each row wore a grey `central`/`colocated` word — the tree now conveys location, so that word is gone.
+**A directory tree, not a flat list.** Capabilities are grouped into a folder tree that mirrors where their specs actually live, so the shape matches the codebase — a capability whose spec sits alone at `src/billing/billing.spec.md` shows up as a **Billing** leaf under a **Src** folder, and siblings in the same area sit together. A folder holding two or more capability specs is its own group, so the eight specs in `capabilities/companion-commands/` sit under **Companion Commands**; a folder holding one spec collapses into its leaf. Labels read as words, and inside a group each leaf drops the leading words every sibling shares, keeping at least one: `commands-living-load` reads as **Living Load**. The exact capability name stays the tooltip's first line. Each folder group is a plain directory node; the capability leaves carry the row health and every action. This replaces the old flat list where each row wore a grey `central`/`colocated` word — the tree now conveys location, so that word is gone.
 
 Below the capability tree, one more group:
 

@@ -239,6 +239,8 @@ export interface LivingHeaderMeta {
     drifted?: boolean;
     /** True when the capability is registered but its spec file does not exist yet. */
     missing?: boolean;
+    /** True while the spec tier still carries its `[DRAFT]` banner, whichever tier is on screen. */
+    draft?: boolean;
     /** Headings whose touched files drifted; absent when drift is unknown. */
     driftedRequirements?: string[];
     /** Headings absent from `main`'s copy of the spec; absent when that copy could not be read. */

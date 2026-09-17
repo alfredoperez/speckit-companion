@@ -8,7 +8,7 @@
  */
 
 import { renderMarkdown, setLivingMode } from '../markdown/renderer';
-import { setLivingCoverage } from '../markdown/livingComponents';
+import { setLivingCoverage, setLivingDrifted, setLivingNew } from '../markdown/livingComponents';
 import { buildToc } from '../toc';
 
 const SPEC = `## Purpose
@@ -69,6 +69,8 @@ describe('the living-spec outline (#672 Wave 1)', () => {
     afterEach(() => {
         setLivingMode(false);
         setLivingCoverage(null);
+        setLivingDrifted(null);
+        setLivingNew(null);
     });
 
     it('lists every requirement, including one appended past Uncovered', () => {
@@ -97,13 +99,13 @@ describe('the living-spec outline (#672 Wave 1)', () => {
         expect(counts).toEqual(['2', null, null]);
     });
 
-    it('says coverage in words, because the dot alone is not announced', () => {
+    it('says known coverage in words and draws no coverage mark', () => {
         setLivingCoverage({ 'Alpha behaviour': '3/4' });
         const [alpha, beta] = rows(mount(SPEC).toc);
         expect(alpha.getAttribute('aria-label')).toContain('covered 3/4');
-        expect(alpha.querySelector('.spec-toc-cov--unknown')).toBeNull();
-        expect(beta.getAttribute('aria-label')).toContain('coverage unknown');
-        expect(beta.querySelector('.spec-toc-cov--unknown')).not.toBeNull();
+        expect(beta.getAttribute('aria-label') ?? '').not.toContain('coverage');
+        expect(alpha.querySelector('.spec-toc-cov')).toBeNull();
+        expect(beta.querySelector('.spec-toc-cov')).toBeNull();
     });
 
     it('keeps the full heading reachable when the row truncates', () => {
@@ -119,11 +121,34 @@ describe('the living-spec outline (#672 Wave 1)', () => {
         expect(toc.classList.contains('spec-toc--empty')).toBe(true);
     });
 
-    it('colours each pip with its card state', () => {
+    it('dots only the rows that need attention', () => {
+        setLivingDrifted(['Moved']);
+        setLivingNew(['Fresh', 'Moved']);
+        const { toc } = mount('## Requirements\n\n### Plain\n\nProse.\n\n### Taken\n<!-- adopted: CLAUDE.md:1 -->\n\nProse.\n\n### Moved\n\nProse.\n\n### Fresh\n\nProse.\n');
+        const [plain, taken, moved, fresh] = rows(toc);
+        expect(plain.querySelector('.spec-toc-cov')).toBeNull();
+        expect(taken.querySelector('.spec-toc-cov')!.className).toBe('spec-toc-cov spec-toc-cov--state-adopted');
+        expect(moved.querySelector('.spec-toc-cov')!.className).toBe('spec-toc-cov spec-toc-cov--state-drifted');
+        expect(fresh.querySelector('.spec-toc-cov')!.className).toBe('spec-toc-cov spec-toc-cov--state-new');
+        expect(toc.querySelector('.spec-toc-cov--unknown')).toBeNull();
+        expect(taken.getAttribute('aria-label')).toContain('adopted');
+        expect(fresh.getAttribute('aria-label')).toContain('new');
+    });
+
+    it('ranks new above adopted, like the card edge', () => {
+        setLivingNew(['Taken']);
         const { toc } = mount('## Requirements\n\n### Plain\n\nProse.\n\n### Taken\n<!-- adopted: CLAUDE.md:1 -->\n\nProse.\n');
-        const pips = rows(toc).map(a => a.querySelector('.spec-toc-cov')!.className);
-        expect(pips[0]).toContain('spec-toc-cov--state-confirmed');
-        expect(pips[1]).toContain('spec-toc-cov--state-adopted');
+        expect(rows(toc)[1].querySelector('.spec-toc-cov')!.className).toBe('spec-toc-cov spec-toc-cov--state-new');
+    });
+
+    it('cancels the heading guide on requirement rows only', () => {
+        const css = require('fs').readFileSync(require('path').join(__dirname, '../../../styles/spec-viewer/_toc.css'), 'utf8') as string;
+        const rule = /\.spec-toc-link--requirement\s*\{([^}]*)\}/.exec(css)![1];
+        expect(rule).toContain('border-left: 0');
+        expect(rule).toContain('margin-left: 0');
+        expect(rule).toContain('padding-left: 8px');
+        expect(css).toMatch(/\.spec-toc-link--h3\s*\{[^}]*border-left: 1px solid/);
+        expect(css).not.toContain('spec-toc-cov--unknown');
     });
 
     it('leaves a feature spec with the outline it always had', () => {
