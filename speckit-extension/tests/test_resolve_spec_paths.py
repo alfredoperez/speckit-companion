@@ -167,6 +167,71 @@ class BothSuitesReadEveryFixture(unittest.TestCase):
                       "the TypeScript suite must iterate the manifest, not a hand-kept list")
 
 
+class LeanedOnBy(unittest.TestCase):
+    """`--leaned-on-by`: every requirement whose aligns marker names a heading."""
+
+    LINKS = Path(__file__).resolve().parent / "fixtures" / "requirement-slices" / "links"
+
+    def _run(self, *argv):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = rsp.main(["--root", str(self.LINKS), *argv])
+        self.assertEqual(code, 0)
+        return out.getvalue()
+
+    def test_every_target_answers_as_the_shared_fixture_says(self):
+        want = json.loads((self.LINKS / "expected.json").read_text(encoding="utf-8"))["leanedOnBy"]
+        for target, expected in want.items():
+            with self.subTest(target=target):
+                got = json.loads(self._run("--leaned-on-by", target, "--json"))
+                self.assertEqual(got["show"], "leaned-on-by")
+                self.assertEqual(got["target"], target)
+                self.assertEqual([f"{m['capability']}#{m['heading']}" for m in got["matches"]], expected)
+
+    def test_a_match_carries_touches_and_body(self):
+        [m] = json.loads(self._run("--leaned-on-by", "beta#Shared name", "--json"))["matches"]
+        self.assertEqual(set(m), {"capability", "heading", "touches", "body"})
+        self.assertIn("Links to itself", m["body"])
+
+    def test_text_output_lists_capability_hash_heading(self):
+        self.assertEqual(self._run("--leaned-on-by", "alpha#Reads the session").strip(),
+                         "alpha#Writes the record")
+
+    def test_a_disabled_registry_gives_the_empty_shape(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "living-specs.yml").write_text("enabled: false\n", encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                rsp.main(["--root", tmp, "--leaned-on-by", "alpha#X", "--json"])
+            self.assertEqual(json.loads(out.getvalue()),
+                             {"show": "leaned-on-by", "target": "alpha#X", "matches": []})
+
+
+class RemovedRequirements(unittest.TestCase):
+    """A removal record names its capability, because colocated capabilities share the file."""
+
+    def test_reads_only_the_named_capabilitys_records(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps({"history": [
+                {"kind": "requirement-removed", "capability": "todos", "requirement": "Gone"},
+                {"kind": "requirement-removed", "capability": "storage", "requirement": "Other"},
+                {"kind": "note", "capability": "todos", "requirement": "Not a removal"},
+            ]}), encoding="utf-8")
+            self.assertEqual(rsp.removed_requirements(str(Path(tmp) / "todos.spec.md"), "todos"), {"Gone"})
+
+    def test_a_history_that_is_not_a_list_records_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps({"history": 1}), encoding="utf-8")
+            self.assertEqual(rsp.removed_requirements(str(Path(tmp) / "spec.md"), "todos"), set())
+
+    def test_no_file_or_a_bad_file_records_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = str(Path(tmp) / "spec.md")
+            self.assertEqual(rsp.removed_requirements(spec, "todos"), set())
+            (Path(tmp) / ".spec-context.json").write_text("{ not json", encoding="utf-8")
+            self.assertEqual(rsp.removed_requirements(spec, "todos"), set())
+
+
 class RequirementsForChangedMode(unittest.TestCase):
     """`--requirements-for`: what a load should contribute, per capability."""
 

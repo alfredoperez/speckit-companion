@@ -326,8 +326,8 @@ describe('the spec location', () => {
     });
 });
 
-describe('the Approve spec button', () => {
-    it('sits beside the DRAFT badge on an adopted living spec', () => {
+describe('approving moved to the bar', () => {
+    it('leaves no approve button in the header of a draft living spec', () => {
         navState.value = mockNavState({
             livingMode: true,
             badgeText: 'DRAFT',
@@ -336,20 +336,37 @@ describe('the Approve spec button', () => {
         const container = renderInto();
 
         expect(container.querySelector('.spec-header-title .spec-badge--draft')).not.toBeNull();
-        expect(container.querySelector('.spec-header-approve')?.textContent).toContain('Approve spec');
+        expect(container.querySelector('.spec-header-approve')).toBeNull();
+        expect(container.textContent).not.toContain('Approve');
+
+        cleanup(container);
+    });
+});
+
+describe('the new fact', () => {
+    it('counts requirements added on this branch', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta({ newRequirements: ['A', 'B', 'C'] }),
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-fact--new')?.textContent).toBe('3 new');
 
         cleanup(container);
     });
 
-    it('is absent once the spec is no longer a draft', () => {
+    it.each([
+        ['nothing is new', []],
+        ["main's copy could not be read", undefined],
+    ])('is absent when %s', (_why, newRequirements) => {
         navState.value = mockNavState({
             livingMode: true,
-            badgeText: 'LIVING',
-            livingMeta: livingMeta(),
+            livingMeta: livingMeta({ newRequirements }),
         });
         const container = renderInto();
 
-        expect(container.querySelector('.spec-header-approve')).toBeNull();
+        expect(container.querySelector('.spec-header-fact--new')).toBeNull();
 
         cleanup(container);
     });

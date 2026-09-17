@@ -9,6 +9,8 @@ import {
     readDriftedFiles,
     resolveCapabilityBySpecPath,
     isPathWithinRoot,
+    readLivingSpecs,
+    requirementSlices,
 } from './livingSpecsModel';
 
 /**
@@ -378,6 +380,35 @@ export function registerLivingSpecsCommands(
             }
             provider.refresh();
             NotificationUtils.showAutoDismissNotification(`Deleted "${label}"`);
+        }),
+        vscode.commands.registerCommand('speckit.livingSpecs.open', async () => {
+            const root = workspaceRoot();
+            const listing = root ? readLivingSpecs(root, { withOrphans: false }) : undefined;
+            if (!root || !listing?.enabled) {
+                vscode.window.showInformationMessage('Living specs are not set up in this project.');
+                return;
+            }
+            const cap = await vscode.window.showQuickPick(
+                listing.capabilities.map(c => ({ label: c.name, description: c.spec, capability: c })),
+                { title: 'Open Living Spec', placeHolder: 'Which capability?', matchOnDescription: true },
+            );
+            if (!cap) return;
+            const absSpec = path.join(root, cap.capability.spec);
+            let headings: string[] = [];
+            try {
+                const bytes = await vscode.workspace.fs.readFile(vscode.Uri.file(absSpec));
+                headings = requirementSlices(Buffer.from(bytes).toString('utf8')).map(r => r.heading);
+            } catch {
+                // A missing or unreadable spec still opens at the top.
+            }
+            const top = '$(arrow-up) Open at the top';
+            const picked = await vscode.window.showQuickPick(
+                [{ label: top, alwaysShow: true }, ...headings.map(label => ({ label }))],
+                { title: `Open ${cap.capability.name}`, placeHolder: 'Jump to a requirement' },
+            );
+            if (!picked) return;
+            await vscode.commands.executeCommand('speckit.viewSpecDocument', absSpec,
+                picked.label === top ? { living: true } : { living: true, requirement: picked.label });
         }),
         vscode.commands.registerCommand('speckit.livingSpecs.refresh', () => {
             provider.refresh();

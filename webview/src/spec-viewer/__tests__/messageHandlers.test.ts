@@ -92,6 +92,24 @@ describe('the webview routes every message the extension can send', () => {
         expect(redraws).toBe(1);
     });
 
+    it('marks new requirements and redraws only when the set changed', () => {
+        let redraws = 0;
+        const handlers = buildHandlers(() => undefined, () => { redraws++; });
+        navState.value = nav({});
+        const health = (newRequirements?: string[]) => ({
+            type: 'livingHealthResolved',
+            livingMeta: { capabilityName: 'c', specPath: 'c.spec.md', location: 'colocated', match: [], newRequirements },
+        }) as Extract<ExtensionToViewerMessage, { type: 'livingHealthResolved' }>;
+
+        handlers.livingHealthResolved(health(['A']));
+        handlers.livingHealthResolved(health(['A']));
+        expect(redraws).toBe(1);
+        expect(navState.value?.livingMeta?.newRequirements).toEqual(['A']);
+
+        handlers.livingHealthResolved(health(undefined));
+        expect(redraws).toBe(2);
+    });
+
     it('replaces the whole navState on a state update, rather than merging', () => {
         const handlers = buildHandlers(() => undefined);
         navState.value = nav({ badgeText: 'stale' });

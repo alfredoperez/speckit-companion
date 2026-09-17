@@ -26,7 +26,7 @@ The header MUST render the title exactly as supplied and MUST NOT re-case it or 
 ### A living spec's actions sit in the footer bar; its header carries facts only
 <!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
 
-In living mode the footer MUST state the capability's condition on its left in words: in sync, how many requirements drifted, drift unknown, or no spec yet. It MUST always offer adopting another area and validating living specs, and offer syncing this spec to its code only once drift has been found. The header MUST NOT carry buttons except the draft's own approval: while the document is a draft, DRAFT reads as part of the title with an "Approve spec" control beside it. Otherwise the header shows, once each, the requirement count, how many are adopted and unconfirmed, how many drifted, coverage, where the capability applies and where its file lives. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders the nudge the extension sent from the one frame the protocol layer builds, taking its classes, label, body and `data-*` prompt from there rather than deciding them itself.
+In living mode the footer MUST state the capability's condition on its left in words: in sync, how many requirements drifted, drift unknown, or no spec yet. It MUST offer "Approve all N" while N requirements are adopted, always offer adopting another area and validating living specs, and offer syncing this spec to its code only once drift has been found. While the extension reports a pending undo, the footer MUST show Undo for the time left and post its token when pressed. The header MUST NOT carry buttons: while the document is a draft, DRAFT reads as part of the title. The header shows, once each, the requirement count, how many are adopted and unconfirmed, how many are new, how many drifted, coverage, where the capability applies and where its file lives. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders the nudge the extension sent from the one frame the protocol layer builds, taking its classes, label, body and `data-*` prompt from there rather than deciding them itself.
 
 #### Scenario: a drifted living spec is open
 - **WHEN** the footer renders
@@ -36,9 +36,9 @@ In living mode the footer MUST state the capability's condition on its left in w
 - **WHEN** the footer renders
 - **THEN** it offers "Adopt an area" and "Validate" beside the words "In sync"
 
-#### Scenario: an adopted living spec is still a draft
-- **WHEN** the header renders
-- **THEN** DRAFT sits inside the title with "Approve spec" beside it
+#### Scenario: an adopted living spec with four adopted requirements
+- **WHEN** the footer renders
+- **THEN** it offers "Approve all 4" and the header holds no button
 
 #### Scenario: the extension sends an update prompt
 - **WHEN** the Activity panel renders it

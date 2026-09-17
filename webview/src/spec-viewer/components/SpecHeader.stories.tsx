@@ -219,17 +219,38 @@ export const LivingFull: Story = {
 };
 
 export const LivingDraft: Story = {
-    name: 'Living — draft',
+    name: 'Living — draft, approving lives in the bar',
     decorators: [withStatus('draft')],
     render: () => living({
         badgeText: 'DRAFT',
         specContextName: 'Payments Core',
+        livingOverview: {
+            purpose: '',
+            requirements: [
+                { heading: 'Charges once', adopted: true },
+                { heading: 'Reconciles every attempt', adopted: true },
+                { heading: 'Never double-charges on retry', adopted: false },
+            ],
+        },
         livingMeta: livingMeta({
             capabilityName: 'payments-core',
             specPath: 'capabilities/payments-core/spec.md',
             requirements: 6,
             scenarios: 9,
             match: ['src/billing/**'],
+        }),
+    }),
+};
+
+export const LivingNew: Story = {
+    name: 'Living — 3 new on this branch',
+    decorators: [withStatus('active')],
+    render: () => living({
+        livingMeta: livingMeta({
+            requirements: 12,
+            scenarios: 34,
+            coverage: { covered: 8, total: 12 },
+            newRequirements: ['Records a removal', 'Undo restores the file', 'Links open their target'],
         }),
     }),
 };

@@ -242,3 +242,96 @@ describe('FooterActions — living spec', () => {
         }
     });
 });
+
+describe('FooterActions — living Approve all and Undo', () => {
+    const postMessage = jest.fn();
+    const living = (adopted: boolean[], livingUndo?: { token: string; kind: 'approve' | 'remove'; expiresAt: number }) =>
+        ({
+            livingMode: true,
+            livingMeta: { capabilityName: 'auth', specPath: 'specs/auth/spec.md', location: 'centralized', match: [], drifted: false },
+            livingOverview: { purpose: '', requirements: adopted.map((a, i) => ({ heading: `R${i}`, adopted: a })) },
+            livingUndo,
+            enhancementButtons: [],
+        }) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    beforeEach(() => {
+        postMessage.mockReset();
+        (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = { postMessage };
+    });
+    afterEach(() => {
+        navState.value = null;
+        viewerState.value = null;
+    });
+
+    it('offers Approve all N while N requirements are adopted', () => {
+        navState.value = living([true, false, true, true, true]);
+        const container = renderInto();
+        try {
+            expect(labels(container)[0]).toBe('Approve all 4');
+            container.querySelector('button')?.click();
+            // The count is the spec tier's, so the action has to name that tier.
+            expect(postMessage).toHaveBeenCalledWith({ type: 'approveSpec', documentType: 'spec' });
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('offers no approve action when nothing is adopted', () => {
+        navState.value = living([false, false]);
+        const container = renderInto();
+        try {
+            expect(labels(container).some(l => l.startsWith('Approve'))).toBe(false);
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('shows Undo for the time left and posts the token', () => {
+        navState.value = living([], { token: 'tok-1', kind: 'remove', expiresAt: Date.now() + 5000 });
+        const container = renderInto();
+        try {
+            const undo = container.querySelector<HTMLButtonElement>('.undo-toast-button');
+            expect(undo?.textContent).toBe('Undo');
+            expect(container.querySelector('.undo-toast-countdown')?.textContent).toBe('5s');
+            undo?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'undoLivingAction', token: 'tok-1' });
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('hides Undo once the window passes', async () => {
+        navState.value = living([], { token: 'tok-2', kind: 'approve', expiresAt: Date.now() + 40 });
+        const container = renderInto();
+        try {
+            expect(container.querySelector('.undo-toast')).not.toBeNull();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            expect(container.querySelector('.undo-toast')).toBeNull();
+            expect(postMessage).not.toHaveBeenCalled();
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('leaves Escape to the page, so cancelling an edit cannot undo a write', () => {
+        navState.value = living([], { token: 'tok-4', kind: 'approve', expiresAt: Date.now() + 5000 });
+        const container = renderInto();
+        try {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+            expect(postMessage).not.toHaveBeenCalled();
+            expect(container.querySelector('.undo-toast-button')?.hasAttribute('autofocus')).toBe(false);
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('shows nothing for an Undo already expired', () => {
+        navState.value = living([], { token: 'tok-3', kind: 'remove', expiresAt: Date.now() - 1 });
+        const container = renderInto();
+        try {
+            expect(container.querySelector('.undo-toast')).toBeNull();
+        } finally {
+            cleanup(container);
+        }
+    });
+});

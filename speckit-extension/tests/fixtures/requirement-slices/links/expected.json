@@ -1,0 +1,52 @@
+{
+  "requirementLinks": {
+    "alpha": [
+      {
+        "heading": "Reads the session",
+        "leansOn": [{ "raw": "beta#Sessions expire", "broken": false }],
+        "leanedOnBy": []
+      },
+      {
+        "heading": "Writes the record",
+        "leansOn": [
+          { "raw": "alpha#Reads the session", "broken": false },
+          { "raw": "beta#No such heading", "broken": true },
+          { "raw": "gamma#Anything", "broken": true }
+        ],
+        "leanedOnBy": ["beta#Shared name"]
+      },
+      {
+        "heading": "Checks itself",
+        "leansOn": [
+          { "raw": "alpha#Checks itself", "broken": false },
+          { "raw": "beta#Shared name", "broken": false }
+        ],
+        "leanedOnBy": []
+      }
+    ],
+    "beta": [
+      {
+        "heading": "Sessions expire",
+        "leansOn": [],
+        "leanedOnBy": ["alpha#Reads the session"]
+      },
+      {
+        "heading": "Shared name",
+        "leansOn": [{ "raw": "alpha#Writes the record", "broken": false }],
+        "leanedOnBy": ["alpha#Checks itself"]
+      },
+      {
+        "heading": "Shared name",
+        "leansOn": [{ "raw": "alpha#Writes the record", "broken": false }],
+        "leanedOnBy": ["alpha#Checks itself"]
+      }
+    ]
+  },
+  "leanedOnBy": {
+    "alpha#Reads the session": ["alpha#Writes the record"],
+    "alpha#Checks itself": ["alpha#Checks itself"],
+    "beta#Shared name": ["alpha#Checks itself"],
+    "beta#Sessions expire": ["alpha#Reads the session"],
+    "beta#Nothing points here": []
+  }
+}

@@ -11,6 +11,8 @@
  */
 
 import { parseInline, escapeHtml } from './inline';
+import { navState } from '../signals';
+import type { RequirementLink } from '../types';
 
 const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 
@@ -46,6 +48,17 @@ export function setLivingDrifted(headings: string[] | null | undefined): boolean
     const next = new Set(headings ?? []);
     const changed = next.size !== livingDrifted.size || [...next].some((h) => !livingDrifted.has(h));
     livingDrifted = next;
+    return changed;
+}
+
+// Headings `main`'s copy of the spec lacks, as the extension computed them. Empty until health resolves.
+let livingNew = new Set<string>();
+
+/** Mark requirements new by exact heading. Returns whether the set changed. */
+export function setLivingNew(headings: string[] | null | undefined): boolean {
+    const next = new Set(headings ?? []);
+    const changed = next.size !== livingNew.size || [...next].some((h) => !livingNew.has(h));
+    livingNew = next;
     return changed;
 }
 
@@ -189,6 +202,8 @@ const STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 const TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
 /** `<!-- adopted: CLAUDE.md:18 -->` — adoption transcribed this and no run has confirmed it. */
 const ADOPTED_LINE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
+/** `<!-- aligns: cap#Heading -->` — read on the extension side; here it is only kept out of the prose. */
+const ALIGNS_LINE = /^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$/;
 
 function buildRequirementCard(
     heading: string,
@@ -221,7 +236,7 @@ function buildRequirementCard(
             continue;
         }
         const a = line.match(ADOPTED_LINE);
-        if (!a && !TOUCHES_LINE.test(line)) {
+        if (!a && !TOUCHES_LINE.test(line) && !ALIGNS_LINE.test(line)) {
             break;
         }
         if (a && !adoptedFrom) adoptedFrom = a[1];
@@ -250,6 +265,12 @@ function buildRequirementCard(
             + `<span class="living-req-pill-dot" aria-hidden="true"></span>${word}</span>`
             + `<span class="living-req-why">${why}</span>`);
     }
+    const isNew = livingNew.has(title);
+    if (isNew) {
+        badges.push('<span class="living-req-pill living-req-pill--new">'
+            + '<span class="living-req-pill-dot" aria-hidden="true"></span>New</span>'
+            + '<span class="living-req-why">Added on this branch. The copy of this spec on main does not have it.</span>');
+    }
     if (inferred) {
         badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
     }
@@ -273,6 +294,7 @@ function buildRequirementCard(
     // A bare flag, never the source string: this is an attribute, and the
     // viewer's escapeHtml does not escape attribute quotes.
     const adoptedAttr = adoptedFrom ? ' data-req-adopted' : '';
+    const newAttr = isNew ? ' data-req-new' : '';
     // Under the title: the files this requirement is about, and where adoption transcribed it from.
     const globs = touchesGlobs(blockLines);
     const fileBits = globs.map((g) =>
@@ -281,6 +303,8 @@ function buildRequirementCard(
         fileBits.push(`<span class="living-req-file living-req-file--source" title="Adopted from this file">from ${escapeHtml(adoptedFrom)}</span>`);
     }
     const filesLine = fileBits.length ? [`<div class="living-req-files">${fileBits.join('')}</div>`] : [];
+    const links = navState.value?.livingOverview?.requirements.find((r) => r.heading === title);
+    const linksLines = [linkList('Leans on', links?.leansOn), linkList('Leaned on by', links?.leanedOnBy)].filter(Boolean);
     // Actions sit at the card's foot, left: Approve only while adopted, Remove always.
     const actions = [
         adoptedFrom
@@ -293,16 +317,29 @@ function buildRequirementCard(
     const actionsLine = [`<div class="living-req-actions">${actions}</div>`];
     return [
         `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}"`
-        + ` data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}>`,
+        + ` data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}${newAttr}>`,
         '<div class="living-req-header">',
         ...metaLine,
         `### ${title}`,
         ...filesLine,
+        ...linksLines,
         ...actionsLine,
         '</div>',
         ...body,
         '</div>',
     ];
+}
+
+/** One titled list of links, or '' when there are none. A broken link keeps its original text and opens nothing. */
+function linkList(label: string, links: RequirementLink[] | undefined): string {
+    if (!links?.length) return '';
+    const items = links.map((l) => l.broken
+        ? `<span class="living-req-link living-req-link--broken" title="Nothing matches this link: no such capability or requirement">${escapeHtml(l.raw)}</span>`
+        : `<button type="button" class="living-req-link" data-open-living-requirement`
+            + ` data-capability="${escapeAttr(l.capability)}" data-spec-path="${escapeAttr(l.specPath ?? '')}" data-heading="${escapeAttr(l.heading)}"`
+            + ` title="Open ${escapeAttr(l.capability)} at this requirement">`
+            + `<span class="living-req-link-cap">${escapeHtml(l.capability)}</span>${escapeHtml(l.heading)}</button>`);
+    return `<div class="living-req-links"><span class="living-req-links-label">${label}</span>${items.join('')}</div>`;
 }
 
 /** `escapeHtml` leaves quotes alone, so an attribute value needs them escaped too. */

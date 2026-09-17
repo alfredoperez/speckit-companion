@@ -1,0 +1,16 @@
+{
+  "FR-001": {
+    "title": "The bar approves every adopted requirement at once",
+    "tasks": ["T022", "T023"],
+    "tests": ["webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx", "src/features/spec-viewer/__tests__/messageHandlers.test.ts"]
+  },
+  "FR-002": {
+    "tasks": ["T017"],
+    "tests": ["src/features/spec-viewer/__tests__/livingDocs.test.ts::appendLivingRemoval"]
+  },
+  "FR-003": {
+    "title": "Written before the fix, as one line",
+    "tasks": "T030, T031",
+    "tests": "speckit-extension/tests/test_living_validate.py,src/features/specs/__tests__/requirementSlices.test.ts"
+  }
+}

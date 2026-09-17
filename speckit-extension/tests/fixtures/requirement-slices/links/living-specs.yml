@@ -1,0 +1,6 @@
+enabled: true
+capabilities:
+  - name: alpha
+    match: ["src/alpha/**"]
+  - name: beta
+    match: ["src/beta/**"]

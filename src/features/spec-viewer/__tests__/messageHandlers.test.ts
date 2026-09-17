@@ -1,5 +1,9 @@
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
-import { createMessageHandlers, MessageHandlerDependencies } from '../messageHandlers';
+import { createMessageHandlers, MessageHandlerDependencies, LivingUndoAction } from '../messageHandlers';
+import { livingTierDocuments } from '../livingDocs';
 
 // Mock specContextManager
 jest.mock('../../specs/specContextManager', () => ({
@@ -74,6 +78,8 @@ function createMockDeps(overrides?: Partial<MessageHandlerDependencies>): Messag
             extensionPath: '/mock/extension',
             extensionUri: vscode.Uri.file('/mock/extension'),
         } as unknown as vscode.ExtensionContext,
+        offerLivingUndo: jest.fn(),
+        takeLivingUndo: jest.fn(),
         ...overrides,
     };
 }
@@ -122,6 +128,141 @@ describe('messageHandlers - living spec navigation', () => {
             '/workspace/webview/src/spec-viewer/viewer-ui.spec.md',
             { living: true },
         );
+    });
+});
+
+describe('messageHandlers - living Approve all, Remove and Undo', () => {
+    const LINKS = path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'tests', 'fixtures', 'requirement-slices', 'links');
+    let root: string;
+
+    const specOf = (cap: string) => path.join(root, 'capabilities', cap, 'spec.md');
+    const ctxOf = (cap: string) => path.join(root, 'capabilities', cap, '.spec-context.json');
+    const warn = vscode.window.showWarningMessage as jest.Mock;
+
+    function panel(cap: string) {
+        let held: (LivingUndoAction & { token: string }) | undefined;
+        let n = 0;
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: {
+                    specDirectory: path.dirname(specOf(cap)),
+                    specName: cap,
+                    living: true,
+                    livingSourcePath: specOf(cap),
+                    currentDocument: 'spec',
+                    availableDocuments: livingTierDocuments(specOf(cap)),
+                },
+                debounceTimer: undefined,
+            }),
+            offerLivingUndo: jest.fn((_dir: string, action: LivingUndoAction) => { held = { ...action, token: `t${++n}` }; }),
+            takeLivingUndo: jest.fn((_dir: string, token: string) => {
+                if (held?.token !== token) return undefined;
+                const action = held;
+                held = undefined;
+                return action;
+            }),
+        });
+        return { deps, handler: createMessageHandlers(path.dirname(specOf(cap)), deps), token: () => held?.token ?? '' };
+    }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'living-undo-'));
+        fs.cpSync(LINKS, root, { recursive: true });
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root) }];
+        warn.mockResolvedValue('Remove');
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    const ADOPTED = '# Alpha\n\n> [DRAFT] Review before trusting.\n\n## Requirements\n\n### One\n<!-- adopted: CLAUDE.md:1 -->\n\nA.\n\n### Two\n<!-- adopted: developer -->\n\nB.\n';
+
+    it('Approve all stores a pending undo, and Undo restores the file byte for byte without a record', async () => {
+        fs.writeFileSync(specOf('alpha'), ADOPTED);
+        const { deps, handler, token } = panel('alpha');
+
+        await handler({ type: 'approveSpec' });
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain('adopted:');
+        expect(deps.offerLivingUndo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ kind: 'approve', before: ADOPTED }));
+
+        await handler({ type: 'undoLivingAction', token: token() });
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(ADOPTED);
+        expect(fs.existsSync(ctxOf('alpha'))).toBe(false);
+    });
+
+    it('Remove stores a pending undo, and Undo restores the file byte for byte without a record', async () => {
+        const before = fs.readFileSync(specOf('alpha'), 'utf-8');
+        const { deps, handler, token } = panel('alpha');
+
+        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain('### Checks itself');
+        expect(deps.offerLivingUndo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ kind: 'remove', capability: 'alpha', heading: 'Checks itself' }));
+
+        await handler({ type: 'undoLivingAction', token: token() });
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(before);
+        expect(fs.existsSync(ctxOf('alpha'))).toBe(false);
+    });
+
+    it('Undo writes nothing and warns when the file changed, and the removal then stands with a record', async () => {
+        const { handler, token } = panel('alpha');
+        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
+        fs.appendFileSync(specOf('alpha'), '\nEdited elsewhere.\n');
+        const edited = fs.readFileSync(specOf('alpha'), 'utf-8');
+        warn.mockClear();
+
+        await handler({ type: 'undoLivingAction', token: token() });
+
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(edited);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('changed after the removal'));
+        expect(JSON.parse(fs.readFileSync(ctxOf('alpha'), 'utf-8')).history).toEqual([
+            expect.objectContaining({ kind: 'requirement-removed', capability: 'alpha', requirement: 'Checks itself' }),
+        ]);
+    });
+
+    it('records the removal when the restore itself cannot be written', async () => {
+        const { handler, token } = panel('alpha');
+        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
+        const write = jest.spyOn(fs.promises, 'writeFile').mockRejectedValueOnce(new Error('EROFS'));
+        warn.mockClear();
+
+        await handler({ type: 'undoLivingAction', token: token() });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('could not be written'));
+        expect(JSON.parse(fs.readFileSync(ctxOf('alpha'), 'utf-8')).history).toEqual([
+            expect.objectContaining({ kind: 'requirement-removed', requirement: 'Checks itself' }),
+        ]);
+        write.mockRestore();
+    });
+
+    it('ignores a stale token', async () => {
+        fs.writeFileSync(specOf('alpha'), ADOPTED);
+        const { handler } = panel('alpha');
+        await handler({ type: 'approveSpec' });
+        const approved = fs.readFileSync(specOf('alpha'), 'utf-8');
+
+        await handler({ type: 'undoLivingAction', token: 'stale' });
+
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(approved);
+    });
+
+    it('refuses Remove when another capability leans on the heading', async () => {
+        const before = fs.readFileSync(specOf('beta'), 'utf-8');
+        const { deps, handler } = panel('beta');
+
+        await handler({ type: 'removeRequirement', heading: 'Sessions expire' });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('alpha still aligns to it'));
+        expect(fs.readFileSync(specOf('beta'), 'utf-8')).toBe(before);
+        expect(deps.offerLivingUndo).not.toHaveBeenCalled();
+    });
+
+    it.each(['Reads the session', 'Checks itself'])('does not refuse Remove of "%s", leaned on only from its own capability', async heading => {
+        const { handler } = panel('alpha');
+        await handler({ type: 'removeRequirement', heading });
+        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain(`### ${heading}`);
     });
 });
 

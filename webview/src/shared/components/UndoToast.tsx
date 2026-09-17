@@ -10,6 +10,11 @@ export interface UndoToastProps {
      * while another run is in flight (R030).
      */
     active?: boolean;
+    /**
+     * Whether Escape undoes and the button takes focus. False where the page
+     * already binds Escape, so cancelling an inline edit cannot undo a write.
+     */
+    captureKeyboard?: boolean;
 }
 
 /**
@@ -26,6 +31,7 @@ export function UndoToast({
     onElapse,
     onUndo,
     active = true,
+    captureKeyboard = true,
 }: UndoToastProps) {
     const [remaining, setRemaining] = useState(countdownMs);
     const tickRef = useRef<number | undefined>(undefined);
@@ -57,7 +63,7 @@ export function UndoToast({
     }, [active, countdownMs, onElapse]);
 
     useEffect(() => {
-        if (!active) return;
+        if (!active || !captureKeyboard) return;
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 e.preventDefault();
@@ -67,7 +73,7 @@ export function UndoToast({
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [active]);
+    }, [active, captureKeyboard]);
 
     const handleUndo = () => {
         if (firedRef.current) return;
@@ -92,7 +98,7 @@ export function UndoToast({
                 type="button"
                 class="undo-toast-button"
                 onClick={handleUndo}
-                autoFocus
+                autoFocus={captureKeyboard}
             >
                 Undo
             </button>

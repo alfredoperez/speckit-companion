@@ -13,7 +13,8 @@ import {
     StalenessMap,
     NavState,
     LivingHeaderMeta,
-    LivingOverview
+    LivingOverview,
+    LivingUndo
 } from '../types';
 import { escapeHtml, encodeBase64Utf8, generateNonce } from '../utils';
 import type { InstallPrompt } from '../../../protocol/viewer';
@@ -51,7 +52,8 @@ export function generateHtml(
     livingMeta?: LivingHeaderMeta | null,
     titleFromHeading: boolean = false,
     landing?: 'overview' | 'document',
-    livingOverview?: LivingOverview | null
+    livingOverview?: LivingOverview | null,
+    livingUndo?: LivingUndo | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -112,6 +114,7 @@ export function generateHtml(
         livingMode,
         livingMeta: livingMeta ?? null,
         livingOverview: livingOverview ?? null,
+        livingUndo: livingUndo ?? null,
         titleFromHeading,
         // The first render is the one a tree click lands on, and the shell's own
         // state does not survive an HTML reassignment — so the entry point's

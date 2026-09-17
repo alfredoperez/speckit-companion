@@ -199,6 +199,22 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(orphans[0].relPath).toBe('legacy/legacy-auth.spec.md');
     });
 
+    it('opens a capability row in the living viewer with no requirement', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'billing', spec: 'capabilities/billing/spec.md', location: 'centralized', exists: true, tiers: [], match: [], exclude: [] },
+            ],
+            orphans: [],
+        });
+
+        const roots = await provider.getChildren();
+        const caps = await childrenOf(provider, byLabel(roots, 'capabilities'));
+
+        expect(caps[0].command?.command).toBe('speckit.viewSpecDocument');
+        expect(caps[0].command?.arguments).toEqual([`${WORKSPACE}/capabilities/billing/spec.md`, { living: true }]);
+    });
+
     it('offers no open command on a capability whose spec does not exist', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,

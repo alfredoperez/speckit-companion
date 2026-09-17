@@ -108,6 +108,8 @@ function makeDeps(
     executeInTerminal: jest.fn().mockResolvedValue(undefined),
     outputChannel: { appendLine: jest.fn() } as any,
     context: {} as any,
+    offerLivingUndo: jest.fn(),
+    takeLivingUndo: jest.fn(),
     ...overrides,
   };
 }

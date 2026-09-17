@@ -1,10 +1,12 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     requirementSlices,
     requirementsForChange,
     hasNoMarkers,
     requirementIds,
+    requirementLinks,
 } from '../livingSpecsModel';
 
 /**
@@ -178,5 +180,54 @@ describe('the adopted marker', () => {
         const feed = requirementSlices(spaced)[1];
         expect(feed.adopted).toBe('developer');
         expect(feed.body.join('\n')).not.toContain('adopted:');
+    });
+});
+
+describe('requirementLinks — against the shared links fixture', () => {
+    const LINKS = path.join(FIXTURES, 'links');
+    const want = JSON.parse(fs.readFileSync(path.join(LINKS, 'expected.json'), 'utf-8'));
+    type Want = { heading: string; leansOn: { raw: string; broken: boolean }[]; leanedOnBy: string[] };
+
+    it.each(Object.keys(want.requirementLinks))('%s links as the contract says', cap => {
+        const links = requirementLinks(LINKS, cap);
+        for (const w of want.requirementLinks[cap] as Want[]) {
+            const got = links.get(w.heading)!;
+            expect(got.leansOn.map(l => ({ raw: l.raw, broken: l.broken }))).toEqual(w.leansOn);
+            expect(got.leanedOnBy.map(l => l.raw)).toEqual(w.leanedOnBy);
+        }
+    });
+
+    it('a resolved link carries its spec path, a broken one none', () => {
+        const [same, brokenHeading, brokenCap] = requirementLinks(LINKS, 'alpha').get('Writes the record')!.leansOn;
+        expect(same.specPath).toBe('capabilities/alpha/spec.md');
+        expect(brokenHeading.specPath).toBeUndefined();
+        expect(brokenCap).toMatchObject({ capability: 'gamma', heading: 'Anything', broken: true });
+    });
+
+    it('keys an [inferred] requirement the way the card does, so the refusal still sees it', () => {
+        // The card strips the tag before it posts a heading back, so a map keyed
+        // on the raw heading misses exactly the requirements that carry one.
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'links-inferred-'));
+        try {
+            fs.mkdirSync(path.join(root, 'capabilities', 'one'), { recursive: true });
+            fs.mkdirSync(path.join(root, 'capabilities', 'two'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'living-specs.yml'),
+                'enabled: true\ncapabilities:\n  - name: one\n    match: ["src/one/**"]\n  - name: two\n    match: ["src/two/**"]\n');
+            fs.writeFileSync(path.join(root, 'capabilities', 'one', 'spec.md'),
+                '## Requirements\n\n### Handles retries [inferred]\n\nBody.\n');
+            fs.writeFileSync(path.join(root, 'capabilities', 'two', 'spec.md'),
+                '## Requirements\n\n### Retries are bounded\n<!-- aligns: one#Handles retries -->\n\nBody.\n');
+
+            const links = requirementLinks(root, 'one');
+
+            expect([...links.keys()]).toEqual(['Handles retries']);
+            expect(links.get('Handles retries')!.leanedOnBy.map(l => l.raw)).toEqual(['two#Retries are bounded']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('an unregistered capability has no links', () => {
+        expect(requirementLinks(LINKS, 'gamma').size).toBe(0);
     });
 });

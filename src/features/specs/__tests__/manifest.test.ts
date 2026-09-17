@@ -95,9 +95,16 @@ describe('sidebar contributions', () => {
             ['speckit.livingSpecs.adopt', 'Adopt Code Area…'],
             ['speckit.livingSpecs.sync', 'Sync living specs from my changes'],
             ['speckit.livingSpecs.refresh', 'Refresh Living Specs'],
+            ['speckit.livingSpecs.open', 'Open Living Spec'],
             ['speckit.companion.installSpecKitExtension', 'Install Companion Extension'],
         ])('%s is titled "%s"', (id, title) => {
             expect(commandTitle(id)).toBe(title);
+        });
+
+        it('files Open Living Spec under SpecKit and leaves it in the command palette', () => {
+            expect(commands.find(c => c.command === 'speckit.livingSpecs.open')).toEqual(
+                { command: 'speckit.livingSpecs.open', title: 'Open Living Spec', category: 'SpecKit' });
+            expect(commandPalette.some(e => e.command === 'speckit.livingSpecs.open' && e.when === 'false')).toBe(false);
         });
 
         it('declares no emoji in any command title', () => {

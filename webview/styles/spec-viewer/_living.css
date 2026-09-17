@@ -8,8 +8,7 @@
 
 /* ── Approve ────────────────────────────────────────────────────────── */
 /* Beside the adopted badge: small, secondary, the review hue marks it. */
-#markdown-content .living-req-approve,
-.spec-header-approve {
+#markdown-content .living-req-approve {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -25,15 +24,8 @@
   cursor: pointer;
 }
 
-#markdown-content .living-req-approve:hover,
-.spec-header-approve:hover {
+#markdown-content .living-req-approve:hover {
   background: var(--review-subtle);
-}
-
-.spec-header-title .spec-header-approve {
-  margin-left: var(--space-3);
-  vertical-align: 0.25em;
-  font-size: var(--text-xs);
 }
 
 /* ── Overview ───────────────────────────────────────────────────────── */
@@ -138,8 +130,9 @@
 }
 
 #markdown-content .living-req-card[data-req-state="adopted"] { --req-edge: var(--review); --req-ink: var(--review-ink); }
+/* New sits between the two: it outranks adopted, and drifted keeps the edge because it asks for action. */
+#markdown-content .living-req-card[data-req-new] { --req-edge: var(--success); --req-ink: var(--success); }
 #markdown-content .living-req-card[data-req-state="drifted"] { --req-edge: var(--warning); --req-ink: var(--warning); }
-#markdown-content .living-req-card[data-req-state="new"] { --req-edge: var(--success); --req-ink: var(--success); }
 
 /* The same bounded card the specify step draws for a user story. */
 #markdown-content .living-req-header {
@@ -188,6 +181,15 @@
 }
 
 
+/* A new drifted card shows both pills, so New carries its own colour rather than the edge's. */
+#markdown-content .living-req-pill--new { color: var(--success); }
+#markdown-content .living-req-pill--new .living-req-pill-dot { background: var(--success); }
+
+.spec-header-fact--new {
+  color: var(--success);
+  font-weight: 600;
+}
+
 #markdown-content .living-req-why {
   font-size: var(--text-xs);
   color: var(--text-body);
@@ -221,6 +223,59 @@
 #markdown-content .living-req-file--source {
   cursor: default;
   color: var(--review-ink);
+}
+
+/* What the requirement leans on and what leans on it, under its files. */
+#markdown-content .living-req-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: var(--space-2);
+  border-left: 2px solid color-mix(in srgb, var(--review) 35%, transparent);
+}
+
+#markdown-content .living-req-links-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+#markdown-content .living-req-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-height: 0;
+  padding: 1px var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-body);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--review) 35%, transparent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+#markdown-content .living-req-link:hover {
+  background: var(--review-subtle);
+  color: var(--text-primary);
+}
+
+#markdown-content .living-req-link-cap {
+  font-family: var(--font-mono);
+  color: var(--review-ink);
+}
+
+#markdown-content .living-req-link--broken {
+  cursor: default;
+  font-family: var(--font-mono);
+  border-style: dashed;
+  border-color: var(--warning);
+  text-decoration: line-through;
+}
+
+#markdown-content .living-req-link--broken:hover {
+  background: transparent;
+  color: var(--text-body);
 }
 
 /* Actions at the card's foot, left-aligned. */

@@ -16,6 +16,8 @@ jest.mock('../livingSpecsModel', () => {
     return {
         readDriftedFiles: jest.fn().mockResolvedValue([]),
         resolveCapabilityBySpecPath: jest.fn(),
+        readLivingSpecs: jest.fn(),
+        requirementSlices: jest.requireActual('../livingSpecsModel').requirementSlices,
         isPathWithinRoot: (root: string, relPath: string) => {
             if (nodePath.isAbsolute(relPath)) return false;
             const rel = nodePath.relative(root, nodePath.resolve(root, relPath));
@@ -28,7 +30,7 @@ jest.mock('../../../core/utils/notificationUtils', () => ({
     NotificationUtils: { showAutoDismissNotification: jest.fn() },
 }));
 
-import { readDriftedFiles, resolveCapabilityBySpecPath } from '../livingSpecsModel';
+import { readDriftedFiles, readLivingSpecs, resolveCapabilityBySpecPath } from '../livingSpecsModel';
 
 type Handler = (...args: unknown[]) => Promise<void> | void;
 
@@ -69,6 +71,7 @@ describe('registerLivingSpecsCommands', () => {
             'speckit.livingSpecs.drift',
             'speckit.livingSpecs.init',
             'speckit.livingSpecs.move',
+            'speckit.livingSpecs.open',
             'speckit.livingSpecs.refresh',
             'speckit.livingSpecs.sync',
             'speckit.livingSpecs.update',
@@ -373,6 +376,75 @@ describe('registerLivingSpecsCommands', () => {
             await handlers['speckit.livingSpecs.delete']({ relPath: '../../etc/passwd' });
             expect(vscode.window.showWarningMessage).not.toHaveBeenCalled();
             expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('open', () => {
+        const billing = { name: 'billing', spec: 'capabilities/billing/billing.spec.md' };
+        const specText = '# Billing\n\n### Invoices are emailed\n\nProse.\n\n### Refunds post same day\n';
+
+        beforeEach(() => {
+            (readLivingSpecs as jest.Mock).mockReturnValue({ enabled: true, configured: true, capabilities: [billing, { name: 'auth', spec: 'auth.spec.md' }], orphans: [] });
+            (vscode.workspace.fs.readFile as jest.Mock).mockResolvedValue(Buffer.from(specText));
+        });
+
+        it('lists every registered capability, then its requirements plus Open at the top', async () => {
+            (vscode.window.showQuickPick as jest.Mock)
+                .mockImplementationOnce(async (items: any[]) => items[0])
+                .mockResolvedValueOnce(undefined);
+            await handlers['speckit.livingSpecs.open']();
+            expect(readLivingSpecs).toHaveBeenCalledWith('/workspace', { withOrphans: false });
+            const [capItems] = (vscode.window.showQuickPick as jest.Mock).mock.calls[0];
+            expect(capItems.map((i: any) => i.label)).toEqual(['billing', 'auth']);
+            const [reqItems] = (vscode.window.showQuickPick as jest.Mock).mock.calls[1];
+            expect(reqItems.map((i: any) => i.label)).toEqual([
+                '$(arrow-up) Open at the top', 'Invoices are emailed', 'Refunds post same day',
+            ]);
+        });
+
+        it('opens the viewer at the picked requirement', async () => {
+            (vscode.window.showQuickPick as jest.Mock)
+                .mockImplementationOnce(async (items: any[]) => items[0])
+                .mockImplementationOnce(async (items: any[]) => items[2]);
+            await handlers['speckit.livingSpecs.open']();
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'speckit.viewSpecDocument', '/workspace/capabilities/billing/billing.spec.md',
+                { living: true, requirement: 'Refunds post same day' });
+        });
+
+        it('opens at the top when the requirement is skipped', async () => {
+            (vscode.window.showQuickPick as jest.Mock)
+                .mockImplementationOnce(async (items: any[]) => items[0])
+                .mockImplementationOnce(async (items: any[]) => items[0]);
+            await handlers['speckit.livingSpecs.open']();
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'speckit.viewSpecDocument', '/workspace/capabilities/billing/billing.spec.md', { living: true });
+        });
+
+        it('opens nothing when the capability picker is dismissed', async () => {
+            (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+            await handlers['speckit.livingSpecs.open']();
+            expect(vscode.window.showQuickPick).toHaveBeenCalledTimes(1);
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        });
+
+        it('opens nothing when the requirement picker is dismissed', async () => {
+            (vscode.window.showQuickPick as jest.Mock)
+                .mockImplementationOnce(async (items: any[]) => items[0])
+                .mockResolvedValueOnce(undefined);
+            await handlers['speckit.livingSpecs.open']();
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ['not configured', { enabled: false, configured: false, capabilities: [], orphans: [] }],
+            ['disabled', { enabled: false, configured: true, capabilities: [], orphans: [] }],
+        ])('says so and opens nothing when living specs are %s', async (_label, listing) => {
+            (readLivingSpecs as jest.Mock).mockReturnValue(listing);
+            await handlers['speckit.livingSpecs.open']();
+            expect(vscode.window.showInformationMessage).toHaveBeenCalledWith('Living specs are not set up in this project.');
+            expect(vscode.window.showQuickPick).not.toHaveBeenCalled();
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
         });
     });
 

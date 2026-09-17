@@ -96,3 +96,15 @@ A registered capability whose spec file does not exist SHALL still open from its
 #### Scenario: Validate is pressed in an open capability
 - **WHEN** the check is dispatched
 - **THEN** it names that capability
+
+### Any requirement opens from the command palette
+
+`SpecKit: Open Living Spec` SHALL list every registered capability, then that capability's requirement headings under an "Open at the top" item, and open the viewer through `speckit.viewSpecDocument` with `{ living: true, requirement? }`. Dismissing either picker SHALL open nothing, and without living specs configured the command SHALL say so and open nothing.
+
+#### Scenario: the reader picks a requirement
+- **WHEN** the second picker closes on a heading
+- **THEN** the viewer opens scrolled to that requirement
+
+#### Scenario: living specs are not set up
+- **WHEN** the command runs
+- **THEN** a message says so and nothing opens

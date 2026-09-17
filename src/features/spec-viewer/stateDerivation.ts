@@ -147,6 +147,16 @@ function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
     });
 }
 
+/**
+ * A coverage cell is a list, or the comma-separated string the batch capture
+ * wrote verbatim. Read as "not a list", every one of those rows said no test was
+ * linked while the names sat in the file.
+ */
+function coverageNames(v: unknown): string[] {
+    if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean);
+    return coerceNameList(v);
+}
+
 function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
     const v = (ctx as Record<string, unknown>)['coverage'];
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
@@ -157,8 +167,8 @@ function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
         rows.push({
             req,
             title: typeof e.title === 'string' && e.title.trim() ? e.title : undefined,
-            tasks: coerceNameList(e.tasks),
-            tests: coerceNameList(e.tests),
+            tasks: coverageNames(e.tasks),
+            tests: coverageNames(e.tests),
         });
     }
     if (rows.length === 0) return undefined;

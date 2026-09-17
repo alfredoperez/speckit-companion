@@ -5,13 +5,14 @@
  * resolver's naming convention (see speckit-extension/scripts/resolve-spec-paths.py):
  *   centralized  capabilities/<name>/spec.md            → spec.rules.md / spec.coverage.md
  *   colocated    <anywhere>/<stem>.spec.md              → <stem>.rules.md / <stem>.coverage.md
- * The tiers become the viewer's tab strip; there is no workflow, no phases,
- * and no `.spec-context.json` involved.
+ * The tiers become the viewer's tab strip; there is no workflow and no phases.
+ * The only `.spec-context.json` write is a removal record.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import type { SpecDocument, DocumentType } from './types';
+import { requirementKey } from '../specs/livingSpecsModel';
 
 export type LivingTier = 'spec' | 'rules' | 'coverage';
 
@@ -206,12 +207,9 @@ export function livingPurposeBody(content: string): string {
 }
 
 const ADOPTED_MARKER = /^\s*<!--\s*adopted:\s*.+?\s*-->\s*$/;
-const INFERRED_TAG = /\s*\[inferred\]\s*/gi;
 
-/** A heading as the card keys it: tag-stripped, whitespace-trimmed. */
-function cardHeading(text: string): string {
-    return text.replace(INFERRED_TAG, ' ').trim();
-}
+/** A heading as the card keys it — the same normalization every join uses. */
+const cardHeading = requirementKey;
 
 /** Drop the `adopted` marker on one requirement (by heading) or all, then the `[DRAFT]` banner once none remain; null when nothing changed. */
 export function approveLivingText(content: string, heading?: string): string | null {
@@ -276,10 +274,40 @@ export function removeLivingRequirement(content: string, heading: string): strin
     return removed ? kept.join('\n').replace(/\n{3,}/g, '\n\n') : null;
 }
 
-/** Every `<!-- aligns: cap#Heading -->` in a spec text, as `cap#Heading` strings. */
-export function alignsIn(content: string): string[] {
-    return [...content.matchAll(/<!--\s*aligns:\s*(.+?)\s*-->/g)]
-        .flatMap(m => m[1].split(',').map(s => s.trim()).filter(Boolean));
+/**
+ * Record that a requirement was removed on purpose, in the `.spec-context.json`
+ * beside the capability's spec. A direct read-merge-write: the feature-spec
+ * writer would stamp a status and a step a capability does not have.
+ */
+export async function appendLivingRemoval(specPath: string, capability: string, heading: string): Promise<void> {
+    const file = path.join(path.dirname(specPath), '.spec-context.json');
+    // Colocated capabilities share this file, so two removals settling together
+    // would both read the same history and the second write would lose a record.
+    const queued = (removalQueues.get(file) ?? Promise.resolve())
+        .then(() => appendRemoval(file, capability, heading));
+    const settled = queued.catch(() => undefined)
+        .then(() => { if (removalQueues.get(file) === settled) removalQueues.delete(file); });
+    removalQueues.set(file, settled);
+    return queued;
+}
+
+const removalQueues = new Map<string, Promise<void>>();
+
+async function appendRemoval(file: string, capability: string, heading: string): Promise<void> {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(await fs.promises.readFile(file, 'utf-8'));
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    }
+    // A file holding something else is left alone rather than overwritten.
+    if (parsed !== undefined && (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))) {
+        throw new Error(`${file} does not hold a spec context`);
+    }
+    const ctx: Record<string, unknown> = (parsed as Record<string, unknown>) ?? {};
+    const history = Array.isArray(ctx.history) ? ctx.history : [];
+    history.push({ kind: 'requirement-removed', capability, requirement: heading, at: new Date().toISOString(), by: 'user' });
+    await fs.promises.writeFile(file, JSON.stringify({ ...ctx, history }, null, 2) + '\n', 'utf-8');
 }
 
 /** Read a tier document, tolerating missing files. */

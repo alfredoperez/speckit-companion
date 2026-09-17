@@ -241,13 +241,34 @@ export interface LivingHeaderMeta {
     missing?: boolean;
     /** Headings whose touched files drifted; absent when drift is unknown. */
     driftedRequirements?: string[];
+    /** Headings absent from `main`'s copy of the spec; absent when that copy could not be read. */
+    newRequirements?: string[];
+}
+
+/** One entry in a card's Leans on or Leaned on by list. */
+export interface RequirementLink {
+    capability: string;
+    heading: string;
+    /** The link as written, `capability#heading`. */
+    raw: string;
+    broken: boolean;
+    /** Workspace-relative spec path, present only when not broken. */
+    specPath?: string;
+}
+
+/** What the bar needs to offer Undo for the last Approve all or Remove. */
+export interface LivingUndo {
+    token: string;
+    kind: 'approve' | 'remove';
+    /** Epoch ms. */
+    expiresAt: number;
 }
 
 /** What the living-spec Overview lists, parsed from the spec tier once on the extension side. */
 export interface LivingOverview {
     /** The `## Purpose` body, verbatim markdown. */
     purpose: string;
-    requirements: { heading: string; adopted: boolean }[];
+    requirements: { heading: string; adopted: boolean; leansOn?: RequirementLink[]; leanedOnBy?: RequirementLink[] }[];
 }
 
 // ============================================
@@ -269,6 +290,8 @@ export interface NavState {
     livingMeta?: LivingHeaderMeta | null;
     /** The Overview's material; living-spec mode only. */
     livingOverview?: LivingOverview | null;
+    /** The pending Undo for the last Approve all or Remove, present only while it is offered. */
+    livingUndo?: LivingUndo | null;
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
     /** Core documents with existence state */
@@ -528,6 +551,10 @@ export type ViewerToExtensionMessage =
     | {
           type: 'approveRequirement';
           heading: string;
+      }
+    | {
+          type: 'undoLivingAction';
+          token: string;
       }
     | {
           type: 'approveSpec';

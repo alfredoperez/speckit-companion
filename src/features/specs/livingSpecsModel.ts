@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import type { RequirementLink } from '../../protocol/viewer';
 
 /**
  * Node-side reader for the project's capability registry.
@@ -969,6 +970,73 @@ export function hasNoMarkers(slices: RequirementSlice[]): boolean {
     return slices.every((s) => !s.touches);
 }
 
+/**
+ * The key every surface joins a requirement on: the heading with its
+ * `[inferred]` tag stripped, as the card renders it. The cards strip it, so a
+ * map keyed on the raw heading misses exactly the requirements that carry it.
+ */
+export function requirementKey(heading: string): string {
+    return heading.replace(/\s*\[inferred\]\s*/gi, ' ').trim();
+}
+
+/** A requirement's aligns links in both directions. */
+export interface RequirementLinks {
+    leansOn: RequirementLink[];
+    leanedOnBy: RequirementLink[];
+}
+
+/**
+ * Leans on and Leaned on by for every requirement in one capability, keyed by
+ * exact heading. Leaned on by skips the capability's own requirements, so a
+ * self-link appears once. Requirements sharing a heading share their lists.
+ */
+export function requirementLinks(workspaceRoot: string, capability: string): Map<string, RequirementLinks> {
+    const specs = new Map<string, { spec: string; slices: RequirementSlice[] }>();
+    for (const cap of readLivingSpecs(workspaceRoot, { withOrphans: false }).capabilities) {
+        let slices: RequirementSlice[] = [];
+        if (cap.exists) {
+            try {
+                slices = requirementSlices(fs.readFileSync(path.join(workspaceRoot, cap.spec), 'utf8'));
+            } catch { /* an unreadable spec links nothing */ }
+        }
+        specs.set(cap.name, { spec: cap.spec, slices });
+    }
+    const out = new Map<string, RequirementLinks>();
+    const own = specs.get(capability);
+    if (!own) return out;
+
+    const resolve = (raw: string): RequirementLink => {
+        const at = raw.indexOf('#');
+        const name = (at === -1 ? raw : raw.slice(0, at)).trim();
+        // Normalized, because the card the link opens is keyed on the stripped heading.
+        const heading = at === -1 ? '' : requirementKey(raw.slice(at + 1));
+        const target = specs.get(name);
+        return target?.slices.some((s) => requirementKey(s.heading) === heading)
+            ? { capability: name, heading, raw, broken: false, specPath: target.spec }
+            : { capability: name, heading, raw, broken: true };
+    };
+    for (const slice of own.slices) {
+        const key = requirementKey(slice.heading);
+        if (out.has(key)) continue;
+        const raws = own.slices.filter((s) => requirementKey(s.heading) === key).flatMap((s) => s.aligns ?? []);
+        const target = `${capability}#${key}`;
+        const leanedOnBy: RequirementLink[] = [];
+        for (const [name, other] of specs) {
+            if (name === capability) continue;
+            for (const s of other.slices) {
+                if (s.aligns?.some((a) => {
+                    const at = a.indexOf('#');
+                    return at !== -1 && `${a.slice(0, at).trim()}#${requirementKey(a.slice(at + 1))}` === target;
+                })) {
+                    leanedOnBy.push({ capability: name, heading: requirementKey(s.heading), raw: `${name}#${requirementKey(s.heading)}`, broken: false, specPath: other.spec });
+                }
+            }
+        }
+        out.set(key, { leansOn: [...new Set(raws)].map(resolve), leanedOnBy });
+    }
+    return out;
+}
+
 /** A coverage line "names a test" per the CLI rule. */
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 
@@ -990,6 +1058,26 @@ function makeDefaultGitRunner(timeoutMs: number): GitRunner {
             });
         });
     };
+}
+
+/**
+ * `main`'s copy of a workspace file, or undefined when git cannot give it:
+ * no repository, no `main`, a file `main` lacks, or a timeout.
+ */
+export async function readMainCopy(
+    workspaceRoot: string,
+    relPath: string,
+    opts?: { git?: GitRunner; timeoutMs?: number },
+): Promise<string | undefined> {
+    const timeoutMs = opts?.timeoutMs ?? 1500;
+    const git = opts?.git ?? makeDefaultGitRunner(timeoutMs);
+    let timer: unknown;
+    return Promise.race([
+        git(['show', `main:./${posix(relPath)}`], workspaceRoot),
+        new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
+    ])
+        .catch(() => undefined)
+        .finally(() => clearTimeout(timer as ReturnType<typeof setTimeout>));
 }
 
 function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHealth['coverage'] {

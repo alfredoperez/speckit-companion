@@ -265,3 +265,40 @@ export const LivingDrifted: Story = {
         return <FooterActions initialSpecStatus="active" />;
     },
 };
+
+const adoptedOverview = (adopted: boolean[]) => ({
+    purpose: '',
+    requirements: adopted.map((a, i) => ({ heading: `Requirement ${i + 1}`, adopted: a })),
+});
+
+export const LivingApproveAll: Story = {
+    name: 'Living — Approve all 4',
+    render: () => {
+        navState.value = { ...livingNav({ drifted: false }), livingOverview: adoptedOverview([true, true, false, true, true]) };
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};
+
+export const LivingNothingAdopted: Story = {
+    name: 'Living — nothing adopted',
+    render: () => {
+        navState.value = { ...livingNav({ drifted: false }), livingOverview: adoptedOverview([false, false]) };
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};
+
+export const LivingUndoPending: Story = {
+    name: 'Living — Undo pending',
+    render: () => {
+        navState.value = {
+            ...livingNav({ drifted: false }),
+            livingOverview: adoptedOverview([false, false]),
+            // Long enough to look at, and to capture.
+            livingUndo: { token: 'story', kind: 'approve', expiresAt: Date.now() + 60 * 60 * 1000 },
+        };
+        viewerState.value = null;
+        return <FooterActions initialSpecStatus="active" />;
+    },
+};

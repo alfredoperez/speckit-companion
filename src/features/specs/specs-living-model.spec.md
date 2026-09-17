@@ -118,3 +118,15 @@ The registry reader SHALL carry each capability's optional retirement declaratio
 ## Uncovered
 
 - All files under `__tests__/` were listed but not read.
+
+### Requirement links are computed in-process over the requirement slicer
+
+`requirementLinks` SHALL read every registered capability's spec through `requirementSlices` and return, per heading, the requirement's own aligns links marked resolved or broken, and the requirements in other capabilities that align to it. Headings match exactly, and requirements sharing a heading share their lists. The cards and the Remove refusal SHALL both read this one function.
+
+#### Scenario: a requirement aligns to itself
+- **WHEN** its links are computed
+- **THEN** the self-link appears under Leans on and not under Leaned on by
+
+#### Scenario: a link names an unregistered capability
+- **WHEN** its links are computed
+- **THEN** that link is marked broken with no spec path
