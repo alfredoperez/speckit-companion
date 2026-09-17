@@ -1,17 +1,17 @@
 # Steering Documents — Living Spec
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-Steering documents are the guidance files the extension itself creates for a project. They are the one part of the steering tree the user acts on rather than only reads, so this file holds the rules for what may be done to them: which rows can be refined or deleted, who writes their content, and how their use is counted. Without those rules a user could delete a provider-owned file from the tree, or the extension would ship canned guidance that says nothing about this project.
+Steering documents are the guidance files the extension creates for a project, and the one part of the steering tree the user acts on. These rules cover which rows can be refined or deleted, who writes their content, and how their use is counted.
 
 ## Requirements
 
 ### Only the steering documents the extension generates are destructive-actionable
 <!-- touches: src/features/steering/steeringExplorerProvider.ts, src/features/steering/steeringCommands.ts -->
 
-Refine and delete SHALL be offered exclusively on generated steering documents. Provider-owned and SpecKit-owned files SHALL be openable and revealable but never deletable from this view, because deleting them breaks the user's assistant setup or their SpecKit project, and the extension did not create them.
+Refine and delete SHALL be offered only on generated steering documents. Provider-owned and SpecKit-owned files SHALL be openable and revealable but never deletable from this view, because the extension did not create them.
 
 #### Scenario: right-clicking a SpecKit-owned file
 - **WHEN** the user opens the context menu on the constitution, a script, or a template
@@ -21,7 +21,7 @@ Refine and delete SHALL be offered exclusively on generated steering documents. 
 ### Authoring and refining steering documents is delegated to the AI provider
 <!-- touches: src/features/steering/steeringManager.ts -->
 
-Creating, initializing, refining, and cleaning up after deleting a steering document SHALL be expressed as a prompt dispatched to the configured provider, not as extension-side templating. The value of a steering document is that it reflects this project; a canned template cannot.
+Creating, initializing, refining, and post-delete cleanup of a steering document SHALL be a prompt dispatched to the configured provider, not extension-side templating, so the document reflects this project.
 
 #### Scenario: the user asks for a new steering document
 - **WHEN** they describe the guidance they need
@@ -36,11 +36,11 @@ Creating, initializing, refining, and cleaning up after deleting a steering docu
 ### Opening a steering document is counted as a usage signal
 <!-- touches: src/features/steering/steeringCommands.ts, src/features/steering/steeringExplorerProvider.ts -->
 
-Clicking a generated steering document or a workflow reference row SHALL route through the extension's own open command, which records a `steering.opened` telemetry event before handing the file to the editor. The count is what tells us whether the view is actually consulted; a raw editor-open would open the file but leave that use invisible. Only these extension-authored and reference rows are counted — provider-owned, SpecKit-owned, and Companion command and template rows open directly and emit nothing.
+Clicking a generated steering document or workflow reference row SHALL go through the extension's own open command, which records a `steering.opened` telemetry event before opening the file. Provider-owned, SpecKit-owned, and Companion command and template rows SHALL open directly and emit nothing.
 
 #### Scenario: the user opens a generated steering document from the tree
 - **WHEN** the row is clicked
-- **THEN** a `steering.opened` event is recorded, counted once per open
+- **THEN** one `steering.opened` event is recorded per open
 - **AND** the document then opens in the editor
 
 #### Scenario: the user opens a provider-owned or SpecKit-owned file
@@ -49,4 +49,4 @@ Clicking a generated steering document or a workflow reference row SHALL route t
 
 ## Uncovered
 
-_None — every file in the area was read._
+_None: every file in the area was read._

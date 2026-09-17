@@ -2,29 +2,29 @@
 
 <!-- reviewed: d589a63e -->
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The panel is the extension-side host for one spec's reading surface: one panel per spec, a shell generated under a locked-down policy, and every refresh carrying a complete snapshot. Without it a spec could end up with two disagreeing views of itself, or a webview holding stale fields beside fresh ones.
+The extension-side host for one spec's reading surface: one panel per spec, a shell generated under a locked-down policy, and every refresh carrying a complete snapshot.
 
 ## Requirements
 
 ### One panel per spec, revealed rather than duplicated
 
-Opening any document of a spec MUST resolve to that spec's own panel. A second open — of the same document, a sibling document, or the spec as a whole — SHALL reuse and reveal the existing panel rather than creating another. Panels are keyed by the spec's directory so a spec can never end up with two disagreeing views of itself, and closing a panel MUST release everything scoped to it (pending timers, per-spec notification memory).
+Opening any document of a spec MUST resolve to that spec's own panel, keyed by the spec's directory. A second open of the same document, a sibling, or the whole spec SHALL reveal the existing panel instead of creating another. Closing a panel MUST release everything scoped to it, including pending timers and per-spec notification memory.
 
 #### Scenario: opening a sub-document of an open spec
-- **WHEN** the reader opens a document that lives under a directory a panel already owns
+- **WHEN** the reader opens a document under a directory a panel already owns
 - **THEN** that panel switches to the document and comes to the front
 - **AND** no second panel is created
 
 #### Scenario: the panel is closed
 - **WHEN** a panel is disposed
-- **THEN** its pending work and its per-spec notification state are discarded
+- **THEN** its pending work and per-spec notification state are discarded
 - **AND** reopening the spec starts from a clean panel
 
-The entry point's landing request rides with the panel. Opening a document asks to land on that document; opening the spec as a whole asks to land on the Overview. The request MUST be carried on the first render — the webview's own state does not survive the panel HTML being regenerated — and re-sent on every state update. It lives on the panel's own state, so a render that rebuilds that state MUST carry the existing state forward rather than replace it; a rebuilt-from-scratch state drops the request before the render reads it, and the panel lands on the document the reader last had open. The reader's later choice inside the viewer SHALL be recorded as itself, the Overview as the Overview and a document as that document, never as an absence of choice: an absent request falls back to the document for any spec that has run, so clearing it on an Overview click sent the reader back to the document on the next refresh — the exact bounce this rule exists to prevent.
+Opening a document asks to land on that document, and opening the whole spec asks to land on the Overview. The landing request MUST be carried on the first render and re-sent on every state update, and a render that rebuilds panel state MUST carry the existing state forward so the request is not dropped. The reader's later choice in the viewer SHALL be recorded as that choice (the Overview or a specific document), never as no choice, because an absent request falls back to the document on refresh.
 
 #### Scenario: a document row is opened on a spec that has been run
 - **WHEN** the panel renders
@@ -41,7 +41,7 @@ The entry point's landing request rides with the panel. Opening a document asks 
 ### Every refresh ships a complete state snapshot from one builder
 <!-- touches: src/features/spec-viewer/specViewerProvider.ts -->
 
-Both refresh paths — a document switch and a change to the spec's recorded context — MUST build their payload through one shared builder and send a *complete* state, never a partial merged onto whatever the webview last held. A payload that omits a state-bearing field would let the webview keep a stale value beside fresh ones, which is how the footer once offered an action the spec's real state did not permit. A snapshot also carries facts that belong to the project rather than to the spec — whether the spec-kit half is missing or out of date — so when those change on disk every open run panel MUST be re-posted a fresh snapshot rather than left waiting for one of its own files to change.
+Both refresh paths, a document switch and a recorded-context change, MUST build their payload through one shared builder and send a complete state, never a partial merged onto the webview's last state. When project-level facts in the snapshot change on disk, such as the spec-kit half being missing or out of date, every open run panel MUST be re-posted a fresh snapshot.
 
 #### Scenario: the recorded context changes on disk
 - **WHEN** a watcher reports a change to an open spec's recorded context
@@ -50,8 +50,8 @@ Both refresh paths — a document switch and a change to the spec's recorded con
 
 #### Scenario: a refresh that carries no document content
 - **WHEN** the refresh is triggered by state alone
-- **THEN** document and staleness reads are skipped as unnecessary work
-- **AND** the snapshot remains internally consistent by reusing the panel's cached values for the fields it did not recompute
+- **THEN** document and staleness reads are skipped
+- **AND** the snapshot stays consistent by reusing the panel's cached values for fields it did not recompute
 
 #### Scenario: the spec-kit extension lands on disk while panels are open
 - **WHEN** the files that decide the install nudge change
@@ -60,7 +60,7 @@ Both refresh paths — a document switch and a change to the spec's recorded con
 
 ### The webview shell is generated under a locked-down policy
 
-Each render MUST emit its own content-security policy with a freshly generated per-render nonce, restrict resource loading to the extension's own assets plus the explicitly named script sources, and escape every value interpolated into the shell. Element-content escaping is not attribute-safe, so a document body carried through an HTML attribute SHALL be base64-encoded and decoded by the webview rather than escaped — the helper that does it is named for the encoding it performs, not for escaping, because a name that says "escape" invites its use where no escaping is happening. Regenerating the shell is also what resets the webview's in-memory selection, so any navigation meant to preserve that selection MUST go through a message instead.
+Each render MUST emit its own content-security policy with a fresh per-render nonce, restrict resource loading to the extension's assets and the named script sources, and escape every value interpolated into the shell. A document body carried through an HTML attribute SHALL be base64-encoded and decoded by the webview, because element-content escaping is not attribute-safe, and its helper is named for the encoding, not for escaping. Navigation that must preserve the webview's in-memory selection MUST go through a message, since regenerating the shell resets it.
 
 #### Scenario: a pipeline entry is selected
 - **WHEN** the reader picks a document from the pipeline rail
@@ -73,7 +73,7 @@ Each render MUST emit its own content-security policy with a freshly generated p
 
 ### The viewer's message contract is declared once, for both sides
 
-The set of messages the panel and its webview exchange, and the document types they name, SHALL live in one shared protocol module both sides import, not be restated in the extension-side types file. The two ends cannot then hold different ideas of what a message is, and a variant added on one side is visible to the other by construction.
+The messages the panel and webview exchange, and the document types they name, SHALL live in one shared protocol module both sides import, not be restated in the extension-side types file.
 
 #### Scenario: a message variant is added
 - **WHEN** the protocol gains a new message type
@@ -82,7 +82,7 @@ The set of messages the panel and its webview exchange, and the document types t
 ### The install nudge is resolved per render, and a click reports the banner the reader saw
 <!-- touches: src/features/spec-viewer/specViewerProvider.ts, src/features/spec-viewer/html/generator.ts, src/features/spec-viewer/messageHandlers.ts -->
 
-Which spec-kit-extension nudge belongs on screen — none, an install, or an update naming the installed and expected versions — MUST be resolved through the one shared resolver that already weighs the setting, what is on disk, and any dismissal, and the whole prompt SHALL be carried to the webview on the first render and re-sent on every state update, never reduced to a bare "show it" flag. The banner lives inside the Activity panel, so with that panel off nothing is resolved and nothing is reported as shown; when a banner does render, the shown report names which kind it is. The banner's own messages MUST carry the prompt back as the banner declared it, because the extension's view of the gap can have moved on since it was drawn: the click report names the update surface rather than the install one, and the dismissal is persisted through the single dismissal writer against the banner the reader actually closed — permanently for the install nudge, and only for that expected version for an update, so the next release asks again.
+The spec-kit-extension nudge (none, install, or an update naming installed and expected versions) MUST be resolved through the one shared resolver, and the whole prompt SHALL be sent on first render and every state update, never as a bare flag. With the Activity panel off, nothing is resolved or reported as shown, and a rendered banner's shown report names its kind. The banner's messages MUST carry back the prompt it declared: the click report names the update surface for an update, and dismissal goes through the single dismissal writer for the banner closed, permanently for install and only for that expected version for an update.
 
 #### Scenario: the installed commands are behind this build
 - **WHEN** the panel renders
@@ -96,7 +96,7 @@ Which spec-kit-extension nudge belongs on screen — none, an install, or an upd
 
 ### A document is addressed by its path under the spec
 
-A document MUST be identified by its path relative to the spec directory, so one that lives in a subfolder keeps that folder in its identity. Every path that names a document — the scan that lists them, a click that opens one — MUST derive that identity the same way, from one shared derivation. Two derivations of the same identity is not a cosmetic duplication here: a click whose identity does not match the stored one resolves to no document, the render returns early, and the panel keeps whatever it was already showing, so the click reads as having opened the wrong document rather than as having failed.
+A document MUST be identified by its path relative to the spec directory, so a subfolder stays part of its identity. Every path that names a document, including the listing scan and a click, MUST derive that identity through one shared derivation. A mismatched identity resolves to no document, and the panel would otherwise keep showing the previous one.
 
 #### Scenario: a document in a subfolder is opened
 - **WHEN** the reader opens a document nested under the spec directory
@@ -104,11 +104,11 @@ A document MUST be identified by its path relative to the spec directory, so one
 
 #### Scenario: a click names a document the scan never listed
 - **WHEN** the identity resolves to nothing
-- **THEN** the panel says so rather than silently keeping the previous document
+- **THEN** the panel says so instead of silently keeping the previous document
 
 ### Opening a spec can name the requirement to bring into view
 
-The viewer's open command SHALL accept an optional requirement heading and, once the spec renders, bring the matching requirement into view. A heading matching nothing SHALL leave the document where it is rather than failing the open.
+The viewer's open command SHALL accept an optional requirement heading and bring the matching requirement into view once the spec renders. A heading that matches nothing SHALL leave the document in place without failing the open.
 
 #### Scenario: a requirement heading that does not exist
 - **WHEN** the spec is opened with it
@@ -116,4 +116,4 @@ The viewer's open command SHALL accept an optional requirement heading and, once
 
 ## Uncovered
 
-_None — every file in the area was read, though the test files under `__tests__/` were read only for the contracts they pin, not line by line._
+_None: every file in the area was read, though test files under `__tests__/` were read only for the contracts they pin._

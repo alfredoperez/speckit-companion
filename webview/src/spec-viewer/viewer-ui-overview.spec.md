@@ -4,19 +4,19 @@
 
 ## Purpose
 
-This is the overview and activity panel: the run's durable context, its timing, and the log beneath them, rendered from what the extension summarised. Without it a spec's run would be a wall of events, and a fabricated duration or one failing section could take the whole reading surface down.
+The overview and activity panel, which renders the run's durable context, its timing and its log from what the extension summarised.
 
 ## Requirements
 
 ### The overview degrades section by section, and a failure never blanks the page
 
-Every section of the overview MUST hide itself when its data is empty, so a spec that recorded little shows a short page rather than a page of empty headings. A render-time failure anywhere in the overview subtree MUST be caught, reported back to the extension for diagnosis, and replaced with an inline notice — one bad section may not take the reading surface down with it.
+Every overview section MUST hide itself when its data is empty. A render failure anywhere in the overview subtree MUST be caught, reported to the extension, and replaced with an inline notice, so one bad section cannot take the reading surface down.
 
 #### Scenario: a section's data is absent
 - **WHEN** a spec recorded no decisions
 - **THEN** the decisions section does not render at all
 
-Coverage is the exception to the hide-when-empty rule, because its empty state is a finding rather than an absence, and because the header strip reports the count whether the section renders or not — hiding the section left the page showing the zero and withholding the explanation.
+Coverage is the exception to hiding when empty. Its empty state is a finding, and the header strip reports the count whether or not the section renders.
 
 #### Scenario: coverage has rows but nothing is traced
 - **WHEN** the coverage rows exist but no requirement has a linked test
@@ -34,19 +34,19 @@ Coverage is the exception to the hide-when-empty rule, because its empty state i
 
 ### Run timing is a summary the extension provides, not a duration the webview sums
 
-Elapsed time and per-phase coverage MUST be read from the timing summary the extension sends, never recomputed in the webview from per-step activity timestamps. The webview SHALL NOT sum step spans, cap idle gaps, or otherwise derive a working-time figure of its own; it renders the summary's completion flag, its elapsed figure, and its measured-of-expected phase count as given. A run that has not settled surfaces phase coverage — "N of M phases" — not a fabricated wall-clock total; only a summary that reports itself complete surfaces a start, an elapsed figure, and an end.
+Elapsed time and per-phase coverage MUST be read from the timing summary the extension sends, never recomputed from per-step timestamps. The webview SHALL NOT sum step spans, cap idle gaps or derive any working-time figure of its own, and renders the summary's completion flag, elapsed figure and measured-of-expected phase count as given. A run that has not settled shows "N of M phases", and only a summary that reports itself complete shows a start, an elapsed figure and an end.
 
-Recorded substep events are journal moments, not measured work. Each event carries the timestamp at which it was recorded, is ordered by it, and is shown as "recorded at" that moment. The webview SHALL NOT present the gap between a substep's start and finish as a duration, because an AI or CLI finish is a cadence record rather than a measured piece of work.
+Recorded substep events are journal moments, ordered by and shown as "recorded at" their timestamp. The webview SHALL NOT present the gap between a substep's start and finish as a duration.
 
 #### Scenario: a run is still in flight
 - **WHEN** the timing summary reports itself not yet complete
 - **THEN** the run surfaces measured-of-expected phase coverage
-- **AND** no start, elapsed, or end figure is shown as if the run had settled
+- **AND** no start, elapsed or end figure is shown as if the run had settled
 
 #### Scenario: a spec was driven entirely through the CLI
-- **WHEN** the extension now marks a CLI-run's step spans as measured (both boundaries from an authoritative-enough writer) and reports them in the summary
-- **THEN** the viewer surfaces that trusted coverage as given rather than "0 of N"
-- **AND** the webview still sums nothing itself — the change is in the summary it renders, not in a webview derivation
+- **WHEN** the extension marks a CLI run's step spans as measured (both boundaries from an authoritative-enough writer) and reports them in the summary
+- **THEN** the viewer shows that coverage as given rather than "0 of N"
+- **AND** the webview still sums nothing: the change is in the summary it renders, not in a webview derivation
 
 #### Scenario: a recorded substep event is displayed
 - **WHEN** a tracked substep is rendered in the phase history
@@ -55,7 +55,7 @@ Recorded substep events are journal moments, not measured work. Each event carri
 
 ### A folded phase is presented as folded, never as a near-zero duration
 
-A phase the derivation marks as folded (a fast-path plan or tasks whose boundaries were stamped inside the specify run) MUST NOT render its span as a duration. The run timing strip SHALL render a "folded into" note naming the nearest earlier non-folded phase (a plain "folded" when none exists), with a visual distinct from a measured phase, while measured phases, coverage counts, and the elapsed total render unchanged.
+A phase marked folded (a fast-path plan or tasks whose boundaries were stamped inside the specify run) MUST NOT render its span as a duration. The run timing strip SHALL show a "folded into" note naming the nearest earlier non-folded phase, or a plain "folded" when there is none, styled distinctly from a measured phase. Measured phases, coverage counts and the elapsed total render unchanged.
 
 #### Scenario: a fast-path spec is opened
 - **WHEN** the run timing strip renders a phase carrying the folded marker
@@ -64,7 +64,7 @@ A phase the derivation marks as folded (a fast-path plan or tasks whose boundari
 
 ### Durable context leads the panel; the granular run history stays collapsed
 
-The activity panel MUST lead with the run's lifecycle signal and durable context — intent, the run's timing overview, the living specs it touched, verified proof, decisions, coverage — and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The living specs a feature touched and its run-timing overview belong to that durable context and render inline in the overview's intent, not as separate run-log cards. A living-spec chip is always a link that opens its capability by name; a stored spec path, when present, rides along but is not required for the chip to be clickable.
+The activity panel MUST lead with the run's lifecycle signal and durable context (intent, run timing overview, touched living specs, verified proof, decisions, coverage) and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The touched living specs and the run timing overview render inline in the overview's intent, not as separate run-log cards. A living-spec chip is always a link that opens its capability by name, whether or not a stored spec path rides along.
 
 #### Scenario: a spec touched living specs
 - **WHEN** the overview renders
@@ -73,7 +73,7 @@ The activity panel MUST lead with the run's lifecycle signal and durable context
 
 ### Evidence and assertion do not wear the same mark
 
-The Overview's verification section carries both what was checked and what the run says it did, and rendering them alike makes the most trustworthy-looking panel in the viewer the one asserting the most. A verification the pipeline derived SHALL keep the check mark and show what it actually got back; one the run merely reported SHALL be visibly quieter and grouped apart, and stay readable rather than being hidden — a run's account of its own work is worth reading, it just must not look like proof. The section's count SHALL say how many of each, because that is the number a reader wants when deciding whether to trust a finished spec.
+A verification the pipeline derived SHALL keep the check mark and show what it actually got back. One the run merely reported SHALL be visibly quieter, grouped apart, and still readable, because a run's account is worth reading but must not look like proof. The section's count SHALL say how many of each.
 
 #### Scenario: a spec carries both kinds
 - **WHEN** the Overview renders
@@ -83,25 +83,9 @@ The Overview's verification section carries both what was checked and what the r
 - **WHEN** the Overview renders
 - **THEN** they all read as reported, because that is what they are
 
-### A living spec's overview is the capability itself, not a run
-
-A living spec has no run to summarise, so in living mode the overview pane MUST render the capability instead of the activity panel: its purpose as authored, the paths it covers, its health, and its requirements in document order. Health reads as sentences rather than figures — how many requirements have a mapped test, whether the source has moved since the spec was last updated, and how many requirements are still adopted but unconfirmed, with the tier's "Approve spec" control beside that count. A requirement row opens that requirement: within the spec tier it switches the pane to the document and reveals it, and from another tier it asks the extension to open the spec there. This pane renders behind the same failure boundary as the run overview, so one bad section cannot take the reading surface down.
-
-#### Scenario: a living spec is opened
-- **WHEN** the overview pane renders
-- **THEN** it shows purpose, covers, health and one row per requirement, and no run-log cards
-
-#### Scenario: every requirement has been confirmed
-- **WHEN** the health section renders
-- **THEN** it says so plainly and offers no approval control, because there is nothing left to approve
-
-#### Scenario: a requirement row is chosen from a tier other than the spec
-- **WHEN** the reader selects it
-- **THEN** the extension is asked to open the spec at that requirement, rather than the pane scrolling a document it is not showing
-
 ## Uncovered
 
-The following files were not read in full by the original adoption — their exported surface and role were established, but their bodies were not reviewed line by line:
+The original adoption did not read these files in full. Their exported surface and role were established, but their bodies were not reviewed line by line:
 
 - `webview/src/spec-viewer/relativeTime.ts`
 - `webview/src/spec-viewer/activityHeroModel.ts`

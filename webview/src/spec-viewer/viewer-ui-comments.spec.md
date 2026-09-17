@@ -6,13 +6,13 @@
 
 ## Purpose
 
-This is how inline comments survive a re-render, reach the extension that owns them, and close once a spec settles. Without it a comment would drift off its line, or the reader would be told a click changed a record the webview never writes.
+How inline comments survive a re-render, reach the extension that owns them, and close once a spec settles.
 
 ## Requirements
 
 ### Comments survive re-render by re-anchoring, and the card speaks for where it sits
 
-Persisted comments MUST be restored inline on every render and after every state change, and restoration MUST be idempotent so repeated calls do not duplicate cards. Anchoring is best-effort and follows a fixed precedence — the stored line when its content still matches, else any line matching the stored text, else the first line under the stored heading, else the stored line if it still exists. A comment that matches nothing stays available in the consolidated list rather than being dropped. A restored card MUST describe the line it actually mounted onto; the stored anchor is the *input* to re-anchoring, never its output.
+Persisted comments MUST be restored inline on every render and after every state change, and restoring MUST be idempotent so cards never duplicate. Anchoring is best-effort in a fixed order: the stored line when its content still matches, else any line matching the stored text, else the first line under the stored heading, else the stored line if it still exists. A comment that matches nothing stays in the consolidated list rather than being dropped. A restored card MUST describe the line it actually mounted on, never the stored anchor it started from.
 
 #### Scenario: the document drifts by a line
 - **WHEN** a comment's stored line no longer matches but its text is found elsewhere
@@ -26,9 +26,9 @@ Persisted comments MUST be restored inline on every render and after every state
 
 ### Comment mutations are posted to the extension, which owns the record
 
-Adding, editing, or removing a comment MUST post the change to the extension rather than write anything itself; the local card is a rendering of the record, not the record. An edit that changes nothing, or that resolves to no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them, so what is shown after the round trip is what was actually persisted. A living spec is the exception, because it has no run record to hold its comments: there the dispatch MUST carry the document's pending comments with it, or the request arrives naming a document and asking for nothing.
+Adding, editing or removing a comment MUST post the change to the extension rather than write anything, since the local card only renders the record. An edit that changes nothing, or has no target, SHALL be a no-op rather than a posted mutation. Dispatching refinement for a document MUST clear the local cards and let the refreshed record re-render them. A living spec has no run record, so its dispatch MUST carry the document's pending comments, or the request asks for nothing.
 
-The line-level structural actions (remove a story, scenario, task, section, or line) are likewise requests the webview posts, not edits it performs. They MUST be labelled as suggestions rather than as direct removals, so the reader is never told a click deletes content the webview does not itself remove.
+The structural line actions (remove a story, scenario, task, section or line) are also posted requests, not edits. They MUST be labelled as suggestions rather than removals, so the reader is never told a click deletes content.
 
 #### Scenario: a comment is deleted
 - **WHEN** the reader deletes a card
@@ -41,13 +41,13 @@ The line-level structural actions (remove a story, scenario, task, section, or l
 - **AND** the local cards are cleared as they are for any other document
 
 #### Scenario: a reader picks a structural line action
-- **WHEN** the reader chooses to remove a story, scenario, task, section, or line from its menu
+- **WHEN** the reader chooses to remove a story, scenario, task, section or line from its menu
 - **THEN** the control reads as a suggestion, not a direct removal
 - **AND** the request is posted for the AI to act on rather than editing the document in place
 
 ### A settled spec is readable but not annotatable
 
-Once a spec is completed or archived, its comments MUST still be visible — they are the record of what was asked — but every path that would create or change one SHALL be closed: the composer refuses to open, and mounted cards render without their action controls. This read-only decision SHALL follow the spec's live status, exactly as the footer's actions already do — it is re-evaluated when the status changes inside an open panel, never fixed at the moment the page was built.
+Once a spec is completed or archived, its comments MUST stay visible, but every path that creates or changes one SHALL be closed: the composer refuses to open and mounted cards render without action controls. This read-only decision SHALL follow the spec's live status, as the footer's actions do, and is re-evaluated when the status changes inside an open panel.
 
 #### Scenario: a completed spec is opened
 - **WHEN** the reader hovers a line
@@ -61,6 +61,6 @@ Once a spec is completed or archived, its comments MUST still be visible — the
 
 ## Uncovered
 
-The following file was not read in full by the original adoption — its exported surface and role were established, but its body was not reviewed line by line:
+The original adoption did not read this file in full. Its exported surface and role were established, but its body was not reviewed line by line:
 
 - `webview/src/spec-viewer/components/InlineEditor.tsx`

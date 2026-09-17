@@ -2,29 +2,29 @@
 
 <!-- reviewed: a9c0b02b -->
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-This capability turns the project's pipeline configuration into the command bodies the assistant reads, and tells the user when what was built no longer matches what it was built from. Without it the editor shows one pipeline and the assistant runs another.
+Builds the project's pipeline configuration into the command bodies the assistant reads, and tells the user when that build no longer matches its inputs.
 
 ## Requirements
 
 ### One answer about whether a config is usable
 
-A configuration file read by more than one reader MUST get one verdict. The editor SHALL refuse exactly what the runtime refuses, so a file every command rejects cannot render as a healthy tree in the sidebar while the terminal reports it unreadable. Where the two must be implemented separately, they SHALL be pinned against a shared set of fixtures so they cannot drift apart again, and the reason a config was rejected — with the line at fault — SHALL be visible from the editor rather than only from a terminal the user may never open.
+A configuration file read by several readers MUST get one verdict: the editor SHALL refuse exactly what the runtime refuses. Where the two are implemented separately, they SHALL be pinned against shared fixtures. The rejection reason, with the line at fault, SHALL be visible in the editor, not only in a terminal.
 
 #### Scenario: a config the runtime cannot read
 - **WHEN** a registry uses syntax outside the runtime's supported subset
-- **THEN** the editor rejects it too, naming the line, rather than showing it as working
+- **THEN** the editor rejects it too, naming the line
 
 #### Scenario: a config both readers accept
 - **WHEN** a file is inside the supported subset
-- **THEN** it behaves exactly as before — this narrows nothing that already works
+- **THEN** it behaves exactly as before
 
 ### A built pipeline reports when it is older than what it was built from
 
-Turning the configuration into the command bodies the assistant reads is a build, so the built output SHALL be reported as out of date whenever anything it was built from is newer — the configuration file, a node, a workflow, a fragment, or a template. Comparing against the configuration file alone reports "current" in exactly the case the editor makes easiest: editing a node writes a file that is not `companion.yml`. Nothing about a run looks wrong when the two disagree; the file says one thing and the assistant is handed another.
+The built output SHALL be reported out of date whenever any input is newer: the configuration file, a node, a workflow, a fragment, or a template. Checking `companion.yml` alone misses the most common edit, a node file.
 
 #### Scenario: a node is edited and nothing is rebuilt
 - **WHEN** the build state is read
@@ -32,11 +32,11 @@ Turning the configuration into the command bodies the assistant reads is a build
 
 ### A build is previewable, and its log is kept rather than summarized
 
-Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes, and SHALL keep the full output in the log rather than reducing it to a notification — a build's output is the change it is about to make, which does not fit in a toast. The log SHALL take the screen only when the build failed, and a build that hangs SHALL be abandoned rather than left running.
+Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes. The full output SHALL go to the log, not a notification. The log SHALL take focus only when the build failed, and a hung build SHALL be abandoned.
 
 #### Scenario: a build succeeds
 - **WHEN** it finishes
-- **THEN** the full output is in the log and the editor is not stolen to say so
+- **THEN** the full output is in the log and the editor keeps focus
 
 #### Scenario: a build fails
 - **WHEN** it reports an error
@@ -44,7 +44,7 @@ Running a build from the editor SHALL offer a preview that writes nothing alongs
 
 ### The pipeline structure shown is the one a build would produce
 
-The structure the pipeline builder draws SHALL be derived by the same half of the product that performs the build, from the same configuration, rather than re-derived on the editor side. A second derivation of the same structure drifts from the first within a release, and the drawing then describes a pipeline that would not be built.
+The pipeline builder SHALL draw the structure derived by the build itself from the same configuration, not a second derivation on the editor side.
 
 #### Scenario: the builder renders a pipeline
 - **WHEN** its structure is resolved

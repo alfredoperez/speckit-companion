@@ -1,17 +1,18 @@
 # Command Assembly — Living Spec
 
 <!-- reviewed: d589a63e -->
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-Every shipped command body is generated from single-sourced parts and nodes, and a set of gates holds the bodies, the manifest and the frozen baseline to each other. Without this, a rule restated in nine bodies drifts silently and a renamed command leaves its old name live.
+Every shipped command body is generated from single-sourced parts and nodes, and gates hold the bodies, the manifest and the frozen baseline to each other. This keeps a shared rule from drifting across bodies and a renamed command from leaving its old name live.
 
 ## Requirements
 
 ### Command bodies are assembled from single-sourced parts and nodes, and the assembly is the contract
 
-No shipped command body is hand-authored end to end. A rule that applies to more than one command SHALL live in exactly one part file, and a command's structure SHALL be expressed as an ordered list of node files, each carrying its own identity and declared reads and writes. The committed bodies stay whole and self-contained — they are what the agent reads — but they are *generated*, and a gate MUST hold each assembled region byte-identical to its source. Editing a shipped body directly is therefore a defect, not a shortcut: it forks a shared rule silently.
+A rule shared by more than one command SHALL live in exactly one part file, and a command's structure SHALL be an ordered list of node files, each with its own identity and declared reads and writes. The committed bodies stay whole and self-contained but are generated, and a gate MUST hold each assembled region byte-identical to its source. Editing a shipped body directly is a defect, because it silently forks a shared rule.
 
 #### Scenario: a shared rule changes
 - **WHEN** a rule embedded in several commands is edited
@@ -24,7 +25,7 @@ No shipped command body is hand-authored end to end. A rule that applies to more
 
 ### Assembly changes MUST be proved against a frozen baseline
 
-Reshaping how bodies are built MUST NOT change the instructions the agent receives. Commands not intentionally changed SHALL compare equal to a frozen capture of their prior text, after normalizing the assembly markers themselves, so a refactor of the build mechanism is demonstrably behavior-preserving. Re-freezing the baseline is a deliberate, separate act after an intentional wording change — never something the build performs on its own.
+Reshaping how bodies are built MUST NOT change the instructions the agent receives: commands not intentionally changed SHALL equal a frozen capture of their prior text, after normalizing the assembly markers. Re-freezing the baseline is a deliberate, separate act after an intentional wording change, and the build never does it on its own.
 
 #### Scenario: the assembly mechanism is refactored
 - **WHEN** the bodies are rebuilt
@@ -36,7 +37,7 @@ Reshaping how bodies are built MUST NOT change the instructions the agent receiv
 
 ### The manifest is the command inventory's single authority, and every downstream surface is gated against it
 
-The extension manifest declares what commands exist. Every surface derived from that list — the files the installer writes into each agent's directory, the registry, the documentation tables — MUST agree with it in both directions, and a gate SHALL enforce that. Both drift directions matter: a missing entry means a command the user cannot reach, and an orphaned entry means a renamed command whose retired name stays live in the agent's list because reinstallation merges names and never deletes. The gate MUST discover install areas rather than iterating a fixed list, since a hardcoded list quietly stops covering a new agent directory — the same drift one level down. An input it cannot resolve MUST fail loudly rather than shrink the surface it scans.
+Every surface derived from the manifest's command list (installed agent files, the registry, the documentation tables) MUST agree with it in both directions, and a gate SHALL enforce that. A missing entry is a command the user cannot reach, and an orphaned entry is a retired name that stays live because reinstallation never deletes. The gate MUST discover install areas rather than iterate a fixed list, and an input it cannot resolve MUST fail loudly rather than shrink the surface it scans.
 
 #### Scenario: a command is renamed
 - **WHEN** the manifest names the new command
@@ -48,7 +49,7 @@ The extension manifest declares what commands exist. Every surface derived from 
 
 ### The pipeline's document shape lives in command bodies, never in document templates
 
-Shape is delivered by overriding the command bodies, not by shipping alternative document scaffolds. This is a mechanism constraint, not a preference: template overrides only resolve when a setup script invokes the resolver, and the specification command copies its template by literal path, so a template override for it would silently do nothing. Command overrides apply uniformly to every command, which makes them the only reliable single mechanism. The accepted cost is that the on-disk templates keep showing the stock shape while the Companion commands simply do not read them.
+Document shape SHALL be delivered by overriding command bodies, not by shipping alternative document templates. Template overrides only resolve when a setup script calls the resolver, and the specification command copies its template by literal path, so a template override there would do nothing. The on-disk templates keep showing the stock shape, and the Companion commands do not read them.
 
 #### Scenario: a Companion-shaped document is wanted
 - **WHEN** the desired shape differs from stock
@@ -57,7 +58,7 @@ Shape is delivered by overriding the command bodies, not by shipping alternative
 
 ### A command that injects a step into a numbered body MUST NOT restart the numbering
 
-Node bodies are concatenated, so numbering is a property of the *assembled* command, not of any one node. A node adding a step to a command whose numbering continues downstream SHALL use a sub-bullet or an unnumbered note rather than opening a fresh top-level number, and the check is made against the assembled body.
+A node adding a step to a command whose numbering continues downstream SHALL use a sub-bullet or an unnumbered note, not a fresh top-level number. The check is made against the assembled body, because node bodies are concatenated.
 
 #### Scenario: a node adds a step mid-command
 - **WHEN** the assembled body is reviewed
@@ -65,7 +66,7 @@ Node bodies are concatenated, so numbering is a property of the *assembled* comm
 
 ### The prompting contract is held by a static gate, not by convention
 
-The commands under the never-halts contract — the four lifecycle hooks, the living-spec reports and sync, completion, status, resume, and classify — SHALL be scanned on every change for instructions that stop to ask the user, and the clarify-type carrier SHALL be required to ask. The scan reads the command sources as text (negated mentions and fenced templates do not count), and a roster file it cannot find fails loudly rather than shrinking the surface it checks.
+On every change, a scan SHALL check the never-halts commands (the four lifecycle hooks, the living-spec reports and sync, completion, status, resume, and classify) for instructions that stop to ask the user, and SHALL require the clarify-type carrier to ask. The scan reads command sources as text, ignoring negated mentions and fenced templates. A roster file it cannot find fails loudly rather than shrinking the surface it checks.
 
 #### Scenario: a prompt instruction slips into a never-halts command
 
@@ -75,11 +76,11 @@ The commands under the never-halts contract — the four lifecycle hooks, the li
 #### Scenario: the clarify carrier stops asking
 
 - **WHEN** the clarify-type command body no longer contains an ask instruction
-- **THEN** the quality gate fails — asking is that command's purpose
+- **THEN** the quality gate fails, because asking is that command's purpose
 
 ### A shipped body never names a command in a spelling the host cannot resolve
 
-Commands have one canonical id in dot form, and several hosts register them dashed instead. A shipped body SHALL therefore name a command without a leading slash, so the name reads as an id to translate rather than as something to type verbatim, and every body that prints or dispatches a name SHALL carry the rule that says to use the spelling the project installed. The part that teaches that rule is the one place both spellings appear, because they are its subject. This SHALL be held by a scan over the shipped bodies rather than by review: the rule competes with every worked example around it, and three hand sweeps each left a residue in a file nobody thought to check — including the command names held as data in the status script, which are both printed to the user and dispatched on their behalf.
+A shipped body SHALL name a command without a leading slash, so the name reads as an id to translate, and every body that prints or dispatches a name SHALL carry the rule to use the spelling the project installed. The part that teaches that rule is the one place both the dot and dashed spellings appear. A scan over the shipped bodies SHALL enforce this, including command names held as data in the status script, because hand sweeps kept leaving residue.
 
 #### Scenario: a body names a command behind a slash
 
@@ -93,7 +94,7 @@ Commands have one canonical id in dot form, and several hosts register them dash
 
 ### Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them
 
-A switch that adds instruction text to command bodies MUST change which bodies get rendered, not toggle a passage inside them. With the switch off the text MUST be absent from the assembled body entirely, so an off render stays byte-identical to the frozen baseline and the parity gate keeps its meaning. The switch SHALL be declared in the project's own configuration and read through the existing loader, inheriting its failure table, and it MUST NOT introduce a second mechanism for changing command text. Because a body is a static file the agent reads, the switch necessarily affects the next dispatched command and never one already in flight.
+A switch that adds instruction text MUST change which bodies get rendered, not toggle a passage inside them, and with the switch off the text MUST be absent so the off render matches the frozen baseline. The switch SHALL be declared in the project's own configuration, read through the existing loader with its failure table, and MUST NOT add a second mechanism for changing command text. It affects the next dispatched command, never one already in flight.
 
 #### Scenario: the switch is off
 - **WHEN** the bodies are assembled
@@ -105,4 +106,4 @@ A switch that adds instruction text to command bodies MUST change which bodies g
 
 ## Uncovered
 
-_None — re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._
+_None. Re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._

@@ -2,17 +2,17 @@
 
 <!-- reviewed: d589a63e -->
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The commands that adopt, sync, validate, show and report on living specs are opt-in, read-honest and never halt the run. Without this contract, a clean report could be read as a verdict on files it never examined, and a check could rewrite the spec it was checking.
+The commands that adopt, sync, validate, show and report on living specs are opt-in, honest about what they read, and never halt the run. This keeps a clean report from passing as a verdict on unread files, and a check from rewriting the spec it checks.
 
 ## Requirements
 
 ### Living-spec commands are opt-in, non-halting, and honest about what they did not examine
 
-The commands that adopt, move, report drift on, and report coverage for living specs SHALL act only when the project has opted in, SHALL never fail the run, and — for the reporting pair — SHALL make no edits. Their output MUST state both what was examined and what was skipped with a reason, so a clean marker can never be read as a verdict on the whole configuration. A finding is a signal a surrounding workflow may act on; these commands do not gate.
+The adopt, move, drift and coverage commands SHALL act only when the project has opted in and SHALL never fail the run, and the drift and coverage reports SHALL make no edits. Their output MUST state what was examined and what was skipped with a reason. A finding is a signal for a surrounding workflow, and these commands do not gate.
 
 #### Scenario: the project has not opted in
 - **WHEN** one of these commands runs
@@ -24,7 +24,7 @@ The commands that adopt, move, report drift on, and report coverage for living s
 
 ### One command syncs every affected living spec from the current changes, uncommitted included
 
-The living-spec family SHALL include a sync command that, in a single pass, groups the working tree's changes — uncommitted edits, deletions, and untracked files, plus commits since each capability spec's baseline — by capability using the same derivation as the drift report's working-tree mode, and updates every affected capability spec in place. Updates are update-not-regenerate: content the change does not invalidate survives verbatim. The run ends with a synced/skipped report, never commits the spec edits, never redrafts a never-committed spec (that belongs to adoption), and inherits the family's opt-in, never-halt contract.
+A sync command SHALL, in one pass, group the working tree's changes (uncommitted edits, deletions, untracked files, and commits since each spec's baseline) by capability, using the drift report's working-tree derivation, and update every affected capability spec in place. It SHALL update rather than regenerate, keeping content the change does not invalidate verbatim. It ends with a synced/skipped report, never commits, never redrafts a never-committed spec, and keeps the family's opt-in, never-halt contract.
 
 #### Scenario: changes span several capabilities
 - **WHEN** the sync runs with working-tree changes touching multiple capability areas
@@ -37,7 +37,7 @@ The living-spec family SHALL include a sync command that, in a single pass, grou
 ### The shape check is a command, and it reports rather than gates
 <!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
 
-The command that checks living-spec shape SHALL act only when the project has opted in, SHALL make no edits, and SHALL never fail the run. Named a capability, it SHALL check only that capability's spec; unnamed, every living spec and every active feature spec's deltas. Its output MUST state both what was examined and what was skipped with a reason, so a clean report can never be read as a verdict on files that were never examined, and a capability name the registry does not list is a skip, never a clean result. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding: fixing is the author's decision, made with the finding in front of them.
+The shape check SHALL act only when opted in, make no edits, and never fail the run. Given a capability it SHALL check only that spec, otherwise every living spec and every active feature spec's deltas, and its output MUST state what was examined and what was skipped with a reason, treating an unregistered capability name as a skip. The body SHALL NOT direct the assistant to edit a spec to satisfy a finding, because fixing is the author's decision.
 
 #### Scenario: the command runs on a project with findings
 - **WHEN** it reports
@@ -61,7 +61,7 @@ The command that checks living-spec shape SHALL act only when the project has op
 
 ### A spec that is still true can say so, and stop drifting
 
-Drift is measured from the moment the spec was last committed, so a spec nobody needs to change drifts further every week and there is no way to record that someone read it against the code and found it correct. Left alone every capability ends up flagged, and a flag on everything is a flag on nothing. The drift report SHALL therefore take an explicit acceptance, per capability, which writes the commit it was read against into the spec itself. The record lives in the spec because committing it is what moves the baseline: kept anywhere else it would need its own bookkeeping to stay true, which is the problem it exists to solve. Nothing writes it on its own — reviewing is a claim a person makes, and a report that recorded its own review would be worth exactly as much as no report.
+The drift report SHALL take an explicit per-capability acceptance that writes the commit the spec was read against into the spec itself, since committing it is what moves the drift baseline. Nothing SHALL write an acceptance on its own, because a review is a claim a person makes. Without acceptance, drift grows on every unchanged spec until everything is flagged.
 
 #### Scenario: a spec is read and found correct
 - **WHEN** its capability is accepted
@@ -73,7 +73,7 @@ Drift is measured from the moment the spec was last committed, so a spec nobody 
 
 ### A living spec is readable one slice at a time, from a terminal
 
-A command SHALL print a capability's requirement headings, one named requirement with its scenarios, or the requirements whose file markers describe a given path, using the same requirement parser the load steps use. It SHALL be read-only, and every outcome — including an unregistered capability, a missing spec file, a name matching nothing, an ambiguous name, and a file nothing claims — SHALL exit successfully with the alternatives named.
+A read-only command SHALL print a capability's requirement headings, one named requirement with its scenarios, or the requirements whose file markers describe a path, using the load steps' requirement parser. Every outcome, including an unregistered capability, missing spec file, unmatched or ambiguous name, or unclaimed file, SHALL exit successfully with the alternatives named.
 
 #### Scenario: a reader asks for one requirement
 - **WHEN** the command is given a requirement heading that exists in exactly one capability
@@ -89,4 +89,4 @@ A command SHALL print a capability's requirement headings, one named requirement
 
 ## Uncovered
 
-_None — re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._
+_None. Re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._
