@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-09-17
+
 ### Fixed
 - **Drift no longer flags every capability that shares a folder.** When a requirement in one living spec names the changed file, sibling capabilities that only claim that folder through a broad pattern are not reported as drifted for it.
 
