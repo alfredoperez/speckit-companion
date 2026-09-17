@@ -4,7 +4,7 @@ import { UndoToast } from './UndoToast';
 import { Button } from './Button';
 
 const meta: Meta<typeof UndoToast> = {
-    title: 'Primitives/UndoToast',
+    title: 'VS Code Extension/Primitives/Undo toast',
     component: UndoToast,
 };
 export default meta;

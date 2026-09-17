@@ -63,7 +63,7 @@ import ctxPlannedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/sp
 import ctxImplementingRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.implementing.json?raw';
 import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
 
-const ctxSpecified = JSON.parse(ctxSpecifiedRaw) as SpecContextData;
+export const ctxSpecified = JSON.parse(ctxSpecifiedRaw) as SpecContextData;
 const ctxPlanned = JSON.parse(ctxPlannedRaw) as SpecContextData;
 const ctxImplementing = JSON.parse(ctxImplementingRaw) as SpecContextData;
 const ctxCompleted = JSON.parse(ctxCompletedRaw) as SpecContextData;
@@ -107,7 +107,7 @@ export function teamboardDocs(tasksMd: string, reached: 'specify' | 'plan' | 'ta
 }
 
 /** Core pipeline tabs, with `exists` telling the truth for this snapshot. */
-function coreDocsFor(reached: 'specify' | 'plan' | 'tasks') {
+export function coreDocsFor(reached: 'specify' | 'plan' | 'tasks') {
     return [
         mockDoc('spec', true, 'Specification'),
         mockDoc('plan', reached !== 'specify', 'Plan'),
@@ -116,12 +116,12 @@ function coreDocsFor(reached: 'specify' | 'plan' | 'tasks') {
 }
 
 /** The two-button pause footer: Regenerate, plus the pill naming the next step. */
-const pauseFooter = (forwardLabel: string): SerializedFooterAction[] => [
+export const pauseFooter = (forwardLabel: string): SerializedFooterAction[] => [
     { id: 'regenerate', label: 'Regenerate', scope: 'step', tooltip: 'Re-run only the current step' },
     { id: 'approve', label: forwardLabel, scope: 'step', tooltip: 'Approve this step and continue' },
 ];
 
-const steps = (
+export const steps = (
     specify: string,
     plan: string,
     tasks: string,
@@ -189,7 +189,7 @@ const TALL_DOSSIER_CSS = `
 `;
 
 const meta: Meta = {
-    title: 'Video Capture/Episode 1 · Teamboard',
+    title: 'Scenes/Teamboard Run',
     // Shared with ReadmeCapture.stories.tsx (the README hero composite), which
     // reuses the mid-plan Teamboard state rather than forking the fixtures.
     excludeStories: [

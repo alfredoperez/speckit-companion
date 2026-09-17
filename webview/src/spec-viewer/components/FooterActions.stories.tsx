@@ -21,7 +21,7 @@ import { FooterActions } from './FooterActions';
 import { mockNavState } from './__stories__/mockData';
 
 const meta: Meta<typeof FooterActions> = {
-    title: 'Viewer/FooterActions',
+    title: 'VS Code Extension/Spec Viewer/Footer actions',
     component: FooterActions,
 };
 export default meta;

@@ -14,7 +14,7 @@ const seedStatus = (status: string) => {
 };
 
 const meta: Meta<typeof StepTab> = {
-    title: 'Viewer/StepTab',
+    title: 'VS Code Extension/Spec Viewer/Step tab',
     component: StepTab,
     decorators: [(Story) => {
         // Reset: a status seeded by one story would otherwise decide the next one's.

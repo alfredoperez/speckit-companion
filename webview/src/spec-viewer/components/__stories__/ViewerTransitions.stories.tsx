@@ -28,7 +28,7 @@ import { CreateSpecMock } from '../../../spec-editor/CreateSpecMock';
 import { mockDoc, mockNavState } from './mockData';
 
 const meta: Meta = {
-    title: 'Viewer/Transitions',
+    title: 'VS Code Extension/Spec Viewer/Transitions',
     parameters: {
         layout: 'fullscreen',
         docs: {

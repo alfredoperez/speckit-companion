@@ -6,7 +6,7 @@ import context394 from '../__fixtures__/specs/394-adopt-codex-design/.spec-conte
 
 /** The viewer's **Tasks** page — a whole real phased tasks.md. */
 const meta: Meta<typeof MarkdownDoc> = {
-    title: 'Viewer/Markdown Rendering/Tasks',
+    title: 'VS Code Extension/Spec Viewer/Markdown Rendering/Tasks/Document',
     component: MarkdownDoc,
 };
 export default meta;

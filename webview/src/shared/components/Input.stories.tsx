@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { Input } from './Input';
 
 const meta: Meta<typeof Input> = {
-    title: 'Primitives/Input',
+    title: 'VS Code Extension/Primitives/Input',
     component: Input,
     argTypes: {
         variant: { control: 'select', options: ['refine', 'inline-edit', 'editor'] },

@@ -12,7 +12,7 @@ import type { ComponentChildren } from 'preact';
 import '../../../styles/spec-viewer/_install-banner.css';
 
 const meta: Meta = {
-    title: 'Install nudges/Every surface',
+    title: 'VS Code Extension/Install Nudges',
     parameters: {
         layout: 'fullscreen',
         docs: {

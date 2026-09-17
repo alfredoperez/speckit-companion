@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { InlineEditor } from './InlineEditor';
 
 const meta: Meta<typeof InlineEditor> = {
-    title: 'Viewer/InlineEditor',
+    title: 'VS Code Extension/Spec Viewer/Inline editor',
     component: InlineEditor,
 };
 export default meta;

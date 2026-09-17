@@ -18,7 +18,7 @@ import type { ViewerState, TaskSummary, Transition, NavState } from '../types';
 import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
 const meta: Meta<typeof ActivityPanel> = {
-    title: 'Viewer/Activity/ActivityPanel',
+    title: 'VS Code Extension/Spec Viewer/Overview/Activity panel',
     component: ActivityPanel,
     decorators: [
         (Story) => (

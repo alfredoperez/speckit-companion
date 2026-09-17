@@ -10,7 +10,7 @@ import { CreateSpecMock } from '../CreateSpecMock';
 import '../../../styles/spec-editor.css';
 
 const meta: Meta = {
-    title: 'SpecEditor/CreateSpec',
+    title: 'VS Code Extension/Create Spec',
     parameters: {
         layout: 'fullscreen',
         docs: {

@@ -43,6 +43,10 @@ The default mode writes into `docs/screenshots/generated/`, whose filenames are 
 
 A clip capture's pixel size is a contract. Every rect in a composition's `BEATS` array is a real element box measured in that capture's own CSS pixels, so a capture that comes back a different size silently aims every camera move at the wrong element with nothing to fail on. Every story feeding one composition declares the same `parameters.capture` size, and changing it means re-measuring that composition's rects.
 
+## Article figures
+
+An article figure is one product surface inside a fixed frame: a title chip that names the screen, the site's chevron wordmark, the capture, and a caption with the mascot, plus measured outlines when a region needs pointing at. The frame is `webview/src/spec-viewer/__stories__/FigureCapture.stories.tsx`, one story per figure, and `node scripts/capture-docs-images.mjs --only figure-` writes them to `docs/screenshots/generated/figure-*.png`. Figures are always shot in the violet palette: each entry carries `theme: 'violet'`, which the script passes to the preview as the Storybook theme global, so the active capture palette is untouched. The frame's own colours are the site's Constellation tokens and its text is Geist, because a figure is read on the blog; the reasoning is in the vault's figure style guide. Articles copy a figure into the vault under an `IMG-` name; nothing about export changes.
+
 ## The capture palette is a variable
 
 Every story renders in the palette `.storybook/capture-theme.ts` marks active, so that file is where a screenshot's colours are decided. It used to be a hand-maintained wall of `--vscode-*` literals inside `.storybook/preview.tsx`, one hex per key with nothing tying any of them together; it is now its own module written in named roles, and `preview.tsx` only reads from it.

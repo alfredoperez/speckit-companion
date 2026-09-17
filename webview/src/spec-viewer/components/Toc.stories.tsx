@@ -87,7 +87,7 @@ const LONG_HEADINGS: Heading[] = [
 ];
 
 const meta: Meta<typeof TocHarness> = {
-    title: 'Viewer/Toc',
+    title: 'VS Code Extension/Spec Viewer/Table of contents',
     component: TocHarness,
 };
 export default meta;

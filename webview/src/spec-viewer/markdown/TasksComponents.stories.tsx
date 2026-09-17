@@ -7,7 +7,7 @@ import ctx327 from '../../../../specs/327-install-banner-responsive/.spec-contex
 /** Tasks-page renderers in isolation: phase headers, and the capture merge that
  * folds what each task actually did + the files it touched into the checklist. */
 const meta: Meta<typeof MarkdownDoc> = {
-    title: 'Viewer/Markdown Rendering/Tasks/Components',
+    title: 'VS Code Extension/Spec Viewer/Markdown Rendering/Tasks/Components',
     component: MarkdownDoc,
 };
 export default meta;

@@ -120,7 +120,7 @@ const docs393: DocSet = {
 };
 
 const meta: Meta = {
-    title: 'Viewer/Full Viewer',
+    title: 'VS Code Extension/Spec Viewer/Full viewer',
     parameters: {
         layout: 'fullscreen',
         docs: {

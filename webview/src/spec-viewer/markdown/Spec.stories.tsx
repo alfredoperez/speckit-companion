@@ -9,7 +9,7 @@ import spec008 from '../../../../specs/008-spec-viewer-ux/spec.md?raw';
  * see the full document; drill into individual renderers under Components.
  */
 const meta: Meta<typeof MarkdownDoc> = {
-    title: 'Viewer/Markdown Rendering/Spec',
+    title: 'VS Code Extension/Spec Viewer/Markdown Rendering/Spec/Document',
     component: MarkdownDoc,
 };
 export default meta;

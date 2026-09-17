@@ -43,7 +43,7 @@ function One({ children }: { children: preact.ComponentChildren }) {
     return <div class="builder">{children}</div>;
 }
 
-const meta: Meta = { title: 'Pipeline Builder/Components' };
+const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Components' };
 export default meta;
 type Story = StoryObj;
 

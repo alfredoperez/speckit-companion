@@ -4,7 +4,7 @@ import { StaleBanner } from './StaleBanner';
 import { mockNavState, stalePlan } from './__stories__/mockData';
 
 const meta: Meta<typeof StaleBanner> = {
-    title: 'Viewer/StaleBanner',
+    title: 'VS Code Extension/Spec Viewer/Stale banner',
     component: StaleBanner,
 };
 export default meta;

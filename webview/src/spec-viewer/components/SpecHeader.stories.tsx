@@ -4,7 +4,7 @@ import { SpecHeader } from './SpecHeader';
 import { mockNavState } from './__stories__/mockData';
 
 const meta: Meta<typeof SpecHeader> = {
-    title: 'Viewer/SpecHeader',
+    title: 'VS Code Extension/Spec Viewer/Spec header',
     component: SpecHeader,
     // Reset body[data-spec-status] before every story so a previous status
     // variant doesn't leak into the next one. Status stories below re-apply

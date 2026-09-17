@@ -3,7 +3,7 @@ import { Tooltip } from './Tooltip';
 import { Button } from './Button';
 
 const meta: Meta<typeof Tooltip> = {
-    title: 'Primitives/Tooltip',
+    title: 'VS Code Extension/Primitives/Tooltip',
     component: Tooltip,
 };
 export default meta;

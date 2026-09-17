@@ -48,7 +48,7 @@ function LivingDoc({ md, coverage }: LivingDocProps) {
 }
 
 const meta: Meta<typeof LivingDoc> = {
-    title: 'Viewer/Markdown Rendering/Living/Components',
+    title: 'VS Code Extension/Living Spec Viewer/Components',
     component: LivingDoc,
 };
 export default meta;

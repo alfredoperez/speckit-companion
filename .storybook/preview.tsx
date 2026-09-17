@@ -2,6 +2,7 @@ import type { Preview } from '@storybook/preact';
 import { navState } from '../webview/src/spec-viewer/signals';
 import {
     activeCapturePalette,
+    constellationViolet,
     beardedMonokaiBlack,
     beardedVividLight,
     captureFontVars,
@@ -42,6 +43,12 @@ const themes: Record<string, StoryTheme> = {
         vars: deriveVscodeVars(beardedVividLight),
     },
     'high-contrast': { bodyClass: 'vscode-high-contrast', vars: highContrast },
+    // The dark cut of the brand. Article figures are always shot in it; the
+    // capture script selects it per entry (`theme: 'violet'`).
+    violet: {
+        bodyClass: constellationViolet.bodyClass,
+        vars: deriveVscodeVars(constellationViolet),
+    },
 };
 
 // Mock vscode API
@@ -63,6 +70,7 @@ const preview: Preview = {
                     { value: 'monokai-black', title: 'Bearded Monokai Black (dark)' },
                     { value: 'vivid-light', title: 'Bearded Vivid Light (light)' },
                     { value: 'high-contrast', title: 'VS Code High Contrast' },
+                    { value: 'violet', title: 'Constellation Violet (figures)' },
                 ],
                 dynamicTitle: true,
             },
@@ -73,17 +81,19 @@ const preview: Preview = {
     },
     parameters: {
         options: {
-            // Surface the Markdown Rendering catalog first under Viewer, grouped
-            // by the tab/artifact it appears in.
+            // One tree, four apps: Core (the brand), the extension, the website,
+            // content, then the scenes every capture is shot from. DESIGN.md.
             storySort: {
                 order: [
-                    'Viewer',
-                    ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts']],
-                    'Primitives',
-                    'SpecEditor',
-                    // Video capture stories sort last: they are frames for the
-                    // YouTube series, not a component catalog.
-                    'Video Capture',
+                    'Core',
+                    ['Foundations'],
+                    'VS Code Extension',
+                    ['Primitives', 'Create Spec', 'Spec Viewer', ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts'], 'Overview'], 'Living Spec Viewer', 'Sidebar', 'Pipeline Builder', 'Install Nudges'],
+                    'Website',
+                    'Content',
+                    ['Figure', 'Article Figures', 'Carousel', 'Post Images'],
+                    // Scenes are the fixture-fed states the captures reuse, not a catalog.
+                    'Scenes',
                 ],
             },
         },
