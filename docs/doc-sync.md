@@ -48,6 +48,7 @@
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
 8. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
+9. Run the manual pass in [`manual-verification.md`](./manual-verification.md) on a local install. Anything that fails becomes an issue before the tag, not after it.
 
 ## Changelog voice
 
