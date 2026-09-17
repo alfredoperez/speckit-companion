@@ -1,31 +1,31 @@
 # Webview Shared Rendering — Living Spec
 
-> [DRAFT] Surface-first draft from existing code — every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
+> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
 
 ## Purpose
 
-The contracts a webview must honour when it turns a spec file into something a user can read and act on: every control maps back to a source line, one classifier decides what a line allows, and untrusted content never becomes live markup. Without them, edits land on the wrong line or spec text injects into the page.
+The contracts a webview honours when it renders a spec file: every control maps to a source line, one classifier decides what a line allows, and untrusted content never becomes live markup.
 
 ## Requirements
 
-> The rendering, classification, and overlay requirements below are the contracts a consuming webview must satisfy. Their implementations live in the viewer, not in this shared area — the standalone copies here were removed.
+> A consuming webview must satisfy the requirements below. Their implementations live in the viewer, not in this shared area.
 
 ### Rendered documents stay addressable back to their source lines
 
-Rendering MUST preserve the mapping from each interactive element to the line number it came from in the original markdown, and consumers MUST act on that number rather than on the rendered DOM. Editing, deleting, and refinement all mutate a file on disk; the rendered tree is a lossy projection of that file, so anything derived from the DOM instead of the source position will eventually target the wrong line.
+Rendering MUST preserve the source line number behind each interactive element, and consumers MUST act on that number rather than on the rendered DOM. The DOM is a lossy projection of the file, so edits derived from it eventually target the wrong line.
 
 #### Scenario: a line is edited in place
 - **WHEN** the user commits an inline edit
-- **THEN** the request identifies the source line and the new plain text
-- **AND** the extension — not the webview — is what rewrites the file
+- **THEN** the request carries the source line and the new plain text
+- **AND** the extension, not the webview, rewrites the file
 
 #### Scenario: content the user cannot act on
-- **WHEN** a region is not individually editable (a fenced block, a rule, a top-level title)
-- **THEN** it renders without per-line controls rather than with controls that would misfire
+- **WHEN** a region is not individually editable, such as a fenced block, a rule, or a top-level title
+- **THEN** it renders without per-line controls
 
 ### One classifier decides what each line is and what may be done to it
 
-Whether a line can be deleted and whether it can be refined MUST come from a single classification pass, and both the renderer and any consumer offering those affordances MUST read the same answer. Two independent opinions about "is this removable" drift, and the failure is silent: a control appears that the handler will not honour, or a legitimate action is hidden.
+Whether a line can be deleted or refined MUST come from a single classification pass. The renderer and every consumer offering those affordances MUST read the same answer.
 
 #### Scenario: a structural heading is rendered
 - **WHEN** the line defines document or section structure
@@ -33,24 +33,24 @@ Whether a line can be deleted and whether it can be refined MUST come from a sin
 
 #### Scenario: an unrecognised line shape appears
 - **WHEN** content matches no known markdown shape
-- **THEN** it still renders as readable prose with the affordances its classification grants, rather than being dropped
+- **THEN** it still renders as readable prose with the affordances its classification grants
 
 ### Spec content is untrusted input and must never reach an attribute through string markup
 
-Spec files, workflow definitions, filenames, and fence languages are all authored outside this codebase, and fenced regions in particular MUST render as displayed content that is never live in the page — highlighting and diagram rendering are applied after the content is safely in the DOM. The shared escaping helper is safe **only for element content** — it neutralises angle brackets and ampersands but not attribute quotes — so any markup that carries such a value into an attribute MUST be built with DOM APIs (create element, set property, set text) rather than assembled as a string. Treating the helper as a general-purpose sanitiser is the recurring way injection gets reintroduced here. Link destinations and other URL-shaped values additionally require an allow-list of safe schemes, since escaping alone does not make a destination safe to navigate to.
+Spec files, workflow definitions, filenames, and fence languages are untrusted, and fenced regions MUST render as displayed content that is never live in the page, with highlighting and diagrams applied after the content is safely in the DOM. The shared escaping helper does not escape attribute quotes, so any such value that lands in an attribute MUST be set through DOM APIs rather than string markup. Link destinations and other URL-shaped values additionally require an allow-list of safe schemes.
 
 #### Scenario: user content is placed inside an element
 - **WHEN** a value is rendered as visible text
 - **THEN** the shared escaping helper is sufficient
 
 #### Scenario: user content becomes an attribute value
-- **WHEN** a value must land in an attribute — a label, a title, an image source, a link destination, a data value
-- **THEN** the element is constructed programmatically and the value assigned as an attribute
+- **WHEN** a value must land in an attribute, such as a label, title, image source, link destination, or data value
+- **THEN** the element is built programmatically and the value assigned as an attribute
 - **AND** no string-concatenated markup carrying that value is assigned to a container's inner HTML
 
 #### Scenario: a link destination is rendered
 - **WHEN** markdown supplies an inline link
-- **THEN** only destinations with an allowed scheme produce a navigable link; anything else renders as inert text
+- **THEN** only destinations with an allowed scheme produce a navigable link, and anything else renders as inert text
 
 #### Scenario: a fence contains markup
 - **WHEN** a spec includes HTML or script text inside a code fence
@@ -62,9 +62,9 @@ Spec files, workflow definitions, filenames, and fence languages are all authore
 
 ### Progress indicators are derived from the document, not stored alongside it
 
-Completion state shown against phases or steps MUST be computed from the document's own contents on each render rather than tracked as separate state. One fact with two derivations will disagree, and the disagreement surfaces as a header claiming a phase is finished while the items beneath it are not. [inferred]
+Completion state shown against phases or steps MUST be computed from the document's contents on each render, not tracked as separate state. [inferred]
 
-Known gap: the step-progress surface still encodes a fixed phase set that predates the configurable pipeline, so it cannot represent a workflow of a different shape. Aligning it is outstanding work, tied to the same change that makes the document panel's phase stepper follow the spec's recorded workflow.
+Known gap: the step-progress surface still encodes a fixed phase set, so it cannot represent a workflow of a different shape. Fixing it is tied to making the document panel's phase stepper follow the spec's recorded workflow.
 
 #### Scenario: an item is checked off
 - **WHEN** the underlying document changes
@@ -72,8 +72,8 @@ Known gap: the step-progress surface still encodes a fixed phase set that predat
 
 #### Scenario: a phase contains no trackable items
 - **WHEN** there is nothing to count
-- **THEN** it is not reported as complete merely because nothing is outstanding
+- **THEN** it is not reported as complete
 
 ## Uncovered
 
-_None — every file in the area was read._
+_None. Every file in the area was read._
