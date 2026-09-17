@@ -1,4 +1,6 @@
+import { useCallback, useMemo, useState } from 'preact/hooks';
 import { navState } from '../../signals';
+import { UndoToast } from '../../../shared/components/UndoToast';
 import type { LivingHeaderMeta, VSCodeApi } from '../../types';
 
 declare const vscode: VSCodeApi;
@@ -13,18 +15,41 @@ export function livingCondition(meta: LivingHeaderMeta): string {
     return 'In sync';
 }
 
-/** The living spec's action bar: Adopt and Validate always, Sync only once drift is found. */
+/** The living spec's action bar: Approve all while anything is adopted, Adopt and Validate always, Sync only once drift is found. */
 export function LivingFooter() {
-    const meta = navState.value?.livingMeta;
+    const ns = navState.value;
+    const meta = ns?.livingMeta;
+    const undo = ns?.livingUndo ?? null;
+    const [spent, setSpent] = useState<string | null>(null);
+    // Measured once per action: a countdown recomputed on every frame's render would restart itself.
+    const remaining = useMemo(() => (undo ? undo.expiresAt - Date.now() : 0), [undo?.token]);
+    const onElapse = useCallback(() => setSpent(undo?.token ?? null), [undo?.token]);
+    const onUndo = useCallback(() => {
+        if (!undo) return;
+        vscode.postMessage({ type: 'undoLivingAction', token: undo.token });
+        setSpent(undo.token);
+    }, [undo?.token]);
     if (!meta) return null;
     const drifted = !!meta.drifted;
-    const post = (type: 'livingUpdate' | 'livingValidate' | 'livingAdopt') => () =>
+    const adopted = ns?.livingOverview?.requirements.filter((r) => r.adopted).length ?? 0;
+    const post = (type: 'livingUpdate' | 'livingValidate' | 'livingAdopt' | 'approveSpec') => () =>
         vscode.postMessage({ type });
 
     return (
         <footer class="actions">
             <span class="footer-context">{livingCondition(meta)}</span>
             <div class="actions-right">
+                {adopted > 0 && (
+                    <button
+                        type="button"
+                        class="secondary"
+                        title="Approve every adopted requirement and clear the draft banner. You can undo for 5 seconds."
+                        onClick={post('approveSpec')}
+                    >
+                        <span class="codicon codicon-check" aria-hidden="true" />
+                        Approve all {adopted}
+                    </button>
+                )}
                 <button
                     type="button"
                     class="secondary"
@@ -53,6 +78,16 @@ export function LivingFooter() {
                     </button>
                 )}
             </div>
+            {undo && remaining > 0 && (
+                <UndoToast
+                    key={undo.token}
+                    message={undo.kind === 'remove' ? 'Requirement removed' : 'Adopted requirements approved'}
+                    countdownMs={remaining}
+                    onElapse={onElapse}
+                    onUndo={onUndo}
+                    active={spent !== undo.token}
+                />
+            )}
         </footer>
     );
 }

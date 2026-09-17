@@ -15,6 +15,7 @@ import {
     requirementIds,
     requirementSlices,
     requirementsForChange,
+    readMainCopy,
     CapabilityHealth,
 } from '../specs/livingSpecsModel';
 
@@ -93,17 +94,16 @@ export function buildLivingHeaderMeta(
 }
 
 /**
- * Coverage and drift for a capability, through the Living Specs tree's own
- * computation. Never rejects — a failure leaves both fields absent, which the
- * header renders as nothing rather than as a zero.
+ * Coverage, drift and new requirements for a capability, coverage and drift
+ * through the Living Specs tree's own computation. Never rejects — a failure
+ * leaves its fields absent, which the header renders as nothing rather than as a zero.
  */
 export async function resolveLivingHealth(
     workspaceRoot: string,
     meta: LivingHeaderMeta,
-): Promise<Pick<LivingHeaderMeta, 'coverage' | 'drifted' | 'driftedRequirements'>> {
-    let health: CapabilityHealth;
-    try {
-        health = await readCapabilityHealth(workspaceRoot, {
+): Promise<Pick<LivingHeaderMeta, 'coverage' | 'drifted' | 'driftedRequirements' | 'newRequirements'>> {
+    const [health, fresh] = await Promise.all([
+        readCapabilityHealth(workspaceRoot, {
             name: meta.capabilityName,
             spec: meta.specPath,
             location: meta.location,
@@ -111,13 +111,28 @@ export async function resolveLivingHealth(
             tiers: [],
             match: meta.match,
             exclude: [],
-        });
-    } catch {
-        return {};
-    }
+        }).catch((): CapabilityHealth | undefined => undefined),
+        newHeadings(workspaceRoot, meta.specPath),
+    ]);
+    const facts = fresh ? { newRequirements: fresh } : {};
+    if (!health) return facts;
     const { driftedFiles, ...rest } = health;
-    if (!driftedFiles) return rest;
-    return { ...rest, driftedRequirements: driftedHeadings(workspaceRoot, meta.specPath, driftedFiles) };
+    if (!driftedFiles) return { ...rest, ...facts };
+    return { ...rest, driftedRequirements: driftedHeadings(workspaceRoot, meta.specPath, driftedFiles), ...facts };
+}
+
+/** Headings the working copy has and `main`'s copy lacks; undefined when either copy cannot be read. Nothing is written. */
+async function newHeadings(workspaceRoot: string, specPath: string): Promise<string[] | undefined> {
+    const onMain = await readMainCopy(workspaceRoot, specPath);
+    if (onMain === undefined) return undefined;
+    let text: string;
+    try {
+        text = fs.readFileSync(path.join(workspaceRoot, specPath), 'utf8');
+    } catch {
+        return undefined;
+    }
+    const old = new Set(requirementSlices(onMain).map((s) => s.heading.trim()));
+    return [...new Set(requirementSlices(text).map((s) => s.heading.trim()).filter((h) => !old.has(h)))];
 }
 
 /** Requirements whose touches marker names a drifted file. An unmarked requirement never drifts. */

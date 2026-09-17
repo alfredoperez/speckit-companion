@@ -7,9 +7,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { randomUUID } from "crypto";
 import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
-import { createMessageHandlers } from "./messageHandlers";
+import { createMessageHandlers, type LivingUndoAction } from "./messageHandlers";
 import { computeStaleness, isStalenessRelevant } from "./staleness";
 import {
   computePanelDerivedState,
@@ -53,8 +54,8 @@ import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody } from "./livingDocs";
-import { requirementSlices } from "../specs/livingSpecsModel";
+import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody, appendLivingRemoval } from "./livingDocs";
+import { requirementLinks, requirementSlices } from "../specs/livingSpecsModel";
 import { buildLivingHeaderMeta, resolveLivingHealth } from "./livingHeaderMeta";
 import type { LivingHeaderMeta } from "./types";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
@@ -75,6 +76,9 @@ import {
   resolveWorkflow,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
+
+/** How long Approve all and Remove stay undoable. */
+const LIVING_UNDO_MS = 5000;
 
 // Re-export utility functions for external use
 export {
@@ -153,6 +157,9 @@ async function ensureSpecContext(
 export class SpecViewerProvider {
   /** Per-spec-directory panel instances; debounce-timer cleanup lives in the registry's `delete`. */
   private readonly panels = new PanelRegistry();
+
+  /** At most one Undo per living panel, held here because every write regenerates the webview page. */
+  private readonly livingUndos = new Map<string, LivingUndoAction & { token: string; expiresAt: number; timer: ReturnType<typeof setTimeout> }>();
 
   /** Fires VS Code + OS notifications when a dispatched step completes. */
   private readonly stepCompletionNotifier = new StepCompletionNotifier();
@@ -288,6 +295,7 @@ export class SpecViewerProvider {
     if (existing?.state.living) {
       // Re-anchor: two colocated capabilities can share a directory (the
       // panel key), so the clicked file decides which family renders.
+      if (existing.state.livingSourcePath !== filePath) this.settleLivingUndo(specDirectory);
       existing.state = {
         ...existing.state,
         livingSourcePath: filePath,
@@ -529,6 +537,7 @@ export class SpecViewerProvider {
         `[SpecViewer] Panel disposed for ${specDirectory}`,
       );
       this.stepCompletionNotifier.forget(specDirectory);
+      this.settleLivingUndo(specDirectory);
       // PanelRegistry.delete clears any pending debounceTimer for us.
       this.panels.delete(specDirectory);
     });
@@ -559,6 +568,8 @@ export class SpecViewerProvider {
       },
       outputChannel: this.outputChannel,
       context: this.context,
+      offerLivingUndo: (dir, action) => this.offerLivingUndo(dir, action),
+      takeLivingUndo: (dir, token) => this.takeLivingUndo(dir, token),
     });
 
     instance.panel.webview.onDidReceiveMessage(
@@ -566,6 +577,36 @@ export class SpecViewerProvider {
       undefined,
       this.context.subscriptions,
     );
+  }
+
+  /** Hold an action as the panel's one Undo for LIVING_UNDO_MS; the action it replaces stands. */
+  private offerLivingUndo(specDirectory: string, action: LivingUndoAction): void {
+    this.settleLivingUndo(specDirectory);
+    const token = randomUUID();
+    const timer = setTimeout(() => this.settleLivingUndo(specDirectory, token), LIVING_UNDO_MS);
+    this.livingUndos.set(specDirectory, { ...action, token, expiresAt: Date.now() + LIVING_UNDO_MS, timer });
+  }
+
+  /** The held action for a current token, no longer held; undefined for a stale one. */
+  private takeLivingUndo(specDirectory: string, token: string): LivingUndoAction | undefined {
+    const held = this.livingUndos.get(specDirectory);
+    if (!held || held.token !== token) return undefined;
+    clearTimeout(held.timer);
+    this.livingUndos.delete(specDirectory);
+    return held;
+  }
+
+  /** The held action stands: drop it, and record a removal. */
+  private settleLivingUndo(specDirectory: string, token?: string): void {
+    const held = this.livingUndos.get(specDirectory);
+    if (!held || (token !== undefined && held.token !== token)) return;
+    clearTimeout(held.timer);
+    this.livingUndos.delete(specDirectory);
+    if (held.kind === "remove" && held.heading) {
+      appendLivingRemoval(held.filePath, held.capability, held.heading).catch((err) =>
+        this.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${held.heading}": ${err}`),
+      );
+    }
   }
 
   /**
@@ -613,10 +654,20 @@ export class SpecViewerProvider {
     // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
     // DRAFT so the header stops contradicting the first line of the document.
     const isDraft = isLivingDraft(content);
+    const links = workspaceRoot && meta ? requirementLinks(workspaceRoot, meta.capabilityName) : undefined;
     const overview = {
       purpose: livingPurposeBody(specTierContent),
-      requirements: requirementSlices(specTierContent).map(r => ({ heading: r.heading, adopted: !!r.adopted })),
+      requirements: requirementSlices(specTierContent).map(r => ({
+        heading: r.heading,
+        adopted: !!r.adopted,
+        leansOn: links?.get(r.heading)?.leansOn ?? [],
+        leanedOnBy: links?.get(r.heading)?.leanedOnBy ?? [],
+      })),
     };
+    const undo = this.livingUndos.get(specDirectory);
+    const livingUndo = undo && undo.expiresAt > Date.now()
+      ? { token: undo.token, kind: undo.kind, expiresAt: undo.expiresAt }
+      : null;
 
     instance.state = {
       ...instance.state,
@@ -659,6 +710,7 @@ export class SpecViewerProvider {
       heading !== null,
       instance.state.landing,
       overview,
+      livingUndo,
     );
 
     this.outputChannel.appendLine(
@@ -683,7 +735,7 @@ export class SpecViewerProvider {
     if (!workspaceRoot) return;
 
     const health = await resolveLivingHealth(workspaceRoot, meta);
-    if (health.coverage === undefined && health.drifted === undefined) return;
+    if (health.coverage === undefined && health.drifted === undefined && health.newRequirements === undefined) return;
 
     const instance = this.panels.get(specDirectory);
     if (!instance?.state.living) return;

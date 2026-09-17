@@ -114,6 +114,29 @@ describe('living specs status bar', () => {
     });
 });
 
+describe('the picker command', () => {
+    it('opens the picked requirement in the living viewer', async () => {
+        const root = workspace({ 'living-specs.yml': REGISTRY, 'src/alpha/alpha.spec.md': ALPHA_SPEC });
+        try {
+            jest.clearAllMocks();
+            activate(root, 'src/alpha/due-date/index.ts');
+            register();
+            const pick = (vscode.commands.registerCommand as jest.Mock).mock.calls
+                .find(([id]) => id === 'speckit.livingSpecs.forFile')![1];
+            (vscode.window.showQuickPick as jest.Mock).mockImplementationOnce(async (items: any[]) =>
+                items.find(i => i.requirement));
+            await pick();
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'speckit.viewSpecDocument',
+                path.join(root, 'src/alpha/alpha.spec.md'),
+                { living: true, requirement: 'Users can set a due date' },
+            );
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
 describe('the picker list', () => {
     const claim = (over: Partial<FileClaim> = {}): FileClaim => ({
         capability: 'alpha',

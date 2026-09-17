@@ -6,7 +6,7 @@ jest.mock('fs', () => {
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { readLivingSpecs, readCapabilityHealth, claimsForFile, __test } from '../livingSpecsModel';
+import { readLivingSpecs, readCapabilityHealth, claimsForFile, readMainCopy, __test } from '../livingSpecsModel';
 import { countLivingFacts } from '../../spec-viewer/livingHeaderMeta';
 
 const realStatSync = jest.requireActual('fs').statSync;
@@ -693,4 +693,22 @@ describe('capability order agrees with the resolver', () => {
             expect(claimsForFile(root, file).map(c => c.capability)).toEqual(order);
         }
     );
+});
+
+describe('readMainCopy', () => {
+    it("returns main's copy of the file", async () => {
+        const git = jest.fn().mockResolvedValue('# On main\n');
+        await expect(readMainCopy('/w', 'capabilities/todos/spec.md', { git })).resolves.toBe('# On main\n');
+        expect(git).toHaveBeenCalledWith(['show', 'main:./capabilities/todos/spec.md'], '/w');
+    });
+
+    it('is undefined when git exits non-zero, as for a file main lacks', async () => {
+        const git = async () => { throw new Error("fatal: path 'x' exists on disk, but not in 'main'"); };
+        await expect(readMainCopy('/w', 'x.md', { git })).resolves.toBeUndefined();
+    });
+
+    it('is undefined when git does not answer in time', async () => {
+        const git = () => new Promise<string>(() => undefined);
+        await expect(readMainCopy('/w', 'x.md', { git, timeoutMs: 5 })).resolves.toBeUndefined();
+    });
 });

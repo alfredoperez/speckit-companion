@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Approve every adopted requirement at once, and take it back.** The bar at the bottom of a living spec offers Approve all with the number still adopted, in place of the header's Approve spec. For 5 seconds after approving, or after removing a requirement, Undo puts the file back exactly as it was. If the file changed in the meantime, Undo leaves it alone and tells you why.
+- **Requirements a branch added are marked New.** On a feature branch, a requirement whose heading is not in `main`'s copy of the spec gets a green edge and a New pill, and the header counts them. Nothing is written to the file, so the marks go away once the branch merges.
+- **Each requirement shows what it leans on and what leans on it.** Under a card's files, Leans on lists the requirements it aligns to and Leaned on by lists requirements in other specs that align to it. Click one to open that spec at that requirement. A link to a requirement or capability that does not exist stays on the card, marked broken.
+- **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
+
+### Changed
+- **Remove is remembered.** A requirement you remove and do not undo is recorded next to the spec as removed on purpose, so validation stops reporting a change that names it as missing. Remove now only refuses while a requirement in another spec still leans on the one you are removing.
+
 ## [0.33.0] - 2026-09-17
 
 ### Added

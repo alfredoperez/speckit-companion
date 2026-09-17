@@ -615,7 +615,7 @@ def _delta_blocks(text: str) -> list:
 
 
 def check_feature_deltas(text: str, path: str, known_capabilities: list,
-                         target_texts: dict, default_capability=None) -> list:
+                         target_texts: dict, default_capability=None, removed=None) -> list:
     """Every shape finding in one feature spec's delta sections, ordered by line.
 
     `target_texts` maps a capability name to the current text of its living
@@ -626,6 +626,9 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
     An unmarked block belongs to `default_capability`, exactly as the fold
     routes it. Leaving it unresolved is how an unmarked delta escaped the check
     that exists to catch it.
+
+    `removed` maps a capability name to the headings recorded as removed on
+    purpose; a delta naming one of those is not pointing at nothing.
     """
     known = set(known_capabilities or [])
     findings: list = []
@@ -671,7 +674,7 @@ def check_feature_deltas(text: str, path: str, known_capabilities: list,
         if block["verb"] not in ("MODIFIED", "REMOVED"):
             continue
         for heading, line in block["headings"]:
-            if heading in present:
+            if heading in present or heading in (removed or {}).get(cap, ()):
                 continue
             # A warning, not an error: the fold promotes a MODIFIED with no
             # match into an addition and a REMOVED with no match removes
@@ -805,6 +808,7 @@ def build_report(root: str = ".", capability: str = "") -> dict:
     skipped: list = []
     checked = 0
     target_texts: dict = {}
+    removed: dict = {}
     known: list = []
 
     for cap in living.get("capabilities") or []:
@@ -824,6 +828,7 @@ def build_report(root: str = ".", capability: str = "") -> dict:
             continue
         checked += 1
         target_texts[name] = text
+        removed[name] = rsp.removed_requirements(full, name)
         findings.extend(check_living_spec(text, rel, root=root, capability=name))
         # The rules tier is plain bullets, one per rule, and the only thing that
         # can go wrong with it is having none. A file with a banner and no rule
@@ -852,7 +857,7 @@ def build_report(root: str = ".", capability: str = "") -> dict:
             skipped.append({"path": rel, "reason": f"could not be read ({err.__class__.__name__})"})
             continue
         checked += 1
-        findings.extend(check_feature_deltas(text, rel, known, target_texts))
+        findings.extend(check_feature_deltas(text, rel, known, target_texts, removed=removed))
 
     findings.sort(key=lambda f: (f["path"], f["line"], f["code"]))
     return {"enabled": True, "checked": checked, "findings": findings, "skipped": skipped}

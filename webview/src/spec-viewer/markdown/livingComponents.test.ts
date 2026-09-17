@@ -17,7 +17,10 @@ import {
     preprocessLivingUncovered,
     setLivingCoverage,
     setLivingDrifted,
+    setLivingNew,
 } from './livingComponents';
+import { navState } from '../signals';
+import type { NavState, RequirementLink } from '../types';
 import { renderMarkdown, setLivingMode } from './renderer';
 
 afterEach(() => {
@@ -628,5 +631,86 @@ describe('the adopted badge', () => {
         const [adoptedCard, confirmedCard] = out.split('### Already confirmed');
         expect(adoptedCard).toContain('data-req-approve');
         expect(confirmedCard).not.toContain('data-req-approve');
+    });
+});
+
+describe('the New mark', () => {
+    const spec = ['## Requirements', '', '### Added here', '', 'New.', '', '### From main', '', 'Old.'].join('\n');
+    afterEach(() => { setLivingNew([]); setLivingDrifted([]); });
+
+    it('marks only the new card, with the attribute and a New pill', () => {
+        setLivingNew(['Added here']);
+        const [added, fromMain] = preprocessLivingRequirements(spec).split('### From main');
+        expect(added).toContain('data-req-new');
+        expect(added).toContain('living-req-pill--new');
+        expect(added).toContain('</span>New</span>');
+        expect(fromMain).not.toContain('data-req-new');
+        expect(fromMain).not.toContain('living-req-pill--new');
+    });
+
+    it('keeps the drifted edge on a new drifted card and shows both pills', () => {
+        setLivingNew(['Added here']);
+        setLivingDrifted(['Added here']);
+        const [added] = preprocessLivingRequirements(spec).split('### From main');
+        expect(added).toContain('data-req-state="drifted"');
+        expect(added).toContain('living-req-pill--drifted');
+        expect(added).toContain('living-req-pill--new');
+    });
+
+    it('reports whether the set changed', () => {
+        expect(setLivingNew(['Added here'])).toBe(true);
+        expect(setLivingNew(['Added here'])).toBe(false);
+    });
+});
+
+describe('Leans on and Leaned on by', () => {
+    const spec = ['## Requirements', '', '### Reads the session', '<!-- aligns: beta#Sessions expire -->', '', 'Body.', '', '### Alone', '', 'No links.'].join('\n');
+    const link = (over: Partial<RequirementLink>): RequirementLink => ({
+        capability: 'beta', heading: 'Sessions expire', raw: 'beta#Sessions expire', broken: false, specPath: 'capabilities/beta/spec.md', ...over,
+    });
+    const withLinks = (leansOn: RequirementLink[], leanedOnBy: RequirementLink[]) => {
+        navState.value = {
+            livingOverview: {
+                purpose: '',
+                requirements: [
+                    { heading: 'Reads the session', adopted: false, leansOn, leanedOnBy },
+                    { heading: 'Alone', adopted: false, leansOn: [], leanedOnBy: [] },
+                ],
+            },
+        } as unknown as NavState;
+    };
+    afterEach(() => { navState.value = null; });
+
+    it('renders each list only when it has entries', () => {
+        withLinks([link({})], []);
+        const [linked, alone] = preprocessLivingRequirements(spec).split('### Alone');
+        expect(linked).toContain('>Leans on</span>');
+        expect(linked).not.toContain('Leaned on by');
+        expect(alone).not.toContain('living-req-links');
+    });
+
+    it('makes a resolved entry a button that carries where to open', () => {
+        withLinks([], [link({ capability: 'alpha', heading: 'Writes the record', raw: 'alpha#Writes the record', specPath: 'capabilities/alpha/spec.md' })]);
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('>Leaned on by</span>');
+        expect(out).toMatch(/<button type="button" class="living-req-link" data-open-living-requirement data-capability="alpha" data-spec-path="capabilities\/alpha\/spec.md" data-heading="Writes the record"/);
+    });
+
+    it('shows a broken entry as a span with its original text', () => {
+        withLinks([link({ capability: 'gamma', heading: 'Anything', raw: 'gamma#Anything', broken: true, specPath: undefined })], []);
+        const out = preprocessLivingRequirements(spec);
+        expect(out).toContain('<span class="living-req-link living-req-link--broken"');
+        expect(out).toContain('>gamma#Anything</span>');
+        expect(out).not.toContain('data-capability="gamma"');
+    });
+
+    it('escapes quotes so a heading cannot leave its attribute', () => {
+        withLinks([link({ heading: 'a" onclick="x' })], []);
+        const out = preprocessLivingRequirements(spec);
+        expect(out).not.toContain('onclick="x');
+    });
+
+    it('keeps the aligns marker out of the prose', () => {
+        expect(preprocessLivingRequirements(spec)).not.toContain('<!-- aligns:');
     });
 });

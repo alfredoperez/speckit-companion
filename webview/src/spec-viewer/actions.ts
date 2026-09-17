@@ -48,6 +48,16 @@ export function setupRevealGlob(): void {
     });
 }
 
+/** A card's Leans on and Leaned on by entries open the spec they name, at that requirement. */
+export function setupOpenLivingRequirement(): void {
+    document.addEventListener('click', (e) => {
+        const link = (e.target as HTMLElement).closest<HTMLElement>('[data-open-living-requirement]');
+        const { capability, specPath, heading } = link?.dataset ?? {};
+        if (!capability || !heading) return;
+        vscode.postMessage({ type: 'openLivingSpec', capabilityName: capability, specPath: specPath || undefined, requirement: heading });
+    });
+}
+
 /**
  * Setup checkbox toggle handler for task items
  */

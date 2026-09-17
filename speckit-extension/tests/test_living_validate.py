@@ -281,3 +281,30 @@ class AnAddedHeadingThatRestatesAnExistingOneIsFlagged(unittest.TestCase):
     def test_a_genuinely_new_heading_under_added_is_silent(self):
         delta = "## ADDED Requirements\n\n### Queued favourites survive a reload\n\n#### Scenario: s\n- **WHEN** x\n- **THEN** y\n"
         self.assertNotIn("added-heading-near-existing", [f["code"] for f in self._run(delta)])
+
+
+class RemovalRecordsSilenceMissingHeadings(unittest.TestCase):
+    """A requirement removed on purpose is not a delta pointing at nothing."""
+
+    TARGET = "## Requirements\n\n### Still here\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"
+    DELTA = "## REMOVED Requirements\n<!-- capability: todos -->\n\n### Removed on purpose\n"
+
+    def _codes(self, records):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps({"history": records}), encoding="utf-8")
+            removed = {"todos": lv._load_resolver().removed_requirements(str(Path(tmp) / "todos.spec.md"), "todos")}
+        found = lv.check_feature_deltas(self.DELTA, "spec.md", known_capabilities=["todos"],
+                                        target_texts={"todos": self.TARGET}, removed=removed)
+        return [f["code"] for f in found]
+
+    def test_a_recorded_removal_raises_no_missing_heading(self):
+        self.assertNotIn("delta-heading-not-found", self._codes([
+            {"kind": "requirement-removed", "capability": "todos", "requirement": "Removed on purpose"}]))
+
+    def test_the_same_heading_without_a_record_still_does(self):
+        self.assertIn("delta-heading-not-found", self._codes([]))
+
+    def test_a_record_for_another_capability_in_the_shared_file_does_not_count(self):
+        self.assertIn("delta-heading-not-found", self._codes([
+            {"kind": "requirement-removed", "capability": "storage", "requirement": "Removed on purpose"}]))

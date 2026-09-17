@@ -9,7 +9,7 @@ import { navState, markdownHtml } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
-import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupRemoveRequirement, setupRevealGlob } from './actions';
+import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
@@ -118,6 +118,7 @@ function init(): void {
     setupFileRefClickHandler();
     setupApproveRequirement();
     setupRevealGlob();
+    setupOpenLivingRequirement();
     setupRemoveRequirement();
     restoreScrollPosition();
 

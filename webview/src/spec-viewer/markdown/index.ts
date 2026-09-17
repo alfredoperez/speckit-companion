@@ -7,6 +7,7 @@ export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTa
 export {
     setLivingCoverage,
     setLivingDrifted,
+    setLivingNew,
     stripLivingDraftBanner,
     preprocessLivingPurpose,
     preprocessLivingScenarios,

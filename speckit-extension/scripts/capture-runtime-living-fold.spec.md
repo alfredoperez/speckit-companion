@@ -158,3 +158,15 @@ A fold that would leave a capability's spec with no requirements SHALL be refuse
 ## Uncovered
 
 - The Python test suite under `speckit-extension/tests/` was not read.
+
+### A requirement removed on purpose is not reported as a missing heading
+
+Validation SHALL read the `requirement-removed` records beside each living spec, scoped to that capability, and SHALL NOT raise `delta-heading-not-found` for a heading so recorded. A record naming another capability in a shared file SHALL NOT suppress the finding.
+
+#### Scenario: a delta names a heading with a removal record
+- **WHEN** validation runs
+- **THEN** no `delta-heading-not-found` is reported for it
+
+#### Scenario: the record names another capability
+- **WHEN** validation runs
+- **THEN** `delta-heading-not-found` is still reported

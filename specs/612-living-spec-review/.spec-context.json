@@ -1,0 +1,1109 @@
+{
+  "workflow": "companion",
+  "telemetryInstanceId": "f6b75a9c-c6a7-4d82-9044-fb32373a88a2",
+  "specName": "Living Spec Review",
+  "branch": "612-living-spec-review",
+  "selectedAt": "2026-09-17T17:18:04.122Z",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T17:18:04.122Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:19:12.610Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:19:12.696Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:20:27.431Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:20:41.864Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:20:42.158Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-17T17:20:42.350Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T17:21:26.671Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:24:54.495Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:25:36.026Z"
+    },
+    {
+      "step": "plan",
+      "substep": "constitution-check",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:25:36.130Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:26:07.863Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:26:45.090Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:26:56.825Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T17:29:05.476Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:29:33.514Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:31:43.234Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:31:43.363Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:31:44.052Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-17T17:34:44.594Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:36:59.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:36:59.966Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:37:09.672Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:37:12.382Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:37:12.461Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:37:39.106Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:37:39.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:25.817Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:25.923Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:26.052Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:26.182Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:26.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:26.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:39:40.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:40:01.362Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:40:01.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:41:58.884Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:41:58.991Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:41:59.113Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:42:06.743Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:43:02.070Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:43:02.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:44:01.267Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:44:01.375Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:44:09.196Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:44:53.189Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:44:53.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:46:23.298Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:46:23.382Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:46:26.042Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:47:26.809Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:47:26.892Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:47:26.988Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:47:27.095Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:47:44.548Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:48:13.431Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:49:17.021Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:49:49.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:49:49.442Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:49:49.527Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T041",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:49:49.626Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T042",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:54:09.103Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T043",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:54:09.192Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:54:09.231Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-17T17:55:52.590Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "spec-viewer-actions",
+      "spec-viewer-living",
+      "spec-viewer-panel",
+      "spec-viewer-state"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "spec-viewer-panel": [
+        "One panel per spec, revealed rather than duplicated",
+        "The webview shell is generated under a locked-down policy",
+        "The viewer's message contract is declared once, for both sides",
+        "A document is addressed by its path under the spec",
+        "Opening a spec can name the requirement to bring into view"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "spec-viewer-actions",
+        "reason": "the action catalog and pipeline dispatch are unchanged; living approve and remove are described under spec-viewer-living"
+      },
+      {
+        "name": "spec-viewer-panel",
+        "reason": "panel identity, the message contract rule and open-at-requirement behave as before; undoLivingAction is a new variant under the same contract"
+      },
+      {
+        "name": "spec-viewer-state",
+        "reason": "viewer state derivation, timing and staleness are untouched"
+      }
+    ],
+    "synced": [
+      "capture-runtime-living-resolve",
+      "capture-runtime-living-fold",
+      "spec-viewer-living",
+      "specs-living-model",
+      "specs-living-view",
+      "viewer-ui-chrome",
+      "viewer-ui-document"
+    ]
+  },
+  "last_action": "all 43 tasks done; compile, webview tsc, 2981 Jest and 1452 Python tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Bar offers Approve all N when N >= 1 adopted, never at 0",
+      "tasks": "T022,T023,T024",
+      "tests": "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::offers Approve all N while N requirements are adopted,offers no approve action when nothing is adopted"
+    },
+    "FR-002": {
+      "title": "Approve all removes every adopted marker and the banner in one write",
+      "tasks": "T005,T017",
+      "tests": "src/features/spec-viewer/__tests__/livingDocs.test.ts,src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo"
+    },
+    "FR-003": {
+      "title": "Undo offered for 5 seconds after Approve all or Remove, restores byte for byte",
+      "tasks": "T005,T009,T014,T017,T022,T023",
+      "tests": "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo,Remove stores a pending undo;webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::shows Undo for the time left and posts the token,hides Undo once the window passes"
+    },
+    "FR-004": {
+      "title": "Undo does not write when the file changed on disk, and says why",
+      "tasks": "T005,T017",
+      "tests": "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+    },
+    "FR-005": {
+      "title": "Requirements absent from main show a green edge and New pill, header counts them",
+      "tasks": "T007,T008,T015,T016,T018,T025,T027,T028",
+      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::the New mark;webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx::the new fact"
+    },
+    "FR-006": {
+      "title": "New mark computed without writing, omitted when main cannot be read",
+      "tasks": "T003,T013,T025,T027",
+      "tests": "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts::new requirements;src/features/specs/__tests__/livingSpecsModel.test.ts::readMainCopy"
+    },
+    "FR-007": {
+      "title": "Cards list Leans on and Leaned on by, each only when non-empty",
+      "tasks": "T001,T002,T007,T010,T014,T015,T018,T029",
+      "tests": "src/features/specs/__tests__/requirementSlices.test.ts::requirementLinks;webview/src/spec-viewer/markdown/livingComponents.test.ts::Leans on and Leaned on by"
+    },
+    "FR-008": {
+      "title": "Unresolved aligns links shown with original text and marked broken",
+      "tasks": "T002,T007,T010,T015,T018",
+      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::shows a broken entry as a span with its original text"
+    },
+    "FR-009": {
+      "title": "Resolver accepts --leaned-on-by capability#heading and returns every match",
+      "tasks": "T006,T012",
+      "tests": "speckit-extension/tests/test_resolve_spec_paths.py::LeanedOnBy"
+    },
+    "FR-010": {
+      "title": "A removal past its Undo window appends one record; an undone one leaves none",
+      "tasks": "T004,T005,T011,T014,T017",
+      "tests": "src/features/spec-viewer/__tests__/livingDocs.test.ts::appendLivingRemoval;src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+    },
+    "FR-011": {
+      "title": "Drift and the doctor do not report a recorded removal as missing",
+      "tasks": "T006,T012,T030,T031",
+      "tests": "speckit-extension/tests/test_living_validate.py::RemovalRecordsSilenceMissingHeadings"
+    },
+    "FR-012": {
+      "title": "SpecKit: Open Living Spec picks a capability, then optionally a requirement",
+      "tasks": "T032,T033,T036,T037",
+      "tests": "src/features/specs/__tests__/livingSpecsCommands.test.ts,src/features/specs/__tests__/manifest.test.ts"
+    },
+    "FR-013": {
+      "title": "Tree row, status bar and loaded-living-specs links open scrolled to their requirement",
+      "tasks": "T034,T035,T036",
+      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts,src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+    },
+    "FR-014": {
+      "title": "Tests cover each story; viewer-states, sidebar, changelog and screenshots updated",
+      "tasks": "T038,T039,T040,T041,T042,T043"
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 26,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No dependency graph view",
+    "No configurable default branch for the New comparison",
+    "Undo does not survive a window reload"
+  ],
+  "context": [
+    "living spec: spec-viewer-living",
+    "living spec: spec-viewer-panel",
+    "living spec: spec-viewer-actions",
+    "living spec: spec-viewer-state",
+    "area: src/features/spec-viewer (approve/remove/openLivingSpec handlers)",
+    "area: webview/src/spec-viewer (LivingFooter, SpecHeader approve, cards)",
+    "area: src/features/specs/livingSpecsStatusBar.ts",
+    "area: speckit-extension/scripts/resolve-spec-paths.py (aligns parsing)",
+    "constraint: scenarios as WHEN/THEN with one observable outcome"
+  ],
+  "intent": "Let a reader review a living spec: approve all with undo, see new requirements and cross-spec links, undo removals, open at a requirement from anywhere",
+  "decisions": [
+    {
+      "decision": "Hold one pending undo per panel in the extension and render the existing UndoToast from NavState.livingUndo",
+      "why": "Every refresh regenerates the webview page, so webview-held undo state is wiped by the write it would undo (spec-viewer-living)",
+      "rejected": "Undo state in the webview"
+    },
+    {
+      "decision": "Append requirement-removed entries to history[] in a .spec-context.json beside the spec file, naming the capability, written directly rather than via updateSpecContext",
+      "why": "Colocated capabilities share a directory, and updateSpecContext stamps feature-spec defaults a capability lacks (spec-viewer-living)",
+      "rejected": "A marker line in the spec file, or a key in living-specs.yml"
+    },
+    {
+      "decision": "One in-process requirementLinks function over requirementSlices feeds cards and the Remove refusal; delete alignsIn",
+      "why": "alignsIn matched markers anywhere including fences, so the refusal and the cards could disagree (specs-living-model)",
+      "rejected": "Shelling out to the resolver from the editor"
+    },
+    {
+      "decision": "New marks computed by git show main:<path> in the post-paint health push; any failure leaves them absent",
+      "why": "git can be slow or absent and the slow-fact path already races a timeout and drops stale results (spec-viewer-living)",
+      "rejected": "Computing on first paint, or parsing git diff"
+    },
+    {
+      "decision": "New is a separate data-req-new attribute and pill, not a card state",
+      "why": "data-req-state is single-valued, so a new drifted card would lose a fact (viewer-ui-document)",
+      "rejected": "A combined new-drifted state"
+    },
+    {
+      "decision": "Move Approve all from the header to the living footer bar",
+      "why": "One action, one button, next to its Undo (viewer-ui-chrome)",
+      "rejected": "Keeping both buttons"
+    },
+    {
+      "decision": "FR-011 lands as a removal-record skip in living_validate.py delta-heading-not-found; drift and doctor have no missing-requirement check to change",
+      "why": "The validator is the only place a deliberately removed heading raises a false alarm (capture-runtime-living-resolve)",
+      "rejected": "Building a new doctor check only to exempt removals"
+    },
+    {
+      "decision": "Open Living Spec command titled without an ellipsis; tree row and chips keep opening at the top",
+      "why": "The spec pins SpecKit: Open Living Spec, and those entry points name no requirement (specs-living-view)",
+      "rejected": "Adding requirement child rows to the tree"
+    },
+    {
+      "decision": "Pending undo lives in a Map on the spec viewer provider, offered and taken through two handler dependencies",
+      "why": "Every write regenerates the webview page, so webview state would be wiped by the write it undoes",
+      "rejected": "Undo state in the webview"
+    },
+    {
+      "decision": "Only Approve all offers Undo, not a single card Approve",
+      "why": "The spec scopes Undo to Approve all and Remove; a single approve settles nothing and a pending Undo still refuses if the file changed",
+      "rejected": "Undo on every approve"
+    },
+    {
+      "decision": "Cards read their links from navState.livingOverview instead of a new renderer setter",
+      "why": "The overview already rides in the initial nav state, so no extra wiring in the webview entry",
+      "rejected": "setLivingLinks called from the entry point and applyNavState"
+    },
+    {
+      "decision": "leansOn and leanedOnBy are optional on overview requirements",
+      "why": "Many fixtures and stories build overview rows without links; the provider always sets them",
+      "rejected": "Required fields and edits to every fixture"
+    },
+    {
+      "decision": "git show main:./<path>, relative to the workspace",
+      "why": "Works when the workspace root is not the repository root",
+      "rejected": "main:<path>, which is relative to the repo root"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Planned living-spec review by wiring existing approve, remove, open-at-requirement, slow-fact push and UndoToast together, plus a resolver flag and a removal record",
+      "key_finding": "The webview page is regenerated on every refresh, so Undo must live on the extension-side panel state"
+    },
+    "tasks": {
+      "summary": "43 tasks: Setup, Foundational (shared extension side and rendering, 3 waves), 5 story phases with disjoint files, Polish"
+    },
+    "implement": {
+      "summary": "Living spec review: Approve all with Undo, undoable and recorded Remove, New marks against main, Leans on / Leaned on by, and SpecKit: Open Living Spec"
+    }
+  },
+  "approach": "Undo is one pending action per panel in the extension, rendered through the unused UndoToast. Links come from one in-process function over the requirement slicer, and New marks from git show main in the post-paint health push. Standing removals append a history record beside the spec, which the resolver and validator read.",
+  "currentTask": "T043",
+  "task_summaries": {
+    "T032": {
+      "status": "DONE",
+      "did": "Tests for Open Living Spec pickers, dismissals, unconfigured message and viewer args",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsCommands.test.ts"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Registered speckit.livingSpecs.open with capability and requirement pickers",
+      "files": [
+        "src/features/specs/livingSpecsCommands.ts"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Added a two-capability links fixture workspace with expected links for both parsers",
+      "files": [
+        "speckit-extension/tests/fixtures/requirement-slices/links/"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Manifest test: Open Living Spec contributed in SpecKit category, palette-visible",
+      "files": [
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Contributed speckit.livingSpecs.open in the SpecKit category",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Status bar picker test: passes its requirement to speckit.viewSpecDocument",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsStatusBar.test.ts"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Tree row test: opens with { living: true } and no requirement",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Pinned requirementLinks against the shared links fixture",
+      "files": [
+        "src/features/specs/__tests__/requirementSlices.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Pinned readMainCopy: main's text, undefined on git failure or timeout",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Pinned appendLivingRemoval: creates, appends, preserves, adds no defaults",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Added RequirementLink, LivingUndo, links on overview, newRequirements, undoLivingAction",
+      "files": [
+        "src/protocol/viewer.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added requirementLinks over the requirement slicer, exact heading match",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added appendLivingRemoval with a direct read-merge-write of history",
+      "files": [
+        "src/features/spec-viewer/livingDocs.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Added readMainCopy beside the git runner, 1500 ms, undefined on failure",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Pinned --leaned-on-by JSON, text and disabled shapes, and removed_requirements scoping",
+      "files": [
+        "speckit-extension/tests/test_resolve_spec_paths.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Added --leaned-on-by and removed_requirements to the resolver",
+      "files": [
+        "speckit-extension/scripts/resolve-spec-paths.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Pinned Approve all/Remove undo, changed-file refusal with record, stale token, link-based refusal",
+      "files": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Held one pending undo per panel with timer, settle on dispose/re-anchor, links on overview",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts",
+        "src/features/spec-viewer/html/generator.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Snapshot and offer undo on Approve all and Remove, undo handler with disk compare, refusal via links",
+      "files": [
+        "src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Deleted the loose alignsIn; refusal and cards share requirementLinks",
+      "files": [
+        "src/features/spec-viewer/livingDocs.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Pinned New attribute and pill, drifted-plus-new, link lists, broken spans, attribute escaping",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Rendered data-req-new with a New pill and Leans on / Leaned on by lists from the overview",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts",
+        "webview/src/spec-viewer/markdown/index.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Pinned the header: no approve button, N new only when at least one is new",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Removed ApproveSpecButton from the header and added the N new fact",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.tsx",
+        "src/protocol/viewer.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Moved the new edge to data-req-new, styled link lists, broken links and the new fact",
+      "files": [
+        "webview/styles/spec-viewer/_living.css"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Header stories: draft spec with adopted requirements and no approve button, spec with 3 new",
+      "files": [
+        "webview/src/spec-viewer/components/SpecHeader.stories.tsx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Card stories: new, new and drifted, with links, with a broken link",
+      "files": [
+        "webview/src/spec-viewer/markdown/LivingComponents.stories.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Pinned Approve all N, none at 0, Undo label, countdown, token post, hide after expiry",
+      "files": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added Approve all N from the adopted count and the UndoToast for a pending living undo",
+      "files": [
+        "webview/src/spec-viewer/components/footer/LivingFooter.tsx"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Bar stories: Approve all 4, nothing adopted, Undo pending",
+      "files": [
+        "webview/src/spec-viewer/components/FooterActions.stories.tsx"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Pinned newRequirements: headings main lacks, body-only change unmarked, absent on read failure",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Pinned livingHealthResolved setting the new set and redrawing only on change",
+      "files": [
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Computed newRequirements with readMainCopy in the slow health push, no write",
+      "files": [
+        "src/features/spec-viewer/livingHeaderMeta.ts",
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Kept the module-level new set through setLivingNew and redraw on change",
+      "files": [
+        "webview/src/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Routed a data-open-living-requirement click to openLivingSpec with the requirement",
+      "files": [
+        "webview/src/spec-viewer/actions.ts",
+        "webview/src/spec-viewer/index.tsx"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Pinned the validator honoring removal records, scoped to their capability",
+      "files": [
+        "speckit-extension/tests/test_living_validate.py"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Validator skips delta-heading-not-found for headings in removed_requirements",
+      "files": [
+        "speckit-extension/scripts/living_validate.py"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Documented Approve all and Undo, New marks, link lists and removal records",
+      "files": [
+        "docs/viewer-states.md",
+        "docs/viewer.md"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "Documented SpecKit: Open Living Spec and how every entry point scrolls",
+      "files": [
+        "docs/sidebar.md"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "Added user-facing Unreleased entries for the viewer features",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T041": {
+      "status": "DONE",
+      "did": "Added Unreleased entries for --leaned-on-by and removal records in validation",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T042": {
+      "status": "DONE",
+      "did": "Regenerated docs images; kept the living-spec pair and benefits strip, restored unrelated re-render noise",
+      "files": [
+        "docs/screenshots/generated/"
+      ]
+    },
+    "T043": {
+      "status": "DONE",
+      "did": "Ran compile, webview type-check, full Jest and Python suites; fixed one stale deps builder",
+      "files": [
+        "tests/unit/spec-viewer/messageHandlers.spec.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "extension compiles",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "> speckit-companion@0.33.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-checks",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "no output"
+    },
+    {
+      "what": "full Jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 41.3,
+      "result": "Tests:       2996 passed, 2996 total · Snapshots:   0 total · Time:        40.645 s, estimated 43 s"
+    },
+    {
+      "what": "spec-kit extension Python suite",
+      "command": "python3 -m pytest speckit-extension/tests -q",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 125.6,
+      "result": "........................................................................ [ 98%] · ....................                                                     [100%] · 1452 passed, 8 skipped in 125.35s (0:02:05)"
+    },
+    {
+      "what": "Living-spec screenshots regenerated and inspected",
+      "result": "living-specs-pair renders the card, header and bar with no visual regression; unrelated images that only re-rendered were restored"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Three small edits landed outside the files tasks.md assigned: html/generator.ts gained a livingUndo parameter, markdown/index.ts exports setLivingNew, and index.tsx registers the link click handler. tests/unit/spec-viewer/messageHandlers.spec.ts needed the two new dependencies.",
+      "step": "implement"
+    },
+    {
+      "note": "UndoToast undoes on Escape anywhere in the page, as that shared component already did; pressing Escape within 5 seconds of Approve all or Remove undoes it.",
+      "step": "implement"
+    },
+    {
+      "note": "The capture script re-rendered 34 unrelated images with pixel-level differences; they were restored to keep the diff to the living-spec images.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 23 task finishes landed in bursts. Self-inflicted: tests and implementation were closed together after each file set passed. History is append-only, so the durations are not trustworthy; the summaries are.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: one capture call resolved no spec and wrote nothing. The trace did not name it and it could not be attributed to this run, so no issue was opened.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: specify is reported as closing without <short-name>.spec.md, but living-spec-review.spec.md exists. The check appears to compare against the literal placeholder; warning only, left for separate work.",
+      "step": "implement"
+    }
+  ]
+}

@@ -13,7 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingDrifted, setLivingMode, setTaskSummaries } from './markdown';
+import { setCurrentTask, setHasSpecContext, setLivingDrifted, setLivingMode, setLivingNew, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
@@ -60,8 +60,10 @@ export function buildHandlers(
             if (navState.value) {
                 navState.value = { ...navState.value, livingMeta: message.livingMeta };
             }
-            // Drift lands after the first paint, so the cards redraw to take their edge.
-            if (setLivingDrifted(message.livingMeta.driftedRequirements)) rerender();
+            // Drift and New land after the first paint, so the cards redraw to take their edge.
+            const drifted = setLivingDrifted(message.livingMeta.driftedRequirements);
+            const fresh = setLivingNew(message.livingMeta.newRequirements);
+            if (drifted || fresh) rerender();
         },
 
         viewerStateUpdated: message => {

@@ -5,6 +5,7 @@ import {
     requirementsForChange,
     hasNoMarkers,
     requirementIds,
+    requirementLinks,
 } from '../livingSpecsModel';
 
 /**
@@ -178,5 +179,31 @@ describe('the adopted marker', () => {
         const feed = requirementSlices(spaced)[1];
         expect(feed.adopted).toBe('developer');
         expect(feed.body.join('\n')).not.toContain('adopted:');
+    });
+});
+
+describe('requirementLinks — against the shared links fixture', () => {
+    const LINKS = path.join(FIXTURES, 'links');
+    const want = JSON.parse(fs.readFileSync(path.join(LINKS, 'expected.json'), 'utf-8'));
+    type Want = { heading: string; leansOn: { raw: string; broken: boolean }[]; leanedOnBy: string[] };
+
+    it.each(Object.keys(want.requirementLinks))('%s links as the contract says', cap => {
+        const links = requirementLinks(LINKS, cap);
+        for (const w of want.requirementLinks[cap] as Want[]) {
+            const got = links.get(w.heading)!;
+            expect(got.leansOn.map(l => ({ raw: l.raw, broken: l.broken }))).toEqual(w.leansOn);
+            expect(got.leanedOnBy.map(l => l.raw)).toEqual(w.leanedOnBy);
+        }
+    });
+
+    it('a resolved link carries its spec path, a broken one none', () => {
+        const [same, brokenHeading, brokenCap] = requirementLinks(LINKS, 'alpha').get('Writes the record')!.leansOn;
+        expect(same.specPath).toBe('capabilities/alpha/spec.md');
+        expect(brokenHeading.specPath).toBeUndefined();
+        expect(brokenCap).toMatchObject({ capability: 'gamma', heading: 'Anything', broken: true });
+    });
+
+    it('an unregistered capability has no links', () => {
+        expect(requirementLinks(LINKS, 'gamma').size).toBe(0);
     });
 });

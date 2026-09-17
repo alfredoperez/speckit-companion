@@ -5,8 +5,12 @@ import {
     setHasSpecContext,
     setLivingMode,
     setLivingCoverage,
+    setLivingDrifted,
+    setLivingNew,
     setTaskSummaries,
 } from './index';
+import { navState } from '../signals';
+import type { NavState, RequirementLink } from '../types';
 import { applyHighlighting } from '../highlighting';
 import webviewSharedCapability from '../../../../capabilities/webview-shared/spec.md?raw';
 
@@ -20,12 +24,20 @@ import webviewSharedCapability from '../../../../capabilities/webview-shared/spe
 interface LivingDocProps {
     md: string;
     coverage?: Record<string, string>;
+    newHeadings?: string[];
+    drifted?: string[];
+    links?: Record<string, { leansOn?: RequirementLink[]; leanedOnBy?: RequirementLink[] }>;
 }
 
-function LivingDoc({ md, coverage }: LivingDocProps) {
+function LivingDoc({ md, coverage, newHeadings, drifted, links }: LivingDocProps) {
     setHasSpecContext(false);
     setLivingMode(true);
     setLivingCoverage(coverage ?? null);
+    setLivingNew(newHeadings);
+    setLivingDrifted(drifted);
+    navState.value = links
+        ? ({ livingOverview: { purpose: '', requirements: Object.entries(links).map(([heading, l]) => ({ heading, adopted: false, ...l })) } } as unknown as NavState)
+        : null;
     setTaskSummaries(null);
     const html = renderMarkdown(md);
     useEffect(() => {
@@ -37,6 +49,9 @@ function LivingDoc({ md, coverage }: LivingDocProps) {
     useEffect(() => () => {
         setLivingMode(false);
         setLivingCoverage(null);
+        setLivingNew([]);
+        setLivingDrifted([]);
+        navState.value = null;
     }, []);
     return (
         <div
@@ -283,5 +298,67 @@ export const UncoveredOneReasonLongList: Story = {
             '  - `src/big/module-g.ts`',
             '  - `src/big/module-h.ts`',
         ].join('\n'),
+    },
+};
+
+// ── Reviewing: new on this branch, and links between requirements ──────
+
+const REVIEW_SPEC = [
+    '# Sessions — Living Spec',
+    '',
+    '## Requirements',
+    '',
+    '### Sessions expire after an hour',
+    '<!-- touches: src/session/** -->',
+    '',
+    'A session older than an hour is rejected.',
+    '',
+    '#### Scenario: an old session',
+    '- **WHEN** a request carries a session issued 61 minutes ago',
+    '- **THEN** the request is rejected',
+    '',
+    '### Writing requires being signed in',
+    '<!-- aligns: auth#A token names one user, auth#Tokens are rotated -->',
+    '',
+    'Every write checks the session first.',
+].join('\n');
+
+const resolved = (capability: string, heading: string): RequirementLink => ({
+    capability, heading, raw: `${capability}#${heading}`, broken: false, specPath: `capabilities/${capability}/spec.md`,
+});
+
+export const RequirementNew: Story = {
+    name: 'Requirement · new on this branch',
+    args: { md: REVIEW_SPEC, newHeadings: ['Writing requires being signed in'] },
+};
+
+export const RequirementNewAndDrifted: Story = {
+    name: 'Requirement · new and drifted',
+    args: { md: REVIEW_SPEC, newHeadings: ['Sessions expire after an hour'], drifted: ['Sessions expire after an hour'] },
+};
+
+export const RequirementWithLinks: Story = {
+    name: 'Requirement · leans on and leaned on by',
+    args: {
+        md: REVIEW_SPEC,
+        links: {
+            'Sessions expire after an hour': { leanedOnBy: [resolved('billing', 'Charges need a live session')] },
+            'Writing requires being signed in': { leansOn: [resolved('auth', 'A token names one user'), resolved('auth', 'Tokens are rotated')] },
+        },
+    },
+};
+
+export const RequirementWithBrokenLink: Story = {
+    name: 'Requirement · a broken link',
+    args: {
+        md: REVIEW_SPEC,
+        links: {
+            'Writing requires being signed in': {
+                leansOn: [
+                    resolved('auth', 'A token names one user'),
+                    { capability: 'auth', heading: 'Tokens are rotated', raw: 'auth#Tokens are rotated', broken: true },
+                ],
+            },
+        },
     },
 };

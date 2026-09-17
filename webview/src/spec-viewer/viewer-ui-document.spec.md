@@ -114,16 +114,28 @@ The original adoption did not read these files in full. Their exported surface a
 
 ### A living requirement shows its state on its heading's left edge
 
-Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block with a meta row, the title, and a 3px left edge in the state's colour. Confirmed uses the accent colour, adopted the review colour, drifted the warning colour and new the success colour, and drifted wins over adopted. Only non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour, so a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
+Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block with a meta row, the title, and a 3px left edge in the state's colour. Confirmed uses the accent colour, adopted the review colour, drifted the warning colour. New is its own `data-req-new` attribute with the success colour and a New pill: it outranks adopted for the edge, and a new drifted card keeps the drifted edge and shows both pills. Only non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour, so a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
 
 #### Scenario: a requirement whose touched file changed
 - **WHEN** the extension reports it among the drifted requirements
 - **THEN** its card redraws with the warning edge and a Drifted pill
 
-#### Scenario: a confirmed requirement
+#### Scenario: a new requirement that also drifted
 - **WHEN** its card renders
-- **THEN** its meta row holds no pill
+- **THEN** it keeps the warning edge and shows both the Drifted and the New pill
 
 #### Scenario: a capability with a single requirement
 - **WHEN** it renders
 - **THEN** no outline is shown
+
+### A requirement card lists what it leans on and what leans on it
+
+Under its files a card SHALL list Leans on and Leaned on by, each only when non-empty. A resolved entry SHALL be a button carrying the capability, spec path and heading, built with attribute escaping, that opens that spec at that requirement. A broken entry SHALL be a non-interactive span showing the link as written.
+
+#### Scenario: a link names a heading that does not exist
+- **WHEN** the card renders
+- **THEN** the link shows its original text, marked broken
+
+#### Scenario: a resolved entry is clicked
+- **WHEN** the reader activates it
+- **THEN** the viewer opens that spec scrolled to that requirement

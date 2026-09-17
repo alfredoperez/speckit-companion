@@ -34,7 +34,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot, readLivingSpecs, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
+import { isPathWithinRoot, requirementLinks, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -47,7 +47,7 @@ import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
-import { alignsIn, approveLivingText, livingTierDocuments, removeLivingRequirement } from "./livingDocs";
+import { appendLivingRemoval, approveLivingText, livingTierDocuments, removeLivingRequirement } from "./livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
@@ -64,6 +64,16 @@ import {
   SpecViewerState,
   ViewerToExtensionMessage,
 } from "./types";
+
+/** An Approve all or Remove the reader can still undo: the file before and after the write. */
+export interface LivingUndoAction {
+  kind: "approve" | "remove";
+  filePath: string;
+  before: string;
+  after: string;
+  capability: string;
+  heading?: string;
+}
 
 /**
  * Interface for message handler dependencies
@@ -87,6 +97,10 @@ export interface MessageHandlerDependencies {
   executeInTerminal: (prompt: string) => Promise<void>;
   outputChannel: vscode.OutputChannel;
   context: vscode.ExtensionContext;
+  /** Hold this action as the panel's one Undo; a newer action settles the older one. */
+  offerLivingUndo: (specDirectory: string, action: LivingUndoAction) => void;
+  /** Take the held action back when the token is current; undefined when stale. */
+  takeLivingUndo: (specDirectory: string, token: string) => LivingUndoAction | undefined;
 }
 
 /**
@@ -201,6 +215,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
     removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
     approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
+    undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
     openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
@@ -861,6 +876,9 @@ async function handleLivingApprove(
   }
   await fs.promises.writeFile(doc.filePath, after, "utf-8");
   deps.outputChannel.appendLine(`[SpecViewer] Approved ${heading ?? doc.fileName}`);
+  if (heading === undefined) {
+    deps.offerLivingUndo(specDirectory, { kind: "approve", filePath: doc.filePath, before, after, capability: instance.state.specName });
+  }
   await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 
@@ -880,15 +898,7 @@ async function handleLivingRemove(
   const cap = resolveCapabilityBySpecPath(root, specPath);
   if (!cap) return;
 
-  const target = `${cap.name}#${heading}`;
-  const leaners: string[] = [];
-  for (const other of readLivingSpecs(root, { withOrphans: false }).capabilities) {
-    if (!other.exists) continue;
-    try {
-      const text = await fs.promises.readFile(path.join(root, other.spec), "utf-8");
-      if (alignsIn(text).includes(target)) leaners.push(other.name);
-    } catch { /* unreadable spec leans on nothing */ }
-  }
+  const leaners = [...new Set((requirementLinks(root, cap.name).get(heading)?.leanedOnBy ?? []).map((l) => l.capability))];
   if (leaners.length) {
     void vscode.window.showWarningMessage(
       `Cannot remove "${heading}": ${leaners.join(", ")} still align${leaners.length === 1 ? "s" : ""} to it. Change those first.`,
@@ -904,11 +914,43 @@ async function handleLivingRemove(
   if (choice !== "Remove") return;
 
   const file = path.join(root, specPath);
-  const after = removeLivingRequirement(await fs.promises.readFile(file, "utf-8"), heading);
+  const before = await fs.promises.readFile(file, "utf-8");
+  const after = removeLivingRequirement(before, heading);
   if (after === null) return;
   await fs.promises.writeFile(file, after, "utf-8");
   deps.outputChannel.appendLine(`[SpecViewer] Removed requirement "${heading}" from ${cap.name}`);
+  deps.offerLivingUndo(specDirectory, { kind: "remove", filePath: file, before, after, capability: cap.name, heading });
   await deps.updateContent(specDirectory, instance.state.currentDocument);
+}
+
+/**
+ * Put the file back as it was before the last Approve all or Remove. Refused
+ * when the file changed since, because restoring would overwrite that change;
+ * a refused removal then stands and is recorded.
+ */
+async function handleLivingUndo(
+  specDirectory: string,
+  token: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const action = deps.takeLivingUndo(specDirectory, token);
+  if (!action) return;
+  const current = await fs.promises.readFile(action.filePath, "utf-8").catch(() => undefined);
+  if (current === action.after) {
+    await fs.promises.writeFile(action.filePath, action.before, "utf-8");
+    deps.outputChannel.appendLine(`[SpecViewer] Undid ${action.kind} on ${path.basename(action.filePath)}`);
+  } else {
+    void vscode.window.showWarningMessage(
+      `Undo skipped: ${path.basename(action.filePath)} changed after the ${action.kind === "remove" ? "removal" : "approval"}, and restoring it would overwrite that change.`,
+    );
+    if (action.kind === "remove" && action.heading) {
+      await appendLivingRemoval(action.filePath, action.capability, action.heading).catch((err) =>
+        deps.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${action.heading}": ${err}`),
+      );
+    }
+  }
+  const instance = deps.getInstance(specDirectory);
+  if (instance) await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 
 /**

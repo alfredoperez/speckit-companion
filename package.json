@@ -531,6 +531,11 @@
         "icon": "$(checklist)"
       },
       {
+        "command": "speckit.livingSpecs.open",
+        "title": "Open Living Spec",
+        "category": "SpecKit"
+      },
+      {
         "command": "speckit.livingSpecs.forFile",
         "title": "Living Specs for This File",
         "category": "SpecKit",

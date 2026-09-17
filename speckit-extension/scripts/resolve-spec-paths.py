@@ -727,6 +727,42 @@ def show_requirement(name: str, living: dict, root: str, capability: str | None 
             "headings": headings}
 
 
+def show_leaned_on_by(target: str, living: dict, root: str) -> dict:
+    """Every requirement whose aligns marker names `capability#heading`, the
+    target's own capability included. Headings match exactly."""
+    cap_name, _, heading = (target or "").partition("#")
+    wanted = (cap_name.strip(), heading.strip())
+    matches = []
+    for name in capability_names(living):
+        entry = capability_by_name(name, living, root)
+        if entry is None:
+            continue
+        for s in _slices_of(entry):
+            for ref in s.get("aligns") or []:
+                c, _, h = ref.partition("#")
+                if (c.strip(), h.strip()) == wanted:
+                    matches.append(_requirement_payload(entry["name"], s))
+                    break
+    return {"show": "leaned-on-by", "target": target, "matches": matches}
+
+
+def removed_requirements(spec_path: str, capability: str) -> set:
+    """Headings recorded as removed on purpose for `capability`, read from the
+    `.spec-context.json` beside its spec. Colocated capabilities share that
+    file, so a record for another capability never counts."""
+    ctx = os.path.join(os.path.dirname(spec_path), ".spec-context.json")
+    try:
+        with open(ctx, encoding="utf-8") as fh:
+            history = json.load(fh).get("history") or []
+    except (OSError, ValueError, AttributeError):
+        return set()
+    return {
+        e["requirement"] for e in history
+        if isinstance(e, dict) and e.get("kind") == "requirement-removed"
+        and e.get("capability") == capability and isinstance(e.get("requirement"), str)
+    }
+
+
 def show_for_file(path: str, living: dict, root: str) -> dict:
     """The requirements describing one file, grouped by capability, most-specific first."""
     caps = []
@@ -759,6 +795,8 @@ def render_rules(rules: dict) -> str:
 def render_show(result: dict) -> str:
     """The human view of a slice. One answer per line, never a JSON dump."""
     mode = result.get("show")
+    if mode == "leaned-on-by":
+        return "\n".join(f"{m['capability']}#{m['heading']}" for m in result.get("matches") or [])
     if mode == "headings":
         if not result.get("registered"):
             names = _fmt_list(result.get("capabilities") or [])
@@ -811,6 +849,8 @@ def main(argv=None) -> int:
                     help="print one requirement in full, by heading")
     ap.add_argument("--file", metavar="PATH",
                     help="print the requirements whose marker describes this file")
+    ap.add_argument("--leaned-on-by", metavar="CAPABILITY#HEADING",
+                    help="every requirement whose aligns marker names this requirement")
     ap.add_argument("--capability", metavar="NAME",
                     help="with --requirement: search only this capability")
     ap.add_argument("--rules", action="store_true",
@@ -840,6 +880,8 @@ def main(argv=None) -> int:
         elif args.requirement:
             result = {"show": "requirement", "requested": args.requirement,
                       "matches": [], "headings": [], "capabilities": []}
+        elif args.leaned_on_by:
+            result = {"show": "leaned-on-by", "target": args.leaned_on_by, "matches": []}
         elif args.file:
             result = {"show": "file", "file": args.file, "capabilities": []}
         elif args.orphans:
@@ -861,6 +903,8 @@ def main(argv=None) -> int:
             result = show_headings(args.headings, living, root)
         elif args.requirement:
             result = show_requirement(args.requirement, living, root, args.capability)
+        elif args.leaned_on_by:
+            result = show_leaned_on_by(args.leaned_on_by, living, root)
         elif args.file:
             result = show_for_file(args.file, living, root)
         elif args.orphans:

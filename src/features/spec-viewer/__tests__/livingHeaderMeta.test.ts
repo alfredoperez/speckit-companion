@@ -217,3 +217,52 @@ describe('coverage and drift reuse', () => {
         spy.mockRestore();
     });
 });
+
+describe('new requirements', () => {
+    const meta = { capabilityName: 'todos', specPath: 'capabilities/todos/todos.spec.md', location: 'centralized' as const, match: [] };
+    let root: string;
+    let health: jest.SpyInstance;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'lhm-new-'));
+        fs.mkdirSync(path.join(root, 'capabilities/todos'), { recursive: true });
+        fs.writeFileSync(path.join(root, meta.specPath), [
+            '# Todos', '', '## Requirements', '',
+            '### Adds a todo', 'Body changed on this branch.', '',
+            '### Archives a todo', 'Added here.',
+        ].join('\n'));
+        health = jest.spyOn(model, 'readCapabilityHealth').mockResolvedValue({});
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it("names the headings main's copy lacks, and not one whose body alone changed", async () => {
+        const { resolveLivingHealth } = await import('../livingHeaderMeta');
+        const main = jest.spyOn(model, 'readMainCopy').mockResolvedValue('## Requirements\n\n### Adds a todo\nOriginal body.\n');
+        const before = fs.readFileSync(path.join(root, meta.specPath), 'utf-8');
+
+        const got = await resolveLivingHealth(root, meta);
+
+        expect(got.newRequirements).toEqual(['Archives a todo']);
+        expect(main).toHaveBeenCalledWith(root, meta.specPath);
+        expect(fs.readFileSync(path.join(root, meta.specPath), 'utf-8')).toBe(before);
+    });
+
+    it("leaves it absent when main's copy cannot be read", async () => {
+        const { resolveLivingHealth } = await import('../livingHeaderMeta');
+        jest.spyOn(model, 'readMainCopy').mockResolvedValue(undefined);
+
+        expect(await resolveLivingHealth(root, meta)).not.toHaveProperty('newRequirements');
+    });
+
+    it('still reports new requirements when the drift computation fails', async () => {
+        const { resolveLivingHealth } = await import('../livingHeaderMeta');
+        health.mockRejectedValue(new Error('no git here'));
+        jest.spyOn(model, 'readMainCopy').mockResolvedValue('### Adds a todo\n');
+
+        expect(await resolveLivingHealth(root, meta)).toEqual({ newRequirements: ['Archives a todo'] });
+    });
+});

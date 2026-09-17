@@ -9,6 +9,7 @@ import {
     livingSpecTitle,
     livingPurposeBody,
     approveLivingText,
+    appendLivingRemoval,
 } from '../livingDocs';
 
 describe('livingTierType', () => {
@@ -244,5 +245,40 @@ describe('approveLivingText', () => {
     it('returns null when nothing matched', () => {
         expect(approveLivingText(spec, 'No such rule')).toBeNull();
         expect(approveLivingText('# Cap\n\n## Requirements\n\n### A\n\nBody.')).toBeNull();
+    });
+});
+
+describe('appendLivingRemoval', () => {
+    let dir: string;
+    const ctxFile = () => path.join(dir, '.spec-context.json');
+    const read = () => JSON.parse(fs.readFileSync(ctxFile(), 'utf-8'));
+
+    beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'living-removal-')); });
+    afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+
+    it('creates the file when absent, with only the record', async () => {
+        await appendLivingRemoval(path.join(dir, 'spec.md'), 'todos', 'Todos persist');
+        const ctx = read();
+        expect(Object.keys(ctx)).toEqual(['history']);
+        expect(ctx.history).toHaveLength(1);
+        expect(ctx.history[0]).toMatchObject({ kind: 'requirement-removed', capability: 'todos', requirement: 'Todos persist', by: 'user' });
+        expect(Number.isNaN(Date.parse(ctx.history[0].at))).toBe(false);
+    });
+
+    it('appends after existing entries and keeps unknown fields', async () => {
+        fs.writeFileSync(ctxFile(), JSON.stringify({ owner: 'platform', history: [{ kind: 'note' }] }));
+        await appendLivingRemoval(path.join(dir, 'todos.spec.md'), 'todos', 'Gone');
+        const ctx = read();
+        expect(ctx.owner).toBe('platform');
+        expect(ctx.history.map((h: { kind: string }) => h.kind)).toEqual(['note', 'requirement-removed']);
+        expect(ctx.status).toBeUndefined();
+        expect(ctx.currentStep).toBeUndefined();
+        expect(ctx.workflow).toBeUndefined();
+    });
+
+    it('never overwrites a file it cannot parse', async () => {
+        fs.writeFileSync(ctxFile(), '{ not json');
+        await expect(appendLivingRemoval(path.join(dir, 'spec.md'), 'todos', 'Gone')).rejects.toThrow();
+        expect(fs.readFileSync(ctxFile(), 'utf-8')).toBe('{ not json');
     });
 });
