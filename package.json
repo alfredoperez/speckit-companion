@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline, per-phase timing, and living specs for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -104,7 +104,6 @@
         "contents": "Welcome to SpecKit\n\nA spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.\n\n[$(plus) Create your first spec](command:speckit.create)\n\n[$(play) Open a live sample](command:speckit.openSampleSpec)",
         "when": "speckit.detected && !speckit.constitutionNeedsSetup"
       },
-      
       {
         "view": "speckit.views.explorer",
         "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
@@ -504,7 +503,7 @@
       },
       {
         "command": "speckit.livingSpecs.move",
-        "title": "Move Living Spec\u2026",
+        "title": "Move Living Spec…",
         "category": "SpecKit",
         "icon": "$(arrow-swap)"
       },
