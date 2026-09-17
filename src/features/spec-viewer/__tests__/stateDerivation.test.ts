@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import {
     isStepCompleted,
     deriveStepBadges,
@@ -10,7 +12,6 @@ import type { SpecContext, HistoryEntry, StepName } from '../../../core/types/sp
 import type { WorkflowStepConfig } from '../../workflows/types';
 import { COMPANION_WORKFLOW, normalizeWorkflowConfig } from '../../workflows/workflowManager';
 import { resolveCompanionSteps } from '../../workflows/pipelineResolution';
-import * as path from 'path';
 
 // Stub footerActions — these tests exercise derivation, not footer logic.
 // (vscode itself is mocked globally via jest.config moduleNameMapper, so
@@ -437,6 +438,20 @@ describe('reasoning-trail normalization', () => {
             expect(state.coverage).toEqual([
                 { req: 'FR-001', title: undefined, tasks: ['T001', 'T002'], tests: ['a.test.ts::case', 'b.test.ts'] },
             ]);
+        });
+
+        it('derives the rows the writer promises, for both shapes it can produce', () => {
+            // The Python half pins the same pair in
+            // speckit-extension/tests/test_capture_fields.py; the fixture is what
+            // stops the two runtimes agreeing separately and not with each other.
+            const dir = path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'tests', 'fixtures', 'coverage-shape');
+            const read = (name: string) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
+            const state = deriveViewerState(makeContext({ coverage: read('written.json') } as never));
+            expect(state.coverage).toEqual(
+                read('expected-rows.json').map((row: Record<string, unknown>) => ({
+                    req: row.req, title: row.title, tasks: row.tasks, tests: row.tests,
+                })),
+            );
         });
 
         it('skips malformed entries and yields absent for an empty map', () => {

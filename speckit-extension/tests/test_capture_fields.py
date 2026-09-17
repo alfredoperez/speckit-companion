@@ -115,6 +115,31 @@ class CaptureFieldTests(unittest.TestCase):
         self.assertEqual(entry["tasks"], ["T001", "T002"])
         self.assertEqual(entry["tests"], ["a.test.ts::case", "b.test.ts"])
 
+    def test_coverage_writes_the_shape_the_viewer_reads(self) -> None:
+        fixtures = Path(__file__).resolve().parent / "fixtures" / "coverage-shape"
+        written = json.loads((fixtures / "written.json").read_text(encoding="utf-8"))
+        wc.upsert_coverage(self.fd, "FR-001", written["FR-001"]["tasks"],
+                           written["FR-001"]["tests"], written["FR-001"]["title"])
+        wc.upsert_coverage(self.fd, "FR-002", written["FR-002"]["tasks"], written["FR-002"]["tests"])
+        # The line shape the batch capture used to store verbatim.
+        wc.upsert_coverage(self.fd, "FR-003", "T030, T031",
+                           "speckit-extension/tests/test_living_validate.py,"
+                           "src/features/specs/__tests__/requirementSlices.test.ts",
+                           written["FR-003"]["title"])
+        rows = json.loads((fixtures / "expected-rows.json").read_text(encoding="utf-8"))
+        produced = _ctx(self.fd)["coverage"]
+        for row in rows:
+            entry = produced[row["req"]]
+            self.assertEqual(entry.get("title"), row.get("title"))
+            self.assertEqual(entry["tasks"], row["tasks"])
+            self.assertEqual(entry["tests"], row["tests"])
+
+    def test_the_typescript_half_reads_the_same_fixture(self) -> None:
+        twin = (Path(__file__).resolve().parents[2] / "src" / "features" / "spec-viewer"
+                / "__tests__" / "stateDerivation.test.ts").read_text(encoding="utf-8")
+        self.assertIn("coverage-shape", twin)
+        self.assertIn("expected-rows.json", twin)
+
     def test_coverage_upsert_keeps_other_requirements(self) -> None:
         wc.upsert_coverage(self.fd, "FR-001", ["T001"], None)
         wc.upsert_coverage(self.fd, "FR-002", ["T002"], None)
