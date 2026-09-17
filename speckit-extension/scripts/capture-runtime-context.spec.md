@@ -4,42 +4,42 @@
 
 ## Purpose
 
-The spec context file is the only record the extension can read of a run it cannot watch, and every script here writes into it from inside the user's own pipeline. This concern holds the write contract: nothing here may break the host command, and nothing already recorded may be lost, rewound, or hand-authored.
+The spec context file is the extension's only record of a run it cannot watch, and every script here writes into it from inside the user's pipeline. These rules keep those writes from breaking the host command or losing, rewinding, or hand-authoring anything already recorded.
 
 ## Requirements
 
 ### Recording state MUST NOT be able to break the run it observes
 
-Every script in this runtime is a passenger on the user's command. A missing interpreter, an unresolvable spec directory, a malformed config, a git repository that cannot answer a question — none of these MUST fail the host command. The scripts SHALL report the problem on stderr and exit successfully, so a capture defect degrades into a gap in the record rather than a halted pipeline. The read-side and report-side tools (status resolution, drift, coverage) carry the same contract and are documented as never raising and never exiting non-zero.
+A missing interpreter, an unresolvable spec directory, a malformed config, or a git repository that cannot answer MUST NOT fail the host command. The scripts SHALL report the problem on stderr and exit successfully, so a capture defect leaves a gap in the record instead of a halted pipeline. The read-side and report-side tools (status resolution, drift, coverage) carry the same contract: they never raise and never exit non-zero.
 
 #### Scenario: the interpreter is absent
-- **WHEN** a command reaches its capture step in an environment without `python3`
+- **WHEN** a command reaches its capture step without `python3`
 - **THEN** the command warns once and continues its real work
-- **AND** the user's run completes normally with an incomplete record
+- **AND** the run completes normally with an incomplete record
 
 #### Scenario: the spec directory cannot be resolved
-- **WHEN** the writer cannot determine which spec a lifecycle write belongs to
+- **WHEN** the writer cannot tell which spec a lifecycle write belongs to
 - **THEN** it declines to write, names the problem on stderr, and exits successfully
 
 ### The context file is append-only, crash-safe, and tolerant of fields it does not own
 
-The spec context is a shared document written by several independent producers — this runtime, the VS Code extension, and future readers. Writers SHALL read-merge-write rather than rebuild: unknown top-level keys and previously written history entries survive untouched, and the lifecycle log is only ever appended to, never rewritten or shrunk. Every write MUST be atomic (write a temporary file, then rename) so an interrupted run can never leave a half-written or truncated context behind.
+Writers SHALL read-merge-write rather than rebuild, because this runtime, the VS Code extension, and future readers all share the file. Unknown top-level keys and existing history entries survive untouched, and the lifecycle log is only appended to, never rewritten or shrunk. Every write MUST be atomic (temporary file, then rename), so an interrupted run never leaves a partial context.
 
 #### Scenario: a newer writer adds a field this runtime does not know
-- **WHEN** an older script updates a context file carrying an unfamiliar top-level key
+- **WHEN** an older script updates a context carrying an unfamiliar top-level key
 - **THEN** that key is present and unchanged after the write
 
 #### Scenario: the process dies mid-write
 - **WHEN** a write is interrupted before it completes
-- **THEN** the on-disk context is either the previous state or the new state, never a partial one
+- **THEN** the context on disk is either the previous state or the new state, never a partial one
 
-Atomicity is not isolation, and the append-only guarantee needs both. A writer SHALL hold a lock across its whole read-modify-write, not merely around the publish, so two captures issued at the same moment cannot each start from the same copy and have the second silently discard the first one's work. Readers never take that lock and are never blocked by it. The lock MUST NOT be kept inside the feature directory, which is the user's, and MUST NOT be the context file itself, which is replaced by rename on every publish.
+A writer SHALL hold a lock across its whole read-modify-write, not only around the publish, so two simultaneous captures cannot start from the same copy and lose the first one's work. Readers never take the lock and are never blocked by it. The lock MUST NOT live inside the feature directory, which is the user's, and MUST NOT be the context file itself, which is replaced by rename on every publish.
 
-Where the guarantee cannot be met, it MUST be defended rather than assumed: a write that would leave the lifecycle log shorter than the copy on disk SHALL keep every recorded entry and add only what is genuinely new, and a log that is present but unreadable SHALL be preserved beside the fresh one rather than overwritten. Both SHALL say so.
+Where the guarantee cannot be met, it MUST be defended. A write that would leave the lifecycle log shorter than the copy on disk SHALL keep every recorded entry and add only what is new. A log that is present but unreadable SHALL be preserved beside the fresh one rather than overwritten. Both cases SHALL be reported.
 
 #### Scenario: two captures are issued at the same moment
 - **WHEN** several writes to one feature overlap
-- **THEN** every one of them is present afterwards, and the document is readable
+- **THEN** every one of them is present afterwards and the document is readable
 
 #### Scenario: a writer would shorten the history
 - **WHEN** a write publishes fewer entries than the file already holds
@@ -52,7 +52,7 @@ Where the guarantee cannot be met, it MUST be defended rather than assumed: a wr
 ### Both writers resolve the lock to one place, whatever environment they were given
 <!-- touches: speckit-extension/scripts/spec_context.py -->
 
-Where a spec's write lock lives SHALL NOT depend on the temporary directory the resolving process happens to have. Both halves read the same environment, so deriving it that way makes them agree only when their environments do, and stop sharing a lock silently when they do not — which is the lost write the lock exists to prevent, with nothing to say it happened. A terminal reached over a connection, from a wrapper, or inside a container is exactly the case that differs. A fixed root is the only way two processes that never meet can be sure they queue on one file, and it is what makes the directory's shared-host permissions load-bearing rather than decorative.
+A spec's write lock SHALL live under a fixed root, not the resolving process's temporary directory. Two halves with different environments (a remote terminal, a wrapper, a container) would otherwise stop sharing a lock silently and lose writes with no sign of it.
 
 #### Scenario: the editor and a terminal were given different temporary directories
 - **WHEN** each resolves where the lock lives
@@ -60,7 +60,7 @@ Where a spec's write lock lives SHALL NOT depend on the temporary directory the 
 
 ### The write lock is released once, after the publish, on whichever path ran
 
-A context write SHALL hold its lock until the publish has succeeded or failed, on every code path including the fallback one. A release attached to the first attempt let the fallback path publish unlocked, which is precisely the window the lock exists to close.
+A context write SHALL hold its lock until the publish has succeeded or failed, on every code path including the fallback. Releasing it after the first attempt would let the fallback publish unlocked.
 
 #### Scenario: the preferred writer is unavailable and the fallback path runs
 - **WHEN** the fallback publishes the file
@@ -68,12 +68,12 @@ A context write SHALL hold its lock until the publish has succeeded or failed, o
 
 ### Lifecycle status moves forward only, and the terminal state has exactly one writer
 
-Any path that sets a spec's status MUST check that the spec has not already moved past the step being written, not merely that it is non-terminal. Re-running an earlier step, or a hook firing twice, records the finish but MUST NOT drag the spec backwards. Promotion to the terminal completed state is reserved to a single explicit writer (`--mark-complete`), which refuses a spec with work outstanding and is a no-op on a spec already shipped. Generic field-setting MUST refuse lifecycle keys outright, so no side door exists around this guard.
+Any path that sets a spec's status MUST check that the spec has not already moved past the step being written, not merely that it is non-terminal. Re-running an earlier step or a duplicate hook records the finish but MUST NOT move the spec backwards. Only `--mark-complete` promotes a spec to completed: it refuses a spec with work outstanding and is a no-op on one already shipped. Generic field-setting MUST refuse lifecycle keys, so nothing bypasses this guard.
 
 #### Scenario: an earlier step is re-advanced
-- **WHEN** an already-advanced spec receives a completion for a step it passed
+- **WHEN** an advanced spec receives a completion for a step it already passed
 - **THEN** the finish is recorded in history
-- **AND** the status and current step are left where they were
+- **AND** the status and current step stay where they were
 
 #### Scenario: a caller tries to set the terminal status through a generic setter
 - **WHEN** a generic field write names a lifecycle key
@@ -81,19 +81,19 @@ Any path that sets a spec's status MUST check that the spec has not already move
 
 ### The order a spec's statuses run in is published, not copied
 
-Anything that has to know whether a spec has reached a step — a driver waiting on one, a hook, the panel — needs the statuses in the order a run passes through them, and every copy of that order is a copy that goes stale on the day a status is added. The runtime SHALL hold the order once, beside the statuses themselves, with the in-progress form of each step before its completed form, and SHALL make it readable from outside the module so a caller in another language ranks statuses against the same list rather than keeping its own.
+The runtime SHALL hold the status order once, beside the statuses, with each step's in-progress form before its completed form. It SHALL expose that order outside the module, so callers in other languages rank statuses against the same list instead of keeping a copy that goes stale.
 
 #### Scenario: a caller needs to rank two statuses
 - **WHEN** it asks the runtime for the status order
-- **THEN** it is given every status in the order a run passes through them, rather than maintaining its own copy
+- **THEN** it gets every status in run order, with no copy of its own to maintain
 
 ### Timing is stamped by a script, never hand-authored
 
-Durations are only meaningful if a clock produced them. Every timing entry SHALL be written by running a writer script that reads the real clock at write time; no caller — human or AI — writes timing into the context by editing the file. This is the runtime's central reliability lever: running a command is something an AI does faithfully, while pausing mid-work to hand-author a timestamped JSON entry is not. It is also what keeps the file structurally valid, since hand-editing is what corrupted it in practice. The same argument reaches past timing: where a check can be executed, the writer SHALL take the check and the command and run it, rather than take a sentence describing the outcome, and a pair it cannot read SHALL be named and skipped rather than recorded as a check nobody ran.
+Every timing entry SHALL be written by a writer script that reads the real clock at write time. No caller, human or AI, writes timing by editing the file. An AI runs a command faithfully but does not reliably hand-author timestamped JSON, and hand-editing is what corrupted the file in practice. Where a check can be executed, the writer SHALL take the check and its command and run it, not a sentence describing the outcome. A pair it cannot read SHALL be named and skipped, never recorded as a check nobody ran.
 
 #### Scenario: a step's work finishes
-- **WHEN** the step's own work ends and its completion must be recorded
-- **THEN** the writer script is invoked and stamps the entry from its own clock
+- **WHEN** a step's work ends and its completion must be recorded
+- **THEN** the writer script runs and stamps the entry from its own clock
 
 #### Scenario: an entry is de-duplicated
 - **WHEN** the same step completion is recorded twice
@@ -105,9 +105,9 @@ Durations are only meaningful if a clock produced them. Every timing entry SHALL
 
 ### A step a project declared is a real step; only a typo is refused
 
-The guard on step names exists to catch a MISSPELLED step, which would otherwise default to the first step and journal a junk completion against the wrong one. It SHALL NOT refuse a step that exists: a project that has written a step's node directory has declared a real step, and refusing to journal it leaves the run with no record of a phase that genuinely happened. Both the extension's own step directories and the project's SHALL be consulted, and the project SHALL be located even when the call carries no feature directory — the hook form of a step-start carries none, and deriving the project from that argument alone journaled a project step's finish while refusing its start, producing a history that ends in a completion that never began.
+The step-name guard SHALL refuse only a misspelled step, which would otherwise default to the first step and journal a junk completion. It SHALL NOT refuse a step whose node directory exists, checking both the extension's step directories and the project's. The project SHALL be located even when the call has no feature directory, as in the hook form of a step-start, so a project step's start is never refused while its finish is journaled.
 
-Ordering SHALL NOT be applied to a step outside the canonical order: the canonical order says nothing about where it belongs, and ranking it against the last canonical step refuses exactly the case people add one for — a review or verification that runs after the work. A spec that has genuinely shipped stays closed to everything.
+Ordering SHALL NOT be applied to a step outside the canonical order, so a review or verification step added after the work is not refused. A spec that has shipped stays closed to everything.
 
 #### Scenario: a project journals its own step
 - **WHEN** the start arrives through the hook form, with no feature directory
@@ -115,9 +115,9 @@ Ordering SHALL NOT be applied to a step outside the canonical order: the canonic
 
 #### Scenario: a step name is misspelled
 - **WHEN** the write is attempted
-- **THEN** it is refused by name rather than defaulting to another step
+- **THEN** it is refused by name instead of defaulting to another step
 
 ## Uncovered
 
-- `derive-from-files.py` — read its docstring only.
+- `derive-from-files.py`: read its docstring only.
 - The Python test suite under `speckit-extension/tests/` was not read.

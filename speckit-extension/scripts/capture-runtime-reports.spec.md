@@ -4,13 +4,13 @@
 
 ## Purpose
 
-Drift, coverage and the health check read the record after the fact and never gate a run. Their one obligation is honesty: a report must say what it could not examine, and must never turn a failure to look into a clean verdict.
+Drift, coverage, and the health check read the record after the fact and never gate a run by default. They must say what they could not examine and never turn a failure to look into a clean verdict.
 
 ## Requirements
 
 ### A probe that cannot determine an answer MUST report "unknown", never the negative
 
-Boundary and capability probes throughout this runtime — is this a shallow clone, is this directory a separate project, does this file exist — MUST distinguish "no" from "I could not tell." Only the error that genuinely *means* absence may return the negative; every other failure MUST surface a third state so the caller can skip loudly. The failure shape this guards against is that the negative branch is usually also the keep-going branch, so a swallowed error silently produces a confident wrong answer.
+Boundary and capability probes (shallow clone, separate project, file exists) MUST distinguish "no" from "could not tell". Only an error that genuinely means absence may return the negative; every other failure MUST surface a third state so the caller can skip loudly. The negative branch is usually also the keep-going branch, so a swallowed error would yield a confident wrong answer.
 
 #### Scenario: history is unreachable
 - **WHEN** a shallow clone means a capability's baseline cannot be compared
@@ -18,23 +18,23 @@ Boundary and capability probes throughout this runtime — is this a shallow clo
 
 #### Scenario: a nested config is unreadable
 - **WHEN** a boundary probe cannot read a directory's config
-- **THEN** the directory is still treated as a boundary rather than descended into
+- **THEN** the directory is still treated as a boundary and not descended into
 
 ### A report MUST NOT claim success for work it did not do
 
-Summary output SHALL state both what was examined and what was not. A run that skipped every capability reports zero checked rather than a clean verdict, and a partly-skipped run states both counts so a success marker can never read as a verdict on the whole configuration. Skips carry their reason, and reasons that are actionable carry a hint. Reporting tools always exit successfully — a finding is a signal for a surrounding workflow to act on, not a gate these commands enforce.
+Summary output SHALL state what was examined and what was not. A run that skipped every capability reports zero checked, not a clean verdict, and a partly-skipped run states both counts. Skips carry their reason, and actionable reasons carry a hint. Reporting tools always exit successfully.
 
 #### Scenario: some capabilities could not be checked
 - **WHEN** a drift run examines part of the configured set
-- **THEN** the summary names both the checked and unchecked counts and the reason
+- **THEN** the summary names the checked and unchecked counts and the reason
 
-A count SHALL be presented as a total only when it is one. Where the evidence a count is drawn from is known to be incomplete — entries rolled off a capped log, or a call whose record could not be written — the report SHALL say the figure is a lower bound and raise the incompleteness itself as a finding.
+A count SHALL be presented as a total only when it is one. When its evidence is known to be incomplete, such as entries rolled off a capped log or a call whose record could not be written, the report SHALL call the figure a lower bound and raise the incompleteness as a finding.
 
-Reporting tools exit successfully by default, and that default does not change. But a constraint nobody can fail is a constraint nobody can demonstrate, so a caller MAY ask for a strict verdict that exits non-zero when a problem-severity finding is present, for use as a gate in a surrounding workflow.
+Reporting tools exit successfully by default. A caller MAY request a strict verdict that exits non-zero when a problem-severity finding is present, for use as a gate.
 
 #### Scenario: a call did work the trace could not record
 - **WHEN** a capture succeeds but its trace entry cannot be written
-- **THEN** the run says so, leaves evidence beside the trace, and the report calls its counts lower bounds rather than totals
+- **THEN** the run says so, leaves evidence beside the trace, and the report calls its counts lower bounds
 
 #### Scenario: a caller wants a gate
 - **WHEN** a strict verdict is requested and a problem-severity finding is present
@@ -42,7 +42,7 @@ Reporting tools exit successfully by default, and that default does not change. 
 
 ### The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence
 
-A run that cannot write into its spec directory can still complete captures while the trace line recording them fails to append. That run leaves a marker and no trace file. The check SHALL read the marker first, so the single failure mode that produces no trace at all is reportable rather than indistinguishable from a spec that has simply captured nothing yet.
+A run that cannot write into its spec directory leaves a marker and no trace file, even though its captures completed. The check SHALL read that marker first, so this failure is reported instead of looking like a spec that has captured nothing yet.
 
 #### Scenario: the trace file was never created
 - **WHEN** the health check runs on a spec with unrecorded-call entries and no trace file
@@ -51,15 +51,15 @@ A run that cannot write into its spec directory can still complete captures whil
 
 #### Scenario: neither a marker nor a trace exists
 - **WHEN** the health check runs on a spec with no marker and no trace file
-- **THEN** it reports the trace check as skipped with its existing wording, and emits no finding
+- **THEN** it reports the trace check as skipped with its existing wording and emits no finding
 
 ### The health check MUST report an implement step that closed having executed nothing
 
-Running the project's own checks is an instruction with no observer, so a run can write code, check off a task naming a test, and close having proven nothing. The check SHALL judge whether the run recorded any verification it actually executed before implement closed, treating an absent, empty, or malformed list alike as nothing verified.
+The check SHALL judge whether the run recorded any verification it actually executed before implement closed. An absent, empty, or malformed list counts as nothing verified.
 
 #### Scenario: implement closed with an empty verification list
 - **WHEN** the health check runs on a spec whose implement step recorded a step-level completion and no verification
-- **THEN** it emits exactly one problem finding naming that the step closed with nothing verified
+- **THEN** it emits exactly one problem finding saying the step closed with nothing verified
 
 #### Scenario: the spec never reached implement
 - **WHEN** the health check runs on a spec with no implement completion recorded
@@ -68,7 +68,7 @@ Running the project's own checks is an instruction with no observer, so a run ca
 ### The health check MUST report a step that closed without the document it declared it writes
 <!-- touches: speckit-extension/scripts/doctor.py, speckit-extension/scripts/doctor_checks.py -->
 
-Every author node declares the document it writes, and a build collects those declarations into a manifest; until something compared that manifest against the disk, a step that quietly stopped writing its document closed exactly like one that wrote it. The check SHALL read the built manifest and, for each step the run recorded as finished, report a declared document that is not on disk. Only unconditional declarations are judged — an artifact the size budget is allowed to fold away is not a fault — and findings are raised at warning severity, never as a gate, because the manifest describes the pipeline as it is built today while the spec on disk may have been produced by an earlier one. A step that produced none of what this pipeline declares SHALL be read as a run of some other pipeline and reported as no record rather than as a fault, and an absent, unreadable, or misshapen manifest SHALL be reported as a skip with its reason, since there is then nothing to hold the run to.
+The check SHALL read the built manifest and, for each step the run recorded as finished, report any declared document missing from disk. Only unconditional declarations are judged, and findings are warnings, never a gate, since the spec may come from an earlier pipeline. A step that produced none of the declared documents SHALL be reported as no record, and an absent, unreadable, or misshapen manifest SHALL be reported as a skip with its reason.
 
 #### Scenario: a closed step is missing one of the documents it declares
 - **WHEN** the health check runs on a spec whose finished step wrote some but not all of its declared documents
@@ -76,7 +76,7 @@ Every author node declares the document it writes, and a build collects those de
 
 #### Scenario: the spec was produced by a different pipeline
 - **WHEN** no closed step produced any of the documents this pipeline declares
-- **THEN** the check reports itself as skipped rather than flagging every declaration as missing
+- **THEN** the check reports itself as skipped instead of flagging every declaration as missing
 
 #### Scenario: this install's build declared nothing
 - **WHEN** the manifest is absent or cannot be read
@@ -84,5 +84,5 @@ Every author node declares the document it writes, and a build collects those de
 
 ## Uncovered
 
-- `check-coverage.py` — read only its contract docstring, not its matching logic.
+- `check-coverage.py`: read only its contract docstring, not its matching logic.
 - The Python test suite under `speckit-extension/tests/` was not read.

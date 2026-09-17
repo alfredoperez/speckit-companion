@@ -4,16 +4,16 @@
 
 ## Purpose
 
-Per-task progress is written by many workers at once and read back as a checklist and a timeline. This concern keeps the journal contention-free and the checklist derived from it, so the two never disagree.
+Many workers write per-task progress at once, and it is read back as a checklist and a timeline. These rules keep the journal contention-free and the checklist derived from it, so the two never disagree.
 
 ## Requirements
 
 ### Per-task progress is finish-only, contention-free, and folded idempotently
 
-A task records a single finish, never a start/finish pair stamped at one instant — a pair produces zero-length ticks and hides real cadence, so each task's duration is the gap to the previous finish. Finishes are appended as single lines to a separate event log rather than read-modify-written into the shared context, so concurrent workers never contend and the hot loop never stalls. Those lines are folded into the durable record through the same code path a live write would take, so folding is byte-equivalent to inline journaling and re-folding the whole log never double-counts.
+A task records a single finish, never a start/finish pair, and its duration is the gap to the previous finish. Finishes are appended as single lines to a separate event log, not read-modify-written into the shared context, so concurrent workers never contend. Folding those lines into the durable record uses the same code path as a live write, so it is byte-equivalent to inline journaling and re-folding never double-counts.
 
 #### Scenario: several workers finish at once
-- **WHEN** parallel workers each record a task finish simultaneously
+- **WHEN** parallel workers each record a task finish at the same time
 - **THEN** every finish lands and none corrupts the shared context
 
 #### Scenario: the log is folded more than once
@@ -27,14 +27,14 @@ A task records a single finish, never a start/finish pair stamped at one instant
 
 ### Derived artifacts have exactly one writer
 
-Anything computed from the journal — most visibly the task checklist's checkboxes — SHALL be written by one place, derived from the event record, and never hand-edited by the agent doing the work. Two producers of the same fact will disagree eventually; making the checklist *derived* rather than a second source of truth is what keeps the file and the record from diverging. Task-marker parsing MUST accept every marker format the shipped command families emit, since a format the parser silently misses produces no journal at all and strands the step.
+Anything computed from the journal, such as the task checklist's checkboxes, SHALL be written by one place from the event record and never hand-edited by the working agent. Task-marker parsing MUST accept every marker format the shipped command families emit, since a missed format produces no journal and strands the step.
 
 #### Scenario: a task is completed by a fanned-out worker
 - **WHEN** a worker finishes its task
 - **THEN** it records only its finish
-- **AND** the checkbox is flipped later by the single derivation pass
+- **AND** the single derivation pass flips the checkbox later
 
-The task grammar SHALL match the extension's, cover every bullet character, ignore a checkbox inside a fenced block or a code span, and require a task id. Both halves decide the same question — whether every task is done — from opposite sides of the product, so they SHALL be pinned to one shared fixture read by both test suites. A checkbox shown inside a fence is documentation of the syntax; counting it here reported a task list finished while the viewer, which has always skipped fences, still showed tasks left.
+The task grammar SHALL match the extension's: every bullet character, no checkbox inside a fenced block or code span, and a required task id. Both halves SHALL be pinned to one shared fixture read by both test suites, so they agree on whether every task is done.
 
 #### Scenario: a task document shows example syntax inside a fence
 - **WHEN** the two halves each count its tasks
@@ -42,11 +42,11 @@ The task grammar SHALL match the extension's, cover every bullet character, igno
 
 ### A call count may shrink only when the record it produces stays identical
 
-Reducing the number of calls a step makes is worth doing — the two-call task close and the six-call end-of-step volley are both mostly ceremony — but a shorter path that records something different is a regression disguised as an optimization. A merged form MUST therefore produce a record byte-equivalent to the sequence it replaces, MUST remain idempotent for the same reason the sequence was, and MUST NOT remove the caller's ability to perform the steps separately where the split exists for a reason: only the main agent may fold, so a merged close that folds is for the main agent alone and a fanned-out worker keeps appending on its own.
+A merged form that replaces a call sequence MUST produce a byte-equivalent record and MUST stay idempotent. It MUST NOT remove the ability to run the steps separately where the split has a reason: only the main agent may fold, so a merged close that folds is reserved for the main agent and fanned-out workers keep appending on their own.
 
 #### Scenario: a task is closed in one call instead of two
 - **WHEN** the merged close runs
-- **THEN** the resulting record equals what appending and then folding produced
+- **THEN** the record equals what appending and then folding produced
 
 #### Scenario: a worker uses the merged close
 - **WHEN** concurrent workers would each fold

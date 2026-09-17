@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Drift is the code a capability claims that changed without anyone saying what it changed about the behaviour. This capability covers what counts as drift, what does not, and how the question can be asked early enough to answer rather than only in aggregate once it has become a backlog.
+Drift is code a capability claims that changed without anyone saying what it changed about the behaviour. This capability defines what counts as drift and how to ask about it early, before it becomes a backlog.
 
 ## Requirements
 
 ### The drift detector offers an opt-in working-tree mode
 
-The drift script SHALL accept a working-tree mode that widens each capability's changed set from committed history to the baseline→worktree diff plus untracked files, de-duplicated, with the tracked-vs-unspeced scan widened the same way. The default invocation issues exactly the pre-existing git commands and renders identical human output; the machine-readable result names which mode produced it. The never-fails exit contract and the checked/skipped counts semantics hold in both modes.
+The drift script SHALL accept a working-tree mode that widens each capability's changed set to the baseline→worktree diff plus untracked files, de-duplicated, and widens the tracked-vs-unspeced scan the same way. The default invocation runs the same git commands and renders identical human output, and the machine-readable result names its mode. The never-fails exit contract and the checked/skipped counts hold in both modes.
 
 #### Scenario: an uncommitted edit in a capability's area
 - **WHEN** drift runs without the flag and then with it
@@ -16,19 +16,19 @@ The drift script SHALL accept a working-tree mode that widens each capability's 
 
 ### A file a run already accounted for is not drift
 
-Drift is code that changed with nobody saying whether the spec still describes it, and a run that folded a delta into a capability, or recorded a reasoned skip for it, has said exactly that. The detector SHALL therefore drop from a capability's drifted set every file changed by such a run, read from the runs' own records rather than from anything the report keeps for itself. Reporting them anyway tells a developer to review work they finished on the run that changed the file, which is how a drift report becomes a list people scroll past. A file changed by hand, with no run behind it, is drift as before, and the accounting is per capability: a run that settled one capability vouches for nothing in another.
+The detector SHALL drop from a capability's drifted set every file changed by a run that folded a delta into that capability or recorded a reasoned skip for it, read from the runs' own records. A file changed by hand, with no run behind it, is still drift. Accounting is per capability: a run that settled one capability vouches for nothing in another.
 
 #### Scenario: a completed run folded into this capability
 - **WHEN** drift runs afterwards
-- **THEN** the files that run changed are not reported, while a hand edit since is
+- **THEN** the files that run changed are not reported, but a later hand edit is
 
 #### Scenario: a run recorded a reasoned skip
 - **WHEN** drift runs afterwards
-- **THEN** that run's files are not reported either, because a skip is the run saying the spec still holds
+- **THEN** that run's files are not reported either, because a skip says the spec still holds
 
 ### A living spec is not code that drifts, whoever wrote it
 
-A capability's own spec documents are already excluded from its drift. That is not enough where capabilities sit beside the code they describe: one capability's membership routinely claims the directory its siblings keep their specs in, so writing one spec reports every neighbour as having drifted code. Any registered capability's spec documents SHALL therefore be excluded from every capability's drift, not only from its own.
+Every registered capability's spec documents SHALL be excluded from every capability's drift, not only its own. Colocated capabilities often claim the directory holding a sibling's spec, so writing one spec would otherwise drift its neighbours.
 
 #### Scenario: two colocated capabilities share a directory
 - **WHEN** one of their specs is written
@@ -36,7 +36,7 @@ A capability's own spec documents are already excluded from its drift. That is n
 
 ### Drift can be asked about one branch, so it is answerable before it is a backlog
 
-Measured across the whole repository, drift is only ever read once it has become a backlog, and by then it is on nearly every capability and means nothing. The report SHALL therefore also measure from the merge base with a named ref, so it answers a question about the work in hand: which capabilities did this branch touch, and did it fold any of them. A capability whose spec was written on the same branch reports nothing, because that is the loop closing rather than drift. Work that was already on the base is not this branch's to answer for, and reporting it is how a branch-scoped check becomes noise like the whole-repo one.
+The report SHALL also measure from the merge base with a named ref, answering which capabilities this branch touched and whether it folded them. A capability whose spec was written on the same branch reports nothing. Work already on the base SHALL NOT be reported.
 
 #### Scenario: a branch changes code a capability claims and writes no spec
 - **WHEN** drift is measured from the branch point
@@ -52,7 +52,7 @@ Measured across the whole repository, drift is only ever read once it has become
 
 ### A file one requirement names does not drift the capabilities that only share its folder
 
-When a requirement's marker in one capability names a changed file, the drift report SHALL attribute that change to that capability alone. A sibling capability whose membership glob also matches the file, but whose requirements never name it, SHALL NOT be reported as drifted for it. A changed file no requirement names anywhere still drifts every capability that claims it.
+When a requirement's marker in one capability names a changed file, the drift report SHALL attribute that change to that capability alone. A sibling capability whose glob matches the file but whose requirements never name it SHALL NOT be reported as drifted. A changed file no requirement names still drifts every capability that claims it.
 
 #### Scenario: two capabilities claim one folder and a requirement names the changed file
 - **WHEN** drift is computed
