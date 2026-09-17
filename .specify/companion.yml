@@ -25,6 +25,8 @@ commands:
           # No simplifier hook: on the run that measured it, it cost 6 minutes of
           # wall clock and found nothing the self-review below had not already caught.
           - { type: prompt, text: "Before this spec is marked complete, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
+          # Two reviewers, because the self-review above is the author marking their own work.
+          - { type: prompt, text: "Now have the diff reviewed by someone other than yourself, before the commit. Dispatch TWO subagents in ONE message so they run at once: one runs the /code-review skill over the working diff, the other runs /codex:review over the same diff. Each returns findings only, never file contents. Then judge every finding yourself: fix the real ones, and say in one line which you rejected and why. RUN AT MOST TWO ROUNDS. Go round two only when round one produced a lot to act on, meaning you fixed three or more real findings, and then review only what you changed. Stop after round two whatever it returns, and carry anything still open into the PR body as a gap. If a subagent tool is unavailable, run /code-review inline once and say that codex was skipped." }
           - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
 
   specify:

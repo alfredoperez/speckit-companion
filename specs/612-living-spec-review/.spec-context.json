@@ -560,72 +560,180 @@
   "coverage": {
     "FR-001": {
       "title": "Bar offers Approve all N when N >= 1 adopted, never at 0",
-      "tasks": "T022,T023,T024",
-      "tests": "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::offers Approve all N while N requirements are adopted,offers no approve action when nothing is adopted"
+      "tasks": [
+        "T022",
+        "T023",
+        "T024"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::offers Approve all N while N requirements are adopted",
+        "offers no approve action when nothing is adopted"
+      ]
     },
     "FR-002": {
       "title": "Approve all removes every adopted marker and the banner in one write",
-      "tasks": "T005,T017",
-      "tests": "src/features/spec-viewer/__tests__/livingDocs.test.ts,src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo"
+      "tasks": [
+        "T005",
+        "T017"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts",
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo"
+      ]
     },
     "FR-003": {
       "title": "Undo offered for 5 seconds after Approve all or Remove, restores byte for byte",
-      "tasks": "T005,T009,T014,T017,T022,T023",
-      "tests": "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo,Remove stores a pending undo;webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::shows Undo for the time left and posts the token,hides Undo once the window passes"
+      "tasks": [
+        "T005",
+        "T009",
+        "T014",
+        "T017",
+        "T022",
+        "T023"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Approve all stores a pending undo",
+        "Remove stores a pending undo;webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx::shows Undo for the time left and posts the token",
+        "hides Undo once the window passes"
+      ]
     },
     "FR-004": {
       "title": "Undo does not write when the file changed on disk, and says why",
-      "tasks": "T005,T017",
-      "tests": "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+      "tasks": [
+        "T005",
+        "T017"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+      ]
     },
     "FR-005": {
       "title": "Requirements absent from main show a green edge and New pill, header counts them",
-      "tasks": "T007,T008,T015,T016,T018,T025,T027,T028",
-      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::the New mark;webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx::the new fact"
+      "tasks": [
+        "T007",
+        "T008",
+        "T015",
+        "T016",
+        "T018",
+        "T025",
+        "T027",
+        "T028"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::the New mark;webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx::the new fact"
+      ]
     },
     "FR-006": {
       "title": "New mark computed without writing, omitted when main cannot be read",
-      "tasks": "T003,T013,T025,T027",
-      "tests": "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts::new requirements;src/features/specs/__tests__/livingSpecsModel.test.ts::readMainCopy"
+      "tasks": [
+        "T003",
+        "T013",
+        "T025",
+        "T027"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts::new requirements;src/features/specs/__tests__/livingSpecsModel.test.ts::readMainCopy"
+      ]
     },
     "FR-007": {
       "title": "Cards list Leans on and Leaned on by, each only when non-empty",
-      "tasks": "T001,T002,T007,T010,T014,T015,T018,T029",
-      "tests": "src/features/specs/__tests__/requirementSlices.test.ts::requirementLinks;webview/src/spec-viewer/markdown/livingComponents.test.ts::Leans on and Leaned on by"
+      "tasks": [
+        "T001",
+        "T002",
+        "T007",
+        "T010",
+        "T014",
+        "T015",
+        "T018",
+        "T029"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/requirementSlices.test.ts::requirementLinks;webview/src/spec-viewer/markdown/livingComponents.test.ts::Leans on and Leaned on by"
+      ]
     },
     "FR-008": {
       "title": "Unresolved aligns links shown with original text and marked broken",
-      "tasks": "T002,T007,T010,T015,T018",
-      "tests": "webview/src/spec-viewer/markdown/livingComponents.test.ts::shows a broken entry as a span with its original text"
+      "tasks": [
+        "T002",
+        "T007",
+        "T010",
+        "T015",
+        "T018"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/markdown/livingComponents.test.ts::shows a broken entry as a span with its original text"
+      ]
     },
     "FR-009": {
       "title": "Resolver accepts --leaned-on-by capability#heading and returns every match",
-      "tasks": "T006,T012",
-      "tests": "speckit-extension/tests/test_resolve_spec_paths.py::LeanedOnBy"
+      "tasks": [
+        "T006",
+        "T012"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_resolve_spec_paths.py::LeanedOnBy"
+      ]
     },
     "FR-010": {
       "title": "A removal past its Undo window appends one record; an undone one leaves none",
-      "tasks": "T004,T005,T011,T014,T017",
-      "tests": "src/features/spec-viewer/__tests__/livingDocs.test.ts::appendLivingRemoval;src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+      "tasks": [
+        "T004",
+        "T005",
+        "T011",
+        "T014",
+        "T017"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingDocs.test.ts::appendLivingRemoval;src/features/spec-viewer/__tests__/messageHandlers.test.ts::Undo writes nothing and warns when the file changed"
+      ]
     },
     "FR-011": {
       "title": "Drift and the doctor do not report a recorded removal as missing",
-      "tasks": "T006,T012,T030,T031",
-      "tests": "speckit-extension/tests/test_living_validate.py::RemovalRecordsSilenceMissingHeadings"
+      "tasks": [
+        "T006",
+        "T012",
+        "T030",
+        "T031"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_living_validate.py::RemovalRecordsSilenceMissingHeadings"
+      ]
     },
     "FR-012": {
       "title": "SpecKit: Open Living Spec picks a capability, then optionally a requirement",
-      "tasks": "T032,T033,T036,T037",
-      "tests": "src/features/specs/__tests__/livingSpecsCommands.test.ts,src/features/specs/__tests__/manifest.test.ts"
+      "tasks": [
+        "T032",
+        "T033",
+        "T036",
+        "T037"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsCommands.test.ts",
+        "src/features/specs/__tests__/manifest.test.ts"
+      ]
     },
     "FR-013": {
       "title": "Tree row, status bar and loaded-living-specs links open scrolled to their requirement",
-      "tasks": "T034,T035,T036",
-      "tests": "src/features/specs/__tests__/livingSpecsStatusBar.test.ts,src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      "tasks": [
+        "T034",
+        "T035",
+        "T036"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsStatusBar.test.ts",
+        "src/features/specs/__tests__/livingSpecsExplorerProvider.test.ts"
+      ]
     },
     "FR-014": {
       "title": "Tests cover each story; viewer-states, sidebar, changelog and screenshots updated",
-      "tasks": "T038,T039,T040,T041,T042,T043"
+      "tasks": [
+        "T038",
+        "T039",
+        "T040",
+        "T041",
+        "T042",
+        "T043"
+      ]
     }
   },
   "size": "oversized",

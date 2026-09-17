@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Ask what leans on a requirement.** `resolve-spec-paths.py --leaned-on-by <capability>#<heading>` lists every requirement whose aligns link names that heading, in any capability, with its files and body. Plain output prints one `capability#heading` per line.
 
 ### Fixed
+- **Coverage records a list of names, whichever way it was written.** A requirement's tasks and tests given as one comma-separated line are stored as separate names, the same as when they are passed one flag at a time. Written as a single line, they read back as no coverage at all.
 - **A requirement removed on purpose is not reported missing.** When the viewer records a removal beside a living spec, `/speckit.companion.living-validate` no longer warns that a change names a heading the spec does not have.
 
 ## [0.22.0] - 2026-09-17

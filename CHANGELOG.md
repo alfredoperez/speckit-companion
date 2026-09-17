@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 - **Each requirement shows what it leans on and what leans on it.** Under a card's files, Leans on lists the requirements it aligns to and Leaned on by lists requirements in other specs that align to it. Click one to open that spec at that requirement. A link to a requirement or capability that does not exist stays on the card, marked broken.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
+### Fixed
+- **The coverage table shows the tests a run recorded.** Requirements whose tests were captured in one end-of-step write read as "No test linked", because the names were stored as one line of text and the table only read a list. The names were in the file the whole time; every spec already on disk now renders them.
+
 ### Changed
 - **Remove is remembered.** A requirement you remove and do not undo is recorded next to the spec as removed on purpose, so validation stops reporting a change that names it as missing. Remove now only refuses while a requirement in another spec still leans on the one you are removing.
 

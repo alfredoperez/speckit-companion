@@ -109,6 +109,12 @@ class CaptureFieldTests(unittest.TestCase):
         self.assertEqual(entry["tasks"], ["T001", "T002"])
         self.assertEqual(entry["tests"], ["a.test.ts::case"])
 
+    def test_coverage_splits_a_comma_string_into_names(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-001", "T001, T002", "a.test.ts::case,b.test.ts")
+        entry = _ctx(self.fd)["coverage"]["FR-001"]
+        self.assertEqual(entry["tasks"], ["T001", "T002"])
+        self.assertEqual(entry["tests"], ["a.test.ts::case", "b.test.ts"])
+
     def test_coverage_upsert_keeps_other_requirements(self) -> None:
         wc.upsert_coverage(self.fd, "FR-001", ["T001"], None)
         wc.upsert_coverage(self.fd, "FR-002", ["T002"], None)

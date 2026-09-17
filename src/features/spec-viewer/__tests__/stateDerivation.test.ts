@@ -430,6 +430,15 @@ describe('reasoning-trail normalization', () => {
             ]);
         });
 
+        it('reads tasks and tests written as one comma-separated string', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: { 'FR-001': { tasks: 'T001, T002', tests: 'a.test.ts::case,b.test.ts' } },
+            } as never));
+            expect(state.coverage).toEqual([
+                { req: 'FR-001', title: undefined, tasks: ['T001', 'T002'], tests: ['a.test.ts::case', 'b.test.ts'] },
+            ]);
+        });
+
         it('skips malformed entries and yields absent for an empty map', () => {
             expect(deriveViewerState(makeContext({ coverage: {} } as never)).coverage).toBeUndefined();
             const state = deriveViewerState(makeContext({ coverage: { 'FR-001': 'not-an-object' } } as never));
