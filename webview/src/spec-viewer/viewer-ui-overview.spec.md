@@ -83,22 +83,6 @@ A verification the pipeline derived SHALL keep the check mark and show what it a
 - **WHEN** the Overview renders
 - **THEN** they all read as reported, because that is what they are
 
-### A living spec's overview is the capability itself, not a run
-
-In living mode the overview pane MUST render the capability instead of the activity panel: its authored purpose, the paths it covers, its health, and its requirements in document order. Health reads as sentences: how many requirements have a mapped test, whether the source moved since the spec was last updated, and how many requirements are still adopted but unconfirmed, with the tier's "Approve spec" control beside that count. A requirement row opens that requirement, switching the pane to the document within the spec tier, or asking the extension to open the spec there from another tier. The pane renders behind the same failure boundary as the run overview.
-
-#### Scenario: a living spec is opened
-- **WHEN** the overview pane renders
-- **THEN** it shows purpose, covers, health and one row per requirement, and no run-log cards
-
-#### Scenario: every requirement has been confirmed
-- **WHEN** the health section renders
-- **THEN** it says so plainly and offers no approval control, because there is nothing left to approve
-
-#### Scenario: a requirement row is chosen from a tier other than the spec
-- **WHEN** the reader selects it
-- **THEN** the extension is asked to open the spec at that requirement, rather than the pane scrolling a document it is not showing
-
 ## Uncovered
 
 The original adoption did not read these files in full. Their exported surface and role were established, but their bodies were not reviewed line by line:
