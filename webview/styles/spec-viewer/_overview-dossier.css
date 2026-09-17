@@ -343,6 +343,41 @@
     background: var(--warning-subtle);
 }
 
+/* A claim is the run's own account. It stays visible and readable, and it does not wear
+   the mark a check earned: outlined rather than filled, and quieter by one step. */
+.dossier-check--claimed {
+    color: var(--text-muted);
+    background: none;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    line-height: 17px;
+}
+
+.dossier-evidence__row--claimed .dossier-evidence__body h3 {
+    color: var(--text-body);
+    font-weight: 500;
+}
+
+.dossier-evidence__row--claimed .dossier-evidence__body p,
+.dossier-evidence__row--claimed code {
+    color: var(--text-muted);
+}
+
+.dossier-evidence__row--claimed code {
+    background: var(--bg-inset);
+}
+
+.dossier-evidence__label {
+    margin: var(--space-5) 0 var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
 .dossier-evidence__body h3 {
     margin: 0;
     font-size: 14px;

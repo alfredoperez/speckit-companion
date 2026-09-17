@@ -86,6 +86,7 @@ from capture import (  # noqa: E402,F401
     append_capture_entries,
     apply_batch,
     append_string_list,
+    append_verification_runs,
     set_classification,
     set_fields,
     set_living_specs_loaded,
@@ -431,6 +432,12 @@ def _main() -> int:
              "JSON object with a 'what' key (plus result/command/warnings), or bare text. Repeatable.",
     )
     parser.add_argument(
+        "--verify-run", dest="verify_runs", action="append", default=None, metavar="WHAT::COMMAND",
+        help="Run COMMAND and record what actually happened as a verification — exit code and "
+             "duration, not a sentence. Prefer this over --verified wherever the check is "
+             "something that can be run. Repeatable.",
+    )
+    parser.add_argument(
         "--concern", dest="concerns", action="append", default=None, metavar="JSON|TEXT",
         help="Append a concern to concerns[] (de-duped on 'note'). "
              "JSON object with a 'note' key (plus step/kind), or bare text. Repeatable.",
@@ -491,7 +498,7 @@ def _main() -> int:
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
     capture_mode = bool(
-        args.decisions or args.verified or args.concerns or args.expectations
+        args.decisions or args.verified or args.verify_runs or args.concerns or args.expectations
         or args.coverage_req or args.step_summary or args.classification or args.context_entries
         or args.batch
     )
@@ -603,6 +610,14 @@ def _main() -> int:
         if args.verified:
             target = append_capture_entries(feature_dir, "verified", "what", args.verified)
             captured.append(f"[companion] Recorded {len(args.verified)} verification(s) in {target}")
+        if args.verify_runs:
+            target, skipped = append_verification_runs(feature_dir, args.verify_runs)
+            for spec in skipped:
+                captured.append(f"[companion] Skipped --verify-run {spec!r}: expected WHAT::COMMAND")
+            if target:
+                captured.append(
+                    f"[companion] Ran and recorded {len(args.verify_runs) - len(skipped)} "
+                    f"verification(s) in {target}")
         if args.concerns:
             target = append_capture_entries(feature_dir, "concerns", "note", args.concerns)
             captured.append(f"[companion] Recorded {len(args.concerns)} concern(s) in {target}")
