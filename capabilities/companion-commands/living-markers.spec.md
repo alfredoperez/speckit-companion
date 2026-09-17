@@ -2,13 +2,13 @@
 
 ## Purpose
 
-The markers under a requirement heading are what let a run be briefed on the right things: which files a requirement describes, which rule elsewhere constrains it, and whether anything has confirmed it yet. This capability covers who writes them, what has to agree about reading them, and what must be true of a capability's membership for them to resolve at all.
+Markers under a requirement heading say which files it describes, which rule elsewhere constrains it, and whether anything has confirmed it, so a run is briefed on the right things. This capability covers who writes them, how readers find them, and what a capability's membership needs for them to resolve.
 
 ## Requirements
 
 ### Adoption and sync write the file markers, so nobody maintains them by hand
 
-Adoption SHALL write a marker under each requirement it produces, naming the files that requirement was derived from. A sync SHALL write or widen the marker of each requirement it updates, as the union of what the marker already named and the files it folded in — never narrowing, since a requirement that keeps claiming a file it no longer touches costs a run one extra requirement, where narrowing could cost it a needed one.
+Adoption SHALL write a marker under each requirement it produces, naming the files it was derived from. A sync SHALL write or widen the marker of each requirement it updates to the union of its existing files and the files it folded in, and MUST never narrow it, since narrowing can cost a run a needed requirement.
 
 #### Scenario: a capability is adopted
 - **WHEN** its requirements are written
@@ -20,11 +20,11 @@ Adoption SHALL write a marker under each requirement it produces, naming the fil
 
 #### Scenario: fold-back rewrites a requirement that already carries a marker
 - **WHEN** the delta replaces that requirement's section
-- **THEN** the marker survives the replacement, widened by anything the delta names, because the span being replaced covers the marker line and a plain replacement would silently discard what adoption wrote
+- **THEN** the marker survives the replacement, widened by anything the delta names, because a plain replacement of the span would discard what adoption wrote
 
 ### A fold carries every marker across, not only the one it knows about
 
-A delta comes from a feature spec and carries no markers of its own, so a marker survives a fold only by being carried across deliberately. The `aligns` edge SHALL be carried the same way `touches` is. It is the marker that most needs it and the one least likely to be missed: no file match can reach an edge, so it would be deleted the first time any feature folded onto that requirement and nothing would ever notice — the capability would simply stop being reachable, silently, exactly as if the edge had never been written.
+A fold SHALL carry the `aligns` edge across the same way it carries `touches`, because a delta carries no markers of its own. No file match can reach an edge, so a dropped one silently makes the capability unreachable.
 
 #### Scenario: a feature folds onto a requirement carrying an edge
 - **WHEN** the fold rewrites that requirement
@@ -32,7 +32,7 @@ A delta comes from a feature spec and carries no markers of its own, so a marker
 
 ### Adoption proposes the links between capabilities, because only it can see them
 
-A requirement's `aligns` marker names a rule under another capability that constrains this behaviour, and nobody writes those by hand: at the moment you are editing one capability you cannot see what governs it from elsewhere. Adoption reads a whole area in one pass and SHALL propose these where the code shows the constraint — a guard, a check, a redirect that a rule elsewhere explains — bringing each to the developer with both headings side by side before writing. The marker is matched by heading text, so a proposal MUST name a heading that exists: a mistyped one is a dead link that reads as a working edge and sends every future run to load nothing.
+Adoption SHALL propose an `aligns` marker where the code shows a rule under another capability constraining the behaviour, such as a guard, check or redirect, and show the developer both headings side by side before writing. The marker is matched by heading text, so a proposal MUST name a heading that exists. A mistyped heading reads as a working edge and loads nothing.
 
 #### Scenario: a behaviour is guarded by a rule under another capability
 - **WHEN** adoption drafts the requirement
@@ -44,7 +44,7 @@ A requirement's `aligns` marker names a rule under another capability that const
 
 ### A capability's membership must reach the files its own requirements name
 
-A capability's match globs are what the resolver uses to claim a file, so a capability whose globs never reach the code its requirements describe resolves to nothing: a change in that area is told about no capability at all, and the run proceeds as if nothing had been written down. Adoption SHALL therefore name the code a behaviour is implemented in rather than the surface it was found through — a capability discovered through a page usually lives elsewhere — and validation SHALL report a capability whose every requirement names files outside its own membership. Both halves are individually valid in that case, the requirement's files exist and the capability's glob matches files too, which is why nothing else catches it.
+Adoption SHALL name the code a behaviour is implemented in, not the surface it was found through. Validation SHALL report a capability whose requirements all name files outside its own membership globs, because such a capability resolves to nothing and nothing else catches it.
 
 #### Scenario: adoption names the page instead of the implementation
 - **WHEN** the specs are validated
@@ -66,11 +66,11 @@ A capability's match globs are what the resolver uses to claim a file, so a capa
 - **WHEN** they split one area's behaviour between them
 - **THEN** none is reported, because whether a file is described is a question about the group
 
-The registry's own exempt list applies here as it does everywhere else, so a capability spanning its own test folder is not asked to describe it.
+The registry's exempt list applies here too, so a capability is not asked to describe its own test folder.
 
 ### Both readers of a spec must agree on where a marker can sit
 
-A marker may sit under a blank line: a formatter puts one between a heading and its comment. Every reader of a living spec SHALL skip blank lines when looking for one, and a reader that stops at the line directly under the heading is a defect, not a strictness. It fails silently and in the safe-looking direction — the spec reads as carrying no markers, so a validator passes it and a load quietly falls back to reading the file whole. This has shipped twice: once in the resolver as #690, and once in the validator, where it left both membership checks above dead on every formatted spec in the repository that had them.
+Every reader of a living spec SHALL skip blank lines between a heading and its marker, since formatters insert one. A reader that stops at the line directly under the heading is a defect: the spec silently reads as unmarked, so validation passes and a load reads the whole file.
 
 #### Scenario: a formatter separates a heading from its marker
 - **WHEN** the spec is read
