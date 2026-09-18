@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **The doctor no longer blames a run for an older failure.** A failed capture call from before a run's window used to be reported as a problem for that run. It is now a note saying failures from other runs sit in the shared log.
+- **The doctor finds a spec file named after the feature.** A step that declares it writes `<short-name>.spec.md` was reported as closing without it, because the check looked for that literal file name. It now matches the file the run actually named.
+
 ### Added
 - **Ask what leans on a requirement.** `resolve-spec-paths.py --leaned-on-by <capability>#<heading>` lists every requirement whose aligns link names that heading, in any capability, with its files and body. Plain output prints one `capability#heading` per line.
 

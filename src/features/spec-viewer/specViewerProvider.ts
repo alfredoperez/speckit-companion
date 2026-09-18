@@ -157,6 +157,7 @@ async function ensureSpecContext(
 export class SpecViewerProvider {
   /** Per-spec-directory panel instances; debounce-timer cleanup lives in the registry's `delete`. */
   private readonly panels = new PanelRegistry();
+  private readonly healthRequests = new Map<string, number>();
 
   /** At most one Undo per living panel, held here because every write regenerates the webview page. */
   private readonly livingUndos = new Map<string, LivingUndoAction & { token: string; expiresAt: number; timer: ReturnType<typeof setTimeout> }>();
@@ -742,7 +743,11 @@ export class SpecViewerProvider {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) return;
 
+    // Only the latest request for a panel may post: an older one finishing last would repaint stale facts.
+    const request = (this.healthRequests.get(specDirectory) ?? 0) + 1;
+    this.healthRequests.set(specDirectory, request);
     const health = await resolveLivingHealth(workspaceRoot, meta);
+    if (this.healthRequests.get(specDirectory) !== request) return;
     if (health.coverage === undefined && health.drifted === undefined && health.newRequirements === undefined && health.requirementCoverage === undefined) return;
 
     const instance = this.panels.get(specDirectory);

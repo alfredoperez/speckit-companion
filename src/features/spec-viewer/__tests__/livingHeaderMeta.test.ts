@@ -17,6 +17,17 @@ describe('countLivingFacts', () => {
         expect(countLivingFacts(content).requirements).toBe(3);
     });
 
+    it('counts a living spec by its requirement headings and its Scenario headings', () => {
+        const content = [
+            '# Todos', '', '## Requirements', '',
+            '### Adds a todo', '', '#### Scenario: empty title', '- **WHEN** x', '- **THEN** y', '',
+            '### Lists todos [inferred]', '', '#### Scenario: none yet', '- **WHEN** x', '- **THEN** y', '',
+            '```md', '### Not a requirement', '#### Scenario: an example', '```',
+        ].join('\n');
+
+        expect(countLivingFacts(content)).toEqual({ requirements: 2, scenarios: 2 });
+    });
+
     it('counts acceptance scenarios', () => {
         const content = [
             '### Acceptance Scenarios',
