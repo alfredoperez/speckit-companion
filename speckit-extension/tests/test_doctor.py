@@ -251,6 +251,26 @@ class ReviewRegressionTests(unittest.TestCase):
             self.assertEqual(attempts, [],
                              "another run's failure outside this spec's window is not this spec's")
 
+    def test_an_older_run_failure_alone_is_a_note_not_this_run_problem(self):
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            specs = Path(tmp) / "specs"
+            spec = specs / "001-x"
+            spec.mkdir(parents=True)
+            run_trace.record("write-context", "set", False, ms=1,
+                             feature_dir=specs, reason="could not resolve", spec=None)
+            with open(specs / run_trace.TRACE_NAME, "r+", encoding="utf-8") as fh:
+                body = fh.read().replace('"at":"', '"at":"2020-01-01T00:00:00Z","_at":"', 1)
+                fh.seek(0); fh.write(body); fh.truncate()
+            ctx = {"status": "implemented", "currentStep": "implement", "history": [
+                {"step": "implement", "substep": None, "kind": "start",
+                 "by": "extension", "at": "2026-08-01T11:00:00Z"},
+                {"step": "implement", "substep": None, "kind": "complete",
+                 "by": "extension", "at": "2026-08-01T11:30:00Z"}]}
+            finding = dc._unattributed_finding(dc._unattributed_failures(spec, ctx))
+            self.assertEqual(finding.severity, "note",
+                             "a failure from before this run is mentioned, never blamed on it")
+
     def test_the_doctor_reads_the_repo_that_owns_the_spec_not_the_cwd(self):
         import inspect
         src = inspect.getsource(doctor.main)
@@ -648,6 +668,15 @@ class ArtifactManifestCheck(unittest.TestCase):
             status, findings = dc.check_artifact(spec, ctx, manifest_path=path)
         self.assertEqual(status.state, "ran")
         self.assertEqual(findings, [], "a declared directory is produced when it is there")
+
+    def test_a_short_name_placeholder_matches_the_file_the_run_named(self):
+        manifest = {"commands": {"specify": [
+            {"artifact": "<short-name>.spec.md", "node": "draft-spec", "conditional": False},
+            {"artifact": "checklists/requirements.md", "node": "quality-checklist", "conditional": False},
+        ]}}
+        with self._run(manifest, files=("coverage-badges.spec.md", "checklists/requirements.md")) as (spec, path):
+            status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+        self.assertEqual(findings, [], "the placeholder is a pattern, not a literal file name")
 
     def test_the_shipped_manifest_is_where_the_doctor_looks_for_it(self):
         # The build writes it beside the command bodies; both the source tree and

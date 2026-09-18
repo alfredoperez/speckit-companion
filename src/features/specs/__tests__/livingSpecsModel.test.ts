@@ -472,6 +472,23 @@ describe('readCapabilityHealth', () => {
             expect((await health('| Adds an item helper_FR-007 | src/add.test.ts |\n', files)).requirementCoverage).toEqual({ 'Adds an item': '1 test' });
         });
 
+        it('counts a heading-named capability as covered by exactly its labelled cards', async () => {
+            const h = await health('| Adds an item | src/a.test.ts |\n| Persists the cart | tests/cart.test.ts |\n| Removes an item | — |\n', { 'src/a.test.ts': '' });
+            expect(h.coverage).toEqual({ covered: 2, total: 4 }); // three named headings plus FR-007
+            expect(Object.keys(h.requirementCoverage ?? {})).toHaveLength(h.coverage?.covered ?? -1);
+        });
+
+        it('reads a selector with no file path and a Windows path, and skips a fixture under tests/', async () => {
+            const h = await health('| Adds an item | pkg.cart::test_add, src\\a.test.ts, tests/fixtures/cart.json |\n', { 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('matches a heading as whole words only', async () => {
+            const spec = '# C\n\n### Login\n\nBody.\n';
+            const h = await health('| Logins are rate limited | src/a.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toBeUndefined();
+        });
+
         it('is absent when there is no coverage file', async () => {
             expect((await health(undefined)).requirementCoverage).toBeUndefined();
         });

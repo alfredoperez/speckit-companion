@@ -529,6 +529,13 @@ def _closed_steps(ctx: dict) -> set:
             and _entry_kind(e) == "complete"}
 
 
+
+def _artifact_exists(feature_dir, name: str) -> bool:
+    """True when the declared file is on disk; a `<short-name>` placeholder matches whatever name the run chose."""
+    if "<" in name:
+        return any(Path(feature_dir).glob(re.sub(r"<[^>]+>", "*", name)))
+    return (Path(feature_dir) / name).exists()
+
 def check_artifact(feature_dir: Path, ctx: dict, manifest_path=None) -> tuple:
     """Did each closed step leave behind the file it declared it would write?
 
@@ -571,7 +578,7 @@ def check_artifact(feature_dir: Path, ctx: dict, manifest_path=None) -> tuple:
         names = [n for n in names if n]
         if not names:
             continue
-        missing = [n for n in names if not (Path(feature_dir) / n).exists()]
+        missing = [n for n in names if not _artifact_exists(feature_dir, n)]
         if len(missing) == len(names):
             # None of it landed. That is a step that ran some other pipeline, not
             # one that dropped an artifact — the manifest has no claim on it.
@@ -843,9 +850,14 @@ def _unattributed_failures(feature_dir: Path, ctx: dict) -> list:
 
 def _unattributed_finding(events: list) -> Finding:
     reasons = sorted({e.get("reason") or "no reason recorded" for e in events})
+    ours = [e for e in events if e.get("op") != "outside-window"]
+    if not ours:
+        # Only older failures were set aside: worth saying, but not this run's problem.
+        return Finding("trace", "note", "Failed capture calls from other runs sit in the repo-level log",
+                       reasons[0], {"count": 0, "reasons": reasons})
     return Finding(
         "trace", "problem",
-        f"{plural(len(events), 'capture call')} could not resolve a spec and wrote nothing",
+        f"{plural(len(ours), 'capture call')} could not resolve a spec and wrote nothing",
         reasons[0] + (f" (+{len(reasons) - 1} other reason(s))" if len(reasons) > 1 else ""),
-        {"count": len(events), "reasons": reasons},
+        {"count": len(ours), "reasons": reasons},
     )

@@ -731,6 +731,18 @@ export function requirementIds(specText: string): string[] {
     return [...new Set(kept.join('\n').match(REQUIREMENT_ID_RE) ?? [])];
 }
 
+/**
+ * The requirements a spec declares: its `FR-nnn` ids, plus one key per `###`
+ * heading that carries no id itself or in its body, as the CLI's coverage check
+ * counts them. A heading over id bullets is a section label, not a requirement.
+ */
+export function requirementKeys(specText: string): string[] {
+    const named = requirementSlices(specText)
+        .filter(s => !new RegExp(REQUIREMENT_ID_RE.source).test([s.heading, ...s.body].join('\n')))
+        .map(s => requirementKey(s.heading));
+    return [...new Set([...requirementIds(specText), ...named])];
+}
+
 /** One requirement, as both the loader and the outline see it. */
 export interface RequirementSlice {
     /** The heading text, verbatim — the join key fold-back, coverage and the cards already share. */
@@ -777,7 +789,7 @@ function fenceFlags(lines: string[]): boolean[] {
 /**
  * Every requirement in a spec, with the files its marker claims.
  *
- * Counts exactly the headings `requirementIds()` counts, off the same
+ * Slices every `###` heading, the same ones `requirementKeys()` counts, off the same
  * fence-stripped text — the outline and the coverage denominator have to agree
  * or a row contradicts the badge beside it. The Python twin in
  * `resolve-spec-paths.py` is pinned against the same fixtures.
@@ -1091,15 +1103,19 @@ function readCoverageCount(root: string, cap: ResolvedCapability): CapabilityHea
     try {
         const specText = fs.readFileSync(path.join(root, cap.spec), 'utf-8');
         const ids = requirementIds(specText);
-        if (ids.length === 0) {
+        const keys = requirementKeys(specText);
+        if (keys.length === 0) {
             return undefined;
         }
+        // A named requirement is covered exactly when its card carries a label.
+        const labelled = readRequirementCoverage(root, cap) ?? {};
+        const coveredNames = keys.filter(k => !ids.includes(k) && k in labelled).length;
         const coverageLines = fs
             .readFileSync(path.join(root, coverageTier.path), 'utf-8')
             .split('\n')
             .filter(line => TEST_REF_RE.test(line));
-        const covered = ids.filter(id => coverageLines.some(line => line.includes(id))).length;
-        return { covered, total: ids.length };
+        const covered = ids.filter(id => coverageLines.some(line => line.includes(id))).length + coveredNames;
+        return { covered, total: keys.length };
     } catch {
         return undefined;
     }
@@ -1242,7 +1258,10 @@ export async function readDriftedFiles(
 }
 
 /** A token that names a test file: `x.test.ts`, `x.spec.ts` (never a `.spec.md` document), `x_test.go`, `test_x.py`, or a file under `tests/`. */
-const TEST_FILE_RE = /(\.(test|spec)\.(?!md$)\w+|_test\.\w+|(^|\/)test_[^/]+\.\w+|(^|\/)tests?\/.*\.\w+)$/;
+const TEST_FILE_RE = /(\.(test|spec)\.(?!md$)\w+|_test\.\w+|(^|\/)test_[^/]+\.\w+|(^|\/)tests?\/.*\.(tsx?|jsx?|mjs|cjs|py|go|rs|rb|java|kts?|swift|cs|php|exs?))$/;
+
+/** A pytest-style selector with no file path, `pkg.module::test_case`. It names a test that cannot be looked up on disk. */
+const TEST_SELECTOR_RE = /^[\w.\/-]+::\w+/;
 
 /** The test files one coverage line names, with `::case` suffixes, wrapping parens and sentence dots removed. */
 function testPathsIn(line: string): string[] {
@@ -1250,8 +1269,13 @@ function testPathsIn(line: string): string[] {
         .split(/[\s|`,;"'*<>[\]]+/)
         .map(token => (token.includes('(') ? token : token.replace(/\)+\.*$/, '')))
         .map(token => (token.includes(')') ? token : token.replace(/^\(+/, '')))
-        .map(token => token.replace(/^\((.*)\)$/, '$1').replace(/::.*$/, '').replace(/(:\d+|#L\d+)$/, '').replace(/\.+$/, ''))
-        .filter(token => !token.includes('://') && TEST_FILE_RE.test(token));
+        .map(token => token.replace(/^\((.*)\)$/, '$1').replace(/\\/g, '/').replace(/(:\d+|#L\d+)$/, '').replace(/\.+$/, ''))
+        .filter(token => !token.includes('://'))
+        .flatMap(token => {
+            const file = token.replace(/::.*$/, '');
+            if (TEST_FILE_RE.test(file)) return [file];
+            return TEST_SELECTOR_RE.test(token) ? [token] : [];
+        });
 }
 
 /** A label per requirement key: how many of the test files its coverage line names exist. Absent when none names one. */
@@ -1265,7 +1289,9 @@ function readRequirementCoverage(root: string, cap: ResolvedCapability): Capabil
             const key = requirementKey(slice.heading);
             // Only the id the heading opens with is its own; a later one refers to another requirement.
             const ids = (key.match(/^N?FR-\d+\b/) ?? []).map(id => ({ key, text: id, test: new RegExp(`(?<![\\w-])${id}(?![\\w-])`) }));
-            return [{ key, text: key, test: undefined as RegExp | undefined }, ...ids];
+            // Whole words only, so a requirement called "Login" does not claim a line about "Logins".
+            const words = new RegExp(`(?<![\\w])${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])`);
+            return [{ key, text: key, test: words }, ...ids];
         });
         const named = new Map<string, Set<string>>();
         for (const line of fs.readFileSync(path.join(root, coverageTier.path), 'utf-8').split('\n')) {
@@ -1273,7 +1299,7 @@ function readRequirementCoverage(root: string, cap: ResolvedCapability): Capabil
             if (paths.length === 0) continue;
             // Headings are looked for outside the paths, so `tests/Checkout.test.ts` does not hand the line to "Checkout".
             const prose = paths.reduce((text, p) => text.split(p).join(' '), line).replace(/::\S*/g, ' ');
-            const hits = needles.filter(n => (n.test ? n.test.test(prose) : prose.includes(n.text)));
+            const hits = needles.filter(n => n.test.test(prose));
             // A requirement called "Adds" does not own a line written for "Adds an item".
             const owners = hits.filter(n => !hits.some(m => m.key !== n.key && m.text !== n.text && m.text.includes(n.text)));
             for (const { key } of owners) {
@@ -1286,7 +1312,8 @@ function readRequirementCoverage(root: string, cap: ResolvedCapability): Capabil
             return undefined;
         }
         return Object.fromEntries([...named].map(([key, paths]) => {
-            const found = [...paths].filter(p => fileExists(root, p)).length;
+            // A selector with no file path cannot be looked up, so naming it is all there is to confirm.
+            const found = [...paths].filter(p => TEST_SELECTOR_RE.test(p) || fileExists(root, p)).length;
             return [key, found === paths.size ? `${found} ${found === 1 ? 'test' : 'tests'}` : `${found}/${paths.size} tests`];
         }));
     } catch {

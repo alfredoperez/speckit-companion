@@ -12,7 +12,7 @@ import type { LivingHeaderMeta } from './types';
 import {
     readLivingSpecs,
     readCapabilityHealth,
-    requirementIds,
+    requirementKeys,
     requirementSlices,
     requirementsForChange,
     readMainCopy,
@@ -21,7 +21,8 @@ import {
 } from '../specs/livingSpecsModel';
 
 /** A numbered acceptance scenario as `/speckit.companion.living-adopt` writes it. */
-const SCENARIO_LINE_RE = /^\s*\d+\.\s.*\bgiven\b.*\bwhen\b.*\bthen\b/i;
+/** A numbered Given/When/Then line in a feature spec, or a `#### Scenario:` heading in a living spec. */
+const SCENARIO_LINE_RE = /^\s*\d+\.\s.*\bgiven\b.*\bwhen\b.*\bthen\b|^####\s+Scenario\b/i;
 
 export interface LivingFactCounts {
     requirements?: number;
@@ -50,7 +51,7 @@ function withoutFences(content: string): string[] {
 export function countLivingFacts(content: string): LivingFactCounts {
     if (!content) return {};
 
-    const ids = requirementIds(content);
+    const ids = requirementKeys(content);
     const scenarios = withoutFences(content).filter(line => SCENARIO_LINE_RE.test(line)).length;
 
     const facts: LivingFactCounts = {};
