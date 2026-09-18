@@ -79,7 +79,7 @@ export const Unresolved: Story = {
     ),
 };
 
-// Capabilities loaded into context at specify time, none folded back yet.
+// Loaded only: a single "Read for context" group.
 // (Names-only legacy payload — no `capabilities` field — keeps the chip list.)
 export const LoadedOnly: Story = {
     render: () => (
@@ -87,14 +87,14 @@ export const LoadedOnly: Story = {
     ),
 };
 
-// Loaded + some folded back at completion — the "folded back" marker appears.
+// Both groups: "Updated by this run" first, then "Read for context".
 export const LoadedAndSynced: Story = {
     render: () => (
         <LivingSpecsCard state={baseState({ livingSpecs: { loaded: ['checkout', 'cart'], synced: ['checkout'] } })} />
     ),
 };
 
-// A capability folded back but not loaded this run — still listed, marked.
+// A capability updated but not loaded this run still lands under "Updated by this run".
 export const SyncedNotLoaded: Story = {
     render: () => (
         <LivingSpecsCard state={baseState({ livingSpecs: { loaded: ['cart'], synced: ['checkout'] } })} />

@@ -54,7 +54,7 @@ describe('IntentSection', () => {
         expect(context?.textContent).toContain('Size');
         expect(context?.textContent).not.toContain('Living specs');
         expect(Array.from(approach?.querySelectorAll('.living-specs-chip') ?? []).map(node => node.textContent))
-            .toEqual(['viewer-ui', 'spec-viewer']);
+            .toEqual(['Viewer Ui', 'Spec Viewer']);
         expect(host.querySelector('.dossier-intent__statement')?.nextElementSibling)
             .toBe(host.querySelector('.dossier-timing'));
     });
@@ -65,7 +65,7 @@ describe('IntentSection', () => {
             state: base({ livingSpecs: { loaded: ['viewer-ui'], synced: [] } }),
         }), host);
         expect(host.querySelector('.dossier-intent')).not.toBeNull();
-        expect(host.textContent).toContain('viewer-ui');
+        expect(host.textContent).toContain('Viewer Ui');
     });
 
     it('omits the whole region when no intent context exists', () => {

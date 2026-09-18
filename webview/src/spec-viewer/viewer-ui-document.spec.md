@@ -49,7 +49,7 @@ A destination taken from the document, such as a link target or image source, MU
 
 ### A living spec is navigable by requirement
 
-A living spec SHALL be navigable by requirement from the viewer's existing document outline, not from a second outline beside it. That outline SHALL list the requirements by default, without the subsections toggle a feature spec needs. Each row SHALL show the requirement's coverage when known and unknown when not, never zero, plus the number of path patterns its marker names when it has one. The count is of patterns, not files, because one pattern can claim a whole directory. These marks SHALL be drawn and hidden from assistive technology, with the row's single accessible name saying what they mean in words. The outline SHALL read what it shows off the rendered requirement cards, never by parsing the document again. A feature spec's outline is unchanged.
+A living spec SHALL be navigable by requirement from the viewer's existing document outline, not from a second outline beside it. That outline SHALL list the requirements by default, without the subsections toggle a feature spec needs. A row SHALL carry a dot only when its requirement is adopted, drifted or new on this branch, and a confirmed row SHALL carry none. A requirement row SHALL NOT take the subsection guide's border or indent. Each row SHALL show the number of path patterns its marker names when it has one, and say its coverage in its accessible name only when coverage is known. The count is of patterns, not files, because one pattern can claim a whole directory. These marks SHALL be drawn and hidden from assistive technology, with the row's single accessible name saying what they mean in words. The outline SHALL read what it shows off the rendered requirement cards, never by parsing the document again. A feature spec's outline is unchanged.
 
 #### Scenario: a large living spec is opened
 - **WHEN** it renders
@@ -60,9 +60,9 @@ A living spec SHALL be navigable by requirement from the viewer's existing docum
 - **THEN** it is a card and a row like any other, because fold-back appends to the end of the file and position says nothing about what is a requirement
 - **AND** the uncovered section between them stays outside every card rather than joining the one above it
 
-#### Scenario: a requirement whose coverage was never computed
+#### Scenario: a confirmed requirement whose coverage was never computed
 - **WHEN** its row renders
-- **THEN** it reads as unknown, not as zero, which would mean none
+- **THEN** it has no dot and no coverage mark
 
 #### Scenario: a heading inside a fenced block
 - **WHEN** the cards and the outline are built
@@ -139,3 +139,15 @@ Under its files a card SHALL list Leans on and Leaned on by, each only when non-
 #### Scenario: a resolved entry is clicked
 - **WHEN** the reader activates it
 - **THEN** the viewer opens that spec scrolled to that requirement
+
+### A living spec's marker comments render nothing, and a draft shows once
+
+The `touches`, `adopted`, `reviewed`, `aligns` and `capability` comments SHALL pass through comment preprocessing untouched and be dropped while rendering, never becoming a template disclosure. A draft's banner line SHALL be stripped from the rendered body, so the badge is the only draft mark on screen. Any other comment still renders as a template disclosure.
+
+#### Scenario: a draft whose third line is a reviewed marker
+- **WHEN** it renders in living mode
+- **THEN** no banner text and no template disclosure appear
+
+#### Scenario: an ordinary comment in a feature spec
+- **WHEN** it renders
+- **THEN** it is a template disclosure, as before

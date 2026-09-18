@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import type { RequirementLink } from '../../protocol/viewer';
+import { readableName, stripSharedLeadingWords } from '../../core/utils/capabilityNames';
 
 /**
  * Node-side reader for the project's capability registry.
@@ -602,6 +603,8 @@ export interface CapabilityTreeGroup {
     kind: 'group';
     /** The single path segment this node names (e.g. `features`). */
     name: string;
+    /** The segment as words (e.g. `Companion Commands`). */
+    label: string;
     /** The full POSIX prefix from the root (e.g. `src/features`). */
     path: string;
     children: CapabilityTreeNode[];
@@ -611,6 +614,8 @@ export interface CapabilityTreeGroup {
 export interface CapabilityTreeLeaf {
     kind: 'capability';
     capability: ResolvedCapability;
+    /** The readable name, minus the leading words every sibling leaf shares. */
+    label: string;
 }
 
 export type CapabilityTreeNode = CapabilityTreeGroup | CapabilityTreeLeaf;
@@ -622,54 +627,50 @@ function dirOf(rel: string): string {
 }
 
 /**
- * The directory segments a capability groups under — the parent of the folder
- * its spec lives in. `src/core/core.spec.md` groups under `src`; a colocated
- * `src/features/specs/specs.spec.md` groups under `src/features`; a spec at the
- * repo root groups under nothing. The capability's own folder is dropped because
- * the leaf itself stands in for it (labeled by the capability name).
- */
-function capabilityGroupSegments(cap: ResolvedCapability): string[] {
-    const groupDir = dirOf(dirOf(cap.spec));
-    return groupDir === '' ? [] : groupDir.split('/');
-}
-
-/**
- * Group capabilities into a directory tree mirroring where their specs live, so
- * the Living Specs view's shape matches the codebase. Groups and leaves at each
- * level sort by name together, and capabilities keep their resolved data on the
- * leaf so the provider can compute row health lazily.
+ * Group capabilities into a directory tree mirroring where their specs live. A
+ * folder holding two or more specs is its own group; a folder holding one is
+ * dropped, because the leaf stands in for it. `src/core/core.spec.md` groups
+ * under `src`, and a spec at the repo root groups under nothing.
  */
 export function buildCapabilityTree(capabilities: ResolvedCapability[]): CapabilityTreeNode[] {
-    const root: CapabilityTreeGroup = { kind: 'group', name: '', path: '', children: [] };
+    const specsPerDir = new Map<string, number>();
     for (const cap of capabilities) {
+        const dir = dirOf(cap.spec);
+        specsPerDir.set(dir, (specsPerDir.get(dir) ?? 0) + 1);
+    }
+    const root: CapabilityTreeGroup = { kind: 'group', name: '', label: '', path: '', children: [] };
+    for (const cap of capabilities) {
+        const dir = dirOf(cap.spec);
+        const groupDir = (specsPerDir.get(dir) ?? 0) > 1 ? dir : dirOf(dir);
         let node = root;
         let prefix = '';
-        for (const segment of capabilityGroupSegments(cap)) {
+        for (const segment of groupDir === '' ? [] : groupDir.split('/')) {
             prefix = prefix ? `${prefix}/${segment}` : segment;
             let child = node.children.find(
                 (c): c is CapabilityTreeGroup => c.kind === 'group' && c.path === prefix,
             );
             if (!child) {
-                child = { kind: 'group', name: segment, path: prefix, children: [] };
+                child = { kind: 'group', name: segment, label: readableName(segment), path: prefix, children: [] };
                 node.children.push(child);
             }
             node = child;
         }
-        node.children.push({ kind: 'capability', capability: cap });
+        node.children.push({ kind: 'capability', capability: cap, label: readableName(cap.name) });
     }
-    sortTreeChildren(root);
+    finishTreeChildren(root);
     return root.children;
 }
 
-function nodeName(node: CapabilityTreeNode): string {
-    return node.kind === 'group' ? node.name : node.capability.name;
-}
-
-function sortTreeChildren(group: CapabilityTreeGroup): void {
-    group.children.sort((a, b) => nodeName(a).localeCompare(nodeName(b)));
+function finishTreeChildren(group: CapabilityTreeGroup): void {
+    // Only a folder's own specs share a prefix worth dropping: the group label stands in for it.
+    const leaves = group.children.filter(
+        (c): c is CapabilityTreeLeaf => c.kind === 'capability' && dirOf(c.capability.spec) === group.path,
+    );
+    stripSharedLeadingWords(leaves.map(l => l.label)).forEach((label, i) => { leaves[i].label = label; });
+    group.children.sort((a, b) => a.label.localeCompare(b.label));
     for (const child of group.children) {
         if (child.kind === 'group') {
-            sortTreeChildren(child);
+            finishTreeChildren(child);
         }
     }
 }

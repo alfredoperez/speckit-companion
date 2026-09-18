@@ -254,6 +254,9 @@ describe('FooterActions — living Approve all and Undo', () => {
             enhancementButtons: [],
         }) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const draft = (ns: any) => ({ ...ns, livingMeta: { ...ns.livingMeta, draft: true } });
+
     beforeEach(() => {
         postMessage.mockReset();
         (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = { postMessage };
@@ -276,7 +279,29 @@ describe('FooterActions — living Approve all and Undo', () => {
         }
     });
 
-    it('offers no approve action when nothing is adopted', () => {
+    it('offers Approve spec on a draft with nothing adopted', () => {
+        navState.value = draft(living([false, false]));
+        const container = renderInto();
+        try {
+            expect(labels(container)[0]).toBe('Approve spec');
+            container.querySelector('button')?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'approveSpec', documentType: 'spec' });
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('keeps the count on a draft that still has adopted requirements', () => {
+        navState.value = draft(living([true, true, true]));
+        const container = renderInto();
+        try {
+            expect(labels(container)[0]).toBe('Approve all 3');
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('offers no approve action when nothing is adopted and the spec is not a draft', () => {
         navState.value = living([false, false]);
         const container = renderInto();
         try {

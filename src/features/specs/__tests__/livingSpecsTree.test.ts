@@ -65,6 +65,27 @@ describe('buildCapabilityTree', () => {
         expect(leafNames(tree)).toEqual(['foo']);
     });
 
+    it('makes a folder holding two or more specs its own group, with shared leading words stripped', () => {
+        const files: Record<string, string> = {
+            'commands-assembly': 'assembly', 'commands-capture': 'capture', 'commands-completion': 'completion',
+            'commands-living': 'living-commands', 'commands-living-load': 'living-load',
+            'commands-living-markers': 'living-markers', 'commands-nodes': 'nodes', 'commands-pipeline': 'pipeline',
+        };
+        const tree = buildCapabilityTree([
+            ...Object.entries(files).map(([name, file]) => cap(name, `capabilities/companion-commands/${file}.spec.md`)),
+            cap('auth', 'capabilities/auth/auth.spec.md'),
+        ]);
+        const capabilities = group(tree, 'capabilities');
+        expect(capabilities.label).toBe('Capabilities');
+        const commands = group(capabilities.children, 'companion-commands');
+        expect(commands.label).toBe('Companion Commands');
+        expect(commands.children.map(n => n.label)).toEqual([
+            'Assembly', 'Capture', 'Completion', 'Living', 'Living Load', 'Living Markers', 'Nodes', 'Pipeline',
+        ]);
+        // A folder holding one spec still collapses into its leaf.
+        expect(capabilities.children.filter(n => n.kind === 'capability').map(n => n.label)).toEqual(['Auth']);
+    });
+
     it('carries the resolved capability through onto each leaf', () => {
         const resolved = cap('billing', 'src/billing/billing.spec.md', { match: ['src/billing/**'] });
         const tree = buildCapabilityTree([resolved]);

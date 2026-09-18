@@ -526,6 +526,47 @@ Beta, unmarked.
     });
 });
 
+describe('review markers render nothing', () => {
+    const DRAFT = `# Cap
+
+<!-- reviewed: 2026-09-01 abc1234 -->
+<!-- capability: cap -->
+
+> [DRAFT] Adopted from the code's surface. Review before trusting.
+
+## Purpose
+
+Why.
+
+## Requirements
+
+### Alpha behaviour
+<!-- aligns: other-cap#Some rule -->
+
+Alpha.
+
+### Beta behaviour
+
+Beta.
+`;
+
+    afterEach(() => setLivingMode(false));
+
+    it('shows no banner and no disclosure on a draft whose line 3 is a reviewed marker', () => {
+        setLivingMode(true);
+        const out = renderMarkdown(DRAFT);
+        expect(out).not.toContain('template-instructions');
+        expect(out).not.toContain('[DRAFT]');
+        expect(out).not.toContain('reviewed:');
+        expect(out).not.toContain('aligns:');
+        expect(out).not.toContain('capability:');
+    });
+
+    it('still turns an ordinary comment into a disclosure', () => {
+        expect(renderMarkdown('# Spec\n\n<!-- Fill this section in -->\n')).toContain('template-instructions');
+    });
+});
+
 describe('a touches marker is never prose (#672 Wave 1)', () => {
     const MARKER = '<!-- touches: src/a/**, src/b.ts -->';
 

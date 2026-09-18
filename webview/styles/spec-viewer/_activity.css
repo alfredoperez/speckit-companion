@@ -305,7 +305,7 @@
 /* ============================================
    Living specs card — compact chips
 
-   One chip per capability the run loaded/folded back. The full content lives
+   One chip per capability, grouped by whether the run updated it or only read it. The full content lives
    in the Living Specs viewer, so a resolved chip links there rather than
    reprinting requirements here.
    ============================================ */
@@ -334,7 +334,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
-    font-family: var(--font-mono);
+    font-family: var(--font-family);
     font-size: 0.78rem;
     font-weight: 600;
     padding: 2px 8px;
@@ -358,12 +358,17 @@
     outline-offset: 1px;
 }
 
-.living-specs-chip__synced {
-    font-size: 0.66rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+.living-specs-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.living-specs-group__label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--text-xs);
+    color: var(--text-body);
 }
 
 /* ============================================

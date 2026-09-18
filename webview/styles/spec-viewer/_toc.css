@@ -234,6 +234,10 @@ aside.spec-toc.spec-toc--compact {
     gap: 6px;
     font-size: 11px;
     color: var(--text-body);
+    /* Primary navigation, not a subsection: no guide rule, no indent. */
+    margin-left: 0;
+    padding-left: 8px;
+    border-left: 0;
 }
 
 /* The full ellipsis trio: two of the three alone silently wrap instead. */
@@ -245,24 +249,14 @@ aside.spec-toc.spec-toc--compact {
     white-space: nowrap;
 }
 
-/* Known coverage is a filled dot, unknown a ring. Shape, not only colour, and
-   never a `0` — which would read as "none" rather than "not computed". */
+/* A dot means "look here", in its card's edge colour. A confirmed row has none. */
 .spec-toc-cov {
     flex: none;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--success);
 }
 
-.spec-toc-cov--unknown {
-    background: transparent;
-    border: 1px solid var(--border-hover);
-}
-
-/* A requirement row's pip takes its card's edge colour. */
-.spec-toc-cov[class*="spec-toc-cov--state-"] { border: 0; }
-.spec-toc-cov--state-confirmed { background: var(--accent); }
 .spec-toc-cov--state-adopted { background: var(--review); }
 .spec-toc-cov--state-drifted { background: var(--warning); }
 .spec-toc-cov--state-new { background: var(--success); }

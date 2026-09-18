@@ -45,8 +45,8 @@ let livingMode = false;
 // escaped, not passed through as raw HTML.
 const LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
 
-// `<!-- touches: a/**, b.ts -->` or `<!-- adopted: CLAUDE.md:18 -->`: a living requirement's markers.
-const TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted):\s*.+?\s*-->\s*$/i;
+// `<!-- touches: a/**, b.ts -->`, `<!-- adopted: CLAUDE.md:18 -->`, `<!-- reviewed: … -->`: a living spec's markers.
+const TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capability):\s*.+?\s*-->\s*$/i;
 
 // Per-task capture summaries (what each task did + files), keyed by task id.
 // Injected from viewerState so the tasks.md document can show captured detail.

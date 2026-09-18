@@ -211,7 +211,7 @@ const ADOPTED_MARKER = /^\s*<!--\s*adopted:\s*.+?\s*-->\s*$/;
 /** A heading as the card keys it — the same normalization every join uses. */
 const cardHeading = requirementKey;
 
-/** Drop the `adopted` marker on one requirement (by heading) or all, then the `[DRAFT]` banner once none remain; null when nothing changed. */
+/** Drop the `adopted` marker on one requirement (by heading) or all, then the `[DRAFT]` banner once none remain or the whole spec was approved; null when nothing changed. */
 export function approveLivingText(content: string, heading?: string): string | null {
     const lines = content.split(/\r?\n/);
     const wanted = heading === undefined ? undefined : cardHeading(heading);
@@ -232,8 +232,8 @@ export function approveLivingText(content: string, heading?: string): string | n
         }
         kept.push(line);
     }
-    if (!removed) return null;
-    if (!kept.some(line => ADOPTED_MARKER.test(line))) {
+    let bannerDropped = false;
+    if (heading === undefined || (removed && !kept.some(line => ADOPTED_MARKER.test(line)))) {
         let from = 0;
         if (kept[0]?.trim() === '---') {
             const close = kept.findIndex((line, i) => i > 0 && line.trim() === '---');
@@ -242,8 +242,10 @@ export function approveLivingText(content: string, heading?: string): string | n
         const banner = kept.findIndex((line, i) => i >= from && i < from + DRAFT_BANNER_SCAN_LINES && DRAFT_BANNER_LINE.test(line));
         if (banner !== -1) {
             kept.splice(banner, kept[banner + 1]?.trim() === '' ? 2 : 1);
+            bannerDropped = true;
         }
     }
+    if (!removed && !bannerDropped) return null;
     return kept.join('\n');
 }
 

@@ -34,7 +34,7 @@ A tier SHALL resolve by the resolver's naming convention, and a renamed conventi
 
 ### Approving an adopted requirement only ever removes what adoption claimed
 
-Approving SHALL delete the `adopted` marker, for one requirement by heading or for every requirement in the tier on screen, and change nothing else. When the last marker goes, the `[DRAFT]` banner SHALL go with it. A request that would write outside the workspace or to a non-tier file MUST be refused and logged, and one with nothing to remove MUST leave the file untouched.
+Approving SHALL delete the `adopted` marker, for one requirement by heading or for every requirement in the tier on screen, and change nothing else. When the last marker goes, the `[DRAFT]` banner SHALL go with it, and approving the whole spec SHALL remove the banner even when no marker was left to remove. A request that would write outside the workspace or to a non-tier file MUST be refused and logged, and one that changes neither a marker nor the banner MUST leave the file untouched.
 
 #### Scenario: the last adopted requirement in a tier is approved
 - **WHEN** the reader approves it
@@ -44,6 +44,10 @@ Approving SHALL delete the `adopted` marker, for one requirement by heading or f
 #### Scenario: approval is asked for a document that is not a living tier
 - **WHEN** the request names a file outside the workspace root, or one that is not a tier file
 - **THEN** nothing is written and the refusal is logged
+
+#### Scenario: a draft with no adopted markers is approved whole
+- **WHEN** the reader approves the spec
+- **THEN** the draft banner is removed from the file
 
 ### Living specs surfaced in the run log are compact chips that hand off to their own viewer
 

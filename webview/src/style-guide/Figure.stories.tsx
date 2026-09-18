@@ -121,7 +121,7 @@ export const TwoOutlines: Story = {
                 }
                 marks={[
                     { selector: '.dossier-timing', kind: 'here', label: 'the rail' },
-                    { selector: '.dossier-intent__living-specs', kind: 'point', label: 'folded back', pad: 8 },
+                    { selector: '.dossier-intent__living-specs', kind: 'point', label: 'updated by this run', pad: 8 },
                 ]}
             >
                 <Intent />
