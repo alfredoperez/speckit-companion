@@ -150,3 +150,15 @@ After first paint the extension SHALL compare the spec's headings with `git show
 #### Scenario: the repository has no `main`
 - **WHEN** the health push resolves
 - **THEN** `newRequirements` is absent
+
+### Each requirement card says how many of its tests exist
+
+The extension SHALL send, with the capability's other health facts after first paint, a coverage label per requirement, and the card SHALL show it beside the state pill. The label counts the test files the requirement's coverage line names and says how many exist when some do not. A requirement whose line names no test SHALL have no label, never a zero. The cards SHALL redraw only when the labels changed, and labels SHALL NOT survive onto another capability's cards.
+
+#### Scenario: a requirement's coverage line names a test that exists
+- **WHEN** the capability's health resolves
+- **THEN** that requirement's card shows its label
+
+#### Scenario: another capability opens and resolves no health facts
+- **WHEN** its cards render
+- **THEN** none of them carries the previous capability's label

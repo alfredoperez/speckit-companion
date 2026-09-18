@@ -382,6 +382,101 @@ describe('readCapabilityHealth', () => {
         expect(countLivingFacts(spec).requirements).toBe(health.coverage?.total);
     });
 
+    describe('per-requirement coverage', () => {
+        const SPEC = '# Checkout\n\n## Requirements\n\n### Adds an item\n\nBody.\n\n### Removes an item [inferred]\n\nBody.\n\n### Persists the cart\n\nBody.\n\n### FR-007 Clears the cart\n\nBody.\n';
+        const health = async (coverage: string | undefined, extra: Record<string, string> = {}) => {
+            const files: Record<string, string> = { 'capabilities/checkout/spec.md': SPEC, ...extra };
+            if (coverage !== undefined) files['capabilities/checkout/spec.coverage.md'] = coverage;
+            const root = makeWorkspace(files, YML);
+            created.push(root);
+            return readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        };
+
+        it('labels a requirement whose named test exists, joined on its heading', async () => {
+            const h = await health('| Adds an item | src/cart.test.ts (adds) | ✅ |\n', { 'src/cart.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('says how many were found when a named test is missing', async () => {
+            const h = await health('| Adds an item | src/a.test.ts, src/b.test.ts, src/c.spec.ts::case |\n', { 'src/a.test.ts': '', 'src/c.spec.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2/3 tests' });
+        });
+
+        it('joins an [inferred] heading through the shared requirement key', async () => {
+            const h = await health('| Removes an item | src/rm.test.ts |\n', { 'src/rm.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Removes an item': '1 test' });
+        });
+
+        it('joins on a requirement id the heading carries', async () => {
+            const h = await health('- FR-007 → src/clear.test.ts::clears\n', { 'src/clear.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'FR-007 Clears the cart': '1 test' });
+        });
+
+        it('gives no entry to a line that names no test', async () => {
+            const h = await health('| Adds an item | — | ❌ |\n| Persists the cart | specs/001 tasks T001 | ❌ |\n');
+            expect(h.requirementCoverage).toBeUndefined();
+        });
+
+        it('counts a test path that escapes the workspace as not found', async () => {
+            const h = await health('| Adds an item | ../outside.test.ts |\n');
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '0/1 tests' });
+        });
+
+        it('gives a line to the longest heading it names', async () => {
+            const spec = '# C\n\n### Adds\n\nBody.\n\n### Adds an item\n\nBody.\n';
+            const h = await health('| Adds an item | src/cart.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'src/cart.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('reads a test path that carries route-group parens, and one wrapped in parens', async () => {
+            const h = await health('| Adds an item | app/(shop)/cart.test.tsx (src/b.test.ts) |\n', { 'app/(shop)/cart.test.tsx': '', 'src/b.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('reads Go and pytest file names, and never takes a spec document for a test', async () => {
+            const h = await health('| Adds an item | pkg/cart_test.go, pkg/test_cart.py::test_add, src/cart.spec.md |\n', { 'pkg/cart_test.go': '', 'pkg/test_cart.py': '', 'src/cart.spec.md': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('labels every requirement one line names, and keeps FR-7 out of a line for FR-70', async () => {
+            const spec = '# C\n\n### FR-7 One\n\nBody.\n\n### FR-8 Two\n\nBody.\n';
+            const files = { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' };
+            expect((await health('- FR-7, FR-8 → src/a.test.ts\n', files)).requirementCoverage)
+                .toEqual({ 'FR-7 One': '1 test', 'FR-8 Two': '1 test' });
+            expect((await health('- FR-70 and NFR-7 → src/a.test.ts\n', files)).requirementCoverage).toBeUndefined();
+        });
+
+        it('never gives a line to a requirement whose name only appears in the test path', async () => {
+            const spec = '# C\n\n### Add\n\nBody.\n\n### Checkout\n\nBody.\n';
+            const h = await health('| Add | tests/Checkout.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'tests/Checkout.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ Add: '1 test' });
+        });
+
+        it('keeps a label when another heading mentions the same id', async () => {
+            const spec = '# C\n\n### FR-001: Adds\n\nBody.\n\n### FR-002: Replaces FR-001 rounding\n\nBody.\n';
+            const h = await health('- FR-001 → src/a.test.ts\n', { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'FR-001: Adds': '1 test' });
+        });
+
+        it('reads a path out of a markdown link, bold text, a line reference and a trailing paren, and ignores a URL', async () => {
+            const h = await health(
+                '- Adds an item: [a](src/a.test.ts), **src/b.test.ts**, (see src/c.test.ts:42) https://x.dev/tests/d.html\n',
+                { 'src/a.test.ts': '', 'src/b.test.ts': '', 'src/c.test.ts': '' },
+            );
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '3 tests' });
+        });
+
+        it('ignores an id that only appears in a test selector or behind an underscore', async () => {
+            const files = { 'src/add.test.ts': '' };
+            expect((await health('| Adds an item | src/add.test.ts::FR-007 |\n', files)).requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+            expect((await health('| Adds an item helper_FR-007 | src/add.test.ts |\n', files)).requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('is absent when there is no coverage file', async () => {
+            expect((await health(undefined)).requirementCoverage).toBeUndefined();
+        });
+    });
+
     it('omits coverage when there is no coverage tier', async () => {
         const root = makeWorkspace({ 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' }, YML);
         created.push(root);

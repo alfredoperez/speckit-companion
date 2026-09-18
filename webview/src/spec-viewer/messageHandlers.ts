@@ -13,7 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingDrifted, setLivingMode, setLivingNew, setTaskSummaries } from './markdown';
+import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
@@ -28,6 +28,8 @@ export function applyNavState(next: NavState): void {
     // Cleared before the new state lands, not after: a render triggered by `navState` would
     // otherwise read the previous echo and answer with it.
     viewerMode.value = null;
+    // Labels belong to one capability; the next one may never send a health message to replace them.
+    if (next.livingMeta?.specPath !== navState.value?.livingMeta?.specPath) setLivingCoverage(null);
     navState.value = next;
     if (next.currentTask !== undefined) setCurrentTask(next.currentTask);
     setHasSpecContext(!!(next.specContextName || next.badgeText));
@@ -60,10 +62,11 @@ export function buildHandlers(
             if (navState.value) {
                 navState.value = { ...navState.value, livingMeta: message.livingMeta };
             }
-            // Drift and New land after the first paint, so the cards redraw to take their edge.
+            // Drift, New and coverage land after the first paint, so the cards redraw to take their edge.
             const drifted = setLivingDrifted(message.livingMeta.driftedRequirements);
             const fresh = setLivingNew(message.livingMeta.newRequirements);
-            if (drifted || fresh) rerender();
+            const covered = setLivingCoverage(message.livingMeta.requirementCoverage);
+            if (drifted || fresh || covered) rerender();
         },
 
         viewerStateUpdated: message => {

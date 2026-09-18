@@ -2,7 +2,7 @@
 
 | Requirement | Covered by | Status |
 |---|---|---|
-| Todo state changes through a single reducer | src/store/todos.test.tsx (reducer actions) | ✅ |
+| Todo state changes through a single reducer | src/store/todos.test.ts (reducer actions) | ✅ |
 | Todos survive a reload | src/lib/storage.test.ts | ✅ |
 | Consumers read todos through the hook | src/App.test.tsx (renders via provider) | ✅ |
 | Users can add a todo | — | ❌ |

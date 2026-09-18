@@ -102,7 +102,7 @@ export function buildLivingHeaderMeta(
 export async function resolveLivingHealth(
     workspaceRoot: string,
     meta: LivingHeaderMeta,
-): Promise<Pick<LivingHeaderMeta, 'coverage' | 'drifted' | 'driftedRequirements' | 'newRequirements'>> {
+): Promise<Pick<LivingHeaderMeta, 'coverage' | 'drifted' | 'driftedRequirements' | 'newRequirements' | 'requirementCoverage'>> {
     const [health, fresh] = await Promise.all([
         readCapabilityHealth(workspaceRoot, {
             name: meta.capabilityName,

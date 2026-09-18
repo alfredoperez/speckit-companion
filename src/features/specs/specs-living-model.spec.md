@@ -142,3 +142,15 @@ A folder holding two or more capability specs SHALL be its own group, and a fold
 #### Scenario: a folder holds a single spec
 - **WHEN** the tree is built
 - **THEN** the folder is not a group and the leaf sits under its parent
+
+### Per-requirement coverage joins on the requirement key and checks the named files
+
+The extension SHALL read a capability's coverage file into a label per requirement, joining a coverage line to a requirement by its key or by an id its heading carries, and giving a line that names several headings to the longest. A line counts only when it names a test file, and each named path SHALL be confirmed to exist inside the workspace, a path outside it counting as not found. The label SHALL be built from the two counts alone, never from file text, and the whole map SHALL be absent when no line names a test or the file cannot be read.
+
+#### Scenario: a line names two tests and one is missing
+- **WHEN** the coverage file is read
+- **THEN** the requirement's label reads `1/2 tests`
+
+#### Scenario: a named test path escapes the workspace
+- **WHEN** the coverage file is read
+- **THEN** that path counts as not found

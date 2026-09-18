@@ -743,7 +743,7 @@ export class SpecViewerProvider {
     if (!workspaceRoot) return;
 
     const health = await resolveLivingHealth(workspaceRoot, meta);
-    if (health.coverage === undefined && health.drifted === undefined && health.newRequirements === undefined) return;
+    if (health.coverage === undefined && health.drifted === undefined && health.newRequirements === undefined && health.requirementCoverage === undefined) return;
 
     const instance = this.panels.get(specDirectory);
     if (!instance?.state.living) return;

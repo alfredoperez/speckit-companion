@@ -157,6 +157,26 @@ describe('coverage and drift reuse', () => {
         spy.mockRestore();
     });
 
+    it('carries per-requirement coverage from a real coverage file to the health it resolves', async () => {
+        const { resolveLivingHealth } = await import('../livingHeaderMeta');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'lhm-cov-'));
+        fs.mkdirSync(path.join(root, 'capabilities/todos'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'capabilities/todos/spec.md'), '# Todos\n\n### Adds a todo\n\nBody.\n\n### Lists todos\n\nBody.\n');
+        fs.writeFileSync(path.join(root, 'capabilities/todos/spec.coverage.md'), '| Adds a todo | src/add.test.ts |\n| Lists todos | — |\n');
+        fs.writeFileSync(path.join(root, 'src/add.test.ts'), '');
+
+        const health = await resolveLivingHealth(root, {
+            capabilityName: 'todos',
+            specPath: 'capabilities/todos/spec.md',
+            location: 'centralized',
+            match: [],
+        });
+
+        expect(health.requirementCoverage).toEqual({ 'Adds a todo': '1 test' });
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
     it('leaves the fields absent when the shared computation determines nothing', async () => {
         const { resolveLivingHealth } = await import('../livingHeaderMeta');
         const spy = jest.spyOn(model, 'readCapabilityHealth').mockResolvedValue({});
