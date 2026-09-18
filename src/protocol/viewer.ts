@@ -245,6 +245,8 @@ export interface LivingHeaderMeta {
     driftedRequirements?: string[];
     /** Headings absent from `main`'s copy of the spec; absent when that copy could not be read. */
     newRequirements?: string[];
+    /** Coverage label per requirement key; absent when no requirement has a mapped test or coverage is unknown. */
+    requirementCoverage?: Record<string, string>;
 }
 
 /** One entry in a card's Leans on or Leaned on by list. */

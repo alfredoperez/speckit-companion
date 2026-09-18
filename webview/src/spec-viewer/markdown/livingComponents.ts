@@ -35,9 +35,13 @@ export function safe(region: string, fn: (region: string) => string): string {
 // inherited names like `toString` / `__proto__` — only set headings match.
 let livingCoverage: Record<string, string> = Object.create(null);
 
-/** Inject best-effort per-requirement coverage labels keyed by exact heading. */
-export function setLivingCoverage(map: Record<string, string> | null): void {
-    livingCoverage = Object.assign(Object.create(null), map || {});
+/** Inject best-effort per-requirement coverage labels keyed by exact heading. Returns whether the map changed. */
+export function setLivingCoverage(map: Record<string, string> | null | undefined): boolean {
+    const next: Record<string, string> = Object.assign(Object.create(null), map || {});
+    const keys = Object.keys(next);
+    const changed = keys.length !== Object.keys(livingCoverage).length || keys.some((k) => next[k] !== livingCoverage[k]);
+    livingCoverage = next;
+    return changed;
 }
 
 // Headings whose touched files drifted, as the extension computed them. Empty until health resolves.

@@ -4,6 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { buildHandlers } from '../messageHandlers';
+import { preprocessLivingRequirements } from '../markdown';
 import { navState, viewerState, historyEntries } from '../signals';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from '../types';
 
@@ -90,6 +91,28 @@ describe('the webview routes every message the extension can send', () => {
         handlers.livingHealthResolved(msg);
 
         expect(redraws).toBe(1);
+    });
+
+    it('puts the coverage a health message carries onto the card, and redraws only when it changed', () => {
+        let redraws = 0;
+        const handlers = buildHandlers(() => undefined, () => { redraws++; });
+        navState.value = nav({});
+        const health = (requirementCoverage?: Record<string, string>) => ({
+            type: 'livingHealthResolved',
+            livingMeta: { capabilityName: 'c', specPath: 'c.spec.md', location: 'colocated', match: [], requirementCoverage },
+        }) as Extract<ExtensionToViewerMessage, { type: 'livingHealthResolved' }>;
+        const card = () => preprocessLivingRequirements('## Requirements\n\n### Adds a todo\n\nBody.');
+
+        handlers.livingHealthResolved(health({ 'Adds a todo': '3/4 tests' }));
+        handlers.livingHealthResolved(health({ 'Adds a todo': '3/4 tests' }));
+        expect(redraws).toBe(1);
+        expect(card()).toContain('<span class="living-req-coverage">3/4 tests</span>');
+        expect(card()).toContain('data-req-coverage="3/4 tests"');
+
+        handlers.livingHealthResolved(health({ 'Adds a todo': '4 tests' }));
+        expect(redraws).toBe(2);
+        expect(card()).toContain('4 tests');
+        handlers.livingHealthResolved(health(undefined));
     });
 
     it('marks new requirements and redraws only when the set changed', () => {

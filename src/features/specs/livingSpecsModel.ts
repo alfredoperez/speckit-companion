@@ -78,6 +78,8 @@ export interface CapabilityHealth {
     drifted?: boolean;
     /** The files behind `drifted`; present exactly when `drifted` is. */
     driftedFiles?: string[];
+    /** Coverage label per requirement key; absent when no requirement has a mapped test. */
+    requirementCoverage?: Record<string, string>;
 }
 
 export interface LivingSpecsListing {
@@ -1239,6 +1241,59 @@ export async function readDriftedFiles(
     return files;
 }
 
+/** A token that names a test file: `x.test.ts`, `x.spec.ts` (never a `.spec.md` document), `x_test.go`, `test_x.py`, or a file under `tests/`. */
+const TEST_FILE_RE = /(\.(test|spec)\.(?!md$)\w+|_test\.\w+|(^|\/)test_[^/]+\.\w+|(^|\/)tests?\/.*\.\w+)$/;
+
+/** The test files one coverage line names, with `::case` suffixes, wrapping parens and sentence dots removed. */
+function testPathsIn(line: string): string[] {
+    return line
+        .split(/[\s|`,;"'*<>[\]]+/)
+        .map(token => (token.includes('(') ? token : token.replace(/\)+\.*$/, '')))
+        .map(token => (token.includes(')') ? token : token.replace(/^\(+/, '')))
+        .map(token => token.replace(/^\((.*)\)$/, '$1').replace(/::.*$/, '').replace(/(:\d+|#L\d+)$/, '').replace(/\.+$/, ''))
+        .filter(token => !token.includes('://') && TEST_FILE_RE.test(token));
+}
+
+/** A label per requirement key: how many of the test files its coverage line names exist. Absent when none names one. */
+function readRequirementCoverage(root: string, cap: ResolvedCapability): CapabilityHealth['requirementCoverage'] {
+    const coverageTier = tierPaths(cap.spec, root).find(t => t.kind === 'coverage');
+    if (!coverageTier?.exists || !cap.exists) {
+        return undefined;
+    }
+    try {
+        const needles = requirementSlices(fs.readFileSync(path.join(root, cap.spec), 'utf-8')).flatMap(slice => {
+            const key = requirementKey(slice.heading);
+            // Only the id the heading opens with is its own; a later one refers to another requirement.
+            const ids = (key.match(/^N?FR-\d+\b/) ?? []).map(id => ({ key, text: id, test: new RegExp(`(?<![\\w-])${id}(?![\\w-])`) }));
+            return [{ key, text: key, test: undefined as RegExp | undefined }, ...ids];
+        });
+        const named = new Map<string, Set<string>>();
+        for (const line of fs.readFileSync(path.join(root, coverageTier.path), 'utf-8').split('\n')) {
+            const paths = testPathsIn(line);
+            if (paths.length === 0) continue;
+            // Headings are looked for outside the paths, so `tests/Checkout.test.ts` does not hand the line to "Checkout".
+            const prose = paths.reduce((text, p) => text.split(p).join(' '), line).replace(/::\S*/g, ' ');
+            const hits = needles.filter(n => (n.test ? n.test.test(prose) : prose.includes(n.text)));
+            // A requirement called "Adds" does not own a line written for "Adds an item".
+            const owners = hits.filter(n => !hits.some(m => m.key !== n.key && m.text !== n.text && m.text.includes(n.text)));
+            for (const { key } of owners) {
+                const set = named.get(key) ?? new Set<string>();
+                paths.forEach(p => set.add(p));
+                named.set(key, set);
+            }
+        }
+        if (named.size === 0) {
+            return undefined;
+        }
+        return Object.fromEntries([...named].map(([key, paths]) => {
+            const found = [...paths].filter(p => fileExists(root, p)).length;
+            return [key, found === paths.size ? `${found} ${found === 1 ? 'test' : 'tests'}` : `${found}/${paths.size} tests`];
+        }));
+    } catch {
+        return undefined;
+    }
+}
+
 /**
  * Compute a capability's row health: coverage count (filesystem only) and a
  * drift boolean (one time-bounded git call). Never rejects — every failure
@@ -1253,6 +1308,10 @@ export async function readCapabilityHealth(
     const coverage = readCoverageCount(workspaceRoot, cap);
     if (coverage) {
         health.coverage = coverage;
+    }
+    const requirementCoverage = readRequirementCoverage(workspaceRoot, cap);
+    if (requirementCoverage) {
+        health.requirementCoverage = requirementCoverage;
     }
     const timeoutMs = opts?.timeoutMs ?? 1500;
     // Typed loosely because tsc and ts-jest resolve setTimeout against different libs.

@@ -1,0 +1,726 @@
+{
+  "workflow": "companion",
+  "specName": "Requirement Coverage Badges",
+  "branch": "614-requirement-coverage-badges",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-18T12:25:58.071Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:27:47.317Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:28:04.822Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:28:05.128Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-18T12:28:05.322Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-18T12:28:22.050Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:29:23.793Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:29:55.688Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:29:55.781Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:30:18.050Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:30:18.398Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-18T12:30:33.367Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:31:12.818Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:31:12.917Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:31:13.338Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-18T12:31:27.267Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:32:07.230Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:32:07.447Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:32:11.246Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:32:37.604Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:02.079Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:10.937Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:26.522Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:26.711Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:30.413Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:47.036Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:33:58.388Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:34:07.029Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:36:37.554Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:36:37.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:36:37.659Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete-accounting",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-18T12:37:51.997Z"
+    }
+  ],
+  "telemetryInstanceId": "b65879df-e620-4393-b76d-27572210f734",
+  "selectedAt": "2026-09-18T12:25:58.071Z",
+  "livingSpecs": {
+    "loaded": [
+      "viewer-ui-chrome",
+      "viewer-ui-comments",
+      "viewer-ui-document",
+      "viewer-ui-navigation",
+      "viewer-ui-overview",
+      "viewer-ui-state",
+      "spec-viewer-actions",
+      "spec-viewer-living",
+      "spec-viewer-panel",
+      "spec-viewer-state",
+      "specs-commands",
+      "specs-lifecycle",
+      "specs-living-model",
+      "specs-living-view",
+      "specs-pipeline-build",
+      "specs-state-record"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "viewer-ui-chrome": [
+        "The header renders the title it is given; casing is decided upstream",
+        "Presentation must stay legible and announced",
+        "The viewer's own microcopy reads as plain sentences"
+      ],
+      "spec-viewer-panel": [
+        "One panel per spec, revealed rather than duplicated",
+        "Every refresh ships a complete state snapshot from one builder",
+        "The webview shell is generated under a locked-down policy",
+        "The viewer's message contract is declared once, for both sides",
+        "The install nudge is resolved per render, and a click reports the banner the reader saw",
+        "A document is addressed by its path under the spec",
+        "Opening a spec can name the requirement to bring into view"
+      ],
+      "specs-living-model": [
+        "A source file reports the living specs that claim it, in the editor's own process",
+        "Requirement slicing lives beside the requirement-id parser and counts the same headings",
+        "Drift is the code a run never accounted for",
+        "The registry carries a capability's retirement declaration",
+        "Requirement links are computed in-process over the requirement slicer",
+        "The capability tree groups by folder and labels its rows as words"
+      ],
+      "specs-living-view": [
+        "Living-spec listings are read-only, bounded, and honest about what they could not compute",
+        "A drifted row is told apart by shape and repaired from the row",
+        "The Living Specs view offers a one-pass sync action",
+        "The status bar names the living specs for the active file and reaches one requirement",
+        "A capability with no spec file opens to the call to adopt it",
+        "Any requirement opens from the command palette",
+        "An icon on a capability row means look here"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "viewer-ui-chrome",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "viewer-ui-comments",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "viewer-ui-navigation",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "viewer-ui-overview",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "viewer-ui-state",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "spec-viewer-actions",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "spec-viewer-state",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "specs-commands",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "specs-lifecycle",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "specs-living-view",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "specs-pipeline-build",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "specs-state-record",
+        "reason": "shares a changed file but none of its behaviour changed"
+      },
+      {
+        "name": "viewer-ui-document",
+        "reason": "the card already drew a supplied label and the outline already reads it; only the supply was missing"
+      },
+      {
+        "name": "spec-viewer-panel",
+        "reason": "one optional field joined the existing health message, declared once in the shared protocol as its rule requires"
+      }
+    ],
+    "synced": [
+      "spec-viewer-living",
+      "specs-living-model"
+    ]
+  },
+  "last_action": "two review rounds done, 9 findings fixed, 3040/3040 tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Compute per-requirement mapped test counts with the same rule as the header count",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts::per-requirement coverage"
+      ]
+    },
+    "FR-002": {
+      "title": "Send per-requirement coverage with the other health facts after first paint",
+      "tasks": [
+        "T001",
+        "T005",
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts::carries per-requirement coverage"
+      ]
+    },
+    "FR-003": {
+      "title": "Show the coverage label on each card whose requirement has mapped tests",
+      "tasks": [
+        "T006",
+        "T009"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts::puts the coverage a health message carries onto the card"
+      ]
+    },
+    "FR-004": {
+      "title": "Show no label, never a zero, on a requirement with no mapped tests",
+      "tasks": [
+        "T003",
+        "T004",
+        "T010"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts::gives no entry to a line that names no test",
+        "webview/src/spec-viewer/__tests__/livingCoverageAbsent.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Label says found out of named when several tests are named",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts::says how many were found when a named test is missing"
+      ]
+    },
+    "FR-006": {
+      "title": "No coverage file or an unreadable one renders exactly as today",
+      "tasks": [
+        "T003",
+        "T004",
+        "T010"
+      ],
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts::is absent when there is no coverage file",
+        "webview/src/spec-viewer/__tests__/livingCoverageAbsent.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Cards redraw when coverage arrives or changes, not when unchanged",
+      "tasks": [
+        "T002",
+        "T006",
+        "T009"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts::puts the coverage a health message carries onto the card"
+      ]
+    },
+    "FR-008": {
+      "title": "Coverage labels clear when the panel shows a different capability",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "webview/src/spec-viewer/__tests__/livingCoverageAbsent.test.ts::drops the labels when another capability opens"
+      ]
+    },
+    "FR-009": {
+      "title": "A test covers the path that supplies the values, not only the renderer",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts",
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "No change to the card design, the coverage table or the header",
+    "No zero or unknown placeholder on uncovered requirements",
+    "No regeneration of docs images unless card markup changes"
+  ],
+  "context": [
+    "living spec: viewer-ui-document",
+    "living spec: viewer-ui-chrome",
+    "living spec: spec-viewer-living (facts omitted never zero; coverage label says how many found)",
+    "area: webview/src/spec-viewer/markdown/livingComponents.ts (card renderer, setter never called)",
+    "area: webview/src/spec-viewer/messageHandlers.ts (livingHealthResolved applies drift and new only)",
+    "area: src/features/spec-viewer/livingHeaderMeta.ts + src/features/specs/livingSpecsModel.ts (health computation, header count)",
+    "area: src/protocol/viewer.ts (health message shape)",
+    "constraint: scenarios carry one observable outcome",
+    "constraint: issue #750 verified to reproduce on main"
+  ],
+  "intent": "Supply per-requirement coverage from the extension so living spec cards show their test counts in the running viewer",
+  "decisions": [
+    {
+      "decision": "Join coverage lines to requirements by heading through the shared requirement key, and by FR id when one is present",
+      "why": "Cards key on the heading and this repo s living specs carry no ids, so an id-only join leaves every real card blank",
+      "rejected": "Reusing the header s id-only count"
+    },
+    {
+      "decision": "Label is N tests, or F/N tests when some named test files are missing; no entry when no test is named",
+      "why": "The living spec rule requires a missing test to read differently from an unmapped requirement",
+      "rejected": "A bare count, and checking test names inside files"
+    },
+    {
+      "decision": "Ride the existing livingHealthResolved message with one optional field",
+      "why": "The message contract is declared once and drift and new marks already travel this way",
+      "rejected": "A new message type"
+    },
+    {
+      "decision": "Webview clears the map when the spec path on screen changes",
+      "why": "The provider skips the health message when nothing resolved, so stale labels would survive a capability switch",
+      "rejected": "Always posting a health message, which changes behaviour for capabilities with no coverage"
+    },
+    {
+      "decision": "Extension builds the label from integers and fixed words",
+      "why": "The card writes it into an attribute through an escape that does not cover quotes",
+      "rejected": "Rewriting the card renderer to use DOM APIs"
+    },
+    {
+      "decision": "A coverage line goes to the longest requirement heading it names",
+      "why": "A requirement called Adds would otherwise claim a line written for Adds an item",
+      "rejected": "First match in document order"
+    },
+    {
+      "decision": "Join by id only when the id is in the requirement heading",
+      "why": "Ids in a body belong to bullets under a grouping heading, which has no card of its own",
+      "rejected": "Ids found anywhere in the requirement body, as the plan first said"
+    },
+    {
+      "decision": "Test paths are read token by token, and headings are searched outside those paths and outside test selectors",
+      "why": "Two review rounds showed a single path regex cut paths with route-group parens, took spec documents for tests, and let a heading or id inside a path claim the line",
+      "rejected": "The single TEST_PATH_RE from the first pass"
+    },
+    {
+      "decision": "A coverage line labels every requirement it names, and only the id a heading opens with is its own",
+      "why": "One line often lists several ids, and a heading that mentions another id must not take or cancel its label",
+      "rejected": "One owner per line"
+    },
+    {
+      "decision": "No extra provider state to clear labels",
+      "why": "Every living update reloads the webview, which resets them; the set added after review round one was dead code and was removed in round two",
+      "rejected": "A per-spec set that forces an empty health message"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The header covered count recognises FR ids only, so a capability whose requirements are named by heading shows card labels but no header count. Separate gap, not fixed here."
+    },
+    {
+      "note": "One recorded check, Webview type-check, failed because I pointed it at a webview tsconfig that does not exist. The webview build that followed is the real check and passed.",
+      "step": "implement"
+    },
+    {
+      "note": "A coverage line that names a test only as module::case, with no file path, gets no card label although the header rule counts it as covered.",
+      "step": "implement"
+    },
+    {
+      "note": "Not checked in a running Extension Development Host. The supply path is covered by tests on both sides and by a run over the example project.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor at the end of implement: 1 problem (a capture call that resolved no spec, which looks like the doctor own drift call), an artifact warning that specify closed without its spec file although the file exists, 9 capabilities drifted since #746 and #752, plan, tasks and implement closed by ai, and task finishes stamped in bursts. None fixed here.",
+      "step": "implement"
+    },
+    {
+      "note": "Review gap left open: two overlapping health requests for the same spec can land out of order, so an older result can overwrite a newer one. Drift and new marks share this guard already.",
+      "step": "implement"
+    },
+    {
+      "note": "Review gaps left open: Windows backslash paths, any file under tests/ counting as a test, and a short heading matching as a bare substring of unrelated prose.",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Supply per-requirement coverage through the existing health message and apply it with the existing setter",
+      "key_finding": "The TypeScript coverage count is id-only while the CLI and the cards are heading-keyed, so the new reader must join on headings"
+    },
+    "tasks": {
+      "summary": "13 tasks in 4 phases: foundational reader and message shape, the P1 supply path, the P2 absence tests, polish"
+    },
+    "implement": {
+      "summary": "Requirement cards now receive per-requirement test counts through the existing health message"
+    }
+  },
+  "approach": "The living-specs model gains a reader that maps each requirement heading to a found-of-named test label from the coverage file. The label map rides the existing post-paint health message as one optional field. The webview applies it through the card renderer's existing setter, redraws only on change, and clears it when the capability on screen changes.",
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the optional requirementCoverage field to LivingHeaderMeta",
+      "files": [
+        "src/protocol/viewer.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "setLivingCoverage now returns whether the map changed",
+      "files": [
+        "webview/src/spec-viewer/markdown/livingComponents.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Wrote eight failing reader tests covering heading join, found-of-named, inferred key, id join, no-test lines, workspace escape, longest heading and no file",
+      "files": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added readRequirementCoverage beside the header count and set requirementCoverage on capability health; labels are built from two integers",
+      "files": [
+        "src/features/specs/livingSpecsModel.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added a test that resolveLivingHealth carries per-requirement coverage from a real coverage file",
+      "files": [
+        "src/features/spec-viewer/__tests__/livingHeaderMeta.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added a failing test that a health message puts the label on the rendered card and redraws only on change",
+      "files": [
+        "webview/src/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Widened resolveLivingHealth's return type; the existing spread already carries the field",
+      "files": [
+        "src/features/spec-viewer/livingHeaderMeta.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "The skip-when-nothing-resolved guard now also checks requirementCoverage",
+      "files": [
+        "src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "The health handler applies per-requirement coverage and redraws on change; a nav state for a different spec path clears it",
+      "files": [
+        "webview/src/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Added three tests: a health message without coverage removes labels, a different capability clears them with no message, a same-capability refresh keeps them",
+      "files": [
+        "webview/src/spec-viewer/__tests__/livingCoverageAbsent.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Added the user-facing changelog line under Unreleased, Fixed",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "The outline requirement already says coverage is spoken only when known, so it reads true unchanged; added the per-card sentence to the sidebar doc",
+      "files": [
+        "webview/src/spec-viewer/viewer-ui-document.spec.md",
+        "docs/sidebar.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Ran the jest suite, the extension type-check and the webview build, then ran the reader on the todo example: three labels, two blanks. The project has no lint script. No card markup changed, so no docs images were regenerated"
+    }
+  },
+  "verified": [
+    {
+      "what": "Extension type-check",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.0,
+      "result": "no output"
+    },
+    {
+      "what": "Webview type-check",
+      "command": "npx tsc -p webview/tsconfig.json --noEmit",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.2,
+      "result": "error TS5058: The specified path does not exist: 'webview/tsconfig.json'.",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "Webview build, which type-checks the webview",
+      "command": "npm run compile-web",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.9,
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished"
+    },
+    {
+      "what": "Full jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 41.2,
+      "result": "Tests:       3033 passed, 3033 total · Snapshots:   0 total · Time:        40.418 s, estimated 41 s"
+    },
+    {
+      "what": "Reader against examples/todo-living-central",
+      "command": "throwaway jest test, deleted after the run",
+      "result": "3 requirements labelled (one as 0/1 tests because the coverage file names todos.test.tsx and the file is todos.test.ts), 2 without a named test left blank"
+    }
+  ]
+}

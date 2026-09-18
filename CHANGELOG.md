@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Approve works on a draft with nothing left to approve.** A living spec that still carried its draft banner but had no adopted requirements could never lose the DRAFT badge. The bar now offers Approve spec on any draft, and approving the whole spec always clears the banner.
 - **DRAFT shows once.** A spec that drift acceptance had stamped showed a grey Template Instructions bar and the draft banner under the badge. Both are gone.
+- **Requirement cards show how many tests cover them.** A living spec's cards were built to show a count beside the state pill, such as `3/4 tests`, but the running viewer never received the numbers, so every card was blank and read as untested. A requirement whose coverage file names tests now shows how many of them exist. A requirement with none shows nothing, and a capability with no coverage file looks exactly as before.
 - **The coverage table shows the tests a run recorded.** Requirements whose tests were captured in one end-of-step write read as "No test linked", because the names were stored as one line of text and the table only read a list. The names were in the file the whole time; every spec already on disk now renders them.
 
 ### Changed
