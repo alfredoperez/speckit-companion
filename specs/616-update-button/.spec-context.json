@@ -1,0 +1,276 @@
+{
+  "workflow": "companion",
+  "specName": "Update from the new-version notification",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:53:53.156Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:54:47.765Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:54:47.997Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:55:00.000Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:55:00.364Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:55:00.449Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:55:00.532Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:55:00.612Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:55:00.714Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:55:09.257Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:55:26.446Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:56:04.238Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:56:12.475Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:56:12.493Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:57:28.380Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "59d13e75-adba-4eb8-bd99-152198276f2a",
+  "livingSpecs": {
+    "loaded": [
+      "speckit-cli-notifications"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "speckit-cli-notifications": [
+        "Two products share one release list and must never be confused",
+        "Update checks are throttled, skippable, and never noisy on failure"
+      ]
+    },
+    "synced": [
+      "speckit-cli-notifications"
+    ]
+  },
+  "last_action": "review fixes applied; 3059 tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Notification offers Update, View Changelog, Skip, Update first",
+      "tests": [
+        "src/speckit/updateChecker.test.ts::comes first",
+        "ahead of View Changelog and Skip"
+      ]
+    },
+    "FR-002": {
+      "title": "Update installs exactly the offered version",
+      "tests": [
+        "src/speckit/updateChecker.test.ts::installs the offered version and reloads when the reload is accepted"
+      ]
+    },
+    "FR-003": {
+      "title": "A successful install offers a window reload",
+      "tests": [
+        "src/speckit/updateChecker.test.ts::installs the offered version and reloads when the reload is accepted",
+        "leaves the window alone when the reload is declined"
+      ]
+    },
+    "FR-004": {
+      "title": "A failed install opens the extension page",
+      "tests": [
+        "src/speckit/updateChecker.test.ts::opens the extension page when the gallery does not have the version yet"
+      ]
+    },
+    "FR-005": {
+      "title": "View Changelog and Skip keep their behavior",
+      "tests": [
+        "src/speckit/updateChecker.test.ts::opens the offered version's own release",
+        "not the shared latest lookup",
+        "opens nothing when the user skips"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 3,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "A separate OpenVSX install path",
+    "Auto-updating without the developer pressing a button"
+  ],
+  "context": [
+    "living spec: speckit-cli-notifications",
+    "area: src/speckit/updateChecker.ts (new-version notification)",
+    "constraint: update checks stay throttled, skippable and quiet on failure"
+  ],
+  "intent": "The new-version notification can install the new version",
+  "approach": "Add an Update button that installs the offered version, offers a reload, and opens the extension page when the install fails",
+  "currentTask": "T003",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Update button installs the offered version, offers Reload Window, opens the extension page on failure",
+      "files": [
+        "src/speckit/updateChecker.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Button order, update plus reload, declined reload, failed install opens page, dismissal; two existing tests updated for the new first button",
+      "files": [
+        "src/speckit/updateChecker.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Getting-started and changelog say the notification can update the extension",
+      "files": [
+        "docs/getting-started.md",
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "update checker tests",
+      "command": "npx jest src/speckit/updateChecker.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.6,
+      "result": "Ran all test suites matching /src\\/speckit\\/updateChecker.test.ts/i. · Jest did not exit one second after the test run has completed. · 'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue."
+    },
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "> speckit-companion@0.33.0 compile · > tsc -p ./"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Install the offered version pinned as id@version",
+      "why": "a gallery that does not serve the version yet rejects it, which is the signal to open the extension page",
+      "rejected": "installing latest, which succeeds silently as a no-op when the Marketplace lags"
+    },
+    {
+      "decision": "Read the extension id from the running extension",
+      "why": "matches the existing rule of not hardcoding the id",
+      "rejected": "a hardcoded alfredoperez.speckit-companion string"
+    },
+    {
+      "decision": "Update installs by bare id, not id@version",
+      "why": "VS Code pins an extension installed at a given version (installGivenVersion sets pinned), which turns its automatic updates off for good",
+      "rejected": "the pinned id@version install the issue suggested for detecting Marketplace lag"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "The new-version notification offers Update, which installs the offered version and offers a reload"
+    }
+  },
+  "concerns": [
+    {
+      "note": "Doctor RECORD: closing the last task with --close-task also writes a step-level implement complete by ai, so the step reads finished before checks and completion run (same on spec 615). Product bug in the capture path, proposed as an issue."
+    },
+    {
+      "note": "During the few minutes a release reaches GitHub before the Marketplace, Update brings nothing new; the notification returns at the next daily check",
+      "step": "implement"
+    },
+    {
+      "note": "living_spec_fold.py appends ADDED requirements after trailing sections such as ## Uncovered; placed by hand here, fix proposed separately",
+      "step": "implement"
+    }
+  ]
+}

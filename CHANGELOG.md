@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Update from the new-version notification.** When a newer SpecKit Companion is out, the notification now offers Update first. It installs the newest version your editor's Marketplace serves, keeps automatic updates on, and offers to reload the window. If the install fails, it opens the extension's page instead of doing nothing.
 - **Approve every adopted requirement at once, and take it back.** The bar at the bottom of a living spec offers Approve all with the number still adopted, in place of the header's Approve spec. For 5 seconds after approving, or after removing a requirement, Undo puts the file back exactly as it was. If the file changed in the meantime, Undo leaves it alone and tells you why.
 - **Requirements a branch added are marked New.** On a feature branch, a requirement whose heading is not in `main`'s copy of the spec gets a green edge and a New pill, and the header counts them. Nothing is written to the file, so the marks go away once the branch merges.
 - **Each requirement shows what it leans on and what leans on it.** Under a card's files, Leans on lists the requirements it aligns to and Leaned on by lists requirements in other specs that align to it. Click one to open that spec at that requirement. A link to a requirement or capability that does not exist stays on the card, marked broken.

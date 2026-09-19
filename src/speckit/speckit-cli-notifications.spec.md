@@ -56,6 +56,18 @@ Phase completion SHALL be computed by parsing the task document into phases and 
 - **WHEN** the file changes
 - **THEN** that phase alone is reported as newly complete, and re-saving the file reports nothing further
 
+### The new-version notification can install the version it offers
+
+The new-version notification SHALL offer Update first, ahead of View Changelog and Skip. Update SHALL install the newest version the editor's gallery serves without pinning a version, then offer a window reload. When the install fails, Update SHALL open the extension's page instead of failing silently.
+
+#### Scenario: the install succeeds
+- **WHEN** the developer presses Update
+- **THEN** the newest version is installed, automatic updates stay on, and a reload is offered
+
+#### Scenario: the install fails
+- **WHEN** the developer presses Update and the install fails
+- **THEN** the extension's page opens
+
 ## Uncovered
 
 _None. Every file in the area was read._
