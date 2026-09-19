@@ -56,6 +56,8 @@ npm run test:watch      # watch mode
 npm run test:coverage   # coverage report
 ```
 
+`npm run test:all` runs the jest suite and the spec-kit extension's stdlib-unittest suite together, and CI runs both.
+
 - **Style**: BDD — `describe()` / `it()` blocks describe behaviour, not implementation. Read a few existing test files in `src/**/*.test.ts` before adding new ones.
 - **VS Code mock**: extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js#moduleNameMapper`). When you need a VS Code API that isn't mocked yet, add it there rather than stubbing inline.
 - **Config**: Jest runs through `ts-jest` against `tsconfig.test.json`.
@@ -109,7 +111,7 @@ If your change is documented in `CLAUDE.md`'s map but not in the README after yo
 
 1. Branch from `main` (don't stack new work on a previously-merged feature branch — this repo squash-merges, so the old commits won't be in the history of your new branch).
 2. Make your changes.
-3. Run `npm test` and `npm run compile`.
+3. Run `npm run test:all` and `npm run compile`.
 4. Update `README.md` per the docs map in `CLAUDE.md`. If your change is internal-only (refactor, test-only, build), say so in the PR.
 5. Open a PR using the template in `.github/pull_request_template.md`. Fill in the related issue, description, screenshots (for UI changes), and the checklist.
 6. Reviewers merge by squashing — keep your commits readable but don't stress over rebase noise.
