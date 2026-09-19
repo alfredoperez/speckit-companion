@@ -250,6 +250,33 @@ class TheMarkerCheckIsSkippedWhereItIsNotWanted(unittest.TestCase):
         self.assertEqual(calls, [])
 
 
+class AnUnreviewedDraftIsNamed(unittest.TestCase):
+    SPEC = "# X\n\n{banner}\n\n## Requirements\n\n### It works\n\nIt works.\n\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"
+
+    def codes(self, banner):
+        import tempfile
+        with tempfile.TemporaryDirectory() as root:
+            return [f["code"] for f in lv.check_living_spec(self.SPEC.format(banner=banner), "x.spec.md", root=root)]
+
+    def test_a_surface_draft_banner_warns(self):
+        self.assertIn("draft-unreviewed", self.codes("> [DRAFT] Surface-first draft from existing code."))
+
+    def test_a_reviewed_spec_and_an_adopted_draft_do_not(self):
+        self.assertNotIn("draft-unreviewed", self.codes(""))
+        self.assertNotIn("draft-unreviewed", self.codes("> [DRAFT] Adopted from CLAUDE.md."))
+
+    def test_a_spec_someone_accepted_is_not_called_unreviewed(self):
+        self.assertNotIn("draft-unreviewed", self.codes("> [DRAFT] Surface-first draft.\n<!-- reviewed: abc1234 -->"))
+
+    def test_a_banner_below_frontmatter_is_found_the_way_the_viewer_finds_it(self):
+        self.assertIn("draft-unreviewed", self.codes("---\nx: 1\n---\n**[Draft]** from code."))
+
+    def test_bulleted_rules_count_one_per_bullet(self):
+        spec = "## Requirements\n\n### R\n\n" + "".join(f"- It MUST do {n}\n" for n in range(5)) + \
+               "\n#### Scenario: s\n- **WHEN** a\n- **THEN** b\n"
+        self.assertIn("requirement-bundles-rules", [f["code"] for f in lv.check_living_spec(spec, "x.spec.md", root=None)])
+
+
 class FindingsAreOrdered(unittest.TestCase):
     def test_by_path_then_line_then_code(self):
         report = lv.build_report(str(REPO))

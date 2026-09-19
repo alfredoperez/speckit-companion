@@ -516,7 +516,8 @@ def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
     and the same holds for the design docs when the size budget kept both. A
     `simple` run folds plan, so plan is not judged there. A closed implement whose
     Foundational phase had waves of four or more tasks and no wave check-ins built
-    them inline.
+    them inline, and one offered a living-spec reviewer that never checked in folded
+    its deltas unreviewed.
     """
     skip = _no_record("dispatch", feature_dir, ctx)
     if skip is not None:
@@ -575,6 +576,14 @@ def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
                 "one checked in — dispatch the printed briefs as written",
                 {"waves": skipped},
             ))
+    if "implement" in closed and "living" in offered and not any(l.startswith("living:") for l in labels):
+        findings.append(Finding(
+            "dispatch", "warning",
+            "implement folded its living-spec deltas without dispatching their reviewer",
+            "`dispatch-briefs.py --living` printed a reviewer brief for this run and no reviewer checked in "
+            "— dispatch the printed brief before the fold",
+            {"expected": 1, "checked_in": 0},
+        ))
     return CheckStatus("dispatch", "ran"), findings
 
 

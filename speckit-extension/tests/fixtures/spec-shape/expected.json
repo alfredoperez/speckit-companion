@@ -133,5 +133,25 @@
         "line": 1
       }
     ]
+  },
+  "bundled-rules.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "requirement-bundles-rules",
+        "line": 5
+      }
+    ]
+  },
+  "wordy-requirement.md": {
+    "kind": "living",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "requirement-too-wordy",
+        "line": 5
+      }
+    ]
   }
 }

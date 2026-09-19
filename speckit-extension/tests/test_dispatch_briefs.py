@@ -243,5 +243,57 @@ class FoundationalWaves(unittest.TestCase):
         self.assertEqual(findings, [])
 
 
+DELTA = """# Thing
+
+## ADDED Requirements
+<!-- capability: demo -->
+
+### Installing the extension
+
+The install MUST run the add command. The target MUST live in one place. A first install MUST NOT pass the flag. An update MUST pass it. The probe SHOULD be retried.
+
+#### Scenario: the user installs
+- **WHEN** the install runs
+- **THEN** the add command is used
+"""
+
+
+class LivingReview(unittest.TestCase):
+    def _feature(self, spec):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name) / "specs" / "001-thing"
+        d.mkdir(parents=True)
+        (d / "thing.spec.md").write_text(spec)
+        history = PLAN_CLOSED + [
+            {"step": "implement", "kind": "start", "at": "2000-01-01T00:00:00.000Z", "by": "extension"},
+            {"step": "implement", "kind": "complete", "at": "2999-01-01T00:00:00.000Z", "by": "ai"},
+        ]
+        (d / ".spec-context.json").write_text(json.dumps({"history": history, "size": "simple"}))
+        return d
+
+    def _run(self, d, *args):
+        return subprocess.run([sys.executable, str(SCRIPTS / "dispatch-briefs.py"),
+                               "--feature-dir", str(d), *args], capture_output=True, text=True)
+
+    def test_a_spec_with_no_delta_has_nothing_to_review(self):
+        self.assertIn("nothing to review", self._run(self._feature("# Thing\n"), "--living").stdout)
+
+    def test_a_delta_gets_one_reviewer_carrying_the_checker_findings(self):
+        out = self._run(self._feature(DELTA), "--living").stdout
+        self.assertIn("=== living: review ===", out)
+        self.assertIn("living specs of demo", out)
+        self.assertIn("states 5 rules under one heading", out)
+
+    def test_a_fold_without_the_reviewer_is_named_until_it_checks_in(self):
+        d = self._feature(DELTA)
+        self._run(d, "--living")
+        ctx = json.loads((d / ".spec-context.json").read_text())
+        titles = [f.title for f in doctor_checks.check_dispatch(d, ctx)[1]]
+        self.assertIn("implement folded its living-spec deltas without dispatching their reviewer", titles)
+        self._run(d, "--checkin", "living: review")
+        self.assertEqual(doctor_checks.check_dispatch(d, ctx)[1], [])
+
+
 if __name__ == "__main__":
     unittest.main()
