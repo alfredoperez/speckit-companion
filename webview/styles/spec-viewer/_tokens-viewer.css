@@ -5,7 +5,7 @@
  * keep the host-derived tokens from tokens.css — the redesign is scoped to the
  * viewer (spec 394), so nothing here may leak into a shared file.
  *
- * Palette: a hybrid theme (docs/DESIGN.md) — the viewer OWNS a tested
+ * Palette: a hybrid theme (DESIGN.md) — the viewer OWNS a tested
  * light/dark semantic palette (canvas, surfaces, ink, statuses, syntax) for
  * predictable contrast, while inheriting the host editor's font families and
  * accessibility mode. Colors are deliberate literals, not VS Code
@@ -92,7 +92,7 @@
     --border-checkbox: #52615e;
     --bg-checkbox: #171d20;
 
-    /* Geometry: 6px surfaces, 4px controls (docs/DESIGN.md). */
+    /* Geometry: 6px surfaces, 4px controls (DESIGN.md). */
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;

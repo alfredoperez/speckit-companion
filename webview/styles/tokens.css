@@ -131,7 +131,7 @@
     --bg-checkbox: var(--vscode-checkbox-background, #3c3c3c);
 
     /* Misc */
-    /* Terminal/techy direction: squared corners across all webviews (docs/DESIGN.md). */
+    /* Terminal/techy direction: squared corners across all webviews (DESIGN.md). */
     --radius-sm: 2px;
     --radius-md: 2px;
     --radius-lg: 2px;

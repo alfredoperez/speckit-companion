@@ -77,7 +77,7 @@ export const NightForest: Story = {
             <style>{GEIST_FACES}</style>
             <h1 style={H1}>Banner and marketplace art</h1>
             <p style={LEDE}>
-                The older generated identity, still the ground of the README cross-promo banners and the marketplace assets: a bioluminescent night forest as a developer tool, near-black navy lit by cyan, one scarce emerald. THEME.md at the root is its source. It predates the Constellation violet the site and captures use; DESIGN.md says which surfaces still carry it.
+                The older generated identity, still the ground of the README cross-promo banners and the marketplace assets: a bioluminescent night forest as a developer tool, near-black navy lit by cyan, one scarce emerald. The Generated art section of DESIGN.md at the root is its source. It predates the Constellation violet the site and captures use; DESIGN.md says which surfaces still carry it.
             </p>
             <h2 style={H2}>Reference</h2>
             <Reference
