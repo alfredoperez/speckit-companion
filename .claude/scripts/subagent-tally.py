@@ -59,7 +59,7 @@ def dispatched(path):
         if runs and current and block.get("type") == "tool_use" and block.get("name") in ("Agent", "Task"):
             i = block.get("input") or {}
             text = f"{i.get('description', '')} {i.get('prompt', '')}".lower()
-            kind = "review" if re.search(r"code-review|codex", text) or "review" in (i.get("description") or "").lower() else "worker"
+            kind = "living" if "living: review" in text else "review" if re.search(r"code-review|codex", text) or "review" in (i.get("description") or "").lower() else "worker"
             runs[-1][current].append((kind, i.get("description") or "?"))
     return runs[-1] if runs else None
 
@@ -91,6 +91,8 @@ def expected(spec_dir):
     if waves:
         implement += f", plus {sum(min(size, 4) for _, size in waves)} across Foundational waves " + ", ".join(
             f"{n} ({size} tasks)" for n, size in waves)
+    if dispatch_briefs.living_brief(spec_dir) is not None:
+        implement += ", 1 living-spec reviewer before the fold"
     return {
         "specify": "judgement (one per code area when the request names 2+)",
         "plan": plan,
@@ -116,7 +118,10 @@ def main():
     for step in STEPS:
         workers = [d for k, d in got[step] if k == "worker"]
         reviews = [d for k, d in got[step] if k == "review"]
+        living = [d for k, d in got[step] if k == "living"]
         line = f"[subagents] {step}: {len(workers)} worker(s)"
+        if living:
+            line += f", {len(living)} living-spec reviewer(s)"
         if reviews:
             line += f", {len(reviews)} reviewer(s)"
         if got[step]:

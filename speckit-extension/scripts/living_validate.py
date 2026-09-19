@@ -61,6 +61,12 @@ def adopted_sources(section: list[str]) -> str | None:
 MAX_REQUIREMENTS = 8
 MAX_LINES = 160
 MIN_REQUIREMENTS = 3
+#: Past these one requirement is several rules under one heading, or one rule buried in
+#: explanation. Measured on this repo's 320 requirements, each flags about the worst 5%.
+MAX_RULES = 4
+MAX_REQUIREMENT_WORDS = 120
+_NORMATIVE_RE = re.compile(r"\b(SHALL|MUST|SHOULD)\b")
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 
 _DELTA_HEADER_RE = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$",
                               re.IGNORECASE)
@@ -81,6 +87,18 @@ _THEN_RE = re.compile(_BULLET + r"\*{0,2}THEN\*{0,2}\b", re.IGNORECASE)
 #: Severity decides one thing: whether a fold stops. Nothing else reads it.
 ERROR = "error"
 WARNING = "warning"
+
+
+#: The viewer's DRAFT badge rule (`livingDocs.ts`): a `[DRAFT]` banner in the first ten body lines.
+_DRAFT_LINE_RE = re.compile(r"^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]", re.IGNORECASE)
+
+
+def _is_draft(lines: list) -> bool:
+    body = lines
+    if lines and lines[0].strip() == "---":
+        end = next((k for k in range(1, len(lines)) if lines[k].strip() == "---"), None)
+        body = lines[end + 1:] if end is not None else lines
+    return any(_DRAFT_LINE_RE.match(l) for l in body[:10])
 
 
 def _fence_flags(lines: list) -> list:
@@ -395,6 +413,24 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                 "Add a `#### Scenario:` with a WHEN and a THEN under this requirement.",
                 capability))
 
+        prose = [lines[k] for k in range(i + 1, scenarios[0] if scenarios else j)
+                 if not fenced[k] and not lines[k].lstrip().startswith("<!--")]
+        # Per line, so a bulleted list of rules counts each bullet.
+        rules = sum(1 for line in prose for s in _SENTENCE_RE.split(line) if _NORMATIVE_RE.search(s))
+        words = sum(len(line.split()) for line in prose)
+        if rules > MAX_RULES:
+            findings.append(_finding(
+                WARNING, "requirement-bundles-rules", path, i + 1,
+                f'"{heading}" states {rules} rules under one heading, so a reader cannot tell which one a change broke.',
+                "Split it: one requirement per rule, each with its own heading and scenario.",
+                capability))
+        elif words > MAX_REQUIREMENT_WORDS:
+            findings.append(_finding(
+                WARNING, "requirement-too-wordy", path, i + 1,
+                f'"{heading}" takes {words} words to state its rule.',
+                "Cut it to the rule and the one reason that stops someone breaking it; how it is built belongs in the code.",
+                capability))
+
         for n, start in enumerate(scenarios):
             end = scenarios[n + 1] if n + 1 < len(scenarios) else j
             body = [lines[k] for k in range(start + 1, end) if not fenced[k]]
@@ -530,6 +566,14 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
             "Every adopted requirement in this spec has been confirmed by a run, "
             "but the draft banner still says the whole spec is unreviewed.",
             "Remove the `> [DRAFT]` line.", capability))
+    reviewed = any(re.match(r"^<!--\s*reviewed:", l) for l in lines)
+    if (root is not None and reqs > 0 and not _draft_banner and not reviewed
+            and _is_draft(lines)):
+        findings.append(_finding(
+            WARNING, "draft-unreviewed", path, 1,
+            "This spec was drafted from the code and nobody has reviewed it since.",
+            "Review it for one rule per requirement and no restated implementation, then remove the `> [DRAFT]` line.",
+            capability))
     if (root is not None and capability and _draft_banner and reqs > 0
             and str(path).endswith((".rules.md", ".arch.md"))):
         # Adoption transcribes the rules that hold between files, and a rule about

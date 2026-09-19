@@ -68,7 +68,7 @@ Every step that records or reads a size MUST use the same vocabulary. A word its
 
 ### A step dispatches what a script splits out for it, to avoid reading or to get a second pair of eyes
 
-A step SHALL dispatch when a worker reads something the main agent would otherwise carry to the end of the run, brings a distinct perspective, or builds independent work a script has already split out for it. Which workers a step sends is decided by `dispatch-briefs.py`, not by the model: plan sends one reader per recorded code area (at most four) and, above `simple` size, one writer per design document; implement sends workers for each Foundational wave of four or more tasks. Tasks does not dispatch. The optional adversarial task review is a panel of distinct lenses, not a split of files.
+A step SHALL dispatch when a worker reads something the main agent would otherwise carry to the end of the run, brings a distinct perspective, or builds independent work a script has already split out for it. Which workers a step sends is decided by `dispatch-briefs.py`, not by the model: plan sends one reader per recorded code area (at most four) and, above `simple` size, one writer per design document; implement sends workers for each Foundational wave of four or more tasks, and one reviewer for its living-spec deltas before they fold. Tasks does not dispatch. The optional adversarial task review is a panel of distinct lenses, not a split of files.
 
 #### Scenario: a step's only inputs are the artifacts already written
 - **WHEN** no script prints briefs for it

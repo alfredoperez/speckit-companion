@@ -34,6 +34,8 @@ reads: []
      ```
      By the end, every name in `livingSpecs.loaded` is accounted for by a delta block or a recorded skip. A capability that is neither is a hole the fold flags.
 
+   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints.
+
    - **Fold living-spec deltas (opt-in, best-effort).** After the completion write, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai

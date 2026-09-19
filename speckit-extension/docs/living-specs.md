@@ -112,6 +112,9 @@ It checks every registered living spec, and the delta sections of every active f
 | Code | Severity | Raised when |
 |---|---|---|
 | `requirement-without-scenario` | warning | A requirement states a rule and never says how anyone would know it held. |
+| `requirement-bundles-rules` | warning | A requirement states more than 4 SHALL, MUST or SHOULD sentences under one heading. Split it: one requirement per rule, each with its own heading and scenario. |
+| `requirement-too-wordy` | warning | A requirement takes more than 120 words to state its rule. Cut it to the rule and the one reason that stops someone breaking it. |
+| `draft-unreviewed` | warning | A spec drafted from the code still carries its `> [DRAFT]` banner, so nobody has reviewed it. Review it, then remove the banner. |
 | `scenario-missing-half` | error | A scenario has a condition and no outcome, or an outcome and no condition. The keywords are recognised with or without emphasis, so `- WHEN …` counts exactly as `- **WHEN** …` does. |
 | `duplicate-requirement` | error | Two requirements in one capability share a heading, which is the key fold-back and coverage both join on. |
 | `unknown-capability` | error | A delta block is marked for a capability the registry does not list. |

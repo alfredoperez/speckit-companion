@@ -59,6 +59,19 @@ The shape check SHALL act only when opted in, make no edits, and never fail the 
 - **WHEN** it reports
 - **THEN** it says nothing was checked and where the registry actually is, rather than the words it uses when the feature is genuinely off
 
+### The shape check names a requirement too big to hold
+<!-- touches: speckit-extension/scripts/living_validate.py, src/features/specs/specShapeCheck.ts -->
+
+A requirement with more than 4 SHALL, MUST or SHOULD sentences, or more than 120 words before its first scenario, SHALL get a warning naming the split or the cut. A spec still carrying a surface draft banner SHALL get a warning that nobody has reviewed it.
+
+#### Scenario: one heading states five rules
+- **WHEN** the check runs
+- **THEN** it warns that the requirement bundles five rules and says to split it, in the command and in the editor alike
+
+#### Scenario: a spec drafted from the code was never reviewed
+- **WHEN** it still carries its `> [DRAFT]` banner
+- **THEN** the check warns until the banner is removed
+
 ### A spec that is still true can say so, and stop drifting
 
 The drift report SHALL take an explicit per-capability acceptance that writes the commit the spec was read against into the spec itself, since committing it is what moves the drift baseline. Nothing SHALL write an acceptance on its own, because a review is a claim a person makes. Without acceptance, drift grows on every unchanged spec until everything is flagged.

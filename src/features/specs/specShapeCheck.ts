@@ -47,6 +47,10 @@ const WHEN_RE = new RegExp(BULLET + String.raw`\*{0,2}(WHEN|GIVEN)\*{0,2}\b`, 'i
 // outcome. Counting it as one is how a scenario with a condition and no result
 // passes a check written to catch exactly that.
 const THEN_RE = new RegExp(BULLET + String.raw`\*{0,2}THEN\*{0,2}\b`, 'i');
+// Past these one requirement is several rules under one heading, or one rule buried in explanation.
+const MAX_RULES = 4;
+const MAX_REQUIREMENT_WORDS = 120;
+const NORMATIVE_RE = /\b(SHALL|MUST|SHOULD)\b/;
 
 /**
  * False when a fence is opened and never closed.
@@ -150,6 +154,25 @@ export function checkLivingSpec(
                 'warning', 'requirement-without-scenario', path, i + 1,
                 `"${heading}" states a rule and never says how anyone would know it held.`,
                 'Add a `#### Scenario:` with a WHEN and a THEN under this requirement.', cap));
+        }
+
+        const proseLines: string[] = [];
+        for (let k = i + 1; k < (scenarios[0] ?? j); k++) {
+            if (!fenced[k] && !lines[k].trimStart().startsWith('<!--')) proseLines.push(lines[k]);
+        }
+        // Per line, so a bulleted list of rules counts each bullet.
+        const rules = proseLines.flatMap(l => l.split(/(?<=[.!?])\s+/)).filter(s => NORMATIVE_RE.test(s)).length;
+        const words = proseLines.flatMap(l => l.split(/\s+/)).filter(Boolean).length;
+        if (rules > MAX_RULES) {
+            findings.push(finding(
+                'warning', 'requirement-bundles-rules', path, i + 1,
+                `"${heading}" states ${rules} rules under one heading, so a reader cannot tell which one a change broke.`,
+                'Split it: one requirement per rule, each with its own heading and scenario.', cap));
+        } else if (words > MAX_REQUIREMENT_WORDS) {
+            findings.push(finding(
+                'warning', 'requirement-too-wordy', path, i + 1,
+                `"${heading}" takes ${words} words to state its rule.`,
+                'Cut it to the rule and the one reason that stops someone breaking it; how it is built belongs in the code.', cap));
         }
 
         for (let n = 0; n < scenarios.length; n++) {
