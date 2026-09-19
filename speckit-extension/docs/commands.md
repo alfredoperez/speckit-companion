@@ -181,7 +181,7 @@ Writes `tasks.md`: a dependency-ordered checklist grouped by user story into pha
 
 Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand, then marks the spec complete at the end.
 
-On a host with a subagent tool it hands each user-story phase to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. Without a subagent tool it builds the waves inline exactly as before.
+On a host with a subagent tool it hands each user-story phase that owns five or more files to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. The Foundational phase goes through `dispatch-briefs.py --waves`, which splits it into waves (at join lines, `###` blocks and `Wave` headers, so tests stay ahead of the code they test) and prints the next wave that still has unfinished tasks: up to four worker briefs when it holds four or more, otherwise the tasks to build inline. Implement runs it before each Foundational wave and crosses a join line only once that wave's workers have returned; Setup and Polish it builds itself. Without a subagent tool it builds the waves inline exactly as before.
 
 ### `speckit.companion.auto`
 

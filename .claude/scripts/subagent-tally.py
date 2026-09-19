@@ -5,10 +5,16 @@ Usage: python3 .claude/scripts/subagent-tally.py specs/<NNN>-<slug> [--session <
 Reads the Claude Code transcript for this session (CLAUDE_CODE_SESSION_ID). Logs, never enforces.
 """
 import argparse
+import importlib.util
 import json
 import os
 import re
 from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location(
+    "dispatch_briefs", Path(__file__).resolve().parents[2] / "speckit-extension" / "scripts" / "dispatch-briefs.py")
+dispatch_briefs = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(dispatch_briefs)
 
 STEPS = ("specify", "plan", "tasks", "implement")
 
@@ -62,13 +68,18 @@ def expected(spec_dir):
     ctx_file = spec_dir / ".spec-context.json"
     ctx = json.loads(ctx_file.read_text()) if ctx_file.exists() else {}
     areas = [c for c in ctx.get("context") or [] if isinstance(c, str) and c.startswith("area:")]
-    plan = f"{len(areas)} readers (one per area)" if len(areas) >= 2 else f"0 readers ({len(areas)} area recorded)"
-    docs = [d for d in ("data-model.md", "contracts") if (spec_dir / d).exists()]
-    plan += f", {len(docs)} design-doc writers" if len(docs) >= 2 else f", 0 design-doc writers ({len(docs)} doc kept)"
+    if (ctx.get("size") or "normal") == "simple":
+        plan = "0 (simple size: plan and tasks are folded into specify)"
+    else:
+        plan = f"{min(len(areas), 4)} readers (one per area, at most 4)" if len(areas) >= 2 else f"0 readers ({len(areas)} area recorded)"
+        plan += ", 2 design-doc writers"
 
     tasks = spec_dir / "tasks.md"
     big = []
+    waves = []
     if tasks.exists():
+        sizes = [len(w) for w in dispatch_briefs.foundational_waves(tasks.read_text())]
+        waves = [(n, size) for n, size in enumerate(sizes, 1) if size >= dispatch_briefs.MIN_WAVE]
         phase = None
         for line in tasks.read_text().splitlines():
             if line.startswith("## Phase"):
@@ -77,6 +88,9 @@ def expected(spec_dir):
                 if len(re.findall(r"`[^`]+`", line)) >= 5:
                     big.append(phase.split(" - ")[0])
     implement = f"{len(big)} ({', '.join(big)} own 5+ files)" if big else "0 (no story phase owns 5+ files)"
+    if waves:
+        implement += f", plus {sum(min(size, 4) for _, size in waves)} across Foundational waves " + ", ".join(
+            f"{n} ({size} tasks)" for n, size in waves)
     return {
         "specify": "judgement (one per code area when the request names 2+)",
         "plan": plan,
