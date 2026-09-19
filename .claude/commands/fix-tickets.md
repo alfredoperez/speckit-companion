@@ -13,10 +13,10 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 1. **Fresh `main`** — pull, and if the pull changed `speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
 2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, `/code-review` + `/codex:review` in parallel (max two rounds), the commit, and the PR.
 3. **Merge** — squash-merge once CI is green.
-4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in `Current.md`.
+4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
 5. **Next ticket.**
 
-After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, into `Projects/speckit companion/reports/`) of everything fixed, in plain language, **flagging UI / manual-test items**, what the pipeline already exercised (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
+After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, **flagging UI / manual-test items**, what the pipeline already exercised (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
@@ -133,7 +133,7 @@ Merge **one at a time**, confirming CI green on each (`gh pr checks`). After eac
 
 - Resolve the ticket queue from `$ARGUMENTS` (see Inputs). Create a task list (`TaskCreate`) with one task per ticket so progress is visible.
 - Read `gh issue view <N>` for each to confirm scope and capture the title/body.
-- **Honor the queue groups in `Current.md`** (`### Live queue (GitHub)`): tickets under `🔒 Gated / not ready` are **skipped**; tickets under `⏸️ Review-gated` are run but **paused before merge** (step 3). The `--review-merge` arg forces review-gate for the whole batch.
+- **Honor the queue groups in the live queue** (`Projects/command-center/tickets/migrate-live-queue.md`; `Current.md` is archived): tickets under `🔒 Gated / not ready` are **skipped**; tickets under `⏸️ Review-gated` are run but **paused before merge** (step 3). The `--review-merge` arg forces review-gate for the whole batch.
 - Confirm the queue with the user **once** (AskUserQuestion) only when the queue was derived (`open` / backlog), not when explicit numbers were passed.
 
 ### For each ticket `N` (sequential):
@@ -190,7 +190,7 @@ If checks fail and can't be fixed on the branch, leave the PR open, record "merg
 - an **architecture / coverage gap** → a GitHub issue candidate (accumulate across the run, surface in the report)
 - If it can become a test or hook, propose that instead of prose.
 
-**c) Tick the box in `Current.md`.** In `~/dev/GitHub/obsidian-vault/Current.md`, under `## SpecKit Companion → ### Live queue (GitHub)`, flip the ticket's line from `- [ ]` to `- [x]` and append `→ [PR #NNN](url)`, matching the existing format. If the ticket isn't listed, add it under the right group as `- [x]`.
+**c) Tick the ticket in the live queue.** `Current.md` is archived; the queue now lives in the command-center ticket `Projects/command-center/tickets/migrate-live-queue.md`. Tick the ticket there if it is listed; if the queue has no line for it, say so in the report rather than creating one.
 
 Mark the ticket task `completed` and loop to the next ticket.
 
@@ -205,7 +205,7 @@ Run `/install-local`, then `git restore package.json package-lock.json .specify/
 
 ### Final report
 
-Write **one markdown run report** (via the vault `obsidian` skill) to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/reports/YYYY-MM-DD-fix-tickets-run.md`. **Never overwrite a prior report.** Concise and plain-language:
+Write **one markdown run report** (via the vault `obsidian` skill) flat in `~/dev/GitHub/obsidian-vault/Projects/speckit companion/`, named for what the run did (no date prefix, no `reports/` folder: the date is a frontmatter field). **Never overwrite a prior report.** Concise and plain-language:
 
 - **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped / needs attention.
 - **🖐️ Manual verification needed** — the UI / sidebar / webview / settings surfaces from each ticket. For each: what changed and how to eyeball it.

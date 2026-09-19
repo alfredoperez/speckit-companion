@@ -73,6 +73,21 @@ class RecordAuditTests(unittest.TestCase):
         self.assertEqual(len(hit), 1)
         self.assertEqual(hit[0].evidence, {**hit[0].evidence, "step": "specify", "by": "ai"})
 
+    def test_a_companion_run_closing_its_own_steps_is_not_an_anomaly(self):
+        ctx = {"workflow": "companion", "history": [
+            {"step": s, "kind": k, "by": b, "at": f"2026-08-01T1{i}:00:00.000Z"}
+            for i, (s, k, b) in enumerate([("plan", "start", "extension"), ("plan", "complete", "ai"),
+                                           ("tasks", "start", "extension"), ("tasks", "complete", "ai"),
+                                           ("specify", "complete", "ai")])]}
+        titles = [title for step, *_ in dc._attribution_anomalies(ctx) for title in [step]]
+        self.assertEqual(titles, ["specify"], "specify is still stamped by the extension")
+
+    def test_a_companion_implement_closed_with_open_tasks_is_still_an_anomaly(self):
+        ctx = {"workflow": "companion", "history": [
+            {"step": "implement", "kind": "complete", "by": "ai", "at": "2026-08-01T12:00:00.000Z"}]}
+        self.assertEqual([s for s, *_ in dc._attribution_anomalies(ctx, tasks_done=False)], ["implement"])
+        self.assertEqual(dc._attribution_anomalies(ctx, tasks_done=True), [])
+
     def test_a_spec_with_no_record_is_a_skip_with_a_reason_not_a_clean_verdict(self):
         status, findings = dc.check_record(FIXTURES, {})
         self.assertEqual(status.state, "skipped")

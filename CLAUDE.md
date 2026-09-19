@@ -50,5 +50,5 @@ The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**`
 - Run the extension: F5 → Extension Development Host.
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/172-composable-command-nodes/plan.md`
+For additional context about technologies to be used, project structure, shell commands, and other important information, read the current plan: `specs/618-foundational-wave-fanout/plan.md`
 <!-- SPECKIT END -->
