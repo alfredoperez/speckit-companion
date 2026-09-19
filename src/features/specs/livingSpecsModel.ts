@@ -111,6 +111,8 @@ interface RawCapability {
     retire?: boolean;
     /** Resolved spec path; '' flags a declared-but-empty (bad) colocated entry. */
     spec: string;
+    /** The registry named no `spec:`, so the path is the derived central default. */
+    specDefaulted?: boolean;
 }
 
 function posix(p: string): string {
@@ -314,14 +316,16 @@ function normalizeBlock(block: unknown): { enabled: boolean; capabilities: RawCa
         if ('spec' in entry) {
             spec = entry.spec === null || entry.spec === undefined || entry.spec === '' ? '' : String(entry.spec);
         } else {
-            spec = `${DEFAULT_CAPABILITY_ROOT}/${name}/spec.md`;
+            spec = `${DEFAULT_CAPABILITY_ROOT}/${name}/${name}.spec.md`;
         }
+        const specDefaulted = !('spec' in entry);
         capabilities.push({
             name,
             match: asList(entry.match),
             exclude: asList(entry.exclude),
             retire: entry.retire === true,
             spec,
+            specDefaulted,
         });
     }
     return { enabled, capabilities, exempt };
@@ -335,6 +339,17 @@ interface RegistryResolution {
     legacyStale: boolean;
     error?: string;
     configured: boolean;
+}
+
+/** A central spec written before the `<name>.spec.md` rename is still found at `<name>/spec.md`. */
+function settleDefaultSpecs<T extends { capabilities: RawCapability[] }>(block: T, root: string): T {
+    for (const cap of block.capabilities) {
+        const legacy = `${DEFAULT_CAPABILITY_ROOT}/${cap.name}/spec.md`;
+        if (cap.specDefaulted && !fileExists(root, cap.spec) && fileExists(root, legacy)) {
+            cap.spec = legacy;
+        }
+    }
+    return block;
 }
 
 /**
@@ -353,7 +368,7 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
     if (isFile(registryFile)) {
         const registryRead = readMapping(registryFile);
         if (registryRead.ok) {
-            return { ...normalizeBlock(registryRead.value), legacyStale: legacyHasBlock, configured: true };
+            return { ...settleDefaultSpecs(normalizeBlock(registryRead.value), workspaceRoot), legacyStale: legacyHasBlock, configured: true };
         }
         const reason = registryRead.absent ? 'file disappeared while reading' : registryRead.reason;
         return {
@@ -366,7 +381,7 @@ function resolveRegistry(workspaceRoot: string): RegistryResolution {
         };
     }
     if (legacyHasBlock) {
-        return { ...normalizeBlock(legacyBlock), legacyStale: false, configured: true };
+        return { ...settleDefaultSpecs(normalizeBlock(legacyBlock), workspaceRoot), legacyStale: false, configured: true };
     }
     if (!legacyRead.ok && !legacyRead.absent) {
         return {

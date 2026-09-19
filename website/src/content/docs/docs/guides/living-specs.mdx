@@ -8,7 +8,7 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-By the end of this page you'll have a registry that turns living specs on, know where each capability's spec and its two sibling files go, and know which of the five commands computes an answer and which asks your assistant for one.
+By the end of this page you'll have a registry that turns living specs on, know where each capability's spec and its two sibling files go, and know which of the seven commands computes an answer and which asks your assistant for one.
 
 A feature spec describes one change. It's written, it's implemented, and after that it's a record of something that happened rather than a description of what the code does now. Read a folder of them a year later and you have an archaeology problem: the current behavior is the sum of thirty specs, minus the parts later specs undid.
 
@@ -52,11 +52,11 @@ Two layouts, and the registry picks between them by whether you wrote a `spec:` 
 
 **Colocated.** Give the capability a `spec:` path and the spec sits next to the code it describes, as `<something>.spec.md`. This is the layout that makes a living spec discoverable from the code, because it's in the directory you were already reading.
 
-**Central.** Leave `spec:` out and the location is derived: `capabilities/<name>/spec.md`. This suits a capability whose code is spread across several directories with no obvious home.
+**Central.** Leave `spec:` out and the location is derived: `capabilities/<name>/<name>.spec.md`. A central spec written before that rename, `capabilities/<name>/spec.md`, is still found. This suits a capability whose code is spread across several directories with no obvious home.
 
 You can mix both in one registry, and the sidebar's Living Specs tree mirrors whichever you chose, so a colocated spec appears nested under its source directories. `/speckit.companion.living-move` moves a capability from one layout to the other later, so the first choice isn't final.
 
-Each spec has two sibling files, derived from its name. For a colocated `<stem>.spec.md` they are `<stem>.arch.md` and `<stem>.coverage.md` in the same directory. For a central `capabilities/<name>/spec.md` they are `spec.arch.md` and `spec.coverage.md` beside it. The architecture file is free-form notes about how the capability is built. The coverage file maps requirements to the tests that exercise them, and it's what the coverage count on a sidebar row and in the viewer header is read from. Neither is generated; you create them at those paths yourself.
+Each spec has two sibling files, named from the spec's own stem and kept beside it: `<stem>.rules.md` and `<stem>.coverage.md`. For a central `capabilities/<name>/<name>.spec.md` that means `<name>.rules.md` and `<name>.coverage.md`. The rules file holds the capability's conventions as plain bullets, for people and assistants to read; the pipeline does not load it on its own. An older `.arch.md` beside a spec is still read as the rules file. The coverage file maps requirements to the tests that exercise them, and it's what the coverage count on a sidebar row and in the viewer header is read from. `/speckit.companion.living-adopt` writes a rules file for a layer it drafts; otherwise you create both files yourself.
 
 Two more rules decide which capability a given file belongs to.
 
@@ -68,7 +68,7 @@ Any spec file in the tree that no capability claims shows up under **Orphans** i
 
 ## The commands
 
-All five are named `/speckit.companion.living-<verb>`, and all five come from the Companion Spec Kit extension. Install only the VS Code extension and neither they nor the Living Specs view exist.
+All seven are named `/speckit.companion.living-<verb>`, and all seven come from the Companion Spec Kit extension. Install only the VS Code extension and neither they nor the Living Specs view exist.
 
 | Command | What it does |
 | --- | --- |
@@ -76,13 +76,15 @@ All five are named `/speckit.companion.living-<verb>`, and all five come from th
 | `/speckit.companion.living-sync` | Rewrites the affected specs from your current changes. Also assistant work. "Update, don't regenerate" is an instruction in the command, not something a script enforces. |
 | `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. Committed history only by default; `--working` counts uncommitted edits and untracked files as drift too. |
 | `/speckit.companion.living-coverage` | Reads each capability's coverage file and reports what it finds. `--capability <name>` limits it to one. |
+| `/speckit.companion.living-show` | Prints one slice of a living spec: a capability's requirement headings, one requirement in full, or the requirements that describe one file. Read-only. |
+| `/speckit.companion.living-validate` | Checks the shape of living specs and of a feature spec's deltas: a requirement with no scenario, a scenario missing WHEN or THEN, a duplicate heading, a delta pointing at a requirement that isn't there. Read-only. |
 | `/speckit.companion.living-move` | Moves a capability's spec and its sibling files between the colocated and central layouts and rewrites the registry to match, after showing you the paths and pausing for confirmation. |
 
-The split in that table matters. Drift, coverage and move are backed by scripts that compute the answer, so they're deterministic and repeatable. Adopt and sync are prompts your assistant follows, so their quality is your assistant's quality.
+The split in that table matters. Drift, coverage, show, validate and move are backed by scripts that compute the answer, so they're deterministic and repeatable. Adopt and sync are prompts your assistant follows, so their quality is your assistant's quality.
 
 ## How a run folds back
 
-A **delta** is a block a run appends to its own `spec.md` to say what it changed about a capability. There are four of them, one per verb, and each names the capability it belongs to.
+A **delta** is a block a run appends to its own feature spec, `<short-name>.spec.md`, to say what it changed about a capability. There are four of them, one per verb, and each names the capability it belongs to.
 
 ```markdown
 ## ADDED Requirements
@@ -107,7 +109,7 @@ Drift and coverage never gate anything. Both are read-only reports that always e
 
 A capability whose spec isn't committed yet, or a CI checkout without enough history, is skipped with the reason named and counted. The all-clear line is reserved for a run where every capability was actually examined.
 
-The architecture and coverage siblings are recognized but never generated. Nothing writes either of them, which is why a capability with no coverage file shows no coverage number, and why that looks exactly like zero coverage on screen.
+The rules and coverage siblings are recognized, and only adopt writes one: a rules file for a layer it drafts. Nothing writes a coverage file, which is why a capability with no coverage file shows no coverage number, and why that looks exactly like zero coverage on screen.
 
 ## Next
 

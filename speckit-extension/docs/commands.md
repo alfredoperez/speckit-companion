@@ -231,4 +231,4 @@ Reads each capability's `.coverage.md` tier and reports, per requirement, which 
 
 ### `speckit.companion.living-move`
 
-Moves a living spec between central storage (`capabilities/<capability>/<name>.spec.md`) and colocation next to its code, taking the spec file, its tier siblings (`.arch.md`, `.coverage.md`), and the registry entry together so the three cannot end up disagreeing. Reversible — moving back restores the prior layout.
+Moves a living spec between central storage (`capabilities/<capability>/<name>.spec.md`) and colocation next to its code, taking the spec file, its tier siblings (`.rules.md`, `.coverage.md`, or a legacy `.arch.md`), and the registry entry together so the three cannot end up disagreeing. Reversible — moving back restores the prior layout.

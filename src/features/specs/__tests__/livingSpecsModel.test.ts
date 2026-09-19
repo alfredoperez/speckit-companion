@@ -70,7 +70,27 @@ describe('readLivingSpecs', () => {
         expect(readLivingSpecs(root).enabled).toBe(false);
     });
 
-    it('resolves a centralized capability to capabilities/<name>/spec.md', () => {
+    it('resolves a centralized capability to capabilities/<name>/<name>.spec.md', () => {
+        const root = ws(
+            { 'capabilities/checkout/checkout.spec.md': '# checkout' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.spec).toBe('capabilities/checkout/checkout.spec.md');
+        expect(cap.exists).toBe(true);
+    });
+
+    it('keeps a declared central path even when only the old file exists', () => {
+        const root = ws(
+            { 'capabilities/checkout/spec.md': '# checkout' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      spec: capabilities/checkout/checkout.spec.md\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.spec).toBe('capabilities/checkout/checkout.spec.md');
+        expect(cap.exists).toBe(false);
+    });
+
+    it('still finds a centralized spec written before the rename, at capabilities/<name>/spec.md', () => {
         const root = ws(
             { 'capabilities/checkout/spec.md': '# checkout' },
             'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n'
