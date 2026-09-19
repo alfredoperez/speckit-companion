@@ -130,6 +130,19 @@ describe('SpecKitDetector', () => {
             });
         });
 
+        it('never pastes the workspace path into the command text', async () => {
+            (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/tmp/a"$(touch x)' } }];
+            mockProvider('claude');
+            const detector = SpecKitDetector.getInstance();
+            for (const run of [() => detector.initializeWorkspace(), () => detector.upgradeProject(), () => detector.upgradeAll()]) {
+                await run();
+                expect(lastSentText()).not.toContain('$(touch x)');
+                const calls = mockWindow.createTerminal.mock.calls as unknown as [{ cwd?: unknown }][];
+                const opts = calls[calls.length - 1][0];
+                expect(opts.cwd).toEqual({ fsPath: '/tmp/a"$(touch x)' });
+            }
+        });
+
         it('both upgrade paths emit the same --ai value for the same provider (FR-006)', async () => {
             mockProvider('claude');
             await SpecKitDetector.getInstance().upgradeProject();

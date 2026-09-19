@@ -189,9 +189,9 @@ export class SpecKitDetector {
             return;
         }
 
-        const terminal = vscode.window.createTerminal('Initialize SpecKit');
+        const terminal = vscode.window.createTerminal({ name: 'Initialize SpecKit', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && specify init .`);
+        terminal.sendText('specify init .');
 
         const selection = await vscode.window.showInformationMessage(
             'Initializing SpecKit... Reload window once complete.',
@@ -234,9 +234,9 @@ export class SpecKitDetector {
             return;
         }
 
-        const terminal = vscode.window.createTerminal('Upgrade SpecKit Project');
+        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText(`cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
+        terminal.sendText(`specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading project files... Reload window after upgrade completes.',
@@ -258,10 +258,10 @@ export class SpecKitDetector {
             return;
         }
 
-        const terminal = vscode.window.createTerminal('Upgrade SpecKit (All)');
+        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder.uri });
         terminal.show();
         terminal.sendText('uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
-            `cd "${workspaceFolder.uri.fsPath}" && specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
+            `specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI and project files... Reload window after upgrade completes.',

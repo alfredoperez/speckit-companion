@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Security
+- **A folder name can no longer run commands through Initialize or Upgrade.** Initialize SpecKit, Upgrade Project and Upgrade All pasted the workspace path into the terminal command, so a folder name containing shell syntax would have run it. The terminal now opens in the folder instead, the way installing the companion extension already did.
+
 ### Added
 - **The editor flags requirements that are hard to hold.** A living spec or a spec's delta now gets a warning on a requirement that bundles more than four rules under one heading, or takes more than 120 words to state its rule, so it can be split or cut before it becomes context for every later run.
 - **Update from the new-version notification.** When a newer SpecKit Companion is out, the notification now offers Update first. It installs the newest version your editor's Marketplace serves, keeps automatic updates on, and offers to reload the window. If the install fails, it opens the extension's page instead of doing nothing.
