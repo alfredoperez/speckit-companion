@@ -78,7 +78,7 @@ Skipping a stage is visible: repainting the PNGs without re-rendering the clips 
 
 `npm run lightwell` and `npm run favicons` are page chrome rather than product imagery and are **not** on this chain — their colours come from the site's brand, not from the capture palette. Re-run them when the site's tokens or the mascot mark change, not when a capture palette does.
 
-Know what the palette reaches before you reach for it. The VS Code variables theme the capture shell, the Specs sidebar recreation, and anything that reads `--vscode-*`. They do not theme the spec viewer's body: the viewer owns a tested palette in `webview/styles/spec-viewer/_tokens-viewer.css` and follows the host only in high-contrast mode, which is deliberate (see `docs/DESIGN.md`). Recolouring the viewer means editing that owned palette, and that changes what ships to users, not just what the screenshots look like.
+Know what the palette reaches before you reach for it. The VS Code variables theme the capture shell, the Specs sidebar recreation, and anything that reads `--vscode-*`. They do not theme the spec viewer's body: the viewer owns a tested palette in `webview/styles/spec-viewer/_tokens-viewer.css` and follows the host only in high-contrast mode, which is deliberate (see `DESIGN.md`). Recolouring the viewer means editing that owned palette, and that changes what ships to users, not just what the screenshots look like.
 
 ## Web renders
 
@@ -139,7 +139,7 @@ npm run test:visual:ci     # layout only — what CI runs
 npm run test:visual -- --update   # re-bless the baselines after an intended change
 ```
 
-Two things it checks, and the split matters. **Layout** is geometry a browser can answer and jsdom cannot: nothing overflows the panel shell, no control is drawn at zero size, nothing is clipped beyond reach, no console errors. That holds on any machine, so CI runs it on every push. **Pixels** are compared against baselines in `webview/src/pipeline-builder/__screenshots__/` (the situation stories, both widths, dark theme — 54 files). Those stay local: font rasterisation differs between macOS and a Linux runner, and a pixel gate in CI would fail on every push for reasons nobody could act on. A failing comparison writes the diff image next to the baselines under `diff/`.
+Two things it checks, and the split matters. **Layout** is geometry a browser can answer and jsdom cannot: nothing overflows the panel shell, no control is drawn at zero size, nothing is clipped beyond reach, no console errors. That holds on any machine, but `npm run test:visual:ci` is a local command — no CI workflow runs it, or the pixel half, today. **Pixels** are compared against baselines in `webview/src/pipeline-builder/__screenshots__/` (the situation stories, both widths, dark theme — 54 files). Those stay local: font rasterisation differs between macOS and a Linux runner, and a pixel gate in CI would fail on every push for reasons nobody could act on. A failing comparison writes the diff image next to the baselines under `diff/`.
 
 Stories need no changes to take part. Determinism — no animation, no transition, no caret, no scrollbars — is injected by the runner rather than declared per story, and both themes are reached through Storybook's `globals` URL parameter. Adding a story to `Pipeline Builder/*` puts it under layout checks automatically.
 
@@ -167,6 +167,66 @@ Each SVG carries the same brief as an XML comment, so filling one in is mechanic
 ## Fixtures are published copy
 
 The Teamboard fixture prose (`webview/src/spec-viewer/__fixtures__/teamboard/`) appears verbatim in public images and videos. Keep it legible and deliberately dull; it must never be anyone's real spec. Preserve its engineered properties: FR-004 stays vacuous by design (it is the clarify-demo plant). No em dashes in fixture text or any on-screen copy. The product name in on-image copy is "Spec Kit Companion", two words.
+
+## Manual assets — the README screenshots
+
+The five README screenshots (`hero.jpg`, `viewer.png`, `comments.png`, `create-spec.png`, `activity.png`) are captured by hand, not by a script, so the set needs a standing recipe to stay uniform: same theme, same zoom, same widths, cropped tight, no decoration.
+
+> **Filenames are stable — overwrite, never rename or delete.** README image URLs
+> are absolute and pinned to `main` (`raw.githubusercontent.com/.../main/docs/screenshots/<file>`).
+> The Marketplace serves the last *published* README but resolves those URLs against
+> the *current* `main`, so renaming/deleting a referenced file retroactively 404s the
+> live listing. Re-shoot into the existing filename (`hero.jpg`, `viewer.png`,
+> `comments.png`, `create-spec.png`, `activity.png`).
+
+### Environment (set once, identically for every shot)
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| Color theme | **Dark Modern** (VS Code default) | Matches the extension's tested CSS variables; familiar to most users |
+| Display | Retina / HiDPI (`@2x`) | Crisp text when scaled down in the README |
+| Editor zoom | `Cmd+=` **twice** from default (reset first with `Cmd+0`) | Legible UI text at README render width — keep it identical across shots |
+| Minimap | Off (`editor.minimap.enabled: false`) | Removes clutter |
+| Breadcrumbs | Off (`breadcrumbs.enabled: false`) | Removes clutter |
+| Status bar | Off for panel-only crops (`workbench.statusBar.visible: false`) | Removes clutter |
+| Open editor tabs | Close all but the one in shot | No stray tabs in frame |
+| Activity bar | Keep visible only when it's part of the shot (sidebar overview) | Context where relevant |
+| Primary sidebar width | Fixed — drag to a consistent width and don't change between shots | Uniform sidebar proportions |
+
+Capture in the **Extension Development Host** (`F5`), not a packaged install, so
+you're shooting the current working tree.
+
+### Dimensions (display width)
+
+Crop tight to the relevant panel — no desktop wallpaper, no empty editor gutter.
+
+| Tier | Display width | Shots |
+|------|---------------|-------|
+| Full viewer | **~1600px** | `viewer`, `comments`, `activity` |
+| Narrow | **~900px** | `create-spec` |
+| Hero | **2000 × 989** | `hero.jpg` (AI-generated — see `screenshots/hero/PROMPT.md`) |
+
+Captured at `@2x` these are ~3200px / ~1800px source pixels; that's expected.
+
+### Per-shot recipe
+
+Each must show the **current** UI (title-leading header, color badge, branch
+chip, step tabs, children rail, TOC, footer state machine).
+
+| File | Open | Frame must include |
+|------|------|--------------------|
+| `viewer.png` | `_01_demo-planned` viewer, Plan tab — **sidebar visible** | Specs sidebar + viewer together; title-leading header + `Planned` badge + `demo/planned` chip + date pill; Spec/Plan/Tasks tabs; children-rail chips (data-model / research / quickstart); the architecture/mermaid diagram; next-step **Tasks** footer |
+| `comments.png` | `_01_demo-planned` viewer, hover a line, click `+` | GitHub-style comment card mid-use: context header, textarea with text, footer (secondary action left / Cancel + Add Comment right) |
+| `activity.png` | `_02_demo-tasked`, toggle **Activity** | Phases timeline + Approach / Tasks / Review-comments cards |
+| `create-spec.png` | `+` New Spec | Title, **Workflow** picker, description + char counter, **Attach Image**, footer Cancel / **Auto Mode** / Submit |
+
+### Checklist before committing
+
+- [ ] All shots use Dark Modern at the same zoom.
+- [ ] Widths match the tier table; cropped tight.
+- [ ] Canonical filenames; old set deleted.
+- [ ] PNGs optimized; hero shows no purple; video loops cleanly.
+- [ ] `git status` shows **no** staged changes under the demo fixtures.
 
 ## Determinism
 
