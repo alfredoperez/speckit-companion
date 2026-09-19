@@ -26,6 +26,9 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Type-check the webview
+        run: npx tsc -p tsconfig.webview.json --noEmit
+
       - name: Run tests
         run: npm test
 
