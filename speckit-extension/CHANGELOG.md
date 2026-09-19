@@ -14,16 +14,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Implement's closing record is its own step.** Recording what was verified, decided and left open now runs as a separate node after the work and its checks. Hooks attached after the work still run after the checks, as before.
 
 ### Fixed
+- **The doctor stops warning about steps a Companion run closes itself.** Plan, tasks and implement closed by the assistant are how a Companion run works, including older specs on the turbo profile, so they are no longer reported as closed by the wrong writer.
+- **A dispatch time given in another time zone is stored in UTC.** A step start passed with an offset or without milliseconds could sort out of order against every other stamp.
 - **A folded requirement lands under Requirements.** When a feature added a requirement to a living spec that ends with another section, such as Uncovered, the fold put it after that section, where the requirement tools do not read it. It now goes at the end of the Requirements section.
 - **The doctor no longer blames a run for an older failure.** A failed capture call from before a run's window used to be reported as a problem for that run. It is now a note saying failures from other runs sit in the shared log.
 - **The doctor finds a spec file named after the feature.** A step that declares it writes `<short-name>.spec.md` was reported as closing without it, because the check looked for that literal file name. It now matches the file the run actually named.
+- **Coverage records a list of names, whichever way it was written.** A requirement's tasks and tests given as one comma-separated line are stored as separate names, the same as when they are passed one flag at a time. Written as a single line, they read back as no coverage at all.
+- **A requirement removed on purpose is not reported missing.** When the viewer records a removal beside a living spec, `/speckit.companion.living-validate` no longer warns that a change names a heading the spec does not have.
 
 ### Added
 - **Ask what leans on a requirement.** `resolve-spec-paths.py --leaned-on-by <capability>#<heading>` lists every requirement whose aligns link names that heading, in any capability, with its files and body. Plain output prints one `capability#heading` per line.
-
-### Fixed
-- **Coverage records a list of names, whichever way it was written.** A requirement's tasks and tests given as one comma-separated line are stored as separate names, the same as when they are passed one flag at a time. Written as a single line, they read back as no coverage at all.
-- **A requirement removed on purpose is not reported missing.** When the viewer records a removal beside a living spec, `/speckit.companion.living-validate` no longer warns that a change names a heading the spec does not have.
 
 ## [0.22.0] - 2026-09-17
 

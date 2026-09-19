@@ -1620,6 +1620,14 @@ class MultiFlagDispatchTests(unittest.TestCase):
         finally:
             sys.argv, sys.stdout = orig_argv, orig_stdout
 
+    def test_a_dispatch_time_is_stored_in_the_same_utc_form_as_every_other_stamp(self) -> None:
+        rc, _ = self._run(["--step", "plan", "--status", "planning", "--kind", "start",
+                           "--by", "extension", "--at", "2026-09-06T05:00:00-05:00"])
+        self.assertEqual(rc, 0)
+        starts = [e for e in json.loads(self.fd.joinpath(".spec-context.json").read_text())["history"]
+                  if e.get("step") == "plan" and e.get("kind") == "start"]
+        self.assertEqual(starts[-1]["at"], "2026-09-06T10:00:00.000Z")
+
     def test_a_decision_and_a_verification_in_one_call_both_record(self) -> None:
         rc, out = self._run(["--decision", "picked A", "--verified", "suite green"])
         self.assertEqual(rc, 0)

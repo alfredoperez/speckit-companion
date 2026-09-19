@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import argparse
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 from pathlib import Path
 
@@ -577,6 +577,8 @@ def _main() -> int:
             print(f"[companion] {msg}", file=sys.stderr)
             _record_outcome(False, msg)
             return 2
+        utc = _parsed_at.astimezone(timezone.utc)
+        args.at = utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
 
     if args.batch:
         try:

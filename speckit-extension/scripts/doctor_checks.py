@@ -185,13 +185,17 @@ def _task_finish_times(ctx: dict) -> list:
     return sorted(out, key=lambda p: p[1])
 
 
-def _attribution_anomalies(ctx: dict) -> list:
+def _attribution_anomalies(ctx: dict, tasks_done: bool = False) -> list:
     out = []
+    # A Companion run closes these itself: plan and tasks with --advance, implement at completion.
+    companion = ctx.get("workflow") == "companion" or ctx.get("profile") == "turbo"
+    # Implement only counts as self-closed once every task is checked; an earlier close is still wrong.
+    self_closed = ({"plan", "tasks"} | ({"implement"} if tasks_done else set())) if companion else set()
     for e in log_entries(ctx):
         step, by = e.get("step"), e.get("by")
         if not isinstance(step, str) or _entry_kind(e) != "complete" or not _is_step_level(e):
             continue
-        if step in EXTENSION_STEPS and by == "ai":
+        if step in EXTENSION_STEPS and by == "ai" and step not in self_closed:
             out.append((step, by, e.get("at"),
                         "the extension stamps this step's boundaries; an ai complete lands "
                         "first and permanently blocks the hook's close"))
@@ -277,7 +281,7 @@ def check_record(feature_dir: Path, ctx: dict, now: datetime | None = None) -> t
              "batches": len(bursts), "largest_batch": len(worst), "span_seconds": span},
         ))
 
-    for step, by, at, why in _attribution_anomalies(ctx):
+    for step, by, at, why in _attribution_anomalies(ctx, _tasks_all_checked(feature_dir)):
         findings.append(Finding(
             "record", "warning",
             f"Step `{step}` was closed by `{by}`",
