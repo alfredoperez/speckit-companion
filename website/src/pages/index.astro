@@ -32,6 +32,10 @@ const METHODOLOGY =
 const INSTALL_COMMAND =
   'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
 
+// The stock PyPI specify-cli has no `extension` subsystem; this source build does.
+const SOURCE_CLI =
+  'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
+
 type Feature = {
   id: string;
   status: string;
@@ -529,6 +533,16 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         <div class="step" data-step>
           <span class="step-flare" aria-hidden="true"></span>
           <span class="step-num" aria-hidden="true">02</span>
+          <div class="step-text">
+            <span class="step-title">Get an extension-capable Spec Kit CLI</span>
+            <span class="step-sub">The stock PyPI `specify-cli` has no `extension` subsystem.</span>
+          </div>
+          <CodeLine class="step-action" command={SOURCE_CLI} />
+        </div>
+
+        <div class="step" data-step>
+          <span class="step-flare" aria-hidden="true"></span>
+          <span class="step-num" aria-hidden="true">03</span>
           <div class="step-text">
             <span class="step-title">Add the Companion to Spec Kit</span>
             <span class="step-sub">One command. The same command updates it later.</span>
