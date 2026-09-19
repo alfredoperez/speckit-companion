@@ -53,6 +53,8 @@ There are **two** installs, and they're independent:
 
 **Out of date.** The spec-kit extension never updates itself. When the version installed in your project is behind the one this VS Code extension was built with, a **SpecKit commands out of date** item appears in the status bar, the same banner slot says which two versions disagree with an **Update** button, and a notification tells you once per version (with **Skip this version** to silence it). All of them run the same `specify extension add` command; the status-bar item disappears as soon as the versions match. What your project is measured against is whichever is newer: the manifest bundled in this VS Code extension, or the newest spec-kit extension actually published. The published one is learned by the once-a-day update check and remembered between sessions, so the comparison itself needs no network and a version that can't be read is never guessed at.
 
+**A newer SpecKit Companion.** When a newer version of this VS Code extension is published, a notification offers **Update**, **View Changelog** and **Skip**. Update installs the newest version your editor's Marketplace serves, keeps automatic updates on, and offers to reload the window. If the install fails, Update opens the extension's page instead. A release can reach GitHub a few minutes before the Marketplace, so an Update pressed in that window may bring nothing new yet; the notification comes back at the next daily check.
+
 **Manual install.** You need a **github-source** spec-kit CLI first; the stock PyPI `specify-cli` does **not** ship the `extension` subcommand:
 
 ```bash

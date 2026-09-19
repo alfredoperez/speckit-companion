@@ -8,7 +8,7 @@ const { createMockExtensionContext } = vscode as unknown as {
 describe('UpdateChecker', () => {
     const buildContext = (currentVersion: string, skipVersion?: string) => ({
         ...createMockExtensionContext(skipVersion ? { 'speckit.skipVersion': skipVersion } : {}).context,
-        extension: { packageJSON: { version: currentVersion } },
+        extension: { id: 'alfredoperez.speckit-companion', packageJSON: { version: currentVersion } },
     } as any);
 
     const buildOutputChannel = () => ({ appendLine: jest.fn() } as any);
@@ -27,6 +27,7 @@ describe('UpdateChecker', () => {
         jest.restoreAllMocks();
         require('vscode').window.showInformationMessage.mockClear();
         require('vscode').env.openExternal.mockClear();
+        require('vscode').commands.executeCommand.mockReset();
         delete (global as any).fetch;
     });
 
@@ -55,6 +56,7 @@ describe('UpdateChecker', () => {
 
         expect(showSpy).toHaveBeenCalledWith(
             expect.stringContaining('0.23.0'),
+            'Update',
             'View Changelog',
             'Skip'
         );
@@ -106,6 +108,7 @@ describe('UpdateChecker', () => {
 
         expect(showSpy).toHaveBeenCalledWith(
             expect.stringContaining('0.23.1'),
+            'Update',
             'View Changelog',
             'Skip'
         );
@@ -137,6 +140,54 @@ describe('UpdateChecker', () => {
 
         expect(require('vscode').env.openExternal).not.toHaveBeenCalled();
     });
+    describe('the Update button', () => {
+        const run = async (...answers: Array<string | undefined>) => {
+            mockReleases([{ tag_name: 'v0.23.1' }]);
+            const ask = jest.spyOn(require('vscode').window, 'showInformationMessage');
+            answers.forEach(a => ask.mockResolvedValueOnce(a as any));
+            await new UpdateChecker(buildContext('0.22.0'), buildOutputChannel()).checkForUpdates(true);
+            await new Promise(r => setImmediate(r));
+            return { ask, exec: require('vscode').commands.executeCommand as jest.Mock };
+        };
+
+        it('comes first, ahead of View Changelog and Skip', async () => {
+            const { ask } = await run(undefined);
+            expect(ask.mock.calls[0].slice(1)).toEqual(['Update', 'View Changelog', 'Skip']);
+        });
+
+        it('installs the newest version unpinned and reloads when the reload is accepted', async () => {
+            const { exec } = await run('Update', 'Reload Window');
+            expect(exec).toHaveBeenCalledWith('workbench.extensions.installExtension', 'alfredoperez.speckit-companion');
+            expect(exec).toHaveBeenCalledWith('workbench.action.reloadWindow');
+        });
+
+        it('leaves the window alone when the reload is declined', async () => {
+            const { exec } = await run('Update', undefined);
+            expect(exec).not.toHaveBeenCalledWith('workbench.action.reloadWindow');
+        });
+
+        it('opens the extension page when the install fails', async () => {
+            require('vscode').commands.executeCommand.mockImplementation(async (cmd: string) => {
+                if (cmd === 'workbench.extensions.installExtension') { throw new Error('not found'); }
+            });
+            const { exec, ask } = await run('Update');
+            expect(exec).toHaveBeenCalledWith('extension.open', 'alfredoperez.speckit-companion');
+            expect(ask).toHaveBeenCalledTimes(1);
+        });
+
+        it('falls back to the Marketplace page when the editor cannot open the extension page', async () => {
+            require('vscode').commands.executeCommand.mockImplementation(async () => { throw new Error('no such command'); });
+            await run('Update');
+            expect(String((require('vscode').env.openExternal as jest.Mock).mock.calls[0][0]))
+                .toContain('itemName=alfredoperez.speckit-companion');
+        });
+
+        it('installs nothing when the notification is dismissed', async () => {
+            const { exec } = await run(undefined);
+            expect(exec).not.toHaveBeenCalled();
+        });
+    });
+
     describe('the published spec-kit extension version', () => {
         const buildContextWithStore = (seed: Record<string, unknown> = {}) => {
             const mock = createMockExtensionContext(seed);

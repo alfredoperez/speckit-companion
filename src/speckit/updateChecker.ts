@@ -164,10 +164,13 @@ export class UpdateChecker {
 
         vscode.window.showInformationMessage(
             message,
+            'Update',
             'View Changelog',
             'Skip'
         ).then(async (selection) => {
-            if (selection === 'View Changelog') {
+            if (selection === 'Update') {
+                await this.installLatest();
+            } else if (selection === 'View Changelog') {
                 // Resolve by tag: both products publish into one releases list, so
                 // `/releases/latest` can land on the spec-kit extension instead.
                 const releaseUrl = `https://github.com/alfredoperez/speckit-companion/releases/tag/v${latestVersion}`;
@@ -181,9 +184,29 @@ export class UpdateChecker {
                     5000
                 );
             }
-        });
+        }).then(undefined, error => this.outputChannel.appendLine(`[UpdateChecker] ERROR: Update notification action failed: ${error}`));
     }
     
+    /** Install the gallery's newest version, unpinned so auto-update keeps working; open the extension's page if that fails. */
+    private async installLatest(): Promise<void> {
+        const id = this.context.extension.id;
+        try {
+            await vscode.commands.executeCommand('workbench.extensions.installExtension', id);
+        } catch (error) {
+            this.outputChannel.appendLine(`[UpdateChecker] Install failed, opening the extension page: ${error}`);
+            await vscode.commands.executeCommand('extension.open', id).then(undefined, () =>
+                vscode.env.openExternal(vscode.Uri.parse(`https://marketplace.visualstudio.com/items?itemName=${id}`)));
+            return;
+        }
+        const reload = await vscode.window.showInformationMessage(
+            'SpecKit Companion installed the newest version the Marketplace has. Reload the window to run it.',
+            'Reload Window'
+        );
+        if (reload === 'Reload Window') {
+            await vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+    }
+
     /**
      * Check if we've already checked for updates recently
      */
