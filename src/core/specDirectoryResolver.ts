@@ -41,7 +41,18 @@ function getConfiguredPatterns(): string[] {
     // Keep this fallback in sync with the package.json `specDirectories` default;
     // it is only reached when the contribution isn't loaded (bare config), and a
     // divergence would silently drop `.specify/specs` and reintroduce #270.
-    return config.get<string[]>('specDirectories', ['specs', '.specify/specs']);
+    return config.get<string[]>('specDirectories', ['specs', '.specify/specs']).map(p => p.replace(/\/+$/, '')).filter(Boolean);
+}
+
+/** Configured patterns as spec folders: a glob ending in a plain name reads as its children. */
+function getSpecFolderPatterns(): string[] {
+    return getConfiguredPatterns().map(asSpecFolderPattern);
+}
+
+// A glob ending in a plain name, like apps/<glob>/specs, names a folder of specs the way a plain name does.
+function asSpecFolderPattern(pattern: string): string {
+    const last = pattern.split('/').pop() ?? '';
+    return hasGlob(pattern) && !/[*?{[]/.test(last) ? `${pattern}/*` : pattern;
 }
 
 /**
@@ -100,10 +111,10 @@ async function directoryHasSpecContext(dirPath: string): Promise<boolean> {
 /**
  * Resolve all configured spec directory patterns into spec folder entries.
  * - Simple names (no globs): list children of that directory, each child is a spec folder
- * - Glob patterns: each match IS a spec folder directly
+ * - Glob patterns: each match IS a spec folder directly; one ending in a plain name lists its children
  */
 export async function resolveSpecDirectories(workspaceRoot: string): Promise<SpecDirectoryInfo[]> {
-    const patterns = getConfiguredPatterns();
+    const patterns = getSpecFolderPatterns();
     const steeringExclusions = getSteeringExclusionPaths();
     const specs: SpecDirectoryInfo[] = [];
     const seenPaths = new Set<string>();
@@ -223,35 +234,6 @@ async function expandGlobPattern(workspaceRoot: string, pattern: string): Promis
         results.push({ name, path: relativePath });
     }
 
-    // Final fallback: check if the pattern matches actual directories on disk
-    // by using the parent of the pattern and scanning
-    if (results.length === 0) {
-        const parentPattern = pattern.substring(0, pattern.lastIndexOf('/'));
-        if (parentPattern && hasGlob(parentPattern)) {
-            // Find any file in parent dirs to discover them
-            const parentFilePattern = new vscode.RelativePattern(workspaceRoot, `${parentPattern}/*`);
-            const parentFiles = await vscode.workspace.findFiles(parentFilePattern, '**/node_modules/**');
-            for (const file of parentFiles) {
-                const parentDir = path.dirname(file.fsPath);
-                // Now check children matching the last segment
-                const lastSegment = pattern.substring(pattern.lastIndexOf('/') + 1);
-                if (!hasGlob(lastSegment)) {
-                    const candidateDir = path.join(parentDir, lastSegment);
-                    try {
-                        const stat = await vscode.workspace.fs.stat(vscode.Uri.file(candidateDir));
-                        if (stat.type === vscode.FileType.Directory && !seenDirs.has(candidateDir)) {
-                            seenDirs.add(candidateDir);
-                            const relativePath = path.relative(workspaceRoot, candidateDir).replace(/\\/g, '/');
-                            results.push({ name: path.basename(candidateDir), path: relativePath });
-                        }
-                    } catch {
-                        // doesn't exist
-                    }
-                }
-            }
-        }
-    }
-
     return results;
 }
 
@@ -268,7 +250,8 @@ export function deriveChangeRoot(specDirAbsolute: string, workspaceRoot: string)
     const relativePath = toRelativePath(specDirAbsolute, workspaceRoot);
 
     for (const pattern of patterns) {
-        if (!hasGlob(pattern)) continue;
+        // A folder of specs (apps/<glob>/specs) sits in a project, not a change: no change root.
+        if (!hasGlob(pattern) || asSpecFolderPattern(pattern) !== pattern) continue;
 
         // Check if this pattern matches the spec dir
         const matched = matchGlobAsPrefix(relativePath, pattern);
@@ -324,7 +307,7 @@ function matchGlobAsPrefix(relativePath: string, pattern: string): boolean {
  * Returns the spec folder relative path if found, undefined otherwise.
  */
 export function isInsideSpecDirectory(filePath: string, workspaceRoot: string): string | undefined {
-    const patterns = getConfiguredPatterns();
+    const patterns = getSpecFolderPatterns();
     const relativePath = toRelativePath(filePath, workspaceRoot);
 
     // A file inside a workflow's steering (reference-doc) source is never a spec file.

@@ -1,0 +1,331 @@
+{
+  "workflow": "companion",
+  "specName": "Glob spec directories list the specs inside them",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:30:38.469Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:31:37.892Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:31:58.832Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:32:09.040Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:32:09.333Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:33:06.767Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:33:06.865Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:33:06.962Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:33:07.058Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T13:33:07.157Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T13:33:17.646Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:00.299Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:00.376Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:00.477Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:49.553Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:57.458Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:34:57.479Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:36:04.811Z"
+    },
+    {
+      "step": "implement",
+      "substep": "doctor",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T13:36:18.765Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "46cb8a05-be24-42df-b86a-af313d091b13",
+  "livingSpecs": {
+    "loaded": [
+      "core-spec-discovery"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "core-spec-discovery": [
+        "Spec locations are configured, not assumed",
+        "Spec discovery and file-to-spec attribution agree",
+        "Reference material declared by a workflow is never mistaken for a spec",
+        "The extension notices spec changes wherever specs live",
+        "The completion of the implement step is closed by observing the work, not by trusting a report"
+      ]
+    },
+    "synced": [
+      "core-spec-discovery"
+    ]
+  },
+  "last_action": "round-two findings fixed; 3053/3053 tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "A glob match holding its own markdown or spec context is one spec",
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::leaves an OpenSpec archive folder unexpanded under a wildcard-ending glob"
+      ]
+    },
+    "FR-002": {
+      "title": "A glob match holding neither is a container: its content-bearing subfolders are listed, else nothing",
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::lists the spec folders inside each match",
+        "not the matches",
+        "lists nothing for a folder of specs that holds no spec yet"
+      ]
+    },
+    "FR-003": {
+      "title": "File attribution returns the same spec folder discovery lists",
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::attributes a file to the spec folder inside a glob ending in a plain name"
+      ]
+    },
+    "FR-004": {
+      "title": "Globs that already match spec folders keep producing the same specs",
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::handles glob patterns correctly"
+      ]
+    },
+    "FR-005": {
+      "title": "A spec reached through several patterns is listed once",
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::deduplicates specs found through multiple patterns"
+      ]
+    },
+    "FR-006": {
+      "tests": [
+        "src/core/specDirectoryResolver.test.ts::does not treat a project holding a folder of specs as a change root",
+        "returns the change folder above a specs segment"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "A stricter spec-file-only content test",
+    "Searching more than one level below a container"
+  ],
+  "context": [
+    "living spec: core-spec-discovery",
+    "area: src/core/specDirectoryResolver.ts (glob expansion and file-to-spec attribution)",
+    "constraint: plain names and globs share one content test"
+  ],
+  "intent": "A glob in speckit.specDirectories that matches a folder of specs lists the specs inside, not the folder",
+  "approach": "Treat a glob match without its own markdown or spec context as a container and list its content-bearing subfolders, in discovery and attribution alike",
+  "currentTask": "T004",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Shared own-content test; glob deep pass steps into containers; fallback requires content",
+      "files": [
+        "src/core/specDirectoryResolver.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Attribution steps one level below a contentless glob match",
+      "files": [
+        "src/core/specDirectoryResolver.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Container layout, empty container, attribution through a container; 3 new tests fail on main",
+      "files": [
+        "src/core/specDirectoryResolver.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Setting description, configuration doc and changelog say a contentless match is a folder of specs",
+      "files": [
+        "package.json",
+        "docs/configuration.md",
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "resolver tests",
+      "command": "npx jest src/core/specDirectoryResolver.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "Snapshots:   0 total · Time:        1.219 s · Ran all test suites matching /src\\/core\\/specDirectoryResolver.test.ts/i."
+    },
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "> speckit-companion@0.33.0 compile · > tsc -p ./"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "A glob match is a container only when it holds no markdown and no spec context of its own",
+      "why": "the same content test plain names use, so OpenSpec change folders holding proposal.md stay specs",
+      "rejected": "requiring a spec file, which hides every OpenSpec change"
+    },
+    {
+      "decision": "Attribution checks the disk synchronously",
+      "why": "isInsideSpecDirectory is synchronous and called from watchers",
+      "rejected": "making attribution async across every caller"
+    },
+    {
+      "decision": "Read a glob ending in a plain name as that pattern plus /* instead of judging each match by its content",
+      "why": "review round one found the content rule expanded the OpenSpec archive folder and let discovery and attribution disagree",
+      "rejected": "per-match disk checks for container vs spec"
+    },
+    {
+      "decision": "A change root must hold proposal.md",
+      "why": "otherwise a monorepo project folder is walked, node_modules included, for related docs",
+      "rejected": "leaving deriveChangeRoot pattern-only"
+    },
+    {
+      "decision": "Change roots are skipped only for rewritten plain-name globs, not gated on proposal.md",
+      "why": "round two found the proposal.md gate broke non-OpenSpec two-level layouts like features/*/specs/*",
+      "rejected": "requiring an OpenSpec proposal.md"
+    },
+    {
+      "decision": "A glob ending in a plain name always means a folder of specs, and the dead fallback is deleted",
+      "why": "one reading, matching plain names; configs that relied on the old reading add /*",
+      "rejected": "keeping a per-match disk check to guess the meaning"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "A container holding a stray README.md still reads as one spec; a stricter content test would fix it and is out of scope",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 26 drift warnings from earlier merges (#746 UndoToast, #758 brownfield preset) left for living-sync; 2 failed tool calls in the run were retried greps"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Glob spec directories that match a folder of specs now list the specs inside, in discovery and attribution"
+    }
+  }
+}
