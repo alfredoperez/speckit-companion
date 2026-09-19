@@ -1163,7 +1163,7 @@ describe('lifecycleContextValue', () => {
 
 describe('speckit.markCompleted menu eligibility', () => {
     it('offers Mark as Completed for active, tasks-done, and implemented specs', () => {
-        const pkg = require('../../../../package.json');
+        const pkg = require('../../../../../../package.json');
         const menus: Array<{ command: string; when: string }> =
             pkg.contributes.menus['view/item/context'];
         const markCompleted = menus.find(

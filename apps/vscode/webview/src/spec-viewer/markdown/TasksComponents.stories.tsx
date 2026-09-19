@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { MarkdownDoc } from './storyDoc';
 // Real lean tasks + the real captured task summaries from spec 327 (companion).
-import tasks327 from '../../../../specs/327-install-banner-responsive/tasks.md?raw';
-import ctx327 from '../../../../specs/327-install-banner-responsive/.spec-context.json';
+import tasks327 from '../../../../../../specs/327-install-banner-responsive/tasks.md?raw';
+import ctx327 from '../../../../../../specs/327-install-banner-responsive/.spec-context.json';
 
 /** Tasks-page renderers in isolation: phase headers, and the capture merge that
  * folds what each task actually did + the files it touched into the checklist. */
