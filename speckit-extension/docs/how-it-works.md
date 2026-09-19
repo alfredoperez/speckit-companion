@@ -54,4 +54,4 @@ Expected: a valid canonical `.spec-context.json` with `currentStep: "specify"`, 
 4. Confirm `specs/<NNN>-<slug>/.spec-context.json` carries `currentStep: specify` / `status: specified` / a `by: extension` transition, and the Companion sidebar renders it at **specify / specified** — no GUI code change.
 5. Clean up: delete the throwaway spec; optionally `specify extension remove companion`.
 
-**Verified 2026-05-25:** one real `/speckit.specify` auto-fired the hook (no nudge) and wrote a canonical file with `workflow: "speckit"` (a plain spec-kit flow, no SDD). See [../ROADMAP.md](../ROADMAP.md#step-1--whats-proven).
+**Verified 2026-05-25:** one real `/speckit.specify` auto-fired the hook (no nudge) and wrote a canonical file with `workflow: "speckit"` (a plain spec-kit flow, no SDD).
