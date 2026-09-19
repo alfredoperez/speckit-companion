@@ -42,9 +42,11 @@ class TheShippedBodyCarriesTheThreshold(unittest.TestCase):
         self.assertIn("that alone decides it", text)
         self.assertIn("It holds in an auto run too", text)
 
-    def test_setup_foundational_and_polish_are_still_never_dispatched(self):
+    def test_foundational_goes_through_the_wave_script_and_setup_and_polish_stay_inline(self):
         text = BODY.read_text(encoding="utf-8")
-        self.assertRegex(text, r"Setup, Foundational and Polish always stay with you")
+        self.assertIn("dispatch-briefs.py --feature-dir <feature_directory> --waves", text)
+        self.assertIn("Setup and Polish stay with you", text)
+        self.assertNotIn("Setup, Foundational and Polish always stay with you", text)
 
     def test_the_node_and_the_built_body_agree(self):
         # The body is assembled from the node, so a threshold edited in one and not the

@@ -66,33 +66,35 @@ Every step that records or reads a size MUST use the same vocabulary. A word its
 - **WHEN** the standalone classification step reports a size
 - **THEN** the value it records is one every reader of the recorded size understands
 
-### A step dispatches to avoid reading, or to get a second pair of eyes, never for parallelism itself
+### A step dispatches what a script splits out for it, to avoid reading or to get a second pair of eyes
 
-A step SHALL dispatch only when the worker reads something the main agent would otherwise carry to the end of the run, or brings a distinct perspective. A step whose inputs are only artifacts the pipeline just wrote stays inline: specify dispatches when a request names two or more code areas, plan dispatches per area, and tasks does not. The optional adversarial task review is a panel of distinct lenses, not a split of files.
+A step SHALL dispatch when a worker reads something the main agent would otherwise carry to the end of the run, brings a distinct perspective, or builds independent work a script has already split out for it. Which workers a step sends is decided by `dispatch-briefs.py`, not by the model: plan sends one reader per recorded code area (at most four) and, above `simple` size, one writer per design document; implement sends workers for each Foundational wave of four or more tasks. Tasks does not dispatch. The optional adversarial task review is a panel of distinct lenses, not a split of files.
 
 #### Scenario: a step's only inputs are the artifacts already written
-- **WHEN** it authors its own artifact
-- **THEN** it stays inline, because there is nothing to avoid reading
+- **WHEN** no script prints briefs for it
+- **THEN** it stays inline
 
 #### Scenario: a step wants breadth rather than reading
-- **WHEN** it dispatches
+- **WHEN** it dispatches a review panel
 - **THEN** each worker carries a different lens over the same material, not a different slice of it
 
 ### Implement dispatches on how much a phase carries, not on every phase
 
-Implement SHALL dispatch a story phase only when it owns roughly five files or more, build the rest inline in phase order, and say which it did which way. Setup, Foundational and Polish are never dispatched.
+Implement SHALL dispatch a story phase only when it owns roughly five files or more, build the rest inline in phase order, and say which it did which way. The phase's own file count alone decides it; specify, plan and tasks having run in the same session is not a reason to build inline. Foundational goes through `dispatch-briefs.py --waves`: each wave of four or more tasks is split across up to four workers, and the next wave starts only when they have all returned. Smaller Foundational waves, Setup and Polish are built inline.
 
-Size is the second gate: the first stays whether specify, plan and tasks ran in this same session.
-
-The threshold is measured: in ten replays, phases of four files or fewer gained nothing from fanning out and cost about twice as much, while six to eight file phases saved about three minutes. A test naming the overturned "size is not a factor" rule pins this.
+The story-phase threshold is measured: in ten replays, phases of four files or fewer gained nothing from fanning out and cost about twice as much, while six to eight file phases saved about three minutes.
 
 #### Scenario: a story phase owns two files
 - **WHEN** implement reaches it
 - **THEN** it is built inline, and the summary says so
 
-#### Scenario: a story phase owns eight files and the pipeline did not run in this session
+#### Scenario: a story phase owns eight files
 - **WHEN** implement reaches it
 - **THEN** it is dispatched to its own worker
+
+#### Scenario: a Foundational wave holds four or more tasks
+- **WHEN** implement reaches it
+- **THEN** its tasks go to workers dispatched together, and no task after its join line starts until they all return
 
 ### A simple-verdict run captures the same context a full run would, on the fast path
 

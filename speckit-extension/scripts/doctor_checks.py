@@ -503,41 +503,73 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
 
 
 def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
-    """Did plan hand out the workers `dispatch-briefs.py` told it to?
+    """Did plan and implement hand out the workers `dispatch-briefs.py` told them to?
 
-    Each dispatched worker checks in to the trace before it starts. A closed plan
+    Each dispatched worker checks in to the trace before it starts, and a step is
+    only judged when the script recorded that it offered workers, so a spec built
+    before these briefs existed is never faulted. A closed plan
     with two or more recorded areas and no reader check-ins read the code inline,
-    and the same holds for the design docs when the size budget kept both.
+    and the same holds for the design docs when the size budget kept both. A
+    `simple` run folds plan, so plan is not judged there. A closed implement whose
+    Foundational phase had waves of four or more tasks and no wave check-ins built
+    them inline.
     """
     skip = _no_record("dispatch", feature_dir, ctx)
     if skip is not None:
         return skip, []
-    closed = any(e.get("step") == "plan" and _is_step_level(e) and _entry_kind(e) == "complete"
-                 for e in log_entries(ctx))
-    if not closed:
-        return CheckStatus("dispatch", "skipped", "plan has not closed — nothing to judge yet"), []
+    closed = {step for step in ("plan", "implement")
+              if any(e.get("step") == step and _is_step_level(e) and _entry_kind(e) == "complete"
+                     for e in log_entries(ctx))}
+    folded = (ctx.get("size") or "normal") == "simple"
+    if not (closed - ({"plan"} if folded else set())):
+        return CheckStatus("dispatch", "skipped", "no step that dispatches has closed yet"), []
 
     import run_trace
 
     read = run_trace.read(feature_dir)
-    labels = [f for e in (read.events if read else []) if e.get("op") == "dispatch-checkin"
-              for f in e.get("files") or []]
-    areas = [c for c in ctx.get("context") or [] if isinstance(c, str) and c.startswith("area:")]
-    expected = {
-        "readers": (min(len(areas), 4) if len(areas) >= 2 else 0, "reader:", "read the code"),
-        "design-doc writers": (0 if (ctx.get("size") or "normal") == "simple" else 2, "doc:",
-                               "wrote the design docs"),
-    }
+    events = read.events if read else []
+
+    def since_start(step: str) -> tuple:
+        starts = [e.get("at") or "" for e in log_entries(ctx)
+                  if e.get("step") == step and _is_step_level(e) and _entry_kind(e) == "start"]
+        run = [e for e in events if (e.get("at") or "") >= max(starts, default="")]
+        return ([f for e in run if e.get("op") == "dispatch-checkin" for f in e.get("files") or []],
+                {f for e in run if e.get("op") == "dispatch-offer" for f in e.get("files") or []})
+
     findings = []
-    for what, (want, prefix, did) in expected.items():
-        got = sum(1 for label in labels if label.startswith(prefix))
-        if want and not got:
+    if "plan" in closed and not folded:
+        labels, offered = since_start("plan")
+        areas = [c for c in ctx.get("context") or [] if isinstance(c, str) and c.startswith("area:")]
+        expected = {
+            "readers": (min(len(areas), 4) if len(areas) >= 2 else 0, "reader:", "read the code", "readers"),
+            "design-doc writers": (2, "doc:", "wrote the design docs", "docs"),
+        }
+        for what, (want, prefix, did, kind) in expected.items():
+            if want and kind in offered and not any(label.startswith(prefix) for label in labels):
+                findings.append(Finding(
+                    "dispatch", "warning",
+                    f"plan {did} inline instead of dispatching {want} {what}",
+                    "`dispatch-briefs.py` printed briefs for this run and no worker checked in, so the "
+                    "step did the work in its own context — dispatch the printed briefs as written",
+                    {"expected": want, "checked_in": 0},
+                ))
+    labels, offered = since_start("implement")
+    waves = {}
+    for f in offered:
+        parts = f.split(":")
+        if parts[0] == "waves" and len(parts) == 3 and parts[1].isdigit() and parts[2].isdigit():
+            waves[int(parts[1])] = int(parts[2])
+    if "implement" in closed and waves:
+        skipped = [w for w, sent in sorted(waves.items())
+                   if len({label for label in labels if label.startswith(f"wave: {w}.")}) < sent]
+        if skipped:
             findings.append(Finding(
                 "dispatch", "warning",
-                f"plan {did} inline instead of dispatching {want} {what}",
-                "`dispatch-briefs.py` printed briefs for this run and no worker checked in, so the "
-                "step did the work in its own context — dispatch the printed briefs as written",
-                {"expected": want, "checked_in": 0},
+                f"implement built {len(skipped)} Foundational wave{'s' if len(skipped) != 1 else ''} inline "
+                "instead of dispatching their workers",
+                "`dispatch-briefs.py --waves` offered workers for these Foundational waves and not every "
+                "one checked in — dispatch the printed briefs as written",
+                {"waves": skipped},
             ))
     return CheckStatus("dispatch", "ran"), findings
 

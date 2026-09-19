@@ -1,0 +1,560 @@
+{
+  "workflow": "companion",
+  "specName": "Implement fans out large Foundational waves",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:25:50.908Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:26:30.080Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:26:30.324Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:26:38.694Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T14:26:39.040Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:26:47.215Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:30:45.010Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:30:45.098Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:31:43.736Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:31:44.009Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:32:19.937Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:32:20.042Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:32:20.314Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:32:29.686Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:33:08.151Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:33:25.074Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:33:45.056Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:34:27.139Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:34:27.242Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:12.050Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:12.112Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:12.174Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:12.234Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:12.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:52.768Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:35:52.848Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:38:17.784Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:38:17.803Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:38:18.999Z"
+    }
+  ],
+  "telemetryInstanceId": "3c12bf3b-b4f7-438f-8c1a-6fed7900586e",
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "commands-assembly",
+      "commands-capture",
+      "commands-completion",
+      "commands-living",
+      "commands-living-load",
+      "commands-nodes",
+      "commands-pipeline"
+    ],
+    "rules": {
+      "spec": [
+        "Write every scenario as WHEN/THEN with exactly one observable outcome",
+        "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
+      ],
+      "plan": [
+        "Name the capability each decision belongs to, so the fold knows where it goes",
+        "Prefer extending the file that already owns a concern over adding a new one"
+      ]
+    },
+    "loadedRequirements": {
+      "commands-completion": [
+        "Completion is an explicit terminal step with exactly one writer",
+        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
+        "A run that loaded nothing says so, because that is the one silence nothing else catches",
+        "The tasks Polish phase validates the spec's Success Criteria in exactly one place"
+      ],
+      "commands-living": [
+        "Living-spec commands are opt-in, non-halting, and honest about what they did not examine",
+        "One command syncs every affected living spec from the current changes, uncommitted included",
+        "A spec that is still true can say so, and stop drifting",
+        "A living spec is readable one slice at a time, from a terminal"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "commands-assembly",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      },
+      {
+        "name": "commands-capture",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      },
+      {
+        "name": "commands-completion",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      },
+      {
+        "name": "commands-living",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      },
+      {
+        "name": "commands-living-load",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      },
+      {
+        "name": "commands-nodes",
+        "reason": "read for context; this change alters implement's dispatch rule only"
+      }
+    ],
+    "synced": [
+      "commands-pipeline"
+    ]
+  },
+  "last_action": "two review rounds applied; 1,480+ extension tests and all gates pass",
+  "coverage": {
+    "FR-001": {
+      "title": "A Foundational wave of 4+ tasks is dispatched across workers",
+      "tasks": [
+        "T001",
+        "T002",
+        "T005",
+        "T008"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_dispatch_briefs.py::test_waves_of_four_or_more_are_dispatched_to_at_most_four_workers"
+      ]
+    },
+    "FR-002": {
+      "title": "No task after a join starts until the wave workers return and are folded",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_dispatch_threshold.py (built body crosses a join after the wave workers return)"
+      ]
+    },
+    "FR-003": {
+      "title": "Small Foundational waves, Setup and Polish stay inline",
+      "tasks": [
+        "T002",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "speckit-extension/tests/test_dispatch_briefs.py::test_small_waves_stay_inline"
+      ]
+    },
+    "FR-004": {
+      "title": "The implement node stays under the 1,000-word limit",
+      "tasks": [
+        "T005",
+        "T013"
+      ],
+      "tests": [
+        "instruction-budget.py --strict"
+      ]
+    },
+    "FR-005": {
+      "title": "The tally counts qualifying Foundational waves",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "tally on specs/612-living-spec-review expects 3 waves (manual run)"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Benchmark speed numbers for #749",
+    "Fan-out inside the tasks or specify steps"
+  ],
+  "context": [
+    "living spec: commands-pipeline",
+    "living spec: commands-nodes",
+    "area: speckit-extension/nodes/implement (implement-exec dispatch rules and the built command bodies)",
+    "area: .claude/scripts/subagent-tally.py (expected dispatch per step)",
+    "constraint: 1,000-word node limit enforced by instruction-budget.py --strict"
+  ],
+  "intent": "Implement dispatches large Foundational waves to workers instead of building them in one context",
+  "decisions": [
+    {
+      "decision": "dispatch-briefs.py --waves decides which Foundational waves go to workers",
+      "why": "prose that says dispatch when gets argued away; the node is at 993 of 1,000 words",
+      "rejected": "a prose rule in implement step 3"
+    },
+    {
+      "decision": "A wave ends at a join line or the next phase heading",
+      "why": "Wave N headers restart per ### block; join lines give 612 as 11, 4, 4, 1",
+      "rejected": "splitting on Wave N headers"
+    },
+    {
+      "decision": "At most four workers per qualifying wave, tasks dealt round-robin",
+      "why": "four startups instead of eleven for spec 612s first wave",
+      "rejected": "one worker per task"
+    },
+    {
+      "decision": "The tally imports the wave splitter from dispatch-briefs.py",
+      "why": "one definition of a wave for the instruction and the measurement",
+      "rejected": "a second regex in the tally"
+    },
+    {
+      "decision": "US1 went to a worker, Foundational and US3 stayed inline",
+      "why": "US1 owns 8 files; Foundational waves held 1 and 2 tasks; US3 owns 2 files",
+      "rejected": "building every phase inline"
+    },
+    {
+      "decision": "The doctor skips plan on simple runs",
+      "why": "a simple run folds plan, so readers were never printed; the check flagged spec 617 falsely",
+      "rejected": "leaving the false positive for a later PR"
+    },
+    {
+      "decision": "--waves prints one wave per call and folds pending finishes first",
+      "why": "review: printing every wave at once let a later wave start before an earlier one existed, and an unfolded wave was offered twice",
+      "rejected": "printing all waves up front"
+    },
+    {
+      "decision": "A wave also ends at a ### block or a Wave header",
+      "why": "review: tests and the implementation they test were merged into one wave and built together",
+      "rejected": "splitting at join lines only"
+    },
+    {
+      "decision": "Offers record the wave and worker count; the doctor judges only offered waves since the latest start and needs every worker",
+      "why": "review: older specs, restarted runs and waves built inline on instruction were falsely faulted",
+      "rejected": "judging every qualifying wave in tasks.md"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: a --waves mode prints Foundational wave briefs, implement dispatches them, doctor and tally read the same splitter",
+      "key_finding": "the pipeline living spec still says Foundational is never dispatched and that the same-session gate stands, both stale since #758"
+    },
+    "tasks": {
+      "summary": "13 tasks: Foundational script and doctor, US1 node and rebuilt bodies, US3 tally, Polish docs and gates"
+    },
+    "implement": {
+      "summary": "Implement dispatches Foundational waves of 4+ tasks through dispatch-briefs.py --waves; doctor and tally read the same splitter"
+    }
+  },
+  "approach": "Add a --waves mode to dispatch-briefs.py that splits the Foundational phase at join lines and prints worker briefs for waves of four or more tasks. Implement runs it at the start of Foundational; the doctor and the tally read the same splitter.",
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Failing tests for the join-line splitter, --waves briefs, inline small waves and the doctor's implement check",
+      "files": [
+        "speckit-extension/tests/test_dispatch_briefs.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "foundational_waves splits at join lines; --waves prints up to four worker briefs per wave of 4+ tasks",
+      "files": [
+        "speckit-extension/scripts/dispatch-briefs.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "check_dispatch judges implement's Foundational waves and skips plan on simple runs",
+      "files": [
+        "speckit-extension/scripts/doctor_checks.py",
+        "speckit-extension/tests/test_dispatch_briefs.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Tally imports foundational_waves and expects workers for waves of 4+; plan expects nothing on simple runs",
+      "files": [
+        ".claude/scripts/subagent-tally.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "fix-tickets names the plan and Foundational wave expectations",
+      "files": [
+        ".claude/commands/fix-tickets.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Threshold test now pins Foundational to dispatch-briefs --waves and Setup/Polish inline",
+      "files": [
+        "speckit-extension/tests/test_dispatch_threshold.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "implement-exec step 3 runs dispatch-briefs --waves for Foundational; trimmed to 990 words",
+      "files": [
+        "speckit-extension/nodes/implement/implement-exec.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Implement outline says Foundational waves of 4+ go to workers via --waves",
+      "files": [
+        "speckit-extension/nodes/implement/_frame.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "tasks-doc wave sentence mentions Foundational wave split",
+      "files": [
+        "speckit-extension/nodes/tasks/tasks-doc.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Rebuilt bodies and golden; parity, assemble, build and budget checks pass",
+      "files": [
+        "speckit-extension/commands",
+        "speckit-extension/tests/golden"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Commands doc describes Foundational wave dispatch",
+      "files": [
+        "speckit-extension/docs/commands.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Unreleased changelog entry",
+      "files": [
+        "speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Extension tests and every CI gate pass",
+      "files": [
+        "repository"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "dispatch and threshold tests",
+      "command": "python3 -m pytest -q speckit-extension/tests/test_dispatch_briefs.py speckit-extension/tests/test_dispatch_threshold.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.5,
+      "result": "................                                                         [100%] · 16 passed in 0.38s"
+    },
+    {
+      "what": "node word limit",
+      "command": "python3 speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.living-drift.md                  4       0      4     506 · speckit.companion.living-coverage.md               3       0      3     327 · speckit.companion.living-show.md                   3       0      3     399"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 speckit-extension/scripts/check-shape-parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 14 bodies match parts, golden, and carry the timing fence"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Doctor RECORD flags plan and tasks closed by ai, but their handoff tells the model to run --advance --by ai; the check and the command disagree. The US1 worker also appended its five finishes in one burst."
+    },
+    {
+      "note": "A host with no subagent tool that builds an offered wave inline is still warned, as the plan check already does",
+      "step": "implement"
+    },
+    {
+      "note": "write-context.py --at stores timestamps unnormalized, so a non-UTC or millisecond-less start can misorder the doctor cutoff (existing)",
+      "step": "implement"
+    }
+  ]
+}
