@@ -9,9 +9,13 @@ Three deliverables live here: the VS Code extension (`src/`, `webview/`, root `p
 - `capabilities/` — this repo's own living specs; it dogfoods the feature it ships.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
 - `docs/` — reference only, never the source of truth for behaviour.
-- `.github/`, `.specify/`, `.claude/`, `.agents/`, `.codex/`, `.storybook/`, `.vscode/`, `design/` — committed dot-folders that are `specify init` output and manual-testing fixtures.
+- `tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
+- `assets/`, `media/`, `scripts/` — the mascot and social art, the clips and renders the site and README serve, and the build and capture commands that produce them.
+- `.github/`, `.specify/`, `.claude/`, `.agents/`, `.codex/`, `.storybook/`, `.vscode/` — committed dot-folders that are `specify init` output and manual-testing fixtures.
+- `design/` — Pipeline Builder design-tool mockups (`*.dc.html` screens plus `canvas.json`), not a dot-folder or a fixture.
 - `.serena/`, `.pytest_cache/`, and the per-agent command mirrors in `.gitignore` — local caches, not source.
-- `examples/` has moved to the sibling `speckit-bench` repo, which now holds every app that tests and benchmarks need.
+
+The example apps and bench sandboxes that used to sit here now live in the sibling `speckit-bench` repo, which holds every app that tests and benchmarks need.
 
 ## Where things are documented
 

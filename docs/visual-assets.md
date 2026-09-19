@@ -193,8 +193,7 @@ The five README screenshots (`hero.jpg`, `viewer.png`, `comments.png`, `create-s
 | Activity bar | Keep visible only when it's part of the shot (sidebar overview) | Context where relevant |
 | Primary sidebar width | Fixed — drag to a consistent width and don't change between shots | Uniform sidebar proportions |
 
-Capture in the **Extension Development Host** (`F5`), not a packaged install, so
-you're shooting the current working tree.
+Capture in the **Extension Development Host** (`F5`), not a packaged install, so you're shooting the current working tree.
 
 ### Dimensions (display width)
 
@@ -208,10 +207,33 @@ Crop tight to the relevant panel — no desktop wallpaper, no empty editor gutte
 
 Captured at `@2x` these are ~3200px / ~1800px source pixels; that's expected.
 
+### Format & optimization
+
+PNG (lossless) for all UI shots; JPG only for `hero.jpg`. Optimize before committing so files stay small:
+
+```bash
+oxipng -o max docs/screenshots/*.png      # or: pngquant --quality=80-95 ...
+```
+
+Canonical filenames: `viewer.png`, `comments.png`, `activity.png`, `create-spec.png`, `hero.jpg`, `demo.gif` / `demo.mp4`. Delete the old set (`workflow-*`, `specify-*`, `sidebar-overview`, `inline-comment-*`, `other-views`, `specs-tree`) once the new files land.
+
+### Content source
+
+Drive every viewer shot from the pinned demo fixtures so the rendered content is realistic and identical on every retake:
+
+| Fixture | State | Use for |
+|---------|-------|---------|
+| `specs/_01_demo-planned` | `planned` (spec.md + plan.md) — branch `demo/planned` | `viewer` (Plan phase + children-rail chips + diagram), `comments` |
+| `specs/_02_demo-tasked` | `ready-to-implement` (+ tasks.md) — branch `demo/tasked` | `activity` |
+
+> **Do NOT `git add` changes to these three dirs.** Capturing mutates their `.spec-context.json` / files. After you're done, restore the baseline:
+> ```bash
+> git restore specs/_00_demo-specified specs/_01_demo-planned specs/_02_demo-tasked
+> ```
+
 ### Per-shot recipe
 
-Each must show the **current** UI (title-leading header, color badge, branch
-chip, step tabs, children rail, TOC, footer state machine).
+Each must show the **current** UI (title-leading header, color badge, branch chip, step tabs, children rail, TOC, footer state machine).
 
 | File | Open | Frame must include |
 |------|------|--------------------|
@@ -220,13 +242,17 @@ chip, step tabs, children rail, TOC, footer state machine).
 | `activity.png` | `_02_demo-tasked`, toggle **Activity** | Phases timeline + Approach / Tasks / Review-comments cards |
 | `create-spec.png` | `+` New Spec | Title, **Workflow** picker, description + char counter, **Attach Image**, footer Cancel / **Auto Mode** / Submit |
 
+### Hero & video
+
+`hero.jpg` and `demo.gif` / `demo.mp4` are AI-generated, not captured. Build the hero from the three shots above (`viewer.png`, `comments.png`, `activity.png`) via `screenshots/hero/PROMPT.md`, then seed the video from `hero.jpg` via `screenshots/VIDEO-PROMPT.md`.
+
 ### Checklist before committing
 
 - [ ] All shots use Dark Modern at the same zoom.
 - [ ] Widths match the tier table; cropped tight.
 - [ ] Canonical filenames; old set deleted.
 - [ ] PNGs optimized; hero shows no purple; video loops cleanly.
-- [ ] `git status` shows **no** staged changes under the demo fixtures.
+- [ ] `git status` shows **no** staged changes under the demo fixtures — capturing mutates their `.spec-context.json`, and those three dirs get restored, never committed (see Content source above).
 
 ## Determinism
 

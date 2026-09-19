@@ -1,8 +1,8 @@
 # SpecKit Companion — Design
 
-## Tokens
+Three sections, outside in: [Tokens](#tokens) is the viewer's own CSS, [Editorial](#editorial) is the taste and brand rules that govern every surface, and [Generated art](#generated-art) is the reference for anything AI-generated (heroes, banners, social cards).
 
-### Tokens (source of truth)
+## Tokens
 
 Shared scale/spacing/type tokens come from `webview/styles/tokens.css` (host-derived — the spec-editor and workflow-editor webviews ride it and keep tracking the VS Code theme). The **spec viewer's owned palette** lives in `webview/styles/spec-viewer/_tokens-viewer.css`, loaded only by the viewer (after tokens.css, so it wins the cascade): deliberate light/dark literals for canvas, surfaces, ink, statuses, and syntax — chosen for predictable WCAG contrast rather than inherited from `--vscode-*` variables. Only typography (`--vscode-font-family` / `--vscode-editor-font-family`) and **high-contrast mode** follow the host. **Never hardcode hex in partials** — use the tokens; theme blocks (`body.vscode-light` / `-dark` / `-high-contrast`) re-value them. A `tokensScope` jest spec guards the split — Codex literals must never leak into the shared file.
 
@@ -63,7 +63,7 @@ Two other identities exist and stay in their lane. Command Center (Geist, void b
 
 ### The mascot
 
-A round moss ball with two big eyes and a two-leaf sprout, cradling a seedling. Fourteen poses ship in `website/public/mascot/`. It is the brand's character, never its logo: it appears in scenes (heroes, banners), at the caption of a figure, and on the site's pages. It never merges with the chevron wordmark, and it is never the subject of an image.
+The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It cradles a radiant glowing emerald seedling at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants live in `assets/mascot/`; fourteen web-ready poses ship in `website/public/mascot/`. It is the brand's character, never its logo: it appears in scenes (heroes, banners), at the caption of a figure, and on the site's pages. It never merges with the chevron wordmark, and it is never the subject of an image.
 
 ### Always
 
@@ -105,7 +105,7 @@ A round moss ball with two big eyes and a two-leaf sprout, cradling a seedling. 
 
 ## Generated art
 
-Reference for any generated art (hero banners, marketplace assets, social cards). Canonical hero: `docs/screenshots/hero.jpg`. Full design system: the [Tokens](#tokens) section above.
+Reference for any generated art (hero banners, marketplace assets, social cards). Canonical hero: `docs/screenshots/hero.jpg`. Full design system: the [Tokens](#tokens) section above. The mascot: see [The mascot](#the-mascot) under Editorial above.
 
 ### Identity in one line
 
@@ -121,10 +121,6 @@ A **bioluminescent night forest rendered as a developer tool**: almost-black nav
 | Marketing accent (scarce) | emerald `#3fb950` |
 | In-product accent | mint-emerald `#65e6bd` |
 | Info blue | `#78bdf7` |
-
-### Mascot
-
-The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It **cradles a radiant glowing emerald seedling** at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants in `assets/mascot/`.
 
 ### Story motifs
 

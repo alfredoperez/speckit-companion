@@ -2653,9 +2653,9 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
           );
 
           window.setTimeout(() => stepRows[0].setAttribute('data-lit', ''), 760);
-          window.setTimeout(() => {
-            if (stepRows[1]) stepRows[1].setAttribute('data-lit', '');
-          }, 1250);
+          stepRows.slice(1).forEach((row, i) => {
+            window.setTimeout(() => row.setAttribute('data-lit', ''), 1250 + i * 490);
+          });
         },
         { threshold: 0.35 }
       );

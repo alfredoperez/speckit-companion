@@ -16,7 +16,6 @@ out/
 .trace.jsonl
 !speckit-extension/tests/fixtures/**/.trace.jsonl
 
-# Throwaway sandboxes — living-spec cells, fresh installs, builder QA (see examples/README.md)
 .env.local
 .vscode/*
 !.vscode/extensions.json

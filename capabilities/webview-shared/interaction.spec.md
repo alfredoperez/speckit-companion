@@ -23,7 +23,7 @@ Escape also undoes, except where the page already binds Escape, so cancelling an
 <!-- touches: webview/src/shared/components/UndoToast.tsx -->
 
 #### Scenario: the surface disappears mid-window
-- **WHEN** the component unmounts while a confirmation or countdown is pending
+- **WHEN** the component unmounts while an undo countdown is pending
 - **THEN** its timer is cleared and nothing fires afterwards
 
 ### Transient overlays are singletons with a complete teardown
