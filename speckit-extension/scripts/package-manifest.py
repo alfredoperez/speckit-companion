@@ -197,52 +197,45 @@ def derive_closure() -> set[str]:
 
 VSIX_ROOT = "speckit-extension/scripts/"
 
-
-def _imported_siblings(script: str, existing: set[str]) -> set[str]:
-    """Siblings `script` imports outright, so a missing one is an import error.
-
-    Load-by-filename siblings are excluded on purpose: those callers already
-    treat a failed load as a no-op, so their absence degrades rather than
-    crashes."""
-    path = os.path.join(HERE, script)
-    if not os.path.exists(path):
-        return set()
-    deps = set()
-    for name in set(PLAIN_IMPORT.findall(_read(path))):
-        resolved = _resolve_sibling(name, existing)
-        if resolved and resolved != script:
-            deps.add(resolved)
-    return deps
+# Entry points the VS Code extension calls directly out of the .vsix: the
+# context writer (stock-mode prompt preamble) and the pipeline builder group.
+# Each of their siblings has to survive `.vscodeignore` or the feature it
+# starts cannot run.
+VSIX_ROOTS = frozenset({
+    "write-context.py",
+    "build-pipeline.py",
+    "pipeline-graph.py",
+    "config_write.py",
+    "config_repair.py",
+})
 
 
-def vsix_writer_closure() -> set[str]:
-    """write-context.py plus every sibling it imports, transitively.
-
-    The VS Code extension ships the writer inside its .vsix for stock mode, so
-    each of these has to survive `.vscodeignore` or the writer cannot start."""
+def vsix_closure() -> set[str]:
+    """VSIX_ROOTS plus every sibling `sibling_deps` reaches, to a fixed point."""
     existing = _script_files()
     closure: set[str] = set()
-    pending = ["write-context.py"]
+    pending = list(VSIX_ROOTS)
     while pending:
         script = pending.pop()
         if script in closure:
             continue
         closure.add(script)
-        pending.extend(_imported_siblings(script, existing) - closure)
+        pending.extend(sibling_deps(script, existing) - closure)
     return closure
 
 
-def vsix_gaps() -> list[str]:
-    """Writer dependencies that `.vscodeignore` would strip out of the .vsix."""
+def vsix_gaps() -> dict[str, list[str]]:
+    """Where the .vsix closure and `.vscodeignore`'s `!` rules disagree, both ways."""
     path = os.path.join(os.path.dirname(EXT_ROOT), ".vscodeignore")
     if not os.path.exists(path):
-        return []
+        return {"stripped": [], "unreachable": []}
     negated = {
         line[len(VSIX_ROOT) + 1:].strip()
         for line in _read(path).splitlines()
         if line.strip().startswith("!" + VSIX_ROOT)
     }
-    return sorted(vsix_writer_closure() - negated)
+    closure = vsix_closure()
+    return {"stripped": sorted(closure - negated), "unreachable": sorted(negated - closure)}
 
 
 def check() -> list[str]:
@@ -251,10 +244,16 @@ def check() -> list[str]:
     existing = _script_files()
     closure = derive_closure()
 
-    for script in vsix_gaps():
+    gaps = vsix_gaps()
+    for script in gaps["stripped"]:
         problems.append(
-            f"stripped from the .vsix: {script} — the context writer imports it, "
-            f"but .vscodeignore has no `!` rule for it, so stock mode would break"
+            f"stripped from the .vsix: {script} — the .vsix closure reaches it, "
+            f"but .vscodeignore has no `!` rule for it, so a stock install would break"
+        )
+    for script in gaps["unreachable"]:
+        problems.append(
+            f"whitelisted but unreachable: {script} — .vscodeignore has a `!` rule for it, "
+            f"but nothing in the .vsix closure reaches it"
         )
 
     for script in sorted(closure - RUNTIME_SCRIPTS):
@@ -346,11 +345,21 @@ def main() -> int:
         help="fill an archive from the list (clears leftover scripts in DIR first)",
     )
     group.add_argument("--list", action="store_true", help="print the packing list")
+    group.add_argument(
+        "--vsix-lines",
+        action="store_true",
+        help="print the `.vscodeignore` whitelist block for the .vsix closure",
+    )
     args = parser.parse_args()
 
     if args.list:
         for script in sorted(RUNTIME_SCRIPTS):
             print(script)
+        return 0
+
+    if args.vsix_lines:
+        for script in sorted(vsix_closure()):
+            print(f"!{VSIX_ROOT}{script}")
         return 0
 
     if args.copy_to:
