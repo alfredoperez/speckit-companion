@@ -2,8 +2,7 @@ import type { JSX } from 'preact';
 
 /**
  * Visual + semantic variant. `destructive` is the danger/delete affordance
- * (red border + error color). Pair with `useInlineConfirm` for the
- * two-click confirm pattern when the destruction is irreversible.
+ * (red border + error color).
  */
 export type ButtonVariant =
     | 'primary'

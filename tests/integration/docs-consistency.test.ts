@@ -165,4 +165,27 @@ describe('docs consistency', () => {
       expect(upward).toEqual([...ALLOWLIST].sort());
     });
   });
+
+  describe('repo map', () => {
+    const IGNORED = new Set(['node_modules', 'dist', 'out', 'storybook-static', 'coverage']);
+
+    const topLevelDirs = () =>
+      fs
+        .readdirSync(REPO_ROOT, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && !e.name.startsWith('.') && !IGNORED.has(e.name))
+        .map((e) => e.name)
+        .sort();
+
+    it('CLAUDE.md names every top-level directory a contributor sees', () => {
+      const map = read('CLAUDE.md').split('## Gotchas')[0];
+      const unnamed = topLevelDirs().filter((dir) => !map.includes(`${dir}/`));
+      expect(unnamed).toEqual([]);
+    });
+
+    it('the repo map names no directory that has been moved or deleted', () => {
+      const map = read('CLAUDE.md').split('## Gotchas')[0];
+      const named = [...map.matchAll(/`([a-z][a-z-]*)\/`/g)].map((m) => m[1]);
+      expect(named.filter((dir) => !exists(dir))).toEqual([]);
+    });
+  });
 });

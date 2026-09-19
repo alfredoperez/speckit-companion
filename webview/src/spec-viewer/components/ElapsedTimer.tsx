@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { formatElapsed } from '../elapsedFormat';
+import { formatElapsed } from '../relativeTime';
 
 interface ElapsedTimerProps {
     startedAt: string | null | undefined;

@@ -69,7 +69,7 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 | `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
 | `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
 
-`optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.) ROADMAP step 2 shipped `after_plan` / `after_tasks` / `after_implement`, so the full `specify → plan → tasks → implement` lifecycle is now captured automatically — see [../ROADMAP.md](../ROADMAP.md).
+`optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
 
 ## `speckit.companion.after-specify`
 

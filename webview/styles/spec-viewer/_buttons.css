@@ -86,8 +86,7 @@ button.enhancement:hover {
     background: var(--bg-inset);
 }
 
-/* Destructive — soft semantic treatment. Use with useInlineConfirm
-   for the two-click confirm pattern when the operation can't be undone. */
+/* Destructive — soft semantic treatment for an operation that can't be undone. */
 button.destructive {
     background: var(--error-subtle);
     border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);

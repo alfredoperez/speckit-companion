@@ -304,7 +304,6 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 - [docs/how-it-works.md](./docs/how-it-works.md): the hook → script → `.spec-context.json` chain and canonical schema.
 - [docs/node-model.md](./docs/node-model.md): how Companion commands are composed from nodes and the `.specify/companion.yml` hook model.
 - [docs/publishing.md](./docs/publishing.md): how this extension is released (separate from the VS Code extension).
-- [ROADMAP.md](./ROADMAP.md): the migration plan and per-step status.
 - [CHANGELOG.md](./CHANGELOG.md): version history (independent of the VS Code extension).
 
 ## License

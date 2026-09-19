@@ -213,7 +213,7 @@
 }
 
 /* ── Card hover: a quiet border strengthen — accent-flip hover reads as
-   decoration against dense document content (docs/DESIGN.md). ── */
+   decoration against dense document content (DESIGN.md). ── */
 #markdown-content .decision-card,
 #markdown-content .ck-group {
   transition: border-color var(--transition-fast) ease;

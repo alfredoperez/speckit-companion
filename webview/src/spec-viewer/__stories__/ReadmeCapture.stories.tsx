@@ -947,7 +947,7 @@ export const C8LivingSpecsPairWide: Story = {
 //
 // The capture script's `annotate` block measures `.dossier-timing` with
 // getBoundingClientRect and draws one box plus label from the measurement,
-// writing `overview-annotated-16x9.png`. THEME.md permits exactly this kind
+// writing `overview-annotated-16x9.png`. DESIGN.md permits exactly this kind
 // of callout and no other.
 
 // The dossier's own vertical rhythm is set for a full-height panel; in a

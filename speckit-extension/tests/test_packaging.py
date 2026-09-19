@@ -77,6 +77,9 @@ class TestClosureDerivation(unittest.TestCase):
         self.assertNotIn("os.py", deps)
         self.assertNotIn("json.py", deps)
 
+    def test_the_builder_closure_reaches_an_importlib_loaded_sibling(self):
+        self.assertIn("assemble-nodes.py", pm.vsix_closure())
+
 
 class TestGateFailsOnDrift(unittest.TestCase):
     """Each case simulates one real regression and asserts check() names it."""
@@ -115,6 +118,16 @@ class TestGateFailsOnDrift(unittest.TestCase):
         declared = pm.declared_command_files() + [str(SCRIPTS.parent / "commands" / "gone.md")]
         with mock.patch.object(pm, "declared_command_files", lambda: declared):
             self.assertProblem(pm.check(), "command file absent: commands/gone.md")
+
+    def test_a_negation_removed_from_vscodeignore_is_stripped_from_the_vsix(self):
+        widened = frozenset(pm.vsix_closure() | {"ghost-sibling.py"})
+        with mock.patch.object(pm, "vsix_closure", lambda: widened):
+            self.assertProblem(pm.check(), "stripped from the .vsix: ghost-sibling.py")
+
+    def test_a_negation_with_no_closure_entry_is_whitelisted_but_unreachable(self):
+        narrowed = frozenset(pm.vsix_closure() - {"write-context.py"})
+        with mock.patch.object(pm, "vsix_closure", lambda: narrowed):
+            self.assertProblem(pm.check(), "whitelisted but unreachable: write-context.py")
 
     def test_copy_to_refuses_to_build_from_a_failing_list(self):
         short = frozenset(pm.RUNTIME_SCRIPTS - {"companion_config.py"})

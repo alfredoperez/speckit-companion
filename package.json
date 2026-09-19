@@ -1471,6 +1471,7 @@
     "watch-web": "webpack --mode development --watch",
     "package-web": "webpack --mode production --devtool hidden-source-map",
     "test": "jest",
+    "test:all": "jest && python3 -m unittest discover -s speckit-extension/tests -p 'test_*.py'",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:visual": "node scripts/visual-builder.mjs",

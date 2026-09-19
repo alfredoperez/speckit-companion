@@ -67,6 +67,7 @@ speckit-extension/**
 !speckit-extension/scripts/spec_deltas.py
 !speckit-extension/scripts/capture.py
 !speckit-extension/scripts/task_sync.py
+!speckit-extension/scripts/resolve-spec-paths.py
 !speckit-extension/scripts/living_spec_fold.py
 !speckit-extension/scripts/living_validate.py
 !speckit-extension/scripts/run_trace.py

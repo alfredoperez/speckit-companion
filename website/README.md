@@ -87,12 +87,12 @@ The funnel this feeds is landing view to install click to getting-started view. 
 
 | Event | Where | Properties |
 | --- | --- | --- |
-| `install_click_vscode` | Landing hero Install for VS Code; landing quick-start Open in VS Code; landing footer CTA; the Marketplace button on the getting-started guide | `placement`: `hero`, `quick-start`, `footer`, `getting-started` |
-| `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the getting-started guide | `placement`: `quick-start`, `getting-started` |
+| `install_click_vscode` | Landing hero Install for VS Code; landing quick-start Open in VS Code; landing footer CTA; the Marketplace button on the install guide | `placement`: `hero`, `quick-start`, `footer`, `install` |
+| `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the install guide | `placement`: `quick-start`, `install` |
 | `demo_tab_click` | Each of the four demo tabs on the landing page | `tab`: `understand`, `customize`, `living`, `review` |
 | `waitlist_submit` | Submit on either soon page's waitlist form, fired from the handler | `list`: `workflow-builder`, `course` |
 
-The `code --install-extension` fallback on the getting-started guide is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.
+The `code --install-extension` fallback on the install guide is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.
 
 There is no `guide_view` event. `capture_pageview` is on and the docs pages now load the same script the rest of the site does, so every guide view already sends `$pageview` carrying its URL, and a guide view is a path under `/docs/`. A hand-rolled second event would double count the same view and add nothing a URL filter does not already give.
 

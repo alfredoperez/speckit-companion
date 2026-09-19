@@ -25,6 +25,7 @@ The Extension Development Host is a second VS Code window with the local build o
 - **Node.js 18+**
 - **VS Code 1.84+** (matches `engines.vscode` in `package.json`)
 - **An AI CLI** for testing the SpecKit features end-to-end: Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, or Qwen CLI. You don't need all of them — pick whichever you use.
+- **Python 3.9+** on your PATH as `python3`, only if you touch `speckit-extension/`. Its suite is stdlib `unittest`, so there is nothing to install. A change confined to `src/` or `webview/` needs `npm test` alone.
 
 ## Development Loop
 
@@ -55,6 +56,8 @@ npm test                # full suite
 npm run test:watch      # watch mode
 npm run test:coverage   # coverage report
 ```
+
+`npm run test:all` runs the jest suite and the spec-kit extension's stdlib-unittest suite together, which is what CI runs. It needs `python3` on your PATH; without it, run `npm test` for a change that stays inside `src/` or `webview/`.
 
 - **Style**: BDD — `describe()` / `it()` blocks describe behaviour, not implementation. Read a few existing test files in `src/**/*.test.ts` before adding new ones.
 - **VS Code mock**: extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js#moduleNameMapper`). When you need a VS Code API that isn't mocked yet, add it there rather than stubbing inline.
@@ -109,7 +112,7 @@ If your change is documented in `CLAUDE.md`'s map but not in the README after yo
 
 1. Branch from `main` (don't stack new work on a previously-merged feature branch — this repo squash-merges, so the old commits won't be in the history of your new branch).
 2. Make your changes.
-3. Run `npm test` and `npm run compile`.
+3. Run `npm run test:all` and `npm run compile`. For a change that touches no Python, `npm test` and `npm run compile` are enough.
 4. Update `README.md` per the docs map in `CLAUDE.md`. If your change is internal-only (refactor, test-only, build), say so in the PR.
 5. Open a PR using the template in `.github/pull_request_template.md`. Fill in the related issue, description, screenshots (for UI changes), and the checklist.
 6. Reviewers merge by squashing — keep your commits readable but don't stress over rebase noise.

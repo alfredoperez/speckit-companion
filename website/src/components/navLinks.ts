@@ -4,13 +4,12 @@
 
   The groups are the layout, not decoration. Two pairs sit across the bar.
 
-  The workflow builder and the course are both unshipped, so they lead as a
+  Docs and changelog are the two places you actually go, so they lead, right
+  next to the install button, rather than sitting behind the unshipped things.
+
+  The workflow builder and the course are both unshipped, so they trail as a
   pair, and both carry a SOON chip. The chip is never dropped from either one:
   it is the site's only mechanism for saying a thing is not built.
-
-  Docs and changelog are the two places you actually go, so they pair up at the
-  right, next to the install button, rather than sitting at opposite ends of the
-  bar with the unshipped things between them.
 */
 export interface NavLink {
   label: string;
@@ -20,12 +19,12 @@ export interface NavLink {
 
 export const navGroups: NavLink[][] = [
   [
-    { label: 'workflow builder', href: '/workflow-builder/', soon: true },
-    { label: 'course', href: '/course/', soon: true },
-  ],
-  [
     { label: 'docs', href: '/docs/', soon: false },
     { label: 'changelog', href: '/changelog/', soon: false },
+  ],
+  [
+    { label: 'workflow builder', href: '/workflow-builder/', soon: true },
+    { label: 'course', href: '/course/', soon: true },
   ],
 ];
 

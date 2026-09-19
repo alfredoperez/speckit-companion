@@ -80,8 +80,6 @@ The checker enforces this from both directions. It fails if a README references 
 
 `media/web/` is the exception, and it's tracked deliberately. Its files are regenerable in principle, but only from the Storybook captures and the hyperframes renders — neither of which is in the repo, and neither of which a deploy could produce. While it was ignored, a fresh clone had no imagery at all and the deployed site rendered every screenshot and clip as a broken image. The cost is that a retheme rewrites the whole set and history grows by roughly its size each time; Git LFS is the fix if that ever bites, not un-tracking it again.
 
-One thing hasn't caught up: `conventions.webSourceDirTracked` in the manifest still reads `false`. `media/.gitignore` is the authority, and it says tracked.
-
 ## Checking it
 
 ```

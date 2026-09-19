@@ -1,78 +1,36 @@
 ---
 title: Getting started
-description: Put both halves in place, create your first spec, run it, and read the record it leaves behind.
+description: Create your first spec, run it through the workflow, and read the record it leaves behind, picking up once both halves of SpecKit Companion are installed.
 tableOfContents: false
 sidebar:
   label: Getting started
   order: 3
 ---
 
-import Button from '../../../../components/Button.astro';
-import CodeLine from '../../../../components/CodeLine.astro';
 import GuidedStep from '../../../../components/docs/GuidedStep.astro';
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
+By the end of this page you'll have one spec created and run through its workflow, and a run record you can read in the Overview.
 
-{/* The full --from URL form, verbatim. The short catalog form does not work,
-    because the extension is not listed in the Spec Kit catalog. */}
-export const COMPANION_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
+Both halves of SpecKit Companion install from [Install](/docs/install) — the VS Code extension and the Companion Spec Kit extension. This page picks up once both are in place.
 
-By the end of this page you'll have both halves of SpecKit Companion installed, one spec created and run through its workflow, and a run record you can read in the Overview. It assumes you already have an editor and a `specify` CLI that carries the `extension` subsystem. If you don't, or if either install misbehaves, [Install](/docs/install) has the prerequisites and the troubleshooting.
+<GuidedStep n={1} title="Initialize the workspace">
 
-<GuidedStep n={1} title="Install the VS Code extension">
-
-The half you look at: the spec viewer, review comments, and the Specs sidebar.
+Open the SpecKit icon in the activity bar. The Specs view reads your workspace and welcomes you accordingly: once it detects the `specify` CLI in a project that hasn't run `specify init` yet, it offers **Initialize Workspace** to scaffold `.specify/` on the spot.
 
 <div slot="action">
-  <Button
-    href={MARKETPLACE}
-    external
-    size="md"
-    data-analytics="install_click_vscode"
-    data-analytics-placement="getting-started"
-  >
-    Get it on the Marketplace
-  </Button>
-  <div class="gstep-fallback">
-    <p>Or from a terminal:</p>
-    <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
-  </div>
+  <p>Click <strong>Initialize Workspace</strong> in the Specs view.</p>
 </div>
 
 <div slot="result">
 
-A SpecKit icon in the activity bar, with an empty **Specs** view behind it. It's on Open VSX too, if that's where your editor looks.
+The welcome content moves forward with you: a **Configure Constitution** prompt and a **Create New Spec** button replace the initialize step. Once the constitution's configured, the same panel swaps to **Create your first spec** paired with **Open a live sample**, if you'd rather look at a finished run before creating your own. The Specs view is guiding you toward your first spec, not sitting empty.
 
 </div>
 
 </GuidedStep>
 
-<GuidedStep n={2} title="Add the Companion Spec Kit extension">
-
-The half that rides your runs. It writes a run record, a `.spec-context.json` file logging what each step did, next to each spec, and the VS Code extension reads that file.
-
-It needs Spec Kit 0.9.5 or newer, and it needs a `specify` build that actually has `specify extension`. The stock PyPI package doesn't, which is the one failure worth reading [Install](/docs/install) for before you paste this.
-
-<div slot="action">
-  <CodeLine
-    command={COMPANION_COMMAND}
-    data-analytics="install_click_speckit_copy"
-    data-analytics-placement="getting-started"
-  />
-</div>
-
-<div slot="result">
-
-The `/speckit.companion.*` commands in your assistant, alongside the stock `/speckit.*` ones. The two families coexist. A **Living Specs** view joins the sidebar, and the Companion workflow no longer carries the **Install to enable** label.
-
-The same command updates it later, because `companion-latest` always serves the newest build.
-
-</div>
-
-</GuidedStep>
-
-<GuidedStep n={3} title="Create your first spec">
+<GuidedStep n={2} title="Create your first spec">
 
 Click the SpecKit icon, then the `+` button in the Specs view, or run **SpecKit: New Spec** from the command palette. The Create New Spec panel lists every workflow with its description. Describe what you want to build and let it run.
 
@@ -91,7 +49,7 @@ A new spec under **Active**, named from what you typed, with the workflow record
 
 </GuidedStep>
 
-<GuidedStep n={4} title="Run the workflow">
+<GuidedStep n={3} title="Run the workflow">
 
 Open the spec. The viewer's footer carries one forward button, labeled with the next step's own name, with a context line above it reading `Next: Plan`. Use that button.
 
@@ -115,7 +73,7 @@ While a step runs, the forward buttons drop and the footer reads "Step running, 
 
 </GuidedStep>
 
-<GuidedStep n={5} title="Read what came out">
+<GuidedStep n={4} title="Read what came out">
 
 Switch to **Overview**, the second view inside the spec viewer. It exists only for a spec that recorded something.
 

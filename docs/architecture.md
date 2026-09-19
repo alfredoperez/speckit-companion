@@ -126,7 +126,6 @@ User data is stored under the workspace `.claude/` and `specs/` directories, plu
 
 ## Related documents
 
-- `docs/refactor-plan.md` — the structural-cleanup plan, including the prevention strategy this doc participates in.
 - `docs/spec-context-schema.md` — the on-disk schema for `.spec-context.json`.
 - `docs/viewer-states.md` — the full state machine for the spec viewer.
 - `docs/sidebar.md` — long-form sidebar reference.
