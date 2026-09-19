@@ -1,10 +1,5 @@
 # SpecKit Companion: see and steer everything your AI builds, from first spec to shipped code
 
-<!-- Headline alternates (swap the H1 above for one of these if preferred):
-  1. SpecKit Companion: the whole spec lifecycle, visible and under your control
-  2. SpecKit Companion: know what your AI is doing before, during, and after it writes code
--->
-
 ![Build Status](https://img.shields.io/github/actions/workflow/status/alfredoperez/speckit-companion/release.yml?label=build)
 ![VS Code](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fpackage.json&query=%24.engines.vscode&label=VS%20Code&color=blue)
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
@@ -18,11 +13,6 @@ The site shows each feature as a short clip of the real thing — the Overview a
 
 **One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](./docs/configuration.md#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
-<!-- IMAGE PATHS: this README keeps RELATIVE paths on purpose. It is rendered by GitHub
-     and by vsce for the Marketplace, and both resolve relative paths (vsce rewrites them
-     to absolute raw URLs at package time). Only speckit-extension/README.md uses absolute
-     raw.githubusercontent URLs, because the Spec Kit community catalog renders it from
-     main and cannot resolve relative paths. -->
 <!-- The hero is the Overview GIF (built from media/feature-clips/overview): frame
      zero is a representative still by design, so it reads even paused. The composed C1
      still stays regenerable at docs/screenshots/generated/hero.png (no longer referenced

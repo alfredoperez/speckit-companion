@@ -49,6 +49,12 @@
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
 8. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
 
+## README conventions
+
+The root README keeps relative image paths on purpose. It's rendered by GitHub and packaged by vsce for the Marketplace, and both resolve relative paths (vsce rewrites them to absolute raw URLs at package time). `speckit-extension/README.md` uses absolute `raw.githubusercontent` URLs instead, because the Spec Kit community catalog renders it from `main` and can't resolve relative paths.
+
+The root README's H1 has two alternates on file, either of which can swap in for the current headline if it needs a refresh: "SpecKit Companion: the whole spec lifecycle, visible and under your control" and "SpecKit Companion: know what your AI is doing before, during, and after it writes code".
+
 ## Changelog voice
 
 Changelog entries are **release notes for users**, not commit messages. Lead with the observable change — what a user can now do, or what stopped going wrong. Keep the things users actually touch: setting keys (`speckit.defaultWorkflow`), command names (`/speckit.companion.resume`), config files they edit, and the install commands they run. **Drop internal file and symbol names** — `promptBuilder.ts`, `sync_tasks()`, `write-context.py --task …`, on-disk field names like `history[]`/`transitions[]`. Those belong in the commit message or PR description. The test: would the entry make sense to someone who has never opened `src/`? If it only lands for someone who has, it's too deep — move the mechanism out and keep the effect. Applies to both changelogs (root and `speckit-extension/`).
