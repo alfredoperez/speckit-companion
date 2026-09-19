@@ -2,7 +2,8 @@
  * Type definitions for the Spec Editor feature
  */
 
-import type { InstallPrompt } from '../../protocol/viewer';
+export type { WorkflowChosenAs, WorkflowDefinition, SpecEditorToExtensionMessage, ExtensionToSpecEditorMessage } from '../../protocol/spec-editor';
+export { SIZE_LIMITS } from '../../protocol/spec-editor';
 
 // ============================================
 // Session and Draft Types
@@ -145,88 +146,6 @@ export interface TempFileManifest {
     /** Timestamp of last cleanup run */
     lastCleanup: number;
 }
-
-// ============================================
-// Workflow Types
-// ============================================
-
-/**
- * How the workflow was selected in the Create Spec form: the untouched
- * pre-selection, an ordinary change, or the one-spec Companion trial.
- */
-export type WorkflowChosenAs = 'default' | 'picked' | 'trial';
-
-/**
- * A workflow definition for spec-driven development
- */
-export interface WorkflowDefinition {
-    /** Unique workflow identifier */
-    name: string;
-    /** Display name shown on the choice card (no install-state suffix — the card renders state) */
-    displayName: string;
-    /** Description rendered visibly on the choice card (Companion's is the pinned proof line) */
-    description: string;
-    /** Whether the workflow is ready to run; false renders the install-to-enable card state */
-    installed: boolean;
-    /** Command for specify step */
-    stepSpecify: string;
-    /** Command for plan step */
-    stepPlan?: string;
-    /** Command for implement step */
-    stepImplement?: string;
-    /** Custom commands for the specify step (shown next to Submit) */
-    specifyCommands?: Array<{ name: string; title: string; command: string; tooltip?: string }>;
-    /** Workflow has a hands-off auto orchestrator — surfaces the Auto button when selected */
-    supportsAuto?: boolean;
-}
-
-// ============================================
-// Message Types: Webview → Extension
-// ============================================
-
-export type SpecEditorToExtensionMessage =
-    | { type: 'submit'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
-    | { type: 'submitAuto'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs }
-    | { type: 'submitCommand'; content: string; images: string[]; workflow: string; chosenAs: WorkflowChosenAs; command: string }
-    | { type: 'preview' }
-    | { type: 'attachImage'; name: string; size: number; dataUri: string }
-    | { type: 'removeImage'; imageId: string }
-    | { type: 'ready' }
-    | { type: 'cancel' }
-    | { type: 'installSpecKitExtension'; prompt?: InstallPrompt }
-    | { type: 'openReadme' }
-    | { type: 'dismissInstallBanner'; prompt: InstallPrompt };
-
-// ============================================
-// Message Types: Extension → Webview
-// ============================================
-
-export type ExtensionToSpecEditorMessage =
-    | { type: 'init'; workflows: WorkflowDefinition[]; defaultWorkflow?: string }
-    | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
-    | { type: 'imageRemoved'; imageId: string }
-    | { type: 'previewContent'; markdown: string }
-    | { type: 'submissionStarted' }
-    | { type: 'submissionComplete' }
-    | { type: 'error'; message: string }
-    | { type: 'restoreImages'; images: Array<{ id: string; thumbnailUri: string; originalName: string }> };
-
-// ============================================
-// Size Limits
-// ============================================
-
-export const SIZE_LIMITS = {
-    /** Max 2MB per image */
-    SINGLE_IMAGE_BYTES: 2 * 1024 * 1024,
-    /** Max 10MB total attachments */
-    TOTAL_ATTACHMENTS_BYTES: 10 * 1024 * 1024,
-    /** Max 50,000 characters for draft content */
-    DRAFT_CONTENT_CHARS: 50_000,
-    /** Max 20 images per session */
-    MAX_IMAGES: 20,
-    /** Thumbnail dimensions */
-    THUMBNAIL_SIZE: 100
-} as const;
 
 // ============================================
 // Cleanup Thresholds
