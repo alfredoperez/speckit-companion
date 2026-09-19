@@ -6,8 +6,8 @@
  * CHANGELOG.md. Both files are read and parsed at build time and merged into one
  * reverse chronological list, so this page cannot drift from the sources.
  *
- *   VS Code extension   -> ../../../CHANGELOG.md              (package.json version)
- *   Spec Kit extension  -> ../../../speckit-extension/CHANGELOG.md (extension.yml version)
+ *   VS Code extension   -> ../../../../CHANGELOG.md              (package.json version)
+ *   Spec Kit extension  -> ../../../../apps/speckit-extension/CHANGELOG.md (extension.yml version)
  *
  * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
  * never read here.
@@ -22,13 +22,13 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
 // Imported with Vite's ?raw so the two files are inlined at build time and the
 // path is resolved relative to this source file, not to the build's cwd.
-import vscodeChangelog from '../../../CHANGELOG.md?raw';
-import speckitChangelog from '../../../speckit-extension/CHANGELOG.md?raw';
+import vscodeChangelog from '../../../../CHANGELOG.md?raw';
+import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
 
 import Analytics from '../components/Analytics.astro';
 import LogoMark from '../components/LogoMark.astro';
 import SiteIcons from '../components/SiteIcons.astro';
-import ogCard from '../../../docs/screenshots/generated/og-card.png';
+import ogCard from '../../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
 import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
@@ -168,7 +168,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
             >VS Code extension changelog</a
           >
           <a
-            href="https://github.com/alfredoperez/speckit-companion/blob/main/speckit-extension/CHANGELOG.md"
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/CHANGELOG.md"
             >Spec Kit extension changelog</a
           >
           <a href="https://github.com/alfredoperez/speckit-companion">github</a>

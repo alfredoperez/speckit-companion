@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/preact';
-import { navState } from '../webview/src/spec-viewer/signals';
+import { navState } from '../apps/vscode/webview/src/spec-viewer/signals';
 import {
     activeCapturePalette,
     constellationViolet,
@@ -12,11 +12,11 @@ import {
 } from './capture-theme';
 
 // Import all spec-viewer CSS
-import '../webview/styles/spec-viewer/index.css';
+import '../apps/vscode/webview/styles/spec-viewer/index.css';
 // The builder panel rides the shared tokens rather than the viewer's owned
 // palette, so it needs both files to render the way the panel does.
-import '../webview/styles/tokens.css';
-import '../webview/styles/pipeline-builder.css';
+import '../apps/vscode/webview/styles/tokens.css';
+import '../apps/vscode/webview/styles/pipeline-builder.css';
 // Codicon font so file-ref icons render in stories (the real viewer loads this
 // from the extension; without it the glyph shows as an empty square).
 import '@vscode/codicons/dist/codicon.css';
@@ -122,7 +122,7 @@ const preview: Preview = {
             // A story that declares `parameters.capture = { width, height }` is
             // a video frame, not a catalog entry: it gets an exact-pixel box
             // with no padding, so a screenshot of the preview iframe IS the
-            // frame. See webview/src/spec-viewer/__stories__/captureFrame.tsx.
+            // frame. See apps/vscode/webview/src/spec-viewer/__stories__/captureFrame.tsx.
             const capture = context.parameters?.capture as
                 | { width: number; height: number }
                 | undefined;

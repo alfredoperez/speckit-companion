@@ -67,7 +67,7 @@ describe('resolveProviderIconKey', () => {
 
     describe('exhaustiveness over the shipped provider list', () => {
         const manifest = JSON.parse(
-            fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
+            fs.readFileSync(path.join(__dirname, '../../../../../../package.json'), 'utf-8')
         );
         const enumValues: string[] = manifest.contributes.configuration
             .flatMap((section: any) => Object.entries(section.properties ?? {}))
@@ -90,7 +90,7 @@ describe('resolveProviderIconKey', () => {
         });
 
         it('resolves an ide-chat host to a mark the extension actually ships', () => {
-            const assets = path.join(__dirname, '../../../../assets/icons/providers');
+            const assets = path.join(__dirname, '../../../../../../assets/icons/providers');
             for (const host of ['vscode', 'cursor', 'windsurf'] as HostIde[]) {
                 const key = resolveProviderIconKey(AIProviders.IDE_CHAT, host);
                 expect(key.kind).toBe('mono');
@@ -102,7 +102,7 @@ describe('resolveProviderIconKey', () => {
         });
 
         it('resolves every branded provider to a mark the extension actually ships', () => {
-            const assets = path.join(__dirname, '../../../../assets/icons/providers');
+            const assets = path.join(__dirname, '../../../../../../assets/icons/providers');
             for (const id of enumValues) {
                 const key = resolveProviderIconKey(id, 'vscode');
                 if (key.kind === 'asset') {

@@ -9,7 +9,7 @@
  * this.
  *
  * favicon.svg is the SMALL CUT of the logo, not the full mark. The full mark
- * lives in website/src/components/LogoMark.astro and is never the source here:
+ * lives in apps/website/src/components/LogoMark.astro and is never the source here:
  * its checkmark is gone by 32px and the whole thing is a blob by 16. Keep the
  * two in the same family by hand, and re-measure at real pixels after a change
  * rather than shrinking a big render.
@@ -24,17 +24,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PUBLIC = path.join(ROOT, 'website', 'public');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const PUBLIC = path.join(ROOT, 'apps', 'website', 'public');
 const SRC = path.join(PUBLIC, 'favicon.svg');
 
 // sharp is a dependency of the website, not of the repo root.
-const require = createRequire(path.join(ROOT, 'website', 'package.json'));
+const require = createRequire(path.join(ROOT, 'apps', 'website', 'package.json'));
 let sharp;
 try {
   sharp = require('sharp');
 } catch {
-  console.error('sharp is missing. Run npm install in website/ first.');
+  console.error('sharp is missing. Run npm install in apps/website/ first.');
   process.exit(1);
 }
 

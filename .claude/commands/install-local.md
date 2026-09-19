@@ -9,7 +9,7 @@ description: Bump version and install both extensions locally (VS Code + spec-ki
 
 ## Your task
 
-This repo ships **two** extensions: the **VS Code extension** (`.vsix`) and the **spec-kit extension** (`speckit-extension/` — the `/speckit.companion.*` commands + capture scripts). Reinstall both so local changes to either are picked up.
+This repo ships **two** extensions: the **VS Code extension** (`.vsix`) and the **spec-kit extension** (`apps/speckit-extension/` — the `/speckit.companion.*` commands + capture scripts). Reinstall both so local changes to either are picked up.
 
 ### 1. VS Code extension
 
@@ -30,12 +30,12 @@ This repo ships **two** extensions: the **VS Code extension** (`.vsix`) and the 
 
 **Important:** Never skip the version bump, and never bump *below* an installed version — VS Code caches by version number, so same-or-lower = no update and no banner. After installing, restore the throwaway bump in git (`git restore package.json package-lock.json`) so it never lands in a feature commit. Restoring `.specify/` alongside it is safe for living specs — capabilities live in `living-specs.yml` at the repo root, outside that folder.
 
-### 2. spec-kit extension (only if `speckit-extension/extension.yml` exists)
+### 2. spec-kit extension (only if `apps/speckit-extension/extension.yml` exists)
 
 5. Reinstall it so changed/new commands + scripts are re-emitted to the agent dirs:
-   `specify extension add ./speckit-extension --dev --force`
-   - This regenerates `.specify/extensions/companion/` and the per-agent command emissions — all gitignored (source of truth is `speckit-extension/`), so it produces no commit churn.
-   - If `specify` isn't installed or lacks the `extension` subcommand (stock PyPI build), skip with a note — see `speckit-extension/docs/install.md`.
+   `specify extension add ./apps/speckit-extension --dev --force`
+   - This regenerates `.specify/extensions/companion/` and the per-agent command emissions — all gitignored (source of truth is `apps/speckit-extension/`), so it produces no commit churn.
+   - If `specify` isn't installed or lacks the `extension` subcommand (stock PyPI build), skip with a note — see `apps/speckit-extension/docs/install.md`.
 6. Confirm the commands registered: `specify extension add` prints the provided commands; verify any you just changed (e.g. `speckit.companion.status` / `speckit.companion.resume`) appear.
 
 ### 3. Report

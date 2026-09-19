@@ -442,9 +442,9 @@ describe('reasoning-trail normalization', () => {
 
         it('derives the rows the writer promises, for both shapes it can produce', () => {
             // The Python half pins the same pair in
-            // speckit-extension/tests/test_capture_fields.py; the fixture is what
+            // apps/speckit-extension/tests/test_capture_fields.py; the fixture is what
             // stops the two runtimes agreeing separately and not with each other.
-            const dir = path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'tests', 'fixtures', 'coverage-shape');
+            const dir = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'tests', 'fixtures', 'coverage-shape');
             const read = (name: string) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
             const state = deriveViewerState(makeContext({ coverage: read('written.json') } as never));
             expect(state.coverage).toEqual(

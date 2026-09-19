@@ -35,7 +35,7 @@ export interface BuildOutcome {
 export function resolveBuildScript(workspaceRoot: string, extensionPath: string): string | null {
     const candidates = [
         path.join(workspaceRoot, '.specify', 'extensions', 'companion', 'scripts', 'build-pipeline.py'),
-        path.join(extensionPath, 'speckit-extension', 'scripts', 'build-pipeline.py'),
+        path.join(extensionPath, 'apps', 'speckit-extension', 'scripts', 'build-pipeline.py'),
     ];
     return candidates.find(candidate => fs.existsSync(candidate)) ?? null;
 }

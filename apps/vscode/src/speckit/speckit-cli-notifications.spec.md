@@ -7,7 +7,7 @@ What the extension tells the user about things it noticed on its own: a newer re
 ## Requirements
 
 ### Two products share one release list and must never be confused
-<!-- touches: src/speckit/updateChecker.ts -->
+<!-- touches: apps/vscode/src/speckit/updateChecker.ts -->
 
 Every release lookup SHALL keep only the tag shape of the product it asks about and skip drafts and prereleases, because both products publish into one release list. A bare "latest release" lookup MUST NOT be reintroduced, including in links opened for the user.
 
@@ -20,7 +20,7 @@ Every release lookup SHALL keep only the tag shape of the product it asks about 
 - **THEN** the release page for that exact version's tag opens, never a shared "latest release" URL
 
 ### A product missing from the fetched page reads as unknown
-<!-- touches: src/speckit/updateChecker.ts -->
+<!-- touches: apps/vscode/src/speckit/updateChecker.ts -->
 
 Only the first page of releases is fetched, so finding no tag for a product SHALL mean "unknown", never "no releases", and nothing already known about it is discarded.
 
@@ -29,7 +29,7 @@ Only the first page of releases is fetched, so finding no tag for a product SHAL
 - **THEN** its previously known version is kept
 
 ### Update checks are throttled, skippable, and never noisy on failure
-<!-- touches: src/speckit/updateChecker.ts, src/speckit/utilityCommands.ts -->
+<!-- touches: apps/vscode/src/speckit/updateChecker.ts, apps/vscode/src/speckit/utilityCommands.ts -->
 
 The update check SHALL run at most once a day unless forced, SHALL NOT notify about a version the user skipped, and SHALL log a network or API failure without showing it to the user.
 
@@ -42,7 +42,7 @@ The update check SHALL run at most once a day unless forced, SHALL NOT notify ab
 - **THEN** the failure is logged and no error appears
 
 ### The new-version notification can install the version it offers
-<!-- touches: src/speckit/updateChecker.ts -->
+<!-- touches: apps/vscode/src/speckit/updateChecker.ts -->
 
 The notification SHALL offer Update first, then View Changelog and Skip. Update installs the newest version the editor's gallery serves without pinning it, so automatic updates stay on, then offers a reload. A failed install opens the extension's page instead.
 
@@ -55,7 +55,7 @@ The notification SHALL offer Update first, then View Changelog and Skip. Update 
 - **THEN** the extension's page opens
 
 ### A phase is announced only when it newly completes
-<!-- touches: src/speckit/taskProgressService.ts -->
+<!-- touches: apps/vscode/src/speckit/taskProgressService.ts -->
 
 A task phase SHALL be announced once, when its last task is checked. The first sight of a task file records its state without announcing, so opening a finished project announces nothing.
 

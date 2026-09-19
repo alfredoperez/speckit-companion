@@ -23,7 +23,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-FIXTURE = Path(__file__).resolve().parent.parent.parent / "tests" / "fixtures" / "task-grammar"
+FIXTURE = Path(__file__).resolve().parents[3] / "apps" / "vscode" / "tests" / "fixtures" / "task-grammar"
 
 from task_sync import parse_task_markers, prose_lines  # noqa: E402
 

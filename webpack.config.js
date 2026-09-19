@@ -11,7 +11,7 @@ const extensionConfig = {
   target: 'node', // VS Code extensions run in Node.js environment
   mode: 'none', // Use 'none' or 'development' for dev, 'production' for release
 
-  entry: './src/extension.ts', // Extension entry point
+  entry: './apps/vscode/src/extension.ts', // Extension entry point
   output: {
     // Output location for bundled files
     path: path.resolve(__dirname, 'dist'),
@@ -52,7 +52,7 @@ const specEditorConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
 
-  entry: './webview/src/spec-editor/index.ts', // Spec editor entry point
+  entry: './apps/vscode/webview/src/spec-editor/index.ts', // Spec editor entry point
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'spec-editor.js',
@@ -82,7 +82,7 @@ const specEditorConfig = {
     new CopyPlugin({
       patterns: [
         // Copy spec-editor CSS to webview output
-        { from: 'webview/styles/spec-editor.css', to: 'spec-editor.css' }
+        { from: 'apps/vscode/webview/styles/spec-editor.css', to: 'spec-editor.css' }
       ]
     })
   ]
@@ -93,7 +93,7 @@ const specViewerConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
 
-  entry: './webview/src/spec-viewer/index.tsx', // Spec viewer entry point
+  entry: './apps/vscode/webview/src/spec-viewer/index.tsx', // Spec viewer entry point
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'spec-viewer.js',
@@ -123,11 +123,11 @@ const specViewerConfig = {
     new CopyPlugin({
       patterns: [
         // Copy spec-viewer CSS to webview output
-        { from: 'webview/styles/spec-viewer.css', to: 'spec-viewer.css' },
+        { from: 'apps/vscode/webview/styles/spec-viewer.css', to: 'spec-viewer.css' },
         // Copy spec-viewer CSS partials (for @import resolution)
-        { from: 'webview/styles/spec-viewer', to: 'spec-viewer' },
+        { from: 'apps/vscode/webview/styles/spec-viewer', to: 'spec-viewer' },
         // Shared design tokens — imported by every webview stylesheet
-        { from: 'webview/styles/tokens.css', to: 'tokens.css' },
+        { from: 'apps/vscode/webview/styles/tokens.css', to: 'tokens.css' },
         // Bundled @vscode/codicons (offline loading)
         { from: 'node_modules/@vscode/codicons/dist/codicon.css', to: 'codicons/codicon.css' },
         { from: 'node_modules/@vscode/codicons/dist/codicon.ttf', to: 'codicons/codicon.ttf' }
@@ -141,7 +141,7 @@ const pipelineBuilderConfig = {
   target: 'web',
   mode: 'none',
 
-  entry: './webview/src/pipeline-builder/index.tsx',
+  entry: './apps/vscode/webview/src/pipeline-builder/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'pipeline-builder.js',
@@ -170,7 +170,7 @@ const pipelineBuilderConfig = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: 'webview/styles/pipeline-builder.css', to: 'pipeline-builder.css' }
+        { from: 'apps/vscode/webview/styles/pipeline-builder.css', to: 'pipeline-builder.css' }
       ]
     })
   ]

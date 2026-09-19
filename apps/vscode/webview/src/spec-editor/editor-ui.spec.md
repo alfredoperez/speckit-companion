@@ -7,7 +7,7 @@ The browser side of the Create Spec panel. It takes a description, pasted images
 ## Requirements
 
 ### The install banner acts on the prompt it showed
-<!-- touches: webview/src/spec-editor/index.ts, webview/src/spec-editor/types.ts -->
+<!-- touches: apps/vscode/webview/src/spec-editor/index.ts, apps/vscode/webview/src/spec-editor/types.ts -->
 
 The install banner's install and dismiss messages SHALL carry the prompt the banner itself declares, read back off the banner, so the extension acts on the banner the user saw.
 
@@ -96,7 +96,7 @@ While the extension works, the editor SHALL refuse a second submission from any 
 - **THEN** the busy state clears, the message shows as text, and focus moves to its dismiss control
 
 ### The Storybook mock stays a faithful stand-in for the real form
-<!-- touches: webview/src/spec-editor/CreateSpecMock.tsx, webview/src/spec-editor/__stories__/CreateSpec.stories.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-editor/CreateSpecMock.tsx, apps/vscode/webview/src/spec-editor/__stories__/CreateSpec.stories.tsx -->
 
 The shipped form is imperative DOM, so a Preact mock is its visual baseline. The mock SHALL render through the shipped stylesheet with the real class names and native controls, and cover every state of the real form. Nothing checks its structure against the real DOM, so a new form state gets a matching story in the same change.
 

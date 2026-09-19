@@ -29,11 +29,11 @@ Every stage has a command. None of them takes an argument you have to remember.
 ```bash
 npm run clips:new -- <id> "Human name"     # scaffold from _template
 npm run clips:capture -- --clips <id>      # shoot the source PNGs from Storybook
-(cd media/feature-clips/<id> && npm run render)   # composition -> canonical MP4
-npm run clips:render -- <id>               # -> media/web: webm, mp4, poster, 16:9 card
-npm run clips:stills                       # hero and accordion crops -> media/web
+(cd content/media/feature-clips/<id> && npm run render)   # composition -> canonical MP4
+npm run clips:render -- <id>               # -> content/media/web: webm, mp4, poster, 16:9 card
+npm run clips:stills                       # hero and accordion crops -> content/media/web
 npm run clips:gifs -- <id>                 # -> docs/screenshots/generated/<id>.gif
-npm run clips:sync                         # -> website/public/media
+npm run clips:sync                         # -> apps/website/public/media
 npm run clips:check                        # storyboard drift + manifest
 npm run clips:outline -- <id>              # pacing: t, hold and label per beat
 npm run clips:scenes -- <id>               # scene and step list, for review
@@ -41,15 +41,15 @@ npm run clips:scenes -- <id>               # scene and step list, for review
 
 `clips:capture` with no `--clips` shoots the documentation images instead: the
 `STORIES` list, which feeds `docs/screenshots/generated/`. Both lists live in
-`scripts/capture-docs-images.mjs`.
+`tooling/scripts/capture-docs-images.mjs`.
 
 `npm run clips:render -- --list` prints which render file each id resolves to. **Run it
 before any full encode.** It is how you catch a stale source before it ships.
 
 ## Starting a new clip
 
-`npm run clips:new` copies `media/feature-clips/_template`, substitutes the id, adds a
-`CLIP_CAPTURES` stub, and registers the feature in `media/manifest.json`. Do not copy a
+`npm run clips:new` copies `content/media/feature-clips/_template`, substitutes the id, adds a
+`CLIP_CAPTURES` stub, and registers the feature in `content/media/manifest.json`. Do not copy a
 neighbouring composition by hand: the template is where the current caption, scrim and
 pacing rules live, and a hand copy inherits whichever clip happened to be nearest.
 
@@ -90,7 +90,7 @@ Each of these has already cost someone a session.
 - **The poster is MD5-verified against the WebM's first decoded frame.** That check is
   what catches half-synced media. Never route around it.
 - **Labels are mirrored in `STORYBOARD.md` and the check enforces `t` and the label
-  text.** `node scripts/clip-storyboard.mjs --apply <id>` writes storyboard label edits
+  text.** `node tooling/scripts/clip-storyboard.mjs --apply <id>` writes storyboard label edits
   back into the composition. Rects stay code-owned and are never in the storyboard.
 - **Hand-authored compositions have no `BEATS`** and are skipped by the checker by
   design: `make-it-yours`, `overview-engine`, `overview-readme`.
@@ -125,15 +125,15 @@ every composition, then `clips:render`, `clips:stills`, `clips:gifs`, `clips:syn
 
 | What | Where |
 | --- | --- |
-| Compositions | `media/feature-clips/<id>/` |
-| Template | `media/feature-clips/_template/` |
-| Capture list | `CLIP_CAPTURES` in `scripts/capture-docs-images.mjs` |
+| Compositions | `content/media/feature-clips/<id>/` |
+| Template | `content/media/feature-clips/_template/` |
+| Capture list | `CLIP_CAPTURES` in `tooling/scripts/capture-docs-images.mjs` |
 | Capture palette | `.storybook/capture-theme.ts` |
-| Canonical renders | `media/feature-clips/<id>/renders/` (gitignored) |
-| Web outputs | `media/web/` (gitignored) |
-| What the site serves | `website/public/media/` |
-| Asset registry | `media/manifest.json` |
-| Encode settings | `DEFAULTS` in `scripts/render-web-clips.mjs` |
+| Canonical renders | `content/media/feature-clips/<id>/renders/` (gitignored) |
+| Web outputs | `content/media/web/` (gitignored) |
+| What the site serves | `apps/website/public/media/` |
+| Asset registry | `content/media/manifest.json` |
+| Encode settings | `DEFAULTS` in `tooling/scripts/render-web-clips.mjs` |
 
 ## Encode settings, and why they are what they are
 
@@ -141,7 +141,7 @@ every composition, then `clips:render`, `clips:stills`, `clips:gifs`, `clips:syn
 paints it into 864 CSS px, which is 1728 device px on a 2× display. The previous 960 px
 encode was upscaled almost 2× in the browser on top of a 1.9× downscale in ffmpeg, and
 CRF 32 smeared small UI text on the way. Width buys more than quantizer here, which
-`media/WEB-RENDERS.md` established with a VMAF sweep before the numbers were raised.
+`content/media/WEB-RENDERS.md` established with a VMAF sweep before the numbers were raised.
 
 Total bytes are not on the critical path: the `<video>` elements carry `preload="none"`
 and only play when their tab is selected, so a visitor fetches the posters plus at most

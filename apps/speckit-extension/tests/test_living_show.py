@@ -181,7 +181,7 @@ class CountsAgreeWithTheRepoItself(unittest.TestCase):
     the badge beside it.
     """
 
-    REPO = Path(__file__).resolve().parent.parent.parent
+    REPO = Path(__file__).resolve().parents[3]
 
     def test_every_capability_prints_the_number_of_requirements_it_has(self):
         living = rsp.load_living(str(self.REPO))

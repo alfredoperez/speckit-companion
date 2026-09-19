@@ -129,7 +129,7 @@ def docs(files: list) -> dict:
         "words_docs_dir": words([f for f in md if f.startswith("docs/")]),
         "docs_top_level_md": len([f for f in md if f.startswith("docs/") and f.count("/") == 1]),
         "words_root_changelog": words(["CHANGELOG.md"]),
-        "words_ext_changelog": words(["speckit-extension/CHANGELOG.md"]),
+        "words_ext_changelog": words(["apps/speckit-extension/CHANGELOG.md"]),
         "words_living_specs": words([f for f in md if f.endswith(".spec.md") and not f.startswith("specs/")]),
         "install_instruction_locations": sorted(
             f for f in files
@@ -151,8 +151,8 @@ def tests(files: list) -> dict:
     for f in jest:
         if "__tests__" in f:
             homes["__tests__"] += 1
-        elif f.startswith("tests/"):
-            homes["tests/"] += 1
+        elif f.startswith("apps/vscode/tests/"):
+            homes["apps/vscode/tests/"] += 1
         else:
             homes["colocated"] += 1
     ci = _read(".github/workflows/ci.yml")
@@ -171,7 +171,7 @@ def tests(files: list) -> dict:
 def suites() -> dict:
     out = {}
     for name, cmd in (("jest_seconds", ["npm", "test", "--silent"]),
-                      ("python_seconds", ["python3", "-m", "pytest", "-q", "speckit-extension/tests"])):
+                      ("python_seconds", ["python3", "-m", "pytest", "-q", "apps/speckit-extension/tests"])):
         start = time.time()
         r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
         out[name] = round(time.time() - start, 1)
@@ -180,7 +180,7 @@ def suites() -> dict:
 
 
 def living() -> dict:
-    r = subprocess.run(["python3", "speckit-extension/scripts/living_validate.py", "--json"],
+    r = subprocess.run(["python3", "apps/speckit-extension/scripts/living_validate.py", "--json"],
                        cwd=ROOT, capture_output=True, text=True)
     try:
         report = json.loads(r.stdout)

@@ -28,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 
-_SCRIPTS = Path(__file__).resolve().parents[3] / "speckit-extension" / "scripts"
+_SCRIPTS = Path(__file__).resolve().parents[3] / "apps" / "speckit-extension" / "scripts"
 
 
 def _load_write_context():

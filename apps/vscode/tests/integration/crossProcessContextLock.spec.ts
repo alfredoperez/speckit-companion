@@ -24,8 +24,8 @@ import {
 import { backfillMinimalContext } from '../../src/features/specs/specContextBackfill';
 import { SpecContext } from '../../src/core/types/specContext';
 
-const REPO = path.resolve(__dirname, '../..');
-const WRITER = path.join(REPO, 'speckit-extension', 'scripts', 'write-context.py');
+const REPO = path.resolve(__dirname, '../../../..');
+const WRITER = path.join(REPO, 'apps', 'speckit-extension', 'scripts', 'write-context.py');
 const SPEC_CONTEXT = path.join('specs', '001-x');
 
 function hasPython(): boolean {
@@ -112,7 +112,7 @@ describeWithPython('cross-process run-record lock (#629)', () => {
                 '-c',
                 'import sys,pathlib;sys.path.insert(0,sys.argv[1]);' +
                     'import spec_context;print(spec_context._lock_path(pathlib.Path(sys.argv[2])))',
-                path.join(REPO, 'speckit-extension', 'scripts'),
+                path.join(REPO, 'apps', 'speckit-extension', 'scripts'),
                 target,
             ],
             { encoding: 'utf-8' }
@@ -215,7 +215,7 @@ describeWithPython('cross-process run-record lock (#629)', () => {
         const ask = (env: NodeJS.ProcessEnv): string =>
             execFileSync('python3', [
                 '-c',
-                'import sys;sys.path.insert(0,"speckit-extension/scripts");'
+                'import sys;sys.path.insert(0,"apps/speckit-extension/scripts");'
                 + 'import spec_context as sc;from pathlib import Path;'
                 + 'print(sc._lock_path(Path(sys.argv[1])))',
                 target,

@@ -82,7 +82,7 @@ The run has built against the requirement, so it is no longer an unchecked trans
 - **THEN** the `adopted` marker is gone and the fold reports the requirement as confirmed
 
 ### The fold refuses only the capability whose delta has an error-level finding
-<!-- touches: speckit-extension/scripts/living_validate.py, speckit-extension/scripts/living_spec_fold.py -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py, apps/speckit-extension/scripts/living_spec_fold.py -->
 
 #### Scenario: one capability is refused and another is sound
 - **WHEN** the fold runs
@@ -97,14 +97,14 @@ The run has built against the requirement, so it is no longer an unchecked trans
 - **THEN** the refusal is reported under that capability's name, never dropped silently
 
 ### A shape check that crashes never blocks a fold
-<!-- touches: speckit-extension/scripts/living_spec_fold.py -->
+<!-- touches: apps/speckit-extension/scripts/living_spec_fold.py -->
 
 #### Scenario: the check raises
 - **WHEN** the fold runs
 - **THEN** the fold proceeds
 
 ### A fold cannot empty a spec unless the capability declared its retirement
-<!-- touches: speckit-extension/scripts/living_spec_fold.py, speckit-extension/scripts/companion_config.py, speckit-extension/scripts/resolve-spec-paths.py -->
+<!-- touches: apps/speckit-extension/scripts/living_spec_fold.py, apps/speckit-extension/scripts/companion_config.py, apps/speckit-extension/scripts/resolve-spec-paths.py -->
 
 Retirement is `retire: true` on the capability's registry entry, false by default.
 

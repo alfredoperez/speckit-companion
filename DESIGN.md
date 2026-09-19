@@ -4,7 +4,7 @@ Three sections, outside in: [Tokens](#tokens) is the viewer's own CSS, [Editoria
 
 ## Tokens
 
-Shared scale/spacing/type tokens come from `webview/styles/tokens.css` (host-derived — the spec-editor and workflow-editor webviews ride it and keep tracking the VS Code theme). The **spec viewer's owned palette** lives in `webview/styles/spec-viewer/_tokens-viewer.css`, loaded only by the viewer (after tokens.css, so it wins the cascade): deliberate light/dark literals for canvas, surfaces, ink, statuses, and syntax — chosen for predictable WCAG contrast rather than inherited from `--vscode-*` variables. Only typography (`--vscode-font-family` / `--vscode-editor-font-family`) and **high-contrast mode** follow the host. **Never hardcode hex in partials** — use the tokens; theme blocks (`body.vscode-light` / `-dark` / `-high-contrast`) re-value them. A `tokensScope` jest spec guards the split — Codex literals must never leak into the shared file.
+Shared scale/spacing/type tokens come from `apps/vscode/webview/styles/tokens.css` (host-derived — the spec-editor and workflow-editor webviews ride it and keep tracking the VS Code theme). The **spec viewer's owned palette** lives in `apps/vscode/webview/styles/spec-viewer/_tokens-viewer.css`, loaded only by the viewer (after tokens.css, so it wins the cascade): deliberate light/dark literals for canvas, surfaces, ink, statuses, and syntax — chosen for predictable WCAG contrast rather than inherited from `--vscode-*` variables. Only typography (`--vscode-font-family` / `--vscode-editor-font-family`) and **high-contrast mode** follow the host. **Never hardcode hex in partials** — use the tokens; theme blocks (`body.vscode-light` / `-dark` / `-high-contrast`) re-value them. A `tokensScope` jest spec guards the split — Codex literals must never leak into the shared file.
 
 - Surfaces: `--bg-primary` (canvas) / `--bg-secondary` / `--bg-elevated` / `--bg-hover` / `--bg-inset`
 - Text: `--text-primary` / `--text-body` / `--text-secondary` / `--text-muted` — readable content uses `--text-body` / `--text-primary`; secondary/muted are **metadata only**.
@@ -47,7 +47,7 @@ This is the taste half of the style guide. The visual half is rendered in Storyb
 
 | Surface | Reading face | Colour | Mark | Source of truth |
 |---|---|---|---|---|
-| **The website**, speckit-companion.dev | Figtree, JetBrains Mono for labels, Instrument Serif italic for one word per heading | Constellation, dark only | chevron wordmark | `website/src/styles/tokens.css`, `website/src/components/LogoMark.astro` |
+| **The website**, speckit-companion.dev | Figtree, JetBrains Mono for labels, Instrument Serif italic for one word per heading | Constellation, dark only | chevron wordmark | `apps/website/src/styles/tokens.css`, `apps/website/src/components/LogoMark.astro` |
 | **The VS Code extension** | the host editor's font | the user's VS Code theme; captures use a capture palette | none inside the product | [Tokens](#tokens) below (the viewer), `.storybook/capture-theme.ts` (captures) |
 | **Content**: articles, figures, carousels, heroes, clips | Geist for reading, JetBrains Mono for metadata | depends on the asset, below | chevron wordmark on product imagery, mascot on illustrated art | this file, the kaiju skills |
 
@@ -63,7 +63,7 @@ Two other identities exist and stay in their lane. Command Center (Geist, void b
 
 ### The mascot
 
-The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It cradles a radiant glowing emerald seedling at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants live in `assets/mascot/`; fourteen web-ready poses ship in `website/public/mascot/`. It is the brand's character, never its logo: it appears in scenes (heroes, banners), at the caption of a figure, and on the site's pages. It never merges with the chevron wordmark, and it is never the subject of an image.
+The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It cradles a radiant glowing emerald seedling at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants live in `assets/mascot/`; fourteen web-ready poses ship in `apps/website/public/mascot/`. It is the brand's character, never its logo: it appears in scenes (heroes, banners), at the caption of a figure, and on the site's pages. It never merges with the chevron wordmark, and it is never the subject of an image.
 
 ### Always
 
@@ -94,10 +94,10 @@ The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, whi
 
 | Question | Answer lives in |
 |---|---|
-| A colour on the site | `website/src/styles/tokens.css` |
+| A colour on the site | `apps/website/src/styles/tokens.css` |
 | A colour in a capture, clip, or GIF | `.storybook/capture-theme.ts` |
-| A colour inside the viewer | `webview/styles/`, described in [Tokens](#tokens) |
-| The figure frame | `webview/src/spec-viewer/__stories__/figure.tsx`, shown in Style Guide / Figure |
+| A colour inside the viewer | `apps/vscode/webview/styles/`, described in [Tokens](#tokens) |
+| The figure frame | `apps/vscode/webview/src/spec-viewer/__stories__/figure.tsx`, shown in Style Guide / Figure |
 | A hero or carousel prompt | the kaiju `create-image` profiles, `branded-editorial-hero` and `editorial-brush-marker` |
 | Generated banner art | [Generated art](#generated-art) |
 | How the writing sounds | the kaiju `writing` skill, `core-voice.md` |
@@ -138,5 +138,5 @@ A **bioluminescent night forest rendered as a developer tool**: almost-black nav
 - Emerald is scarce: only the pipeline, checkmarks, and seedling glow green — everything else stays cool navy/cyan
 - No neon spray, no glassmorphism
 - **No decorative annotation on generated art.** Brackets, viewfinder corners, and hand-drawn callouts stay off illustrated heroes and diagrams
-- **Measured callouts on product screenshots are allowed**, and only the kind `scripts/capture-docs-images.mjs` draws: a single box plus label positioned from a real `getBoundingClientRect` measurement, never from eyeballed coordinates. `docs/screenshots/generated/overview-annotated.png` is the reference. Anything hand-placed is not a measured callout
+- **Measured callouts on product screenshots are allowed**, and only the kind `tooling/scripts/capture-docs-images.mjs` draws: a single box plus label positioned from a real `getBoundingClientRect` measurement, never from eyeballed coordinates. `docs/screenshots/generated/overview-annotated.png` is the reference. Anything hand-placed is not a measured callout
 - The magenta-gradient marketplace `icon.png` is legacy — do not derive new art from it

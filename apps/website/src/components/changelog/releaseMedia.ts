@@ -7,8 +7,8 @@
  *
  * HOW TO ATTACH AN IMAGE TO A RELEASE
  *
- *   1. Put the file in `website/public/changelog/`, for example
- *      `website/public/changelog/vscode-0.32.0-sample-spec.png`.
+ *   1. Put the file in `apps/website/public/changelog/`, for example
+ *      `apps/website/public/changelog/vscode-0.32.0-sample-spec.png`.
  *   2. Add one entry to RELEASE_MEDIA below. The key is
  *      `<product>@<version>`, where product is `vscode` for the VS Code
  *      extension or `speckit` for the Spec Kit extension, and version is the

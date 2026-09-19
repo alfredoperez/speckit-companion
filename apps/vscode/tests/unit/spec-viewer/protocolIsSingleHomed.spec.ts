@@ -11,12 +11,12 @@ import * as path from 'path';
  * The protocol now lives in one module both projects compile. This test guards
  * that arrangement, since re-declaring a type is easier than importing one.
  */
-const repoRoot = path.join(__dirname, '..', '..', '..');
+const repoRoot = path.join(__dirname, '..', '..', '..', '..', '..');
 const read = (rel: string) => fs.readFileSync(path.join(repoRoot, rel), 'utf8');
 
-const PROTOCOL = 'src/protocol/viewer.ts';
-const EXTENSION_TYPES = 'src/features/spec-viewer/types.ts';
-const WEBVIEW_TYPES = 'webview/src/spec-viewer/types.ts';
+const PROTOCOL = 'apps/vscode/src/protocol/viewer.ts';
+const EXTENSION_TYPES = 'apps/vscode/src/features/spec-viewer/types.ts';
+const WEBVIEW_TYPES = 'apps/vscode/webview/src/spec-viewer/types.ts';
 
 describe('the viewer protocol has one home', () => {
     it('declares both message unions in the protocol module', () => {
@@ -27,7 +27,7 @@ describe('the viewer protocol has one home', () => {
 
     it('is compiled by the webview, not copied into it', () => {
         const webviewConfig = JSON.parse(read('tsconfig.webview.json').replace(/^\s*\/\/.*$/gm, ''));
-        expect(webviewConfig.include).toContain('src/protocol/**/*');
+        expect(webviewConfig.include).toContain('apps/vscode/src/protocol/**/*');
         expect(read(WEBVIEW_TYPES)).toContain("export * from '../../../src/protocol/viewer'");
     });
 
@@ -61,10 +61,10 @@ describe('the viewer protocol has one home', () => {
  */
 describe('the step vocabulary has one home', () => {
     const productionSources = [
-        'src/features/spec-viewer/stateDerivation.ts',
-        'src/features/specs/stepHistoryDerivation.ts',
-        'webview/src/spec-viewer/components/OverviewDossier.tsx',
-        'webview/src/spec-viewer/components/cards/PhasesCard.tsx',
+        'apps/vscode/src/features/spec-viewer/stateDerivation.ts',
+        'apps/vscode/src/features/specs/stepHistoryDerivation.ts',
+        'apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx',
+        'apps/vscode/webview/src/spec-viewer/components/cards/PhasesCard.tsx',
     ];
 
     it('is not re-declared as a literal in the code that reads it', () => {
@@ -76,7 +76,7 @@ describe('the step vocabulary has one home', () => {
     });
 
     it('declares the step lists once, in the contract', () => {
-        const contract = read('src/core/types/specContext.ts');
+        const contract = read('apps/vscode/src/core/types/specContext.ts');
         expect(contract).toContain('export const DEFAULT_PIPELINE_STEPS');
         expect(contract).toContain('export const STEP_NAMES');
     });

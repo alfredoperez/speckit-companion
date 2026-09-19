@@ -7,7 +7,7 @@ extension:
   description: "Records your spec-kit runs live: status, resume, and a health check for what actually happened."
   author: alfredoperez
   repository: https://github.com/alfredoperez/speckit-companion
-  homepage: https://github.com/alfredoperez/speckit-companion/tree/main/speckit-extension
+  homepage: https://github.com/alfredoperez/speckit-companion/tree/main/apps/speckit-extension
   license: MIT
 
 requires:

@@ -16,7 +16,7 @@ Dark only. Starlight's `ThemeProvider` and `ThemeSelect` are overridden by `src/
 
 ## Commands
 
-Run these from `website/`, not from the repo root.
+Run these from `apps/website/`, not from the repo root.
 
 ```
 npm install    # first time
@@ -31,20 +31,20 @@ Set these on the Vercel project. `vercel.json` in this folder carries the same v
 
 | Setting | Value |
 | --- | --- |
-| Root Directory | `website/` |
+| Root Directory | `apps/website/` |
 | Framework preset | Astro |
 | Install Command | `npm ci` |
 | Build Command | `npm run build` |
 | Output Directory | *(leave empty)* |
-| Ignored Build Step | `git diff --quiet HEAD^ HEAD -- . ../media/web ../media/manifest.json` |
+| Ignored Build Step | `git diff --quiet HEAD^ HEAD -- . ../../content/media/web ../../content/media/manifest.json` |
 
 **Output Directory is deliberately empty.** The Vercel adapter writes the Build Output API tree to `.vercel/output`, not `dist`. A leftover `dist` in the dashboard overrides `vercel.json` and the deploy serves nothing useful.
 
-**The ignored-build-step watches three paths, not one.** `public/media/` is gitignored and filled at build time from `../media/web`, so the site's own videos live outside this folder. Watching `.` alone meant re-rendering every clip changed nothing here, Vercel skipped the build, and the site kept serving the previous encodes while the repo held the new ones. Anything the build *reads* belongs in that list.
+**The ignored-build-step watches three paths, not one.** `public/media/` is gitignored and filled at build time from `../../content/media/web`, so the site's own videos live outside this folder. Watching `.` alone meant re-rendering every clip changed nothing here, Vercel skipped the build, and the site kept serving the previous encodes while the repo held the new ones. Anything the build *reads* belongs in that list.
 
 **`vercel.json` rejects unknown keys.** There is no comment syntax and no `_comment` escape hatch — a stray property fails the whole deploy with `should NOT have additional property`. Explanations go here instead.
 
-The Ignored Build Step is the important one. Vercel runs it with the working directory set to the Root Directory, so `.` means `website/`. `git diff --quiet` exits 0 when the last commit touched nothing under `website/`, and Vercel reads exit 0 as "skip this build". Extension commits and release tags therefore never trigger a site build. If `HEAD^` cannot be resolved, git exits non-zero and the build runs, which is the safe direction.
+The Ignored Build Step is the important one. Vercel runs it with the working directory set to the Root Directory, so `.` means `apps/website/`. `git diff --quiet` exits 0 when the last commit touched nothing under `apps/website/`, and Vercel reads exit 0 as "skip this build". Extension commits and release tags therefore never trigger a site build. If `HEAD^` cannot be resolved, git exits non-zero and the build runs, which is the safe direction.
 
 `site` is deliberately unset in `astro.config.mjs` because the domain has not been chosen yet. That makes the sitemap integration log a skip warning on every build. Set `site` once the domain is registered and the warning goes away.
 

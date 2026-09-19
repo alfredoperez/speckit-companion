@@ -5,7 +5,7 @@ One marker points at files that exist; the other points at nothing.
 ## Requirements
 
 ### A rule whose marker matches
-<!-- touches: speckit-extension/scripts/living_spec_fold.py -->
+<!-- touches: apps/speckit-extension/scripts/living_spec_fold.py -->
 
 It MUST do the thing.
 

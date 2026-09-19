@@ -197,7 +197,7 @@ def fetch_catalog_entry():
 
 
 def load_manifest(root: Path):
-    return parse_yaml((root / "speckit-extension" / "extension.yml").read_text())
+    return parse_yaml((root / "apps" / "speckit-extension" / "extension.yml").read_text())
 
 
 # --------------------------------------------------------------------------

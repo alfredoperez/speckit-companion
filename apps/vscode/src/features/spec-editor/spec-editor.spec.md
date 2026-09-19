@@ -47,7 +47,7 @@ Every surface that lists workflows SHALL build the list the same way. Companion 
 - **THEN** both offer exactly the same set
 
 ### A missing dependency degrades or refuses, but never dispatches something unresolvable
-<!-- touches: src/features/spec-editor/installBanner.ts, src/features/spec-editor/specEditorProvider.ts, src/features/spec-editor/types.ts -->
+<!-- touches: apps/vscode/src/features/spec-editor/installBanner.ts, apps/vscode/src/features/spec-editor/specEditorProvider.ts, apps/vscode/src/features/spec-editor/types.ts -->
 
 When the chosen action needs the missing spec-kit extension, the host SHALL ask before creating anything, then install, fall back to the stock equivalent, or refuse when there is none. It MUST never dispatch a command the AI cannot resolve.
 

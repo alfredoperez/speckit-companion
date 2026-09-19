@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 _spec = importlib.util.spec_from_file_location(
-    "dispatch_briefs", Path(__file__).resolve().parents[2] / "speckit-extension" / "scripts" / "dispatch-briefs.py")
+    "dispatch_briefs", Path(__file__).resolve().parents[2] / "apps" / "speckit-extension" / "scripts" / "dispatch-briefs.py")
 dispatch_briefs = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(dispatch_briefs)
 

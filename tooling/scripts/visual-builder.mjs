@@ -11,9 +11,9 @@
  * nothing stopped them coming back.
  *
  * TWO MODES
- *   node scripts/visual-builder.mjs --layout    facts a layout engine can see
- *   node scripts/visual-builder.mjs             the same, plus pixel baselines
- *   node scripts/visual-builder.mjs --update    re-bless the baselines
+ *   node tooling/scripts/visual-builder.mjs --layout    facts a layout engine can see
+ *   node tooling/scripts/visual-builder.mjs             the same, plus pixel baselines
+ *   node tooling/scripts/visual-builder.mjs --update    re-bless the baselines
  *
  * `--layout` asserts nothing about appearance, only about geometry, so it holds
  * across machines and is what CI runs. Pixels are compared locally, where the
@@ -42,8 +42,8 @@ import {
 process.env.SB_PORT ??= '6018';
 
 const BASELINE_DIR = join(
-    REPO_ROOT, 'webview', 'src', 'pipeline-builder', '__screenshots__');
-const DIFF_DIR = join(REPO_ROOT, 'webview', 'src', 'pipeline-builder', '__screenshots__', 'diff');
+    REPO_ROOT, 'apps', 'vscode', 'webview', 'src', 'pipeline-builder', '__screenshots__');
+const DIFF_DIR = join(REPO_ROOT, 'apps', 'vscode', 'webview', 'src', 'pipeline-builder', '__screenshots__', 'diff');
 
 /** Every story whose id starts with this belongs to the panel. */
 const PREFIX = 'pipeline-builder-';

@@ -79,14 +79,14 @@ class ARebuildIsIdentical(unittest.TestCase):
             for _ in range(2):
                 result = subprocess.run(
                     [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--out", out],
-                    capture_output=True, text=True, cwd=str(EXT.parent),
+                    capture_output=True, text=True, cwd=str(EXT.parents[1]),
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             first = {p.name: p.read_bytes() for p in Path(out).iterdir()}
 
             result = subprocess.run(
                 [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--out", out],
-                capture_output=True, text=True, cwd=str(EXT.parent),
+                capture_output=True, text=True, cwd=str(EXT.parents[1]),
             )
             self.assertEqual(result.returncode, 0)
             second = {p.name: p.read_bytes() for p in Path(out).iterdir()}
@@ -115,7 +115,7 @@ class ABuildThatCannotFinishWritesNothing(unittest.TestCase):
         with tempfile.TemporaryDirectory() as out:
             good = subprocess.run(
                 [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--out", out],
-                capture_output=True, text=True, cwd=str(EXT.parent),
+                capture_output=True, text=True, cwd=str(EXT.parents[1]),
             )
             self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
             before = {p.name: p.read_bytes() for p in Path(out).iterdir()}
@@ -215,7 +215,7 @@ class ThePreviewSaysWhatWouldChange(unittest.TestCase):
         with tempfile.TemporaryDirectory() as out:
             result = subprocess.run(
                 [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--dry-run", "--out", out],
-                capture_output=True, text=True, cwd=str(EXT.parent),
+                capture_output=True, text=True, cwd=str(EXT.parents[1]),
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("what would change", result.stdout)
@@ -226,7 +226,7 @@ class ItReadsThisRepositorysOwnConfiguration(unittest.TestCase):
     """The build has a real configuration to prove itself against: this one."""
 
     def test_the_repos_hooks_reach_the_built_bodies(self):
-        config = build.load_config(str(EXT.parent))
+        config = build.load_config(str(EXT.parents[1]))
         self.assertTrue(config, "this repo's companion.yml did not load")
         plan, _ = build.plan_build(config)
         self.assertTrue(plan["implement"]["hooks"], "the repo declares implement hooks")

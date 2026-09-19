@@ -11,8 +11,8 @@
   Resolution order, best first:
     1. `still`, when the page names one of the feature's extraStills by hand
     2. `docsStill`, a still shot for documentation, under docs/screenshots/generated/
-    3. `panelStill`, the cropped panel the landing page uses, under media/web/
-    4. `poster`, frame zero of the feature's clip, under media/web/
+    3. `panelStill`, the cropped panel the landing page uses, under content/media/web/
+    4. `poster`, frame zero of the feature's clip, under content/media/web/
     5. a dashed reserved frame, when the feature has produced none of them yet
 
   Both source directories are globbed eagerly so Astro processes the images at
@@ -32,7 +32,7 @@
   id, a `still` the feature never produced, and a resolved image the manifest
   has no description for.
 */
-import manifest from '../../../../media/manifest.json';
+import manifest from '../../../../../content/media/manifest.json';
 
 interface Props {
   feature: string;
@@ -59,20 +59,20 @@ const known = (
 
 if (!known) {
   throw new Error(
-    `MediaSlot: "${feature}" is not a feature id in media/manifest.json. Use one that is.`,
+    `MediaSlot: "${feature}" is not a feature id in content/media/manifest.json. Use one that is.`,
   );
 }
 
 const docsStills = import.meta.glob<{ default: ImageMetadata }>(
-  '../../../../docs/screenshots/generated/*.png',
+  '../../../../../docs/screenshots/generated/*.png',
   { eager: true },
 );
 const panelStills = import.meta.glob<{ default: ImageMetadata }>(
-  '../../../../media/web/panel-*.png',
+  '../../../../../content/media/web/panel-*.png',
   { eager: true },
 );
 const posters = import.meta.glob<{ default: ImageMetadata }>(
-  '../../../../media/web/*-poster.png',
+  '../../../../../content/media/web/*-poster.png',
   { eager: true },
 );
 
@@ -135,7 +135,7 @@ const alt = altOverride ?? (imagePath ? describedBy[imagePath] : undefined);
 
 if (image && !alt) {
   throw new Error(
-    `MediaSlot: media/manifest.json has no alt text for "${imagePath}" on feature "${feature}". Add one, or pass alt= on the page.`,
+    `MediaSlot: content/media/manifest.json has no alt text for "${imagePath}" on feature "${feature}". Add one, or pass alt= on the page.`,
   );
 }
 

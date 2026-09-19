@@ -5,7 +5,7 @@
     "lib": ["ES2020", "DOM"],
     "outDir": "./dist/webview",
     // Rooted at the repo so the webview can import the protocol and the
-    // `.spec-context.json` contract from `src/` instead of re-declaring them.
+    // `.spec-context.json` contract from `apps/vscode/src/` instead of re-declaring them.
     // Nothing is emitted from here — webpack bundles this project — so widening
     // the root changes no output path.
     "rootDir": ".",
@@ -21,10 +21,10 @@
     "declaration": false
   },
   "include": [
-    "webview/src/**/*",
-    "src/protocol/**/*",
-    "src/core/types/**/*",
-    "src/core/utils/dispatcher.ts"
+    "apps/vscode/webview/src/**/*",
+    "apps/vscode/src/protocol/**/*",
+    "apps/vscode/src/core/types/**/*",
+    "apps/vscode/src/core/utils/dispatcher.ts"
   ],
   "exclude": [
     "node_modules",

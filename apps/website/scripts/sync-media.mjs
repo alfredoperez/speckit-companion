@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Copies the web-facing clip outputs named by media/manifest.json into
-// website/public/media, so the site can serve them from /media.
+// Copies the web-facing clip outputs named by content/media/manifest.json into
+// apps/website/public/media, so the site can serve them from /media.
 //
 // The manifest is the only source of truth. Nothing is discovered by globbing
-// media/web, and nothing is copied that the manifest does not name.
+// content/media/web, and nothing is copied that the manifest does not name.
 //
 // Which files that means is derived, not hardcoded:
 //   1. take every surface whose id starts with "site-"
@@ -11,7 +11,7 @@
 //   3. keep the keys whose declared path sits under manifest.site.sourceDir
 //
 // Today that resolves to webWebm, webMp4 and poster. The full-size canonical
-// MP4s under media/feature-clips/<id>/renders/ are read by no site surface and
+// MP4s under content/media/feature-clips/<id>/renders/ are read by no site surface and
 // live outside sourceDir, so they can never enter the set. Neither can xCrop,
 // which only the social-x surface reads.
 //
@@ -28,8 +28,8 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const websiteDir = path.resolve(scriptDir, '..');
-const repoRoot = path.resolve(websiteDir, '..');
-const manifestPath = path.join(repoRoot, 'media', 'manifest.json');
+const repoRoot = path.resolve(websiteDir, '..', '..');
+const manifestPath = path.join(repoRoot, 'content', 'media', 'manifest.json');
 
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.has('--check');
@@ -138,7 +138,7 @@ async function main() {
   const { keys, sourceDir } = webFacingKeys(manifest);
 
   const publicRel = manifest.site?.publicDir;
-  if (publicRel !== 'website/public/media') {
+  if (publicRel !== 'apps/website/public/media') {
     throw new Error(`Unexpected manifest.site.publicDir: ${publicRel}`);
   }
   const publicDir = resolveInRepo(publicRel);

@@ -12,7 +12,7 @@ description: Publish a new version of the extension
 
 ## Your task
 
-> **Scope: the VS Code extension only.** For the **spec-kit extension** (`speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace).
+> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace).
 
 Help the user publish a new version of the extension by:
 

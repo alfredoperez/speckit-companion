@@ -9,7 +9,7 @@ Small shared rules every feature leans on: settings that survive migration, cont
 ## Requirements
 
 ### Settings survive being renamed, retyped, and retired
-<!-- touches: src/core/settingsMigration.ts -->
+<!-- touches: apps/vscode/src/core/settingsMigration.ts -->
 
 A setting persisted in any older form SHALL read as the user's effective choice before any migration has run, and a migration MUST keep the value at the scope it was set, change nothing on a second run, and never fail activation.
 
@@ -26,7 +26,7 @@ A setting persisted in any older form SHALL read as the user's effective choice 
 - **THEN** the failure is logged to the extension's output, activation continues, and every other key and scope is still migrated
 
 ### Activation resets every context key
-<!-- touches: src/core/utils/contextKeys.ts -->
+<!-- touches: apps/vscode/src/core/utils/contextKeys.ts -->
 
 Activation SHALL reset every catalogued context key to its default, so a previous session's value cannot leave a menu item stuck. A failed context-key write SHALL be logged, not swallowed.
 
@@ -39,7 +39,7 @@ Activation SHALL reset every catalogued context key to its default, so a previou
 - **THEN** the failure is logged
 
 ### A spec's display name resolves by preference without changing its identity
-<!-- touches: src/core/utils/specDisplayName.ts -->
+<!-- touches: apps/vscode/src/core/utils/specDisplayName.ts -->
 
 A display name SHALL come from the recorded name, then the document heading, then the humanized directory slug, and a blank or whitespace-only candidate counts as absent. The slug stays the spec's identifier whatever name is shown.
 
@@ -48,7 +48,7 @@ A display name SHALL come from the recorded name, then the document heading, the
 - **THEN** the document heading is shown when present, otherwise the humanized slug, and the slug still identifies the spec
 
 ### Known acronyms keep their canonical case in spec names
-<!-- touches: src/core/utils/specDisplayName.ts -->
+<!-- touches: apps/vscode/src/core/utils/specDisplayName.ts -->
 
 Recorded and slug-derived names SHALL be title-cased with known acronyms (CLI, API, UI, JSON, VS Code) kept canonical, the same way in the viewer header and the specs tree. A document heading is shown exactly as authored.
 
@@ -61,7 +61,7 @@ Recorded and slug-derived names SHALL be title-cased with known acronyms (CLI, A
 - **THEN** its casing is left exactly as written
 
 ### Dispatch proceeds when a shell never reports ready
-<!-- touches: src/core/utils/terminalUtils.ts -->
+<!-- touches: apps/vscode/src/core/utils/terminalUtils.ts -->
 
 Waiting for a terminal's shell SHALL end at a timeout, so a host without shell integration still receives the command.
 
@@ -70,7 +70,7 @@ Waiting for a terminal's shell SHALL end at a timeout, so a host without shell i
 - **THEN** the command is sent anyway instead of hanging
 
 ### Only a task-id list item outside code counts as a task
-<!-- touches: src/core/utils/taskCheckboxes.ts -->
+<!-- touches: apps/vscode/src/core/utils/taskCheckboxes.ts -->
 
 A task SHALL be a list item, with any bullet character, whose checkbox is followed by a task id. Checkbox lines without an id, and checkboxes inside fenced blocks or inline code, MUST NOT count. The spec-kit side counts tasks with the same grammar, and both test suites read one shared fixture, because a disagreement makes the two sides differ on whether implement finished.
 

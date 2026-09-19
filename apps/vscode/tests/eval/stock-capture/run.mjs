@@ -20,7 +20,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
 const keep = process.argv.includes('--keep');
 
 // ── 1. Compose the real stock preamble from the compiled module ────────────
@@ -31,7 +31,7 @@ if (!existsSync(preambleModulePath)) {
 }
 const { renderSpecifyCreationLifecyclePreamble } = await import(preambleModulePath);
 
-const writerPath = join(repoRoot, 'speckit-extension', 'scripts', 'write-context.py');
+const writerPath = join(repoRoot, 'apps', 'speckit-extension', 'scripts', 'write-context.py');
 const specDir = 'specs/001-notes-tag';
 const dispatchUtc = new Date().toISOString();
 // companionInstalled=false → the stock branch, exactly as the GUI builds it
@@ -86,7 +86,7 @@ try {
 }
 
 // ── 5. Assert the produced context file ─────────────────────────────────────
-const asserter = join(repoRoot, 'tests', 'eval', 'stock-capture', 'assert_capture.py');
+const asserter = join(repoRoot, 'apps', 'vscode', 'tests', 'eval', 'stock-capture', 'assert_capture.py');
 let exitCode = 0;
 try {
     execFileSync('python3', [asserter, join(sandbox, specDir)], { stdio: 'inherit' });

@@ -150,7 +150,7 @@ ORDER BY timestamp DESC
 
 ### Why the site proxies PostHog
 
-Site requests go to `/ingest/*` on our own origin, forwarded by `website/src/pages/ingest/[...path].ts`. This is not a preference. Pointed at `us.i.posthog.com` directly, content blockers answer **204 with an empty body** for the library itself, so `posthog.init` never runs and nothing at all is recorded — not one pageview. The audience is developers, so that is most of them.
+Site requests go to `/ingest/*` on our own origin, forwarded by `apps/website/src/pages/ingest/[...path].ts`. This is not a preference. Pointed at `us.i.posthog.com` directly, content blockers answer **204 with an empty body** for the library itself, so `posthog.init` never runs and nothing at all is recorded — not one pageview. The audience is developers, so that is most of them.
 
 The proxy is a serverless endpoint rather than a `vercel.json` rewrite because it cannot be a rewrite: PostHog's capture endpoints all end in a slash (`/e/`, `/flags/`, `/decide/`), and Vercel resolves a trailing-slash path against the filesystem and serves the static 404 before any rewrite is consulted. Measured against production, `/ingest/e` answered 400 from PostHog while `/ingest/e/` answered 404 from our own 404 page.
 

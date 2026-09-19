@@ -209,7 +209,7 @@ class FalseClaimTests(unittest.TestCase):
 
 class GroundTruthTests(unittest.TestCase):
     def test_the_audit_runs_the_real_drift_script_rather_than_reimplementing_it(self):
-        result = dd.recompute(ROOT.parent)
+        result = dd.recompute(ROOT.parents[1])
         self.assertIsNotNone(result, "drift.py must be invocable as the ground truth")
         self.assertIn("capabilities", result)
         self.assertIn("checked", result)

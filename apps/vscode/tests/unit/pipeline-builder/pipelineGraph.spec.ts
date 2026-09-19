@@ -78,8 +78,8 @@ describe('finding the scripts', () => {
     });
 
     it('finds each script beside the build, so one install answers for all of them', () => {
-        plant(extensionPath, 'speckit-extension', 'scripts');
-        const dir = path.join(extensionPath, 'speckit-extension', 'scripts');
+        plant(extensionPath, 'apps', 'speckit-extension', 'scripts');
+        const dir = path.join(extensionPath, 'apps', 'speckit-extension', 'scripts');
 
         expect(resolveGraphScript(workspace, extensionPath))
             .toBe(path.join(dir, 'pipeline-graph.py'));
@@ -90,7 +90,7 @@ describe('finding the scripts', () => {
     });
 
     it('prefers the copy installed in the project over the bundled one', () => {
-        plant(extensionPath, 'speckit-extension', 'scripts');
+        plant(extensionPath, 'apps', 'speckit-extension', 'scripts');
         plant(workspace, '.specify', 'extensions', 'companion', 'scripts');
 
         expect(resolveGraphScript(workspace, extensionPath))

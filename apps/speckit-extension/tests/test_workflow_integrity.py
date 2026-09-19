@@ -2,8 +2,8 @@
 import json, os, subprocess, sys, tempfile, unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = REPO / "speckit-extension" / "scripts"
+REPO = Path(__file__).resolve().parents[3]
+SCRIPTS = REPO / "apps" / "speckit-extension" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 WRITER = SCRIPTS / "write-context.py"
 
@@ -87,7 +87,7 @@ class DeclineCarriesItsReason(unittest.TestCase):
 class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
     """#611 — the standalone command must emit the word every consumer reads."""
 
-    BODY = REPO / "speckit-extension" / "commands" / "speckit.companion.classify.md"
+    BODY = REPO / "apps" / "speckit-extension" / "commands" / "speckit.companion.classify.md"
 
     def test_the_emitted_verdict_is_simple_not_small(self):
         text = self.BODY.read_text()
@@ -113,7 +113,7 @@ class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
         path was unreachable and every spec silently took the full pipeline."""
         import re
         emitted = set(re.search(r"size=<([^>]+)>", self.BODY.read_text()).group(1).split("|"))
-        workflow = (REPO / "speckit-extension" / "workflows"
+        workflow = (REPO / "apps" / "speckit-extension" / "workflows"
                     / "speckit-companion.workflow.yml").read_text()
 
         cases_block = workflow.split("cases:", 1)[1]
@@ -143,7 +143,7 @@ class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
     """#584 — a spec joining mid-run must be pinned before the next dispatch."""
 
     def test_every_pipeline_command_pins_the_workflow(self):
-        cmds = REPO / "speckit-extension" / "commands"
+        cmds = REPO / "apps" / "speckit-extension" / "commands"
         for step in ("specify", "plan", "tasks", "implement"):
             body = (cmds / f"speckit.companion.{step}.md").read_text()
             # The invariant is that the step pins it, not how it spells it: the

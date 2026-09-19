@@ -54,7 +54,7 @@ The chosen workflow is recorded on the spec at creation and dispatches **its** c
 
 **Right-sizing is built in.** What used to be the opt-in "complexity fast-path" now lives inside the Companion workflow itself: its routing step detects a small change and folds the ceremony (skips the review-gate pauses) without you flipping any setting. Larger changes keep the full specify, plan, tasks, implement pipeline.
 
-**When the extension is missing.** Companion's `/speckit.companion.*` commands ship with the [spec-kit extension](../speckit-extension/README.md). If you pick **SpecKit Companion** in a project that doesn't have it installed, each step **falls back to the stock `/speckit.*` command** and a one-click "Install spec-kit Extension" prompt appears, so you never hit an "Unknown command". Full reference in [template-profiles.md](./template-profiles.md).
+**When the extension is missing.** Companion's `/speckit.companion.*` commands ship with the [spec-kit extension](../apps/speckit-extension/README.md). If you pick **SpecKit Companion** in a project that doesn't have it installed, each step **falls back to the stock `/speckit.*` command** and a one-click "Install spec-kit Extension" prompt appears, so you never hit an "Unknown command". Full reference in [template-profiles.md](./template-profiles.md).
 
 **Measured impact** comes from a benchmark (`/bench-run-all`, 2026-06-10): the same feature set built through each workflow at three sizes (easy / medium / hard), in isolated sandbox clones with a deterministic harness plus an independent judge. Wall-clock is a single sample per cell, so read timing as directional.
 

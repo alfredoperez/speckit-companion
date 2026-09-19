@@ -8,7 +8,7 @@ across the language boundary.
 
 Issue #608 asked for one place or a shared set of fixtures. The duplication
 landed without the fixtures, so the two rules could drift with nothing to
-notice. `tests/fixtures/config-subset/cases.json` at the repo root is that
+notice. `apps/vscode/tests/fixtures/config-subset/cases.json` is that
 corpus, and `src/features/specs/__tests__/configSubsetFixtures.test.ts` runs the
 same file: a case the two answer differently fails one of the builds.
 
@@ -25,7 +25,7 @@ EXT = Path(__file__).resolve().parent.parent
 SCRIPTS = EXT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-FIXTURE = EXT.parent / "tests" / "fixtures" / "config-subset" / "cases.json"
+FIXTURE = EXT.parents[1] / "apps" / "vscode" / "tests" / "fixtures" / "config-subset" / "cases.json"
 
 import companion_config as cc  # noqa: E402
 

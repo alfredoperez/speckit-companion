@@ -9,12 +9,12 @@ import { checkLivingSpec, checkFeatureDeltas, Finding } from '../specShapeCheck'
  * The editor cannot assume the spec-kit scripts are installed and must not put
  * a subprocess in the save path, so the checks exist here too. The risk is
  * divergence, not duplication: these are the same fixtures
- * `speckit-extension/tests/test_living_validate.py` reads, and the drift guard
+ * `apps/speckit-extension/tests/test_living_validate.py` reads, and the drift guard
  * there fails the build when either side skips one.
  */
 
-const REPO = path.resolve(__dirname, '..', '..', '..', '..');
-const FIXTURES = path.join(REPO, 'speckit-extension', 'tests', 'fixtures', 'spec-shape');
+const REPO = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
+const FIXTURES = path.join(REPO, 'apps', 'speckit-extension', 'tests', 'fixtures', 'spec-shape');
 
 const read = (name: string): string =>
     fs.readFileSync(path.join(FIXTURES, name), 'utf-8');
@@ -93,7 +93,7 @@ describe('the drift guard', () => {
         // had stopped reading the manifest entirely. What makes the fixtures a
         // contract is that the twin loops over the manifest's own keys.
         const twin = fs.readFileSync(
-            path.join(REPO, 'speckit-extension', 'tests', 'test_living_validate.py'), 'utf-8');
+            path.join(REPO, 'apps', 'speckit-extension', 'tests', 'test_living_validate.py'), 'utf-8');
         expect(twin).toContain('for name, expected in manifest().items()');
         for (const name of Object.keys(manifest)) {
             expect(twin).not.toContain(`"${name}"`);

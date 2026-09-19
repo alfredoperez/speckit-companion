@@ -25,8 +25,8 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CLIPS = path.join(ROOT, 'media', 'feature-clips');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const CLIPS = path.join(ROOT, 'content', 'media', 'feature-clips');
 const OUT = path.join(ROOT, 'docs', 'screenshots', 'generated');
 
 /*

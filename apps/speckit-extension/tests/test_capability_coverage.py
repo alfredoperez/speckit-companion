@@ -18,8 +18,7 @@ import textwrap
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = REPO / "speckit-extension" / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
 sys.path.insert(0, str(SCRIPTS))
 _spec = importlib.util.spec_from_file_location("living_validate", SCRIPTS / "living_validate.py")

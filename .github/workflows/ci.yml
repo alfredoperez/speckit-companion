@@ -45,33 +45,33 @@ jobs:
           python-version: "3.12"
 
       - name: Run capture tests (stdlib unittest, no deps)
-        run: python3 -m unittest discover -s speckit-extension/tests -p "test_*.py"
+        run: python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 
       - name: Check capture shape parity
-        run: python3 speckit-extension/scripts/check-shape-parity.py
+        run: python3 apps/speckit-extension/scripts/check-shape-parity.py
 
       - name: Check node-assembly parity (commands re-assemble byte-identical)
-        run: python3 speckit-extension/scripts/assemble-nodes.py --check
+        run: python3 apps/speckit-extension/scripts/assemble-nodes.py --check
 
       - name: Check release packaging (every script a shipped command calls is packaged)
-        run: python3 speckit-extension/scripts/package-manifest.py --check
+        run: python3 apps/speckit-extension/scripts/package-manifest.py --check
 
       - name: Check command inventory (emissions, install records, and docs match the manifest)
-        run: python3 speckit-extension/scripts/check-command-emissions.py
+        run: python3 apps/speckit-extension/scripts/check-command-emissions.py
 
       # A ratchet, not the ideal ceiling: the bodies are already over 40, so gating
       # on 40 would be red from the first build and get switched off. This fails
       # only when a command carries MORE directives than it did, which is the
       # regression worth catching. Shedding some is always fine; --record locks it in.
       - name: Check the instruction budget per command (ratchet)
-        run: python3 speckit-extension/scripts/instruction-budget.py --strict
+        run: python3 apps/speckit-extension/scripts/instruction-budget.py --strict
 
       - name: Report what a run of the pipeline is expected to produce
-        run: python3 speckit-extension/scripts/manifest.py
+        run: python3 apps/speckit-extension/scripts/manifest.py
 
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |
           python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/509-timing-capture
           python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/510-living-sync
           python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --commands-dir speckit-extension/commands
+          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --commands-dir apps/speckit-extension/commands

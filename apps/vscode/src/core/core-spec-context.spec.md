@@ -9,7 +9,7 @@ What a spec's recorded state means: the per-spec context file, its append-only h
 ## Requirements
 
 ### Recorded spec state has one on-disk shape and one append-only log
-<!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts, apps/vscode/src/core/types/spec-context.schema.json -->
 
 A spec's lifecycle SHALL be recorded in its context file's history, which is append-only: entries are never reordered, edited or removed. Step and substep timing SHALL be derived from that history in memory and never persisted beside it.
 
@@ -18,7 +18,7 @@ A spec's lifecycle SHALL be recorded in its context file's history, which is app
 - **THEN** the figure is derived from the history, and no stored duration exists in the file
 
 ### A writer keeps the fields it does not recognize
-<!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts, apps/vscode/src/core/types/spec-context.schema.json -->
 
 Every writer SHALL preserve unknown and legacy fields when it rewrites the context file, so no writer loses another's data.
 
@@ -27,7 +27,7 @@ Every writer SHALL preserve unknown and legacy fields when it rewrites the conte
 - **THEN** fields it does not recognize survive unchanged
 
 ### Unchecked test coverage is not reported as missing tests
-<!-- touches: src/core/types/specContext.ts -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts -->
 
 A coverage row SHALL distinguish "its named tests were checked and not found" from "nobody checked", because only the first is a finding.
 
@@ -36,7 +36,7 @@ A coverage row SHALL distinguish "its named tests were checked and not found" fr
 - **THEN** the row reads as unchecked, not as tests that were not found
 
 ### The recorded status and the recorded step must not disagree
-<!-- touches: src/core/types/specContext.ts -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts -->
 
 Each non-terminal status SHALL name one owning step and whether that step is running or settled. A status ahead of the history MUST NOT be written, because it renders as work in progress that nobody is doing.
 
@@ -49,7 +49,7 @@ Each non-terminal status SHALL name one owning step and whether that step is run
 - **THEN** the extension reports that step as active, not settled
 
 ### The TypeScript and Python sides pair steps with the same statuses
-<!-- touches: src/core/types/specContext.ts -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts -->
 
 The step-to-status pairing SHALL be declared once per language and held together by a test, and every other consumer reads it from there. Finishing implement settles at `implemented`, never `completed`, because closing the spec is its own step.
 
@@ -62,7 +62,7 @@ The step-to-status pairing SHALL be declared once per language and held together
 - **THEN** the status becomes `implemented`, not `completed`
 
 ### A step the project added leaves the status unchanged
-<!-- touches: src/core/types/specContext.ts -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts -->
 
 A step outside the built-in lifecycle has no status of its own. Recording its start or finish SHALL append the history entry and keep the spec's current status, and the pairing lookup answers "no status" instead of throwing.
 
@@ -71,7 +71,7 @@ A step outside the built-in lifecycle has no status of its own. Recording its st
 - **THEN** the history entry is appended and the spec's status is unchanged
 
 ### A duration is only shown when the extension itself stamped both ends
-<!-- touches: src/core/types/specContext.ts -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts -->
 
 A span SHALL be trusted only when the extension's own clock stamped both boundaries. Timestamps written by the assistant or a CLI order events correctly but record when the write ran, so no elapsed time is shown from them.
 
@@ -84,7 +84,7 @@ A span SHALL be trusted only when the extension's own clock stamped both boundar
 - **THEN** no start, end or total is shown, only how many phases were measured
 
 ### Every field a script writes is declared in the shared context type
-<!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
+<!-- touches: apps/vscode/src/core/types/specContext.ts, apps/vscode/src/core/types/spec-context.schema.json -->
 
 A field any writer puts in the context file SHALL be declared in the shared context type and the schema reference in the same change. Writers and readers are in different languages, so an undeclared field is one no reader can find.
 

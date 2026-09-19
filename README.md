@@ -13,13 +13,13 @@ The site shows each feature as a short clip of the real thing — the Overview a
 
 **One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](./docs/configuration.md#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
-<!-- The hero is the Overview GIF (built from media/feature-clips/overview): frame
+<!-- The hero is the Overview GIF (built from content/media/feature-clips/overview): frame
      zero is a representative still by design, so it reads even paused. The composed C1
      still stays regenerable at docs/screenshots/generated/hero.png (no longer referenced
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
 ![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
-<!-- Walkthrough video link pulled pending Alfredo's review of the video itself. The plan is per-section GIFs (media/feature-clips) instead of one long walkthrough; the file itself stays at docs/media/walkthrough.mp4. -->
+<!-- Walkthrough video link pulled pending Alfredo's review of the video itself. The plan is per-section GIFs (content/media/feature-clips) instead of one long walkthrough; the file itself stays at docs/media/walkthrough.mp4. -->
 
 ## Features
 
@@ -39,7 +39,7 @@ Comment on specific lines of a spec, exactly like a pull request review. Comment
 
 A run is not a black box you check on afterwards. The pipeline rail unlocks phase by phase, one button always offers the next step, tasks tick over live while implement runs, and the actions stay locked until the step settles — then the Overview shows exactly how long each phase took.
 
-<!-- Rendered from media/feature-clips/run-in-flight (see its STORYBOARD.md); frame zero
+<!-- Rendered from content/media/feature-clips/run-in-flight (see its STORYBOARD.md); frame zero
      is the specified-state rail at rest, so it reads even paused. -->
 ![A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing](docs/screenshots/generated/run-in-flight.gif)
 
@@ -67,10 +67,10 @@ Choose stock Spec Kit or the leaner **SpecKit Companion** workflow in a single s
 
 ### Living specs: one per capability, wherever you keep them
 
-Feature specs describe one change and then go quiet. **Living specs** are durable: one per capability (checkout, auth, billing), loaded into the AI's context when a feature touches that area, and folded back up to date when the feature ships. Keep them together in a central `capabilities/` folder, or colocated, each spec right next to the feature it covers, with one reversible command to move between the two. Either way the sidebar shows per-capability test coverage and flags drift the moment the code moves on, the viewer shows each requirement as a card coloured by its state, and one sync pass updates every affected spec from your current changes. Reviewing one is a pass, not a chore: approve every adopted requirement in one press with five seconds to undo, remove one the same way, see at a glance which requirements this branch added, and read what each requirement leans on and what leans on it. Open any source file and the status bar says how many living specs describe it, one click away from the exact requirement, or reach any requirement from the command palette with **SpecKit: Open Living Spec**. Opt-in, append-only, and never a failed run. [Living specs](./speckit-extension/docs/living-specs.md)
+Feature specs describe one change and then go quiet. **Living specs** are durable: one per capability (checkout, auth, billing), loaded into the AI's context when a feature touches that area, and folded back up to date when the feature ships. Keep them together in a central `capabilities/` folder, or colocated, each spec right next to the feature it covers, with one reversible command to move between the two. Either way the sidebar shows per-capability test coverage and flags drift the moment the code moves on, the viewer shows each requirement as a card coloured by its state, and one sync pass updates every affected spec from your current changes. Reviewing one is a pass, not a chore: approve every adopted requirement in one press with five seconds to undo, remove one the same way, see at a glance which requirements this branch added, and read what each requirement leans on and what leans on it. Open any source file and the status bar says how many living specs describe it, one click away from the exact requirement, or reach any requirement from the command palette with **SpecKit: Open Living Spec**. Opt-in, append-only, and never a failed run. [Living specs](./apps/speckit-extension/docs/living-specs.md)
 
 <!-- This composition (Storybook story C3 in ReadmeCapture.stories.tsx, captured by
-     scripts/capture-docs-images.mjs) is also the storyboard seed for the future Living
+     tooling/scripts/capture-docs-images.mjs) is also the storyboard seed for the future Living
      Specs GIF: sidebar row → click → viewer opens → drift → Update. -->
 ![The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows](docs/screenshots/generated/living-specs-pair.png)
 
@@ -79,13 +79,13 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](./docs/configuration.md#custom-workflows)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](./docs/viewer.md)
 
-<!-- Rendered from media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
+<!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
      and value on screen is real: change the contributed configuration in package.json
      and this composition is stale. -->
 ![Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches](docs/screenshots/generated/make-it-yours.gif)
 
 <!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
-     scripts/capture-docs-images.mjs). The whole image is a link to the engine
+     tooling/scripts/capture-docs-images.mjs). The whole image is a link to the engine
      extension's install guide; the extension README carries the mirror banner
      (C6) pointing back at this extension. -->
 [![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](./docs/getting-started.md#install-the-spec-kit-extension)
@@ -112,7 +112,7 @@ Open it from the **circuit** icon at the top of the Specs sidebar, or from the p
 
 **Attach your own work.** Every phase carries a `+` holding **Add hook**, which asks where it runs and what it is — a **skill** you already have, an **instruction**, a shell **command**, or one of your own nodes. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
 
-**Rewrite a node in your own words.** Click a node, press **Edit**, and save: that write is what copies it to `.specify/companion/nodes/<step>/<node>.md`, so making it yours and doing the thing you came to do are one action. Build, and your version is what your assistant reads; the node is marked `yours` until **Use the shipped node** hands it back, with an undo in the status line. Nothing under `speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
+**Rewrite a node in your own words.** Click a node, press **Edit**, and save: that write is what copies it to `.specify/companion/nodes/<step>/<node>.md`, so making it yours and doing the thing you came to do are one action. Build, and your version is what your assistant reads; the node is marked `yours` until **Use the shipped node** hands it back, with an undo in the status line. Nothing under `apps/speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
 
 Build from the same panel, or from the palette:
 
@@ -150,7 +150,7 @@ Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a termina
 - [Pipeline builder](./docs/pipeline-builder.md): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
 - [Configuration](./docs/configuration.md): all settings, custom workflows, custom commands
 - [Supported AI providers](./docs/providers.md): the compatibility matrix and dispatch styles
-- [Living specs](./speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
+- [Living specs](./apps/speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
 - [Telemetry](./docs/telemetry.md): exactly what is and isn't collected, and both off switches
 - [`.spec-context.json` schema](./docs/spec-context-schema.md): the on-disk state file
 - [How it works](./docs/how-it-works.md): architecture walkthrough

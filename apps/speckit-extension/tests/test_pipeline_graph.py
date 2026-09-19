@@ -283,7 +283,7 @@ class ABrokenConfigurationStillDraws(unittest.TestCase):
 
     def test_a_healthy_project_emits_parseable_json(self):
         result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "pipeline-graph.py"), "--project", str(EXT.parent)],
+            [sys.executable, str(SCRIPTS / "pipeline-graph.py"), "--project", str(EXT.parents[1])],
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)

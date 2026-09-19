@@ -4,10 +4,10 @@
  *
  *   npm run clips:new -- <id> "Human readable name"
  *
- * Copies media/feature-clips/_template into a new composition, substitutes the
+ * Copies content/media/feature-clips/_template into a new composition, substitutes the
  * id and name through every file that carries one, adds a CLIP_CAPTURES stub to
- * scripts/capture-docs-images.mjs, and registers the feature in
- * media/manifest.json.
+ * tooling/scripts/capture-docs-images.mjs, and registers the feature in
+ * content/media/manifest.json.
  *
  * The point is that a new clip inherits the CURRENT caption, scrim and pacing
  * rules instead of whichever neighbouring composition happened to get copied.
@@ -23,11 +23,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CLIPS = path.join(ROOT, 'media', 'feature-clips');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const CLIPS = path.join(ROOT, 'content', 'media', 'feature-clips');
 const TEMPLATE = path.join(CLIPS, '_template');
-const CAPTURES = path.join(ROOT, 'scripts', 'capture-docs-images.mjs');
-const MANIFEST = path.join(ROOT, 'media', 'manifest.json');
+const CAPTURES = path.join(ROOT, 'tooling', 'scripts', 'capture-docs-images.mjs');
+const MANIFEST = path.join(ROOT, 'content', 'media', 'manifest.json');
 
 const fail = (msg) => {
   console.error(`new-clip: ${msg}`);
@@ -48,7 +48,7 @@ const name = nameParts.join(' ') || id.replace(/-/g, ' ').replace(/^./, (c) => c
 const dest = path.join(CLIPS, id);
 
 if (!fs.existsSync(TEMPLATE)) fail(`${path.relative(ROOT, TEMPLATE)} is missing`);
-if (fs.existsSync(dest)) fail(`media/feature-clips/${id} already exists`);
+if (fs.existsSync(dest)) fail(`content/media/feature-clips/${id} already exists`);
 
 // ------------------------------------------------------------------ copy
 
@@ -93,26 +93,26 @@ if (!capturesSrc.includes(anchor)) {
 
 // ------------------------------------------------------------- manifest
 
-let manifestNote = 'registered in media/manifest.json';
+let manifestNote = 'registered in content/media/manifest.json';
 try {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
   if (manifest.features.some((f) => f.id === id)) {
-    manifestNote = 'already present in media/manifest.json, left alone';
+    manifestNote = 'already present in content/media/manifest.json, left alone';
   } else {
     manifest.features.push({
       id,
       name,
       kind: 'clip',
       status: 'draft',
-      composition: `media/feature-clips/${id}`,
+      composition: `content/media/feature-clips/${id}`,
       films: 'TODO: one sentence on what this clip shows, in order.',
       claim: '',
       outputs: {
-        canonicalMp4: `media/feature-clips/${id}/renders/${id}.mp4`,
-        webWebm: `media/web/${id}.webm`,
-        webMp4: `media/web/${id}.mp4`,
-        poster: `media/web/${id}-poster.png`,
-        xCrop: `media/web/${id}-x16x9.png`,
+        canonicalMp4: `content/media/feature-clips/${id}/renders/${id}.mp4`,
+        webWebm: `content/media/web/${id}.webm`,
+        webMp4: `content/media/web/${id}.mp4`,
+        poster: `content/media/web/${id}-poster.png`,
+        xCrop: `content/media/web/${id}-x16x9.png`,
       },
       unnormalized: [],
       alt: {},
@@ -122,19 +122,19 @@ try {
     fs.writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 } catch (err) {
-  manifestNote = `COULD NOT register in media/manifest.json: ${err.message}`;
+  manifestNote = `COULD NOT register in content/media/manifest.json: ${err.message}`;
 }
 
 // ------------------------------------------------------------------ report
 
-console.log(`\nCreated media/feature-clips/${id}  ("${name}")`);
+console.log(`\nCreated content/media/feature-clips/${id}  ("${name}")`);
 console.log(`  ${captureNote}`);
 console.log(`  ${manifestNote}`);
 console.log(`
 Next, in order:
 
   1. Write the capture stories, then point the CLIP_CAPTURES stub at them:
-       scripts/capture-docs-images.mjs
+       tooling/scripts/capture-docs-images.mjs
   2. Shoot them:
        npm run clips:capture -- --clips ${id}
   3. Measure each region you want to name. Rects are real getBoundingClientRect
@@ -143,7 +143,7 @@ Next, in order:
   4. Write the beats into STORYBOARD.md so the two agree, then:
        npm run clips:check
   5. Render and encode:
-       (cd media/feature-clips/${id} && npm run render)
+       (cd content/media/feature-clips/${id} && npm run render)
        npm run clips:render -- ${id}
        npm run clips:sync
 `);

@@ -6,7 +6,7 @@ import Analytics from './Analytics.astro';
 // The share card, same file BaseLayout uses. Starlight emits og:title and
 // og:description on its own but no image, so a shared docs link renders as a
 // bare text card while the landing page renders a proper one.
-import ogCard from '../../../docs/screenshots/generated/og-card.png';
+import ogCard from '../../../../docs/screenshots/generated/og-card.png';
 
 const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.src;
 

@@ -349,7 +349,7 @@ class NothingAcceptedTodayIsNarrowedTests(unittest.TestCase):
         # The valuable half of reading the working file: it must stay inside the
         # supported subset. Nothing is asserted about WHAT it declares, so adding
         # a hook is not a parser failure.
-        live = Path(__file__).resolve().parent.parent.parent / ".specify" / "companion.yml"
+        live = Path(__file__).resolve().parents[3] / ".specify" / "companion.yml"
         if not live.is_file():
             self.skipTest("not running inside the speckit-companion checkout")
         cfg, warnings = cc.load_config(str(live))

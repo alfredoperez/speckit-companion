@@ -62,7 +62,7 @@ The Polish phase SHALL generate a task that runs the project's suites against th
 - **THEN** Polish generates and owns the suite run
 
 ### A diagnostic command recomputes reality rather than trusting what a run recorded
-<!-- touches: speckit-extension/commands/speckit.companion.doctor.md -->
+<!-- touches: apps/speckit-extension/commands/speckit.companion.doctor.md -->
 
 The doctor MUST recompute each answer from the durable record and the spec's documents, never read back a verdict the run recorded, so it also works on runs older than the command.
 
@@ -71,7 +71,7 @@ The doctor MUST recompute each answer from the durable record and the spec's doc
 - **THEN** the contradiction is reported as a false claim, showing both sides
 
 ### Every doctor check reports ran, skipped with a reason, or not applicable
-<!-- touches: speckit-extension/commands/speckit.companion.doctor.md -->
+<!-- touches: apps/speckit-extension/commands/speckit.companion.doctor.md -->
 
 A check that cannot run SHALL be reported as skipped with its reason, never as clean, and a check that crashes becomes that check's skip while the rest still run.
 
@@ -80,7 +80,7 @@ A check that cannot run SHALL be reported as skipped with its reason, never as c
 - **THEN** that check is listed as skipped with the reason, and the others report normally
 
 ### The doctor is read-only and never halts
-<!-- touches: speckit-extension/commands/speckit.companion.doctor.md -->
+<!-- touches: apps/speckit-extension/commands/speckit.companion.doctor.md -->
 
 The doctor SHALL create, modify and delete nothing, and always exit successfully.
 

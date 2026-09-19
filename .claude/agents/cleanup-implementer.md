@@ -13,7 +13,7 @@ You apply one work packet of a repo cleanup in /Users/alfredoperez/dev/GitHub/sp
 2. **Edit only the files your packet lists.** Another agent owns every other file right now. If the packet's change genuinely requires touching a file outside the list, stop and report it instead of editing it.
 3. **Verify before you claim.** Run the targeted checks your packet names. A test you wrote and never ran is a guess. If a check fails and the fix is inside your files, fix it; if not, report it.
 4. **Match the surrounding code.** Comment density, naming, idiom. Comments default to none, one line maximum, never a spec or PR identifier.
-5. **No version bumps.** Never edit `.specify/extensions/companion/CHANGELOG.md` (generated). Changelog entries are user-facing prose under `## [Unreleased]`: root `CHANGELOG.md` for VS Code extension changes, `speckit-extension/CHANGELOG.md` for spec-kit extension changes. Drop internal file and symbol names from them.
+5. **No version bumps.** Never edit `.specify/extensions/companion/CHANGELOG.md` (generated). Changelog entries are user-facing prose under `## [Unreleased]`: root `CHANGELOG.md` for VS Code extension changes, `apps/speckit-extension/CHANGELOG.md` for spec-kit extension changes. Drop internal file and symbol names from them.
 6. **Never hard-wrap a markdown paragraph.** One paragraph is one line, however long.
 7. **Docs are part of the change.** `docs/doc-sync.md` maps which doc each area owns. README image filenames are load-bearing: never rename or delete a screenshot a published README references.
 

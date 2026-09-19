@@ -7,7 +7,7 @@ Which workflows exist and what a valid one looks like: the two built-ins, custom
 ## Requirements
 
 ### Two workflows ship, custom ones are additive, and one setting names the default
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 The stock SpecKit and SpecKit Companion pipelines are always available, and valid workflows from `speckit.customWorkflows` are added beside them.
 
@@ -16,7 +16,7 @@ The stock SpecKit and SpecKit Companion pipelines are always available, and vali
 - **THEN** the list holds SpecKit, SpecKit Companion and the custom workflow
 
 ### A default that names a missing workflow falls back to the first available one
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 #### Scenario: the configured default no longer exists
 - **WHEN** a spec with no recorded workflow resolves its default and `speckit.defaultWorkflow` names no available workflow
@@ -24,7 +24,7 @@ The stock SpecKit and SpecKit Companion pipelines are always available, and vali
 - **AND** the substitution is logged, not shown as an error
 
 ### An unset default picks Companion when its extension is installed
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 A value set at any scope wins, most specific first. Only a schema default counts as unset. Telemetry keeps reporting the raw configured value, so the adoption metric counts explicit choices only.
 
@@ -37,7 +37,7 @@ A value set at any scope wins, most specific first. Only a schema default counts
 - **THEN** new specs default to SpecKit
 
 ### A project's companion.yml customises the Companion entry instead of adding a workflow
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 It shapes the same `/speckit.companion.*` commands, so a second entry would dispatch the same thing. `workflow: shipped` counts as not customised.
 
@@ -46,7 +46,7 @@ It shapes the same `/speckit.companion.*` commands, so a second entry would disp
 - **THEN** the Companion entry reads as customised by this project, and no extra entry appears
 
 ### Built-in names are reserved at every scope
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 A custom workflow cannot take `speckit`, `companion` or the legacy `default` alias, nor a name an earlier custom entry already took.
 
@@ -56,7 +56,7 @@ A custom workflow cannot take `speckit`, `companion` or the legacy `default` ali
 - **AND** the built-in still resolves under that name
 
 ### An invalid workflow definition is skipped, never fatal
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 A malformed name, a non-string step command, or a malformed checkpoint rejects the definition with a logged reason. An unknown provider id only warns.
 
@@ -69,7 +69,7 @@ A malformed name, a non-string step command, or a malformed checkpoint rejects t
 - **THEN** it is accepted with a warning that the id never matches
 
 ### Legacy per-step keys resolve to the same pipeline as an explicit step list
-<!-- touches: src/features/workflows/workflowManager.ts, src/features/workflows/types.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts, apps/vscode/src/features/workflows/types.ts -->
 
 #### Scenario: a workflow declares only legacy step keys
 - **WHEN** its steps or a step's command is resolved
@@ -77,14 +77,14 @@ A malformed name, a non-string step command, or a malformed checkpoint rejects t
 - **AND** a step the legacy keys omit uses the stock pipeline's command
 
 ### A step command resolves to one canonical form regardless of how the user typed it
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 #### Scenario: a step command is written with a leading slash
 - **WHEN** that step is dispatched
 - **THEN** the emitted command carries exactly one leading slash
 
 ### Read paths never write; only explicit user actions persist a selection
-<!-- touches: src/features/workflows/workflowSelector.ts, src/features/workflows/pipelineResolution.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowSelector.ts, apps/vscode/src/features/workflows/pipelineResolution.ts -->
 
 #### Scenario: a spec with no recorded workflow is rendered in the sidebar
 - **WHEN** its workflow is resolved for the tree or the viewer
@@ -96,7 +96,7 @@ A malformed name, a non-string step command, or a malformed checkpoint rejects t
 - **THEN** the resolved workflow is written to the spec's context file
 
 ### Persisting a workflow choice must never destroy existing spec context
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 Only a missing file counts as a first write.
 

@@ -39,7 +39,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXT_ROOT = os.path.dirname(HERE)
-REPO_ROOT = os.path.dirname(EXT_ROOT)
+REPO_ROOT = os.path.dirname(os.path.dirname(EXT_ROOT))
 
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
@@ -82,8 +82,8 @@ SKIP_DIRS = {
 from emission_sync import KNOWN_AREAS  # noqa: E402
 
 DOCS = {
-    "speckit-extension/README.md": "the README command table",
-    "speckit-extension/docs/commands.md": "the command reference",
+    "apps/speckit-extension/README.md": "the README command table",
+    "apps/speckit-extension/docs/commands.md": "the command reference",
 }
 
 REGISTRY = ".specify/extensions/.registry"

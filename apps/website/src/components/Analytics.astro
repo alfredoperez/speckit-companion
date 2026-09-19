@@ -49,7 +49,7 @@ const key = import.meta.env.PUBLIC_POSTHOG_KEY;
   The audience here is developers, so that is not an edge case.
 
   Blockers match on the hostname. `/ingest` is first-party, so it passes.
-  website/vercel.json rewrites it to PostHog: /ingest/static/* to the assets
+  apps/website/vercel.json rewrites it to PostHog: /ingest/static/* to the assets
   host, everything else to the ingestion host.
 
   The rewrite is a VERCEL feature. `astro dev` does not have it, so /ingest

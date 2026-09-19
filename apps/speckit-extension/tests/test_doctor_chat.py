@@ -32,7 +32,7 @@ WINDOW_CTX = {
 
 
 def audit(ctx=None, report=None, override=str(FIXTURE)):
-    return dch.check_chat(ROOT.parent, ROOT, ctx if ctx is not None else WINDOW_CTX,
+    return dch.check_chat(ROOT.parents[1], ROOT, ctx if ctx is not None else WINDOW_CTX,
                           report, override=override)
 
 

@@ -195,7 +195,7 @@ def derive_closure() -> set[str]:
     return closure
 
 
-VSIX_ROOT = "speckit-extension/scripts/"
+VSIX_ROOT = "apps/speckit-extension/scripts/"
 
 # Entry points the VS Code extension calls directly out of the .vsix: the
 # context writer (stock-mode prompt preamble) and the pipeline builder group.
@@ -226,9 +226,9 @@ def vsix_closure() -> set[str]:
 
 def vsix_gaps() -> dict[str, list[str]]:
     """Where the .vsix closure and `.vscodeignore`'s `!` rules disagree, both ways."""
-    path = os.path.join(os.path.dirname(EXT_ROOT), ".vscodeignore")
+    path = os.path.join(os.path.dirname(os.path.dirname(EXT_ROOT)), ".vscodeignore")
     if not os.path.exists(path):
-        return {"stripped": [], "unreachable": []}
+        raise FileNotFoundError(f".vscodeignore not found at {path}")
     negated = {
         line[len(VSIX_ROOT) + 1:].strip()
         for line in _read(path).splitlines()

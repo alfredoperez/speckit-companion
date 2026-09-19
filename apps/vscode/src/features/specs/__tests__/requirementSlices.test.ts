@@ -14,12 +14,12 @@ import {
  *
  * The viewer has no Python and the command bodies have no TypeScript, so the
  * risk is divergence, not duplication. These are the same fixtures
- * `speckit-extension/tests/test_resolve_spec_paths.py` reads; the drift guard
+ * `apps/speckit-extension/tests/test_resolve_spec_paths.py` reads; the drift guard
  * over there fails if either suite stops reading one.
  */
 const FIXTURES = path.join(
-    __dirname, '..', '..', '..', '..',
-    'speckit-extension', 'tests', 'fixtures', 'requirement-slices',
+    __dirname, '..', '..', '..', '..', '..', '..',
+    'apps', 'speckit-extension', 'tests', 'fixtures', 'requirement-slices',
 );
 
 const read = (name: string): string => fs.readFileSync(path.join(FIXTURES, name), 'utf-8');

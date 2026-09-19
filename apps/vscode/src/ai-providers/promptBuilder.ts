@@ -66,7 +66,7 @@ export function bundledWriterPath(): string {
     try {
         const ext = vscode.extensions.getExtension('alfredoperez.speckit-companion');
         if (ext?.extensionPath) {
-            return path.join(ext.extensionPath, 'speckit-extension', 'scripts', 'write-context.py');
+            return path.join(ext.extensionPath, 'apps', 'speckit-extension', 'scripts', 'write-context.py');
         }
     } catch {
         // fall through to the workspace fallback

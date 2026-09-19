@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 // Web video branch of the clip pipeline.
 //
-// Reads the MP4 hyperframes already rendered into media/feature-clips/<id>/renders/
+// Reads the MP4 hyperframes already rendered into content/media/feature-clips/<id>/renders/
 // and writes, per composition, a VP9 WebM, an H.264 MP4 fallback for Safari, and a
 // poster PNG lifted from frame zero of the WebM. Encode settings and the reasoning
-// behind them live in media/WEB-RENDERS.md.
+// behind them live in content/media/WEB-RENDERS.md.
 //
 // The GIF path is untouched: nothing here reads, writes, or deletes a .gif, and
 // nothing here writes into renders/.
 //
-//   node scripts/render-web-clips.mjs                 # every composition
-//   node scripts/render-web-clips.mjs overview        # one composition
-//   node scripts/render-web-clips.mjs --list          # what would be encoded
-//   node scripts/render-web-clips.mjs --verify-only   # re-check existing outputs
+//   node tooling/scripts/render-web-clips.mjs                 # every composition
+//   node tooling/scripts/render-web-clips.mjs overview        # one composition
+//   node tooling/scripts/render-web-clips.mjs --list          # what would be encoded
+//   node tooling/scripts/render-web-clips.mjs --verify-only   # re-check existing outputs
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -21,8 +21,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CLIPS_DIR = path.join(ROOT, 'media', 'feature-clips');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const CLIPS_DIR = path.join(ROOT, 'content', 'media', 'feature-clips');
 
 // Width first, quantizer second. The site paints these into 864 CSS px, which
 // is 1728 device px on a 2x display, so a 960px encode was upscaled almost 2x
@@ -33,7 +33,7 @@ const DEFAULTS = {
   width: 1440,
   vp9Crf: 40,
   h264Crf: 26,
-  out: path.join('media', 'web'),
+  out: path.join('content', 'media', 'web'),
   jobs: Math.max(1, Math.min(4, Math.floor(os.cpus().length / 3) || 1)),
 };
 
@@ -208,7 +208,7 @@ function sourceFor(id) {
 function compositions() {
   if (!fs.existsSync(CLIPS_DIR)) fail(`${CLIPS_DIR} does not exist`);
   // An underscore prefix marks scaffolding, not a clip: _template renders from
-  // a placeholder capture and has no place in media/web or the manifest.
+  // a placeholder capture and has no place in content/media/web or the manifest.
   return fs.readdirSync(CLIPS_DIR, { withFileTypes: true })
     .filter((e) => e.isDirectory() && !e.name.startsWith('_'))
     .filter((e) => fs.existsSync(path.join(CLIPS_DIR, e.name, 'index.html')))

@@ -3,9 +3,9 @@
  * line-leading `- [ ]` counts — one inside a fenced block or code span is documentation, not work.
  *
  * The grammar matches `parse_task_markers` in
- * `speckit-extension/scripts/task_sync.py`, because the two decide the same
+ * `apps/speckit-extension/scripts/task_sync.py`, because the two decide the same
  * question — whether every task is done — from opposite sides of the product.
- * `tests/fixtures/task-grammar/` holds the cases they must agree on, and both
+ * `apps/vscode/tests/fixtures/task-grammar/` holds the cases they must agree on, and both
  * test suites read it.
  *
  * A task id is required. Both task templates emit one, and the checkbox lines

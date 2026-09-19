@@ -2,8 +2,8 @@
 /**
  * clip-storyboard.mjs: keep every feature clip's STORYBOARD.md and its index.html in sync.
  *
- *   node scripts/clip-storyboard.mjs [--check]        report drift across all compositions
- *   node scripts/clip-storyboard.mjs --apply <name>   write storyboard labels into index.html
+ *   node tooling/scripts/clip-storyboard.mjs [--check]        report drift across all compositions
+ *   node tooling/scripts/clip-storyboard.mjs --apply <name>   write storyboard labels into index.html
  *
  * The storyboard's Beats table is the editing surface for beat labels. Timings and
  * rects stay code-owned: they are measured element boxes off the captured DOM and
@@ -17,8 +17,8 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from '
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CLIPS_DIR = join(ROOT, 'media', 'feature-clips');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const CLIPS_DIR = join(ROOT, 'content', 'media', 'feature-clips');
 
 /* ------------------------------------------------------------------ parsing */
 
@@ -369,7 +369,7 @@ function fail(message) {
 }
 
 // An underscore prefix marks a directory that is scaffolding rather than a
-// clip: _template is copied by scripts/new-clip.mjs and is never rendered,
+// clip: _template is copied by tooling/scripts/new-clip.mjs and is never rendered,
 // encoded, or registered in the manifest.
 function compositions() {
   return readdirSync(CLIPS_DIR)
@@ -382,7 +382,7 @@ function check() {
   const results = compositions().map(inspect);
   const failures = results.filter((r) => r.status === 'fail');
 
-  console.log('Clip storyboards vs compositions, in media/feature-clips\n');
+  console.log('Clip storyboards vs compositions, in content/media/feature-clips\n');
   for (const r of results) {
     if (r.status === 'ok') {
       console.log(`  ok    ${r.name.padEnd(16)} ${r.note}`);
@@ -713,7 +713,7 @@ function main(argv) {
   const args = argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
-    console.log('Usage: node scripts/clip-storyboard.mjs [--check] | --apply <composition> | --outline [composition] | --scenes [composition]');
+    console.log('Usage: node tooling/scripts/clip-storyboard.mjs [--check] | --apply <composition> | --outline [composition] | --scenes [composition]');
     return 0;
   }
 
@@ -749,7 +749,7 @@ function main(argv) {
     if (!raw) return fail('--apply needs a composition name, for example: --apply step-rail');
     const name = basename(raw.replace(/\/+$/, ''));
     if (!existsSync(join(CLIPS_DIR, name))) {
-      return fail(`No composition named "${name}" under media/feature-clips. Known: ${compositions().join(', ')}`);
+      return fail(`No composition named "${name}" under content/media/feature-clips. Known: ${compositions().join(', ')}`);
     }
     return apply(name);
   }

@@ -11,7 +11,7 @@
  * the artboard's own copy brushed a never-say entry are corrected here, marked
  * "ledger:" where they sit.
  *
- * Media: clip and still paths are read out of media/manifest.json and mapped
+ * Media: clip and still paths are read out of content/media/manifest.json and mapped
  * onto the site's public URL prefix. Nothing is hand-written, and a feature the
  * manifest has not shipped yet falls back to one that has.
  */
@@ -20,7 +20,7 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Button from '../components/Button.astro';
 import CodeLine from '../components/CodeLine.astro';
-import manifest from '../../../media/manifest.json';
+import manifest from '../../../../content/media/manifest.json';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
@@ -58,7 +58,7 @@ function siteUrl(rel: string | null | undefined): string | null {
 
 function media(id: string) {
   const feature = features.find((entry) => entry.id === id);
-  if (!feature) throw new Error(`media/manifest.json has no feature "${id}"`);
+  if (!feature) throw new Error(`content/media/manifest.json has no feature "${id}"`);
   const poster = siteUrl(feature.outputs.poster);
   const panel = siteUrl(feature.outputs.panelStill);
   return {
@@ -120,7 +120,7 @@ const motes = [
 */
 const lightwell = (() => {
   const f = features.find((entry) => entry.id === 'page-lightwell');
-  if (!f) throw new Error('media/manifest.json has no feature "page-lightwell"');
+  if (!f) throw new Error('content/media/manifest.json has no feature "page-lightwell"');
   return {
     hero: siteUrl(f.outputs.lightwellHero),
     section: siteUrl(f.outputs.lightwellSection),

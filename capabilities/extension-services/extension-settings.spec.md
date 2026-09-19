@@ -7,7 +7,7 @@ Covers what the extension does outside any spec: the always-available entry poin
 ## Requirements
 
 ### The overview view is the flat list of the extension's non-spec entry points
-<!-- touches: src/features/settings/overviewProvider.ts -->
+<!-- touches: apps/vscode/src/features/settings/overviewProvider.ts -->
 
 The overview view SHALL list the always-available actions (pipeline builder, settings, bug and feature reports, marketplace rating) as single entries that each run their command on click.
 
@@ -16,7 +16,7 @@ The overview view SHALL list the always-available actions (pipeline builder, set
 - **THEN** the bug-report command runs and nothing expands
 
 ### The stock command family is added when missing and never removed
-<!-- touches: src/features/settings/companionPresetReconciler.ts -->
+<!-- touches: apps/vscode/src/features/settings/companionPresetReconciler.ts -->
 
 At activation the extension SHALL install the stock command family from the bundled preset when it is absent and SHALL never remove it, whatever else is installed, so choosing a workflow only routes dispatch and never strands a project.
 
@@ -29,7 +29,7 @@ At activation the extension SHALL install the stock command family from the bund
 - **THEN** the leftover is removed and the stock family is re-enabled, not removed
 
 ### A failing preset command never blocks activation
-<!-- touches: src/features/settings/companionPresetReconciler.ts -->
+<!-- touches: apps/vscode/src/features/settings/companionPresetReconciler.ts -->
 
 When the spec-kit CLI a preset operation needs is missing or fails, the failure SHALL be logged and activation SHALL complete normally.
 

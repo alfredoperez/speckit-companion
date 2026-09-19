@@ -71,7 +71,7 @@ specify extension add companion --from https://github.com/alfredoperez/speckit-c
 
 ![What installing the spec-kit extension unlocks: live progress capture, status, resume, the lean Companion pipeline, the complexity fast-path, and honest state recovery](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/install-banner.jpg)
 
-Full extension-side reference: [the spec-kit extension README](../speckit-extension/README.md) and its [install guide](../speckit-extension/docs/install.md).
+Full extension-side reference: [the spec-kit extension README](../apps/speckit-extension/README.md) and its [install guide](../apps/speckit-extension/docs/install.md).
 
 ## Sample specs
 

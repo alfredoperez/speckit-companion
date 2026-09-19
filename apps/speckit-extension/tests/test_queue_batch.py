@@ -6,12 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = REPO / "speckit-extension" / "scripts"
+EXT = Path(__file__).resolve().parents[1]
+SCRIPTS = EXT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import capture  # noqa: E402  — the module under test, reached through SCRIPTS
-NODES = REPO / "speckit-extension" / "nodes"
-COMMANDS = REPO / "speckit-extension" / "commands"
+NODES = EXT / "nodes"
+COMMANDS = EXT / "commands"
 
 
 class TheThirdSizeIsReachableAndDoesSomething(unittest.TestCase):
@@ -40,7 +40,7 @@ class TheThirdSizeIsReachableAndDoesSomething(unittest.TestCase):
 class TheHealthCheckCanBeMadeToFail(unittest.TestCase):
     """#613 — a constraint nobody can fail is a constraint nobody can demonstrate."""
 
-    FIXTURE = REPO / "speckit-extension" / "tests" / "fixtures" / "doctor" / "dangling-start"
+    FIXTURE = EXT / "tests" / "fixtures" / "doctor" / "dangling-start"
 
     def _run(self, *args):
         return subprocess.run(
@@ -57,7 +57,7 @@ class TheHealthCheckCanBeMadeToFail(unittest.TestCase):
         self.assertIn("--strict", r.stdout + r.stderr)
 
     def test_strict_succeeds_when_there_is_nothing_to_report(self):
-        clean = REPO / "speckit-extension" / "tests" / "fixtures" / "doctor" / "clean"
+        clean = EXT / "tests" / "fixtures" / "doctor" / "clean"
         if not clean.is_dir():
             self.skipTest("no clean fixture in this tree")
         r = subprocess.run(

@@ -645,7 +645,7 @@ export class PipelineBuilderPanel {
 
         const dir = path.dirname(this.projectNodePath(command, 'x'));
         const shipped = path.join(
-            this.context.extensionPath, 'speckit-extension', 'nodes', command);
+            this.context.extensionPath, 'apps', 'speckit-extension', 'nodes', command);
         const source = fs.existsSync(shipped) ? shipped : dir;
         if (fs.existsSync(source)) {
             for (const file of fs.readdirSync(source).sort()) {
@@ -687,7 +687,7 @@ export class PipelineBuilderPanel {
             this.projectNodePath(command, nodeId),
             path.join(this.workspaceRoot, '.specify', 'extensions', 'companion',
                 'nodes', command, `${nodeId}.md`),
-            path.join(this.context.extensionPath, 'speckit-extension',
+            path.join(this.context.extensionPath, 'apps', 'speckit-extension',
                 'nodes', command, `${nodeId}.md`),
         ];
         return candidates.find(file => fs.existsSync(file));
@@ -704,7 +704,7 @@ export class PipelineBuilderPanel {
         return [
             path.join(this.workspaceRoot, '.specify', 'extensions', 'companion',
                 'nodes', command, `${nodeId}.md`),
-            path.join(this.context.extensionPath, 'speckit-extension',
+            path.join(this.context.extensionPath, 'apps', 'speckit-extension',
                 'nodes', command, `${nodeId}.md`),
         ].find(file => fs.existsSync(file));
     }

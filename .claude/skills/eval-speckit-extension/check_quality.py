@@ -8,8 +8,8 @@ only; read-only; WARN is the judgment-call tier and never affects exit codes.
 
 Usage:
     python3 check_quality.py --feature-dir specs/<NNN>-<slug>
-    python3 check_quality.py --commands-dir speckit-extension/commands
-    python3 check_quality.py --feature-dir specs/<NNN>-<slug> --commands-dir speckit-extension/commands --json --strict
+    python3 check_quality.py --commands-dir apps/speckit-extension/commands
+    python3 check_quality.py --feature-dir specs/<NNN>-<slug> --commands-dir apps/speckit-extension/commands --json --strict
 """
 
 from __future__ import annotations
@@ -193,7 +193,7 @@ def _dedupe_consecutive(entries: list[dict]) -> list[dict]:
 
 def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     """Mirror of the viewer's duration-trust rule (`deriveStepHistory` in
-    src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
+    apps/vscode/src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
     when the raw log carries exactly ONE step-level start from a trusted writer,
     the lifecycle close boundary — the step's own complete OR the next step's
     start, from a writer at least as authoritative as the start — lands

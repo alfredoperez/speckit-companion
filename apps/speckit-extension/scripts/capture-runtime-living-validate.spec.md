@@ -7,7 +7,7 @@ A read-only check reports where a living spec or a feature spec's deltas would b
 ## Requirements
 
 ### A living spec's shape is checkable, and the fold refuses to write a break
-<!-- touches: speckit-extension/scripts/living_validate.py, speckit-extension/scripts/living_spec_fold.py -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py, apps/speckit-extension/scripts/living_spec_fold.py -->
 
 A read-only check covers every registered living spec and the delta sections of active feature specs. Each finding carries a severity, a stable code, the path, the line and a one-line fix. Error means the fold would damage the record; warning means untidy. The check always exits successfully.
 
@@ -20,7 +20,7 @@ A read-only check covers every registered living spec and the delta sections of 
 - **THEN** it reports the marker's line
 
 ### Code a capability claims but no requirement describes is reported
-<!-- touches: speckit-extension/scripts/living_validate.py -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py -->
 
 Claims are compared by expanding globs to real files, so the check never fires on code the registry exempts or several capabilities share.
 
@@ -29,7 +29,7 @@ Claims are compared by expanding globs to real files, so the check never fires o
 - **THEN** it names that area, because a change there would load this capability and receive nothing
 
 ### The check reads markers exactly as the resolver does
-<!-- touches: speckit-extension/scripts/living_validate.py -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py -->
 
 #### Scenario: a formatter separates a heading from its marker
 - **WHEN** the check reads a spec whose markers sit under a blank line

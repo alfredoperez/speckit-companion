@@ -77,7 +77,7 @@ describe('countTaskCheckboxes', () => {
 
 /**
  * The other half of the product parses the same file to decide the same thing.
- * `speckit-extension/tests/test_task_grammar.py` asserts the same expectations
+ * `apps/speckit-extension/tests/test_task_grammar.py` asserts the same expectations
  * against the same fixture, so the two grammars cannot drift apart silently.
  */
 describe('the shared task-grammar fixture', () => {

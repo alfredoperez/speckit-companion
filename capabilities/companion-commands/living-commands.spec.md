@@ -49,7 +49,7 @@ Sync SHALL keep verbatim any content the change does not invalidate, never commi
 - **THEN** only that requirement changes and the rest of the file is byte-identical
 
 ### The shape check is a command, and it reports rather than gates
-<!-- touches: speckit-extension/commands/speckit.companion.living-validate.md -->
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-validate.md -->
 
 Given a capability, the shape check SHALL check only that spec, and an unregistered name is reported as skipped. Given none, it checks every living spec and every active feature spec's deltas.
 
@@ -62,7 +62,7 @@ Given a capability, the shape check SHALL check only that spec, and an unregiste
 - **THEN** it lists the name as skipped and checks nothing
 
 ### The shape check names a requirement too big to hold
-<!-- touches: speckit-extension/scripts/living_validate.py, src/features/specs/specShapeCheck.ts -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py, apps/vscode/src/features/specs/specShapeCheck.ts -->
 
 A requirement with more than 4 SHALL, MUST or SHOULD sentences, or more than 120 words before its first scenario, SHALL get a warning naming the split or the cut, in the command and in the editor alike.
 
@@ -71,7 +71,7 @@ A requirement with more than 4 SHALL, MUST or SHOULD sentences, or more than 120
 - **THEN** it warns that the requirement bundles five rules and says to split it
 
 ### The shape check flags a spec nobody has reviewed
-<!-- touches: speckit-extension/scripts/living_validate.py, src/features/specs/specShapeCheck.ts -->
+<!-- touches: apps/speckit-extension/scripts/living_validate.py, apps/vscode/src/features/specs/specShapeCheck.ts -->
 
 A spec still carrying its surface-draft banner SHALL get a warning until the banner is removed.
 
