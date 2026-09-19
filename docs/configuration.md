@@ -129,7 +129,7 @@ By default, specs are discovered in `specs/` **and** `.specify/specs/` (the Spec
 }
 ```
 
-Simple names (e.g., `specs`) list their children as specs. Patterns with wildcards treat each match as a spec folder.
+Simple names (e.g., `specs`) list their children as specs. A pattern ending in a wildcard (e.g., `openspec/changes/*`) treats each match as a spec folder. A pattern ending in a plain name (e.g., `apps/*/specs` in a monorepo) names a folder of specs, so it lists `apps/<project>/specs/001-…` the same way `specs` lists `specs/001-…`.
 
 ## Custom Workflows
 

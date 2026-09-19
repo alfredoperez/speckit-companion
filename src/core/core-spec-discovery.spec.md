@@ -11,16 +11,20 @@ Core owns where specs live on disk and how the extension notices them change: th
 ### Spec locations are configured, not assumed
 <!-- touches: src/core/specDirectoryResolver.ts -->
 
-The extension SHALL locate specs from a user-configurable list of directory patterns, not a fixed path. Plain directory names and glob patterns MUST both be supported: a plain name's children are specs, while each glob match is itself a spec. Any hardcoded fallback MUST list every layout the shipped configuration lists, or a whole layout silently disappears.
+The extension SHALL locate specs from a user-configurable list of directory patterns, not a fixed path. Plain directory names and glob patterns MUST both be supported: a plain name's children are specs, while a glob ending in a wildcard matches specs directly and a glob ending in a plain name matches folders of specs, whose children are the specs. Any hardcoded fallback MUST list every layout the shipped configuration lists, or a whole layout silently disappears.
 
 #### Scenario: a workspace uses a nested change-based layout
-- **WHEN** a configured pattern has wildcards and a real directory matches it
+- **WHEN** a configured pattern ends in a wildcard and a real directory matches it
 - **THEN** that directory is itself a spec directory, not a container of specs
 
 #### Scenario: a configured directory holds spec folders
 - **WHEN** a configured pattern is a plain directory name
 - **THEN** each immediate subdirectory is a candidate spec
 - **AND** a subdirectory is only accepted once it has markdown content or a recorded spec context, so empty scaffolding does not appear as a spec
+
+#### Scenario: a wildcard pattern names each project's folder of specs
+- **WHEN** a pattern ends in a plain name, like `apps/*/specs`
+- **THEN** the spec folders inside each match are listed, and the matches themselves are not
 
 ### Spec discovery and file-to-spec attribution agree
 <!-- touches: src/core/specDirectoryResolver.ts -->
