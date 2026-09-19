@@ -3583,10 +3583,6 @@ class ReplacingASupersededCapability(unittest.TestCase):
             self.assertEqual(out["superseded"], [])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 # LS·7 — the additive contract for `touches` markers (#672 Wave 1).
 #
 # A marker exists to narrow what a RUN reads. Every other reader — fold-back,
@@ -3912,3 +3908,39 @@ class AnAlignsEdgeReachesOneHop(unittest.TestCase):
     def test_the_hop_is_not_transitive(self):
         out = self._load(True)
         self.assertNotIn("audit", out, "session's own aligns must not be followed")
+
+
+class AnAddedRequirementLandsUnderRequirements(unittest.TestCase):
+    """A new requirement goes inside `## Requirements`, never after a later section."""
+
+    LIVING = ("# Notifications\n\n## Purpose\n\nTell people.\n\n## Requirements\n\n### Old rule\n\nIt holds.\n\n"
+              "## Uncovered\n\n_None._\n")
+
+    def _fold(self, text, head="New rule"):
+        import living_spec_fold as fold
+        deltas = {"added": [(head, f"### {head}\n\nIt also holds.\n")], "modified": [], "removed": [], "renamed": []}
+        return fold.apply_deltas(text, deltas)
+
+    def test_it_goes_before_a_trailing_section(self):
+        out, applied = self._fold(self.LIVING)
+        self.assertEqual(applied["added"], 1)
+        self.assertLess(out.index("### New rule"), out.index("## Uncovered"))
+        self.assertLess(out.index("### Old rule"), out.index("### New rule"))
+
+    def test_folding_twice_changes_nothing(self):
+        once, _ = self._fold(self.LIVING)
+        self.assertEqual(self._fold(once)[0], once)
+
+    def test_a_heading_inside_a_code_fence_is_not_a_section(self):
+        fenced = self.LIVING.replace("It holds.\n", "It holds.\n\n```markdown\n## Example\n```\n")
+        once, _ = self._fold(fenced)
+        self.assertLess(once.index("## Example"), once.index("### New rule"))
+        self.assertEqual(self._fold(once)[0], once)
+
+    def test_a_spec_with_no_requirements_section_still_gets_it_at_the_end(self):
+        out, _ = self._fold("# X\n\n## Purpose\n\nThing.\n")
+        self.assertTrue(out.rstrip().endswith("It also holds."))
+
+
+if __name__ == "__main__":
+    unittest.main()

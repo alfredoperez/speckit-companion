@@ -95,10 +95,6 @@ A slow fact MUST NOT block the panel's first render; it SHALL be resolved afterw
 - **THEN** the late result is discarded
 - **AND** the header shows only facts about what is on screen
 
-## Uncovered
-
-_None: every file in the area was read, though test files under `__tests__/` were read only for the contracts they pin._
-
 ### An open living spec follows its file and names what drifted
 
 An open living-spec panel SHALL redraw when its spec file is changed or created on disk, wherever the capability lives. Once drift resolves, the panel SHALL receive the drifted requirements: those whose touches marker matches a drifted file, from the same drift result the sidebar uses. A requirement with no touches marker never drifts, and when drift cannot be computed the list is absent, not empty.
@@ -162,3 +158,7 @@ The extension SHALL send, with the capability's other health facts after first p
 #### Scenario: another capability opens and resolves no health facts
 - **WHEN** its cards render
 - **THEN** none of them carries the previous capability's label
+
+## Uncovered
+
+_None: every file in the area was read, though test files under `__tests__/` were read only for the contracts they pin._

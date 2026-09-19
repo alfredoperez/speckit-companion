@@ -77,10 +77,6 @@ A status bar item SHALL show how many living specs claim the active file. It is 
 - **WHEN** the indicator refreshes
 - **THEN** it is hidden instead of showing a zero
 
-## Uncovered
-
-- All files under `__tests__/` were listed but not read.
-
 ### A capability with no spec file opens to the call to adopt it
 
 A registered capability whose spec file does not exist SHALL still open from its row, showing one call to action, "Adopt this area", which adopts the directories the capability already claims without asking again. An existing but empty spec file SHALL NOT show it. The view SHALL include a command that validates living-spec shape through the active AI provider, scoped to the invoking capability, or to every living spec when invoked from nowhere in particular.
@@ -116,3 +112,7 @@ A healthy capability row SHALL have no icon. A drifted row keeps the warning ico
 #### Scenario: a healthy capability is drawn
 - **WHEN** its row renders
 - **THEN** it has no icon
+
+## Uncovered
+
+- All files under `__tests__/` were listed but not read.

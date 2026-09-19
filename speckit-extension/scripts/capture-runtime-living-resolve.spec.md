@@ -138,12 +138,6 @@ When any move or the registry write fails partway through a relocation, every ap
 - **WHEN** every move succeeds but the config write raises
 - **THEN** all moves are rolled back and the original registry content is restored
 
-## Uncovered
-
-- `relocate-capability.py`: read only its opening docstring.
-- `register-capability.py`: read only its contract docstring.
-- The Python test suite under `speckit-extension/tests/` was not read.
-
 ### The resolver answers what leans on a requirement
 
 `resolve-spec-paths.py --leaned-on-by <capability>#<heading>` SHALL return every requirement, in any capability including the target's own, whose aligns marker names that heading exactly, each with its capability, heading, touches and body. No match and a disabled registry SHALL both give an empty `matches` list. Without `--json` it SHALL print one `capability#heading` per line.
@@ -155,3 +149,9 @@ When any move or the registry write fails partway through a relocation, every ap
 #### Scenario: nothing aligns to the heading
 - **WHEN** a command asks who leans on it
 - **THEN** `matches` is empty
+
+## Uncovered
+
+- `relocate-capability.py`: read only its opening docstring.
+- `register-capability.py`: read only its contract docstring.
+- The Python test suite under `speckit-extension/tests/` was not read.

@@ -115,10 +115,6 @@ The registry reader SHALL carry each capability's optional retirement declaratio
 - **WHEN** the registry is read
 - **THEN** it resolves as not retiring
 
-## Uncovered
-
-- All files under `__tests__/` were listed but not read.
-
 ### Requirement links are computed in-process over the requirement slicer
 
 `requirementLinks` SHALL read every registered capability's spec through `requirementSlices` and return, per heading, the requirement's own aligns links marked resolved or broken, and the requirements in other capabilities that align to it. Headings match exactly, and requirements sharing a heading share their lists. The cards and the Remove refusal SHALL both read this one function.
@@ -154,3 +150,7 @@ The extension SHALL read a capability's coverage file into a label per requireme
 #### Scenario: a named test path escapes the workspace
 - **WHEN** the coverage file is read
 - **THEN** that path counts as not found
+
+## Uncovered
+
+- All files under `__tests__/` were listed but not read.

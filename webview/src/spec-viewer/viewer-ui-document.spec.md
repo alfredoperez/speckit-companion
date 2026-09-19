@@ -104,14 +104,6 @@ A requirement with an `adopted:` marker was transcribed by adoption and has not 
 - **WHEN** the card renders
 - **THEN** the tooltip holds the whole source and no attribute is broken out of
 
-## Uncovered
-
-The original adoption did not read these files in full. Their exported surface and role were established, but their bodies were not reviewed line by line:
-
-- `webview/src/spec-viewer/markdown/preprocessors.ts` (read partially; only the first ~60 lines and the export inventory)
-- `webview/src/spec-viewer/toc.ts`
-- `webview/src/spec-viewer/highlighting.ts`
-
 ### A living requirement shows its state on its heading's left edge
 
 Each requirement card SHALL take the shape of the specify step's user-story card: a bordered block with a meta row, the title, and a 3px left edge in the state's colour. Confirmed uses the accent colour, adopted the review colour, drifted the warning colour. New is its own `data-req-new` attribute with the success colour and a New pill: it outranks adopted for the edge, and a new drifted card keeps the drifted edge and shows both pills. Only non-resting states SHALL place a pill in the meta row, naming the state in the matching ink with a dot in the edge colour, so a confirmed card has no pill. The adopted pill's tooltip names the source, and Approve sits beside it. A scenario title SHALL render with a capital first letter whatever case it was written in. A card whose requirement names files SHALL end with one quiet link counting them. The outline SHALL repeat each card's state as the colour of its row's dot, and SHALL be absent when the capability has one requirement or none.
@@ -151,3 +143,11 @@ The `touches`, `adopted`, `reviewed`, `aligns` and `capability` comments SHALL p
 #### Scenario: an ordinary comment in a feature spec
 - **WHEN** it renders
 - **THEN** it is a template disclosure, as before
+
+## Uncovered
+
+The original adoption did not read these files in full. Their exported surface and role were established, but their bodies were not reviewed line by line:
+
+- `webview/src/spec-viewer/markdown/preprocessors.ts` (read partially; only the first ~60 lines and the export inventory)
+- `webview/src/spec-viewer/toc.ts`
+- `webview/src/spec-viewer/highlighting.ts`
