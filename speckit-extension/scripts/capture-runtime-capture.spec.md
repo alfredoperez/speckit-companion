@@ -1,16 +1,14 @@
 # Capture runtime capture — Living Spec
 
-> [DRAFT] Re-adopted on 2026-09-07 from the single capture-runtime living spec, requirements moved verbatim, every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-A capture call has to land on the right spec, record what it was asked, and stay readable by the status resolver and the trace. These rules stop a wrong guess or a narrow reader from reporting a clean run over a record that was never written.
+A capture call has to land on the right spec, record what it was asked, and stay readable by status and the trace, so a wrong guess never reports a clean run over a record that was never written.
 
 ## Requirements
 
 ### An unresolvable pointer is named, not passed over
 
-Resolution MUST NOT raise, but it SHALL NOT fail silently either. When the active-spec pointer exists and cannot be used, the runtime SHALL name the file and say whether it is stale or carries no recognised key, then keep trying the other ways of finding the spec.
+When the active-spec pointer exists but cannot be used, the run names the file, says whether it is stale or has no recognised key, and keeps trying the other ways of finding the spec. Resolution never raises.
 
 #### Scenario: the pointer names a directory that is gone
 - **WHEN** the recorded active spec no longer exists
@@ -20,33 +18,45 @@ Resolution MUST NOT raise, but it SHALL NOT fail silently either. When the activ
 - **WHEN** the pointer file parses but holds no key the resolver reads
 - **THEN** the run names the file, the keys that would have worked, and what it found
 
-### The spec a write lands on is resolved by a fixed precedence, and a conflict refuses rather than guesses
+### A signal the operation owns outranks the ambient pointers
 
-The runtime SHALL apply one documented precedence to the signals that name the active spec. A signal authoritative for the operation, such as the task list being synced, MUST override the ambient pointers. When two explicit signals conflict, the writer MUST refuse to write and name the mismatch.
-
-#### Scenario: two explicit signals disagree
-- **WHEN** an explicit spec directory and an explicit task list point at different specs
-- **THEN** nothing is written and the mismatch is reported
+A signal authoritative for the operation, such as the task list being synced, decides the spec whatever the active-spec pointers say.
 
 #### Scenario: an older spec settles while a newer one is active
 - **WHEN** a task list belonging to an earlier spec is synced
-- **THEN** the earlier spec settles, whichever spec the ambient pointers name
+- **THEN** the earlier spec settles
 
-### Additive capture composes; lifecycle modes are exclusive
+### Two explicit spec signals that disagree refuse the write
 
-Additive capture (decisions, verifications, concerns, expectations, requirement coverage, step summaries, size classification) SHALL all take effect when passed together, each reporting itself. Lifecycle modes MUST stay first-match-wins. When a capture flag accompanies a lifecycle flag, the lifecycle write is skipped and named on stderr. All additive capture is de-duplicated on its identity value, so re-running a command never doubles up.
+#### Scenario: an explicit directory and task list point at different specs
+- **WHEN** the writer is called with both
+- **THEN** nothing is written and the mismatch is reported
+
+### Capture facts passed together are all stored
 
 #### Scenario: several capture facts arrive in one call
-- **WHEN** a caller records a decision, a verification, and a summary together
-- **THEN** all three are stored
+- **WHEN** a caller records a decision, a verification and a summary together
+- **THEN** all three are stored and each is reported
 
-#### Scenario: capture and a lifecycle transition are mixed
-- **WHEN** a completion flag and a capture flag arrive in one call
-- **THEN** the capture is applied and the skipped lifecycle write is reported
+### A lifecycle flag mixed with a capture flag is skipped and named
 
-### Every handled call records itself, including the ones that fail
+Lifecycle modes stay first-match-wins, so a call carrying both applies the capture and skips the lifecycle write.
 
-Each script SHALL append one line per handled call to a local, per-spec, size-capped trace: the operation, whether it succeeded, and on failure the reason verbatim from its stderr message. The trace MUST cost no extra call and add no instruction text to any command body, so the scripts write it themselves. A call that could not resolve a spec MUST still be recorded, in a repository-level unattributed log. Writing a trace entry MUST NEVER raise, because it runs on paths that are already failing.
+#### Scenario: a completion flag arrives with a capture flag
+- **WHEN** the call runs
+- **THEN** the capture is applied and stderr names the skipped lifecycle write
+
+### Re-running a capture never duplicates an entry
+
+Captured entries are de-duplicated on their identity value.
+
+#### Scenario: a command records the same decision twice
+- **WHEN** the second call lands
+- **THEN** the decision appears once
+
+### Every handled call is traced, including the ones that fail
+
+Each call appends one line to a per-spec, size-capped trace: the operation, whether it succeeded, and on failure the reason verbatim from its stderr message. A call that cannot resolve a spec lands in the repository-level unattributed log.
 
 #### Scenario: a capture call is declined
 - **WHEN** a call is refused and its reason printed to stderr
@@ -54,39 +64,37 @@ Each script SHALL append one line per handled call to a local, per-spec, size-ca
 
 #### Scenario: the spec cannot be resolved
 - **WHEN** a call cannot determine which spec it belongs to
-- **THEN** the entry lands in the repository-level unattributed log instead of being dropped
+- **THEN** the entry lands in the unattributed log instead of being dropped
+
+### A trace write never breaks the call it observes
 
 #### Scenario: the trace cannot be written
 - **WHEN** the trace file's directory is unwritable
-- **THEN** the observed call completes exactly as it would with no trace
+- **THEN** the call completes exactly as it would with no trace
 
-### Status resolution dispatches commands from the family the spec has been running
+### Status and resume dispatch commands from the spec's recorded workflow
 
-Every next-step command that status and resume resolution emit MUST come from the spec's recorded workflow: the companion commands for `workflow: companion`, the stock commands otherwise. Resolution SHALL treat the retired marker `profile: turbo` as the companion workflow, so older specs resume on the flow they started.
+A spec recording `workflow: companion`, or the retired `profile: turbo`, gets the companion commands. Any other spec gets the stock commands.
 
-A command name SHALL be held and emitted as its dotted id alone, with no leading slash. The slash is one assistant's invocation syntax, and on other assistants a slashed name such as `/speckit.companion.plan` resolves to nothing.
+#### Scenario: an older context carries only the retired marker
+- **WHEN** resolution computes the next command for a context with `profile: turbo` and no workflow
+- **THEN** the command comes from the companion family
+
+#### Scenario: no workflow is recorded
+- **WHEN** a context names neither the workflow nor the retired marker
+- **THEN** resolution emits the stock command
+
+### Command names are emitted as dotted ids with no leading slash
+
+A slashed name such as `/speckit.companion.plan` resolves to nothing on assistants that do not use slash syntax.
 
 #### Scenario: status names the next step
 - **WHEN** resolution emits the command for the next step
 - **THEN** it is the dotted id with no leading slash, in both what is printed and what resume dispatches
 
-#### Scenario: a companion spec resumes
-- **WHEN** resolution computes the next command for a context recording the companion workflow
-- **THEN** the command comes from the companion family
-
-#### Scenario: an older context carries only the retired marker
-- **WHEN** a context predating the workflow field records the retired companion marker
-- **THEN** resolution still selects the companion family
-
-#### Scenario: no workflow is recorded
-- **WHEN** a context names neither the workflow nor the retired marker
-- **THEN** resolution emits the stock command family
-
 ### A check that can be run is run, not described
 
-A check the pipeline can execute SHALL be executed by the capture script, which keeps the exit code, the duration and a short tail of the output, and marks the entry as derived. A non-zero exit SHALL be recorded, never dropped, so a run that could not prove its work says so. A command the agent only typed is not evidence that anything ran.
-
-What cannot be run, such as a manual pass or a judgement about a warning, SHALL be recorded as a claim. An entry with no provenance MUST read as claimed, and only the exact derived marker may promote an entry, because the record is a file an agent writes into.
+The capture script runs an executable check itself and records its exit code, duration and output tail as a derived entry. A non-zero exit is recorded, never dropped. What cannot be run, such as a manual pass, is recorded as a claim.
 
 #### Scenario: a suite is recorded
 - **WHEN** implement records it
@@ -96,25 +104,22 @@ What cannot be run, such as a manual pass or a judgement about a warning, SHALL 
 - **WHEN** it is recorded
 - **THEN** the entry is kept, carrying the failure
 
+### An entry without the exact derived marker reads as a claim
+
+The record is a file an agent writes into, so only the exact derived marker promotes an entry.
+
 #### Scenario: an entry written before provenance existed
 - **WHEN** it is read back
 - **THEN** it reads as a claim
 
-### A reader of a captured list MUST accept every form its writer stores
+### A captured-list reader reads every usable entry, whatever form it was stored in
 
-A reader of decisions, verifications, or concerns SHALL accept both stored forms: a non-empty string reads as itself, and an entry reads through its identity value with its supporting detail still reachable. An entry with no usable identity value SHALL be skipped alone, never dropping the rest of the list. Widening a reader MUST NOT change the shape of what it emits, because other commands parse that output. Lists whose writer stores plain strings only are exempt.
+Decisions, verifications and concerns are read whether stored as a plain string or as an entry with an identity value. An entry with no usable identity value is skipped alone.
 
-#### Scenario: a real run's decisions are read back
-- **WHEN** status resolves a spec whose decisions the pipeline recorded
+#### Scenario: a list mixes recorded and hand-written decisions
+- **WHEN** status resolves the spec
 - **THEN** every decision appears, in recorded order
-- **AND** hand-authored string decisions in the same list appear unchanged alongside them
 
 #### Scenario: one entry in the list is unusable
-- **WHEN** a captured list carries an entry with no identity value among well-formed ones
-- **THEN** that entry is skipped and the rest are still read
-- **AND** the command still exits successfully
-
-## Uncovered
-
-- `status-context.py`: read its docstring and function list, not its resolution logic.
-- The Python test suite under `speckit-extension/tests/` was not read.
+- **WHEN** a list carries an entry with no identity value among well-formed ones
+- **THEN** that entry is skipped, the rest are read, and the command still exits successfully

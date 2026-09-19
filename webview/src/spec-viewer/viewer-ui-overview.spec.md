@@ -1,83 +1,86 @@
 # Viewer UI Overview — Living Spec
 
-> Adopted from existing code on 2026-07-19 and split by concern on 2026-09-07. Requirements describe observed behavior and have not been individually verified against tests.
-
 ## Purpose
 
-The overview and activity panel, which renders the run's durable context, its timing and its log from what the extension summarised.
+The Overview and its run log, which render a run's durable context, timing and history from what the extension summarised.
 
 ## Requirements
 
-### The overview degrades section by section, and a failure never blanks the page
+### An empty Overview section is not rendered
 
-Every overview section MUST hide itself when its data is empty. A render failure anywhere in the overview subtree MUST be caught, reported to the extension, and replaced with an inline notice, so one bad section cannot take the reading surface down.
+Every Overview section except Coverage SHALL hide itself when it has no data.
 
-#### Scenario: a section's data is absent
-- **WHEN** a spec recorded no decisions
-- **THEN** the decisions section does not render at all
+#### Scenario: a spec recorded no decisions
+- **WHEN** the Overview renders
+- **THEN** there is no Decisions section
 
-Coverage is the exception to hiding when empty. Its empty state is a finding, and the header strip reports the count whether or not the section renders.
+### A failing Overview section is replaced by a notice, never a blank page
 
-#### Scenario: coverage has rows but nothing is traced
-- **WHEN** the coverage rows exist but no requirement has a linked test
-- **THEN** the Coverage section renders and states "0 of N traced" plainly
-- **AND** each untraced requirement is listed, so the gap is readable rather than merely counted
-
-#### Scenario: a requirement names a test that is not on disk
-- **WHEN** a requirement's linked test path does not resolve in the workspace
-- **THEN** that row renders in a state distinct from both a confirmed test and an unmapped requirement
-- **AND** the label says how many of the named tests were found, so a partially-real link is not read as whole
+A render failure in the Overview SHALL be caught, reported to the extension, and replaced with an inline notice while the rest of the viewer keeps working.
 
 #### Scenario: a section throws while rendering
-- **WHEN** the overview subtree fails
-- **THEN** an inline notice replaces it, the error is reported to the extension, and the rest of the viewer keeps working
+- **WHEN** the Overview subtree fails
+- **THEN** an inline notice replaces it and the rail and document still work
 
-### Run timing is a summary the extension provides, not a duration the webview sums
+### Coverage with nothing traced still renders and states the zero
 
-Elapsed time and per-phase coverage MUST be read from the timing summary the extension sends, never recomputed from per-step timestamps. The webview SHALL NOT sum step spans, cap idle gaps or derive any working-time figure of its own, and renders the summary's completion flag, elapsed figure and measured-of-expected phase count as given. A run that has not settled shows "N of M phases", and only a summary that reports itself complete shows a start, an elapsed figure and an end.
+When coverage rows exist but no requirement has a linked test, the Coverage section SHALL render, state "0 of N traced", and list each untraced requirement.
 
-Recorded substep events are journal moments, ordered by and shown as "recorded at" their timestamp. The webview SHALL NOT present the gap between a substep's start and finish as a duration.
+#### Scenario: coverage has rows but nothing is traced
+- **WHEN** the Overview renders
+- **THEN** the Coverage section reads "0 of N traced" and lists the untraced requirements
+
+### A named test missing from disk reads differently from a found one
+
+A row whose named test does not exist SHALL render in a state distinct from both a confirmed test and an unmapped requirement, told apart without colour, and its label SHALL say how many of its named tests were found.
+
+#### Scenario: a requirement names two tests and one is missing
+- **WHEN** the Coverage section renders
+- **THEN** that row renders in its own state and its label says one of two was found
+
+### Run timing renders the extension's summary as given
+
+The Overview SHALL show the completion flag, elapsed figure and measured-of-expected phase count the extension sends, and derive no duration of its own. Only a summary that reports itself complete shows a start, elapsed time and end.
 
 #### Scenario: a run is still in flight
 - **WHEN** the timing summary reports itself not yet complete
-- **THEN** the run surfaces measured-of-expected phase coverage
-- **AND** no start, elapsed or end figure is shown as if the run had settled
+- **THEN** the Overview shows "N of M phases" and no start, elapsed or end figure
 
-#### Scenario: a spec was driven entirely through the CLI
-- **WHEN** the extension marks a CLI run's step spans as measured (both boundaries from an authoritative-enough writer) and reports them in the summary
-- **THEN** the viewer shows that coverage as given rather than "0 of N"
-- **AND** the webview still sums nothing: the change is in the summary it renders, not in a webview derivation
+### A substep event reads as a recorded moment, not a duration
 
-#### Scenario: a recorded substep event is displayed
-- **WHEN** a tracked substep is rendered in the phase history
-- **THEN** it reads as "recorded at" its journal timestamp
-- **AND** the span between its start and finish is not presented as a work duration
+A recorded substep SHALL read as "recorded at" its timestamp, and the gap between its start and finish SHALL NOT be shown as a duration.
+
+#### Scenario: a tracked substep is shown in the phase history
+- **WHEN** it renders
+- **THEN** it reads "recorded at" its timestamp with no duration beside it
 
 ### A folded phase is presented as folded, never as a near-zero duration
 
-A phase marked folded (a fast-path plan or tasks whose boundaries were stamped inside the specify run) MUST NOT render its span as a duration. The run timing strip SHALL show a "folded into" note naming the nearest earlier non-folded phase, or a plain "folded" when there is none, styled distinctly from a measured phase. Measured phases, coverage counts and the elapsed total render unchanged.
+A phase marked folded SHALL show "folded into" the nearest earlier phase that was not folded, or "folded" when there is none, styled apart from measured phases.
 
 #### Scenario: a fast-path spec is opened
-- **WHEN** the run timing strip renders a phase carrying the folded marker
-- **THEN** the phase shows "folded into Specify" instead of a sub-second duration
-- **AND** the specify phase keeps its real measured duration
+- **WHEN** the run timing strip renders a folded plan phase
+- **THEN** it shows "folded into Specify" and the specify phase keeps its measured duration
 
-### Durable context leads the panel; the granular run history stays collapsed
+### Durable context leads the Overview; the run history stays collapsed
 
-The activity panel MUST lead with the run's lifecycle signal and durable context (intent, run timing overview, touched living specs, verified proof, decisions, coverage) and demote the granular run history (phase events, tasks, concerns, files, comments) into a collapsed log below. The touched living specs and the run timing overview render inline in the overview's intent, not as separate run-log cards. Touched living specs SHALL sit under two labels, "Updated by this run" for the synced ones and "Read for context" for the rest, with an empty group omitted and no per-chip stamp. A chip SHALL show the capability's readable name, by the same rule as the Living Specs tree. A living-spec chip is always a link that opens its capability by name, whether or not a stored spec path rides along.
+The Overview SHALL lead with the run's lifecycle signal and durable context (intent, run timing, touched living specs, verified proof, decisions, coverage), and put phase events, tasks, concerns, files and comments in a collapsed log below.
 
-#### Scenario: a spec touched living specs
-- **WHEN** the overview renders
-- **THEN** the touched capabilities appear as links inside the intent, not as a separate card
-- **AND** selecting one opens that capability by name
+#### Scenario: a run with a long event history is opened
+- **WHEN** the Overview renders
+- **THEN** the intent and run timing show first and the event history is collapsed
+
+### Touched living specs are grouped by whether the run updated them
+
+Touched living specs SHALL render inside the intent under "Updated by this run" for synced capabilities and "Read for context" for the rest, with an empty group omitted.
 
 #### Scenario: a run synced one capability and only read two
-- **WHEN** the overview renders
+- **WHEN** the Overview renders
 - **THEN** one chip sits under "Updated by this run" and two under "Read for context"
 
 ### Evidence and assertion do not wear the same mark
 
-A verification the pipeline derived SHALL keep the check mark and show what it actually got back. One the run merely reported SHALL be visibly quieter, grouped apart, and still readable, because a run's account is worth reading but must not look like proof. The section's count SHALL say how many of each.
+A verification the pipeline ran SHALL keep the check mark and show what it got back. One the run only reported SHALL be quieter and grouped apart, and the section's count SHALL say how many of each. An entry recorded before provenance existed reads as reported.
 
 #### Scenario: a spec carries both kinds
 - **WHEN** the Overview renders
@@ -85,7 +88,7 @@ A verification the pipeline derived SHALL keep the check mark and show what it a
 
 #### Scenario: every entry predates provenance
 - **WHEN** the Overview renders
-- **THEN** they all read as reported, because that is what they are
+- **THEN** they all read as reported
 
 ## Uncovered
 

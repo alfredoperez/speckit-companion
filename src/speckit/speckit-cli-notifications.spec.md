@@ -1,72 +1,71 @@
 # Speckit CLI Notifications — Living Spec
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-What the extension tells the user about things it observed on its own: a newer release of the editor extension, and a task phase that just finished.
+What the extension tells the user about things it noticed on its own: a newer release of the editor extension, and a task phase that just finished.
 
 ## Requirements
 
 ### Two products share one release list and must never be confused
 <!-- touches: src/speckit/updateChecker.ts -->
 
-Any release lookup SHALL filter to the tag shape of the product being asked about, and MUST reject drafts and prereleases, because two products publish into one release list. A lookup of "the latest release" across both namespaces MUST NOT be reintroduced anywhere, including links opened for the user. One fetch SHALL answer for both products.
-
-Only the first page is fetched, so finding none of a product's tags SHALL mean the page did not reach them, never that the product has no releases.
+Every release lookup SHALL keep only the tag shape of the product it asks about and skip drafts and prereleases, because both products publish into one release list. A bare "latest release" lookup MUST NOT be reintroduced, including in links opened for the user.
 
 #### Scenario: an update check runs
-- **WHEN** releases are enumerated
-- **THEN** only tags matching the editor extension's own shape are considered, and the highest version among them wins
-- **AND** the other product's releases, drafts, and prereleases are ignored
+- **WHEN** releases are listed
+- **THEN** only `v1.2.3`-shaped tags count, the highest wins, and `speckit-ext-v*` tags, drafts and prereleases are ignored
+
+#### Scenario: the user opens the changelog for an offered update
+- **WHEN** View Changelog is chosen
+- **THEN** the release page for that exact version's tag opens, never a shared "latest release" URL
+
+### A product missing from the fetched page reads as unknown
+<!-- touches: src/speckit/updateChecker.ts -->
+
+Only the first page of releases is fetched, so finding no tag for a product SHALL mean "unknown", never "no releases", and nothing already known about it is discarded.
 
 #### Scenario: the page holds no release for one of the products
 - **WHEN** that product's tag shape matches nothing
-- **THEN** it is read as unknown, and nothing already known about it is discarded
-
-#### Scenario: the user opens the changelog for an offered update
-- **WHEN** the update notification's changelog action is chosen
-- **THEN** the link opens the release page for that exact version by its own tag
-- **AND** never a shared "latest release" URL that could land on the other product
+- **THEN** its previously known version is kept
 
 ### Update checks are throttled, skippable, and never noisy on failure
 <!-- touches: src/speckit/updateChecker.ts, src/speckit/utilityCommands.ts -->
 
-The update check SHALL run at most once per interval unless forced, SHALL respect a version the user skipped, and SHALL fail silently to the log when the network or API is unavailable.
+The update check SHALL run at most once a day unless forced, SHALL NOT notify about a version the user skipped, and SHALL log a network or API failure without showing it to the user.
 
 #### Scenario: the user skips a version
-- **WHEN** that version is later seen again
-- **THEN** no notification is shown
-- **AND** a version newer than the skipped one still notifies
+- **WHEN** that version is seen again
+- **THEN** no notification is shown, while a newer version still notifies
 
 #### Scenario: the releases API is unreachable
 - **WHEN** the check runs
-- **THEN** the failure is logged and no user-facing error appears
+- **THEN** the failure is logged and no error appears
 
-### Task progress is derived from the task document and only reported on transitions
+### The new-version notification can install the version it offers
+<!-- touches: src/speckit/updateChecker.ts -->
+
+The notification SHALL offer Update first, then View Changelog and Skip. Update installs the newest version the editor's gallery serves without pinning it, so automatic updates stay on, then offers a reload. A failed install opens the extension's page instead.
+
+#### Scenario: the install succeeds
+- **WHEN** the user presses Update
+- **THEN** the newest version is installed and a reload is offered
+
+#### Scenario: the install fails
+- **WHEN** the user presses Update and the install fails
+- **THEN** the extension's page opens
+
+### A phase is announced only when it newly completes
 <!-- touches: src/speckit/taskProgressService.ts -->
 
-Phase completion SHALL be computed by parsing the task document into phases and counting only real task checkboxes, not items inside code blocks. A notification MUST fire only when a phase newly becomes complete since the last observed state. The cache MUST be seeded on first sight of a file, so opening an already-finished project announces nothing.
+A task phase SHALL be announced once, when its last task is checked. The first sight of a task file records its state without announcing, so opening a finished project announces nothing.
 
 #### Scenario: an already-complete task file is opened
 - **WHEN** its state is first observed
-- **THEN** the cache is seeded and no completion is announced
+- **THEN** no completion is announced
 
 #### Scenario: the final task of a phase is checked
 - **WHEN** the file changes
-- **THEN** that phase alone is reported as newly complete, and re-saving the file reports nothing further
-
-### The new-version notification can install the version it offers
-
-The new-version notification SHALL offer Update first, ahead of View Changelog and Skip. Update SHALL install the newest version the editor's gallery serves without pinning a version, then offer a window reload. When the install fails, Update SHALL open the extension's page instead of failing silently.
-
-#### Scenario: the install succeeds
-- **WHEN** the developer presses Update
-- **THEN** the newest version is installed, automatic updates stay on, and a reload is offered
-
-#### Scenario: the install fails
-- **WHEN** the developer presses Update and the install fails
-- **THEN** the extension's page opens
+- **THEN** that phase alone is announced, and saving again announces nothing
 
 ## Uncovered
 

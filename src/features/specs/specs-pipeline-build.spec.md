@@ -2,37 +2,31 @@
 
 <!-- reviewed: a9c0b02b -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
 Builds the project's pipeline configuration into the command bodies the assistant reads, and tells the user when that build no longer matches its inputs.
 
 ## Requirements
 
-### One answer about whether a config is usable
-
-A configuration file read by several readers MUST get one verdict: the editor SHALL refuse exactly what the runtime refuses. Where the two are implemented separately, they SHALL be pinned against shared fixtures. The rejection reason, with the line at fault, SHALL be visible in the editor, not only in a terminal.
-
-#### Scenario: a config the runtime cannot read
-- **WHEN** a registry uses syntax outside the runtime's supported subset
-- **THEN** the editor rejects it too, naming the line
-
-#### Scenario: a config both readers accept
-- **WHEN** a file is inside the supported subset
-- **THEN** it behaves exactly as before
-
 ### A built pipeline reports when it is older than what it was built from
 
-The built output SHALL be reported out of date whenever any input is newer: the configuration file, a node, a workflow, a fragment, or a template. Checking `companion.yml` alone misses the most common edit, a node file.
+The build SHALL be reported out of date whenever any input is newer than it: the configuration file, a node, a workflow, a fragment or a template. Checking the configuration file alone misses the most common edit, a node.
 
 #### Scenario: a node is edited and nothing is rebuilt
 - **WHEN** the build state is read
-- **THEN** it reports the build as stale, naming that the inputs are newer
+- **THEN** it reports the build as stale
 
 ### A build is previewable, and its log is kept rather than summarized
 
-Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes. The full output SHALL go to the log, not a notification. The log SHALL take focus only when the build failed, and a hung build SHALL be abandoned.
+Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes.
+
+#### Scenario: the reader previews a build
+- **WHEN** the preview finishes
+- **THEN** it lists the commands that would change and no file on disk has changed
+
+### A build's full output goes to the log, which takes focus only on failure
+
+The full output of a build SHALL go to the log, not a notification, and the log SHALL come forward only when the build failed.
 
 #### Scenario: a build succeeds
 - **WHEN** it finishes
@@ -40,15 +34,23 @@ Running a build from the editor SHALL offer a preview that writes nothing alongs
 
 #### Scenario: a build fails
 - **WHEN** it reports an error
-- **THEN** the log is surfaced with the whole output
+- **THEN** the log is brought forward with the whole output
+
+### A hung build is abandoned
+
+A build that has not finished within a minute SHALL be stopped and reported as failed.
+
+#### Scenario: the build script never exits
+- **WHEN** a minute passes
+- **THEN** the build is abandoned and the failure is shown
 
 ### The pipeline structure shown is the one a build would produce
 
-The pipeline builder SHALL draw the structure derived by the build itself from the same configuration, not a second derivation on the editor side.
+The pipeline builder SHALL draw the structure the build itself derives from the same configuration, never a second derivation in the editor.
 
-#### Scenario: the builder renders a pipeline
-- **WHEN** its structure is resolved
-- **THEN** it comes from the build's own derivation, so what is drawn is what a build would produce
+#### Scenario: the configuration adds a step
+- **WHEN** the builder renders the pipeline
+- **THEN** it shows the step where a build would place it
 
 ## Uncovered
 

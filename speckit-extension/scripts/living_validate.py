@@ -37,8 +37,9 @@ _TOUCHES_RE = re.compile(r"^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$")
 _ADOPTED_RE = re.compile(r"^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$")
 _ALIGNS_RE = re.compile(r"^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$")
 _CAP_MARKER_RE = re.compile(r"^\s*<!--\s*capability:\s*([^\s>]+)\s*-->\s*$", re.IGNORECASE)
-#: Past these a spec is a folder's worth of concerns in one file; under the floor
-#: it is a paragraph with its own tab. Warnings, not gates.
+#: Past the line cap a spec is a folder's worth of concerns in one file; under the floor
+#: it is a paragraph with its own tab. Lines, not requirements: one rule per requirement
+#: makes the count a measure of care, not of size. Warnings, not gates.
 #: `<!-- adopted: CLAUDE.md:18 -->` — this requirement was transcribed by adoption
 #: and no run has confirmed it yet. It sits under the heading, after the `touches`
 #: marker so the resolver still finds that one on the first non-blank line.
@@ -58,7 +59,6 @@ def adopted_sources(section: list[str]) -> str | None:
     return None
 
 
-MAX_REQUIREMENTS = 8
 MAX_LINES = 160
 MIN_REQUIREMENTS = 3
 #: Past these one requirement is several rules under one heading, or one rule buried in
@@ -592,15 +592,14 @@ def check_living_spec(text: str, path: str, root: str | None = ".",
                 "glob, so the rules that hold between its files were not transcribed.",
                 "Read the project's conventions and enforcement configs, and add each rule "
                 "as a requirement whose marker is the layer glob.", capability))
-    if root is not None and (reqs > MAX_REQUIREMENTS or len(lines) > MAX_LINES):
+    if root is not None and len(lines) > MAX_LINES:
         # A capability with a wide surface is one folder, not one file. Warning
         # only: splitting is a judgement about where the seams are, and a gate
         # that blocks on it would just teach people to write fewer scenarios.
         findings.append(_finding(
             WARNING, "spec-too-large", path, 1,
-            f"{reqs} requirements over {len(lines)} lines — past "
-            f"{MAX_REQUIREMENTS} requirements or {MAX_LINES} lines a spec stops "
-            f"being something a reader holds in their head.",
+            f"{len(lines)} lines: past {MAX_LINES} a spec stops being something a "
+            f"reader holds in their head.",
             _split_advice(path), capability))
 
     if not fences_are_balanced(text):

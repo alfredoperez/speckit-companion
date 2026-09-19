@@ -2,80 +2,92 @@
 
 <!-- reviewed: a9c0b02b -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-The sidebar tree and the commands that act on a spec: dispatching a step to the AI, filtering and ordering the tree, and bulk and destructive actions.
+The Specs sidebar tree and the commands that act on a spec: dispatching a step to the AI, filtering and ordering the tree, and bulk and destructive actions.
 
 ## Requirements
 
 ### Commands that need the companion piece are gated by family, not by list
 
-A Companion command SHALL be recognized by its shared namespace prefix, not an enumerated list, and a pipeline whose every step dispatches that family is Companion. Without the companion piece, such a command MUST downgrade to its stock equivalent or, if none exists, be suppressed with a non-blocking explanation. It MUST NEVER be dispatched in a form the AI cannot resolve. The explanation is one sentence owned by the dispatch routine, shown once per session cooldown.
+Without the companion extension installed, a Companion step SHALL run its stock equivalent, and a Companion-only action with no stock equivalent SHALL dispatch nothing. A command the AI cannot resolve is never sent. Any command in the Companion namespace counts, including one added later.
 
-#### Scenario: a Companion step runs without the companion piece installed
+#### Scenario: a Companion step runs without the companion extension
 - **WHEN** the step has a stock equivalent
-- **THEN** the stock command runs instead
-- **AND** the user is warned without being blocked, and offered the install
+- **THEN** the stock command runs and the user is warned, with an install action, without being blocked
 
-#### Scenario: a Companion-only action runs without the companion piece
+#### Scenario: a Companion-only action runs without the companion extension
 - **WHEN** it has no stock equivalent
-- **THEN** nothing is dispatched
-- **AND** the user is told why
+- **THEN** nothing is dispatched and the user is told why
 
-Every dispatching surface SHALL call one routine that resolves the command, falls back and warns, reports the dispatch, formats for the provider, wraps the lifecycle preamble, and runs. Each surface passes in only how to run the finished prompt.
+### The fallback warning is shown once per run, not once per step
 
-#### Scenario: two surfaces run the same step
-- **WHEN** the sidebar and the viewer each dispatch it
-- **THEN** both produce the same command, fallback behavior, and reported event
-- **AND** each supplies its own way of running the prompt, so one can keep the terminal it gets back
+The fallback warning SHALL show at most once per ten-minute window, while every fallback is still logged. It is a cooldown, not a once-ever flag, so a failed or cancelled install is warned about again later.
 
-When a step actually dispatches to a terminal, the dispatch path SHALL call the shared once-per-session terminal install nudge owned by the speckit-cli capability, except on the fell-back path, which shows its own install warning. The nudge's own gate decides whether it renders, and it can never block the command.
-
-#### Scenario: a four-step Companion run without the companion piece
+#### Scenario: a four-step Companion run without the companion extension
 - **WHEN** every step falls back to stock
-- **THEN** the warning is shown once and each fallback is still logged
+- **THEN** the warning is shown once and each fallback is logged
+
+### Every surface dispatches a step the same way
+
+The sidebar and the viewer SHALL produce the same command, the same fallback behaviour and the same reported dispatch event for the same step. Only how the finished prompt is run differs between them.
+
+#### Scenario: the sidebar and the viewer run the same step
+- **WHEN** each dispatches it for the same spec
+- **THEN** both send the same command line and report one `phase.dispatched` event each
 
 ### The specs tree presents recorded state, and its view controls are per-workspace and idempotent
 
-The tree SHALL group specs by recorded status and offer filtering and ordering over them. View state (filter, order, expansion) persists per workspace. A command whose name asserts an end state MUST enforce it rather than toggle, so "collapse all" never expands.
+The tree SHALL group specs by their recorded status and regroup a spec when its record changes on disk. The filter and sort order SHALL persist per workspace.
 
 #### Scenario: a spec finishes while the tree is open
 - **WHEN** its record changes on disk
-- **THEN** a debounced refresh moves it to the matching group
+- **THEN** the spec moves to the matching group without a manual refresh
 
-#### Scenario: "collapse all" is invoked on an already-collapsed tree
+#### Scenario: the window is reloaded
+- **WHEN** the tree is drawn again
+- **THEN** the filter and sort order set before the reload still apply
+
+### Collapse All never expands the tree
+
+A command whose name asserts an end state SHALL enforce that state rather than toggle it.
+
+#### Scenario: Collapse All runs on an already-collapsed tree
 - **WHEN** the command runs
 - **THEN** the tree stays collapsed
 
-The view's title bar SHALL carry, in order: refresh, filter, sort, one collapse-or-expand button matching the tree's state, the pipeline builder when its extension is installed, and new spec. It has no overflow menu of its own, and a test holds this cap.
+### The Specs title bar carries six actions in a fixed order
+
+The view's title bar SHALL carry, in order: refresh, filter, sort, one collapse-or-expand button matching the tree's state, the pipeline builder when the companion extension is installed, and new spec. It has no overflow menu of its own.
 
 #### Scenario: the tree is expanded
 - **WHEN** the reader looks at the title bar
-- **THEN** one button offers Collapse All; after it is used, the same slot offers Expand All
+- **THEN** one button offers Collapse All, and after it is used the same slot offers Expand All
 
 ### A workflow that records nothing still shows progress
 
-For user-defined workflows that never write the state record, progression SHALL be reconstructed from their step outputs on disk, and only ever forward of what the record says. Workflows that record their own progress MUST be left alone.
-
-A shipped workflow is recognized by its step sequence, not by whether every step name is in the lifecycle set. A built-in pipeline ending in a step outside that set MUST still be recognized as built-in and MUST NOT be reconstructed from disk. Recognition may only move a workflow from user-defined to built-in, never the reverse.
-
-Everything inside a folder a step claims as its output belongs to that step and MUST NOT count as evidence for any other step.
+For a user-defined workflow that never writes the state record, progression SHALL be reconstructed from its step outputs on disk, and only ever forward of what the record says.
 
 #### Scenario: a user's workflow has produced its third step's output
 - **WHEN** the record still says step one
-- **THEN** reconstructed progression advances it to the third step so the forward action appears
-- **AND** built-in pipelines are untouched by this path
+- **THEN** the spec reads as at the third step and the forward action appears
 
 #### Scenario: the record is already at or ahead of what disk shows
 - **WHEN** reconstruction runs
-- **THEN** the real record wins and nothing is rewritten
+- **THEN** the record wins and nothing is rewritten
+
+### A built-in pipeline is never reconstructed from disk
+
+A shipped workflow SHALL be recognized by its step sequence, so one ending in a step outside the lifecycle set is still built-in and its progression comes only from its record. Recognition can move a workflow from user-defined to built-in, never the reverse.
 
 #### Scenario: a built-in pipeline ends in a step outside the lifecycle set
 - **WHEN** the reader opens a spec running that pipeline
 - **THEN** no progression is reconstructed from disk
 - **AND** the forward action names the step the step strip shows as pending
+
+### A folder a step claims counts only for that step
+
+Everything inside a folder a step claims as its output SHALL count as evidence for that step alone.
 
 #### Scenario: only a claimed folder's document is present
 - **WHEN** the only document besides the specification lives in a folder an earlier step claims
@@ -84,16 +96,19 @@ Everything inside a folder a step claims as its output belongs to that step and 
 
 ### Destructive and bulk spec actions confirm, skip no-ops, and stay inside the workspace
 
-Deleting a spec or bulk-changing status SHALL confirm first, then apply only to targets the action would change. A path that turns a stored or user-supplied relative path into a file operation MUST resolve it against the workspace root and confirm the target exists, showing a visible error otherwise.
+Deleting a spec or bulk-changing status SHALL ask for confirmation, then apply only to the specs the action would change.
 
 #### Scenario: archiving a group where some specs are already archived
 - **WHEN** the bulk action runs
-- **THEN** only the not-yet-archived specs are touched
-- **AND** the reported count reflects what changed
+- **THEN** the confirmation counts and touches only the specs not yet archived
 
-#### Scenario: revealing a spec folder that has been deleted outside the editor
+### Acting on a missing spec path reports an error
+
+An action that turns a stored or user-supplied relative path into a file operation SHALL resolve it against the workspace root and show a visible error when the target does not exist.
+
+#### Scenario: revealing a spec folder that was deleted outside the editor
 - **WHEN** the reveal action runs
-- **THEN** the user gets an explicit "does not exist" error instead of a silent no-op
+- **THEN** the user gets a "does not exist" error instead of a silent no-op
 
 ## Uncovered
 
