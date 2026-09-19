@@ -35,6 +35,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import os
 import re
@@ -81,6 +82,7 @@ def _literal_prefix(glob_pat: str) -> str:
     return "".join(out).rstrip("/")
 
 
+@functools.lru_cache(maxsize=None)
 def _glob_to_regex(pat: str) -> str:
     """Translate a glob into a regex with POSIX-path semantics.
 
