@@ -17,7 +17,6 @@ out/
 !speckit-extension/tests/fixtures/**/.trace.jsonl
 
 # Throwaway sandboxes — living-spec cells, fresh installs, builder QA (see examples/README.md)
-examples/bench-sandboxes/
 .env.local
 .vscode/*
 !.vscode/extensions.json
@@ -106,3 +105,6 @@ skills-lock.json
 # Mascot explorations, named by timestamp. The poses that survive are picked
 # by hand into assets/mascot/poses/, which stays tracked.
 assets/mascot/explore/
+
+# Agent worktrees: local scratch, never committed (two were once committed as gitlinks).
+.claude/worktrees/
