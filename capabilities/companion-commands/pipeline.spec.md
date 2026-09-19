@@ -2,41 +2,23 @@
 
 <!-- reviewed: d589a63e -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-The two command families coexist, the workflow choice only routes dispatch, and a run sizes itself without ever halting the host. This keeps a configuration change from stranding a project and an unclear size from under-planning a change.
+A Companion run sizes itself, dispatches workers only where a script says the work splits, and never halts the host, so an unclear size never under-plans a change.
 
 ## Requirements
 
 ### Four commands are lifecycle hooks, never user-facing verbs
 
-The manifest binds four commands to spec-kit's lifecycle events, and they SHALL only record the step and status a run reached. They MUST NOT create spec directories, author documents, or do the surrounding command's work. The host pipeline fires them, so their bodies are written for a machine trigger, not a person.
+The four commands bound to spec-kit's lifecycle events SHALL only record the step and status a run reached. They MUST NOT create spec directories, author documents, or do the surrounding command's work.
 
 #### Scenario: a pipeline phase finishes
 - **WHEN** the host fires the matching lifecycle event
 - **THEN** the hook records the step and status and does nothing else
 
-### Both command families are always present; the workflow choice only routes dispatch
-
-Choosing a workflow SHALL add and remove nothing: it selects which family a spec dispatches, and that choice is recorded on the spec so every later dispatch resolves the same way. An add-only reconciliation SHALL restore the stock family when absent and never remove it. A Companion command with no stock counterpart passes through unchanged.
-
-#### Scenario: a spec was created under one workflow
-- **WHEN** a later step is dispatched from any surface
-- **THEN** the spec's recorded workflow decides which family's command runs
-
-#### Scenario: the spec-kit extension is not installed
-- **WHEN** a namespaced command would be dispatched
-- **THEN** it downgrades to its stock counterpart with a visible warning rather than failing
-
-#### Scenario: the stock family is missing from a checkout
-- **WHEN** the extension activates
-- **THEN** the stock family is restored, and nothing is ever removed
-
 ### Every command degrades rather than failing the host
 
-Capture, hook evaluation and living-spec work SHALL be best-effort in every body. A missing interpreter, absent config, malformed file or unavailable capability SHALL produce one warning and a skip, never a halt.
+Capture, hook evaluation and living-spec work SHALL be best-effort in every body: a missing interpreter, absent config, malformed file or unavailable capability produces one warning and a skip, never a halt.
 
 #### Scenario: a prerequisite is unavailable
 - **WHEN** a command reaches a step whose prerequisite is missing
@@ -44,45 +26,43 @@ Capture, hook evaluation and living-spec work SHALL be best-effort in every body
 
 ### The pipeline right-sizes itself automatically, and an unresolved size runs the full pipeline
 
-A classification step SHALL emit one size signal from a single-sourced guardrail, with no user-facing setting. A small change folds toward implementation, an oversized change gets a warning and then the same full pipeline, and anything else runs the full pipeline. Routing MUST never silently skip a phase, and the default branch MUST be the full pipeline.
+Specify SHALL classify each change as simple, normal or oversized from one shared guardrail, with no user setting. Routing MUST never skip a phase silently, so a size it cannot resolve runs the full pipeline.
 
 #### Scenario: the size signal cannot be resolved
 - **WHEN** routing has no usable size
-- **THEN** the full pipeline runs
+- **THEN** every phase runs
 
-#### Scenario: a change clearly exceeds the bar
-- **WHEN** the size is oversized
-- **THEN** a warning is shown and every phase still runs
+### An oversized change runs every phase, with a warning and a scale note
 
-Every documented size MUST be reachable and MUST behave differently from its neighbours, because readers plan around an advertised distinction.
+An oversized verdict SHALL print a warning and run the full pipeline, and its plan and task list SHALL open with a scale note naming how many files and areas the change spans. Every advertised size must behave observably differently, because readers plan around the distinction.
 
-Every step that records or reads a size MUST use the same vocabulary. A word its readers do not understand drops the classification silently and the full ceremony runs.
+#### Scenario: a change clearly exceeds the small bar
+- **WHEN** it is classified oversized
+- **THEN** a warning is shown, every phase runs, and the plan opens with a scale note that a normal plan lacks
 
-#### Scenario: the largest size is chosen
-- **WHEN** a change is judged well beyond the small bar
-- **THEN** that size is recorded, and the resulting documents differ observably from the middle size
+### Every step that records or reads a size uses the same words
+
+Specify, the standalone classify command and every reader of the recorded size SHALL use one vocabulary, because a word a reader does not know drops the classification silently and the full ceremony runs.
 
 #### Scenario: a size is classified on its own rather than during a run
-- **WHEN** the standalone classification step reports a size
-- **THEN** the value it records is one every reader of the recorded size understands
+- **WHEN** the classify command reports a size
+- **THEN** the value is one every reader of the recorded size understands
 
 ### A step dispatches what a script splits out for it, to avoid reading or to get a second pair of eyes
 
-A step SHALL dispatch when a worker reads something the main agent would otherwise carry to the end of the run, brings a distinct perspective, or builds independent work a script has already split out for it. Which workers a step sends is decided by `dispatch-briefs.py`, not by the model: plan sends one reader per recorded code area (at most four) and, above `simple` size, one writer per design document; implement sends workers for each Foundational wave of four or more tasks, and one reviewer for its living-spec deltas before they fold. Tasks does not dispatch. The optional adversarial task review is a panel of distinct lenses, not a split of files.
+Which workers a step sends SHALL be decided by the brief script, not the model: plan sends one reader per recorded code area (at most four) and, above simple size, one writer per design document; implement sends workers for each Foundational wave of four or more tasks and one reviewer for its living-spec deltas. Fewer than two briefs means the step works inline, and tasks never dispatches.
 
-#### Scenario: a step's only inputs are the artifacts already written
-- **WHEN** no script prints briefs for it
+#### Scenario: the script prints no briefs
+- **WHEN** a step reaches its dispatch point
 - **THEN** it stays inline
 
-#### Scenario: a step wants breadth rather than reading
-- **WHEN** it dispatches a review panel
-- **THEN** each worker carries a different lens over the same material, not a different slice of it
+#### Scenario: a Foundational wave holds four or more tasks
+- **WHEN** implement reaches it
+- **THEN** its tasks go to workers dispatched together, and no task after its join line starts until they all return
 
 ### Implement dispatches on how much a phase carries, not on every phase
 
-Implement SHALL dispatch a story phase only when it owns roughly five files or more, build the rest inline in phase order, and say which it did which way. The phase's own file count alone decides it; specify, plan and tasks having run in the same session is not a reason to build inline. Foundational goes through `dispatch-briefs.py --waves`: each wave of four or more tasks is split across up to four workers, and the next wave starts only when they have all returned. Smaller Foundational waves, Setup and Polish are built inline.
-
-The story-phase threshold is measured: in ten replays, phases of four files or fewer gained nothing from fanning out and cost about twice as much, while six to eight file phases saved about three minutes.
+Implement SHALL dispatch a user-story phase only when it owns five or more files, build the rest inline in phase order, and say which it did which way. The phase's own file count alone decides it, even in an auto run. Replays showed phases of four files or fewer gained nothing from a worker and cost about twice as much.
 
 #### Scenario: a story phase owns two files
 - **WHEN** implement reaches it
@@ -92,24 +72,18 @@ The story-phase threshold is measured: in ten replays, phases of four files or f
 - **WHEN** implement reaches it
 - **THEN** it is dispatched to its own worker
 
-#### Scenario: a Foundational wave holds four or more tasks
-- **WHEN** implement reaches it
-- **THEN** its tasks go to workers dispatched together, and no task after its join line starts until they all return
-
 ### A simple-verdict run captures the same context a full run would, on the fast path
 
-When classify returns `simple`, specify writes the plan inline as `## Approach` and skips `plan` and `tasks`, but SHALL still capture what a full run would. It persists the one-line approach onto `.spec-context.json`, reruns the living-spec load post-draft only when the pre-draft load recorded nothing, and stamps the folded `plan` and `tasks` boundaries `by: extension` at step level, not as AI substeps. All of it is best-effort, skipped silently without the interpreter, and writes no `completed` status.
+When the verdict is simple, specify writes the plan inline as an Approach section and skips plan and tasks, but SHALL still record the approach, stamp the folded plan and tasks boundaries as extension step-level events, and run the living-spec load once post-draft when the pre-draft load recorded nothing.
 
 #### Scenario: classify returns simple
+- **WHEN** specify finishes a simple-verdict draft
+- **THEN** the approach is recorded, the plan and tasks boundaries are stamped, and the spec lands at tasks with status ready-to-implement
 
-- **WHEN** the specify command finishes a simple-verdict draft
-- **THEN** the approach is captured, the folded plan and tasks boundaries are stamped as extension step-level events, and the spec lands at tasks with `status: ready-to-implement`
-
-#### Scenario: the pre-draft load recorded nothing
-
-- **WHEN** the simple run reaches the fold and `livingSpecs.loaded` is still empty
-- **THEN** the deterministic recorder runs once against the now-known touched files, and never re-resolves when the load already populated it
+#### Scenario: the pre-draft load already recorded capabilities
+- **WHEN** the simple run reaches the fold
+- **THEN** the load is not run a second time
 
 ## Uncovered
 
-_None. Re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._
+_None._

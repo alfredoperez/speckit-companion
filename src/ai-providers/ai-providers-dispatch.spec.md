@@ -2,89 +2,71 @@
 
 <!-- reviewed: a9c0b02b -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-How a composed command reaches the user's AI coding assistant: the one provider contract, the terminal CLI lifecycle, and host-chat targets that are probed rather than assumed.
+How a composed command reaches the user's AI assistant: a one-way hand-off, through a terminal CLI or a host chat the extension probes rather than assumes.
 
 ## Requirements
 
 ### Dispatch is one-way and unobservable
 <!-- touches: src/ai-providers/aiProvider.ts, src/ai-providers/ideChatProvider.ts, src/ai-providers/claudePanelProvider.ts -->
 
-A provider SHALL be treated as a write-only channel: the extension hands text to the assistant and cannot observe what happens next. No caller may treat a return value as evidence that the work happened. Providers that dispatch somewhere other than a terminal MUST satisfy the same interface and report a non-failure result, not an error.
+The extension hands text to the assistant and cannot see what happens next, so a dispatch returning is never proof the step ran. Completion is known only when the assistant writes spec context.
 
 #### Scenario: a step is dispatched to a chat surface
-- **WHEN** the configured provider routes to the host editor's chat or a GUI panel instead of a terminal
-- **THEN** the dispatch call resolves without a terminal handle and without throwing
-- **AND** callers treat the absence of a failure signal as success, never as confirmation of completion
+- **WHEN** the provider routes to the host editor's chat or a GUI panel
+- **THEN** the dispatch resolves without a terminal and without throwing
 
 #### Scenario: the assistant ignores the instruction
 - **WHEN** the assistant never acts on the dispatched text
-- **THEN** the extension cannot detect this and does not claim the step completed
-- **AND** completion is established by the assistant writing spec context, not by the dispatch returning
+- **THEN** the step is not shown as complete
 
-### Every assistant is reached through one provider contract
-<!-- touches: src/ai-providers/aiProvider.ts, src/ai-providers/aiProviderFactory.ts -->
-
-All assistants SHALL be reached through one provider interface covering installation check, interactive dispatch, background dispatch, slash-command dispatch, and permission-flag resolution. A feature MUST NOT branch on which assistant is configured, so adding an assistant means adding a provider, not editing call sites.
-
-#### Scenario: a new assistant is supported
-- **WHEN** support for another AI tool is added
-- **THEN** it is a new provider registered in the factory and the paths registry
-- **AND** no existing feature code changes to accommodate it
-
-### Terminal CLIs share one dispatch lifecycle
+### A missing CLI fails loudly with how to install it
 <!-- touches: src/ai-providers/cliTerminalProvider.ts -->
 
-Terminal CLI providers SHALL inherit one lifecycle: verify the CLI, stage the prompt to a temp file, build the shell line, create the terminal, wait for shell readiness, send, then delete the temp file after a delay. A concrete provider MUST override only the parts that differ for its CLI. Assistants that do not fit this shape, such as a TUI that must boot before input or a reused long-lived session, may stay outside it.
-
-#### Scenario: a CLI provider needs a different command line
-- **WHEN** a CLI takes its prompt in a form the shared line does not produce
-- **THEN** the provider overrides the dispatch-preparation step and returns its own command line plus the temp files to clean
-- **AND** install verification, terminal creation, shell readiness, and cleanup remain inherited
-
 #### Scenario: the CLI is not installed
-- **WHEN** a provider that declares an install hint dispatches and its binary is absent
-- **THEN** the user is told how to get it and the dispatch fails loudly instead of sending text into a shell that cannot act on it
-- **AND** the hint is a copyable install command for package-manager CLIs, or an "Open Install Page" link for download-based tools such as the `agy` CLI
+- **WHEN** a terminal CLI provider dispatches and its binary is absent
+- **THEN** the dispatch fails with an error instead of sending text into the shell
+- **AND** the error offers a copyable install command, or an "Open Install Page" link for download-based tools such as `agy`
 
 ### The prompt is never pasted into visible terminal scrollback
 <!-- touches: src/ai-providers/aiProvider.ts, src/core/utils/shellDetection.ts -->
 
-The assembled prompt SHALL be passed through a temp file the shell reads at invocation, not inlined into the command line. The substitution form MUST be chosen from the detected shell family. Where a shell has no such substitution, the provider MUST inline with that shell's escaping, and MUST refuse with a message naming a shell to switch to instead of truncating when the line exceeds the shell's limit.
+The prompt travels through a temp file the shell reads at invocation, using the substitution form of the detected shell family. A shell with no such substitution gets the prompt inlined with its own escaping.
 
-#### Scenario: a long prompt on a shell without file substitution
-- **WHEN** the assembled command line would exceed the shell's command-length limit
-- **THEN** dispatch fails with a message naming the limit and suggesting a different terminal shell
+#### Scenario: a long prompt on bash
+- **WHEN** a multi-kilobyte prompt is dispatched to a CLI in bash
+- **THEN** the terminal shows a short command line reading a temp file, not the prompt text
+
+### A prompt too long for the shell is refused, never truncated
+<!-- touches: src/ai-providers/aiProvider.ts, src/core/utils/shellDetection.ts -->
+
+#### Scenario: a long prompt in cmd.exe
+- **WHEN** the inlined command line would exceed cmd.exe's length limit
+- **THEN** dispatch fails with a message naming the limit and suggesting PowerShell or Git Bash
 - **AND** no truncated command is sent
 
 ### Dispatch targets are probed at dispatch time, not assumed
 <!-- touches: src/ai-providers/ideChatProvider.ts, src/ai-providers/wibeyPanelProvider.ts -->
 
-Surfaces the extension does not own, such as a host editor's chat or another extension's panel, SHALL be resolved by checking what is registered at dispatch time, in a per-target preference order with fallbacks. When no target resolves, the provider MUST show an actionable message and MUST NOT throw. `[inferred]` The last fallback copies the command to the clipboard and opens the surface, so a target with no programmatic input still works with one paste.
+A host editor's chat or another extension's panel is found by checking which commands are registered at dispatch time, in a per-target preference order. When none resolves, the user gets an actionable message and nothing throws.
 
 #### Scenario: the host editor exposes no chat command
-- **WHEN** none of the candidate chat commands are registered in the running editor
-- **THEN** the user is warned that no built-in chat was found and told to switch to a CLI provider
-- **AND** a host that ships its own CLI provider (an Antigravity host, whose `agy` CLI the dedicated Antigravity provider runs) is named directly instead of the generic switch-to-CLI hint
-- **AND** nothing throws
+- **WHEN** none of the candidate chat commands are registered
+- **THEN** the user is told no built-in chat was found and to switch to a CLI provider
+- **AND** in Antigravity the message names the Antigravity provider, which runs its `agy` CLI
 
-#### Scenario: the host drops the prompt it is handed
-- **WHEN** a target opens its chat but discards the supplied query
-- **THEN** the command is placed on the clipboard and the user is told to paste and press Enter
+### A host that drops the prompt gets it through the clipboard
+<!-- touches: src/ai-providers/ideChatProvider.ts -->
+
+#### Scenario: dispatching to Windsurf
+- **WHEN** a command is dispatched to a host whose chat discards the supplied query
+- **THEN** the command is copied to the clipboard, the chat opens, and the user is told to paste and press Enter
 
 ### Commands are not auto-submitted into a surface that cannot resolve them
 <!-- touches: src/ai-providers/ideChatProvider.ts -->
 
-Before firing a SpecKit command into a host editor's chat, the extension SHALL check that spec-kit has scaffolded those commands for that editor. If not, the command MUST be prefilled instead of submitted, and the user MUST be told why and offered a route to initialize.
-
 #### Scenario: the workspace is not spec-kit initialized
-- **WHEN** a command is dispatched to a host chat with no spec-kit scaffolding present
+- **WHEN** a SpecKit command is dispatched to a host chat with no spec-kit scaffolding for that editor
 - **THEN** the chat opens with the command prefilled but not submitted
-- **AND** the user is warned and offered the initialize action
-
-## Uncovered
-
-_None. Every file in the area was read._
+- **AND** the user is warned and offered Initialize SpecKit

@@ -2,37 +2,43 @@
 
 <!-- reviewed: d589a63e -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-Core defines what a spec's recorded state means: the on-disk context file, its append-only history, the pairing of steps with statuses, and which timings can be trusted. The extension, the prompt preamble, and the Python writers all share this one contract.
+What a spec's recorded state means: the per-spec context file, its append-only history, how steps pair with statuses, and which timings can be trusted. The extension, the prompt preamble and the Python writers share this one contract.
 
 ## Requirements
 
 ### Recorded spec state has one on-disk shape and one append-only log
 <!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
 
-A spec's lifecycle SHALL be recorded in one per-spec context file whose history is append-only: entries are never reordered, edited, or removed. Per-step and per-substep timing SHALL be derived in memory from that log, never persisted beside it. Unknown and legacy fields MUST be preserved across writes, so no writer loses another's data.
+A spec's lifecycle SHALL be recorded in its context file's history, which is append-only: entries are never reordered, edited or removed. Step and substep timing SHALL be derived from that history in memory and never persisted beside it.
 
 #### Scenario: a step's timing is displayed
-- **WHEN** the viewer needs how long a step took
-- **THEN** it derives that from the history log, not a stored duration
+- **WHEN** the viewer shows how long a step took
+- **THEN** the figure is derived from the history, and no stored duration exists in the file
+
+### A writer keeps the fields it does not recognize
+<!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
+
+Every writer SHALL preserve unknown and legacy fields when it rewrites the context file, so no writer loses another's data.
 
 #### Scenario: a writer that predates a field updates the file
-- **WHEN** a component rewrites the context file
-- **THEN** fields it does not recognize survive the write unchanged
+- **WHEN** it rewrites the context file
+- **THEN** fields it does not recognize survive unchanged
 
-A recorded coverage row SHALL be able to record which of its named tests were confirmed to exist, separately from the case where nobody checked. "Checked and not found" and "not checked" MUST NOT collapse into one, because only the first is a finding.
+### Unchecked test coverage is not reported as missing tests
+<!-- touches: src/core/types/specContext.ts -->
+
+A coverage row SHALL distinguish "its named tests were checked and not found" from "nobody checked", because only the first is a finding.
 
 #### Scenario: coverage is recorded without a workspace to resolve against
 - **WHEN** no check could be performed
-- **THEN** the row records that nobody checked, not that nothing was found
+- **THEN** the row reads as unchecked, not as tests that were not found
 
 ### The recorded status and the recorded step must not disagree
 <!-- touches: src/core/types/specContext.ts -->
 
-Status values and step names SHALL form one lifecycle where each non-terminal status names its owning step and whether that step is running or settled. A status ahead of the history log MUST NOT be written, because it renders as work in progress that nobody is doing.
+Each non-terminal status SHALL name one owning step and whether that step is running or settled. A status ahead of the history MUST NOT be written, because it renders as work in progress that nobody is doing.
 
 #### Scenario: a step is advanced
 - **WHEN** the current step changes
@@ -42,46 +48,49 @@ Status values and step names SHALL form one lifecycle where each non-terminal st
 - **WHEN** the status is one of the in-progress forms
 - **THEN** the extension reports that step as active, not settled
 
-The pairing of each step with its running and settled statuses SHALL be declared exactly once per language runtime, and a test SHALL read both declarations and hold them together. Every other consumer, including the extension, the prompt preamble, and the Python writers, reads the pairing from there instead of restating it.
+### The TypeScript and Python sides pair steps with the same statuses
+<!-- touches: src/core/types/specContext.ts -->
+
+The step-to-status pairing SHALL be declared once per language and held together by a test, and every other consumer reads it from there. Finishing implement settles at `implemented`, never `completed`, because closing the spec is its own step.
 
 #### Scenario: the two runtimes disagree about where a step lands
-- **WHEN** one side's map settles a step at a different status than the other's
+- **WHEN** one side settles a step at a different status than the other
 - **THEN** the test comparing them fails, naming the step
-- **AND** finishing the implement step settles at `implemented`, never at `completed`, because closing the spec is the user's explicit action
 
-A separate, narrower list SHALL name the steps a default pipeline dispatches and measures (specify, plan, tasks, implement) as the fallback for a project whose workflow defines none. Optional steps are not timed, so they are absent from it.
+#### Scenario: implement finishes
+- **WHEN** its completion is recorded
+- **THEN** the status becomes `implemented`, not `completed`
 
-A step the project added to its pipeline has no canonical status, and the pairing lookups SHALL answer "no status" for it instead of throwing. Every writer that would advance the status on such a step SHALL keep the spec's current status while still appending the history entry. A repair pass that re-derives status from the step likewise leaves it alone when there is nothing to derive.
+### A step the project added leaves the status unchanged
+<!-- touches: src/core/types/specContext.ts -->
+
+A step outside the built-in lifecycle has no status of its own. Recording its start or finish SHALL append the history entry and keep the spec's current status, and the pairing lookup answers "no status" instead of throwing.
 
 #### Scenario: a project-added step starts or finishes
 - **WHEN** the writer records its boundary
-- **THEN** the history entry is appended
-- **AND** the spec's status is unchanged, because the step maps to none
+- **THEN** the history entry is appended and the spec's status is unchanged
 
 ### A duration is only shown when the extension itself stamped both ends
 <!-- touches: src/core/types/specContext.ts -->
 
-A span SHALL be trusted only when the extension's own clock stamped both of its boundaries. Timestamps journaled by the assistant or a CLI order events correctly but record when the write ran, so a duration from them MUST NOT be displayed as elapsed time.
+A span SHALL be trusted only when the extension's own clock stamped both boundaries. Timestamps written by the assistant or a CLI order events correctly but record when the write ran, so no elapsed time is shown from them.
 
 #### Scenario: the assistant journaled a step's completion
 - **WHEN** a step's start or end was written by something other than the extension
-- **THEN** the span is marked untrusted and no elapsed time is rendered for it
-
-A derived step entry MAY carry a `folded` marker, set only by the in-memory step-history derivation for a fast-path step stamped inside its anchoring phase. The marker is independent of duration trust, is never persisted with the log, and its derivation and rendering live in the specs and viewer-UI capabilities.
+- **THEN** no elapsed time is shown for that step
 
 #### Scenario: the whole run's elapsed time is requested
-- **WHEN** a run-level timing summary is derived from the history log
-- **THEN** a start, end, and elapsed span appear only if every expected phase has a trustworthy closed span; otherwise the summary reports how many phases were measured and stays incomplete
-- **AND** the summary is derived in memory, never persisted, so the history log stays the only timing source on disk
+- **WHEN** any expected phase lacks a trusted closed span
+- **THEN** no start, end or total is shown, only how many phases were measured
 
 ### Every field a script writes is declared in the shared context type
 <!-- touches: src/core/types/specContext.ts, src/core/types/spec-context.schema.json -->
 
-Any field a writer puts on the per-spec context file SHALL be declared in the canonical context type and documented in the schema reference. The writers and readers are in different languages, so an undeclared field is one no reader can discover or consume without a cast.
+A field any writer puts in the context file SHALL be declared in the shared context type and the schema reference in the same change. Writers and readers are in different languages, so an undeclared field is one no reader can find.
 
-#### Scenario: a script writes a field the type does not have
-- **WHEN** the field is added
-- **THEN** declaring it in the type and the schema reference is part of that change, not a follow-up
+#### Scenario: a script starts writing a new field
+- **WHEN** that change lands
+- **THEN** the field is declared in the type and the schema reference
 
 ## Uncovered
 

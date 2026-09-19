@@ -1,60 +1,46 @@
 # Asset Discovery — Living Spec
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-Finds the agents and skills the user or other tools authored, wherever the active provider keeps them, and shows them without ever failing activation over a file the extension did not write.
+Lists the agents and skills the user or other tools authored, at every scope, without ever failing activation over a file the extension did not write.
 
 ## Requirements
 
 ### Discovering user-authored assets is best-effort and never breaks activation
-<!-- touches: src/features/agents/agentManager.ts, src/features/skills/skillManager.ts, src/features/settings/companionPresetReconciler.ts -->
+<!-- touches: src/features/agents/agentManager.ts, src/features/skills/skillManager.ts -->
 
-Enumerating agents, skills, or presets SHALL treat a missing directory, an unreadable file, or a failing external CLI as "nothing found here" and continue.
+Listing agents or skills SHALL treat a missing directory or an unreadable file as nothing found there, log it, and continue.
 
 #### Scenario: the user has no skills directory
 - **WHEN** the skill list is requested
-- **THEN** an empty list is returned and the failure is logged, not surfaced as an error
-
-#### Scenario: the external CLI a preset operation needs is not installed
-- **WHEN** the operation runs
-- **THEN** the failure is logged and the caller continues
-- **AND** activation completes normally
+- **THEN** an empty list is returned and nothing is surfaced as an error
 
 ### A malformed definition surfaces as a flagged entry, not a missing one
 <!-- touches: src/features/skills/skillManager.ts -->
 
-A skill whose definition file has absent or unparseable frontmatter SHALL still be listed, named from its folder and marked as needing attention. The user's assistant may still load it, so hiding it leaves them nothing to fix.
+A skill whose frontmatter is absent or unparseable SHALL still be listed under its folder name and marked as needing attention, because the user's assistant may still load it and hiding it leaves nothing to fix.
 
 #### Scenario: a skill's frontmatter is invalid YAML
 - **WHEN** the skill list is built
 - **THEN** the skill appears under its folder name, flagged, with an explanation on hover
-- **AND** it is not omitted from the list
 
 ### Assets are discovered at every scope and attributed to their origin
 <!-- touches: src/features/agents/agentManager.ts, src/features/skills/skillManager.ts -->
 
-Discovery SHALL cover the project scope, the user scope, and installed plugins, and SHALL record each asset's scope. Plugin assets SHALL be namespaced by their plugin so same-named assets from two plugins stay distinct.
+Discovery SHALL cover project, user and installed-plugin scopes and record each asset's scope. Plugin assets SHALL be named under their plugin, so same-named assets from two plugins stay distinct.
 
-#### Scenario: two plugins each provide an asset with the same name
+#### Scenario: two plugins each provide a skill with the same name
 - **WHEN** both are discovered
-- **THEN** each is presented under its own plugin's namespace
-- **AND** neither displaces the other
+- **THEN** each is listed under its own plugin's name and neither displaces the other
 
-### Discovery follows the configured provider's layout rather than one vendor's
+### Skills are found where the active provider keeps them
 <!-- touches: src/features/skills/skillManager.ts, src/features/agents/agentManager.ts -->
 
-Where an asset's location differs per AI provider, discovery SHALL resolve the directory from the active provider's path configuration. No asset type may hard-code one vendor's layout. [NEEDS CLARIFICATION: agent discovery still hard-codes one vendor's agents directory at both scopes, so the second scenario does not hold for agents today; is that a defect to fix or an intended exception?]
+Skill discovery SHALL scan the active provider's own skills directory at both project and user scope, never one vendor's layout. Agents are still read from Claude's layout at both scopes, so another provider's agents directory is not listed yet.
 
 #### Scenario: a non-default provider is configured
 - **WHEN** skills are enumerated
-- **THEN** the provider's own skills directory is scanned at both project and user scope
-
-#### Scenario: a provider whose on-disk layout differs from the default is active
-- **WHEN** any provider-located asset type is enumerated
-- **THEN** that provider's own directory is scanned and its assets are listed
-- **AND** the section is not shown as empty because another vendor's layout was assumed
+- **THEN** that provider's skills directory is scanned at project and user scope, and its skills are listed
 
 ## Uncovered
 

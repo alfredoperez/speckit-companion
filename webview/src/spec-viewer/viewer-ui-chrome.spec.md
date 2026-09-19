@@ -2,116 +2,143 @@
 
 <!-- reviewed: d589a63e -->
 
-> Adopted from existing code on 2026-07-19 and split by concern on 2026-09-07. Requirements describe observed behavior and have not been individually verified against tests.
-
 ## Purpose
 
-The frame around the document: the header, the footer bar, the shared tokens and microcopy, and the stories that publish what the viewer looks like. It keeps casing, contrast and wording consistent across surfaces, and keeps the documentation imagery true to the product.
+The frame around the document: the header, the footer bar, the Activity panel's install banner, and the capture stories that publish what the viewer looks like.
 
 ## Requirements
 
-### The header renders the title it is given; casing is decided upstream
+### The header prints the title exactly as it arrives
 
-The header MUST render the title exactly as supplied and MUST NOT re-case it or branch on where it came from. The extension's shared display-name resolver makes that decision: a feature name arrives acronym-aware title-cased ("cli install nudge" becomes "CLI Install Nudge"), and an authored living-spec heading arrives verbatim.
+The header SHALL render the title it is given without re-casing it. Casing is decided before the title reaches the webview.
 
-#### Scenario: a feature name with an acronym is shown
-- **WHEN** the header receives a feature title resolved upstream
-- **THEN** it prints it as given, with acronyms and capitals already in place
-- **AND** the header applies no casing of its own
+#### Scenario: a feature title with an acronym is shown
+- **WHEN** the header receives "CLI Install Nudge"
+- **THEN** it prints "CLI Install Nudge"
 
-#### Scenario: a living spec's authored heading is shown
-- **WHEN** the title came from the document's own top-level heading
-- **THEN** the header prints it exactly as authored, because the resolver returned it verbatim
+### A living spec's footer states the capability's condition in words
 
-### A living spec's actions sit in the footer bar; its header carries facts only
-<!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
+The footer's left side SHALL read "In sync", "N requirements drifted", "Drift unknown" or "No spec yet".
 
-In living mode the footer MUST state the capability's condition on its left in words: in sync, how many requirements drifted, drift unknown, or no spec yet. It MUST offer approve whenever the spec is a draft or N requirements are adopted, labelled "Approve all N" when N is above zero and "Approve spec" otherwise, always offer adopting another area and validating living specs, and offer syncing this spec to its code only once drift has been found. While the extension reports a pending undo, the footer MUST show Undo for the time left and post its token when pressed. The header MUST NOT carry buttons: while the document is a draft, DRAFT reads as part of the title. The header shows, once each, the requirement count, how many are adopted and unconfirmed, how many are new, how many drifted, coverage, where the capability applies and where its file lives. A covers glob renders as a control with its full text, never truncated, that asks the extension to reveal it. The Activity panel's install banner renders the nudge the extension sent from the one frame the protocol layer builds, taking its classes, label, body and `data-*` prompt from there rather than deciding them itself.
-
-#### Scenario: a drifted living spec is open
+#### Scenario: two requirements drifted
 - **WHEN** the footer renders
-- **THEN** it offers "Adopt an area", "Validate" and "Sync" beside a line counting the drifted requirements
+- **THEN** it reads "2 requirements drifted"
 
-#### Scenario: a living spec in step with its code
-- **WHEN** the footer renders
-- **THEN** it offers "Adopt an area" and "Validate" beside the words "In sync"
+### The living footer offers Approve while the spec is a draft or has adopted requirements
+
+Approve SHALL read "Approve all N" when N requirements are adopted, and "Approve spec" when none is adopted but the spec is a draft.
 
 #### Scenario: an adopted living spec with four adopted requirements
 - **WHEN** the footer renders
-- **THEN** it offers "Approve all 4" and the header holds no button
-
-#### Scenario: the extension sends an update prompt
-- **WHEN** the Activity panel renders it
-- **THEN** the banner is the protocol's update frame, carrying both versions on the root a click reads them back from
+- **THEN** it offers "Approve all 4"
 
 #### Scenario: a draft living spec with nothing adopted
 - **WHEN** the footer renders
 - **THEN** it offers "Approve spec"
 
-### Presentation must stay legible and announced
+### Sync is offered only once drift is found
 
-Readable content MUST use the body and primary text tokens, because the secondary and muted tokens fall below the contrast floor on dark themes and are reserved for metadata. An element a control points at for its accessible description MUST be visually hidden, not removed from the accessibility tree. Truncation MUST carry its full set of rules, or it silently wraps instead. Motion MUST have a still equivalent for readers who ask for reduced motion, and purely decorative glyphs MUST be hidden from assistive technology.
+The living footer SHALL always offer "Adopt an area" and "Validate", and SHALL add "Sync" only when the capability has drifted.
+
+#### Scenario: a living spec in step with its code
+- **WHEN** the footer renders
+- **THEN** it offers "Adopt an area" and "Validate" and no "Sync"
+
+#### Scenario: a drifted living spec
+- **WHEN** the footer renders
+- **THEN** it also offers "Sync"
+
+### The living footer shows Undo while an action can be undone
+
+While the extension reports a pending undo, the footer SHALL show Undo counting down the time left, and pressing it SHALL send that undo's token.
+
+#### Scenario: the reader removes a requirement
+- **WHEN** the panel redraws
+- **THEN** an Undo reading "Requirement removed" counts down from five seconds
+
+### A living spec's header carries facts, never buttons
+
+The header SHALL hold no controls except the covers glob. It shows each fact once: requirement count, adopted, new, drifted, coverage, where the capability applies and where its file lives. While the document is a draft, DRAFT reads as part of the title.
+
+#### Scenario: an adopted draft is open
+- **WHEN** the header renders
+- **THEN** DRAFT sits beside the title and no approve button is in the header
+
+### A covers glob shows its full text
+
+A covers glob SHALL render as a control carrying its whole text, never truncated, that asks the extension to reveal it.
+
+#### Scenario: a long glob
+- **WHEN** the header renders it
+- **THEN** every character of the glob is visible
+
+### The install banner shows the prompt the extension sent
+<!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
+
+The Activity panel's banner SHALL render the install or update prompt as the extension sent it, and an update banner SHALL name both the installed and the expected version.
+
+#### Scenario: the extension sends an update prompt
+- **WHEN** the Activity panel renders it
+- **THEN** the banner names the installed and the expected version
+
+### Motion stops for readers who ask for reduced motion
+
+Every animation SHALL have a still equivalent under the reduced-motion preference.
+
+#### Scenario: a step is in flight with reduced motion on
+- **WHEN** the rail renders
+- **THEN** the in-flight indicator does not animate
+
+### Decorative glyphs are hidden from assistive technology
+
+A glyph that carries nothing its label does not SHALL be hidden from assistive technology.
 
 #### Scenario: a status glyph accompanies a label
-- **WHEN** the glyph carries no information the label does not
-- **THEN** it is hidden from assistive technology
-- **AND** the label alone conveys the state
+- **WHEN** a screen reader reaches it
+- **THEN** only the label is announced
 
-#### Scenario: a reader has asked for reduced motion
-- **WHEN** a step is in flight
-- **THEN** the in-flight indicator renders without animation
+### Accent-filled buttons use the accent's own ink
 
-A button filled with the accent colour SHALL take the accent's own ink token, since a hardcoded white is unreadable on the default dark theme's mint accent. This holds for a button assembled imperatively as much as for one rendered from the shared variant map.
+A button filled with the accent colour SHALL take the accent's ink token for its text, whether built from the shared button or assembled by hand, because a hardcoded white is unreadable on the default dark theme's mint accent.
 
-#### Scenario: a control is built imperatively rather than through the shared button
+#### Scenario: a hand-built accent button on the default dark theme
 - **WHEN** it renders
-- **THEN** it carries the same class the variant map would have given it, so one rule paints both
-
-#### Scenario: a story stands in for a control the product builds another way
-- **WHEN** the story renders a synthetic stand-in rather than the real control
-- **THEN** the baseline is not evidence, and the story mounts what production mounts instead
+- **THEN** its label uses the same ink as the shared primary button
 
 ### The viewer's own microcopy reads as plain sentences
 
-Short strings the webview composes itself (a footer context line, a section summary title, a sizing line) MUST read as plain prose: clauses join with a comma, a list of figures follows a colon, and a dash SHALL NOT stand in as the connective. Dash-joined fragments beside authored content read as generated boilerplate.
+Strings the webview composes (a footer context line, a summary title, a sizing line) SHALL join clauses with a comma and introduce figures with a colon, never with a dash.
 
-#### Scenario: the footer explains a locked action set
-- **WHEN** a running step withholds the forward action and the footer says why
-- **THEN** the explanation reads as one plain sentence joined with a comma
-- **AND** no dash stands in for the pause
-
-#### Scenario: a verdict is shown with its inputs
-- **WHEN** a summary line pairs a verdict with the figures behind it
-- **THEN** a colon introduces the figures
+#### Scenario: a running step locks the forward action
+- **WHEN** the footer explains why
+- **THEN** it reads "Step running, actions unlock when it settles"
 
 ### The capture stories are published copies of the real viewer, never forks of it
 <!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
-The stories and fixtures that produce documentation imagery MUST compose the shipped viewer components with fixture data rather than re-implement any surface, because their output is published as what the product looks like. When a component's behavior, styling or tokens change, the imagery SHALL be regenerated from the stories, never hand-edited, and no story may drift onto its own rendering of the surface.
+Stories that produce documentation imagery SHALL compose the shipped viewer components with fixture data, never re-implement a surface, because their output is published as what the product looks like.
 
-#### Scenario: a viewer component's rendering changes
-- **WHEN** a component the capture stories compose changes its markup, styling or tokens
-- **THEN** the stories render the changed component as shipped, with no captured surface still showing the old behavior
-- **AND** the generated imagery is regenerated from the stories rather than edited by hand
+#### Scenario: a viewer component's markup changes
+- **WHEN** the capture stories render
+- **THEN** they show the changed component as shipped
 
-#### Scenario: a story needs to show a particular viewer state
-- **WHEN** a capture story stages a state for imagery
-- **THEN** it drives the real components with fixture data
-- **AND** it does not re-implement the surface it is capturing
+### A scene several captures share is defined once
+<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
-A scene several captures share SHALL be exported once and composed by each, and shared building blocks SHALL be excluded from the published story list. A second copy of a shared scene drifts from the first, and the captures then disagree about what the product looks like.
+A scene more than one capture uses SHALL be exported once and composed by each, and SHALL NOT appear in the published story list itself.
 
-#### Scenario: two captures need the same staged document
-- **WHEN** a still and a clip both frame it
-- **THEN** both compose the one exported scene
-- **AND** that scene is not itself listed as a story
+#### Scenario: a still and a clip frame the same document
+- **WHEN** both render
+- **THEN** both compose the one exported scene, which is not listed as a story
 
-Where a capture stands in for editor chrome the webview does not build, such as the sidebar frames, the stand-in SHALL match what the real view contributes. Its title-bar actions appear in the order the menu declares, only on the pane the frame is about, and an icon slot that depends on state reads that state off the fixture rows rather than being hard-coded.
+### A sidebar capture matches the real view's title bar
+<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
+
+A capture standing in for editor chrome the webview does not build SHALL show the title-bar actions the real view contributes, in the declared order, only on the pane the frame is about. A state-dependent icon slot SHALL read its state off the fixture rows.
 
 #### Scenario: a sidebar frame is captured
-- **WHEN** the pane the frame is about renders
-- **THEN** it shows that view's title-bar actions in the contributed order, and the collapse-or-expand slot matches the tree on screen
-- **AND** the neighbouring panes stay bare
+- **WHEN** the pane renders
+- **THEN** its title-bar actions follow the contributed order, the collapse-or-expand slot matches the tree on screen, and neighbouring panes stay bare
 
 ## Uncovered
 

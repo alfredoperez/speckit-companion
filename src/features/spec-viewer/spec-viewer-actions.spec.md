@@ -2,97 +2,123 @@
 
 <!-- reviewed: 763a4a8b -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-What the reader may do next and what the viewer writes to the spec's record for them: the footer catalog, pipeline dispatch, and review-comment persistence.
+What the footer lets the reader do next with a spec, and what the viewer writes to the spec's record when they act.
 
 ## Requirements
 
-### The action catalog is the authority on what the reader may do
+### The forward action follows the spec's current step, not the tab on screen
 
-The footer's actions MUST be computed from the spec's state alone, and the same state SHALL always yield the same set. Each action declares, and shows, whether it affects the whole spec or only the current step. Closure actions appear only at the final approval gate, and the forward action targets the real current step and disappears once the workflow has moved past it.
-
-#### Scenario: a step is still running
-- **WHEN** the spec's status names a step as in flight
-- **THEN** the catalog still offers the re-run action for that step
-- **AND** the reader cannot advance a step that has not settled
-
-#### Scenario: an interrupted run is rolled back by hand
-- **WHEN** an earlier status is forced after a run died mid-step
-- **THEN** the abandoned later start no longer suppresses the forward action
-- **AND** the reader gets the same forward action a normal pause at that stage offers
+The footer's actions SHALL be computed from the spec's recorded state, so the same state yields the same actions whichever document is displayed.
 
 #### Scenario: the reader is looking at an earlier step's document
 - **WHEN** a completed earlier step's document is displayed
-- **THEN** the forward action reflects the spec's true stage, not the tab being viewed
+- **THEN** the forward action names the step after the spec's current step
 
-Which steps exist SHALL come from the shared pipeline resolution the sidebar uses, including project-added steps. A dispatchable step after implement is the forward action, and that resolution, not a fixed list of lifecycle names, decides whether a step's start is recorded.
+### Every footer action says whether it affects the whole spec or only this step
+
+Each action's tooltip SHALL end with its scope, "Affects whole spec" or "Affects this step".
+
+#### Scenario: the reader hovers Regenerate
+- **WHEN** the tooltip shows
+- **THEN** it ends with "(Affects this step)"
+
+### Mark Completed and Archive appear only once implementation is done
+
+The closure actions SHALL be offered only while the spec's status is `implemented` or `completed`, never while a step is still being generated or built.
+
+#### Scenario: tasks are still being implemented
+- **WHEN** the status is `implementing`
+- **THEN** neither Mark Completed nor Archive is offered
+
+#### Scenario: implementation has finished
+- **WHEN** the status is `implemented`
+- **THEN** Mark Completed and Archive are offered and the forward action is not
+
+### A running step can be re-run but not advanced
+
+While the current step is in flight the footer SHALL keep Regenerate and withhold the forward action, saying the actions unlock when the step settles.
+
+#### Scenario: a step is still running
+- **WHEN** the spec's status names a step as in flight
+- **THEN** Regenerate is offered and the forward action is not
+
+### A run rolled back by hand gets its forward action back
+
+A later step's start left behind by an interrupted run SHALL NOT hide the forward action once an earlier status is forced.
+
+#### Scenario: an interrupted run is rolled back
+- **WHEN** an earlier status is forced after a run died mid-step
+- **THEN** the footer offers the same forward action a normal pause at that stage offers
+
+### A real step after implement becomes the forward action
+
+Which steps exist SHALL come from the same pipeline resolution the sidebar uses, including steps the project added. A dispatchable step after implement is offered as the forward action; the status-only completion step is not.
 
 #### Scenario: the project placed a real step after implement
 - **WHEN** implement has settled
 - **THEN** the forward action targets that step instead of disappearing
 
-### Pipeline actions target the spec's real step, and degrade safely when the pipeline is unavailable
+### Re-run and advance act on the spec's current step, never the document on screen
 
-Re-running or advancing a step MUST target the spec's recorded current step, never the document on screen, and MUST record a start (plus a completion when advancing) before dispatching. When a companion-pipeline command is dispatched without that pipeline installed, the viewer SHALL fall back to the standard equivalent and say so, or suppress the dispatch when none exists.
+Re-running or advancing SHALL target the spec's recorded current step and record its start before dispatching, plus its completion when advancing.
 
-#### Scenario: re-run is clicked from a child document
+#### Scenario: re-run is clicked from a supporting document
 - **WHEN** the reader triggers a re-run while viewing a supporting document
-- **THEN** the spec's current step is re-run
-- **AND** no start is recorded against the wrong step
+- **THEN** the spec's current step is re-run and its start is recorded against that step
 
-#### Scenario: the companion pipeline is not installed
-- **WHEN** a dispatch would name a companion-only command with no standard equivalent
-- **THEN** nothing is dispatched
-- **AND** the reader is told what is missing and offered a way to install it
+### Rendering a spec never writes over an unreadable record
 
-Resolution, the fallback warning, the usage event, and prompt assembly SHALL run through one shared dispatch routine, not per surface.
-
-#### Scenario: a second surface gains a way to run a step
-- **WHEN** it dispatches
-- **THEN** it goes through the same routine and inherits the same fallback, warning, and reporting
-
-#### Scenario: a step is dispatched from the viewer
-- **WHEN** the dispatch is reported for usage measurement
-- **THEN** it carries only the provider, the phase coerced to its allow-list, and the spec's correlation identifier when one exists
-- **AND** it attaches no retired dimension
-
-### Reading a spec must never damage its record
-
-The viewer SHALL treat the recorded context as read-only after first open. It MAY create a minimal record when none exists, but an existing unparseable record MUST be rendered from an in-memory stand-in and left untouched on disk. Repair happens only when the reader accepts an offer that backs up the original first.
+When a spec's recorded context cannot be parsed, the viewer SHALL render from an in-memory stand-in and leave the file on disk untouched. Only the reader's accepted reset may replace it, and the open panel then refreshes onto the repaired record.
 
 #### Scenario: the record is unreadable mid-write
 - **WHEN** the record cannot be parsed during a render
-- **THEN** the panel renders from a minimal in-memory stand-in
-- **AND** nothing is written over the file on disk
+- **THEN** the panel renders and the file on disk is unchanged
 
 #### Scenario: the reader accepts a reset
 - **WHEN** the reader chooses to reset a corrupt record
-- **THEN** the original is backed up before a fresh record is written
-- **AND** the open panel refreshes onto the repaired state
+- **THEN** the open panel refreshes onto the repaired record
 
-### Review comments persist through the single writer, one mutation at a time
+### A review comment is saved the moment it is added, edited or removed
 
-An inline comment MUST be persisted the moment it is added, edited, or removed, through the sanctioned writer, never a direct write. Mutations for one spec SHALL be serialized, and a failed mutation MUST NOT wedge the queue. A mutation SHALL be refused when the existing record cannot be read.
+Each comment change SHALL be written to the spec's record when the reader makes it, with no separate save step.
+
+#### Scenario: the reader closes the panel right after commenting
+- **WHEN** the spec is reopened
+- **THEN** the comment is still there
+
+### Comment changes to one spec apply in order, and one failure does not block the next
+
+Comment changes for a spec SHALL apply one at a time in the order made. A change that fails SHALL NOT stop later ones from applying.
 
 #### Scenario: two comments are added in quick succession
-- **WHEN** the webview posts two comment mutations back to back
-- **THEN** they apply in order against successive baselines
-- **AND** neither is lost
+- **WHEN** the webview posts two comment changes back to back
+- **THEN** both are saved, in order
+
+### A comment change is refused when the spec's record cannot be read
+
+A comment change SHALL NOT be written when the existing record cannot be parsed, so a corrupt record is never replaced by one holding only comments.
+
+#### Scenario: the record is corrupt when a comment is added
+- **WHEN** the reader adds a comment
+- **THEN** the record on disk is unchanged
+
+### Refinement edits the document in place and keeps the comments it sent
+
+Dispatching a document's pending comments SHALL send a prompt that asks for targeted in-place edits and forbids regenerating the document from a template. The sent comments SHALL be marked applied, not deleted.
 
 #### Scenario: refinement is dispatched for a document
-- **WHEN** a document's pending comments are sent to the assistant
-- **THEN** the prompt asks for targeted in-place edits and forbids regenerating the document from a template
-- **AND** the dispatched comments are marked applied, not deleted
+- **WHEN** the reader sends a document's pending comments to the assistant
+- **THEN** those comments read as applied in the record
 
-In living mode there is no record, so comments travel with the refinement request and the prompt targets the tier file's path. The prompt SHALL be assembled once and shared by both paths.
+### Refining a living spec sends its comments with the request
+
+A living spec has no run record, so its comments SHALL travel with the refinement request, and the prompt SHALL name the tier file with the same in-place-edit instructions a run's document gets.
 
 #### Scenario: refinement is dispatched from a living spec
 - **WHEN** the reader refines a capability's tier document
-- **THEN** the comments supplied with the request are used, since none were persisted
-- **AND** the prompt names the tier file and carries the same in-place-edit instructions as a run's document
+- **THEN** the prompt carries the comments from the request and names the tier file
 
 ## Uncovered
 

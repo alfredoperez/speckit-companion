@@ -2,63 +2,72 @@
 
 <!-- reviewed: d589a63e -->
 
-> [DRAFT] Surface-first draft from existing code. Every requirement is observed from the code surface unless tagged otherwise. Review before trusting.
-
 ## Purpose
 
-Command bodies are the only place a run can be made to write its own record, since the extension dispatches text and gets no callback. These rules keep work attributed to its step, pointers under the key readers use, and the shared record free of races.
+The extension dispatches text and gets no callback, so command bodies are the only place a run can record itself. These rules keep each step's work inside its recorded window and the shared record free of races.
 
 ## Requirements
 
 ### The feature pointer is written under the exact key the capture calls read
 
-The pointer file the first step writes SHALL name the feature directory under the one key later capture calls resolve when run without an explicit feature directory. Any other key is silently dropped and the run records nothing.
+The pointer the first step writes SHALL name the feature directory under a key the capture scripts resolve, so every later call made without an explicit feature directory lands on this spec.
 
 #### Scenario: a later step runs without an explicit feature directory
 - **WHEN** it resolves the spec through the pointer file
 - **THEN** it finds the directory the first step wrote
 
-### Commands direct capable providers to parallelize, while bookkeeping stays serialized
+### A step stamps its start before its hooks and nodes run
 
-Where a provider can spawn workers, the bodies SHALL make concurrency the expected strategy and express independence structurally, as waves of tasks sharing no files or dependencies with explicit join points, not as inline markers. Concurrency MUST NOT extend to the shared record: prose that fans work out MUST name who serializes the write. Hosts without workers run sequentially and produce identical artifacts.
+Each step's start SHALL be recorded by a script call ahead of its extension hooks and every node, so the whole step falls inside its window. A step that creates the feature directory SHALL stamp the moment the directory exists, never against the pointer's previous spec.
 
-#### Scenario: a wave of independent tasks is reached
-- **WHEN** the provider supports workers
-- **THEN** the wave's tasks run concurrently and the next wave waits for it
+#### Scenario: plan begins
+- **WHEN** the plan body starts
+- **THEN** an extension-stamped start is recorded before any hook or planning output
 
-#### Scenario: the provider cannot spawn workers
-- **WHEN** the same wave is reached
-- **THEN** it runs sequentially with no error and the same result
+#### Scenario: a fresh specify run
+- **WHEN** the pointer still names the previous spec
+- **THEN** no start is written until the new directory exists, and the previous spec's record is untouched
 
-### Step boundaries are extension-stamped in order on every dispatch path
+#### Scenario: the dispatcher already seeded the start
+- **WHEN** the body's own stamp runs
+- **THEN** no second start is appended and the earlier timestamp stands
 
-Each step's start SHALL be stamped by a script call above the step's extension-hooks fence, so hooks and every node fall inside the step's window, and that instruction SHALL be one shared part fenced into each step frame. A step that mints its own feature directory SHALL stamp as soon as the directory exists, before any other work. Plan and tasks completions SHALL be recorded by their after-step hooks, both `by: extension`, start before complete, and the AI SHALL self-close only clarify and analyze at step level, because the first completion written wins.
+### A step closes itself even when its after-hook never runs
 
-#### Scenario: plan runs on any dispatcher
-- **WHEN** the plan command body begins its work
-- **THEN** a script-stamped extension start is recorded before any planning output
-- **AND** the after-plan hook later records the extension-stamped completion
+Every step except implement SHALL end by recording its own completion through an idempotent, first-writer-wins call, so a hook that was printed rather than dispatched still leaves the step closed. Clarify and analyze record a boundary without moving the status, and no step writes the next step's start.
 
-#### Scenario: a step's hook never fires
-- **WHEN** the after-step hook is skipped (missing or unparseable extensions registry)
-- **THEN** the next step's extension start still closes the span and the duration stays trusted
+#### Scenario: the after-plan hook is skipped
+- **WHEN** plan finishes
+- **THEN** plan's own close records the completion and the status advances
 
-#### Scenario: the extension already seeded this step's start
-- **WHEN** the command body's own stamp runs after a dispatcher already recorded the step's start
-- **THEN** no second start entry is appended and the earlier timestamp stands
+#### Scenario: the after-hook already closed the step
+- **WHEN** the step's own close runs
+- **THEN** nothing new is recorded
 
 ### Task finishes are folded into the shared record one at a time, as they land
 
-The main agent SHALL record each implement task in the foreground the moment its work completes, by appending the finish and then folding it. Fanned-out workers SHALL only append to the event log, and the main agent folds each worker's finish as its result returns. The wave-join and end-of-step folds are idempotent backstops, not the cadence.
+The main agent SHALL close each implement task the moment its work completes, not in a batch afterwards, so the panel and the task's checkbox advance as the run goes. The wave-join and end-of-step folds are backstops, not the cadence.
 
-#### Scenario: a wave of tasks executes
-- **WHEN** each task in the wave finishes
-- **THEN** the watched context file and its checkbox advance before the next task starts
+#### Scenario: a wave of tasks executes inline
+- **WHEN** each task finishes
+- **THEN** the context file and its checkbox advance before the next task starts
 
-#### Scenario: workers run in parallel
-- **WHEN** several workers finish tasks concurrently
-- **THEN** each appends only its own event-log line and the main agent alone performs every fold
+### Workers only append; the main agent does every fold
+
+A fanned-out worker SHALL record its finish by appending one event-log line, and only the main agent folds, one returned result at a time, because a fold is a read-modify-write that concurrent writers would corrupt. Any prose that fans work out MUST name the main agent as the writer.
+
+#### Scenario: workers finish at the same moment
+- **WHEN** several workers record finishes concurrently
+- **THEN** each appends only its own line and every finish reaches the record through the main agent's folds
+
+### A host that cannot spawn workers produces the same artifacts sequentially
+
+Commands SHALL express parallel work as waves of independent tasks with explicit joins, so a host without workers runs the same waves in order with no error.
+
+#### Scenario: the provider cannot spawn workers
+- **WHEN** a wave of independent tasks is reached
+- **THEN** it runs sequentially and produces the same result a parallel run would
 
 ## Uncovered
 
-_None. Re-adopted from `capabilities/companion-commands/companion-commands.spec.md`; every requirement was moved verbatim from that spec, not re-read from the code._
+_None._
