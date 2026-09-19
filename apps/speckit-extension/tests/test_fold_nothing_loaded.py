@@ -16,8 +16,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "speckit-extension" / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 _spec = importlib.util.spec_from_file_location("living_spec_fold", SCRIPTS / "living_spec_fold.py")
 lsf = importlib.util.module_from_spec(_spec)

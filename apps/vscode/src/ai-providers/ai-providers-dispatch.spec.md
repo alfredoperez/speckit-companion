@@ -9,7 +9,7 @@ How a composed command reaches the user's AI assistant: a one-way hand-off, thro
 ## Requirements
 
 ### Dispatch is one-way and unobservable
-<!-- touches: src/ai-providers/aiProvider.ts, src/ai-providers/ideChatProvider.ts, src/ai-providers/claudePanelProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/ai-providers/ideChatProvider.ts, apps/vscode/src/ai-providers/claudePanelProvider.ts -->
 
 The extension hands text to the assistant and cannot see what happens next, so a dispatch returning is never proof the step ran. Completion is known only when the assistant writes spec context.
 
@@ -22,7 +22,7 @@ The extension hands text to the assistant and cannot see what happens next, so a
 - **THEN** the step is not shown as complete
 
 ### A missing CLI fails loudly with how to install it
-<!-- touches: src/ai-providers/cliTerminalProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/cliTerminalProvider.ts -->
 
 #### Scenario: the CLI is not installed
 - **WHEN** a terminal CLI provider dispatches and its binary is absent
@@ -30,7 +30,7 @@ The extension hands text to the assistant and cannot see what happens next, so a
 - **AND** the error offers a copyable install command, or an "Open Install Page" link for download-based tools such as `agy`
 
 ### The prompt is never pasted into visible terminal scrollback
-<!-- touches: src/ai-providers/aiProvider.ts, src/core/utils/shellDetection.ts -->
+<!-- touches: apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/core/utils/shellDetection.ts -->
 
 The prompt travels through a temp file the shell reads at invocation, using the substitution form of the detected shell family. A shell with no such substitution gets the prompt inlined with its own escaping.
 
@@ -39,7 +39,7 @@ The prompt travels through a temp file the shell reads at invocation, using the 
 - **THEN** the terminal shows a short command line reading a temp file, not the prompt text
 
 ### A prompt too long for the shell is refused, never truncated
-<!-- touches: src/ai-providers/aiProvider.ts, src/core/utils/shellDetection.ts -->
+<!-- touches: apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/core/utils/shellDetection.ts -->
 
 #### Scenario: a long prompt in cmd.exe
 - **WHEN** the inlined command line would exceed cmd.exe's length limit
@@ -47,7 +47,7 @@ The prompt travels through a temp file the shell reads at invocation, using the 
 - **AND** no truncated command is sent
 
 ### Dispatch targets are probed at dispatch time, not assumed
-<!-- touches: src/ai-providers/ideChatProvider.ts, src/ai-providers/wibeyPanelProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/ideChatProvider.ts, apps/vscode/src/ai-providers/wibeyPanelProvider.ts -->
 
 A host editor's chat or another extension's panel is found by checking which commands are registered at dispatch time, in a per-target preference order. When none resolves, the user gets an actionable message and nothing throws.
 
@@ -57,14 +57,14 @@ A host editor's chat or another extension's panel is found by checking which com
 - **AND** in Antigravity the message names the Antigravity provider, which runs its `agy` CLI
 
 ### A host that drops the prompt gets it through the clipboard
-<!-- touches: src/ai-providers/ideChatProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/ideChatProvider.ts -->
 
 #### Scenario: dispatching to Windsurf
 - **WHEN** a command is dispatched to a host whose chat discards the supplied query
 - **THEN** the command is copied to the clipboard, the chat opens, and the user is told to paste and press Enter
 
 ### Commands are not auto-submitted into a surface that cannot resolve them
-<!-- touches: src/ai-providers/ideChatProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/ideChatProvider.ts -->
 
 #### Scenario: the workspace is not spec-kit initialized
 - **WHEN** a SpecKit command is dispatched to a host chat with no spec-kit scaffolding for that editor

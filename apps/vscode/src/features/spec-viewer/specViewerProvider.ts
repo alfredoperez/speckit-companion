@@ -502,7 +502,7 @@ export class SpecViewerProvider {
         enableScripts: true,
         retainContextWhenHidden: false,
         localResourceRoots: [
-          vscode.Uri.joinPath(this.context.extensionUri, "webview"),
+          vscode.Uri.joinPath(this.context.extensionUri, "apps", "vscode", "webview"),
           vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview"),
         ],
       },

@@ -13,19 +13,19 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 
 ## Release order: spec-kit first
 
-The VS Code extension bundles a copy of `speckit-extension/extension.yml` and compares it against the version installed in the user's project to say "your spec-kit commands are out of date". So the spec-kit extension is released first and the VS Code extension packaged after, which is the order `/publish-both` runs. Packaged the other way, the `.vsix` expects the previous version and nobody hears about the new one until the next VS Code release. A `.vsix` bundling a manifest *ahead* of what `companion-latest/companion.zip` serves is worse: every user is told they are behind, the update reinstalls the same version, and nothing clears. The extension limits that one to a single wasted click per project, but the release still has to be fixed.
+The VS Code extension bundles a copy of `apps/speckit-extension/extension.yml` and compares it against the version installed in the user's project to say "your spec-kit commands are out of date". So the spec-kit extension is released first and the VS Code extension packaged after, which is the order `/publish-both` runs. Packaged the other way, the `.vsix` expects the previous version and nobody hears about the new one until the next VS Code release. A `.vsix` bundling a manifest *ahead* of what `companion-latest/companion.zip` serves is worse: every user is told they are behind, the update reinstalls the same version, and nothing clears. The extension limits that one to a single wasted click per project, but the release still has to be fixed.
 
 ## Process
 
-1. **Bump** `speckit-extension/extension.yml` `extension.version` (semver).
-2. **Update** `speckit-extension/CHANGELOG.md` — new dated section; keep prior versions.
+1. **Bump** `apps/speckit-extension/extension.yml` `extension.version` (semver).
+2. **Update** `apps/speckit-extension/CHANGELOG.md` — new dated section; keep prior versions.
 3. **Verify** the pre-submit checklist below.
 4. **Commit** to `main` (e.g. `chore(speckit-ext): release v0.2.0`).
 5. **Build the archive** — a **`.zip`** (the installer rejects `.tar.gz` with `BadZipFile`) with a **single top-level dir** `companion-<X.Y.Z>/` holding `extension.yml` at its root. The repo source-archive does **not** work, because the extension lives in a subdir (`extension.yml` wouldn't be at the archive root). The package is an **allow-list of runtime files only** — copy just what the installed extension runs, not the whole source tree:
    ```bash
    V=0.2.0
    rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
-   cd speckit-extension
+   cd apps/speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
    python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
@@ -37,7 +37,7 @@ The VS Code extension bundles a copy of `speckit-extension/extension.yml` and co
 
    The archive deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. This is still an **allow-list**; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
 
-   **`--copy-to` leaves the destination holding exactly that list.** It clears any scripts already sitting there first, so a reused staging dir can't slip a leftover (say, a build-only script from an older layout) into the zip. It only ever removes loose `.py` files, never recursively: a destination holding anything else — a subdirectory, a document, the `speckit-extension/scripts/` source tree itself — is refused with the offending entries named, so a mistyped path can't be emptied.
+   **`--copy-to` leaves the destination holding exactly that list.** It clears any scripts already sitting there first, so a reused staging dir can't slip a leftover (say, a build-only script from an older layout) into the zip. It only ever removes loose `.py` files, never recursively: a destination holding anything else — a subdirectory, a document, the `apps/speckit-extension/scripts/` source tree itself — is refused with the offending entries named, so a mistyped path can't be emptied.
 
    **The list cannot silently fall behind again.** `package-manifest.py --check` derives what the shipped commands actually reach for — scanning the command bodies, then following each script's own imports — and fails if that disagrees with the packed set in either direction, naming the offending script. It runs in CI on every PR, and `--copy-to` refuses to build an archive from a failing list. A new command that calls a new script now blocks the build until the script is packaged.
 6. **Create the GitHub release** with a **prefixed tag** (`speckit-ext-v0.2.0`) and attach the version-named zip (archival):
@@ -76,13 +76,13 @@ The whole flow is automated by the `/publish-speckit-ext` skill; the catalog ste
 - [x] `description` < 100 chars — 88
 - [x] `repository` valid public GitHub URL
 - [x] `homepage` present
-- [x] `license` field + **LICENSE file** in `speckit-extension/`
+- [x] `license` field + **LICENSE file** in `apps/speckit-extension/`
 - [x] `tags` 2–5, lowercase — `spec-driven-development`, `tracking`, `companion`
 - [x] every `provides.commands[].file` exists (6: capture, capture-plan/-tasks/-implement, status, resume)
 - [x] `README.md` + `CHANGELOG.md` present
 - [ ] **No version-pinned install download URL in shipped code/docs** — the in-editor Install/Update must point at the stable rolling `companion-latest/companion.zip` asset, never a `speckit-ext-vX.Y.Z` / `companion-X.Y.Z.zip` pin (a pin makes "Update" a silent downgrade). This must return **nothing** before tagging:
   ```bash
-  grep -rnE 'releases/download/(speckit-ext-v[0-9]|companion-[0-9])' src speckit-extension README.md
+  grep -rnE 'releases/download/(speckit-ext-v[0-9]|companion-[0-9])' apps/vscode/src apps/speckit-extension README.md
   ```
 - [ ] GitHub release created with a `speckit-ext-v*` tag + archive URL
 - [ ] Extension Submission issue filed (minor/major only — `/submit-catalog-update`)
@@ -93,12 +93,12 @@ The submission values are generated at run time by `/submit-catalog-update`, fro
 
 Two display constraints the generator already honors, worth knowing if you ever hand-check a submission:
 
-- `documentation` must be a specific `.md` blob URL (`…/speckit-extension/README.md`). A directory URL renders the catalog page blank.
+- `documentation` must be a specific `.md` blob URL (`…/apps/speckit-extension/README.md`). A directory URL renders the catalog page blank.
 - The community site shows the newest GitHub **release tag**, not the catalog `version` — so the page can read current while the pinned metadata is stale.
 
 ## Catalog page display gotchas (community site)
 
 The community site (`speckit-community.github.io/extensions/<id>`) is a static site that bakes two things at build time. Both behave differently than the catalog `version`/`description` fields suggest, and both are sharper for us because the extension lives in a **subdirectory of a monorepo** rather than its own repo:
 
-- **`documentation` IS the rendered README.** The page's main content area is whatever the catalog `documentation` URL points at, fetched as markdown. **It must be a specific `.md` file** (`…/speckit-extension/README.md`), never a directory — a directory URL fetches nothing and the page renders a blank README (`readmeContent: null`). This is why the snippet above sets `documentation` explicitly.
+- **`documentation` IS the rendered README.** The page's main content area is whatever the catalog `documentation` URL points at, fetched as markdown. **It must be a specific `.md` file** (`…/apps/speckit-extension/README.md`), never a directory — a directory URL fetches nothing and the page renders a blank README (`readmeContent: null`). This is why the snippet above sets `documentation` explicitly.
 - **The displayed version is the GitHub release tag, not the catalog `version`.** The site shows the repo's release tag (with a `release` badge). Because our tag is **prefixed** (`speckit-ext-v*`, required so the release doesn't trigger the VS Code Marketplace publish on `v*`), the page shows `speckit-ext-v0.3.0` instead of `0.3.0`. It also tracks whichever release is newest in the repo, so a later VS Code `/publish` (a `v*` tag) can surface on the companion page. A dedicated single-purpose repo with clean `v*` tags (README at root, standard `archive/refs/tags/v*.zip` install) is the only way to get a clean version + install line matching the other catalog extensions; the monorepo can't without colliding with the Marketplace release tag.

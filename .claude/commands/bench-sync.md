@@ -24,7 +24,7 @@ node ../speckit-bench/sync-templates.mjs --sizes easy,medium,hard,oversized
 Defaults are `--speckit latest --ext latest`, which is what a measured round wants:
 
 - `--speckit latest` installs the spec-kit CLI from GitHub source (`uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force`) — the only build that carries `specify extension`. `--speckit keep` leaves whatever is installed.
-- `--ext latest` installs the Companion spec-kit extension from the rolling `companion-latest` release asset. `--ext code` installs from this checkout's `speckit-extension/` with `--dev` (use it to measure unreleased work). `--ext <tag>` pins an archived release.
+- `--ext latest` installs the Companion spec-kit extension from the rolling `companion-latest` release asset. `--ext code` installs from this checkout's `apps/speckit-extension/` with `--dev` (use it to measure unreleased work). `--ext <tag>` pins an archived release.
 
 The bake reflinks the app clone per cell (instant, `node_modules` included — no dependency install), runs `specify init`, arms each cell for its arm, tags a git baseline, and **fails loudly if any cell file mentions the bench**. It records the spec-kit CLI version, the spec-kit extension version and the Companion version into `cells.json`, and every result row carries all three.
 

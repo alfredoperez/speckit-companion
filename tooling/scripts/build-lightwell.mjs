@@ -36,16 +36,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'media', 'web');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const OUT = path.join(ROOT, 'content', 'media', 'web');
 
 // sharp is a dependency of the website, not of the repo root.
-const require = createRequire(path.join(ROOT, 'website', 'package.json'));
+const require = createRequire(path.join(ROOT, 'apps', 'website', 'package.json'));
 let sharp;
 try {
   sharp = require('sharp');
 } catch {
-  console.error('sharp is missing. Run npm install in website/ first.');
+  console.error('sharp is missing. Run npm install in apps/website/ first.');
   process.exit(1);
 }
 

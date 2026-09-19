@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git -C:*), Bash(npm run compile:*), Bash(python3 speckit-extension/scripts/*), Bash(python3 -m pytest:*), Bash(npx jest:*), Bash(node ../speckit-bench/*), Workflow, Read, Edit
+allowed-tools: Bash(git -C:*), Bash(npm run compile:*), Bash(python3 apps/speckit-extension/scripts/*), Bash(python3 -m pytest:*), Bash(npx jest:*), Bash(node ../speckit-bench/*), Workflow, Read, Edit
 description: Bench one pipeline-diet wave on the two Companion cells and record the row
 ---
 
@@ -19,15 +19,15 @@ git -C ~/dev/GitHub/speckit-companion.worktrees/bench-main checkout -q --detach 
 (cd ~/dev/GitHub/speckit-companion.worktrees/bench-main && npm run compile)
 ```
 
-Then prove the wave's text is what the cell will get: pick one line the wave changed and grep for it in `~/dev/GitHub/speckit-companion.worktrees/bench-main/speckit-extension/commands/`. If it is not there, the branch was not rebuilt (`assemble-nodes.py`, `build-commands.py`) or not pushed. Stop and fix that first.
+Then prove the wave's text is what the cell will get: pick one line the wave changed and grep for it in `~/dev/GitHub/speckit-companion.worktrees/bench-main/apps/speckit-extension/commands/`. If it is not there, the branch was not rebuilt (`assemble-nodes.py`, `build-commands.py`) or not pushed. Stop and fix that first.
 
 ### 2. Gates, in this checkout, on the wave branch
 
 ```bash
-python3 speckit-extension/scripts/assemble-nodes.py --check
-python3 speckit-extension/scripts/check-shape-parity.py
-python3 speckit-extension/scripts/instruction-budget.py
-python3 -m pytest speckit-extension/tests -q
+python3 apps/speckit-extension/scripts/assemble-nodes.py --check
+python3 apps/speckit-extension/scripts/check-shape-parity.py
+python3 apps/speckit-extension/scripts/instruction-budget.py
+python3 -m pytest apps/speckit-extension/tests -q
 npx jest
 ```
 

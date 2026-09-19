@@ -76,7 +76,7 @@ export function isSettledStatus(status?: string | null): boolean {
 /**
  * The status a step owns while it runs and once it has finished — the single
  * home for that pairing on the TypeScript side. Mirrored by
- * `STEP_COMPLETED_STATUS` in `speckit-extension/scripts/spec_context.py`; the
+ * `STEP_COMPLETED_STATUS` in `apps/speckit-extension/scripts/spec_context.py`; the
  * vocabulary consistency test holds the two together.
  *
  * `clarify` is a sub-phase of specify and `analyze` a sub-phase of tasks, so

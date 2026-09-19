@@ -71,7 +71,7 @@ A folder holding two or more capability specs SHALL be its own group, and a fold
 - **THEN** the folder is not a group and the leaf sits under its parent
 
 ### An empty view is a way in, not a row saying there is nothing here
-<!-- touches: src/features/specs/livingSpecsExplorerProvider.ts, src/features/specs/livingSpecsCommands.ts -->
+<!-- touches: apps/vscode/src/features/specs/livingSpecsExplorerProvider.ts, apps/vscode/src/features/specs/livingSpecsCommands.ts -->
 
 With no registry, or nothing adopted yet, the tree SHALL stay empty so the view's welcome content offers the next step instead of an informational row.
 
@@ -80,7 +80,7 @@ With no registry, or nothing adopted yet, the tree SHALL stay empty so the view'
 - **THEN** the tree is empty and the welcome content offers set-up
 
 ### Set-up asks where specs live once, then offers adoption
-<!-- touches: src/features/specs/livingSpecsCommands.ts -->
+<!-- touches: apps/vscode/src/features/specs/livingSpecsCommands.ts -->
 
 Set-up SHALL ask once where specs live, write an enabled registry with that layout and nothing adopted, then offer adoption. Adoption asks which areas to adopt and carries the layout already chosen instead of asking again.
 

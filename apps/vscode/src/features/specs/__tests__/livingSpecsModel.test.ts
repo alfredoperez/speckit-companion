@@ -782,14 +782,14 @@ describe('claimsForFile', () => {
 /**
  * The other half of a rule that has to exist twice: the resolver orders
  * capabilities by specificity in Python, the status bar re-implements it here.
- * `speckit-extension/tests/test_living_show.py` reads the same file.
+ * `apps/speckit-extension/tests/test_living_show.py` reads the same file.
  */
 describe('capability order agrees with the resolver', () => {
     const fixture = JSON.parse(
         fs.readFileSync(
             path.join(
-                __dirname, '..', '..', '..', '..',
-                'speckit-extension', 'tests', 'fixtures', 'claim-order', 'cases.json'
+                __dirname, '..', '..', '..', '..', '..', '..',
+                'apps', 'speckit-extension', 'tests', 'fixtures', 'claim-order', 'cases.json'
             ),
             'utf8'
         )

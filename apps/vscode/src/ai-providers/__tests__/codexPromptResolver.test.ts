@@ -6,14 +6,14 @@ import { AIProviders } from '../../core/constants';
 import { PROVIDER_PATHS } from '../aiProvider';
 import { MARKER_OPEN, MARKER_CLOSE } from '../promptPreamble';
 
-const REPO_ROOT = path.join(__dirname, '..', '..', '..');
+const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..', '..');
 
 const PREAMBLE = `${MARKER_OPEN}\nRecord the step in .spec-context.json.\n${MARKER_CLOSE}`;
 
 /** Every command the companion spec-kit extension provides — the full surface Codex can be asked to dispatch. */
 function companionCommands(): string[] {
     const manifest = fs.readFileSync(
-        path.join(__dirname, '..', '..', '..', 'speckit-extension', 'extension.yml'),
+        path.join(__dirname, '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'extension.yml'),
         'utf8',
     );
     return [...manifest.matchAll(/^\s*-\s+name:\s+(speckit\.companion\.[\w.-]+)\s*$/gm)].map(m => m[1]);

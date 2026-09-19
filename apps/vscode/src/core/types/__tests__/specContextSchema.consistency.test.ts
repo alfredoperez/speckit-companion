@@ -61,7 +61,7 @@ describe('spec-context.schema.json stays in sync with the TS contract', () => {
  * passing vacuously.
  */
 const pythonSource = fs.readFileSync(
-    path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'scripts', 'spec_context.py'),
+    path.join(__dirname, '..', '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'scripts', 'spec_context.py'),
     'utf8',
 );
 

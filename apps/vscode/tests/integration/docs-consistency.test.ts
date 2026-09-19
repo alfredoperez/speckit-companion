@@ -15,7 +15,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
 const exists = (rel: string) => fs.existsSync(path.join(REPO_ROOT, rel));
 
@@ -90,7 +90,7 @@ describe('docs consistency', () => {
       for (const id of enumValues) {
         const file = idToFile[id];
         expect(file).toBeDefined();
-        expect(exists(`src/ai-providers/${file}`)).toBe(true);
+        expect(exists(`apps/vscode/src/ai-providers/${file}`)).toBe(true);
       }
     });
   });
@@ -98,7 +98,7 @@ describe('docs consistency', () => {
   describe('provider file inventory', () => {
     it('every *Provider.ts under src/ai-providers/ is named in architecture.md', () => {
       const arch = read('docs/architecture.md');
-      const dir = path.join(REPO_ROOT, 'src/ai-providers');
+      const dir = path.join(REPO_ROOT, 'apps/vscode/src/ai-providers');
       const providerFiles = fs
         .readdirSync(dir)
         .filter((f) => /Provider\.ts$/.test(f));
@@ -152,13 +152,13 @@ describe('docs consistency', () => {
 
   describe('core layering', () => {
     // Shrinks over time; never grows.
-    const ALLOWLIST = ['src/core/telemetry.ts', 'src/core/utils/terminalUtils.ts'];
+    const ALLOWLIST = ['apps/vscode/src/core/telemetry.ts', 'apps/vscode/src/core/utils/terminalUtils.ts'];
     const UPWARD_IMPORT = /(?:from\s+|import\(|require\()\s*['"]\.\.?\/(?:[^'"]*\/)?(?:features|ai-providers)(?:\/|['"])/;
 
     it('the files under src/core that import features/ or ai-providers/ are exactly the allowlist', () => {
       const upward = fs
-        .readdirSync(path.join(REPO_ROOT, 'src/core'), { recursive: true, encoding: 'utf8' })
-        .map((f) => `src/core/${f.split(path.sep).join('/')}`)
+        .readdirSync(path.join(REPO_ROOT, 'apps/vscode/src/core'), { recursive: true, encoding: 'utf8' })
+        .map((f) => `apps/vscode/src/core/${f.split(path.sep).join('/')}`)
         .filter((f) => /\.ts$/.test(f) && !/\.(test|spec)\.ts$/.test(f) && !f.includes('/__tests__/'))
         .filter((rel) => UPWARD_IMPORT.test(read(rel)))
         .sort();

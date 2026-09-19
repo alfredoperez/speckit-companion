@@ -10,7 +10,7 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 
 > **Two modes.** The default (below) is the full loop: one issue per ticket, fixed by running `/speckit-companion-auto` on itself. **`--light`** ([Light mode](#light-mode---light)) drops the issue, the spec pipeline, and the sequencing for small mechanical changes, and fans out parallel worktree agents instead. It keeps the code review, tests, and CI. Light mode trades away the dogfooding signal — pick it deliberately, not by default.
 
-1. **Fresh `main`** — pull, and if the pull changed `speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
+1. **Fresh `main`** — pull, and if the pull changed `apps/speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
 2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, `/code-review` + `/codex:review` in parallel (max two rounds), the commit, and the PR.
 3. **Merge** — squash-merge once CI is green.
 4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
@@ -82,7 +82,7 @@ Light mode runs one subagent per task, **each with `isolation: "worktree"`**. Th
 Four things collide if you're not careful. Note that the first two are precisely why parallelism is safe **only** in light mode:
 
 1. **Spec numbering race.** Specify picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
-2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./speckit-extension --dev --force` first.*
+2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./apps/speckit-extension --dev --force` first.*
 3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
 4. **A fresh worktree has no `node_modules` — run `npm ci` FIRST or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
 
@@ -144,7 +144,7 @@ git rev-parse --show-toplevel              # must be the speckit-companion repo
 git status --porcelain                     # MUST be empty — if not, STOP and report
 git checkout main && git fetch origin
 BEFORE=$(git rev-parse HEAD) && git pull --ff-only
-git diff --quiet "$BEFORE" HEAD -- speckit-extension/ || specify extension add ./speckit-extension --dev --force
+git diff --quiet "$BEFORE" HEAD -- apps/speckit-extension/ || specify extension add ./apps/speckit-extension --dev --force
 git restore .specify/ && git status --porcelain   # MUST be empty again
 ```
 If the tree is dirty, **do not** stash or discard. Stop the whole loop and report — a dirty tree means an earlier ticket left work uncommitted.
@@ -160,7 +160,7 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
 - **Check what auto left behind before merging:**
   - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.**
   - The PR does not carry regenerated `.specify/` artifacts (`feature.json`, registry files). **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate requires it.
-  - `npm run compile && npm test` is green. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
+  - `npm run compile && npm test` is green. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
   - Note any UI / webview / sidebar / settings surface a human should eyeball, for the report.
   - Push any fixes to the PR branch.
 - **Log the subagents — observe, never force.** Run `python3 .claude/scripts/subagent-tally.py specs/<NNN>-<slug>`. It reads this session's transcript and prints, per step, the subagents auto actually dispatched next to what that step's rule expects (plan: one reader per recorded `area:`, at most 4, plus 2 design-doc writers, nothing on a simple run; implement: one per story phase with 5+ files, up to 4 per Foundational wave of 4+ tasks, plus 2 reviewers per round). Copy the output into the ticket's result line as is. Do not re-run a step to get the expected number, and do not dispatch workers auto skipped: a gap between expected and actual is a finding for the report, not something to fix mid-ticket.

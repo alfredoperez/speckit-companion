@@ -28,7 +28,7 @@ It never falls back to "most-recently-modified dir containing `tasks.md`."
 
 ## Canonical schema
 
-The data contract has a single source of truth: `src/core/types/spec-context.schema.json` (mirrored by the TypeScript types in `src/core/types/specContext.ts`). The writer targets that shape directly — **no vendored copy, no cross-repo reconciliation** — and writes the same canonical `history[]` field the GUI itself writes, so the two never deviate. v1 added `"implemented"` to the `status` enum; the lifecycle step added `"derive"` to the `historyEntry.by` enum (for derive-from-files captures).
+The data contract has a single source of truth: `apps/vscode/src/core/types/spec-context.schema.json` (mirrored by the TypeScript types in `apps/vscode/src/core/types/specContext.ts`). The writer targets that shape directly — **no vendored copy, no cross-repo reconciliation** — and writes the same canonical `history[]` field the GUI itself writes, so the two never deviate. v1 added `"implemented"` to the `status` enum; the lifecycle step added `"derive"` to the `historyEntry.by` enum (for derive-from-files captures).
 
 ## End-to-end proof
 

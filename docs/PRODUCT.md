@@ -12,7 +12,7 @@ Developers running spec-driven workflows with an AI CLI, inside VS Code, while t
 
 ## Where it lives — the key constraint
 
-Everything renders inside a VS Code WebviewPanel and **must adapt to the user's editor theme** via VS Code CSS variables (`webview/styles/tokens.css`). The viewer should feel native to VS Code — never a foreign island. Any visual direction has to keep theme-adaptivity (light / dark / high-contrast) and not fight the host chrome.
+Everything renders inside a VS Code WebviewPanel and **must adapt to the user's editor theme** via VS Code CSS variables (`apps/vscode/webview/styles/tokens.css`). The viewer should feel native to VS Code — never a foreign island. Any visual direction has to keep theme-adaptivity (light / dark / high-contrast) and not fight the host chrome.
 
 ## Design philosophy
 

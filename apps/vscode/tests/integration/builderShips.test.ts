@@ -13,7 +13,7 @@ import * as path from 'path';
  * `.vscodeignore` excludes `speckit-extension/**` and re-includes what ships, so
  * this reads that list rather than trusting it.
  */
-const repoRoot = path.join(__dirname, '..', '..');
+const repoRoot = path.join(__dirname, '..', '..', '..', '..');
 const ignore = fs.readFileSync(path.join(repoRoot, '.vscodeignore'), 'utf8');
 
 /** Paths the packing list re-includes after the blanket exclusion. */
@@ -42,13 +42,13 @@ const REQUIRED_SCRIPTS = [
 
 describe('the pipeline builder ships with what it reads', () => {
     it.each(REQUIRED_SCRIPTS)('packs %s', script => {
-        expect(shipped.has(`speckit-extension/scripts/${script}`)).toBe(true);
+        expect(shipped.has(`apps/speckit-extension/scripts/${script}`)).toBe(true);
     });
 
     it('packs the node sources a build assembles from', () => {
-        expect(shipped.has('speckit-extension/nodes/**')).toBe(true);
-        expect(shipped.has('speckit-extension/extension.yml')).toBe(true);
-        expect(shipped.has('speckit-extension/presets/_parts/**')).toBe(true);
+        expect(shipped.has('apps/speckit-extension/nodes/**')).toBe(true);
+        expect(shipped.has('apps/speckit-extension/extension.yml')).toBe(true);
+        expect(shipped.has('apps/speckit-extension/presets/_parts/**')).toBe(true);
     });
 
     /**
@@ -57,13 +57,13 @@ describe('the pipeline builder ships with what it reads', () => {
      * it — the panel offers a fragment or a preset that resolves to nothing.
      */
     it('packs the content the panel offers to pick from', () => {
-        expect(shipped.has('speckit-extension/fragments/**')).toBe(true);
-        expect(shipped.has('speckit-extension/workflows/presets/**')).toBe(true);
+        expect(shipped.has('apps/speckit-extension/fragments/**')).toBe(true);
+        expect(shipped.has('apps/speckit-extension/workflows/presets/**')).toBe(true);
     });
 
     it('the picked-from directories are not empty', () => {
         for (const rel of [['fragments'], ['workflows', 'presets']]) {
-            const dir = path.join(repoRoot, 'speckit-extension', ...rel);
+            const dir = path.join(repoRoot, 'apps', 'speckit-extension', ...rel);
             expect(fs.existsSync(dir)).toBe(true);
             expect(fs.readdirSync(dir).length).toBeGreaterThan(0);
         }
@@ -71,7 +71,7 @@ describe('the pipeline builder ships with what it reads', () => {
 
     it('every packed script exists on disk', () => {
         for (const script of REQUIRED_SCRIPTS) {
-            const file = path.join(repoRoot, 'speckit-extension', 'scripts', script);
+            const file = path.join(repoRoot, 'apps', 'speckit-extension', 'scripts', script);
             expect(fs.existsSync(file)).toBe(true);
         }
     });
@@ -88,16 +88,16 @@ describe('the pipeline builder ships with what it reads', () => {
      */
     it('packs every script the panel resolves, including ones added since', () => {
         const source = fs.readFileSync(
-            path.join(repoRoot, 'src', 'features', 'specs', 'pipelineGraph.ts'), 'utf8');
+            path.join(repoRoot, 'apps', 'vscode', 'src', 'features', 'specs', 'pipelineGraph.ts'), 'utf8');
         const resolved = Array.from(
             source.matchAll(/build-pipeline\\?\.py\$\/,\s*'([\w.-]+\.py)'/g),
             match => match[1]);
 
         expect(resolved.length).toBeGreaterThan(0);
         for (const script of resolved) {
-            expect(shipped.has(`speckit-extension/scripts/${script}`)).toBe(true);
+            expect(shipped.has(`apps/speckit-extension/scripts/${script}`)).toBe(true);
             expect(fs.existsSync(
-                path.join(repoRoot, 'speckit-extension', 'scripts', script))).toBe(true);
+                path.join(repoRoot, 'apps', 'speckit-extension', 'scripts', script))).toBe(true);
         }
     });
 
@@ -105,8 +105,8 @@ describe('the pipeline builder ships with what it reads', () => {
         // Both come from the same bundled directory. If that ever changes, the
         // builder's fallback path is wrong and only a real install would show it.
         const source = fs.readFileSync(
-            path.join(repoRoot, 'src', 'features', 'specs', 'pipelineBuildCommands.ts'), 'utf8');
-        expect(source).toContain("'speckit-extension', 'scripts', 'build-pipeline.py'");
+            path.join(repoRoot, 'apps', 'vscode', 'src', 'features', 'specs', 'pipelineBuildCommands.ts'), 'utf8');
+        expect(source).toContain("'apps', 'speckit-extension', 'scripts', 'build-pipeline.py'");
     });
 });
 
@@ -120,16 +120,20 @@ describe('the pipeline builder ships with what it reads', () => {
  * or has an explicit exclusion, and a tree that is neither fails the build
  * until someone decides.
  */
-const SHIPS_AT_TOP_LEVEL = new Set(['assets', 'capabilities', 'dist', 'speckit-extension', 'webview']);
+const SHIPS_AT_TOP_LEVEL = new Set(['apps', 'assets', 'capabilities', 'dist']);
 
-const excludedTrees = new Set(
+/** Every blanket `<path>/**` exclusion line, full path (e.g. 'content/media', 'docs'). */
+const excludedTreePaths = new Set(
     ignore
         .split('\n')
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('#') && !line.startsWith('!'))
-        .filter(line => /^[^*/]+\/\*\*$/.test(line))
+        .filter(line => /^[^*]+\/\*\*$/.test(line))
         .map(line => line.slice(0, -3)),
 );
+
+/** Their top-level segment, so a nested exclusion still accounts for its top-level tree. */
+const excludedTrees = new Set([...excludedTreePaths].map(p => p.split('/')[0]));
 
 describe('every top-level tree is either known to ship or explicitly kept out', () => {
     const topLevelDirs = fs
@@ -142,8 +146,8 @@ describe('every top-level tree is either known to ship or explicitly kept out', 
     });
 
     it('keeps the documentation trees out', () => {
-        for (const tree of ['media', 'docs', 'website', 'examples', 'specs', 'design']) {
-            expect(excludedTrees.has(tree)).toBe(true);
+        for (const tree of ['content/media', 'docs', 'apps/website', 'specs', 'content/design']) {
+            expect(excludedTreePaths.has(tree)).toBe(true);
         }
     });
 });

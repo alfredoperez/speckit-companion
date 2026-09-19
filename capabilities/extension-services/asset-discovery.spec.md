@@ -7,7 +7,7 @@ Lists the agents and skills the user or other tools authored, at every scope, wi
 ## Requirements
 
 ### Discovering user-authored assets is best-effort and never breaks activation
-<!-- touches: src/features/agents/agentManager.ts, src/features/skills/skillManager.ts -->
+<!-- touches: apps/vscode/src/features/agents/agentManager.ts, apps/vscode/src/features/skills/skillManager.ts -->
 
 Listing agents or skills SHALL treat a missing directory or an unreadable file as nothing found there, log it, and continue.
 
@@ -16,7 +16,7 @@ Listing agents or skills SHALL treat a missing directory or an unreadable file a
 - **THEN** an empty list is returned and nothing is surfaced as an error
 
 ### A malformed definition surfaces as a flagged entry, not a missing one
-<!-- touches: src/features/skills/skillManager.ts -->
+<!-- touches: apps/vscode/src/features/skills/skillManager.ts -->
 
 A skill whose frontmatter is absent or unparseable SHALL still be listed under its folder name and marked as needing attention, because the user's assistant may still load it and hiding it leaves nothing to fix.
 
@@ -25,7 +25,7 @@ A skill whose frontmatter is absent or unparseable SHALL still be listed under i
 - **THEN** the skill appears under its folder name, flagged, with an explanation on hover
 
 ### Assets are discovered at every scope and attributed to their origin
-<!-- touches: src/features/agents/agentManager.ts, src/features/skills/skillManager.ts -->
+<!-- touches: apps/vscode/src/features/agents/agentManager.ts, apps/vscode/src/features/skills/skillManager.ts -->
 
 Discovery SHALL cover project, user and installed-plugin scopes and record each asset's scope. Plugin assets SHALL be named under their plugin, so same-named assets from two plugins stay distinct.
 
@@ -34,7 +34,7 @@ Discovery SHALL cover project, user and installed-plugin scopes and record each 
 - **THEN** each is listed under its own plugin's name and neither displaces the other
 
 ### Skills are found where the active provider keeps them
-<!-- touches: src/features/skills/skillManager.ts, src/features/agents/agentManager.ts -->
+<!-- touches: apps/vscode/src/features/skills/skillManager.ts, apps/vscode/src/features/agents/agentManager.ts -->
 
 Skill discovery SHALL scan the active provider's own skills directory at both project and user scope, never one vendor's layout. Agents are still read from Claude's layout at both scopes, so another provider's agents directory is not listed yet.
 

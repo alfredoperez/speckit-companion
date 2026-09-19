@@ -34,7 +34,7 @@ from pathlib import Path
 
 from builder_harness import EXT, Project
 
-REPO = EXT.parent
+REPO = EXT.parents[1]
 CAPTURE_EVAL = REPO / ".claude" / "skills" / "eval-speckit-extension" / "check_capture.py"
 
 #: Long enough for a real specify run; a hang past this is a failure, not slowness.

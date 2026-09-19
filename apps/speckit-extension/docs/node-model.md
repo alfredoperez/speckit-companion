@@ -15,7 +15,7 @@ These four words mean specific things. "Node" used to get used loosely for all o
 
 ## How a command is assembled
 
-Each decomposed command lives under `speckit-extension/nodes/<command>/`:
+Each decomposed command lives under `apps/speckit-extension/nodes/<command>/`:
 
 ```
 nodes/plan/

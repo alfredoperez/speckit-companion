@@ -47,7 +47,7 @@ let panel: Panel;
 
 /** A node file as the extension ships it, fences and all. */
 function shippedNode(command: string, id: string, body: string): string {
-    const file = path.join(extensionPath, 'speckit-extension', 'nodes', command, `${id}.md`);
+    const file = path.join(extensionPath, 'apps', 'speckit-extension', 'nodes', command, `${id}.md`);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, body, 'utf8');
     return file;
@@ -330,7 +330,7 @@ describe('saving a node is what makes it yours', () => {
 
     it('writes the project\'s own copy, leaving the shipped node alone', async () => {
         const shipped = path.join(
-            extensionPath, 'speckit-extension', 'nodes', 'specify', 'draft.md');
+            extensionPath, 'apps', 'speckit-extension', 'nodes', 'specify', 'draft.md');
         const before = fs.readFileSync(shipped, 'utf8');
 
         await panel.__receive({

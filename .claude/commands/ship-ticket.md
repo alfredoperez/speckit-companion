@@ -42,7 +42,7 @@ git status --porcelain                        # work should be committed; a clea
 - If there are **uncommitted** changes that are the real work, commit them first (real change + `specs/<NNN>/` spec folder); do **not** commit `.specify/` regenerated artifacts (`git checkout origin/main -- .specify/<file>` for any swept in).
 
 ### 0b. Verify it actually builds — subagent
-- `npm run compile && npm test`. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
+- `npm run compile && npm test`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
 - Confirm the spec is in a shippable state: `specs/<NNN>-<slug>/` committed, tasks checked, `.spec-context.json` `specName` real (not a `[FEATURE NAME]` placeholder).
 - If anything is red, **stop and report** — don't ship a broken branch.
 
@@ -58,7 +58,7 @@ Run `/code-review` on the branch diff vs `main` at **high** effort, apply findin
 **Two passes is the ceiling.** One review, one re-review, then ship. If the second pass still finds something real, fix it and open a follow-up issue for anything it raises beyond that rather than starting a third. An unbounded loop finds real things and costs more than they are worth: on PR #720 the third pass found a genuine dispatch bug, and the fourth found nothing while the branch sat unmerged. Convergence is a budget, not a proof.
 
 ### 1b. Did the branch say what it changed? — main loop
-`python3 speckit-extension/scripts/drift.py --since main --working`. Anything it names is code this branch changed inside a capability, with nothing said about it. Fold it into that spec, or `--accept` the capability when the spec is genuinely still true. Neither is bookkeeping: the first is the loop closing, the second is a review someone actually did.
+`python3 apps/speckit-extension/scripts/drift.py --since main --working`. Anything it names is code this branch changed inside a capability, with nothing said about it. Fold it into that spec, or `--accept` the capability when the spec is genuinely still true. Neither is bookkeeping: the first is the loop closing, the second is a review someone actually did.
 
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.
@@ -94,10 +94,10 @@ git checkout main && git fetch origin && git pull --ff-only
 # /install-local …
 git restore package.json package-lock.json .specify/
 ```
-**If the branch touched `speckit-extension/**`** — `/install-local` only refreshes the VS Code extension; the spec-kit extension also needs a `--dev` reinstall so the new `/speckit.companion.*` commands + workflow are resolvable in Claude Code. Check with `git diff --name-only origin/main...HEAD | grep -q '^speckit-extension/'`, and if so:
+**If the branch touched `apps/speckit-extension/**`** — `/install-local` only refreshes the VS Code extension; the spec-kit extension also needs a `--dev` reinstall so the new `/speckit.companion.*` commands + workflow are resolvable in Claude Code. Check with `git diff --name-only origin/main...HEAD | grep -q '^apps/speckit-extension/'`, and if so:
 ```bash
 specify extension remove companion                # committed stub means a fresh add reports "already installed"
-specify extension add ./speckit-extension --dev   # re-copies into .specify/extensions/companion/ + re-emits .claude/ command
+specify extension add ./apps/speckit-extension --dev   # re-copies into .specify/extensions/companion/ + re-emits .claude/ command
 specify extension list                            # confirm "companion" at the new state
 git restore .specify/                             # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
 ```
@@ -109,5 +109,5 @@ End with a tight summary: issue shipped, PR link, merged / in-review / blocked, 
 - **Never rebuild** — that's `/fix-tickets`' job. This ships what's already on the branch.
 - **Never merge red checks.** Report instead.
 - **Never commit version bumps or `.specify/` regenerated artifacts** into the feature PR (install-local's bump is throwaway — restore it).
-- **Reinstall the spec-kit extension when the branch touched `speckit-extension/**`** — `/install-local` only covers the VS Code side; `specify extension remove companion && specify extension add ./speckit-extension --dev` is what makes the new `/speckit.companion.*` commands resolvable in Claude Code. Restore the gitignored `.specify/` copies; never commit them on main.
+- **Reinstall the spec-kit extension when the branch touched `apps/speckit-extension/**`** — `/install-local` only covers the VS Code side; `specify extension remove companion && specify extension add ./apps/speckit-extension --dev` is what makes the new `/speckit.companion.*` commands resolvable in Claude Code. Restore the gitignored `.specify/` copies; never commit them on main.
 - Always reply to + resolve any PR review threads after fixing.

@@ -27,7 +27,7 @@ def load(name):
     return d, ctx
 
 
-def check(name, root=ROOT.parent):
+def check(name, root=ROOT.parents[1]):
     d, ctx = load(name)
     return db.check_bleed(root, d, ctx)
 
@@ -80,7 +80,7 @@ class ArtifactShapeTests(unittest.TestCase):
                          "the fast-path shape is correct, not bleed")
 
     def test_a_spec_with_no_documents_is_not_applicable(self):
-        status, findings = db.check_bleed(ROOT.parent, FIXTURES / "dangling-start", {})
+        status, findings = db.check_bleed(ROOT.parents[1], FIXTURES / "dangling-start", {})
         self.assertEqual(status.state, "not-applicable")
         self.assertEqual(findings, [])
 
@@ -188,7 +188,7 @@ class TimeShareTests(unittest.TestCase):
             "implement": ("2026-08-01T11:00:00Z", "2026-08-01T11:10:00Z"),
         })
         d = FIXTURES / "bleed-clean"
-        _status, findings = db.check_bleed(ROOT.parent, d, {**ctx, "size": "normal"})
+        _status, findings = db.check_bleed(ROOT.parents[1], d, {**ctx, "size": "normal"})
         notes = [f for f in findings if "took longer than" in f.title]
         self.assertEqual(len(notes), 1)
         self.assertEqual(notes[0].severity, "note")

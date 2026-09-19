@@ -7,7 +7,7 @@ The pipeline a spec actually runs: its ordered steps with any the project added,
 ## Requirements
 
 ### One resolution produces a spec's pipeline, and it includes the steps the project added
-<!-- touches: src/features/workflows/projectSteps.ts -->
+<!-- touches: apps/vscode/src/features/workflows/projectSteps.ts -->
 
 The viewer rail, sidebar tree, footer next-step label, dispatch and timing all read the same ordered steps. For a Companion spec, each project step under `.specify/companion/nodes/` is placed right after the shipped step it names, and mark-complete stays last. A stock or custom pipeline is returned unchanged, and nothing is written to settings.
 
@@ -21,7 +21,7 @@ The viewer rail, sidebar tree, footer next-step label, dispatch and timing all r
 - **THEN** it is left out of the pipeline but can still be run by hand
 
 ### A bad project step never blocks the spec from opening
-<!-- touches: src/features/workflows/projectSteps.ts -->
+<!-- touches: apps/vscode/src/features/workflows/projectSteps.ts -->
 
 A step directory that is unreadable, malformed, or named like a shipped step is skipped, and the remaining steps are still read.
 
@@ -30,7 +30,7 @@ A step directory that is unreadable, malformed, or named like a shipped step is 
 - **THEN** the spec opens on the shipped Companion pipeline with no error shown
 
 ### Checkpoints run at their declared trigger, ask before acting, and record their outcome
-<!-- touches: src/features/workflows/checkpointHandler.ts -->
+<!-- touches: apps/vscode/src/features/workflows/checkpointHandler.ts -->
 
 A checkpoint asks for approval unless its definition sets `requiresApproval: false`, and records its status on the spec. A declined checkpoint is recorded as skipped.
 
@@ -40,14 +40,14 @@ A checkpoint asks for approval unless its definition sets `requiresApproval: fal
 - **AND** the checkpoint is recorded as skipped
 
 ### A failed checkpoint lets the user retry, skip, or cancel the rest
-<!-- touches: src/features/workflows/checkpointHandler.ts -->
+<!-- touches: apps/vscode/src/features/workflows/checkpointHandler.ts -->
 
 #### Scenario: a checkpoint fails with more to run
 - **WHEN** a checkpoint fails and more checkpoints remain for the same trigger
 - **THEN** the user chooses to retry it, skip to the next, or cancel the remaining ones
 
 ### A routing switch matches the verdict the classifier actually emits
-<!-- touches: speckit-extension/workflows/speckit-companion.workflow.yml -->
+<!-- touches: apps/speckit-extension/workflows/speckit-companion.workflow.yml -->
 
 A case key must be the classifier's verdict (`simple`), not the name of its threshold (`small`), or no run ever matches it.
 
@@ -60,7 +60,7 @@ A case key must be the classifier's verdict (`simple`), not the name of its thre
 - **THEN** the full pipeline runs, and no phase is skipped
 
 ### Shipped presets are starting points, not fixed shapes
-<!-- touches: speckit-extension/workflows/presets/** -->
+<!-- touches: apps/speckit-extension/workflows/presets/** -->
 
 Each preset declares only what it changes and carries a one-line summary of who it is for.
 

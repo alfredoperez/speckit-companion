@@ -7,7 +7,7 @@ The guards on destructive and deferred actions, and the teardown rules for inlin
 ## Requirements
 
 ### Undo during the countdown cancels the deferred action
-<!-- touches: webview/src/shared/components/UndoToast.tsx -->
+<!-- touches: apps/vscode/webview/src/shared/components/UndoToast.tsx -->
 
 Escape also undoes, except where the page already binds Escape, so cancelling an inline edit cannot undo a write.
 
@@ -20,7 +20,7 @@ Escape also undoes, except where the page already binds Escape, so cancelling an
 - **THEN** the deferred effect runs exactly once
 
 ### A guarded action never fires after its surface unmounts
-<!-- touches: webview/src/shared/components/UndoToast.tsx -->
+<!-- touches: apps/vscode/webview/src/shared/components/UndoToast.tsx -->
 
 #### Scenario: the surface disappears mid-window
 - **WHEN** the component unmounts while an undo countdown is pending

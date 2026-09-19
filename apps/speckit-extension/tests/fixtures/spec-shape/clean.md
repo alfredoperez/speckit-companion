@@ -5,7 +5,7 @@ A well-formed spec that produces no findings at all.
 ## Requirements
 
 ### The thing behaves
-<!-- touches: speckit-extension/scripts/**  -->
+<!-- touches: apps/speckit-extension/scripts/**  -->
 
 It does the thing, and it does it once.
 

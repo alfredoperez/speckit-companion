@@ -25,7 +25,7 @@ Once the reader picks the Overview or a document, a later refresh SHALL keep sho
 - **THEN** it stays on the Overview
 
 ### An open panel shows the settled state when the spec's record changes on disk
-<!-- touches: src/features/spec-viewer/specViewerProvider.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 When an open spec's recorded context changes on disk, the panel SHALL re-derive its state and replace the webview's state whole, never merge a partial update onto the last one.
 
@@ -34,7 +34,7 @@ When an open spec's recorded context changes on disk, the panel SHALL re-derive 
 - **THEN** the panel shows the step settled without the reader switching tabs or reloading
 
 ### The install nudge settles in every open panel when the spec-kit extension changes on disk
-<!-- touches: src/features/spec-viewer/specViewerProvider.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 When the files that decide the spec-kit extension nudge change, every open run panel SHALL be refreshed.
 
@@ -59,7 +59,7 @@ Each render SHALL emit a content-security policy with a fresh nonce, allowing sc
 - **THEN** each carries a different nonce in its policy
 
 ### The Activity panel's install banner reports the variant the reader saw
-<!-- touches: src/features/spec-viewer/specViewerProvider.ts, src/features/spec-viewer/messageHandlers.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
 The banner's shown report and its click report SHALL name the update surface for an update prompt and the install surface for an install prompt.
 
@@ -68,7 +68,7 @@ The banner's shown report and its click report SHALL name the update surface for
 - **THEN** both the shown and the click report name the update surface
 
 ### No install nudge is shown or counted while the Activity panel is off
-<!-- touches: src/features/spec-viewer/specViewerProvider.ts, src/features/spec-viewer/html/generator.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/spec-viewer/html/generator.ts -->
 
 With the Activity panel setting off, the panel SHALL send no install prompt and report no banner as shown.
 
@@ -77,7 +77,7 @@ With the Activity panel setting off, the panel SHALL send no install prompt and 
 - **THEN** no banner renders and no shown event is reported
 
 ### Closing the install banner removes it at once
-<!-- touches: src/features/spec-viewer/messageHandlers.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
 Dismissing the banner SHALL record the dismissal for the prompt the banner showed and refresh the panel.
 

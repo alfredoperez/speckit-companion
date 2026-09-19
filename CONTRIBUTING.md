@@ -4,7 +4,7 @@ Thanks for considering a contribution. This guide tells you how to get the exten
 
 If you only have five minutes, skim **Quick Start** and the **README docs map** sections — those two cover 80% of what reviewers care about.
 
-> **Two extensions live in this repo.** This guide is for the **VS Code extension** (the GUI — `src/`, `webview/`, `package.json`). The **spec-kit extension** (`speckit-extension/`, `id: companion`) is a separate, independently-versioned product with its own dev loop, changelog, and version — if you're working on it, follow **[speckit-extension/docs/contributing.md](speckit-extension/docs/contributing.md)** instead.
+> **Two extensions live in this repo.** This guide is for the **VS Code extension** (the GUI — `apps/vscode/src/`, `apps/vscode/webview/`, `package.json`). The **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) is a separate, independently-versioned product with its own dev loop, changelog, and version — if you're working on it, follow **[apps/speckit-extension/docs/contributing.md](apps/speckit-extension/docs/contributing.md)** instead.
 
 ---
 
@@ -25,7 +25,7 @@ The Extension Development Host is a second VS Code window with the local build o
 - **Node.js 18+**
 - **VS Code 1.84+** (matches `engines.vscode` in `package.json`)
 - **An AI CLI** for testing the SpecKit features end-to-end: Claude Code, Gemini CLI, GitHub Copilot CLI, Codex CLI, or Qwen CLI. You don't need all of them — pick whichever you use.
-- **Python 3.9+** on your PATH as `python3`, only if you touch `speckit-extension/`. Its suite is stdlib `unittest`, so there is nothing to install. A change confined to `src/` or `webview/` needs `npm test` alone.
+- **Python 3.9+** on your PATH as `python3`, only if you touch `apps/speckit-extension/`. Its suite is stdlib `unittest`, so there is nothing to install. A change confined to `apps/vscode/src/` or `apps/vscode/webview/` needs `npm test` alone.
 
 ## Development Loop
 
@@ -40,9 +40,9 @@ Then **F5** in VS Code to launch the Extension Development Host. After a code ch
 Other build commands:
 
 ```bash
-npm run compile         # one-shot TypeScript compile (src/)
-npm run package-web     # webpack production bundle (webview/)
-npm run watch-web       # webpack development watch (webview/)
+npm run compile         # one-shot TypeScript compile (apps/vscode/src/)
+npm run package-web     # webpack production bundle (apps/vscode/webview/)
+npm run watch-web       # webpack development watch (apps/vscode/webview/)
 npm run package         # produce a .vsix
 npm run install-local   # bump patch, package, install the .vsix in your VS Code
 ```
@@ -57,17 +57,17 @@ npm run test:watch      # watch mode
 npm run test:coverage   # coverage report
 ```
 
-`npm run test:all` runs the jest suite and the spec-kit extension's stdlib-unittest suite together, which is what CI runs. It needs `python3` on your PATH; without it, run `npm test` for a change that stays inside `src/` or `webview/`.
+`npm run test:all` runs the jest suite and the spec-kit extension's stdlib-unittest suite together, which is what CI runs. It needs `python3` on your PATH; without it, run `npm test` for a change that stays inside `apps/vscode/src/` or `apps/vscode/webview/`.
 
-- **Style**: BDD — `describe()` / `it()` blocks describe behaviour, not implementation. Read a few existing test files in `src/**/*.test.ts` before adding new ones.
-- **VS Code mock**: extension-side tests use `tests/__mocks__/vscode.ts` (mapped via `jest.config.js#moduleNameMapper`). When you need a VS Code API that isn't mocked yet, add it there rather than stubbing inline.
+- **Style**: BDD — `describe()` / `it()` blocks describe behaviour, not implementation. Read a few existing test files in `apps/vscode/src/**/*.test.ts` before adding new ones.
+- **VS Code mock**: extension-side tests use `apps/vscode/tests/__mocks__/vscode.ts` (mapped via `jest.config.js#moduleNameMapper`). When you need a VS Code API that isn't mocked yet, add it there rather than stubbing inline.
 - **Config**: Jest runs through `ts-jest` against `tsconfig.test.json`.
 
 ## Project Layout (5-second tour)
 
 ```
-src/         — extension entry, providers, managers, AI provider integrations
-webview/     — webview UIs (spec viewer, spec editor, workflow editor)
+apps/vscode/src/       — extension entry, providers, managers, AI provider integrations
+apps/vscode/webview/   — webview UIs (spec viewer, spec editor, workflow editor)
 docs/        — long-form references (linked below)
 specs/       — spec-driven development specs (one folder per feature)
 .specify/    — SpecKit CLI config / templates (NOT shipped with the extension)
@@ -76,7 +76,7 @@ specs/       — spec-driven development specs (one folder per feature)
 
 Two things to internalise before editing:
 
-1. **Extension isolation** (`CLAUDE.md` → "Extension Isolation"): the packaged extension only ships code under `src/` plus the bundled webview. Anything under `.claude/**` or `.specify/**` is the user's environment, not the extension's. Don't implement extension features by editing those — use `src/` code or prompt text instead.
+1. **Extension isolation** (`CLAUDE.md` → "Extension Isolation"): the packaged extension only ships code under `apps/vscode/src/` plus the bundled webview. Anything under `.claude/**` or `.specify/**` is the user's environment, not the extension's. Don't implement extension features by editing those — use `apps/vscode/src/` code or prompt text instead.
 2. **Spec-driven development**: this project uses SDD. Non-trivial features live as a folder under `specs/NNN-slug/` with `spec.md`, `plan.md`, and `tasks.md`. See `specs/058-floating-toast/` or any recent spec for the shape.
 
 ## Commit Style

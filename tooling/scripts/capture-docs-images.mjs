@@ -21,15 +21,15 @@
  * so two runs of this script produce byte-identical files.
  *
  * HOW TO RUN
- *   node scripts/capture-docs-images.mjs                        documentation images
- *   node scripts/capture-docs-images.mjs --clips                every clip state
- *   node scripts/capture-docs-images.mjs --clips living-specs   one composition
+ *   node tooling/scripts/capture-docs-images.mjs                        documentation images
+ *   node tooling/scripts/capture-docs-images.mjs --clips                every clip state
+ *   node tooling/scripts/capture-docs-images.mjs --clips living-specs   one composition
  *
  * `--clips` runs the CLIP_CAPTURES list instead, writing each PNG into the
- * composition that reads it (`media/feature-clips/<clip>/assets/captures/`)
+ * composition that reads it (`content/media/feature-clips/<clip>/assets/captures/`)
  * rather than into docs/screenshots/generated/. Those captures are gitignored,
  * so this list is the only thing that can bring them back: every PNG any
- * composition under media/feature-clips/ reads is named here, and a retheme in
+ * composition under content/media/feature-clips/ reads is named here, and a retheme in
  * .storybook/capture-theme.ts reaches the clips by re-running this list.
  * (`make-it-yours` and `write-only-specs` are the compositions with no
  * entries — they are typographic and read no capture at all.) Nothing published points at these files.
@@ -48,7 +48,7 @@
  * annotation target is missing.
  *
  * The browser and Storybook plumbing is shared with the Pipeline Builder's
- * visual tests — see scripts/lib/storybook-browser.mjs.
+ * visual tests — see tooling/scripts/lib/storybook-browser.mjs.
  *
  * DO NOT HAND-EDIT THE OUTPUT
  * Everything in `docs/screenshots/generated/` is regenerable by this script.
@@ -137,19 +137,19 @@ const STORIES = [
     {
         // Cross-promo banner in the ROOT README: "Install the other half",
         // inviting the Spec Kit engine extension (ReadmeCapture.stories.tsx
-        // C5). Type over the mascot art from speckit-extension/assets.
+        // C5). Type over the mascot art from apps/speckit-extension/assets.
         story: 'scenes-readme-composites--c-5-banner-install-engine',
         out: 'banner-install-engine.png',
     },
     {
-        // Cross-promo banner in speckit-extension/README.md: same frame,
+        // Cross-promo banner in apps/speckit-extension/README.md: same frame,
         // inviting the VS Code extension (ReadmeCapture.stories.tsx C6).
         story: 'scenes-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
     // ── The pipeline builder guide (docs/pipeline-builder.md) ──
     // One shot per gesture the guide teaches. Re-shoot just these with
-    // `node scripts/capture-docs-images.mjs --only builder-`.
+    // `node tooling/scripts/capture-docs-images.mjs --only builder-`.
     //
     // An `out` filename is permanent: the published README resolves images
     // against `main`, so a rename retroactively 404s the Marketplace listing.
@@ -216,18 +216,18 @@ const STORIES = [
 ];
 
 // ── The clip-state list (`--clips`). Not documentation images. ────────────
-// These write into a composition's OWN `assets/captures/`, which media/
+// These write into a composition's OWN `assets/captures/`, which content/media/
 // .gitignore excludes: a clip capture belongs to the composition that reads
 // it, not to docs/screenshots/generated/, whose filenames are load-bearing for
 // the published Marketplace README.
 //
-// clip:  directory name under media/feature-clips/
+// clip:  directory name under content/media/feature-clips/
 // story: the Storybook story id (see http://localhost:6017/index.json)
-// out:   filename under media/feature-clips/<clip>/assets/captures/
+// out:   filename under content/media/feature-clips/<clip>/assets/captures/
 //
 // Every story of one clip declares the same `parameters.capture` size, because
 // the composition measures its beat rects in the capture's own CSS pixels.
-// Sources: webview/src/spec-viewer/__stories__/ClipCapture.stories.tsx (the
+// Sources: apps/vscode/webview/src/spec-viewer/__stories__/ClipCapture.stories.tsx (the
 // D–H state pairs), VideoCapture.stories.tsx (the A* Teamboard lifecycle) and
 // SidebarCapture.stories.tsx (the B* sidebar recreation).
 const CLIP_CAPTURES = [
@@ -325,7 +325,7 @@ const ONLY = (process.argv.find((a) => a.startsWith('--only')) ?? '').split('=')
 function targetFor(entry) {
     if (!entry.clip) return { dir: OUT_DIR, label: `generated/${entry.out}` };
     return {
-        dir: join(REPO_ROOT, 'media', 'feature-clips', entry.clip, 'assets', 'captures'),
+        dir: join(REPO_ROOT, 'content', 'media', 'feature-clips', entry.clip, 'assets', 'captures'),
         label: `${entry.clip}/assets/captures/${entry.out}`,
     };
 }

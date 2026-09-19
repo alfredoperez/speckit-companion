@@ -70,7 +70,7 @@ See [`docs/architecture.md`](./architecture.md) for the current responsibility-l
 
 ### Entry Point & Activation Flow
 
-**File:** `src/extension.ts`
+**File:** `apps/vscode/src/extension.ts`
 
 The extension activates on `onStartupFinished` or when opening spec files. The activation sequence:
 
@@ -103,7 +103,7 @@ flowchart TD
 
 ### AI Provider System
 
-**Files:** `src/ai-providers/`
+**Files:** `apps/vscode/src/ai-providers/`
 
 Uses **Factory + Strategy patterns** to support multiple AI providers.
 
@@ -139,7 +139,7 @@ AIProviderFactory.getProvider(context, outputChannel)
 
 ### Feature Modules Pattern
 
-**Location:** `src/features/`
+**Location:** `apps/vscode/src/features/`
 
 Each feature follows a consistent structure:
 
@@ -159,14 +159,14 @@ Managers encapsulate business logic:
 - Data transformation
 - State management
 
-**Example:** `SteeringManager` (`src/features/steering/steeringManager.ts`)
+**Example:** `SteeringManager` (`apps/vscode/src/features/steering/steeringManager.ts`)
 - `createCustomDocument()`: Creates steering files
 - `deleteDocument()`: Removes files and updates references
 - `getSteeringFiles()`: Returns list of steering documents
 
 #### Provider Pattern (TreeDataProvider)
 
-All tree views extend `BaseTreeDataProvider<T>` (`src/core/providers/BaseTreeDataProvider.ts`):
+All tree views extend `BaseTreeDataProvider<T>` (`apps/vscode/src/core/providers/BaseTreeDataProvider.ts`):
 
 | View ID | Provider | Purpose |
 |---------|----------|---------|
@@ -242,14 +242,14 @@ sequenceDiagram
 
 ### 2. Webview Communication
 
-The extension has two webview UIs: the **Spec Viewer** (`webview/src/spec-viewer/`) and the **Spec Editor** (`webview/src/spec-editor/`). Both use the same message-passing pattern between extension and browser context.
+The extension has two webview UIs: the **Spec Viewer** (`apps/vscode/webview/src/spec-viewer/`) and the **Spec Editor** (`apps/vscode/webview/src/spec-editor/`). Both use the same message-passing pattern between extension and browser context.
 
 **Files (Spec Viewer example):**
-- `src/features/spec-viewer/specViewerProvider.ts` — creates the panel, posts state to the webview
-- `src/features/spec-viewer/messageHandlers.ts` — the typed handler map for messages coming back
-- `src/features/spec-viewer/types.ts` — the message unions, mirrored in `webview/src/spec-viewer/types.ts`
+- `apps/vscode/src/features/spec-viewer/specViewerProvider.ts` — creates the panel, posts state to the webview
+- `apps/vscode/src/features/spec-viewer/messageHandlers.ts` — the typed handler map for messages coming back
+- `apps/vscode/src/features/spec-viewer/types.ts` — the message unions, mirrored in `apps/vscode/webview/src/spec-viewer/types.ts`
 
-#### Message Types (`src/features/spec-viewer/types.ts`)
+#### Message Types (`apps/vscode/src/features/spec-viewer/types.ts`)
 
 ```typescript
 // Extension → Webview
@@ -264,7 +264,7 @@ export type ViewerToExtensionMessage =
     | { type: 'saveComment'; ... };
 ```
 
-Handlers are registered in a `DispatcherMap` (`src/core/utils/dispatcher.ts`), so every variant of the union must have a handler or the build fails.
+Handlers are registered in a `DispatcherMap` (`apps/vscode/src/core/utils/dispatcher.ts`), so every variant of the union must have a handler or the build fails.
 
 #### Message Flow
 
@@ -287,7 +287,7 @@ sequenceDiagram
 
 ### 3. File Watcher System
 
-**File:** `src/features/fileWatchers.ts`
+**File:** `apps/vscode/src/features/fileWatchers.ts`
 
 Watches multiple patterns with debouncing (1 second):
 
@@ -318,7 +318,7 @@ const debouncedRefresh = (event: string, uri: vscode.Uri) => {
 
 ## Key Components Reference
 
-### Constants (`src/core/constants.ts`)
+### Constants (`apps/vscode/src/core/constants.ts`)
 
 | Constant | Purpose |
 |----------|---------|
@@ -362,7 +362,7 @@ speckit.views.settings.visible        // boolean
 1. **Create provider class** implementing `IAIProvider`:
 
 ```typescript
-// src/ai-providers/myNewProvider.ts
+// apps/vscode/src/ai-providers/myNewProvider.ts
 export class MyNewProvider implements IAIProvider {
     readonly name = 'My New Provider';
 
@@ -392,7 +392,7 @@ PROVIDER_PATHS['mynew'] = {
 
 ### Adding a New Feature Module
 
-1. **Create directory** under `src/features/{feature}/`
+1. **Create directory** under `apps/vscode/src/features/{feature}/`
 
 2. **Create manager** for business logic:
 ```typescript
@@ -424,7 +424,7 @@ export class FeatureExplorerProvider implements vscode.TreeDataProvider<FeatureI
 
 ### Adding a New Command
 
-1. **Add to constants** (`src/core/constants.ts`):
+1. **Add to constants** (`apps/vscode/src/core/constants.ts`):
 ```typescript
 export const Commands = {
     // ...
@@ -456,21 +456,21 @@ context.subscriptions.push(
 
 ### Adding Webview Functionality
 
-1. **Define the message** (`src/features/spec-viewer/types.ts`, then mirror it in `webview/src/spec-viewer/types.ts`):
+1. **Define the message** (`apps/vscode/src/features/spec-viewer/types.ts`, then mirror it in `apps/vscode/webview/src/spec-viewer/types.ts`):
 ```typescript
 export type ViewerToExtensionMessage =
     // ...existing
     | { type: 'myNewAction'; data: string };
 ```
 
-2. **Add the handler** (`src/features/spec-viewer/messageHandlers.ts`) — the dispatcher map is exhaustive, so a missing handler is a compile error:
+2. **Add the handler** (`apps/vscode/src/features/spec-viewer/messageHandlers.ts`) — the dispatcher map is exhaustive, so a missing handler is a compile error:
 ```typescript
 myNewAction: async (message, deps) => {
     await doTheThing(message.data);
 },
 ```
 
-3. **Dispatch it from the webview** (a component under `webview/src/spec-viewer/`):
+3. **Dispatch it from the webview** (a component under `apps/vscode/webview/src/spec-viewer/`):
 ```typescript
 dispatch({ type: 'myNewAction', data: 'value' });
 ```
@@ -517,7 +517,7 @@ Workspace Root/
 ├── .specify/                      # SpecKit CLI config (shared)
 │   ├── memory/
 │   │   └── constitution.md        # Project constitution
-│   ├── scripts/                   # Automation scripts
+│   ├── tooling/scripts/                   # Automation scripts
 │   └── templates/                 # Document templates
 │
 ├── specs/                         # Spec directories (shared)

@@ -3,7 +3,7 @@ import * as path from 'path';
 import { CONTEXT_KEYS } from '../../../core/utils/contextKeys';
 
 const manifest = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
+    fs.readFileSync(path.join(__dirname, '../../../../../../package.json'), 'utf-8')
 );
 
 const commands: Array<{ command: string; title: string; icon?: string }> = manifest.contributes.commands;
@@ -423,7 +423,7 @@ describe('Get Started walkthrough — contributes.walkthroughs', () => {
         manifest.contributes.walkthroughs;
     const steps = walkthroughs.flatMap(w => w.steps);
     const mediaPath = (step: WalkthroughStep) => step.media.markdown ?? step.media.svg ?? step.media.image;
-    const repoRoot = path.join(__dirname, '../../../..');
+    const repoRoot = path.join(__dirname, '../../../../../..');
 
     it('ships one walkthrough so the post-install Get Started page is not empty', () => {
         expect(walkthroughs).toHaveLength(1);

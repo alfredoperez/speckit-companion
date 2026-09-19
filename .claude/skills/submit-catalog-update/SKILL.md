@@ -22,7 +22,7 @@ Deliberately no `Edit`/`Write`: this skill writes to a third-party repository an
 
 ## Steps
 
-1. **Resolve the version.** `V` = `extension.version` from `speckit-extension/extension.yml`. Everything keys off it; the script aborts if it disagrees with what you pass.
+1. **Resolve the version.** `V` = `extension.version` from `apps/speckit-extension/extension.yml`. Everything keys off it; the script aborts if it disagrees with what you pass.
 
 2. **Confirm the shape of the run.** Working tree clean and on `main`; `speckit-ext-v$V` exists as a release; the pinned asset returns 200 and unzips to a single `companion-$V/` whose manifest reports `$V`:
    ```bash
@@ -43,7 +43,7 @@ Deliberately no `Edit`/`Write`: this skill writes to a third-party repository an
 
 5. **Review the drift diff.** Run the renderer and read `report.json`'s `catalog_now` against `proposed`. Get explicit approval for anything that is not a version bump — `description`, `tags`, and `category` are editorial changes and must never ride along silently.
 
-6. **Draft the two human fields.** `Key Features` is seeded from every `## [x.y.z]` section of `speckit-extension/CHANGELOG.md` strictly between the catalog's pin and `$V` — everything the catalog has never seen. Five to eight bullets, `**Bold lead** — what it means for a user`. Every bullet must trace to a changelog line or a shipped command; invent nothing. `Example Usage` is raw content with **no inner fence** (the template already wraps it in ```` ```markdown ````, and the accepted #2926 submission has no nested fence). `Testing Details` states what was actually run — `uname -sr`, `specify --version`, and the real scenarios.
+6. **Draft the two human fields.** `Key Features` is seeded from every `## [x.y.z]` section of `apps/speckit-extension/CHANGELOG.md` strictly between the catalog's pin and `$V` — everything the catalog has never seen. Five to eight bullets, `**Bold lead** — what it means for a user`. Every bullet must trace to a changelog line or a shipped command; invent nothing. `Example Usage` is raw content with **no inner fence** (the template already wraps it in ```` ```markdown ````, and the accepted #2926 submission has no nested fence). `Testing Details` states what was actually run — `uname -sr`, `specify --version`, and the real scenarios.
 
 7. **Attestation gate — ask once.** The script mechanically proves the manifest, README, LICENSE, release, command files, and id convention. It cannot prove: all commands execute without errors · documentation is complete and accurate · no security vulnerabilities identified · tested on at least one real project. List those four, plus a confirmation that Testing Details describes what actually happened, and require an explicit yes. Anything else aborts. Never tick an attestation the user did not give.
 

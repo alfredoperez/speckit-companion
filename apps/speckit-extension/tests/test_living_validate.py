@@ -12,8 +12,8 @@ import sys
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = REPO / "speckit-extension" / "scripts"
+REPO = Path(__file__).resolve().parents[3]
+SCRIPTS = REPO / "apps" / "speckit-extension" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "spec-shape"
 
 sys.path.insert(0, str(SCRIPTS))
@@ -85,7 +85,7 @@ class BothSuitesReadEveryFixture(unittest.TestCase):
         # Asserting the twin merely mentions the directory would pass even if it
         # had stopped reading the manifest entirely. What makes the fixtures a
         # contract is that the twin loops over the manifest's own keys.
-        twin = (REPO / "src" / "features" / "specs" / "__tests__"
+        twin = (REPO / "apps" / "vscode" / "src" / "features" / "specs" / "__tests__"
                 / "specShapeCheck.test.ts").read_text(encoding="utf-8")
         self.assertIn("Object.entries(manifest)", twin)
         self.assertIn("read('expected.json')", twin)
@@ -165,7 +165,7 @@ class NothingCheckedIsNeverReportedAsNothingWrong(unittest.TestCase):
     """A run that could not read the registry is not a run that found nothing."""
 
     def test_running_from_a_subdirectory_says_where_the_registry_is(self):
-        report = lv.build_report(str(REPO / "src"))
+        report = lv.build_report(str(REPO / "apps" / "vscode" / "src"))
         self.assertFalse(report["enabled"])
         self.assertTrue(report["skipped"])
         rendered = lv.render_human(report)

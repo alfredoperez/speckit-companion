@@ -84,7 +84,7 @@ A reader that meets unsupported syntax, or stops before the end of the file for 
 - **THEN** the file is reported as malformed instead of returning what was understood so far
 
 ### What a project could attach is emitted with the pipeline it draws
-<!-- touches: speckit-extension/scripts/build-pipeline.py, speckit-extension/scripts/pipeline-graph.py -->
+<!-- touches: apps/speckit-extension/scripts/build-pipeline.py, apps/speckit-extension/scripts/pipeline-graph.py -->
 
 The structure carries every hook command the project's registries hold, its installed spec-kit extensions and Companion's, each with its registry description, declaring extension and lifecycle step. It is never a hard-coded list.
 
@@ -93,14 +93,14 @@ The structure carries every hook command the project's registries hold, its inst
 - **THEN** that extension's hook commands are carried in its own words, and a project without it is offered none of them
 
 ### A hook command registered at several steps is offered once, with no usual placement
-<!-- touches: speckit-extension/scripts/build-pipeline.py, speckit-extension/scripts/pipeline-graph.py -->
+<!-- touches: apps/speckit-extension/scripts/build-pipeline.py, apps/speckit-extension/scripts/pipeline-graph.py -->
 
 #### Scenario: a command is registered at two lifecycle steps
 - **WHEN** the structure is emitted
 - **THEN** it is carried once and names no usual placement, instead of whichever step was read first
 
 ### An unreadable hook registry never fails the emission
-<!-- touches: speckit-extension/scripts/build-pipeline.py, speckit-extension/scripts/pipeline-graph.py -->
+<!-- touches: apps/speckit-extension/scripts/build-pipeline.py, apps/speckit-extension/scripts/pipeline-graph.py -->
 
 #### Scenario: the registry cannot be read
 - **WHEN** the structure is emitted

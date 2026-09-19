@@ -7,7 +7,7 @@ Installs and updates the companion spec-kit extension, and asks about it only wh
 ## Requirements
 
 ### The companion CLI extension has exactly one install path and one target
-<!-- touches: src/speckit/specKitExtensionInstall.ts, src/speckit/specKitExtensionInstallCommands.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitExtensionInstall.ts, apps/vscode/src/speckit/specKitExtensionInstallCommands.ts -->
 
 Every install and update surface SHALL run the CLI's own extension-add command in a visible terminal, built from one shared definition of the target, so a release changes nothing here.
 
@@ -20,7 +20,7 @@ Every install and update surface SHALL run the CLI's own extension-add command i
 - **THEN** the terminal first prints, without running, the command that installs a CLI that has it, so the failure explains itself
 
 ### A first install omits the overwrite flag and an update passes it
-<!-- touches: src/speckit/specKitExtensionInstall.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitExtensionInstall.ts -->
 
 A first install MUST NOT pass the overwrite flag, because an older CLI rejects it. An install over an extension already present, by its directory or the CLI's registry, SHALL pass it when this machine's CLI accepts it, because the add command refuses to overwrite. A probe that never reached the CLI assumes the current CLI for that click and is asked again next time.
 
@@ -33,7 +33,7 @@ A first install MUST NOT pass the overwrite flag, because an older CLI rejects i
 - **THEN** the plain command is sent instead of one the CLI would reject
 
 ### An install in progress never reads as uninstalled
-<!-- touches: src/speckit/specKitExtensionInstall.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitExtensionInstall.ts -->
 
 Dispatching an install SHALL announce it is in flight, and while it is, detection keeps its previous answer. Overwriting removes the extension directory before copying the new one, and surfaces would otherwise flash the install pitch.
 
@@ -42,7 +42,7 @@ Dispatching an install SHALL announce it is in flight, and while it is, detectio
 - **THEN** detection reports what it saw before the install began, not "uninstalled"
 
 ### The install nudge is gated on presence, not on opt-in
-<!-- touches: src/speckit/specKitExtensionInstall.ts, src/speckit/companionVersionGap.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitExtensionInstall.ts, apps/vscode/src/speckit/companionVersionGap.ts -->
 
 The companion prompt SHALL show only while the prompt preference is on and the extension is absent (install) or behind this build (update). It MUST NOT wait for any workflow opt-in, since people who have not opted in are the ones who need to find it. Dismissing the install prompt is permanent, while dismissing the update prompt covers only that expected version, and every surface falls silent together.
 
@@ -59,7 +59,7 @@ The companion prompt SHALL show only while the prompt preference is on and the e
 - **THEN** the update prompt returns
 
 ### Activation shows no install prompt
-<!-- touches: src/speckit/companionUpdateNudge.ts -->
+<!-- touches: apps/vscode/src/speckit/companionUpdateNudge.ts -->
 
 Activation SHALL NOT show a prompt to install the companion extension. The activity-bar badge and the pinned row in the Specs tree already say it. An installed but outdated extension is announced by the update notification instead.
 
@@ -68,7 +68,7 @@ Activation SHALL NOT show a prompt to install the companion extension. The activ
 - **THEN** no toast or modal appears, and the badge and pinned row are the only mentions
 
 ### The installed companion extension is compared against the version this build ships
-<!-- touches: src/speckit/companionVersionGap.ts, src/speckit/updateChecker.ts -->
+<!-- touches: apps/vscode/src/speckit/companionVersionGap.ts, apps/vscode/src/speckit/updateChecker.ts -->
 
 The workspace's extension SHALL resolve to missing, current or out of date, naming both versions, with no network call of its own. The expected version is the newer of the one bundled in this build and the newest published one the update check remembered. Only an expected version strictly newer than the installed one is a gap, and a version unreadable on either side reads as current. The remembered published version only moves forward and takes effect from the next session.
 
@@ -85,7 +85,7 @@ The workspace's extension SHALL resolve to missing, current or out of date, nami
 - **THEN** it keeps its previous value, and the warning it raised survives
 
 ### An out-of-date extension is announced once per version
-<!-- touches: src/speckit/companionUpdateNudge.ts, src/speckit/specKitExtensionInstall.ts, src/speckit/specKitExtensionInstallCommands.ts -->
+<!-- touches: apps/vscode/src/speckit/companionUpdateNudge.ts, apps/vscode/src/speckit/specKitExtensionInstall.ts, apps/vscode/src/speckit/specKitExtensionInstallCommands.ts -->
 
 While the extension is behind, activation SHALL show one notification per expected version offering Update or Skip, and a warning status-bar item stays while the gap lasts. The notification counts as seen when it appears, not when answered. Neither surface may throw into activation.
 
@@ -98,7 +98,7 @@ While the extension is behind, activation SHALL show one notification per expect
 - **THEN** the notification, the status-bar item and the banner fall silent for that version, and a later release asks again
 
 ### An update that leaves the version unchanged stops the asking
-<!-- touches: src/speckit/specKitExtensionInstall.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitExtensionInstall.ts -->
 
 When a dispatched update changed the extension's files but not its version, every surface SHALL stop asking about that version pair in this project. A dispatch that changed nothing on disk records nothing, so a failed install never silences the ask.
 

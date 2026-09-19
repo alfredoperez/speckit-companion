@@ -2,7 +2,7 @@
 
 Each spec directory contains a `.spec-context.json` file that tracks workflow state. This is the single source of truth for where a spec is in its lifecycle.
 
-**Type**: `SpecContext` in `src/core/types/specContext.ts` (and the parallel `FeatureWorkflowContext` in `src/features/workflows/types.ts`).
+**Type**: `SpecContext` in `apps/vscode/src/core/types/specContext.ts` (and the parallel `FeatureWorkflowContext` in `apps/vscode/src/features/workflows/types.ts`).
 
 ## Fields
 

@@ -7,7 +7,7 @@ Finds the SpecKit CLI and the projects it scaffolded, and drives it through a vi
 ## Requirements
 
 ### A missing or broken CLI degrades the extension, never the host
-<!-- touches: src/speckit/detector.ts -->
+<!-- touches: apps/vscode/src/speckit/detector.ts -->
 
 Detection SHALL resolve to a plain yes or no, never an error, and an absent, outdated or failing CLI MUST leave the extension activated and usable. Before concluding the CLI is absent, a second, differently shaped probe runs.
 
@@ -20,7 +20,7 @@ Detection SHALL resolve to a plain yes or no, never an error, and an absent, out
 - **THEN** running the CLI's help decides the answer
 
 ### Detection distinguishes "the tool exists" from "this project uses it"
-<!-- touches: src/speckit/detector.ts -->
+<!-- touches: apps/vscode/src/speckit/detector.ts -->
 
 Whether the CLI is installed and whether the workspace was scaffolded by it SHALL be separate answers driving separate affordances.
 
@@ -33,7 +33,7 @@ Whether the CLI is installed and whether the workspace was scaffolded by it SHAL
 - **THEN** the workspace still reads as initialized from the per-assistant command files the CLI wrote
 
 ### A written constitution is never flagged as unfinished
-<!-- touches: src/speckit/detector.ts -->
+<!-- touches: apps/vscode/src/speckit/detector.ts -->
 
 The placeholder check SHALL run only on an initialized workspace and read only the constitution's body, ignoring comments. The CLI leaves a comment listing the placeholders it replaced, and reading it would keep flagging a constitution the user already wrote.
 
@@ -42,7 +42,7 @@ The placeholder check SHALL run only on an initialized workspace and read only t
 - **THEN** the constitution reads as set up
 
 ### The extension drives the CLI through a visible terminal, never silently
-<!-- touches: src/speckit/cliCommands.ts, src/speckit/detector.ts -->
+<!-- touches: apps/vscode/src/speckit/cliCommands.ts, apps/vscode/src/speckit/detector.ts -->
 
 Install, initialize and upgrade SHALL run in a named terminal the user can see, because they are long, may prompt and may fail. The extension MUST NOT claim they succeeded: it offers a reload for the user to take once they judge it done.
 
@@ -51,7 +51,7 @@ Install, initialize and upgrade SHALL run in a named terminal the user can see, 
 - **THEN** a named terminal shows the command and its output, and a reload is offered instead of a success message
 
 ### A folder's path never reaches the command text
-<!-- touches: src/speckit/detector.ts, src/speckit/specKitExtensionInstall.ts -->
+<!-- touches: apps/vscode/src/speckit/detector.ts, apps/vscode/src/speckit/specKitExtensionInstall.ts -->
 
 A terminal that runs a CLI command in the workspace SHALL open in that folder rather than change into it by pasting the path into the command, because a folder name can hold shell syntax.
 
@@ -60,7 +60,7 @@ A terminal that runs a CLI command in the workspace SHALL open in that folder ra
 - **THEN** the terminal opens in the folder and the command text never contains its path
 
 ### Re-scaffolding targets the assistant the user actually configured
-<!-- touches: src/speckit/specKitAgent.ts, src/speckit/cliCommands.ts -->
+<!-- touches: apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/speckit/cliCommands.ts -->
 
 The assistant passed to the CLI SHALL come from the configured provider, and for the IDE-chat provider from the detected host editor. Every shipped provider MUST have its own entry, and only an unknown value falls back to a default the CLI accepts.
 

@@ -1,21 +1,21 @@
 # Web renders
 
-The web video branch of the clip pipeline: `node scripts/render-web-clips.mjs`. It reads the MP4s that hyperframes already rendered into `media/feature-clips/<id>/renders/` and writes, per composition, a VP9 WebM, an H.264 MP4 fallback for Safari, and a poster PNG lifted from frame zero. Output lands in `media/web/`, which `media/.gitignore` excludes because it's regenerable.
+The web video branch of the clip pipeline: `node tooling/scripts/render-web-clips.mjs`. It reads the MP4s that hyperframes already rendered into `content/media/feature-clips/<id>/renders/` and writes, per composition, a VP9 WebM, an H.264 MP4 fallback for Safari, and a poster PNG lifted from frame zero. Output lands in `content/media/web/`, which `content/media/.gitignore` excludes because it's regenerable.
 
 The GIF path is not part of this. The script never reads, writes, or deletes a `.gif`, and never writes into `renders/`. The seven published GIFs in `docs/screenshots/generated/` still total 14,226,018 bytes and are still what the two READMEs embed, because a README can't play video.
 
 ## Running it
 
 ```
-node scripts/render-web-clips.mjs                 # every composition
-node scripts/render-web-clips.mjs overview        # one composition
-node scripts/render-web-clips.mjs --list          # which source MP4 each id resolves to
-node scripts/render-web-clips.mjs --verify-only   # re-check existing outputs, encode nothing
+node tooling/scripts/render-web-clips.mjs                 # every composition
+node tooling/scripts/render-web-clips.mjs overview        # one composition
+node tooling/scripts/render-web-clips.mjs --list          # which source MP4 each id resolves to
+node tooling/scripts/render-web-clips.mjs --verify-only   # re-check existing outputs, encode nothing
 ```
 
 Flags: `--width=`, `--vp9-crf=`, `--h264-crf=`, `--out=`, `--jobs=`. If `ffmpeg` or `ffprobe` isn't on PATH the script exits 1 and writes nothing. If a composition has no MP4 in its `renders/` it's skipped by name with the reason printed, and the rest still encode.
 
-Filenames follow `media/manifest.json` under `conventions.webNaming`: `<id>.webm`, `<id>.mp4`, `<id>-poster.png`. The 16:9 X crop that the manifest also names is a different ticket and this script doesn't produce it.
+Filenames follow `content/media/manifest.json` under `conventions.webNaming`: `<id>.webm`, `<id>.mp4`, `<id>-poster.png`. The 16:9 X crop that the manifest also names is a different ticket and this script doesn't produce it.
 
 ## Source selection
 
@@ -89,7 +89,7 @@ Totals:
 > device px on a 2x display, so the old 960 px encode was upscaled almost 2x in
 > the browser on top of a 1.9x downscale in ffmpeg.
 >
-> Current settings live in `DEFAULTS` in `scripts/render-web-clips.mjs`, and the
+> Current settings live in `DEFAULTS` in `tooling/scripts/render-web-clips.mjs`, and the
 > pipeline around them is documented in the `feature-clip` skill.
 
 The measurements below are kept as the record of how the trade was evaluated.
@@ -118,8 +118,8 @@ The script verifies this on every run, including `--verify-only`. It decodes fra
 By hand, for one clip:
 
 ```
-ffmpeg -v error -i media/web/run-in-flight.webm -frames:v 1 -f rawvideo -pix_fmt rgb24 - | md5
-ffmpeg -v error -i media/web/run-in-flight-poster.png -f rawvideo -pix_fmt rgb24 - | md5
+ffmpeg -v error -i content/media/web/run-in-flight.webm -frames:v 1 -f rawvideo -pix_fmt rgb24 - | md5
+ffmpeg -v error -i content/media/web/run-in-flight-poster.png -f rawvideo -pix_fmt rgb24 - | md5
 # both: bcffde01205ae4695b246a256b1d0846
 ```
 
@@ -165,7 +165,7 @@ These come from an earlier sweep that ran at 24 fps and scored against a 960-wid
 If the budget ever has to cover all ten clips:
 
 ```
-node scripts/render-web-clips.mjs --width=800 --vp9-crf=52 --h264-crf=32
+node tooling/scripts/render-web-clips.mjs --width=800 --vp9-crf=52 --h264-crf=32
 ```
 
 That measures 5,184,119 bytes (4.94 MB) for all ten, so it fits, and it verifies poster identity the same way. The cost is real: 74.3 VMAF instead of 81.7 on the busiest clip, which is soft enough that small UI text starts to smear. Prefer trimming the clip list over trimming the width.

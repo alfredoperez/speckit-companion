@@ -24,10 +24,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SOURCE_DIR = path.join(REPO_ROOT, 'assets', 'mascot', 'poses');
 const PROTECTED_DIR = path.join(REPO_ROOT, 'assets');
-const OUT_DIR = path.join(REPO_ROOT, 'website', 'public', 'mascot');
+const OUT_DIR = path.join(REPO_ROOT, 'apps', 'website', 'public', 'mascot');
 
 // The long edge of each derivative. 512 covers the hero at 2x, 256 the soon and
 // 404 art, 128 the small inline placements.
@@ -38,12 +38,12 @@ const ALPHA_THRESHOLD = 16;
 
 // sharp is a dependency of the website, not of the repo root, so it resolves
 // from there rather than being added to the root manifest.
-const require = createRequire(path.join(REPO_ROOT, 'website', 'package.json'));
+const require = createRequire(path.join(REPO_ROOT, 'apps', 'website', 'package.json'));
 let sharp;
 try {
   sharp = require('sharp');
 } catch {
-  console.error('sharp is missing. Run npm install in website/ first.');
+  console.error('sharp is missing. Run npm install in apps/website/ first.');
   process.exit(1);
 }
 

@@ -31,7 +31,7 @@ While work blocks interaction, the busy state is set on the content region, not 
 - **THEN** the form's region reports busy until the submission settles
 
 ### Consumers compose shared primitives instead of re-implementing them
-<!-- touches: webview/src/shared/components/** -->
+<!-- touches: apps/vscode/webview/src/shared/components/** -->
 
 A new surface uses an existing primitive (badge, card, empty state, button, input, toast, tooltip, undo toast) before hand-rolling markup for the same shape.
 
@@ -40,7 +40,7 @@ A new surface uses an existing primitive (badge, card, empty state, button, inpu
 - **THEN** the surface renders the badge rather than styling a fresh element
 
 ### Every shared primitive has a story covering its variants
-<!-- touches: webview/src/shared/components/** -->
+<!-- touches: apps/vscode/webview/src/shared/components/** -->
 
 #### Scenario: a primitive gains a variant
 - **WHEN** a new visual or semantic variant is added

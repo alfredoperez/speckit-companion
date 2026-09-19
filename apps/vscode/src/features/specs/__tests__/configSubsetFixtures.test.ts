@@ -4,14 +4,14 @@ import { unsupportedForRuntime } from '../livingSpecsModel';
 
 /**
  * `companion.yml` is read by two implementations in two languages: the runtime
- * reader in `speckit-extension/scripts/companion_config.py`, and this side's
+ * reader in `apps/speckit-extension/scripts/companion_config.py`, and this side's
  * pre-check, which exists so the editor never presents a configuration the
  * runtime is going to refuse.
  *
  * They cannot share code. Issue #608 asked for one place or shared fixtures, and
  * the duplication landed without the fixtures — so the two rules drifted with
  * nothing to notice. These cases are the shared corpus:
- * `speckit-extension/tests/test_config_subset.py` runs the same file and must
+ * `apps/speckit-extension/tests/test_config_subset.py` runs the same file and must
  * reach the same verdict on every one.
  */
 const fixture = path.join(__dirname, '..', '..', '..', '..', 'tests', 'fixtures', 'config-subset', 'cases.json');

@@ -1,7 +1,7 @@
 import type { StorybookConfig } from '@storybook/preact-vite';
 
 const config: StorybookConfig = {
-    stories: ['../webview/src/**/*.mdx', '../webview/src/**/*.stories.tsx'],
+    stories: ['../apps/vscode/webview/src/**/*.mdx', '../apps/vscode/webview/src/**/*.stories.tsx'],
     framework: '@storybook/preact-vite',
     addons: ['@storybook/addon-docs'],
     /*
@@ -15,7 +15,7 @@ const config: StorybookConfig = {
       to run first — `npm run clips:stills` before the social card is shot.
     */
     staticDirs: [
-        { from: '../media/web', to: '/stills' },
+        { from: '../content/media/web', to: '/stills' },
         { from: '../assets/mascot', to: '/mascot' },
     ],
     viteFinal(config) {

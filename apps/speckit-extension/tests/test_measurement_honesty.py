@@ -7,8 +7,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = REPO / "speckit-extension" / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import doctor_bleed  # noqa: E402

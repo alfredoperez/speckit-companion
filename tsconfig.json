@@ -4,7 +4,7 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./apps/vscode/src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,7 +15,7 @@
     "declaration": false
   },
   "include": [
-    "src/**/*"
+    "apps/vscode/src/**/*"
   ],
   "exclude": [
     "node_modules",

@@ -3,7 +3,7 @@
 SpecKit Companion dispatches spec commands to the AI assistant you already use. Pick yours with **Settings > speckit.aiProvider**.
 
 <!-- Column count must match the `speckit.aiProvider` enum length in package.json.
-     The docs-consistency test in tests/integration/docs-consistency.test.ts enforces this on every `npm test`. -->
+     The docs-consistency test in apps/vscode/tests/integration/docs-consistency.test.ts enforces this on every `npm test`. -->
 
 | Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code | Wibey CLI | Wibey (VS Code) | Antigravity |
 |---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|-----------|-----------------|-------------|

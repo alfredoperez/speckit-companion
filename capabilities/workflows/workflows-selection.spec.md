@@ -7,7 +7,7 @@ How a workflow is offered and chosen: which workflows the create form shows, and
 ## Requirements
 
 ### Selection filters, resolution does not
-<!-- touches: src/features/workflows/workflowManager.ts, src/features/workflows/workflowSelector.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts, apps/vscode/src/features/workflows/workflowSelector.ts -->
 
 The create form hides custom workflows the active provider cannot run. A workflow a spec already recorded resolves unfiltered, so switching provider never changes an existing spec's pipeline.
 
@@ -17,7 +17,7 @@ The create form hides custom workflows the active provider cannot run. A workflo
 - **AND** the same workflow is absent from the create form
 
 ### The Companion workflow is always offered, flagged when it cannot run yet
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 Whether to intercept a pick of the not-ready entry is the create form's call, not the list's.
 
@@ -26,7 +26,7 @@ Whether to intercept a pick of the not-ready entry is the create form's call, no
 - **THEN** SpecKit Companion is still listed, marked as not installed
 
 ### One builder produces every pick-surface workflow list
-<!-- touches: src/features/workflows/workflowManager.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowManager.ts -->
 
 The builder applies validation, name reservation, de-duplication and provider filtering, and gives each entry its description and readiness.
 
@@ -35,7 +35,7 @@ The builder applies validation, name reservation, de-duplication and provider fi
 - **THEN** the invalid entry is skipped with a logged reason and the rest are listed
 
 ### The interactive picker is the create form, not a separate prompt
-<!-- touches: src/features/workflows/workflowSelector.ts -->
+<!-- touches: apps/vscode/src/features/workflows/workflowSelector.ts -->
 
 #### Scenario: a spec with no recorded workflow runs a step
 - **WHEN** the user runs a step on it

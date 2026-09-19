@@ -10,9 +10,9 @@
     "jsxImportSource": "preact"
   },
   "include": [
-    "src/**/*",
-    "tests/**/*",
-    "webview/src/**/*"
+    "apps/vscode/src/**/*",
+    "apps/vscode/tests/**/*",
+    "apps/vscode/webview/src/**/*"
   ],
   "exclude": [
     "node_modules",

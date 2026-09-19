@@ -7,8 +7,8 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-WRITER = REPO / "speckit-extension" / "scripts" / "write-context.py"
+EXT = Path(__file__).resolve().parents[1]
+WRITER = EXT / "scripts" / "write-context.py"
 
 
 class ConcurrentCapturesAllSurvive(unittest.TestCase):
@@ -68,7 +68,7 @@ class APidOnlySpeaksInsideItsOwnScope(unittest.TestCase):
     """A pid says nothing to a reader that numbers processes differently."""
 
     def setUp(self):
-        sys.path.insert(0, str(REPO / "speckit-extension" / "scripts"))
+        sys.path.insert(0, str(EXT / "scripts"))
         import spec_context
 
         self.sc = spec_context
@@ -97,7 +97,7 @@ class APidOnlySpeaksInsideItsOwnScope(unittest.TestCase):
 
 class AnUnreadableOwnerIsNotAReasonToReclaim(unittest.TestCase):
     def test_reclaim_does_nothing_without_an_owner(self):
-        sys.path.insert(0, str(REPO / "speckit-extension" / "scripts"))
+        sys.path.insert(0, str(EXT / "scripts"))
         import spec_context
 
         tmp = tempfile.TemporaryDirectory()

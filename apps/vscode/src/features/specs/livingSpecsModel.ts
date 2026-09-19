@@ -7,7 +7,7 @@ import { readableName, stripSharedLeadingWords } from '../../core/utils/capabili
 /**
  * Node-side reader for the project's capability registry.
  *
- * Mirrors the listing rules of `speckit-extension/scripts/resolve-spec-paths.py`
+ * Mirrors the listing rules of `apps/speckit-extension/scripts/resolve-spec-paths.py`
  * (and `companion_config.py`) in TypeScript so the Living Specs view needs no
  * Python runtime. Only the *listing* slice is reproduced: capability spec-path
  * resolution, tier-sibling existence, and orphan discovery.

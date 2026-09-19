@@ -7,7 +7,7 @@ Where specs live on disk and how the extension notices them change. Every featur
 ## Requirements
 
 ### Spec locations are configured, not assumed
-<!-- touches: src/core/specDirectoryResolver.ts -->
+<!-- touches: apps/vscode/src/core/specDirectoryResolver.ts -->
 
 Specs SHALL be found from the user's list of directory patterns. A plain directory name holds specs as its children, a glob ending in a wildcard matches specs directly, and a glob ending in a plain name matches folders of specs. The built-in fallback MUST list every layout the shipped default setting lists, or that layout silently disappears.
 
@@ -24,7 +24,7 @@ Specs SHALL be found from the user's list of directory patterns. A plain directo
 - **THEN** the spec folders inside each match are listed, and the matches themselves are not
 
 ### An empty folder is not a spec
-<!-- touches: src/core/specDirectoryResolver.ts -->
+<!-- touches: apps/vscode/src/core/specDirectoryResolver.ts -->
 
 A candidate directory SHALL count as a spec only once it holds a markdown file or a recorded spec context, so empty scaffolding never shows in the sidebar.
 
@@ -33,7 +33,7 @@ A candidate directory SHALL count as a spec only once it holds a markdown file o
 - **THEN** the folder is not listed
 
 ### A file belongs to the spec directory that contains it
-<!-- touches: src/core/specDirectoryResolver.ts -->
+<!-- touches: apps/vscode/src/core/specDirectoryResolver.ts -->
 
 File-to-spec attribution SHALL use the same patterns and exclusions as discovery. A file belongs to a spec only when it sits inside a matched spec directory, not at the pattern's own depth.
 
@@ -46,7 +46,7 @@ File-to-spec attribution SHALL use the same patterns and exclusions as discovery
 - **THEN** no spec owns it
 
 ### A spec matched by two patterns is listed once
-<!-- touches: src/core/specDirectoryResolver.ts -->
+<!-- touches: apps/vscode/src/core/specDirectoryResolver.ts -->
 
 Discovery SHALL de-duplicate by resolved path.
 
@@ -55,7 +55,7 @@ Discovery SHALL de-duplicate by resolved path.
 - **THEN** the spec appears once
 
 ### Reference material declared by a workflow is never mistaken for a spec
-<!-- touches: src/core/specDirectoryResolver.ts -->
+<!-- touches: apps/vscode/src/core/specDirectoryResolver.ts -->
 
 Folders any configured workflow declares as reference material SHALL be excluded from discovery and attribution, whichever workflow a given spec chose. Otherwise a reference folder under a spec pattern shows up as a phantom spec.
 

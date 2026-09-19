@@ -73,7 +73,7 @@ A covers glob SHALL render as a control carrying its whole text, never truncated
 - **THEN** every character of the glob is visible
 
 ### The install banner shows the prompt the extension sent
-<!-- touches: webview/src/spec-viewer/components/ActivityPanel.tsx, webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/ActivityPanel.tsx, apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx -->
 
 The Activity panel's banner SHALL render the install or update prompt as the extension sent it, and an update banner SHALL name both the installed and the expected version.
 
@@ -114,7 +114,7 @@ Strings the webview composes (a footer context line, a summary title, a sizing l
 - **THEN** it reads "Step running, actions unlock when it settles"
 
 ### The capture stories are published copies of the real viewer, never forks of it
-<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/__stories__/sidebarTree.tsx, apps/vscode/webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
 Stories that produce documentation imagery SHALL compose the shipped viewer components with fixture data, never re-implement a surface, because their output is published as what the product looks like.
 
@@ -123,7 +123,7 @@ Stories that produce documentation imagery SHALL compose the shipped viewer comp
 - **THEN** they show the changed component as shipped
 
 ### A scene several captures share is defined once
-<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/__stories__/sidebarTree.tsx, apps/vscode/webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
 A scene more than one capture uses SHALL be exported once and composed by each, and SHALL NOT appear in the published story list itself.
 
@@ -132,7 +132,7 @@ A scene more than one capture uses SHALL be exported once and composed by each, 
 - **THEN** both compose the one exported scene, which is not listed as a story
 
 ### A sidebar capture matches the real view's title bar
-<!-- touches: webview/src/spec-viewer/__stories__/sidebarTree.tsx, webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/__stories__/sidebarTree.tsx, apps/vscode/webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx -->
 
 A capture standing in for editor chrome the webview does not build SHALL show the title-bar actions the real view contributes, in the declared order, only on the pane the frame is about. A state-dependent icon slot SHALL read its state off the fixture rows.
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Validates media/manifest.json against the filesystem and against both READMEs.
+ * Validates content/media/manifest.json against the filesystem and against both READMEs.
  *
- *   node scripts/check-media-manifest.mjs
+ *   node tooling/scripts/check-media-manifest.mjs
  *
  * Three questions, in order of how much a failure hurts:
  *
@@ -14,7 +14,7 @@
  *   3. Which outputs the contract names have not been produced yet?
  *
  * Every web output (WebM, MP4 fallback, poster, 16:9 crop) is produced by
- * scripts/render-web-clips.mjs, so a clean tree exits 0. Pending outputs are
+ * tooling/scripts/render-web-clips.mjs, so a clean tree exits 0. Pending outputs are
  * still reported separately from real breakage, because a fresh clone has no
  * gitignored renders and that is correct rather than a regression.
  *
@@ -25,8 +25,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const MANIFEST = join(REPO_ROOT, 'media', 'manifest.json');
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const MANIFEST = join(REPO_ROOT, 'content', 'media', 'manifest.json');
 const RAW_PREFIX = 'https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/';
 
 const VIDEO_KEYS = ['canonicalMp4', 'webWebm', 'webMp4'];
@@ -38,7 +38,7 @@ const c = process.stdout.isTTY
 
 /** Where a path lives decides whether its absence is breakage or pending work. */
 function bucket(path) {
-    if (path.startsWith('media/web/')) return 'pending';
+    if (path.startsWith('content/media/web/')) return 'pending';
     if (path.includes('/renders/')) return 'render';
     return 'published';
 }
@@ -119,11 +119,11 @@ for (const f of manifest.features) {
 }
 
 // The load-bearing check: nothing a README shows may be absent from the manifest.
-for (const file of ['README.md', 'speckit-extension/README.md']) {
+for (const file of ['README.md', 'apps/speckit-extension/README.md']) {
     for (const ref of readmeImages(file)) {
         const entry = indexed.get(ref.src);
         if (!entry) {
-            broken.push(`${file} references ${ref.src}, which is not in media/manifest.json`);
+            broken.push(`${file} references ${ref.src}, which is not in content/media/manifest.json`);
             continue;
         }
         if (!existsSync(join(REPO_ROOT, ref.src))) {
@@ -158,7 +158,7 @@ console.log(`  pending outputs   ${pending.length}`);
 console.log(`  not built locally ${local.length}`);
 
 if (local.length) {
-    console.log(`\n${c.dim('Not built locally: media/feature-clips/*/renders/ is gitignored (media/.gitignore). These rebuild with `npm run render` in the composition directory, and a fresh clone will always list them.')}`);
+    console.log(`\n${c.dim('Not built locally: content/media/feature-clips/*/renders/ is gitignored (content/media/.gitignore). These rebuild with `npm run render` in the composition directory, and a fresh clone will always list them.')}`);
 }
 
 if (pending.length) {

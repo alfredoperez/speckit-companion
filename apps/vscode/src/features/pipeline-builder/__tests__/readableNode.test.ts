@@ -64,7 +64,7 @@ describe('a node file read as instructions', () => {
     // The real files are the point — a stripper that only works on fixtures is
     // a stripper that will meet the first shipped node and give up.
     it('leaves every shipped node with something to read', () => {
-        const root = path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'nodes');
+        const root = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'nodes');
         const files: string[] = [];
         for (const command of fs.readdirSync(root)) {
             const dir = path.join(root, command);
@@ -92,8 +92,8 @@ describe('a node file read as instructions', () => {
         // per-step handoffs each name their own successor now, so they are no
         // longer examples of this — which is the point of pinning a node that is.
         const file = path.join(
-            __dirname, '..', '..', '..', '..',
-            'speckit-extension', 'nodes', 'auto', 'handoff.md');
+            __dirname, '..', '..', '..', '..', '..', '..',
+            'apps', 'speckit-extension', 'nodes', 'auto', 'handoff.md');
         const { body, parts } = readableNode(fs.readFileSync(file, 'utf8'));
 
         expect(body).toBe('');

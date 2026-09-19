@@ -63,7 +63,7 @@ A requirement's `touches`, `adopted` and `aligns` markers SHALL be the run of ma
 - **THEN** the requirement reads as unmarked, so an empty marker widens the load instead of narrowing it to nothing
 
 ### Drift is the code a run never accounted for
-<!-- touches: src/features/specs/livingSpecsModel.ts -->
+<!-- touches: apps/vscode/src/features/specs/livingSpecsModel.ts -->
 
 A capability SHALL drift on files changed under its globs with no run behind them. Every file a completed run recorded for this capability, whether folded into the spec or skipped on purpose, is discounted, as are the capability's own spec files, exemptions and excluded globs. When the change list cannot be read, drift is unknown, not empty.
 
@@ -76,7 +76,7 @@ A capability SHALL drift on files changed under its globs with no run behind the
 - **THEN** the capability reads as drifted
 
 ### The editor checks a spec's shape on save, in its own process
-<!-- touches: src/features/specs/specShapeCheck.ts, src/features/specs/specShapeDiagnostics.ts -->
+<!-- touches: apps/vscode/src/features/specs/specShapeCheck.ts, apps/vscode/src/features/specs/specShapeDiagnostics.ts -->
 
 On saving a `*.spec.md` in a project with living specs enabled, the extension SHALL publish each shape finding as a problem at its line and clear it once fixed. The extension and the spec-kit scripts check against one shared set of example specs, and an example only one of them exercises fails the build.
 

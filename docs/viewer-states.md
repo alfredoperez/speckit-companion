@@ -4,7 +4,7 @@
 > derives badge, pulse, highlight, and footer visibility solely from
 > `.spec-context.json`. File existence is no longer used to infer step
 > completion. See `docs/architecture.md` and
-> `src/features/spec-viewer/stateDerivation.ts`.
+> `apps/vscode/src/features/spec-viewer/stateDerivation.ts`.
 >
 > **Canonical statuses**: `draft` → `specifying` → `specified` → `planning`
 > → `planned` → `tasking` → `ready-to-implement` → `implementing` →
@@ -184,9 +184,9 @@
 > earlier steps it renders in the (otherwise empty) `.step-status` badge.
 > Reduced-motion users get a static glyph (the global
 > `prefers-reduced-motion` rule in `tokens.css` neutralizes the spin).
-> Implemented in `StepTab.tsx` + `webview/styles/spec-viewer/_navigation.css`.
+> Implemented in `StepTab.tsx` + `apps/vscode/webview/styles/spec-viewer/_navigation.css`.
 >
-> **Viewer refresh on completion (#277 Child 3 / #270)**: The open viewer re-derives its state on every `.spec-context.json` write, driven by a watcher over each configured spec directory (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`, wired in `src/features/fileWatchers.ts`). The legacy `.claude` watcher is kept for back-compat. This is why completing a step now stops the spinner and surfaces the next action within a debounce window without switching tabs, and why a newly-created spec (including under `.specify/specs/`) clears the welcome screen and appears in the sidebar without a window reload.
+> **Viewer refresh on completion (#277 Child 3 / #270)**: The open viewer re-derives its state on every `.spec-context.json` write, driven by a watcher over each configured spec directory (`**/<pattern>/**/.spec-context.json` from `getFileWatcherPatterns`, wired in `apps/vscode/src/features/fileWatchers.ts`). The legacy `.claude` watcher is kept for back-compat. This is why completing a step now stops the spinner and surfaces the next action within a debounce window without switching tabs, and why a newly-created spec (including under `.specify/specs/`) clears the welcome screen and appears in the sidebar without a window reload.
 >
 > **Footer overflow note (future-proofing)**: After this redesign
 > the right-side bar typically holds 1–3 buttons. If more lifecycle
@@ -303,7 +303,7 @@ sit alongside any user-defined enhancement buttons for the active tab.
   Palette — provider formatting and step tracking included.
 - A user `customCommands` / workflow command with the same id takes precedence
   and is rendered/dispatched instead (deduped by command id), so overrides win.
-- Source: `src/features/spec-viewer/optionalCommands.ts` (table + helpers),
+- Source: `apps/vscode/src/features/spec-viewer/optionalCommands.ts` (table + helpers),
   wired in `resolveEnhancementButtons` (render) and `handleClarify` (dispatch).
 
 ### Review comments (Activity panel)
@@ -325,7 +325,7 @@ inline comments still work and still persist.
 
 ### Living specs (Overview)
 
-When a feature touches **living specs** (durable capability specs), the spec-kit side records which capabilities were loaded into context at specify time (`livingSpecs.loaded`) and which were folded back at completion (`livingSpecs.synced`). The viewer surfaces this read-only inside the Overview's intent, under a *Living specs* label, as capability chips in two labelled groups: **Updated by this run** (the synced ones) and **Read for context** (loaded only). An empty group is omitted, and a capability that appears in `synced` but not `loaded` is still shown. A chip shows the capability's readable name, from the same `readableName` rule the Living Specs tree uses (`src/core/utils/capabilityNames.ts`), and its tooltip keeps the exact name. Every chip opens that capability in the Living Specs viewer; the full capability content lives there, so the run log never reprints its requirements. The section hides itself when there is no `livingSpecs` data, so existing specs see no new UI. The viewer never writes `livingSpecs` — it only displays what LS·2/LS·3 wrote.
+When a feature touches **living specs** (durable capability specs), the spec-kit side records which capabilities were loaded into context at specify time (`livingSpecs.loaded`) and which were folded back at completion (`livingSpecs.synced`). The viewer surfaces this read-only inside the Overview's intent, under a *Living specs* label, as capability chips in two labelled groups: **Updated by this run** (the synced ones) and **Read for context** (loaded only). An empty group is omitted, and a capability that appears in `synced` but not `loaded` is still shown. A chip shows the capability's readable name, from the same `readableName` rule the Living Specs tree uses (`apps/vscode/src/core/utils/capabilityNames.ts`), and its tooltip keeps the exact name. Every chip opens that capability in the Living Specs viewer; the full capability content lives there, so the run log never reprints its requirements. The section hides itself when there is no `livingSpecs` data, so existing specs see no new UI. The viewer never writes `livingSpecs` — it only displays what LS·2/LS·3 wrote.
 
 ---
 
@@ -416,10 +416,10 @@ A living spec has no branch, created date, phases or task completion, so the hea
 
 Notes:
 
-- **The title is authored, so it is not re-cased.** Feature-spec names are cased in data by `toDisplayCase()` (`src/core/utils/specDisplayName.ts`) — acronym-aware, so `cli install nudge` becomes `CLI Install Nudge`, not `Cli Install Nudge` — and `.spec-header-title` no longer applies any CSS `text-transform`, so the data value is authoritative. A heading-derived title is never fed to the caser (it takes the heading branch of `resolveSpecDisplayName`), so `SpecKit` stays `SpecKit`.
+- **The title is authored, so it is not re-cased.** Feature-spec names are cased in data by `toDisplayCase()` (`apps/vscode/src/core/utils/specDisplayName.ts`) — acronym-aware, so `cli install nudge` becomes `CLI Install Nudge`, not `Cli Install Nudge` — and `.spec-header-title` no longer applies any CSS `text-transform`, so the data value is authoritative. A heading-derived title is never fed to the caser (it takes the heading branch of `resolveSpecDisplayName`), so `SpecKit` stays `SpecKit`.
 - **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
-- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
-- **The requirement count and the coverage denominator are one derivation.** Both call `requirementKeys()` in `src/features/specs/livingSpecsModel.ts`: every `FR-nnn` id, plus every `###` heading that carries no id itself or in its body, which is how the command-line coverage check counts them. Fenced code blocks are ignored, so `N requirements` and the `M` in `N/M covered` cannot drift apart. For a requirement named by its heading, covered means its card carries a test count. `N scenarios` counts numbered Given/When/Then lines and `#### Scenario:` headings.
+- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `apps/vscode/src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
+- **The requirement count and the coverage denominator are one derivation.** Both call `requirementKeys()` in `apps/vscode/src/features/specs/livingSpecsModel.ts`: every `FR-nnn` id, plus every `###` heading that carries no id itself or in its body, which is how the command-line coverage check counts them. Fenced code blocks are ignored, so `N requirements` and the `M` in `N/M covered` cannot drift apart. For a requirement named by its heading, covered means its card carries a test count. `N scenarios` counts numbered Given/When/Then lines and `#### Scenario:` headings.
 - **Health is discarded if the panel moved on.** Colocated capabilities share a panel key, so a health result is dropped unless the panel's current spec tier is still the one the call was made for — otherwise a slow git check on one capability could land on another.
 - **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.
 - **New is measured against `main`.** The same push runs `git show main:<path>` and lists the working-copy headings `main`'s copy lacks. A body-only change is not new, and a renamed heading is. When `main` has no copy of the file, there is no `main`, or git does not answer, `newRequirements` is absent and nothing is marked. Nothing is written to the spec, so the marks go away once the branch merges.
@@ -446,12 +446,12 @@ Under the title, one chip per `touches` pattern (click reveals it) and, when ado
 
 | File | Role |
 |------|------|
-| `src/features/spec-viewer/livingDocs.ts` | `livingSpecHeading()` / `livingSpecTitle()` — the authored title |
-| `src/features/spec-viewer/livingHeaderMeta.ts` | `countLivingFacts()`, `buildLivingHeaderMeta()`, `resolveLivingHealth()` |
-| `src/features/spec-viewer/html/generator.ts` | `buildHeaderHtml()` — server-side header generation |
-| `webview/src/spec-viewer/navigation.ts` | `updateNavState()` — client-side header updates on tab switch |
-| `webview/src/spec-viewer/markdown/preprocessors.ts` | `preprocessSpecMetadata()` — strips metadata when context-driven |
-| `webview/styles/spec-viewer/_content.css` | `.spec-header` layout and `.spec-badge` color styles |
+| `apps/vscode/src/features/spec-viewer/livingDocs.ts` | `livingSpecHeading()` / `livingSpecTitle()` — the authored title |
+| `apps/vscode/src/features/spec-viewer/livingHeaderMeta.ts` | `countLivingFacts()`, `buildLivingHeaderMeta()`, `resolveLivingHealth()` |
+| `apps/vscode/src/features/spec-viewer/html/generator.ts` | `buildHeaderHtml()` — server-side header generation |
+| `apps/vscode/webview/src/spec-viewer/navigation.ts` | `updateNavState()` — client-side header updates on tab switch |
+| `apps/vscode/webview/src/spec-viewer/markdown/preprocessors.ts` | `preprocessSpecMetadata()` — strips metadata when context-driven |
+| `apps/vscode/webview/styles/spec-viewer/_content.css` | `.spec-header` layout and `.spec-badge` color styles |
 
 ---
 
@@ -508,11 +508,11 @@ stateDiagram-v2
 | `disabled` | Step not available (no file, not first) | Dimmed (opacity 0.35) |
 | `stale` | Document stale relative to upstream | `!` badge |
 
-**Narrow-pane fold.** The doc rail is a vertical list at full width; below a viewer-container width of 900px it folds to a single horizontally-scrolling strip. In that fold each step and its own file chips form one inline unit — the step tab followed by a horizontal row of its `.step-substeps` — with a divider between units, so the strip reads `Overview │ Specification Requirements │ Plan Nudge-Gate Research │ Tasks` rather than stacking sub-docs under each tab. The nesting (which file belongs to which step) is preserved; only the wide-vs-folded layout differs. Scoped entirely to the `@container viewer (max-width: 900px)` block in `webview/styles/spec-viewer/_base.css`.
+**Narrow-pane fold.** The doc rail is a vertical list at full width; below a viewer-container width of 900px it folds to a single horizontally-scrolling strip. In that fold each step and its own file chips form one inline unit — the step tab followed by a horizontal row of its `.step-substeps` — with a divider between units, so the strip reads `Overview │ Specification Requirements │ Plan Nudge-Gate Research │ Tasks` rather than stacking sub-docs under each tab. The nesting (which file belongs to which step) is preserved; only the wide-vs-folded layout differs. Scoped entirely to the `@container viewer (max-width: 900px)` block in `apps/vscode/webview/styles/spec-viewer/_base.css`.
 
 ### A step the project added
 
-The rail draws the pipeline the project actually runs, not a fixed list of the shipped steps. A project adds a step by writing `.specify/companion/nodes/<step>/` from the pipeline panel; `resolveSpecPipeline` (`src/features/workflows/pipelineResolution.ts`) reads those directories and splices the placed ones into the Companion pipeline, and every surface that describes a spec's pipeline — the rail, the sidebar, the footer's next-step label, the timing denominator — resolves through that one call, so no two can disagree about which steps exist.
+The rail draws the pipeline the project actually runs, not a fixed list of the shipped steps. A project adds a step by writing `.specify/companion/nodes/<step>/` from the pipeline panel; `resolveSpecPipeline` (`apps/vscode/src/features/workflows/pipelineResolution.ts`) reads those directories and splices the placed ones into the Companion pipeline, and every surface that describes a spec's pipeline — the rail, the sidebar, the footer's next-step label, the timing denominator — resolves through that one call, so no two can disagree about which steps exist.
 
 - **Placement** comes from `after:` in the step's `_order.yml`, naming one of `specify`, `plan`, `tasks`, `implement`. The step lands immediately after the one it names, and `mark-complete` stays terminal. A step with no `after:` (or one naming anything else) is left out of the rail and stays launchable by hand.
 - **Its label** comes from `description:` in `_frame.md`, falling back to the directory name made readable.
@@ -524,7 +524,7 @@ The rail draws the pipeline the project actually runs, not a fixed list of the s
 
 ### In-flight derivation (one fact, one path)
 
-Whether a step is running is decided in exactly one place per bundle. In the webview it is `isStepInFlight(step, run)` (`webview/src/spec-viewer/stepInFlight.ts`), and every viewer surface reads that one answer: the step tab's spinning glyph, the live implement percent, and the footer's forward-motion gate (`FooterActions` asks the same module which step a status names). There is no second "the implement percent is below 100, so it must still be running" path — that one could not be stopped by a settled status, which is how a completed spec kept a step spinning at 95% forever. On the extension side the same fact comes from `STATUS_OWNING_STEP` / `isInFlightStatus()` (`src/core/types/specContext.ts`), which `forceStatus` and the quiet-run recovery strip both read; the webview keeps its own copy only because it is a separate bundle that cannot import `src/`.
+Whether a step is running is decided in exactly one place per bundle. In the webview it is `isStepInFlight(step, run)` (`apps/vscode/webview/src/spec-viewer/stepInFlight.ts`), and every viewer surface reads that one answer: the step tab's spinning glyph, the live implement percent, and the footer's forward-motion gate (`FooterActions` asks the same module which step a status names). There is no second "the implement percent is below 100, so it must still be running" path — that one could not be stopped by a settled status, which is how a completed spec kept a step spinning at 95% forever. On the extension side the same fact comes from `STATUS_OWNING_STEP` / `isInFlightStatus()` (`apps/vscode/src/core/types/specContext.ts`), which `forceStatus` and the quiet-run recovery strip both read; the webview keeps its own copy only because it is a separate bundle that cannot import `apps/vscode/src/`.
 
 The derivation, in order:
 
@@ -535,7 +535,7 @@ The derivation, in order:
 
 The implement percent is a *label*, not a run signal: the tab that hosts it shows it only while implement is in flight by the rule above. The host is the last document tab (Tasks in the stock workflows) — the rail renders entries only for steps that produce a readable document, so action-only steps (Implement, Mark Complete, any custom `actionOnly` step) never get a rail entry and their lifecycle actions live in the footer. A running hidden step also locks no tabs: the running-step lock index is computed against the rendered document list, and a step with no entry yields no index. (Only a workflow that defines `implement` as a document-producing step gets an implement entry, which then hosts the percent itself.)
 
-**What counts as a task.** The percent comes from `countTaskCheckboxes()` (`src/core/utils/taskCheckboxes.ts`), which counts only line-leading `- [ ]` / `- [x]` list items — indented sub-tasks included — and ignores anything inside a fenced code block or an inline code span, so a `tasks.md` legend line like ``Line format: `- [ ] **T###** …` `` is documentation, not an unfinished task. A task whose *description* contains inline code (`` - [x] **T001** fix `foo.ts` ``) still counts: only the line-leading marker decides. That module is the single reader of task checkboxes — the viewer percent, the workflow panel's task stats, and the phase-completion notifications all go through it.
+**What counts as a task.** The percent comes from `countTaskCheckboxes()` (`apps/vscode/src/core/utils/taskCheckboxes.ts`), which counts only line-leading `- [ ]` / `- [x]` list items — indented sub-tasks included — and ignores anything inside a fenced code block or an inline code span, so a `tasks.md` legend line like ``Line format: `- [ ] **T###** …` `` is documentation, not an unfinished task. A task whose *description* contains inline code (`` - [x] **T001** fix `foo.ts` ``) still counts: only the line-leading marker decides. That module is the single reader of task checkboxes — the viewer percent, the workflow panel's task stats, and the phase-completion notifications all go through it.
 
 ### Elapsed Timer and Completion Notifications
 
@@ -602,7 +602,7 @@ strings migrate to booleans on activation; there is no beta pill.)
 
 **stepHistory is derived, not read from disk.** The extension owns this
 field. `deriveStepHistory(transitions, currentStep, status)` in
-`src/features/specs/stepHistoryDerivation.ts` rebuilds it on every read by
+`apps/vscode/src/features/specs/stepHistoryDerivation.ts` rebuilds it on every read by
 walking `transitions[]`: each step's `startedAt` is its first transition,
 `completedAt` is the first transition of the next step (a real boundary
 when `by: "extension"`). Two correctness rules: (1) consecutive identical
@@ -735,17 +735,17 @@ footer-relevant field as a partial merged onto a stale snapshot.
 
 | File | Responsibility |
 |------|---------------|
-| `src/features/spec-viewer/specViewerProvider.ts` | Status computation, `buildViewerPayload` (shared complete-payload builder), data flow to webview |
-| `src/features/spec-viewer/stateDerivation.ts` | `deriveViewerState()` — footer catalog + run-step/generating fields |
-| `src/features/spec-viewer/footerActions.ts` | Footer action catalog + visibility rules (the deterministic oracle) |
-| `src/features/spec-viewer/html/generator.ts` | Initial HTML shell, badge attribute, initial navState |
-| `src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapStepToTab()`, `getDocTypeLabel()` |
-| `src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
-| `src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
-| `webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter; forward button suppressed while in flight) |
-| `webview/src/spec-viewer/components/StepTab.tsx` | Step-tab class derivation |
-| `webview/src/spec-viewer/actions.ts` | Checkbox toggle + percentage update |
-| `webview/styles/spec-viewer/_navigation.css` | Tab visual states |
-| `webview/styles/spec-viewer/_footer.css` | Button styles |
-| `webview/styles/spec-viewer/_content.css` | Badge pill styles |
-| `webview/styles/spec-viewer/_animations.css` | Working pulse animation |
+| `apps/vscode/src/features/spec-viewer/specViewerProvider.ts` | Status computation, `buildViewerPayload` (shared complete-payload builder), data flow to webview |
+| `apps/vscode/src/features/spec-viewer/stateDerivation.ts` | `deriveViewerState()` — footer catalog + run-step/generating fields |
+| `apps/vscode/src/features/spec-viewer/footerActions.ts` | Footer action catalog + visibility rules (the deterministic oracle) |
+| `apps/vscode/src/features/spec-viewer/html/generator.ts` | Initial HTML shell, badge attribute, initial navState |
+| `apps/vscode/src/features/spec-viewer/phaseCalculation.ts` | `computeBadgeText()`, `computeCreatedDate()`, `computeLastUpdatedDate()`, `mapStepToTab()`, `getDocTypeLabel()` |
+| `apps/vscode/src/features/spec-viewer/messageHandlers.ts` | Lifecycle action handlers (complete/archive/reactivate) |
+| `apps/vscode/src/features/spec-viewer/types.ts` | `SpecStatus` type, message types |
+| `apps/vscode/webview/src/spec-viewer/components/FooterActions.tsx` | Single-source footer (CatalogFooter; forward button suppressed while in flight) |
+| `apps/vscode/webview/src/spec-viewer/components/StepTab.tsx` | Step-tab class derivation |
+| `apps/vscode/webview/src/spec-viewer/actions.ts` | Checkbox toggle + percentage update |
+| `apps/vscode/webview/styles/spec-viewer/_navigation.css` | Tab visual states |
+| `apps/vscode/webview/styles/spec-viewer/_footer.css` | Button styles |
+| `apps/vscode/webview/styles/spec-viewer/_content.css` | Badge pill styles |
+| `apps/vscode/webview/styles/spec-viewer/_animations.css` | Working pulse animation |

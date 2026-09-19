@@ -32,7 +32,7 @@ import { chromium } from 'playwright-core';
  */
 const port = () => Number(process.env.SB_PORT) || 6017;
 const base = () => `http://localhost:${port()}`;
-export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 /** How long a cold `storybook dev` is given to answer. */
 const BOOT_TIMEOUT_MS = 180_000;

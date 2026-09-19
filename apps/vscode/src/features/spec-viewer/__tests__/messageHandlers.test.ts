@@ -132,7 +132,7 @@ describe('messageHandlers - living spec navigation', () => {
 });
 
 describe('messageHandlers - living Approve all, Remove and Undo', () => {
-    const LINKS = path.join(__dirname, '..', '..', '..', '..', 'speckit-extension', 'tests', 'fixtures', 'requirement-slices', 'links');
+    const LINKS = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'tests', 'fixtures', 'requirement-slices', 'links');
     let root: string;
 
     const specOf = (cap: string) => path.join(root, 'capabilities', cap, 'spec.md');

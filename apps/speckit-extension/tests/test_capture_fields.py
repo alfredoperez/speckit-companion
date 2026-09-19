@@ -135,7 +135,7 @@ class CaptureFieldTests(unittest.TestCase):
             self.assertEqual(entry["tests"], row["tests"])
 
     def test_the_typescript_half_reads_the_same_fixture(self) -> None:
-        twin = (Path(__file__).resolve().parents[2] / "src" / "features" / "spec-viewer"
+        twin = (Path(__file__).resolve().parents[3] / "apps" / "vscode" / "src" / "features" / "spec-viewer"
                 / "__tests__" / "stateDerivation.test.ts").read_text(encoding="utf-8")
         self.assertIn("coverage-shape", twin)
         self.assertIn("expected-rows.json", twin)

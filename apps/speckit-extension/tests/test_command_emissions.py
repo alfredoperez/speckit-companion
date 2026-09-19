@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
-REPO_ROOT = SCRIPTS.parent.parent
+REPO_ROOT = SCRIPTS.parents[2]
 
 _spec = importlib.util.spec_from_file_location("check_command_emissions", SCRIPTS / "check-command-emissions.py")
 ce = importlib.util.module_from_spec(_spec)

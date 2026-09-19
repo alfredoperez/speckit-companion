@@ -5,13 +5,13 @@ description: Release the spec-kit extension (companion) to a GitHub release for 
 
 ## Context
 
-- spec-kit ext version: !`grep -A4 '^extension:' speckit-extension/extension.yml | grep 'version:' | tr -d ' "' | sed 's/version://'`
+- spec-kit ext version: !`grep -A4 '^extension:' apps/speckit-extension/extension.yml | grep 'version:' | tr -d ' "' | sed 's/version://'`
 - Latest spec-kit-ext tags: !`git tag --list 'speckit-ext-v*' --sort=-version:refname | head -3`
 - Git status: !`git status --porcelain | head`
 
 ## Your task
 
-Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so people can install it without a local clone. This is **separate from `/publish`** (that's the VS Code extension → Marketplace). Full reference: `speckit-extension/docs/publishing.md`.
+Release the **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) so people can install it without a local clone. This is **separate from `/publish`** (that's the VS Code extension → Marketplace). Full reference: `apps/speckit-extension/docs/publishing.md`.
 
 ### ⚠️ Hard-won rules (do not skip)
 
@@ -22,18 +22,18 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
 
 ### Steps
 
-1. **Bump** `speckit-extension/extension.yml` `extension.version` (semver). Confirm the target version with the user.
-2. **Update** `speckit-extension/CHANGELOG.md` — add a dated section for the new version; keep prior versions. End-user-friendly bullets.
+1. **Bump** `apps/speckit-extension/extension.yml` `extension.version` (semver). Confirm the target version with the user.
+2. **Update** `apps/speckit-extension/CHANGELOG.md` — add a dated section for the new version; keep prior versions. End-user-friendly bullets.
 3. **Readiness checklist** (the catalog guide's gates):
-   - `id` lowercase-hyphen; `description` **< 100 chars**; `homepage` present; `license` field **and** a `LICENSE` file in `speckit-extension/`; `tags` 2–5.
-   - **Every `provides.commands[].file` exists** AND every command markdown under `speckit-extension/commands/` is listed in `provides.commands`.
+   - `id` lowercase-hyphen; `description` **< 100 chars**; `homepage` present; `license` field **and** a `LICENSE` file in `apps/speckit-extension/`; `tags` 2–5.
+   - **Every `provides.commands[].file` exists** AND every command markdown under `apps/speckit-extension/commands/` is listed in `provides.commands`.
    - README is current (it's the catalog listing page).
 4. **Commit + push** to `main` (`chore(speckit-ext): release v<X.Y.Z>`).
 5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
    ```bash
    V=<X.Y.Z>
    rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
-   cd speckit-extension
+   cd apps/speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
    python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
@@ -45,7 +45,7 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
    ```bash
    gh release create speckit-ext-v$V /tmp/cb/companion-$V.zip \
      --title "SpecKit Companion spec-kit extension v$V" \
-     --notes-file <[X.Y.Z] section of speckit-extension/CHANGELOG.md> --target main
+     --notes-file <[X.Y.Z] section of apps/speckit-extension/CHANGELOG.md> --target main
    ```
 7. **Refresh the stable `companion-latest` asset** — this is what the README/install docs point users at, so the install/update URL never changes between releases. Force-replace the **stable-named** `companion.zip` on a reusable `companion-latest` **prerelease** with the *same* build:
    ```bash
@@ -74,5 +74,6 @@ Release the **spec-kit extension** (`speckit-extension/`, `id: companion`) so pe
 10. **Refresh the community-catalog entry — MINOR or MAJOR releases only; skip for patches.** A patch (`x.y.Z`) does not touch the catalog: catalog users stay on the current minor and patch fixes ride the rolling `companion-latest` URL. **Do NOT open a PR against `extensions/catalog.community.json`** — direct catalog PRs are rejected (github/spec-kit#3937 was closed with "Updates to extensions must use the extension submission issue template"). Both first listings and version updates go through the **[Extension Submission] issue**. Run **`/submit-catalog-update`**: it renders the issue body from the live upstream issue-form template so our headings cannot drift from theirs, gates on the pinned asset returning 200 and on the minor/major cadence, refuses to file a duplicate, and creates the issue with `gh`. It needs two human-authored inputs — Key Features and Example Usage — and one attestation confirmation.
 
 11. **Report** the release URL + the **stable** install command (`…/releases/download/companion-latest/companion.zip`, re-runnable with `--force` to update), and — on a minor/major — the **catalog submission issue URL** from `/submit-catalog-update`. Maintainers apply the `extension-submission` label at triage, which starts automated catalog validation; there is no follow-up PR.
+12. **Retire the old-path stub.** Once a `/submit-catalog-update` issue lands with `homepage` pointing at `apps/speckit-extension`, delete the root-level `speckit-extension/` redirect stub (`README.md` + `CHANGELOG.md`) in a follow-up commit. Skip this on a patch release, since step 10 does too.
 
 Update version references (README badge, `publishing.md`) to the new version; keep the documented install/update URL pointed at the stable `companion-latest/companion.zip`. Never commit a VS Code `package.json` version bump as part of this.

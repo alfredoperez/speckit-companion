@@ -51,7 +51,7 @@ A writer holds the spec's lock across its whole read-modify-write. Readers never
 - **THEN** it is preserved under a separate key, a fresh log begins, and this is reported
 
 ### Both writers resolve the lock to one place, whatever environment they were given
-<!-- touches: speckit-extension/scripts/spec_context.py -->
+<!-- touches: apps/speckit-extension/scripts/spec_context.py -->
 
 The lock lives under a fixed root, not the process's temporary directory, because the editor and a terminal with different environments would otherwise stop sharing a lock and lose writes silently.
 

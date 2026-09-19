@@ -12,7 +12,7 @@ description: Review code, update docs, and package a new version (project)
 
 ## Your task
 
-> **Scope: the VS Code extension only.** For the **spec-kit extension** (`speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag.
+> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag.
 
 Help the user prepare and package a new version of the extension.
 
@@ -38,7 +38,7 @@ Review if documentation needs updates:
 
 ### 3. Screenshot Check
 
-If recent commits modified files in `webview/` or `src/features/`:
+If recent commits modified files in `apps/vscode/webview/` or `apps/vscode/src/features/`:
 - Suggest the user may want to update screenshots
 - List files in `docs/screenshots/` that might be outdated
 - This is informational only - proceed regardless

@@ -69,7 +69,7 @@ An absent, empty or malformed verification list counts as nothing verified.
 - **THEN** the check reports no record, never a problem
 
 ### The health check reports a step that closed without a document it declared
-<!-- touches: speckit-extension/scripts/doctor.py, speckit-extension/scripts/doctor_checks.py -->
+<!-- touches: apps/speckit-extension/scripts/doctor.py, apps/speckit-extension/scripts/doctor_checks.py -->
 
 The declarations come from the built manifest, and only unconditional ones are judged. Findings are warnings, never a gate, since the spec may come from an earlier pipeline.
 

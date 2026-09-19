@@ -7,7 +7,7 @@
      brand-new image 404s until its file is pushed to main. -->
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/speckit-extension/assets/hero.png" alt="The SpecKit Companion sprout mascot tending rows of glowing seedlings in a forest clearing at dawn" width="100%">
+  <img src="https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/apps/speckit-extension/assets/hero.png" alt="The SpecKit Companion sprout mascot tending rows of glowing seedlings in a forest clearing at dawn" width="100%">
 </p>
 
 <h1 align="center">SpecKit Companion: the Spec Kit Extension</h1>
@@ -18,10 +18,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/extension-companion-0b6dd9" alt="extension: companion">
-  <!-- Both badges read speckit-extension/extension.yml on main, so a release
+  <!-- Both badges read apps/speckit-extension/extension.yml on main, so a release
        (or a floor bump) updates them without touching this file. -->
-  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fspeckit-extension%2Fextension.yml&query=%24.extension.version&label=version&color=0b6dd9" alt="extension version">
-  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fspeckit-extension%2Fextension.yml&query=%24.requires.speckit_version&label=spec-kit&color=008080" alt="required spec-kit version">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fapps%2Fspeckit-extension%2Fextension.yml&query=%24.extension.version&label=version&color=0b6dd9" alt="extension version">
+  <img src="https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Falfredoperez%2Fspeckit-companion%2Fmain%2Fapps%2Fspeckit-extension%2Fextension.yml&query=%24.requires.speckit_version&label=spec-kit&color=008080" alt="required spec-kit version">
   <img src="https://img.shields.io/badge/license-MIT-gold" alt="license MIT">
 </p>
 
@@ -85,7 +85,7 @@ Next: Continue implementation at T004  →  dispatching /speckit.companion.imple
 The payoff is the Overview. Every run, watched, resumed, or hands-off, leaves the same enhanced record in the GUI: the intent the run started from, honest per-phase timing, the expectations fence, the checks that were verified with the commands that prove them, the decisions made with their rejected alternatives, and the requirement-to-task-to-test coverage table. That page is what a future session, a reviewer, or a teammate reads instead of re-asking you.
 
 <!-- Engine-angled cut of the Overview loop. Source composition:
-     media/feature-clips/overview-engine/ (see its STORYBOARD.md); regenerate the GIF by
+     content/media/feature-clips/overview-engine/ (see its STORYBOARD.md); regenerate the GIF by
      rendering that composition. Absolute URL on purpose: this README is also served
      outside the repo tree (extension catalog), where relative paths do not resolve. -->
 ![The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-engine.gif)
@@ -117,12 +117,12 @@ flowchart LR
 ```
 
 ```bash
-specify workflow add speckit-extension/workflows/speckit-companion.workflow.yml
+specify workflow add apps/speckit-extension/workflows/speckit-companion.workflow.yml
 specify workflow run speckit-companion
 specify workflow resume <run_id>   # paused at a gate? pick up from the exact node
 ```
 
-On an agentic CLI each Companion command also continues into the next step on its own, honoring the same gates, so you get the hands-off flow without `workflow run`. Full reference: [template-profiles.md](../docs/template-profiles.md). Either way, hands-off or gated, the run leaves the same Overview record as a run you watched.
+On an agentic CLI each Companion command also continues into the next step on its own, honoring the same gates, so you get the hands-off flow without `workflow run`. Full reference: [template-profiles.md](../../docs/template-profiles.md). Either way, hands-off or gated, the run leaves the same Overview record as a run you watched.
 
 <!-- Cross-promo banner (C6 in ReadmeCapture.stories.tsx, captured by
      scripts/capture-docs-images.mjs). Committed src, per this file's
