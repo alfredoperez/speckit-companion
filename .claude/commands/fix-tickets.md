@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Autonomously fix one or more speckit-companion GitHub issues with the SpecKit Companion pipeline — clean branch, fix, review, PR, merge, reinstall — then write a manual-verification report. Self-hosting build loop.
+description: Autonomously fix one or more speckit-companion GitHub issues with /speckit-companion-auto — fresh main, auto (fix + reviews + PR), merge, learnings — then one install-local and a manual-verification report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
 
@@ -8,25 +8,23 @@ argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | 
 
 A **self-hosting build loop** for `speckit-companion`. For each ticket, in strict sequence:
 
-> **Two modes.** The default (below) is the full loop: one issue per ticket, fixed by driving the SpecKit Companion pipeline on itself. **`--light`** ([Light mode](#light-mode---light)) drops the issue, the spec pipeline, and the sequencing for small mechanical changes, and fans out parallel worktree agents instead. It keeps the code review, tests, and CI. Light mode trades away the dogfooding signal — pick it deliberately, not by default.
+> **Two modes.** The default (below) is the full loop: one issue per ticket, fixed by running `/speckit-companion-auto` on itself. **`--light`** ([Light mode](#light-mode---light)) drops the issue, the spec pipeline, and the sequencing for small mechanical changes, and fans out parallel worktree agents instead. It keeps the code review, tests, and CI. Light mode trades away the dogfooding signal — pick it deliberately, not by default.
 
-1. **Clean slate + install-local FIRST** — on `main`, `git fetch && git pull --ff-only`, then run `/install-local` so this ticket is fixed by the freshest build **and the latest `/speckit.companion.*` commands** (the previous ticket's merge lands here). Discard the throwaway version bump, assert a clean tree. Refuse to start dirty.
-2. **Fix** — drive the SpecKit Companion pipeline to fix the ticket.
-3. **Code review** — run `/code-review`, apply findings; re-run it on any fix that itself changed real logic.
-4. **PR** — open a PR with `/create-pr` conventions.
-5. **Merge** — squash-merge, delete branch.
-6. **Capture learnings + tick the box** — distill this ticket's review findings and route each to where it fires (review check → `.claude/review-checklist.md`; authoring convention → a *proposed* `CLAUDE.md` edit; loop mechanics → this file; gap → an issue candidate), so the *next* ticket's fix avoids the same bug class. Then check the ticket off in the vault's `Current.md` queue with its PR link.
-7. **Next ticket** — its step 1 `/install-local` installs *this* ticket's merge. After the last ticket, a closing `/install-local` installs the final merge. This is the point of the loop: prove the companion keeps working on itself as it improves.
+1. **Fresh `main`** — pull, and if the pull changed `speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
+2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, `/code-review` + `/codex:review` in parallel (max two rounds), the commit, and the PR.
+3. **Merge** — squash-merge once CI is green.
+4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in `Current.md`.
+5. **Next ticket.**
 
-After all tickets: write one **run report** (markdown, via the vault `obsidian` skill, into `Projects/speckit companion/reports/`) of everything fixed, in plain language, **flagging UI / manual-test items** so you know exactly what to verify by hand, what was already exercised by the pipeline (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
+After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, into `Projects/speckit companion/reports/`) of everything fixed, in plain language, **flagging UI / manual-test items**, what the pipeline already exercised (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
 - **Merge:** auto-merge, no per-ticket stop. You review via the final report + manual verification.
-- **`/code-review` is the review gate** — high effort, findings applied; re-run it on any fix that itself changed real logic (the fix commit is the least-reviewed code). One review and one re-review, then ship; anything further becomes a follow-up issue.
-- **Sequential only.** Never parallelize — each `install-local` must land before the next ticket starts. (`--light` lifts this; it has no per-ticket install to gate on. See [Light mode](#light-mode---light).)
-- **Heavy steps run in subagents** (the fix, the code review, distilling learnings) so the main orchestration context stays lean. The main loop only does git/gh/decisions and accumulates the report.
-- **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). So review findings strengthen the *next* fix. Convention/architecture promotions are *proposed* in the report, never auto-applied.
+- **Auto runs in the main loop, not a subagent.** Its review hook dispatches `/code-review` and `/codex:review` as two subagents; inside a subagent that nesting fails and the hook falls back to `/code-review` alone, silently dropping Codex. Keep the main context lean another way: after each ticket, re-derive state from `git`/`gh` and the ticket's result line, not from the transcript.
+- **The auto hooks are the review gate.** Don't add a second `/code-review` pass on top — that's what the old loop did, and it reviewed every ticket twice.
+- **Sequential only.** Never parallelize — each ticket must run on the previous ticket's merged commands. (`--light` lifts this. See [Light mode](#light-mode---light).)
+- **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
 
 ## Inputs
@@ -34,7 +32,7 @@ After all tickets: write one **run report** (markdown, via the vault `obsidian` 
 `$ARGUMENTS` is one of:
 - A space-separated list of issue numbers: `237 238 241`
 - `open` — process all currently-open issues (`gh issue list`), confirm the list first via AskUserQuestion before starting.
-- A path to a backlog markdown file or folder — treat each item as a ticket (still requires a GitHub issue; create one with `/create-issue` if missing, confirm first).
+- A path to a backlog markdown file or folder — treat each item as a ticket (still requires a GitHub issue; create one with `/create-github-issue` if missing, confirm first).
 - `--light` — run **light mode** (below). Takes issue numbers *or* free-text task descriptions, since light mode files no issues.
 
 If `$ARGUMENTS` is empty, list open issues and ask which to run.
@@ -50,12 +48,12 @@ For changes that are **small and already understood** — a wrong regex, a stale
 | Step | Full loop | Light |
 |---|---|---|
 | GitHub issue | required (`Closes #N`) | **none** — the PR body carries the why |
-| Fix | SpecKit Companion pipeline (`specify → plan → tasks → implement`), writes `specs/NNN-*/` | **direct fix**, no spec folder |
+| Fix | `/speckit-companion-auto`, writes `specs/NNN-*/` | **direct fix**, no spec folder |
 | Execution | strictly sequential | **parallel worktree subagents** |
-| `install-local` | before every ticket | **once, at the end** |
-| Code review | `/code-review` high + `/codex:review` in parallel, applied, findings logged to the Review Ledger; re-run on logic-changing fixes | **unchanged** |
+| `install-local` | **once, at the end** (commands refreshed per ticket) | **once, at the end** |
+| Code review | auto's hooks: `/code-review` + `/codex:review` in parallel, max two rounds, findings logged to the Review Ledger | `/code-review` high + `/codex:review` per branch (L2) |
 | Learnings | distill per ticket | **one distill** for the batch |
-| Report | themed HTML brief | **chat summary** |
+| Report | markdown run report in the vault | **chat summary** |
 
 ## What light mode COSTS — read before choosing it
 
@@ -83,7 +81,7 @@ Light mode runs one subagent per task, **each with `isolation: "worktree"`**. Th
 
 Four things collide if you're not careful. Note that the first two are precisely why parallelism is safe **only** in light mode:
 
-1. **Spec numbering race.** `before_specify` picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
+1. **Spec numbering race.** Specify picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
 2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./speckit-extension --dev --force` first.*
 3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
 4. **A fresh worktree has no `node_modules` — run `npm ci` FIRST or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
@@ -112,7 +110,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 If a subagent returns `escalate` — the task was bigger than it looked — **do not merge it**. Leave the branch, report it, and re-run it through the full loop.
 
 ### L2. Review — one subagent per branch
-`/code-review` at **high** effort on each branch's diff vs `main`, with `/codex:review --base main --scope branch` in parallel, apply findings, commit, re-run tests, log each finding to the Review Ledger. Same as the full loop; this step is not lightened.
+`/code-review` at **high** effort on each branch's diff vs `main`, with `/codex:review --base main --scope branch` in parallel, apply findings, commit, re-run tests, log each finding to the Review Ledger. Max two rounds, like the full loop; this step is not lightened.
 
 ### L3. PR — main loop
 Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`. (The review already happened in L2; if an L2 fix changed real logic, re-run `/code-review` on it before opening the PR.)
@@ -134,131 +132,100 @@ Merge **one at a time**, confirming CI green on each (`gh pr checks`). After eac
 ### 0. Setup
 
 - Resolve the ticket queue from `$ARGUMENTS` (see Inputs). Create a task list (`TaskCreate`) with one task per ticket so progress is visible.
-- Read `gh issue view <N>` for each to confirm scope and capture the title/body for the fix subagent.
-- **Honor the queue groups in `Current.md`** (`### Live queue (GitHub)`): tickets under `🔒 Gated / not ready` are **skipped** (never auto-run — they're release/blocked); tickets under `⏸️ Review-gated` are run but **paused before merge** (step 7). The `--review-merge` arg forces review-gate for the whole batch.
+- Read `gh issue view <N>` for each to confirm scope and capture the title/body.
+- **Honor the queue groups in `Current.md`** (`### Live queue (GitHub)`): tickets under `🔒 Gated / not ready` are **skipped**; tickets under `⏸️ Review-gated` are run but **paused before merge** (step 3). The `--review-merge` arg forces review-gate for the whole batch.
 - Confirm the queue with the user **once** (AskUserQuestion) only when the queue was derived (`open` / backlog), not when explicit numbers were passed.
 
 ### For each ticket `N` (sequential):
 
-#### 1. Clean slate + install-local FIRST — main loop
+#### 1. Fresh `main` — main loop
 ```bash
 git rev-parse --show-toplevel              # must be the speckit-companion repo
 git status --porcelain                     # MUST be empty — if not, STOP and report
-git checkout main && git fetch origin && git pull --ff-only
+git checkout main && git fetch origin
+BEFORE=$(git rev-parse HEAD) && git pull --ff-only
+git diff --quiet "$BEFORE" HEAD -- speckit-extension/ || specify extension add ./speckit-extension --dev --force
+git restore .specify/ && git status --porcelain   # MUST be empty again
 ```
 If the tree is dirty, **do not** stash or discard. Stop the whole loop and report — a dirty tree means an earlier ticket left work uncommitted.
 
-Then **install-local before fixing**, so this ticket runs on the freshest build and the latest commands (this installs the *previous* ticket's just-merged work):
-```bash
-# Run the repo's /install-local command — it reinstalls BOTH the VS Code .vsix
-# AND the spec-kit extension (re-emits the /speckit.companion.* commands).
-```
-Invoke the `/install-local` command (Skill). It bumps `package.json` patch to make a fresh `.vsix` **and** regenerates spec-kit registry artifacts; all of it is throwaway and must not ride the feature PR — discard it to restore a clean tree:
-```bash
-# install-local drifts package.json + package-lock.json AND regenerates spec-kit
-# registry files (.specify/extensions.yml, .specify/extensions/.registry, feature.json).
-# All throwaway — restore the lot. (Restoring only the package files leaves the tree dirty.)
-git restore package.json package-lock.json .specify/
-git status --porcelain                        # MUST be empty again before fixing
-```
-Rationale: install-local is the **first** step of every ticket so each fix uses the updated companion. The `specify extension add --dev --force` inside it is what makes the *next* ticket actually use the commands you just changed — the dogfooding crux.
+The installed companion commands (`.specify/extensions/companion/`, `.claude/skills/speckit-companion-*`) are **gitignored copies**, so `git pull` alone leaves them stale. The `specify extension add` refresh is what makes this ticket run on the commands the previous ticket just merged — the dogfooding crux. The `.vsix` is not needed per ticket: the pipeline runs in the CLI, not the VS Code extension.
 
-#### 2. Fix with the SpecKit Companion pipeline — **subagent**
-Dispatch a `general-purpose` subagent. Its job: fix issue `N` end-to-end using the **SpecKit Companion** command family, leave everything committed on a feature branch, return a concise structured result.
+#### 2. Reproduce, then auto — main loop
+- **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to).
+- **Verify the bug reproduces on current `main`.** Backlog tickets go stale — they're frequently already fixed, duplicates, or already-correct paths (~3 of 8 in one batch). If it's already fixed, STOP this ticket, close the issue as resolved/dup with the evidence, and move on. Deliver only the genuinely-missing part.
+- Run `/speckit-companion-auto` with the issue as the feature description. Include `Issue #N: <title>` and the body, and say the PR body must carry `Closes #N`.
+- Auto runs specify → plan → tasks → implement unattended and ends at `completed`. Implement's hooks in `.specify/companion.yml` then self-review, run `/code-review` + `/codex:review` in parallel (max two rounds; anything still open goes into the PR body as a gap), commit, and open the PR via `/create-pr`. It does not merge.
+- **Keep the review findings.** As auto's reviews return, note each finding: what it was, who found it (`code-review` / `codex` / `both`), severity, and whether it changed code. Steps 4a and 4b need them; the transcript won't be re-read.
+- **Check what auto left behind before merging:**
+  - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.**
+  - The PR does not carry regenerated `.specify/` artifacts (`feature.json`, registry files). **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate requires it.
+  - `npm run compile && npm test` is green. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
+  - Note any UI / webview / sidebar / settings surface a human should eyeball, for the report.
+  - Push any fixes to the PR branch.
+- **Log the subagents — observe, never force.** Run `python3 .claude/scripts/subagent-tally.py specs/<NNN>-<slug>`. It reads this session's transcript and prints, per step, the subagents auto actually dispatched next to what that step's rule expects (plan: one per recorded `area:`; implement: one per story phase with 5+ files, plus 2 reviewers per round). Copy the output into the ticket's result line as is. Do not re-run a step to get the expected number, and do not dispatch workers auto skipped: a gap between expected and actual is a finding for the report, not something to fix mid-ticket.
+- If auto can't produce a passing fix, or ends without a PR, record the ticket as "needs attention," get back to a clean `main`, and continue.
 
-Subagent prompt must include:
-- The issue number, title, and body.
-- **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and honor it — those are bug classes prior tickets' reviews already caught.
-- **VERIFY THE BUG REPRODUCES on current `main` before building.** Backlog tickets go stale — they're frequently already fixed by a later PR, a duplicate, or an already-correct path (this happened to ~3 of 8 tickets in one batch). Have the subagent confirm the defect exists in the current code first; if it's already fixed, STOP and report that with evidence (so the orchestrator closes it as resolved/dup) instead of inventing a change. Deliver only the genuinely-missing part.
-- No profile to set — SpecKit Companion is the single workflow (the old `templateProfile: turbo` preset was removed). The companion skills are the `/speckit-companion-*` family.
-- The ordered chain (there is **no** one-shot): run, in order, the skills
-  `/speckit-companion-specify` → `/speckit-companion-plan` → `/speckit-companion-tasks` → `/speckit-companion-implement`,
-  passing the issue as the feature description. The `before_specify` git hook creates the `NNN-<shortname>` feature branch automatically; do not create one manually. Spec artifacts land in `specs/<NNN>-<slug>/`.
-- After implement: **complete the spec.** The SpecKit Companion flow completes a spec at its last node (mark-complete is its terminal node) — that's its advantage over stock, so ensure `specs/<NNN>-<slug>/` status is `completed` (run `python3 speckit-extension/scripts/write-context.py --feature-dir specs/<NNN>-<slug> --mark-complete --by ai` if the flow didn't already). **NEVER revert a Companion-built spec from `completed` back to `implemented`.** Confirm all tasks checked and the `.spec-context.json` `specName` is the real name (not a `[FEATURE NAME]` placeholder). Commit only the real change + spec folder — **do NOT commit `.specify/` regenerated artifacts** (`feature.json`, registry files get swept by `git add -A`); `git checkout origin/main -- .specify/<file>` for any that show modified, then commit `src/`/`webview/`/`package.json` + `specs/<NNN>/`. **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate fails unless the committed registry records every declared command.
-- **Verify before returning:** `npm run compile && npm test`. If `speckit-extension/**` changed, also `python3 speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval. Fix failures; do not return green if red.
-- Return: `{ branch, specDir, filesChanged[], testsPassed, summary, uiOrManualSurfaces[] }` where `uiOrManualSurfaces` lists anything touching the VS Code UI / webview / sidebar / settings that a human should eyeball.
+Then write one result line for the ticket (PR, spec dir, summary, manual surfaces, findings, subagent tally) and work from that, not the transcript, for the rest of the run.
 
-Capture this result. If the subagent reports it could not produce a passing fix, **skip merge** for this ticket, record it as "needs attention," and continue to the next ticket.
-
-#### 3. Code review — **subagent (`/code-review` + `/codex:review`)**
-Run `/code-review` on the branch diff vs `main` at **high** effort, and apply the findings (`--fix`). Keep it in a subagent so the review reasoning doesn't fill the main context. Tell the subagent to **read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes too. Record what each finding was (you'll distill them in step 6). Commit and re-run `npm test` if code changed.
-
-**Run Codex side by side.** Launch `/codex:review --base main --scope branch` on the same diff, in parallel with `/code-review`, before applying anything. Two reviewers over one diff, then reconcile: a finding either reviewer raises gets addressed, and where they disagree the tie-breaker is a test, not an argument.
-
-**Log who found what.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md` — date, branch or PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, and whether it changed code. This is the only record of whether the second reviewer earns its place, so it gets written on every run, including the runs where Codex found nothing.
-
-**Re-review the fix, once.** A fix commit is the least-reviewed code in the PR: it wasn't seen by the review that prompted it, and it lands under time pressure. If a fix changed real **LOGIC** (control flow, a migration, a data-shape writer, an auth/availability gate, a DOM/lifecycle refactor) → **re-run `/code-review` on the new commit and address what it finds.** Docs/CSS/label-only fixes skip the extra pass.
-
-**Two passes is the ceiling: one review, one re-review, then ship.** If the second pass still finds something real, fix it and file a follow-up issue for anything further rather than starting a third. Each extra pass does find something — #433 ran to four, and PR #720's third pass found a real dispatch bug — but the branch sits unmerged while it happens and the returns fall off fast. Cap it, and let the follow-up issue carry the rest. The trigger ("did the fix change logic?") is right; the count is not bounded. **Settle a framework-semantics dispute with a test, not an argument** — on #433 the review reasoned confidently about Preact input handling and was wrong; the real bug (Preact forces the DOM back to the vnode's `value`, so an open editor silently reverted and Save wrote the *old* text) was found only by writing the assertion.
-
-#### 4. Open the PR — main loop
-Use the repo's `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, and how-to-verify. Then:
-```bash
-git push -u origin <branch>
-gh pr create --title "<title>" --body "<body>" --base main
-```
-Capture the PR number/URL.
-
-#### 5. Merge + cleanup — main loop
-Confirm CI/checks are green (`gh pr checks <PR>`):
+#### 3. Merge + cleanup — main loop
 ```bash
 gh pr checks <PR> --watch || true     # let CI finish
 ```
-**Review-gate check.** If this ticket is marked **review-gated** (see Setup — e.g. it came from the `⏸️ Review-gated` group, or the user passed `--review-merge`), do **not** merge. Post the PR link, a one-line summary, and the manual-verification surfaces, then STOP this ticket here and move to the next — record it as "merged: NO — awaiting your review." Do the closing learnings/Current.md note as "in review," not "shipped."
+**Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link, a one-line summary, and the manual-verification surfaces, record it as "merged: NO — awaiting your review," and move to the next ticket.
 
-Otherwise squash-merge:
+Otherwise:
 ```bash
 gh pr merge <PR> --squash --delete-branch
 ```
-If checks fail and can't be auto-addressed, leave the PR open, record as "merged: NO — checks failing," continue.
+If checks fail and can't be fixed on the branch, leave the PR open, record "merged: NO — checks failing," continue.
 
-#### 6. Capture learnings + tick the box — **distill subagent** (cheap) + main loop
-Two things, so the loop compounds and your tracker stays current:
+#### 4. Learnings + tick the box — main loop
+**a) Review Ledger.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md`: date, PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, changed code or not. Write it on every run, including when Codex found nothing — it's the only record of whether the second reviewer earns its place.
 
-**a) Distill learnings — route by shape, don't dump.** Dispatch a small subagent with the code-review findings (step 3) for THIS ticket. A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over a near-duplicate; **an empty distill is the norm.** Route each kept learning to where it fires:
+**b) Distill — route by shape, don't dump.** A learning earns capture only if it's **checkable, recurring or high-cost, and phrased as a rule/scan**; prefer editing an existing line over a near-duplicate; **an empty distill is the norm.** Route each kept learning:
 - a **codebase-specific review check** → `.claude/review-checklist.md`
-- a **universal authoring convention** → the matching `CLAUDE.md` section (Webview & rendering invariants / Code Comments / Design tokens) — *proposed* in the report, not auto-applied
+- a **universal authoring convention** → the matching `CLAUDE.md` section — *proposed* in the report, not auto-applied
 - a **loop-mechanics** improvement → this command file
-- an **architecture / coverage gap** → a GitHub issue (accumulate across the run, surface in the report)
-- If it can become a test or hook, propose that instead of prose. (`.claude/lessons-learned.md` is retired — don't append to it.)
+- an **architecture / coverage gap** → a GitHub issue candidate (accumulate across the run, surface in the report)
+- If it can become a test or hook, propose that instead of prose.
 
-**b) Tick the box in `Current.md`.** In the vault file `~/dev/GitHub/obsidian-vault/Current.md`, under `## SpecKit Companion → ### Live queue (GitHub)`, flip this ticket's line from `- [ ]` to `- [x]` and append `→ [PR #NNN](url)`, matching the existing shipped-line format. (Tickets are tracked there by `#NNN`; if a ticket isn't listed, add it under the right group as `- [x]`.)
+**c) Tick the box in `Current.md`.** In `~/dev/GitHub/obsidian-vault/Current.md`, under `## SpecKit Companion → ### Live queue (GitHub)`, flip the ticket's line from `- [ ]` to `- [x]` and append `→ [PR #NNN](url)`, matching the existing format. If the ticket isn't listed, add it under the right group as `- [x]`.
 
-Mark the ticket task `completed`.
-
-#### 7. Next ticket — main loop
-**Do not** run install-local here — the next ticket's **step 1** pulls this merge and installs it first thing. Loop to the next ticket.
+Mark the ticket task `completed` and loop to the next ticket.
 
 ---
 
-### Closing install-local — after the last ticket merges
+### Closing install-local — after the last ticket
 
-The loop installs each ticket's merge at the *start* of the next ticket, so the **final** ticket's merge is not yet installed. Install it now so the workspace ends current:
 ```bash
 git checkout main && git fetch origin && git pull --ff-only
 ```
-Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored. Optionally `code --command workbench.action.reloadWindow`. Record the final installed version for the report.
+Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root. Optionally `code --command workbench.action.reloadWindow`. Record the installed version for the report.
 
-### Final report — after the queue is drained
+### Final report
 
-Write **one markdown run report** (via the vault `obsidian` skill) to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/reports/YYYY-MM-DD-fix-tickets-run.md`. **Never overwrite a prior report** — each run gets its own dated file. Markdown, not HTML: the vault's reports are markdown so they stay searchable and linkable; reach for `/html-page` only to *export* one that has to leave the vault. It must be **concise and plain-language**, covering:
+Write **one markdown run report** (via the vault `obsidian` skill) to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/reports/YYYY-MM-DD-fix-tickets-run.md`. **Never overwrite a prior report.** Concise and plain-language:
 
-- **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped, new extension version after its `install-local`.
-- **🖐️ Manual verification needed** — a clearly separated section listing the UI / sidebar / webview / settings surfaces from each ticket's `uiOrManualSurfaces[]`. This is the part the user spends their time on. For each: what changed and how to eyeball it.
-- **Already exercised by the pipeline** — what the re-run of the companion pipeline + tests + CI proved (so the user knows NOT to re-test those).
-- **🧠 Lessons captured this run** — new review checks added to `.claude/review-checklist.md` and loop-mechanics tweaks to this command file (with where each landed).
-- **🏗️ Architecture / skill flags** — the promotion candidates accumulated in step 8, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion for the user to approve.
-- **Needs attention** — any ticket skipped (and why), PR left in review, or a CI gap.
+- **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped / needs attention.
+- **🖐️ Manual verification needed** — the UI / sidebar / webview / settings surfaces from each ticket. For each: what changed and how to eyeball it.
+- **🤖 Subagents** — one row per ticket and step from the tally: dispatched vs expected. Call out every gap in plain words (e.g. "plan expected 3 area workers, ran 0"), and any step that never dispatches in an auto run at all. This is how we know users actually get the fan-out the commands promise.
+- **Already exercised by the pipeline** — what auto + tests + CI proved, so the user doesn't re-test those.
+- **🧠 Lessons captured this run** — review checks added to `.claude/review-checklist.md` and loop tweaks to this file, with where each landed.
+- **🏗️ Architecture / skill flags** — the promotion candidates from step 4b, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion.
+- **Needs attention** — skipped tickets and why, PRs left in review, CI gaps.
+- The final installed version.
 
-End your chat response with a tight summary: tickets processed, merged vs in-review vs skipped, the final installed version, lessons-captured count, and a one-line pointer to the report — focused on *what happened*, not *how*.
+End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, and a pointer to the report.
 
 ## Guardrails
 
 - **Never start a ticket on a dirty tree.** Stop and report instead.
-- **Never parallelize tickets in the full loop** — the `install-local` gate is the whole point. (`--light` parallelizes *because* it has no such gate; it must still use `isolation: "worktree"` and the disjoint-file check.)
+- **Never parallelize tickets in the full loop** — each ticket must run on the previous one's merged commands. (`--light` parallelizes *because* it has no such gate; it must still use `isolation: "worktree"` and the disjoint-file check.)
 - **Never force-merge red checks.** Leave the PR open and report it.
 - **Auto-merge is on by default** (per this loop's design). If the user passed `--review-merge` in `$ARGUMENTS`, pause for a thumbs-up before each `gh pr merge` instead.
-- **`/code-review` is the review gate** — re-run it once on any fix that changed real logic, then ship; a third pass becomes a follow-up issue.
+- **Never run auto in a subagent** — its review hook can't nest subagents and silently drops Codex.
+- **Two review rounds is the ceiling** (auto's hook enforces it); anything still open goes into the PR body or a follow-up issue.
 - **Light mode never silently absorbs a big change.** If a `--light` task needs a design decision, or touches derived state / lifecycle / capture, the subagent returns `escalate` and it goes through the full loop instead. A widening *file set* alone is not an escalation — one coherent root cause may legitimately span more files than you named (see [What light mode COSTS](#what-light-mode-costs--read-before-choosing-it)); report the widened set and re-check disjointness. Skipping paperwork is not skipping scrutiny.
 - **Never trust a test run in a fresh worktree until `npm ci` has run there.** Module-resolution failures masquerade as regressions.
 - **Never run `install-local` inside a worktree.** It installs a global VS Code extension and regenerates `.specify/` — it belongs to the main loop, once, at the end.

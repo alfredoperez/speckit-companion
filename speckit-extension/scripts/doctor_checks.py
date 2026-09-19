@@ -502,6 +502,46 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
     )]
 
 
+def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
+    """Did plan hand out the workers `dispatch-briefs.py` told it to?
+
+    Each dispatched worker checks in to the trace before it starts. A closed plan
+    with two or more recorded areas and no reader check-ins read the code inline,
+    and the same holds for the design docs when the size budget kept both.
+    """
+    skip = _no_record("dispatch", feature_dir, ctx)
+    if skip is not None:
+        return skip, []
+    closed = any(e.get("step") == "plan" and _is_step_level(e) and _entry_kind(e) == "complete"
+                 for e in log_entries(ctx))
+    if not closed:
+        return CheckStatus("dispatch", "skipped", "plan has not closed — nothing to judge yet"), []
+
+    import run_trace
+
+    read = run_trace.read(feature_dir)
+    labels = [f for e in (read.events if read else []) if e.get("op") == "dispatch-checkin"
+              for f in e.get("files") or []]
+    areas = [c for c in ctx.get("context") or [] if isinstance(c, str) and c.startswith("area:")]
+    expected = {
+        "readers": (min(len(areas), 4) if len(areas) >= 2 else 0, "reader:", "read the code"),
+        "design-doc writers": (0 if (ctx.get("size") or "normal") == "simple" else 2, "doc:",
+                               "wrote the design docs"),
+    }
+    findings = []
+    for what, (want, prefix, did) in expected.items():
+        got = sum(1 for label in labels if label.startswith(prefix))
+        if want and not got:
+            findings.append(Finding(
+                "dispatch", "warning",
+                f"plan {did} inline instead of dispatching {want} {what}",
+                "`dispatch-briefs.py` printed briefs for this run and no worker checked in, so the "
+                "step did the work in its own context — dispatch the printed briefs as written",
+                {"expected": want, "checked_in": 0},
+            ))
+    return CheckStatus("dispatch", "ran"), findings
+
+
 #: What the build declared this pipeline must produce, written beside the command
 #: bodies by the same build that assembled them. The doctor reads the JSON rather
 #: than importing `manifest.py`, which is a build-time script and is not packaged.

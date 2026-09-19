@@ -12,11 +12,9 @@ reads: []
 
 3. **Dispatch one worker per user-story phase that owns five or more files. If you have a subagent tool, Claude Code's `Agent`/`Task` tool or your host's equivalent, you use it there.** Setup, Foundational and Polish always stay with you: Setup is trivial, Foundational blocks every story, Polish is cross-cutting. Never fan out per *task*: the startup costs more than the task.
 
-   **Two tests decide it, in order.** First: did specify, plan and tasks already run in this same session? If they did not, the reading is not spent and every phase at or above the threshold is dispatched. Nothing you opened while orienting counts: reading `tasks.md`, `plan.md`, the spec, or a couple of source files to fix your conventions is not carrying a phase, and a phase whose files you have *partly* seen still counts as unread. Only when the whole pipeline ran in front of you is the reading genuinely spent, and then you build every phase inline and say so.
+   **Count the phase's own files line, and that alone decides it.** It holds in an auto run too: specify, plan and tasks having run in this same session is not a reason to build inline. By implement a long run's context is the scarce thing, and a worker keeps its phase's files out of it. Below five files a worker's startup is the whole cost, so build a phase under the threshold inline, in phase order, and say which phases you dispatched and which you kept.
 
-   Second, count the phase's own files line. A worker pays the same startup whatever it is handed, and below about five files that startup is the whole cost: measured across ten replays of two features, fanning out thin phases bought no correctness and no wall-clock at roughly twice the price, while a feature whose phases ran to six and eight files saved three minutes. Build a phase under the threshold inline, in phase order, and say which phases you dispatched and which you kept.
-
-   **Read each story phase's files line, `Files:` or `Files owned by this phase:`. That is its ownership.** The tasks step gave every file one owner, so the story phases are disjoint by construction and you dispatch them all together. Two phases naming the same file is a defect in the task list: say so in your summary, and run those two one after another rather than together. Give each worker its phase's task lines, that user story from `spec.md`, the plan's Structure Decision, and **its own living-spec slice**, `resolve-spec-paths.py --changed <that phase's files> --requirements-for --follow-aligns --json`, so it carries the requirements about the files it touches and none of yours. The flag adds a rule from another capability that constrains this phase without living in it: the worker is writing the guarded code and is the last one who can honour it. Then ask it to read what it needs, write the code **and that story's tests**, run **only the test files its phase owns** (the full suite runs once, at the end), and return a distilled result only: what it built, the files it touched, and any test still failing. A worker must never return file contents.
+   **Read each story phase's files line, `Files:` or `Files owned by this phase:`. That is its ownership.** The tasks step gave every file one owner, so the story phases are disjoint by construction and you dispatch them all together. Two phases naming the same file is a task-list defect: say so, and run those two one after another. Give each worker its phase's task lines, that user story from `spec.md`, the plan's Structure Decision, and **its own living-spec slice**, `resolve-spec-paths.py --changed <that phase's files> --requirements-for --follow-aligns --json`, so it carries the requirements about the files it touches and none of yours. The flag adds a rule from another capability that constrains this phase without living in it: the worker is writing the guarded code and is the last one who can honour it. Then ask it to read what it needs, write the code **and that story's tests**, run **only the test files its phase owns** (the full suite runs once, at the end), and return a distilled result only: what it built, the files it touched, and any test still failing. A worker must never return file contents.
 
    ```bash
    # the worker, per task it finishes: append only, never fold
@@ -45,23 +43,5 @@ reads: []
    - **If you genuinely cannot run them**, because no test script exists or the environment forbids it, say so explicitly in the summary and record it as a concern below. Do not describe a read-through as though it were a run.
 
    **Then read your own diff and delete what it does not need**: a helper with one caller, a branch no input reaches, a wrapper that only forwards. Then report a short summary of what was built and anything left undone.
-
-7. **Capture what was verified and decided** the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
-   ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
-     "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
-     "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
-     "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling you left in the code>", "step": "implement"}],
-     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
-     "step_summary": {"summary": "<what shipped in one line>"},
-     "last_action": "<final breadcrumb, e.g. all tasks done, 18/18 tests pass>"
-   }'
-   ```
-
-   **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. Emit one `--batch`. Include only the keys you actually have: an empty list is not the same as an absent one, and on a clean run `concerns` is genuinely absent.
-
-   Record a check that can be run with `--verify-run "<what>::<command>"`: it runs the command and keeps the exit code, rather than taking your word for it. Every suite, build, lint and script goes that way. `--verified` stays for what genuinely cannot be run — a manual pass, a judgement — and reads in the viewer as your account rather than as evidence, which is what it is. Never write a `--verified` describing a command you ran: that is the case `--verify-run` exists for, and a typed result is indistinguishable from an imagined one. If a check could not be run at all, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it.
-
-   One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
 
 **Output**: working changes per `tasks.md`, with completed tasks checked off.
