@@ -86,11 +86,14 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | tasks | `tasks-doc` | author | new file (tasks.md) — single author node, so a recipe is a no-op here in v1 |
 | tasks | `handoff` | control | new file — absorbs `timing` + `self-advance` |
 | implement | `_frame` | — | new file |
-| implement | `implement-exec` | author | new file (executes tasks.md) — single author node |
+| implement | `implement-exec` | author | new file (executes tasks.md and runs the checks) — single author node |
+| implement | `record-verified` | control | records what was verified, decided and left open, split out of `implement-exec` to keep nodes under the word limit |
 | implement | `handoff` | control | new file — absorbs `timing` + `self-advance` |
 | classify | — | — | **existing command** (`speckit.companion.classify.md`) — stays separately dispatchable; not decomposed in v1 |
 | mark-complete | — | — | **existing command** (`speckit.companion.mark-complete.md`) — stays separately dispatchable; not decomposed in v1 |
 
+
+**Nodes stay under 1,000 words.** `instruction-budget.py --strict` (run in CI) fails any node or shared part past that limit. The limit is a constant in the script, not a recorded mark, so a node that outgrows it gets split rather than the number raised. The per-command directive table it prints is a report only.
 Parts (`sizing`, `timing`, `self-advance`, `routing`) stay in `presets/_parts/` and are absorbed as inner fences inside the node bodies that already carried them.
 
 ## The stock carrier — what's single-sourced, what isn't

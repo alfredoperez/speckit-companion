@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+- **An auto run now hands work to parallel workers.** Implement used to build every story inline whenever the whole pipeline ran in one session, which is every auto run. It now sends each story with five or more files to its own worker, the same as a step run on its own. Plan no longer decides for itself whether to send workers: a script prints one reader brief per code area and one writer brief per design document, and plan sends them as printed. Each worker checks in, and the doctor warns when a finished plan had briefs and nobody checked in.
+- **Implement's closing record is its own step.** Recording what was verified, decided and left open now runs as a separate node after the work and its checks. Hooks attached after the work still run after the checks, as before.
+
 ### Fixed
 - **The doctor no longer blames a run for an older failure.** A failed capture call from before a run's window used to be reported as a problem for that run. It is now a note saying failures from other runs sit in the shared log.
 - **The doctor finds a spec file named after the feature.** A step that declares it writes `<short-name>.spec.md` was reported as closing without it, because the check looked for that literal file name. It now matches the file the run actually named.

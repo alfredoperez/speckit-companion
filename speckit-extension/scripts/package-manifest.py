@@ -60,6 +60,8 @@ RUNTIME_SCRIPTS = frozenset({
     "relocate-capability.py",
     "drift.py",
     "check-coverage.py",
+    # Prints the briefs plan dispatches and records each worker's check-in.
+    "dispatch-briefs.py",
     # Run tracing + the doctor. `run_trace` is reached from inside write-context
     # and drift rather than from a command body, so it ships with them.
     "run_trace.py",

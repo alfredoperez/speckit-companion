@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IMPLEMENT = ROOT / "commands" / "speckit.companion.implement.md"
-NODE = ROOT / "nodes" / "implement" / "implement-exec.md"
+NODE = ROOT / "nodes" / "implement" / "record-verified.md"
 
 
 class ImplementRunsItsChecks(unittest.TestCase):

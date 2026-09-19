@@ -50,6 +50,14 @@ class CountsWhatItClaimsTo(unittest.TestCase):
         self.assertGreater(row["own"], 0)
 
 
+class NodesStayUnderTheWordLimit(unittest.TestCase):
+    def test_every_node_and_shared_part_is_under_the_limit(self):
+        self.assertEqual(budget.oversized_nodes(), [])
+
+    def test_the_limit_catches_a_node_that_outgrows_it(self):
+        self.assertTrue(budget.oversized_nodes(limit=100))
+
+
 class TheFencePatternIsNotCopied(unittest.TestCase):
     def test_the_counter_reads_the_same_fence_the_assembler_writes(self):
         import _command_parts

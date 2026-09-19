@@ -194,7 +194,7 @@ Beyond the lifecycle timeline, the Companion command bodies capture the run's **
 | living-specs load (`load-living-specs`) | specify | `record-living-specs.py` writes `livingSpecs.loaded` **and** the `last_action` breadcrumb itself — one of `living specs loaded (…)` / `… — no capabilities matched` / `… — skipped (not configured)` — so the gate is a script outcome, not an AI judgment (#535). The assistant only *reads* the recorded specs afterward. |
 | plan complete (`side-files`) | plan | `--set approach=…` + `--decision` per Phase-0 choice + `--step-summary` |
 | tasks complete (`tasks-doc`) | tasks | `--coverage-req <FR> --title "<requirement text>" --tasks <csv>` per requirement + `--step-summary` |
-| implement close (`implement-exec`) | implement | `--verified` per check (incl. dismissed warnings) + `--decision` + `--concern` (only on real friction) + `--coverage-req <FR> --tests <csv>` + `--step-summary` + `--set last_action=…` |
+| implement close (`record-verified`) | implement | `--verified` per check (incl. dismissed warnings) + `--decision` + `--concern` (only on real friction) + `--coverage-req <FR> --tests <csv>` + `--step-summary` + `--set last_action=…` |
 
 Value syntax is **JSON-or-plain-text**: a JSON object carrying the field's identity key (`decision`/`what`/`note`/`summary`) is stored as-is; anything else wraps as `{<identity>: <text>}` so a weak emitter still captures the signal. De-dup keys on the identity value, first-seen wins. `--classification` is the one caller-validated flag (exit 2 on bad JSON / missing verdict); everything else follows the best-effort rule.
 

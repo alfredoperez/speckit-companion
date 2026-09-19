@@ -46,6 +46,7 @@ OPS = (
     "mark-complete",
     "fold-living-spec",
     "drift-compute",
+    "dispatch-checkin",
     "unknown",
 )
 

@@ -36,11 +36,11 @@ class TheShippedBodyCarriesTheThreshold(unittest.TestCase):
                       "A thin phase is still dispatched"):
             self.assertNotIn(claim, text, f"the overturned claim is back: {claim!r}")
 
-    def test_the_session_test_survives_alongside_it(self):
-        # Size is the second gate, not a replacement. A run that did not watch the pipeline
-        # has not spent the reading, whatever the phase sizes are.
+    def test_an_auto_run_is_not_a_reason_to_build_inline(self):
+        # Auto runs the whole pipeline in one session; that used to switch the fan-out off.
         text = BODY.read_text(encoding="utf-8")
-        self.assertIn("in this same session", text)
+        self.assertIn("that alone decides it", text)
+        self.assertIn("It holds in an auto run too", text)
 
     def test_setup_foundational_and_polish_are_still_never_dispatched(self):
         text = BODY.read_text(encoding="utf-8")

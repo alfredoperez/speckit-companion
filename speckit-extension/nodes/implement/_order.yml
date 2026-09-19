@@ -2,6 +2,7 @@
 # nodes: [...] replaces this list.
 order:
   - implement-exec
+  - record-verified
   - complete
   - handoff
 
@@ -12,7 +13,7 @@ order:
 
 phases:
   - name: execute
-    nodes: [implement-exec]
+    nodes: [implement-exec, record-verified]
   - name: wrap-up
     nodes: [complete, handoff]
 

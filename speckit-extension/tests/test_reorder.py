@@ -123,10 +123,11 @@ class ALockMeansHeldByADependency(unittest.TestCase):
         # last because it dispatches the next step. `finalize` joins them for
         # the same reason: with the handoff pinned, the one slot it could
         # otherwise have taken was after it — recording the spec complete once
-        # the next step had already been told to start.
+        # the next step had already been told to start. `implement-exec` is held
+        # first because `record-verified` records what it ran.
         self.assertEqual(
             sorted(locked),
-            ["finalize"] + ["handoff"] * 5 + ["plan-doc", "resolve-dir"])
+            ["finalize"] + ["handoff"] * 5 + ["implement-exec", "plan-doc", "resolve-dir"])
 
 
 class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
