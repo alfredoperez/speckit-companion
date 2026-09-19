@@ -167,7 +167,7 @@ describe('normalizeSpecContext — task_summaries coercion', () => {
     it('regression: legacy-string-concerns fixture is fully coerced after normalization', () => {
         const fixturePath = path.join(
             __dirname,
-            '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json',
+            '../../../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json',
         );
         const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf-8')) as Record<string, unknown>;
 

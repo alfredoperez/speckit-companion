@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { MarkdownDoc } from './storyDoc';
-import plan060 from '../../../../specs/060-spec-context-tracking/plan.md?raw';
+import plan060 from '../../../../../../specs/060-spec-context-tracking/plan.md?raw';
 
 /** The viewer's **Plan** page — a whole real plan.md, Technical Context grid and
  * Constitution Check rows included. */

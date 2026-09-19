@@ -459,7 +459,7 @@ describe('bundled writer path in stock preambles (#408)', () => {
     it('references the quoted bundled writer, never the bare workspace path (spaces in install dir survive)', () => {
         mockExtensionPath('/Users/dev/.vscode/extensions/alfredoperez.speckit-companion-1.0.0');
         const out = buildPrompt({ command: '/speckit.plan specs/001-demo', step: 'plan', specDir: 'specs/001-demo' });
-        expect(out).toContain('python3 "/Users/dev/.vscode/extensions/alfredoperez.speckit-companion-1.0.0/speckit-extension/scripts/write-context.py"');
+        expect(out).toContain('python3 "/Users/dev/.vscode/extensions/alfredoperez.speckit-companion-1.0.0/apps/speckit-extension/scripts/write-context.py"');
         expect(out).not.toContain('python3 .specify/extensions/companion/scripts/write-context.py');
     });
 

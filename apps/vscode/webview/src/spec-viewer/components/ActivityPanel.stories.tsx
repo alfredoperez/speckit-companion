@@ -15,7 +15,7 @@ import { ActivityPanel } from './ActivityPanel';
 import { ActivityErrorBoundary } from './ActivityErrorBoundary';
 import { viewerState, navState } from '../signals';
 import type { ViewerState, TaskSummary, Transition, NavState } from '../types';
-import legacyFixture from '../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
+import legacyFixture from '../../../../../../specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json';
 
 const meta: Meta<typeof ActivityPanel> = {
     title: 'VS Code Extension/Spec Viewer/Overview/Activity panel',
