@@ -6,19 +6,6 @@ The guards on destructive and deferred actions, and the teardown rules for inlin
 
 ## Requirements
 
-### Destructive and automatic actions are reversible before they commit
-<!-- touches: webview/src/shared/hooks/useInlineConfirm.ts, webview/src/shared/components/UndoToast.tsx -->
-
-An inline-confirmed action fires only on a second click inside its confirmation window, and fires once.
-
-#### Scenario: the confirmation window lapses
-- **WHEN** a user arms a destructive action and does nothing for the window
-- **THEN** the action disarms without firing
-
-#### Scenario: the user confirms
-- **WHEN** they click again inside the window
-- **THEN** the action fires exactly once
-
 ### Undo during the countdown cancels the deferred action
 <!-- touches: webview/src/shared/components/UndoToast.tsx -->
 
@@ -33,7 +20,7 @@ Escape also undoes, except where the page already binds Escape, so cancelling an
 - **THEN** the deferred effect runs exactly once
 
 ### A guarded action never fires after its surface unmounts
-<!-- touches: webview/src/shared/hooks/useInlineConfirm.ts, webview/src/shared/components/UndoToast.tsx -->
+<!-- touches: webview/src/shared/components/UndoToast.tsx -->
 
 #### Scenario: the surface disappears mid-window
 - **WHEN** the component unmounts while a confirmation or countdown is pending
