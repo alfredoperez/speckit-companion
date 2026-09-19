@@ -1,6 +1,6 @@
 # Living Specs
 
-The full reference for living specs: the registry, the resolver, auto-loading, folding, adoption, drift, sync, and the coverage/architecture tiers. For the one-page summary and the command table, see the [extension README](../README.md#living-specs-durable-capability-docs-opt-in).
+The full reference for living specs: the registry, the resolver, auto-loading, folding, adoption, drift, sync, and the rules/coverage tiers. For the one-page summary and the command table, see the [extension README](../README.md#living-specs-durable-capability-docs-opt-in).
 
 Most specs describe one change and then go quiet. **Living specs** are the opposite: a durable spec per *capability* (checkout, auth, billing, todos) that stays current as the code evolves. You declare which files belong to each capability and where its spec lives, and a resolver answers "which capabilities does this change touch?" so the right specs can be kept in sync.
 
@@ -24,7 +24,7 @@ capabilities:
     exclude: ["src/checkout/**/*.test.ts"]   # optional, subtracted from membership
   - name: checkout-cart
     match: ["src/checkout/cart/**"]
-    # spec defaults to capabilities/checkout-cart/spec.md
+    # spec defaults to capabilities/checkout-cart/checkout-cart.spec.md
   - name: billing
     match: ["src/billing/**"]
     spec: src/billing/billing.spec.md  # colocated, lives next to the code
@@ -32,7 +32,7 @@ capabilities:
 
 `living-specs.yml` sits at the project root on purpose: it is yours, it belongs in version control alongside the specs it registers, and keeping it out of `.specify/` means the routine cleanup that re-creates that folder can never wipe your registrations. If your project still keeps capabilities in the older `.specify/companion.yml`, they keep working as they are, and the next time you register or move a capability they are carried across for you.
 
-Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, an optional `retire`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<capability>/<name>.spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.arch.md` / `.coverage.md` siblings are recognized and never flagged as stray.
+Each capability has a `name`, the `match` globs that define which files belong to it, an optional `exclude`, an optional `retire`, and where its living spec lives. By default a capability's spec is **centralized** at `capabilities/<capability>/<name>.spec.md`; give an explicit `spec` path to **colocate** it next to the code. A spec file uses the `.spec.md` extension (the hot tier loaded today); the reserved `.rules.md` / `.coverage.md` siblings (and a legacy `.arch.md`) are recognized and never flagged as stray.
 
 ## The resolver
 
@@ -58,7 +58,7 @@ python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed sr
 
 **Both layouts are scanned.** A colocated spec (`src/billing/billing.spec.md`) and a central one (`capabilities/billing/checkout.spec.md`) are equally visible to discovery, so an unregistered central spec shows up as an orphan instead of quietly belonging to nothing. This matters most during adoption: a capability whose match globs span several directories has no single folder to colocate into, so it gets a central spec by necessity.
 
-An orphan is a spec that no capability claims **and** that does not live inside a configured capability's spec directory, so another file under `capabilities/checkout/` (or a reserved `.arch.md` / `.coverage.md` sibling) is never flagged as stray.
+An orphan is a spec that no capability claims **and** that does not live inside a configured capability's spec directory, so another file under `capabilities/checkout/` (or a reserved `.rules.md` / `.coverage.md` sibling, or a legacy `.arch.md`) is never flagged as stray.
 
 **Nested projects are off limits.** Any directory below the root that has its own `living-specs.yml` (or a legacy `.specify/companion.yml`) is a separate project, and the scan stops at it, the way a search tool stops at a nested ignore file. Sample apps, fixtures, and sandboxes living inside your repo answer for their own living specs; they never show up in the parent's orphan list and are never promoted into the parent's capabilities. That holds whatever the nested config says, including one that turns living specs off, so opting a sandbox out really does mean nothing happens to it. Installed dependencies under `node_modules` are skipped on the same grounds: a spec shipped inside a package you depend on belongs to that package, not to you.
 
@@ -242,11 +242,11 @@ It groups your current changes (uncommitted edits, deletions, and untracked file
 
 It ends with a report of what was synced and what was skipped (with reasons: a capability whose spec was never committed has no baseline and belongs to `/speckit.companion.living-adopt`), and it deliberately does **not** commit: the spec edits sit in your working tree so they can be reviewed and committed together with the code that caused them. Like the rest of the family, it never fails your run.
 
-## Coverage and architecture tiers
+## Rules and coverage tiers
 
-A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<capability>/<name>.spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name: an **architecture** file (`spec.arch.md` / `<base>.arch.md`, structure and the decisions behind the area's shape) and a **coverage** file (`spec.coverage.md` / `<base>.coverage.md`, a requirement-to-tests map). Both are recognized but otherwise reserved until you use them; nothing forces you to write either.
+A living spec is more than its requirements. Next to a capability's requirements file (centralized `capabilities/<capability>/<name>.spec.md`, or a colocated `<base>.spec.md`) you can keep two colder siblings sharing that base name: a **rules** file (`<base>.rules.md`, the capability's conventions as plain bullets) and a **coverage** file (`<base>.coverage.md`, a requirement-to-tests map). An older `<base>.arch.md` is still read as the rules file, so a project written before the rename keeps working. `/speckit.companion.living-adopt` writes a rules file for a layer it drafts.
 
-**Architecture loads lazily, only when the change warrants it.** When you plan a change, Companion already reads the requirements of the capabilities it touches. For an architecture-significant change (a `normal` or `oversized` plan, not a small fast-path one) it *also* pulls those capabilities' `.arch.md` files into context, so the plan is briefed on how the area is built. A small change never drags in the cold architecture tier. The resolver derives the tier paths, so you never hardcode a filename, and a capability with no `.arch.md` is simply skipped.
+**Nothing in the pipeline loads the rules file on its own.** Planning reads the requirements of the capabilities a change touches, through the resolver, and stops there. The rules file is for people and assistants who open it, and `living-move` carries it with the spec. The resolver derives the tier paths, so you never hardcode a filename.
 
 **Coverage tells you which requirements have a test.** `/speckit.companion.living-coverage` reads a capability's requirements and its `.coverage.md` map and reports, per requirement, whether a test is mapped:
 

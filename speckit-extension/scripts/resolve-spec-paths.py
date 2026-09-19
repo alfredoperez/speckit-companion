@@ -18,7 +18,7 @@ drift) call instead of re-interpreting the project's capability registry
                  there and never reports or promotes anything inside it.
   - ordering:    most-specific first (longest matching glob literal-prefix that
                  prefixes the file), tiebreak by capability name.
-  - tiers:       `.spec.md` (hot, loaded in v1); `.arch.md` / `.coverage.md`
+  - tiers:       `.spec.md` (hot, loaded in v1); `.rules.md` / `.coverage.md`
                  reserved siblings, never flagged as orphans.
   - orphans:     a spec of either layout in the tree not claimed by any capability.
 
@@ -333,7 +333,7 @@ def tier_paths(spec: str, root: str | None = None) -> dict:
     spec = _posix(spec)
     # `<base>.spec.md` -> `<base>` (colocated `billing.spec.md` -> `billing`);
     # a plain `spec.md` (centralized `capabilities/x/spec.md`) keeps `spec` as
-    # the base, so its siblings are `spec.arch.md` / `spec.coverage.md`.
+    # the base, so its siblings are `spec.rules.md` / `spec.coverage.md`.
     if spec.endswith(".spec.md"):
         base = spec[: -len(".spec.md")]
     elif spec.endswith(".md"):
@@ -483,7 +483,7 @@ def find_orphans(living: dict, root: str) -> list[str]:
     """A spec in this project — either layout — not claimed by, and not owned by, a capability.
 
     A spec is NOT an orphan when it is: the exact claimed `spec` path of a
-    capability; a reserved-tier sibling (`.arch.md` / `.coverage.md`); or any
+    capability; a reserved-tier sibling (`.rules.md` / `.coverage.md`, or a legacy `.arch.md`); or any
     spec living inside a configured capability's resolved spec directory
     (e.g. another file under `capabilities/checkout/`). A genuinely-unclaimed,
     differently-named spec elsewhere stays an orphan. `specs/` (feature specs)

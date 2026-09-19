@@ -1,0 +1,211 @@
+{
+  "workflow": "companion",
+  "specName": "The living-specs docs match the shipped files",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:09:26.984Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:10:21.971Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:10:22.185Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:10:33.519Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T14:10:33.849Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:10:33.928Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T14:10:34.008Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:10:34.087Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-09-19T14:10:34.165Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-09-19T14:10:41.307Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:11:21.361Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:11:48.386Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:11:48.406Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-09-19T14:12:13.934Z"
+    }
+  ],
+  "unattended": true,
+  "telemetryInstanceId": "79a5de05-8316-4eff-8251-4cf7fd44d3e2",
+  "last_action": "review fixes applied; jest, extension pytest and website build pass",
+  "coverage": {
+    "FR-001": {
+      "title": "The guide lists every shipped living-* command",
+      "tests": [
+        "website build (manual table check: 7 of 7 commands)"
+      ]
+    },
+    "FR-002": {
+      "title": "Every derived path in the docs matches the resolver",
+      "tests": [
+        "checked against resolve-spec-paths.py and companion_config._settle_default_specs"
+      ]
+    },
+    "FR-003": {
+      "title": "The rules file is described as it is now"
+    },
+    "FR-004": {
+      "title": "The docs say a delta goes in the feature spec file"
+    },
+    "FR-005": {
+      "tests": [
+        "src/features/specs/__tests__/livingSpecsModel.test.ts::resolves a centralized capability to capabilities/<name>/<name>.spec.md",
+        "still finds a centralized spec written before the rename"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 2,
+    "projectedTasks": 2,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "The manual screenshot walk from the runbook"
+  ],
+  "context": [
+    "area: website/src/content/docs/docs/guides/living-specs.mdx (site guide)",
+    "area: speckit-extension/docs/living-specs.md (extension doc)",
+    "constraint: every path matches resolve-spec-paths.py"
+  ],
+  "intent": "The living-specs docs name every shipped command and the paths the resolver really derives",
+  "approach": "Correct the site guide and the extension doc against the resolver and the command list",
+  "currentTask": "T002",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Site guide: 7 commands, central path, rules and coverage siblings, delta location",
+      "files": [
+        "website/src/content/docs/docs/guides/living-specs.mdx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Extension doc: default central path, rules tier in place of architecture, legacy .arch.md noted; config docstring corrected",
+      "files": [
+        "speckit-extension/docs/living-specs.md",
+        "speckit-extension/scripts/companion_config.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "website build",
+      "command": "npm --prefix website exec astro build",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.7,
+      "result": "09:12:09 [build] Building static entrypoints... · 09:12:09 [ERROR] [vite] ✗ Build failed in 16ms · [UNRESOLVED_ENTRY] Cannot resolve entry module astro/entrypoints/prerender.",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "extension config tests",
+      "command": "python3 -m pytest -q speckit-extension/tests -k config",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.4,
+      "result": "........................................................................ [ 79%] · ......................................                                   [100%] · 182 passed, 1293 deselected in 2.96s"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Fix the extension doc alongside the site guide",
+      "why": "it carried the same stale central path and architecture-file description",
+      "rejected": "fixing only the site page the runbook named"
+    },
+    {
+      "decision": "Fix the sidebar default path in this PR",
+      "why": "the docs were right against the scripts but the VS Code sidebar still used the pre-rename central path, the same defect",
+      "rejected": "a separate issue"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "The living-specs guide and extension doc now list every command and the real derived paths"
+    }
+  }
+}
