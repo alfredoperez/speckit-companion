@@ -155,10 +155,6 @@ A fold that would leave a capability's spec with no requirements SHALL be refuse
 - **WHEN** the guard counts
 - **THEN** it refuses nothing, because it cannot trust a count that hides everything under the fence
 
-## Uncovered
-
-- The Python test suite under `speckit-extension/tests/` was not read.
-
 ### A requirement removed on purpose is not reported as a missing heading
 
 Validation SHALL read the `requirement-removed` records beside each living spec, scoped to that capability, and SHALL NOT raise `delta-heading-not-found` for a heading so recorded. A record naming another capability in a shared file SHALL NOT suppress the finding.
@@ -170,3 +166,7 @@ Validation SHALL read the `requirement-removed` records beside each living spec,
 #### Scenario: the record names another capability
 - **WHEN** validation runs
 - **THEN** `delta-heading-not-found` is still reported
+
+## Uncovered
+
+- The Python test suite under `speckit-extension/tests/` was not read.

@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Implement's closing record is its own step.** Recording what was verified, decided and left open now runs as a separate node after the work and its checks. Hooks attached after the work still run after the checks, as before.
 
 ### Fixed
+- **A folded requirement lands under Requirements.** When a feature added a requirement to a living spec that ends with another section, such as Uncovered, the fold put it after that section, where the requirement tools do not read it. It now goes at the end of the Requirements section.
 - **The doctor no longer blames a run for an older failure.** A failed capture call from before a run's window used to be reported as a problem for that run. It is now a note saying failures from other runs sit in the shared log.
 - **The doctor finds a spec file named after the feature.** A step that declares it writes `<short-name>.spec.md` was reported as closing without it, because the check looked for that literal file name. It now matches the file the run actually named.
 
