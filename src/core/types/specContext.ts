@@ -67,6 +67,12 @@ export function isInFlightStatus(status?: string | null): boolean {
     return owning !== undefined && !owning.settled;
 }
 
+/** Whether a status is a recognized, settled (non-in-flight) status. False for `draft` and for anything unrecognized. */
+export function isSettledStatus(status?: string | null): boolean {
+    if (!status || status === 'draft') return false;
+    return STATUSES.includes(status as Status) && !isInFlightStatus(status);
+}
+
 /**
  * The status a step owns while it runs and once it has finished — the single
  * home for that pairing on the TypeScript side. Mirrored by

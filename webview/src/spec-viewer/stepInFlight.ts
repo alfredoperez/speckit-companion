@@ -1,17 +1,8 @@
+import { STATUS_OWNING_STEP, isInFlightStatus, isSettledStatus, type Status } from '../../../src/core/types/specContext';
+
 export const IMPLEMENT_STEP = 'implement';
 
-// A Map, not an object: `status` is user-authored data, and an object lookup
-// would resolve `constructor`/`toString` off the prototype.
-const STATUS_TO_INFLIGHT_STEP = new Map<string, string>([
-    ['specifying', 'specify'],
-    ['planning', 'plan'],
-    ['tasking', 'tasks'],
-    ['implementing', IMPLEMENT_STEP],
-]);
-
-const SETTLED_STATUSES = new Set([
-    'specified', 'planned', 'ready-to-implement', 'implemented', 'completed', 'archived',
-]);
+export { isSettledStatus };
 
 export interface StepRunState {
     status?: string | null;
@@ -24,11 +15,7 @@ export interface StepRunState {
 
 /** The step a spec-level `status` says is running, or undefined when it names none. */
 export function inFlightStepFor(status?: string | null): string | undefined {
-    return status ? STATUS_TO_INFLIGHT_STEP.get(status) : undefined;
-}
-
-export function isSettledStatus(status?: string | null): boolean {
-    return status ? SETTLED_STATUSES.has(status) : false;
+    return status && isInFlightStatus(status) ? STATUS_OWNING_STEP.get(status as Status)!.step : undefined;
 }
 
 /** The single derivation of "is this step in flight" — every surface reads this one answer. */
