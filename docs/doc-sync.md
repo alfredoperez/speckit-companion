@@ -57,7 +57,9 @@ The root README's H1 has two alternates on file, either of which can swap in for
 
 ## Doc size ceiling
 
-A doc under `docs/` stays under 3,000 words. That's where the repo's healthy docs top out (`architecture.md`, `configuration.md`, `viewer.md`) and where the ones that need work start (`pipeline-builder.md`, `template-profiles.md`, and worse). Past the ceiling, split it: pull a self-contained topic into its own doc and link it from the original, or, if part of the doc describes behavior that's finished and superseded, archive that part the way `CHANGELOG.md` archives old releases into `docs/changelog-archive.md`. Check with `wc -w docs/*.md`.
+A doc under `docs/` stays under 3,000 words. That's where the repo's healthy docs top out (`architecture.md`, `configuration.md`, `viewer.md`) and where the ones that need work start (`pipeline-builder.md`, `template-profiles.md`, and worse). Past the ceiling, split it: pull a self-contained topic into its own doc and link it from the original, or, if part of the doc describes behavior that's finished and superseded, archive that part the way `CHANGELOG.md` archives old releases into `docs/changelog-archive.md`.  Check with `wc -w docs/*.md`.
+
+**Split along what the reader came for, not by length.** A doc over the ceiling is almost always four docs stapled together: a lesson someone follows once, a recipe for a specific job, a reference to look things up in, and an explanation of why it works that way. Those four want different shapes and different readers, which is why the long ones read as heavy no matter how well each paragraph is written. Cut at those seams. `capture-and-timing.md` at 10,511 words is the clearest case: the schema is reference, the dated "fixed in #NNN" passages are explanation that mostly belongs in history, and the writer-script rules are a recipe. Splitting it by word count would just make two heavy docs.
 
 ## Changelog voice
 
