@@ -1,5 +1,5 @@
 enabled: true
-exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts"]
+exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts", "apps/vscode/src/core/types/config.ts"]
 capabilities:
   - name: spec-editor
     match: ["apps/vscode/src/features/spec-editor/**"]
@@ -171,6 +171,27 @@ capabilities:
   - name: viewer-ui-chrome
     match: ["apps/vscode/webview/src/spec-viewer/**"]
     spec: apps/vscode/webview/src/spec-viewer/viewer-ui-chrome.spec.md
+  - name: file-watchers
+    match: ["apps/vscode/src/features/fileWatchers.ts"]
+    spec: capabilities/extension-services/file-watchers.spec.md
+  - name: protocol-contracts
+    match: ["apps/vscode/src/protocol/**"]
+    spec: apps/vscode/src/protocol/protocol-contracts.spec.md
+  - name: pipeline-builder-panel
+    match: ["apps/vscode/src/features/pipeline-builder/**"]
+    spec: capabilities/pipeline-builder/panel.spec.md
+  - name: pipeline-builder-board
+    match: ["apps/vscode/webview/src/pipeline-builder/**"]
+    spec: capabilities/pipeline-builder/board.spec.md
+  - name: pipeline-builder-editing
+    match: ["apps/vscode/webview/src/pipeline-builder/**"]
+    spec: capabilities/pipeline-builder/editing.spec.md
+  - name: media-pipeline
+    match: ["tooling/scripts/**", "content/media/**"]
+    spec: capabilities/media-pipeline/asset-build.spec.md
+  - name: capture-runtime-quality-checks
+    match: ["apps/speckit-extension/scripts/check_capture.py", "apps/speckit-extension/scripts/check_living_spec.py", "apps/speckit-extension/scripts/check_quality.py", "apps/speckit-extension/scripts/dispatch-briefs.py"]
+    spec: apps/speckit-extension/scripts/capture-runtime-quality-checks.spec.md
 
 # House rules, written once here instead of retyped into chat on every run.
 # `spec` reaches the specify step, `plan` reaches the plan step, and neither
