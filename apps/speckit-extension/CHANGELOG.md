@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Changed
+- **Living specs stay short on purpose.** Adopting a code area now tests each requirement with one question, would someone planning a change here need this, and lists what it left out as *found, not proposed* so you can pull any of it back. At the end of a run, a new file no spec claims no longer forces a new capability: supporting code gets no requirement, and only something a person can now do gets one.
 - **Living-spec validation and coverage checks run in about a tenth of the time.**
 - **Living-spec changes are reviewed before they land.** A living spec is context every later run loads, so what folds into it is now read by someone other than its author. Before the fold, implement hands the new and changed requirements to one reviewer with a short rubric: every requirement names behaviour someone relies on, one rule per requirement, a heading someone could check, behaviour rather than how it is built, and no filler. The reviewer edits them in place, and the doctor warns when a run folded without it.
 - **`living-validate` flags requirements that are hard to hold.** It now warns when one requirement bundles more than four rules, when it takes more than 120 words to state its rule, and when a spec drafted from the code still carries its draft banner. A spec is now too large by its length alone, past 160 lines: it no longer warns past eight requirements, since splitting bundled rules raises the count without making the spec harder to read.

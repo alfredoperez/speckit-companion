@@ -48,6 +48,8 @@ If no conventions doc and no enforcement config names a constraint, ask once, be
 
 **If a proposed capability's spec would have no requirement a person outside the team could read, it is not a capability.**
 
+**Test every requirement you are about to propose with one question: would someone planning a change here need this?** What fails the test stays out of the draft. List it at the gate as *found, not proposed*, one line each, so the developer can pull any of it back in. A short spec the team reads beats a full one nobody does.
+
 **Propose the layer as one capability of its own**, named for the layer, carrying the whole layer glob and the conventions you transcribed. This is the one that gets an `.rules.md`. Every behaviour capability beside it shares the same coarse membership, so a file is claimed by both and the narrowing happens at the requirement.
 
 Bring the whole list to the developer before writing anything: each capability's name, one line on what it covers, the directories it draws from, and roughly how many requirements you expect. Offer a coarser and a finer cut with the count each would give. **The shape is theirs to decide.**
