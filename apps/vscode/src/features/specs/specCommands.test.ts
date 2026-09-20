@@ -50,8 +50,9 @@ jest.mock('./selectionContextKeys', () => ({
     updateSelectionContextKeys: jest.fn(),
 }));
 
-jest.mock('./specContextManager', () => ({
-    readSpecContextSync: jest.fn(),
+jest.mock('./specContextReader', () => ({
+    ...jest.requireActual('./specContextReader'),
+    readSpecContextSyncSafe: jest.fn(),
 }));
 
 jest.mock('../settings/companionPresetReconciler', () => ({
@@ -69,7 +70,7 @@ jest.mock('../../speckit/detector', () => ({
 
 import { setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
-import { readSpecContextSync } from './specContextManager';
+import { readSpecContextSyncSafe } from './specContextReader';
 
 const mockCommands = vscode.commands as jest.Mocked<typeof vscode.commands>;
 
@@ -296,9 +297,9 @@ describe('bulk status command handlers', () => {
         const handler = handlers.get('speckit.reactivate')!;
 
         // Reactivate skips already-active targets via the no-op filter; stub
-        // readSpecContextSync so each target reads as completed and passes the
+        // readSpecContextSyncSafe so each target reads as completed and passes the
         // filter.
-        (readSpecContextSync as jest.Mock)
+        (readSpecContextSyncSafe as jest.Mock)
             .mockReturnValueOnce({ status: 'completed' })
             .mockReturnValueOnce({ status: 'completed' })
             .mockReturnValueOnce({ status: 'completed' });
@@ -319,7 +320,7 @@ describe('bulk status command handlers', () => {
         const handlers = captureCommandHandlers(context);
         const handler = handlers.get('speckit.markCompleted')!;
 
-        (readSpecContextSync as jest.Mock).mockReturnValueOnce({ status: 'completed' });
+        (readSpecContextSyncSafe as jest.Mock).mockReturnValueOnce({ status: 'completed' });
 
         await handler(makeItem('done', 'spec-completed'), undefined);
 
@@ -333,7 +334,7 @@ describe('bulk status command handlers', () => {
         const handlers = captureCommandHandlers(context);
         const handler = handlers.get('speckit.reactivate')!;
 
-        (readSpecContextSync as jest.Mock)
+        (readSpecContextSyncSafe as jest.Mock)
             .mockReturnValueOnce({ status: 'active' })
             .mockReturnValueOnce({ status: 'completed' });
 
@@ -362,7 +363,7 @@ describe('bulk status command handlers', () => {
 
         // archive's skipIf only drops already-archived targets; our four
         // lifecycle items include one archived (skipped) and three eligible.
-        (readSpecContextSync as jest.Mock)
+        (readSpecContextSyncSafe as jest.Mock)
             .mockReturnValueOnce({ status: 'active' })
             .mockReturnValueOnce({ status: 'tasks-done' })
             .mockReturnValueOnce({ status: 'completed' })

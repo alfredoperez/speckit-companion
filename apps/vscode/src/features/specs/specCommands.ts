@@ -17,7 +17,8 @@ import {
     WorkflowStep,
     WorkflowConfig,
 } from '../workflows';
-import { updateStepProgress, readSpecContextSync } from './specContextManager';
+import { updateStepProgress } from './stepProgress';
+import { readSpecContextSyncSafe } from './specContextReader';
 import { resolveDispatchForRoot } from './profileDispatch';
 import { dispatchStep } from './dispatchStep';
 import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
@@ -404,7 +405,7 @@ export function registerSpecKitCommands(
         skipIf?: (status: string | undefined) => boolean
     ): Promise<number> {
         const filtered = skipIf
-            ? specDirs.filter(d => !skipIf(readSpecContextSync(d)?.status))
+            ? specDirs.filter(d => !skipIf(readSpecContextSyncSafe(d)?.status))
             : specDirs;
         if (filtered.length === 0) return 0;
         await Promise.all(filtered.map(d => apply(d)));
@@ -428,7 +429,7 @@ export function registerSpecKitCommands(
         if (groupSpecs.length === 0) return;
         const wsPath = workspaceFolder.uri.fsPath;
         const specDirs = groupSpecs.map(s => path.join(wsPath, s.path));
-        const eligible = specDirs.filter(d => !skipIf(readSpecContextSync(d)?.status));
+        const eligible = specDirs.filter(d => !skipIf(readSpecContextSyncSafe(d)?.status));
         if (eligible.length === 0) return;
         const confirm = await vscode.window.showWarningMessage(
             `${actionLabel} all ${eligible.length} ${groupLabel} specs?`,

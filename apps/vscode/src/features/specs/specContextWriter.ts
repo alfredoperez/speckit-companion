@@ -33,13 +33,19 @@ import { hasStepStart } from './historyHelpers';
  * touching it; a working holder is waited for however long it works. Protocol
  * and rationale: `docs/capture-and-timing.md`.
  */
-const LOCK_POLL_MS = 10;
-/** A holder touches its lock this often, so "old" means abandoned, not busy. */
-const LOCK_REFRESH_MS = 5_000;
-/** Untouched for this long: nobody is coming back for it. */
-const LOCK_ABANDONED_MS = 30_000;
-/** The last bound. Only a holder that keeps touching a lock it never releases reaches it. */
-const LOCK_MAX_WAIT_MS = 60_000;
+/**
+ * Mutable so tests can shrink the wait without a real clock — e.g. shrinking
+ * `abandonedMs` in a `beforeAll` to exercise reclaim without a 30s sleep.
+ */
+export const lockTiming = {
+    pollMs: 10,
+    /** A holder touches its lock this often, so "old" means abandoned, not busy. */
+    refreshMs: 5_000,
+    /** Untouched for this long: nobody is coming back for it. */
+    abandonedMs: 30_000,
+    /** The last bound. Only a holder that keeps touching a lock it never releases reaches it. */
+    maxWaitMs: 5_000,
+};
 
 let warnedLockUnavailable = false;
 
@@ -205,7 +211,7 @@ async function reclaimLock(lock: string, owner: string | null): Promise<void> {
 async function lockIsAbandoned(lock: string): Promise<boolean> {
     try {
         const { mtimeMs } = await fs.promises.stat(lock);
-        return Date.now() - mtimeMs >= LOCK_ABANDONED_MS;
+        return Date.now() - mtimeMs >= lockTiming.abandonedMs;
     } catch {
         return false;
     }
@@ -229,7 +235,7 @@ function startLockRefresh(lock: string, token: string): void {
             const now = new Date();
             await fs.promises.utimes(lock, now, now).catch(() => stopLockRefresh(lock));
         })();
-    }, LOCK_REFRESH_MS);
+    }, lockTiming.refreshMs);
     timer.unref?.();
     refreshTimers.set(lock, timer);
 }
@@ -249,7 +255,7 @@ async function acquireContextLock(target: string): Promise<string | null> {
         return null;
     }
     const token = `${process.pid}:${pidScope()}:${crypto.randomBytes(8).toString('hex')}`;
-    const giveUpAt = Date.now() + LOCK_MAX_WAIT_MS;
+    const giveUpAt = Date.now() + lockTiming.maxWaitMs;
     for (;;) {
         try {
             await fs.promises.writeFile(lock, token, { flag: 'wx' });
@@ -268,18 +274,18 @@ async function acquireContextLock(target: string): Promise<string | null> {
         }
         if (await lockIsAbandoned(lock)) {
             console.warn(
-                `[spec-context] Reclaimed a write lock untouched for ${LOCK_ABANDONED_MS}ms on ${target}.`
+                `[spec-context] Reclaimed a write lock untouched for ${lockTiming.abandonedMs}ms on ${target}.`
             );
             await reclaimLock(lock, owner);
             continue;
         }
         if (Date.now() >= giveUpAt) {
             console.warn(
-                `[spec-context] Waited ${LOCK_MAX_WAIT_MS}ms for the write lock on ${target}; recording without it.`
+                `[spec-context] Waited ${lockTiming.maxWaitMs}ms for the write lock on ${target}; recording without it.`
             );
             return null;
         }
-        await new Promise(resolve => setTimeout(resolve, LOCK_POLL_MS));
+        await new Promise(resolve => setTimeout(resolve, lockTiming.pollMs));
     }
 }
 

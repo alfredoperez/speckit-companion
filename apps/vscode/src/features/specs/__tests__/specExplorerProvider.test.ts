@@ -42,8 +42,9 @@ jest.mock('../../workflows', () => ({
     },
 }));
 
-jest.mock('../specContextManager', () => ({
-    readSpecContextSync: jest.fn().mockReturnValue(undefined),
+jest.mock('../specContextReader', () => ({
+    ...jest.requireActual('../specContextReader'),
+    readSpecContextSyncSafe: jest.fn().mockReturnValue(undefined),
 }));
 
 // Companion installed by default so the pinned CTA row is absent for pre-existing tree-shape tests; CTA tests flip this to false.
@@ -52,7 +53,7 @@ jest.mock('../../settings/companionPresetReconciler', () => ({
 }));
 
 import { resolveSpecDirectories, hasDuplicateNames } from '../../../core/specDirectoryResolver';
-import { readSpecContextSync } from '../specContextManager';
+import { readSpecContextSyncSafe } from '../specContextReader';
 import { isCompanionInstalled } from '../../settings/companionPresetReconciler';
 
 const WORKSPACE_ROOT = '/workspace';
@@ -141,7 +142,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature-a', path: 'specs/feature-a' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
 
             const children = await provider.getChildren();
 
@@ -150,11 +151,32 @@ describe('SpecExplorerProvider', () => {
             expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
         });
 
+        it('should still render the tree when one spec has a malformed .spec-context.json', async () => {
+            // readSpecContextSyncSafe returns null (never throws) for an
+            // unparseable file — the tree must degrade that one spec to
+            // "no context" rather than losing the whole sidebar.
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'broken-feature', path: 'specs/broken-feature' },
+                { name: 'good-feature', path: 'specs/good-feature' },
+            ]);
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((specPath: string) => {
+                if (specPath.includes('broken-feature')) {
+                    return null;
+                }
+                return { status: 'active' };
+            });
+
+            const children = await provider.getChildren();
+
+            expect(children).toHaveLength(1);
+            expect(children[0].label).toBe('Active (2)');
+        });
+
         it('should group specs with status active under Active', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature-a', path: 'specs/feature-a' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'active' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'active' });
 
             const children = await provider.getChildren();
 
@@ -167,7 +189,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'done-feature', path: 'specs/done-feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'completed' });
 
             const children = await provider.getChildren();
 
@@ -180,7 +202,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'old-feature', path: 'specs/old-feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'archived' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'archived' });
 
             const children = await provider.getChildren();
 
@@ -196,7 +218,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'old-feature', path: 'specs/old-feature' },
             ]);
 
-            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((specPath: string) => {
                 if (specPath.includes('active-feature')) {
                     return { status: 'active' };
                 }
@@ -221,7 +243,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'done-feature', path: 'specs/done-feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'completed' });
 
             const children = await provider.getChildren();
 
@@ -234,7 +256,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'shipped-feature', path: 'specs/shipped-feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'implemented' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'implemented' });
 
             const children = await provider.getChildren();
 
@@ -251,7 +273,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'shipped-feature', path: 'specs/shipped-feature' },
                 { name: 'done-feature', path: 'specs/done-feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((specPath: string) => {
                 if (specPath.includes('shipped-feature')) {
                     return { status: 'implemented' };
                 }
@@ -270,7 +292,7 @@ describe('SpecExplorerProvider', () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature', path: 'specs/feature' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(status ? { status } : undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(status ? { status } : undefined);
             const children = await provider.getChildren();
             return children[0].iconPath as vscode.ThemeIcon;
         }
@@ -306,7 +328,7 @@ describe('SpecExplorerProvider', () => {
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
 
             const groups = await provider.getChildren();
             return provider.getChildren(groups[0]);
@@ -345,7 +367,7 @@ describe('SpecExplorerProvider', () => {
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(specContext || undefined);
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
             return specs[0];
@@ -385,7 +407,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'my-feature', path: 'specs/a/my-feature' },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set(['my-feature']));
-            (readSpecContextSync as jest.Mock).mockReturnValue({
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({
                 workflow: 'default',
                 currentStep: 'specify',
                 status: 'draft',
@@ -409,7 +431,7 @@ describe('SpecExplorerProvider', () => {
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
             // Root-level getSpecStatus returns active
-            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(specContext || undefined);
 
             if (isActive) {
                 provider.setActiveSpec(specName);
@@ -490,7 +512,7 @@ describe('SpecExplorerProvider', () => {
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(specContext || undefined);
             (mockFs.existsSync as jest.Mock).mockReturnValue(true);
             (mockFs.readFileSync as jest.Mock).mockReturnValue(fileContent);
 
@@ -694,7 +716,7 @@ describe('SpecExplorerProvider', () => {
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue({
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({
                 workflow: 'default',
                 currentStep: 'specify',
                 status: 'specifying',
@@ -721,7 +743,7 @@ describe('SpecExplorerProvider', () => {
                 { name: specName, path: `specs/${specName}` },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(specContext || undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(specContext || undefined);
             const groups = await provider.getChildren();
             const specs = await provider.getChildren(groups[0]);
             return specs[0];
@@ -787,7 +809,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'feature', path: 'specs/feature' },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (mockFs.existsSync as jest.Mock).mockReturnValue(true);
             (mockFs.readFileSync as jest.Mock).mockReturnValue('# Title\nLine 2\nLine 3\nLine 4\nLine 5');
 
@@ -808,7 +830,7 @@ describe('SpecExplorerProvider', () => {
                 { name: '069-reveal-folder', path: 'specs/069-reveal-folder' },
                 { name: '068-collapse-toggle', path: 'specs/068-collapse-toggle' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
             // Deliberately make birthtime orderings contradict the numeric
@@ -838,7 +860,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'beta', path: 'specs/beta' },
                 { name: 'alpha', path: 'specs/alpha' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
             const groups = await provider.getChildren();
@@ -854,7 +876,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'legacy-spec', path: 'specs/legacy-spec' },
                 { name: '001-first', path: 'specs/001-first' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
             (mockFs.statSync as jest.Mock).mockReturnValue({
                 birthtime: new Date('2025-01-01T00:00:00Z'),
@@ -875,7 +897,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'new-spec', path: 'specs/new-spec' },
                 { name: 'mid-spec', path: 'specs/mid-spec' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
             const groups = await provider.getChildren();
@@ -896,7 +918,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'spec-a', path: 'specs/spec-a' },
                 { name: 'spec-b', path: 'specs/spec-b' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
             // statSync throws for all paths
@@ -916,7 +938,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'done-old', path: 'specs/done-old' },
                 { name: 'done-new', path: 'specs/done-new' },
             ]);
-            (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'completed' });
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'completed' });
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
 
             const groups = await provider.getChildren();
@@ -946,7 +968,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'feature', path: 'specs/feature' },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
             provider.expandAllSpecs = flag;
 
             const groups = await provider.getChildren();
@@ -962,7 +984,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'feature', path: 'specs/feature' },
             ]);
             (hasDuplicateNames as jest.Mock).mockReturnValue(new Set());
-            (readSpecContextSync as jest.Mock).mockReturnValue(undefined);
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue(undefined);
 
             const groups = await provider.getChildren();
             expect(groups[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
@@ -995,7 +1017,7 @@ describe('SpecExplorerProvider', () => {
                 { name: 'b', path: 'specs/b' },
                 { name: 'c', path: 'specs/c' },
             ]);
-            (readSpecContextSync as jest.Mock).mockImplementation((p: string) => {
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((p: string) => {
                 if (p.includes('/a')) return { status: 'active' };
                 if (p.includes('/b')) return { status: 'completed' };
                 if (p.includes('/c')) return { status: 'archived' };
@@ -1037,7 +1059,7 @@ describe('SpecExplorerProvider', () => {
                 { name: '071-tree-group-counts', path: 'specs/071-tree-group-counts' },
                 { name: '072-immediate-status-update', path: 'specs/072-immediate-status-update' },
             ]);
-            (readSpecContextSync as jest.Mock).mockImplementation((specPath: string) => {
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((specPath: string) => {
                 if (specPath.includes('070-')) return { status: 'active', specName: 'Design — tighten safety' };
                 if (specPath.includes('071-')) return { status: 'active', specName: 'Tree group counts' };
                 if (specPath.includes('072-')) return { status: 'completed', specName: 'Immediate status update' };
@@ -1128,8 +1150,12 @@ describe('lifecycleContextValue', () => {
         expect(lifecycleContextValue({ status: 'active' } as any)).toBe('spec-active');
     });
 
-    it('maps tasks-done to spec-tasks-done', () => {
-        expect(lifecycleContextValue({ status: 'tasks-done' } as any)).toBe('spec-tasks-done');
+    it('maps ready-to-implement to spec-tasks-done', () => {
+        expect(lifecycleContextValue({ status: 'ready-to-implement' } as any)).toBe('spec-tasks-done');
+    });
+
+    it('leaves the legacy tasks-done value to the normalizing reader', () => {
+        expect(lifecycleContextValue({ status: 'tasks-done' } as any)).toBe('spec-active');
     });
 
     it('maps implemented to the terminal spec-implemented (not spec-active)', () => {
@@ -1190,7 +1216,7 @@ describe('SpecExplorerProvider — pinned Companion install CTA', () => {
         (resolveSpecDirectories as jest.Mock).mockResolvedValue([
             { name: '070-a', path: 'specs/070-a' },
         ]);
-        (readSpecContextSync as jest.Mock).mockReturnValue({ status: 'active', specName: 'A' });
+        (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'active', specName: 'A' });
     });
 
     it('prepends the CTA row when the spec-kit extension is not installed', async () => {
