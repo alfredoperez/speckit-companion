@@ -64,7 +64,7 @@ Both gaps the financial-page E2E exposed were closed by moving capture off the A
 - **specify now self-closes.** The specify body calls `write-context.py --kind start` right after it creates the dir and `--kind complete` at the end (`by:extension`, ms precision) → a real begin→end span instead of a `complete` synthesized at plan-start. The late `after_specify` hook-start is collapsed by the broadened start-dedup in `update_context` (a step is started once).
 - **per-task no longer bursts.** The AI stopped hand-authoring per-task JSON; the `after_implement` hook's `sync_tasks()` writes each task with the script's own clock.
 
-All remaining `by:ai` writes (the plan/tasks/clarify/analyze self-closes and substep boundaries) now go through `write-context.py --finish`, never a hand-edited JSON file — so the duplicate-`status`-key corruption can't recur. They are the plan/tasks/clarify/analyze self-closes and substep boundaries. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
+All remaining `by:ai` writes go through `write-context.py --finish`, never a hand-edited JSON file — so the duplicate-`status`-key corruption can't recur. At the time that meant the plan/tasks/clarify/analyze self-closes and the substep boundaries; #509 later took plan and tasks out of the companion self-close set, so under companion it is clarify/analyze and the substeps. History: `Projects/speckit companion/backlog/specify-duration-and-duplicate-start.md`.
 
 ## Fixed — serialized context writes (2026-07-22, #527)
 
@@ -122,14 +122,6 @@ Finish-only made the timing honest; this pass makes the record *self-describing*
 - **Cadence-span FAIL + format validation.** The eval gains `task-cadence-span` (the burst detector) and `entries-match-format` (per-entry schema validation) — see *The eval* below.
 - **Schema is the single vocabulary source.** `check_capture.py` loads its `by`/step/status enums *from* `spec-context.schema.json` instead of hard-coding parallel lists, so the eval can't drift from the format authority.
 
-## Fast-path lifecycle fold (2026-06-09)
-
-The Companion complexity fast-path — the command-body fold described here (**on by default**, no flag), and separately available as the [Companion workflow routing step](./template-profiles.md#companion-workflow-routing-step) — folds the plan and tasks steps into the `specify` run for a small change. The same pass also emits three lean files — `<name>.spec.md` (inline Approach), a `plan.md` pointer, and a real-checklist `tasks.md` — so the file-driven stepper, sidebar, and implement progress agree with this history fold rather than reading "not created". After `specify` self-closes, the simple-mode branch records the folded steps so the history panels read them as satisfied (not missing) instead of dispatching separate `/speckit.companion.plan` / `.tasks` runs:
-
-- **`--substep` flag.** `write-context.py --step <plan|tasks> --kind <start|complete> --substep fast-path` tags the folded step-level entries with `substep: "fast-path"` instead of `null`. The fold is four ordered calls — `plan` start/complete then `tasks` start/complete, the last adding `--status ready-to-implement` — each stamped by the script's own clock (`by:ai`, real timestamps), so the spec lands at `ready-to-implement` in one run.
-- **Idempotent on (step, substep).** `_has_step_start` / `_has_complete` dedup on the `(step, substep)` pair, so a folded `fast-path` start/complete never collides with a real step-level (`substep:null`) entry and a re-run never doubles the fold.
-- **Eval coverage.** `check_capture.py` asserts a fast-tracked spec's folded `plan`/`tasks` start+complete entries (tagged `fast-path`), real timestamps, and final `ready-to-implement` status — and stays silent on a normal spec.
-
 ## Companion workflow run/resume capture (#292)
 
 The Companion pipeline can run as a single spec-kit workflow (`specify workflow run speckit-companion`) on spec-kit's own engine instead of hand-invoked commands — see [`template-profiles.md`](./template-profiles.md#companion-workflow-routing-step). Capture is **unchanged** by this path: the engine dispatches each step's command (`speckit.companion.{specify,plan,tasks,implement}`) exactly as a hand-run would, so the same lifecycle hooks and command bodies fire and write `.spec-context.json` the same way. The two timing models above still hold — deterministic step writes from the hooks, finish-only per-task journaling inside implement.
@@ -148,7 +140,7 @@ The implement step's *settle* (reaching `status: implemented`) is the most fragi
 
 ## Specify settle in stock mode (#332)
 
-`specify` is the one step that needs mode-aware handling. `plan`/`tasks`/`clarify`/`analyze` are always in the AI self-close set (the dispatch preamble tells the AI to write their completion itself), so they settle in any mode. `implement` settles from the always-on `tasks.md` watcher (#244). But `specify` is told to **defer** — "the specify command records its own completion" — which is only true when the **companion** `/speckit.companion.specify` command runs (it calls `write-context.py --kind complete`). In a **stock** project the upstream `/speckit.specify` makes no such call, so nothing closed specify and it stuck at `specifying` forever, with the in-flight footer gate hiding the advance button.
+`specify` is the one step that needs mode-aware handling. `clarify`/`analyze` are always in the AI self-close set, and `plan`/`tasks` join it in stock mode (the dispatch preamble tells the AI to write their completion itself), so they settle in any mode. `implement` settles from the always-on `tasks.md` watcher (#244). But `specify` is told to **defer** — "the specify command records its own completion" — which is only true when the **companion** `/speckit.companion.specify` command runs (it calls `write-context.py --kind complete`). In a **stock** project the upstream `/speckit.specify` makes no such call, so nothing closed specify and it stuck at `specifying` forever, with the in-flight footer gate hiding the advance button.
 
 The fix lives in the **dispatch preamble**, not in extension code (`promptBuilder.ts` → `promptPreamble.ts`):
 
@@ -229,7 +221,7 @@ On activation the extension runs an **add-only** ensure — `companionPresetReco
 
 The dependency order is one-way: `spec_context` and `spec_deltas` depend on nothing local, `capture` and `task_sync` depend on `spec_context`, `living_spec_fold` depends on all three, and `write-context.py` sits on top. `spec_context.py` exists precisely to keep that acyclic — the fold and the capture writers both need the store, so it cannot live in the module that imports them.
 
-**`write-context.py` re-exports every name the siblings hold**, so anything importing it as a module keeps reaching them by their original path. Five things do: `derive-from-files.py`, `status-context.py`, `test_context.py`, `test_capture_fields.py`, and `.claude/skills/eval-speckit-extension/check_living_spec.py`. None of them changed for the split, and none should need to.
+**`write-context.py` re-exports every name the siblings hold**, so anything importing it as a module keeps reaching them by their original path. Five things do: `derive-from-files.py`, `status-context.py`, `test_context.py`, `test_capture_fields.py`, and `apps/speckit-extension/scripts/check_living_spec.py`. None of them changed for the split, and none should need to.
 
 **Every new module must be in `package-manifest.py`'s `RUNTIME_SCRIPTS`.** The gate derives what ships by scanning command bodies and then following plain `import` statements to a fixed point — which is why the siblings are imported by plain name rather than loaded dynamically. A dynamically-loaded module would be invisible to the gate and the release archive would ship a broken extension.
 
@@ -280,7 +272,7 @@ Capture scripts run from the **installed** extension dir, `.specify/extensions/c
 
 ## The eval
 
-`.claude/skills/eval-speckit-extension/check_capture.py` is the regression net (a tracked project skill — edit it here, it is **not** sourced from kaiju). It bakes in the reliability principle:
+`apps/speckit-extension/scripts/check_capture.py` is the regression net (a tracked project skill — edit it here, it is **not** sourced from kaiju). It bakes in the reliability principle:
 
 - **`timestamps-real` / `timestamps-monotonic`** apply strict checks only to **deterministic** writes (`by:extension`/`derive`/`cli`/`user`): those must be ms-precision and non-decreasing. `by:ai` second-precision and occasional burst is **expected**, reported as cadence quality — not a failure.
 - **`per-task-no-duplicates`** pairs by `(task, kind)`: finish-only means a task carries a single `complete` (a `start` may still appear on legacy specs). Only a repeated `(task, kind)` is the real dedup-failure signal (the backstop re-adding a task the live path already journaled).

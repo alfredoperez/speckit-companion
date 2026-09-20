@@ -193,50 +193,6 @@
 > actions are added later, group secondary entries into an overflow
 > `⋯` menu — keep the dynamic next-step button as the primary surface.
 
-## Status Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> active : spec created
-    active --> tasks_done : all tasks checked (auto)
-    tasks_done --> active : task unchecked
-    tasks_done --> completed : "Complete" button
-    active --> completed : "Complete" button
-    active --> archived : "Archive" button
-    completed --> archived : "Archive" button
-    completed --> active : "Reactivate" button
-    archived --> active : "Reactivate" button
-
-    state active {
-        [*] --> specifying
-        specifying --> planning : spec.md done
-        planning --> creating_tasks : plan.md done
-        creating_tasks --> implementing : tasks.md done
-    }
-```
-
-## Status Determination
-
-```mermaid
-flowchart TD
-    A[Read .spec-context.json] --> B{status = archived?<br/>OR currentStep = archived/done?}
-    B -- yes --> C[archived]
-    B -- no --> D{status = completed?}
-    D -- yes --> E[completed]
-    D -- no --> F{taskCompletionPercent = 100?}
-    F -- yes --> G[tasks-done]
-    F -- no --> H[active]
-```
-
-| Status | How it's reached | Editable? |
-|--------|-----------------|-----------|
-| `active` | Default / Reactivate button | Yes |
-| `tasks-done` | All task checkboxes checked (auto-detected) | Yes |
-| `completed` | User clicks "Complete" button | No |
-| `archived` | User clicks "Archive" button | No |
-
----
-
 ## Footer Buttons
 
 **Single source of truth.** The footer is a pure function of one `ViewerState`

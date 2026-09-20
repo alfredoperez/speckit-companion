@@ -45,7 +45,7 @@ Both families bake a single shared **timing partial** into every overridden comm
 2. **No duplicate start** — a repeated same-step `start` is deduped at write time in `apps/speckit-extension/scripts/write-context.py` instead of doubling `history[]`.
 3. **Live cadence** — one fresh `date -u` per substep/task, plus a per-task `complete` (not just `start`); no end-of-run burst with 0ms gaps.
 
-The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`apps/speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`.claude/skills/eval-speckit-extension/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
+The GUI preamble stays as the extra path; the body-embedded partial is the standalone path. A parity check (`apps/speckit-extension/scripts/check-shape-parity.py`) locks every body's partial so the two can't fork. Caveat: per-task `date -u` is still best-effort — it can burst on very fast tasks. A burst is still caught by the eval's `timestamps-real` round-millisecond check (`apps/speckit-extension/scripts/check_capture.py`); folding the 0ms-gap signal into the `task-cadence` verdict specifically is a pending follow-up in the kaiju eval source (see "Areas to improve").
 
 ## Companion workflow routing step
 
