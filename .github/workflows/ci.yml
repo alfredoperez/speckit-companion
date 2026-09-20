@@ -75,3 +75,31 @@ jobs:
           python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/510-living-sync
           python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
           python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands
+
+  visual-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No browser needed, so it runs first and fails fast.
+      - name: Check storyboard drift and the media manifest
+        run: npm run clips:check
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Pipeline Builder visual gate (layout only)
+        run: npm run test:visual:ci

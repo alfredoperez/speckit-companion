@@ -118,6 +118,12 @@ for (const f of manifest.features) {
     }
 }
 
+// Two clips CAN share a byte-identical poster, and it is not a fault: a web
+// poster is frame zero of its own clip, enforced by render-web-clips.mjs, which
+// fails when a poster is not frame zero. step-rail and run-in-flight open on the
+// same shot, so their frame-zero posters match by construction. Do not add a
+// duplicate-poster check here; it would be red on a correct repo forever.
+
 // The load-bearing check: nothing a README shows may be absent from the manifest.
 for (const file of ['README.md', 'apps/speckit-extension/README.md']) {
     for (const ref of readmeImages(file)) {

@@ -74,7 +74,11 @@ npm run clips:check                storyboard drift plus the manifest
 
 Skipping a stage is visible: repainting the PNGs without re-rendering the clips leaves the README showing two palettes at once; re-rendering the clips without `clips:gifs` leaves the README GIFs on the old palette while the site is on the new one; and stopping before `clips:stills` leaves the landing page's hero and accordion figures behind, because those are cut from the captures and renders rather than shot separately.
 
+`npm run media:all` runs every stage above except `npm run render`: the two capture passes, then `clips:render`, `clips:stills`, `clips:gifs`, `clips:sync`, and `clips:check` in that order. Render each changed composition by hand first (`npm run render` in its directory) — that step is per-composition and re-rendering every clip on every run would be its own kind of blast radius. `npm run clips:check` alone is the check half; there is no separate `media:check`.
+
 **A drawn composition does not follow the palette.** `make-it-yours` and `living-specs-explained` have no screenshot under them, so the capture palette cannot reach them at all: they have to be re-themed by hand in their own `index.html`, or they end up as the one dark thing in a light set. The same trap caught the README composite stories once, which had hardcoded a dark theme's neutrals instead of reading the derived variables. New composite chrome must read the palette.
+
+**Two clips can share a byte-identical poster, and it is not a fault.** A web poster is frame zero of its own clip, and `render-web-clips.mjs` fails the build when a poster is not frame zero, because the site swaps the video in over the poster and a mismatch shows as a jump. `step-rail` and `run-in-flight` open on the same shot, so their posters match by construction. The docs stills solve the same collision differently: `panel-step-rail` is cut from the capture rather than the render, so the two pages do not show one picture twice.
 
 `npm run lightwell` and `npm run favicons` are page chrome rather than product imagery and are **not** on this chain — their colours come from the site's brand, not from the capture palette. Re-run them when the site's tokens or the mascot mark change, not when a capture palette does.
 
@@ -131,7 +135,7 @@ The contract, the field meanings, and which surface reads which key are in `docs
 
 ## Visual tests for the Pipeline Builder
 
-`tooling/scripts/visual-builder.mjs` drives the panel in the same browser the capture script uses, across two widths (1600 and 380) and both themes — 332 renders from the 83 `Pipeline Builder/*` stories.
+`tooling/scripts/visual-builder.mjs` drives the panel in the same browser the capture script uses, across two widths (1600 and 380) and both themes — 556 renders from the 139 `VS Code Extension/Pipeline Builder/*` stories.
 
 ```bash
 npm run test:visual        # layout + pixel baselines, compared locally
@@ -139,9 +143,9 @@ npm run test:visual:ci     # layout only — what CI runs
 npm run test:visual -- --update   # re-bless the baselines after an intended change
 ```
 
-Two things it checks, and the split matters. **Layout** is geometry a browser can answer and jsdom cannot: nothing overflows the panel shell, no control is drawn at zero size, nothing is clipped beyond reach, no console errors. That holds on any machine, but `npm run test:visual:ci` is a local command — no CI workflow runs it, or the pixel half, today. **Pixels** are compared against baselines in `apps/vscode/webview/src/pipeline-builder/__screenshots__/` (the situation stories, both widths, dark theme — 54 files). Those stay local: font rasterisation differs between macOS and a Linux runner, and a pixel gate in CI would fail on every push for reasons nobody could act on. A failing comparison writes the diff image next to the baselines under `diff/`.
+Two things it checks, and the split matters. **Layout** is geometry a browser can answer and jsdom cannot: nothing overflows the panel shell, no control is drawn at zero size, nothing is clipped beyond reach, no console errors. That holds on any machine, so `npm run test:visual:ci` runs in CI on every push, in the `visual-gate` job alongside `npm run clips:check`. **Pixels** are compared against baselines in `apps/vscode/webview/src/pipeline-builder/__screenshots__/` (the situation stories, both widths, dark theme — 54 files). Those stay local: font rasterisation differs between macOS and a Linux runner, and a pixel gate in CI would fail on every push for reasons nobody could act on. A failing comparison writes the diff image next to the baselines under `diff/`.
 
-Stories need no changes to take part. Determinism — no animation, no transition, no caret, no scrollbars — is injected by the runner rather than declared per story, and both themes are reached through Storybook's `globals` URL parameter. Adding a story to `Pipeline Builder/*` puts it under layout checks automatically.
+Stories need no changes to take part. Determinism — no animation, no transition, no caret, no scrollbars — is injected by the runner rather than declared per story, and both themes are reached through Storybook's `globals` URL parameter. Adding a story to `VS Code Extension/Pipeline Builder/*` puts it under layout checks automatically.
 
 The browser and Storybook plumbing is shared with the capture script: `tooling/scripts/lib/storybook-browser.mjs`. Change it and re-run **both**, because the determinism guarantee below is what proves the capture script still behaves.
 
