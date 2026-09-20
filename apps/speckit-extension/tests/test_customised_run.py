@@ -32,10 +32,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from builder_harness import EXT, Project
+from builder_harness import EXT, SCRIPTS, Project
 
 REPO = EXT.parents[1]
-CAPTURE_EVAL = REPO / ".claude" / "skills" / "eval-speckit-extension" / "check_capture.py"
+CAPTURE_EVAL = SCRIPTS / "check_capture.py"
 
 #: Long enough for a real specify run; a hang past this is a failure, not slowness.
 RUN_TIMEOUT_S = 900

@@ -71,7 +71,7 @@ jobs:
 
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/509-timing-capture
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/510-living-sync
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --commands-dir apps/speckit-extension/commands
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/509-timing-capture
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/510-living-sync
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands

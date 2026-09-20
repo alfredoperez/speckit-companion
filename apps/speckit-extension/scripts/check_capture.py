@@ -34,10 +34,11 @@ _FALLBACK_ENTRY_REQUIRED = ["step", "substep", "kind", "by", "at"]
 def _load_schema() -> dict | None:
     """Locate and parse spec-context.schema.json (the format authority) by
     walking up from this file to the repo root. None when unreadable."""
-    here = Path(__file__).resolve()
-    for parent in here.parents:
-        cand = parent / "src" / "core" / "types" / "spec-context.schema.json"
-        if cand.is_file():
+    rel = Path("src") / "core" / "types" / "spec-context.schema.json"
+    for parent in Path(__file__).resolve().parents:
+        for cand in (parent / rel, parent / "apps" / "vscode" / rel):
+            if not cand.is_file():
+                continue
             try:
                 return json.loads(cand.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError):

@@ -29,7 +29,7 @@ from pathlib import Path
 from builder_harness import EXT, SCRIPTS, Project
 
 REPO = EXT.parents[1]
-EVAL = REPO / ".claude" / "skills" / "eval-speckit-extension" / "check_quality.py"
+EVAL = SCRIPTS / "check_quality.py"
 SHIPPED_COMMANDS = EXT / "commands"
 PRESETS = EXT / "presets"
 

@@ -108,6 +108,11 @@ BUILD_ONLY = frozenset({
     # Diagnoses a configuration the builder could not read and offers the ways
     # back. Runs from the panel, beside the writer it undoes.
     "config_repair.py",
+    # The eval-speckit-extension gates: CI's command-quality/capture/living-spec
+    # checkers, never invoked from a shipped command body.
+    "check_quality.py",
+    "check_capture.py",
+    "check_living_spec.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

@@ -23,7 +23,7 @@ Eval areas (add a section per feature as the extension grows):
 ### 2. Run the deterministic checker
 
 ```bash
-python3 .claude/skills/eval-speckit-extension/check_capture.py specs/<NNN>-<slug>/
+python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/
 ```
 
 Read the PASS/FAIL/INFO rows and the timing breakdown. (`--json` for machine output; `--strict` to exit non-zero on any FAIL.)
@@ -31,7 +31,7 @@ Read the PASS/FAIL/INFO rows and the timing breakdown. (`--json` for machine out
 ### 2b. Run the command-quality checker
 
 ```bash
-python3 .claude/skills/eval-speckit-extension/check_quality.py --feature-dir specs/<NNN>-<slug> --commands-dir apps/speckit-extension/commands
+python3 apps/speckit-extension/scripts/check_quality.py --feature-dir specs/<NNN>-<slug> --commands-dir apps/speckit-extension/commands
 ```
 
 Same report shape plus a **WARN** tier (judgment calls — budgets, duration outliers, untrusted spans; never affects `--strict`, which fails only on FAIL). Three dimensions: **verbosity** (spec/plan/tasks against line/char WARN/FAIL bands calibrated on the completed specs 484/509/510 — only oversize flags; a missing or lean artifact is fine), **time-waste** (each reached step's span trusted only with ordered extension-stamped boundaries; ≥3 `by:ai` task finishes inside one second FAIL as the pre-#509 burst shape; a step >8× the median of the others and >5m WARNs), and **prompting** (never-halts commands — the after-* hooks, living-drift/sync/coverage, mark-complete, status, resume, classify — must contain no ask-the-user instruction; the clarify carrier must ask; negated mentions and fenced templates don't count; a missing roster file fails loudly). CI runs all three strict over `specs/509-timing-capture`, `specs/510-living-sync`, and the shipped command sources.
