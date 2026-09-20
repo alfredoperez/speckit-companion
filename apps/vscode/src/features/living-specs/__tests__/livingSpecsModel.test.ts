@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { readLivingSpecs, readCapabilityHealth, claimsForFile, readMainCopy, __test } from '../livingSpecsModel';
-import { countLivingFacts } from '../../spec-viewer/livingHeaderMeta';
+import { countLivingFacts } from '../livingHeaderMeta';
 
 const realStatSync = jest.requireActual('fs').statSync;
 const statSyncMock = fs.statSync as unknown as jest.Mock;

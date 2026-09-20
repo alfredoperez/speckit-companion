@@ -6,7 +6,8 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
-import { SpecExplorerProvider, LivingSpecsExplorerProvider, registerSpecKitCommands, registerLivingSpecsCommands, registerLivingSpecsStatusBar, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
+import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
+import { LivingSpecsExplorerProvider, registerLivingSpecsCommands, registerLivingSpecsStatusBar } from './features/living-specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';

@@ -11,8 +11,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { SpecDocument, DocumentType } from './types';
-import { requirementKey } from '../specs/livingSpecsModel';
+import type { SpecDocument, DocumentType } from '../spec-viewer/types';
+import { requirementKey } from './livingSpecsModel';
 
 export type LivingTier = 'spec' | 'rules' | 'coverage';
 

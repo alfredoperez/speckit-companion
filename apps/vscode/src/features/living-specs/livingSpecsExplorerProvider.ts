@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { livingPurposeBody } from '../spec-viewer/livingDocs';
+import { livingPurposeBody } from './livingDocs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import {

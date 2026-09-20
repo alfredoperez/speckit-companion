@@ -63,7 +63,7 @@ A requirement's `touches`, `adopted` and `aligns` markers SHALL be the run of ma
 - **THEN** the requirement reads as unmarked, so an empty marker widens the load instead of narrowing it to nothing
 
 ### Drift is the code a run never accounted for
-<!-- touches: apps/vscode/src/features/specs/livingSpecsModel.ts -->
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 A capability SHALL drift on files changed under its globs with no run behind them. Every file a completed run recorded for this capability, whether folded into the spec or skipped on purpose, is discounted, as are the capability's own spec files, exemptions and excluded globs. When the change list cannot be read, drift is unknown, not empty.
 

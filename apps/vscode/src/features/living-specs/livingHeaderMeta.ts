@@ -8,7 +8,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { LivingHeaderMeta } from './types';
+import type { LivingHeaderMeta } from '../spec-viewer/types';
 import {
     readLivingSpecs,
     readCapabilityHealth,
@@ -18,7 +18,7 @@ import {
     readMainCopy,
     requirementKey,
     CapabilityHealth,
-} from '../specs/livingSpecsModel';
+} from './livingSpecsModel';
 
 /** A numbered acceptance scenario as `/speckit.companion.living-adopt` writes it. */
 /** A numbered Given/When/Then line in a feature spec, or a `#### Scenario:` heading in a living spec. */

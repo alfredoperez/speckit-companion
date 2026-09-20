@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { countLivingFacts, buildLivingHeaderMeta } from '../livingHeaderMeta';
-import * as model from '../../specs/livingSpecsModel';
+import * as model from '../livingSpecsModel';
 
 describe('countLivingFacts', () => {
     it('counts distinct requirement identifiers', () => {

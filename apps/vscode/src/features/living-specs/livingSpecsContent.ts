@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { LivingSpecsView, CapabilityContentView } from '../../core/types/specContext';
-import { readLivingSpecs, isPathWithinRoot, ResolvedCapability } from '../specs/livingSpecsModel';
+import { readLivingSpecs, isPathWithinRoot, ResolvedCapability } from './livingSpecsModel';
 
 /** Cap on the feature spec read for delta counts — an oversized spec skips deltas. */
 const MAX_SPEC_BYTES = 256 * 1024;

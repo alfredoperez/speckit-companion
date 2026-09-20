@@ -19,7 +19,7 @@ const DEFAULT_CAPABILITY_ROOT = 'capabilities';
 export const LIVING_SPECS_REL = 'living-specs.yml';
 
 /** Where capability registrations used to live; still read when no registry exists. */
-export const LEGACY_CONFIG_REL = path.join('.specify', 'companion.yml');
+const LEGACY_CONFIG_REL = path.join('.specify', 'companion.yml');
 
 /** Reserved tier siblings, keyed by kind. Single source of truth for suffixes. */
 const TIER_SUFFIXES: Record<TierKind, string> = {
@@ -39,9 +39,9 @@ const RESERVED_TIER_SUFFIXES = [
     ...Object.values(LEGACY_TIER_SUFFIXES),
 ];
 
-export type TierKind = 'rules' | 'coverage';
+type TierKind = 'rules' | 'coverage';
 
-export interface Tier {
+interface Tier {
     kind: TierKind;
     /** POSIX repo-relative path of the sibling. */
     path: string;
@@ -628,7 +628,7 @@ export interface CapabilityTreeGroup {
 }
 
 /** A capability leaf in the capability tree. */
-export interface CapabilityTreeLeaf {
+interface CapabilityTreeLeaf {
     kind: 'capability';
     capability: ResolvedCapability;
     /** The readable name, minus the leading words every sibling leaf shares. */
@@ -733,7 +733,7 @@ const REQUIREMENT_ID_RE = /\bN?FR-\d+\b/g;
  * derivation behind both the coverage denominator and the viewer's count — two
  * regexes over the same text would eventually disagree.
  */
-export function requirementIds(specText: string): string[] {
+function requirementIds(specText: string): string[] {
     const kept: string[] = [];
     let inFence = false;
     for (const line of specText.split(/\r?\n/)) {
@@ -759,7 +759,7 @@ export function requirementKeys(specText: string): string[] {
 }
 
 /** One requirement, as both the loader and the outline see it. */
-export interface RequirementSlice {
+interface RequirementSlice {
     /** The heading text, verbatim — the join key fold-back, coverage and the cards already share. */
     heading: string;
     /** The marker's globs, absent when the requirement carries none. */
@@ -996,7 +996,7 @@ export function claimsForFile(workspaceRoot: string, relPath: string): FileClaim
 }
 
 /** True when a spec carries no marker at all, so it is read whole as before. */
-export function hasNoMarkers(slices: RequirementSlice[]): boolean {
+function hasNoMarkers(slices: RequirementSlice[]): boolean {
     return slices.every((s) => !s.touches);
 }
 
@@ -1010,7 +1010,7 @@ export function requirementKey(heading: string): string {
 }
 
 /** A requirement's aligns links in both directions. */
-export interface RequirementLinks {
+interface RequirementLinks {
     leansOn: RequirementLink[];
     leanedOnBy: RequirementLink[];
 }
@@ -1071,7 +1071,7 @@ export function requirementLinks(workspaceRoot: string, capability: string): Map
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 
 /** Injectable git runner so tests never need a real repository. */
-export type GitRunner = (args: string[], cwd: string) => Promise<string>;
+type GitRunner = (args: string[], cwd: string) => Promise<string>;
 
 /** Default runner factory: the process timeout matches the caller's timeoutMs,
  * so a timed-out race never leaves git running in the background. */
@@ -1371,5 +1371,5 @@ export async function readCapabilityHealth(
     return health;
 }
 
-/** Exposed for membership-rule tests; not used by the listing path directly. */
-export const __test = { globMatches, globToRegExp };
+/** Exposed for tests; not used by the listing path directly. */
+export const __test = { globMatches, globToRegExp, requirementIds, hasNoMarkers };

@@ -1,4 +1,4 @@
-import { unsupportedForRuntime } from '../livingSpecsModel';
+import { unsupportedForRuntime } from '../../living-specs/livingSpecsModel';
 
 /**
  * The runtime reads these files with a narrow parser and the editor with js-yaml.

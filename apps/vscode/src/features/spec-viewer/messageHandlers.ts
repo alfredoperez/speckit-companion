@@ -34,7 +34,7 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot, requirementKey, requirementLinks, resolveCapabilityBySpecPath } from "../specs/livingSpecsModel";
+import { isPathWithinRoot, requirementKey, requirementLinks, resolveCapabilityBySpecPath } from "../living-specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
@@ -47,7 +47,7 @@ import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
-import { appendLivingRemoval, approveLivingText, livingTierDocuments, removeLivingRequirement } from "./livingDocs";
+import { appendLivingRemoval, approveLivingText, livingTierDocuments, removeLivingRequirement } from "../living-specs/livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,

@@ -4,10 +4,10 @@ import * as path from 'path';
 import {
     requirementSlices,
     requirementsForChange,
-    hasNoMarkers,
-    requirementIds,
     requirementLinks,
+    __test,
 } from '../livingSpecsModel';
+const { hasNoMarkers, requirementIds } = __test;
 
 /**
  * The TypeScript half of a parser that has to exist twice.
