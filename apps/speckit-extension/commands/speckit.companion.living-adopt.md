@@ -24,17 +24,17 @@ If the argument names **several areas**, adopt them in one run. Propose the full
 
 If the argument is `.`, the developer asked for the **whole project**. Read the conventions as always, then propose the tree for the whole source tree. Say at the gate how many capabilities and how many spec files that comes to, and offer a coarser cut (one spec per area) and a finer one (a spec per concern within an area) with the count each gives. Nothing is written until they pick.
 
-<!-- speckit-companion:part smallest-thing -->
+<!-- speckit-companion:part concise -->
 ## The smallest thing that works
 
 **Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later. Lean governs what you build and write, not how the work is split: sending work to a worker where a step says to is not extra.
 
-**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
-
 **Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A": remove it instead.
 
+**The same test governs what you write, and again once it is written.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss. Then reread and cut: the sentence restating the one before it, the example longer than its rule, the clause defending a choice nobody challenged, the prose repeating a table. Each reads as thoroughness and is what makes a body too long to follow.
+
 **Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
-<!-- /speckit-companion:part smallest-thing -->
+<!-- /speckit-companion:part concise -->
 
 ## What to do
 
@@ -46,9 +46,15 @@ If no conventions doc and no enforcement config names a constraint, ask once, be
 
 **Then read the area and work out what it does.** Open the routes, the loaders and the entry points, and answer one question: what can a person do here? The answers are the capabilities. `article-reading`, `authoring-an-article`, `signing-in`: things you could say to someone who has never seen the repository. A directory is not a capability, it is where some of one lives. Expect a capability to span several directories and a directory to serve several capabilities. Never produce one capability per folder.
 
-**If a proposed capability's spec would have no requirement a person outside the team could read, it is not a capability.**
+**Test every requirement you are about to propose with one question: would someone planning a change here need this?**
 
-**Propose the layer as one capability of its own**, named for the layer, carrying the whole layer glob and the conventions you transcribed. This is the one that gets an `.rules.md`. Every behaviour capability beside it shares the same coarse membership, so a file is claimed by both and the narrowing happens at the requirement.
+**Then say the outcome, not the lookup.** The code is written as lookups, so adoption reaches for that voice. "The locale SHALL be `user.locale`, else the `Accept-Language` header, else `en`" narrates a lookup. "A reader sees the site in the language they chose, else the one their browser asks for, else English" is the same rule, checkable by someone who never saw the code. Name a setting, command or file the person edits; never a path the product keeps, a resolution order, or a field's value.
+
+What fails the test stays out of the draft. List it at the gate as *found, not proposed*, one line each, so the developer can pull any of it back in.
+
+**The code says what it does, never what it guards against.** A lock under a fixed root, a merge instead of an overwrite: each is a scar from a bug and looks like any other line. Find them where the reason survives: a test named for a defect, a `Fixed` changelog entry, in every changelog covering the code in scope and not only the nearest one, a comment that explains instead of labels, a guard with no obvious caller. Follow each back. If a person loses work or is told something untrue without it, write what must stay true, with the failure as its scenario. Found a guard but not its reason? Ask at the gate. Unexplained guards are what rewrites delete.
+
+**A rule binding every capability belongs to none, so every draft drops it and it lands nowhere.** Escaping user text before it reaches a page; an accessibility floor every screen owes. Where a transcribed convention or a guard binds more than one proposed capability, propose one capability for it, named for what it protects, carrying the union of their globs.
 
 Bring the whole list to the developer before writing anything: each capability's name, one line on what it covers, the directories it draws from, and roughly how many requirements you expect. Offer a coarser and a finer cut with the count each would give. **The shape is theirs to decide.**
 
@@ -76,7 +82,7 @@ Deriving a **colocated** path: take the capability's match glob, strip the trail
 
 Two consequences of colocated placement to say out loud:
 
-1. **The filename stem becomes the capability's display name.** A capability named `speckit-extension-capture` colocated as `capture.spec.md` shows as `capture` in the sidebar. Keep the stem equal to the name, or say what it will display as.
+1. **The filename stem becomes the capability's display name.** A capability named `billing-invoice-export` colocated as `export.spec.md` shows as `export` in the sidebar. Keep the stem equal to the name, or say what it will display as.
 2. **The rules file sits beside its spec**, same stem, `<name>.rules.md`.
 
 Show the proposed capability tree to the developer, names, match globs, and the resolved spec path for each, and pause for confirmation before drafting and registering. This is the one review gate in this command.
@@ -85,7 +91,7 @@ Show the proposed capability tree to the developer, names, match globs, and the 
 
 **A spec says what the area does. It is not a style guide.** Import direction, file naming, barrels and path helpers are real rules worth keeping, but they describe how the code is written, not what the software does. Living specs ship two tiers for that split, and adoption writes both.
 
-**`<name>.spec.md` is the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects. Adoption does not write behaviour it has not observed, so: **a requirement that names a function, a hook, a component or a file is not observable, and belongs in the rules file or nowhere.** Say what happens, not what calls what.
+**`<name>.spec.md` is the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects. Adoption does not write behaviour it has not observed, and a requirement naming a function, a hook or a component is not observable: it belongs in the rules file or nowhere.
 
 **`<name>.rules.md` is the cold tier, read only when a plan is large enough to care.** The conventions you transcribed in step 1, as **plain bullets**. No headings per rule, no SHALL, no scenarios. One line per rule, in this order: the rule, where it is stated, what enforces it or `unenforced`. Written the way `CLAUDE.md` says it.
 
@@ -170,14 +176,15 @@ If you have no terminal tool, report the exact `register-capability.py` command 
 
 ### 5. Report
 
-Summarize, in plain language: which capabilities you proposed and registered, the storage layout used and any capability that deviated from it, where each living spec was drafted, how many requirements each carries, how many were tagged `[inferred]`, how many clarifications you walked and how they landed (resolved / kept / dropped), any **defects** the clarification walk turned up, and what landed under `## Uncovered`. Make clear the drafts are `[DRAFT]` starting points to review, not finished specs.
+**First, check every deferral landed.** Each `## Uncovered` entry and each *found, not proposed* line naming another capability is an unchecked promise. Open that capability's spec: either it says the thing, or nothing does. Move each orphan where it belongs, or report it uncovered by decision.
+
+Then summarize, in plain language: which capabilities you proposed and registered, the storage layout used and any capability that deviated from it, where each living spec was drafted, how many requirements each carries, how many were tagged `[inferred]`, how many clarifications you walked and how they landed (resolved / kept / dropped), any **defects** the clarification walk turned up, and what landed under `## Uncovered`. Make clear the drafts are `[DRAFT]` starting points to review, not finished specs.
 
 ## Boundaries
 
 - **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates spec files and appends to the capability registry.
 - **The layout is already the developer's call.** Never assume central because it is the default. Read the `layout` field, and show the resulting spec paths before writing anything.
 - **Only what was named.** Adopt the areas the developer named or chose, and nothing else. Several areas in one run is fine. Silently widening past the agreed scope is not.
-- **Specify, don't transcribe.** A requirement that a prop rename would falsify is a bug in the draft. Fewer, durable requirements beat an exhaustive inventory of the code.
-- **Write the shape the pipeline can update.** Named `###` requirements with scenarios, never numbered `FR-` bullets, and never `###` section groupings. Fold-back matches requirements by heading text, and a spec in any other shape is one the pipeline can silently fail to update.
+- - **Write the shape the pipeline can update.** Named `###` requirements with scenarios, never numbered `FR-` bullets, and never `###` section groupings. Fold-back matches requirements by heading text, and a spec in any other shape is one the pipeline can silently fail to update.
 - **Honest by construction.** The `[inferred]` tag, clarification markers, and the `## Uncovered` section are required.
 - **Never fail the host.** A missing resolver, missing helper, or unparseable config is reported and skipped, not crashed through.

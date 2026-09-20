@@ -1,226 +1,277 @@
 enabled: true
-exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/__fixtures__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts", "apps/vscode/src/core/types/config.ts"]
+exempt:
+- '**/*.config.*'
+- '**/*.test.*'
+- '**/__tests__/**'
+- '**/__stories__/**'
+- '**/__fixtures__/**'
+- '**/*.stories.*'
+- '**/migrations/**'
+- '**/index.ts'
+- apps/vscode/src/core/types/config.ts
+- apps/*/tests/**
+- tests/**
 capabilities:
-  - name: spec-editor
-    match: ["apps/vscode/src/features/spec-editor/**"]
-    spec: apps/vscode/src/features/spec-editor/spec-editor.spec.md
-  - name: editor-ui
-    match: ["apps/vscode/webview/src/spec-editor/**"]
-    spec: apps/vscode/webview/src/spec-editor/editor-ui.spec.md
-  - name: webview-shared-interaction
-    match: ["apps/vscode/webview/src/shared/**"]
-    spec: capabilities/webview-shared/interaction.spec.md
-  - name: webview-shared-design-system
-    match: ["apps/vscode/webview/src/shared/**"]
-    spec: capabilities/webview-shared/design-system.spec.md
-  - name: core-spec-discovery
-    match: ["apps/vscode/src/core/specDirectoryResolver*"]
-    spec: apps/vscode/src/core/core-spec-discovery.spec.md
-  - name: core-spec-context
-    match: ["apps/vscode/src/core/types/**"]
-    exclude: ["apps/vscode/src/core/types/config.ts"]
-    spec: apps/vscode/src/core/core-spec-context.spec.md
-  - name: core-telemetry
-    match: ["apps/vscode/src/core/telemetry.ts", "apps/vscode/src/core/__tests__/**"]
-    spec: apps/vscode/src/core/core-telemetry.spec.md
-  - name: core-primitives
-    match: ["apps/vscode/src/core/**"]
-    exclude: ["apps/vscode/src/core/specDirectoryResolver*", "apps/vscode/src/core/types/**", "apps/vscode/src/core/telemetry.ts", "apps/vscode/src/core/__tests__/**"]
-    spec: apps/vscode/src/core/core-primitives.spec.md
-  - name: specs-state-record
-    match: ["apps/vscode/src/features/specs/**"]
-    spec: apps/vscode/src/features/specs/specs-state-record.spec.md
-  - name: specs-lifecycle
-    match: ["apps/vscode/src/features/specs/**"]
-    spec: apps/vscode/src/features/specs/specs-lifecycle.spec.md
-  - name: specs-commands
-    match: ["apps/vscode/src/features/specs/**"]
-    spec: apps/vscode/src/features/specs/specs-commands.spec.md
-  - name: specs-pipeline-build
-    match: ["apps/vscode/src/features/specs/**"]
-    spec: apps/vscode/src/features/specs/specs-pipeline-build.spec.md
-  - name: specs-living-view
-    match: ["apps/vscode/src/features/living-specs/**"]
-    spec: apps/vscode/src/features/living-specs/specs-living-view.spec.md
-  - name: specs-living-actions
-    match: ["apps/vscode/src/features/living-specs/**"]
-    spec: apps/vscode/src/features/living-specs/specs-living-actions.spec.md
-  - name: specs-living-model
-    match: ["apps/vscode/src/features/living-specs/**"]
-    spec: apps/vscode/src/features/living-specs/specs-living-model.spec.md
-  - name: steering-tree
-    match: ["apps/vscode/src/features/steering/**"]
-    spec: apps/vscode/src/features/steering/steering-tree.spec.md
-  - name: steering-documents
-    match: ["apps/vscode/src/features/steering/**"]
-    spec: apps/vscode/src/features/steering/steering-documents.spec.md
-  - name: spec-viewer-panel
-    match: ["apps/vscode/src/features/spec-viewer/**"]
-    spec: apps/vscode/src/features/spec-viewer/spec-viewer-panel.spec.md
-  - name: spec-viewer-state
-    match: ["apps/vscode/src/features/spec-viewer/**"]
-    spec: apps/vscode/src/features/spec-viewer/spec-viewer-state.spec.md
-  - name: spec-viewer-actions
-    match: ["apps/vscode/src/features/spec-viewer/**"]
-    spec: apps/vscode/src/features/spec-viewer/spec-viewer-actions.spec.md
-  - name: spec-viewer-living
-    match: ["apps/vscode/src/features/spec-viewer/**", "apps/vscode/src/features/living-specs/livingDocs.ts", "apps/vscode/src/features/living-specs/livingHeaderMeta.ts", "apps/vscode/src/features/living-specs/livingSpecsContent.ts"]
-    spec: apps/vscode/src/features/spec-viewer/spec-viewer-living.spec.md
-  - name: spec-viewer-living-review
-    match: ["apps/vscode/src/features/spec-viewer/**", "apps/vscode/src/features/living-specs/livingDocs.ts", "apps/vscode/src/features/living-specs/livingHeaderMeta.ts", "apps/vscode/src/features/living-specs/livingSpecsContent.ts"]
-    spec: apps/vscode/src/features/spec-viewer/spec-viewer-living-review.spec.md
-  - name: commands-assembly
-    match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: capabilities/companion-commands/assembly.spec.md
-  - name: commands-pipeline
-    match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: capabilities/companion-commands/pipeline.spec.md
-  - name: commands-capture
-    match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: capabilities/companion-commands/capture.spec.md
-  - name: commands-completion
-    match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: capabilities/companion-commands/completion.spec.md
-  - name: commands-living-markers
-    match: ["apps/speckit-extension/scripts/living_validate.py", "apps/speckit-extension/scripts/living_spec_fold.py"]
-    spec: capabilities/companion-commands/living-markers.spec.md
-  - name: commands-living
-    match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: capabilities/companion-commands/living-commands.spec.md
-  - name: workflows-catalog
-    match: ["apps/vscode/src/features/workflows/**"]
-    spec: capabilities/workflows/workflows-catalog.spec.md
-  - name: workflows-selection
-    match: ["apps/vscode/src/features/workflows/**"]
-    spec: capabilities/workflows/workflows-selection.spec.md
-  - name: workflows-pipeline
-    match: ["apps/vscode/src/features/workflows/**", "apps/speckit-extension/workflows/**"]
-    spec: capabilities/workflows/workflows-pipeline.spec.md
-  - name: ai-providers-dispatch
-    match: ["apps/vscode/src/ai-providers/**"]
-    spec: apps/vscode/src/ai-providers/ai-providers-dispatch.spec.md
-  - name: ai-providers-prompt
-    match: ["apps/vscode/src/ai-providers/**"]
-    spec: apps/vscode/src/ai-providers/ai-providers-prompt.spec.md
-  - name: ai-providers-config
-    match: ["apps/vscode/src/ai-providers/**"]
-    spec: apps/vscode/src/ai-providers/ai-providers-config.spec.md
-  - name: asset-discovery
-    match: ["apps/vscode/src/features/agents/**", "apps/vscode/src/features/skills/**"]
-    spec: capabilities/extension-services/asset-discovery.spec.md
-  - name: extension-settings
-    match: ["apps/vscode/src/features/settings/**", "apps/vscode/src/features/permission/**"]
-    spec: capabilities/extension-services/extension-settings.spec.md
-  - name: speckit-cli-detection
-    match: ["apps/vscode/src/speckit/detector.ts", "apps/vscode/src/speckit/cliCommands.ts", "apps/vscode/src/speckit/specKitAgent.ts", "apps/vscode/src/speckit/index.ts"]
-    spec: apps/vscode/src/speckit/speckit-cli-detection.spec.md
-  - name: speckit-cli-companion-extension
-    match: ["apps/vscode/src/speckit/specKitExtensionInstall.ts", "apps/vscode/src/speckit/specKitExtensionInstallCommands.ts", "apps/vscode/src/speckit/companionVersionGap.ts", "apps/vscode/src/speckit/companionUpdateNudge.ts"]
-    spec: apps/vscode/src/speckit/speckit-cli-companion-extension.spec.md
-  - name: speckit-cli-notifications
-    match: ["apps/vscode/src/speckit/updateChecker.ts", "apps/vscode/src/speckit/utilityCommands.ts", "apps/vscode/src/speckit/taskProgressService.ts"]
-    spec: apps/vscode/src/speckit/speckit-cli-notifications.spec.md
-  - name: capture-runtime-context
-    match: ["apps/speckit-extension/scripts/spec_context.py", "apps/speckit-extension/scripts/write-context.py", "apps/speckit-extension/scripts/derive-from-files.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-context.spec.md
-  - name: capture-runtime-capture
-    match: ["apps/speckit-extension/scripts/capture.py", "apps/speckit-extension/scripts/run_trace.py", "apps/speckit-extension/scripts/status-context.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-capture.spec.md
-  - name: capture-runtime-tasks
-    match: ["apps/speckit-extension/scripts/task_sync.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-tasks.spec.md
-  - name: capture-runtime-living-fold
-    match: ["apps/speckit-extension/scripts/living_spec_fold.py", "apps/speckit-extension/scripts/spec_deltas.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-living-fold.spec.md
-  - name: capture-runtime-living-validate
-    match: ["apps/speckit-extension/scripts/living_validate.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-living-validate.spec.md
-  - name: capture-runtime-living-resolve
-    match: ["apps/speckit-extension/scripts/resolve-spec-paths.py", "apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: apps/speckit-extension/scripts/capture-runtime-living-resolve.spec.md
-  - name: capture-runtime-living-registry
-    match: ["apps/speckit-extension/scripts/record-living-specs.py", "apps/speckit-extension/scripts/register-capability.py", "apps/speckit-extension/scripts/relocate-capability.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-living-registry.spec.md
-  - name: capture-runtime-drift
-    match: ["apps/speckit-extension/scripts/drift.py", "apps/speckit-extension/scripts/doctor_drift.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-drift.spec.md
-  - name: capture-runtime-reports
-    match: ["apps/speckit-extension/scripts/drift.py", "apps/speckit-extension/scripts/check-coverage.py", "apps/speckit-extension/scripts/doctor.py", "apps/speckit-extension/scripts/doctor_checks.py", "apps/speckit-extension/scripts/doctor_bleed.py", "apps/speckit-extension/scripts/doctor_chat.py", "apps/speckit-extension/scripts/doctor_drift.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-reports.spec.md
-  - name: capture-runtime-build
-    match: ["apps/speckit-extension/scripts/build-pipeline.py", "apps/speckit-extension/scripts/assemble_nodes.py", "apps/speckit-extension/scripts/build.py", "apps/speckit-extension/scripts/hook_render.py", "apps/speckit-extension/scripts/template_render.py", "apps/speckit-extension/scripts/decision_routes.py", "apps/speckit-extension/scripts/manifest.py", "apps/speckit-extension/scripts/emission_sync.py", "apps/speckit-extension/scripts/package-manifest.py", "apps/speckit-extension/scripts/_command_parts.py", "apps/speckit-extension/scripts/check_shape_parity.py", "apps/speckit-extension/scripts/check-command-emissions.py", "apps/speckit-extension/scripts/instruction-budget.py", "apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]
-    spec: apps/speckit-extension/scripts/capture-runtime-build.spec.md
-  - name: capture-runtime-config
-    match: ["apps/speckit-extension/scripts/companion_config.py", "apps/speckit-extension/scripts/config_write.py", "apps/speckit-extension/scripts/config_repair.py", "apps/speckit-extension/scripts/pipeline-graph.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-config.spec.md
-  - name: viewer-ui-state
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-state.spec.md
-  - name: viewer-ui-navigation
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-navigation.spec.md
-  - name: viewer-ui-document
-    match: ["apps/vscode/webview/src/spec-viewer/**", "apps/vscode/webview/src/shared/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-document.spec.md
-  - name: viewer-ui-living-cards
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-living-cards.spec.md
-  - name: viewer-ui-comments
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-comments.spec.md
-  - name: viewer-ui-overview
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-overview.spec.md
-  - name: viewer-ui-chrome
-    match: ["apps/vscode/webview/src/spec-viewer/**"]
-    spec: apps/vscode/webview/src/spec-viewer/viewer-ui-chrome.spec.md
-  - name: file-watchers
-    match: ["apps/vscode/src/features/fileWatchers.ts"]
-    spec: capabilities/extension-services/file-watchers.spec.md
-  - name: protocol-contracts
-    match: ["apps/vscode/src/protocol/**"]
-    spec: apps/vscode/src/protocol/protocol-contracts.spec.md
-  - name: pipeline-builder-panel
-    match: ["apps/vscode/src/features/pipeline-builder/**"]
-    spec: capabilities/pipeline-builder/panel.spec.md
-  - name: pipeline-builder-board
-    match: ["apps/vscode/webview/src/pipeline-builder/**"]
-    spec: capabilities/pipeline-builder/board.spec.md
-  - name: pipeline-builder-editing
-    match: ["apps/vscode/webview/src/pipeline-builder/**"]
-    spec: capabilities/pipeline-builder/editing.spec.md
-  - name: media-pipeline
-    match: ["tooling/scripts/**", "content/media/**"]
-    spec: capabilities/media-pipeline/asset-build.spec.md
-  - name: capture-runtime-quality-checks
-    match: ["apps/speckit-extension/scripts/check_capture.py", "apps/speckit-extension/scripts/check_living_spec.py", "apps/speckit-extension/scripts/check_quality.py", "apps/speckit-extension/scripts/dispatch-briefs.py"]
-    spec: apps/speckit-extension/scripts/capture-runtime-quality-checks.spec.md
-
-# House rules, written once here instead of retyped into chat on every run.
-# `spec` reaches the specify step, `plan` reaches the plan step, and neither
-# sees the other's.
-rules:
-  spec:
-    - "Write every scenario as WHEN/THEN with exactly one observable outcome"
-    - "Reserve backticks for real identifiers a reader would copy, never ordinary nouns"
-  plan:
-    - "Name the capability each decision belongs to, so the fold knows where it goes"
-    - "Prefer extending the file that already owns a concern over adding a new one"
-
-# Requirements dropped in the 2026-09-07 re-adoption, each because a test
-# already enforces it. Kept here so the decision is greppable.
-#   One message dispatcher serves both ends of the webview protocol: dropped because the TypeScript compiler already enforces both halves. The dispatcher'
-#   A provider's label and its mark resolve from one decision — enforced by apps/vscode/src/features/steering/__tests__/providerIcon.test.ts (unknown host and unknown
-#   A file the view creates lands where the view watches and reads — enforced by apps/vscode/src/features/steering/__tests__/steeringManager.test.ts (global steering 
-#   A done spec offers only its finish actions, never the forward advance — already pinned by a test: apps/vscode/src/features/spec-viewer/__tests__/footerMatrix.fixt
-#   A CLI provider is a terminal target; an editor-chat provider is not — every scenario (three editor providers false, CLIs true, unknown defaults to ter
-#   The preamble's schema block is generated from the canonical contract, never retyped — its one scenario (every author/step/status listed from the canon
-#   Command names are rewritten to whatever the target actually registered — dot/dash per target, user-setting override, verb-only rewrite, non-SpecKit co
-#   A value's meaning survives a type change — enforced by apps/vscode/src/core/settingsMigration.test.ts (`coerceLegacyBoolean` maps beta/on→true, off→false, boolean
-#   Migrations rewrite only known legacy values, scope by scope, and are idempotent — enforced by apps/vscode/src/core/settingsMigration.test.ts (`preserves scope`, `
-#   Retired settings are removed from settings but tolerated if present — removal half enforced by apps/vscode/src/core/settingsMigration.test.ts `removeRetiredSettin
-#   Reconciling the companion's command family is add-only and idempotent — enforced by apps/vscode/src/features/settings/companionPresetReconciler.test.ts (`is a no-
-#   An install-state gate keys on the signal that actually implies the capability — enforced scenario-for-scenario by companionPresetReconciler.test.ts `i
-#   A recorded step completion settles the step even when status lags — both scenarios are enforced one-to-one by apps/vscode/webview/src/spec-viewer/__tests__/stepIn
-#   A teardown must unmount what it marked, not re-find it — enforced by apps/vscode/webview/src/spec-viewer/editor/editorHost.test.ts ('leaves no editing class behin
+- name: choose-an-assistant
+  match:
+  - apps/vscode/src/**
+  spec: capabilities/ai-providers/choose-an-assistant.spec.md
+- name: pick-a-workflow
+  match:
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/src/features/workflows/**
+  spec: capabilities/ai-providers/pick-a-workflow.spec.md
+- name: send-a-command-to-the-assistant
+  match:
+  - apps/vscode/src/ai-providers/**
+  - apps/vscode/src/core/utils/installUtils.ts
+  - apps/vscode/src/speckit/detector.ts
+  spec: capabilities/ai-providers/send-a-command-to-the-assistant.spec.md
+- name: customize-the-pipeline
+  match:
+  - apps/speckit-extension/fragments/**
+  - apps/speckit-extension/nodes/**
+  - apps/speckit-extension/presets/_parts/**
+  - apps/speckit-extension/scripts/**
+  - apps/speckit-extension/workflows/presets/**
+  spec: capabilities/companion-pipeline/customize-the-pipeline.spec.md
+- name: right-size-a-change
+  match:
+  - apps/speckit-extension/commands/**
+  - apps/speckit-extension/nodes/plan/**
+  - apps/speckit-extension/nodes/specify/**
+  - apps/speckit-extension/nodes/tasks/size-budget.md
+  - apps/speckit-extension/presets/_parts/**
+  - apps/speckit-extension/scripts/**
+  - apps/speckit-extension/workflows/speckit-companion.workflow.yml
+  spec: capabilities/companion-pipeline/right-size-a-change.spec.md
+- name: run-a-spec-through-the-pipeline
+  match:
+  - apps/speckit-extension/commands/**
+  - apps/speckit-extension/extension.yml
+  - apps/speckit-extension/nodes/**
+  - apps/speckit-extension/presets/_parts/**
+  - apps/speckit-extension/presets/companion-standard/**
+  - apps/speckit-extension/scripts/dispatch-briefs.py
+  - apps/speckit-extension/workflows/**
+  spec: capabilities/companion-pipeline/run-a-spec-through-the-pipeline.spec.md
+- name: split-work-across-workers
+  match:
+  - apps/speckit-extension/nodes/implement/**
+  - apps/speckit-extension/nodes/plan/**
+  - apps/speckit-extension/nodes/specify/draft-spec.md
+  - apps/speckit-extension/nodes/tasks/tasks-doc.md
+  - apps/speckit-extension/presets/_parts/timing.md
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/companion-pipeline/split-work-across-workers.spec.md
+- name: keep-the-companion-extension-current
+  match:
+  - apps/vscode/src/**
+  - apps/vscode/webview/styles/spec-viewer/_install-banner.css
+  - package.json
+  spec: capabilities/extension-services/keep-the-companion-extension-current.spec.md
+- name: see-changes-from-disk
+  match:
+  - apps/vscode/src/core/specDirectoryResolver.ts
+  - apps/vscode/src/core/utils/notificationUtils.ts
+  - apps/vscode/src/extension.ts
+  - apps/vscode/src/features/**
+  - apps/vscode/src/speckit/taskProgressService.ts
+  - package.json
+  spec: capabilities/extension-services/see-changes-from-disk.spec.md
+- name: set-up-and-update
+  match:
+  - apps/vscode/src/**
+  - package.json
+  spec: capabilities/extension-services/set-up-and-update.spec.md
+- name: share-anonymous-usage
+  match:
+  - apps/vscode/src/**
+  - package.json
+  spec: capabilities/extension-services/share-anonymous-usage.spec.md
+- name: fold-a-finished-change-back
+  match:
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/living-specs-engine/fold-a-finished-change-back.spec.md
+- name: keep-specs-honest
+  match:
+  - apps/speckit-extension/commands/**
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/living-specs-engine/keep-specs-honest.spec.md
+- name: load-specs-for-a-change
+  match:
+  - apps/speckit-extension/commands/speckit.companion.living-show.md
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/living-specs-engine/load-specs-for-a-change.spec.md
+- name: register-living-specs
+  match:
+  - apps/speckit-extension/commands/**
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/living-specs-engine/register-living-specs.spec.md
+- name: find-a-living-spec
+  match:
+  - apps/vscode/src/extension.ts
+  - apps/vscode/src/features/living-specs/**
+  - apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx
+  - apps/vscode/webview/src/spec-viewer/components/cards/LivingSpecsCard.tsx
+  - package.json
+  spec: capabilities/living-specs-in-vscode/find-a-living-spec.spec.md
+- name: keep-living-specs-current
+  match:
+  - apps/vscode/src/features/living-specs/**
+  - apps/vscode/src/features/spec-viewer/messageHandlers.ts
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/webview/src/spec-viewer/App.tsx
+  - apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx
+  - package.json
+  spec: capabilities/living-specs-in-vscode/keep-living-specs-current.spec.md
+- name: review-a-living-spec
+  match:
+  - apps/vscode/src/features/living-specs/**
+  - apps/vscode/src/features/spec-viewer/**
+  - apps/vscode/webview/src/spec-viewer/**
+  spec: capabilities/living-specs-in-vscode/review-a-living-spec.spec.md
+- name: attach-a-hook
+  match:
+  - apps/vscode/src/features/pipeline-builder/**
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/webview/src/pipeline-builder/**
+  spec: capabilities/pipeline-builder/attach-a-hook.spec.md
+- name: read-the-pipeline
+  match:
+  - apps/vscode/src/features/pipeline-builder/**
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/webview/src/pipeline-builder/**
+  spec: capabilities/pipeline-builder/read-the-pipeline.spec.md
+- name: reshape-a-step
+  match:
+  - apps/vscode/src/features/pipeline-builder/**
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/webview/src/pipeline-builder/**
+  spec: capabilities/pipeline-builder/reshape-a-step.spec.md
+- name: switch-workflows-and-build
+  match:
+  - apps/vscode/src/features/pipeline-builder/**
+  - apps/vscode/src/features/specs/**
+  - apps/vscode/webview/src/pipeline-builder/**
+  spec: capabilities/pipeline-builder/switch-workflows-and-build.spec.md
+- name: produce-the-docs-media
+  match:
+  - .storybook/capture-theme.ts
+  - README.md
+  - apps/speckit-extension/**
+  - apps/vscode/webview/src/spec-viewer/__stories__/captureFrame.tsx
+  - apps/website/scripts/sync-media.mjs
+  - content/media/**
+  - docs/screenshots/generated/**
+  - package.json
+  - tooling/scripts/**
+  spec: capabilities/repo-tooling/produce-the-docs-media.spec.md
+- name: release-the-spec-kit-extension
+  match:
+  - .github/workflows/release.yml
+  - apps/speckit-extension/**
+  spec: capabilities/repo-tooling/release-the-spec-kit-extension.spec.md
+- name: diagnose-a-run
+  match:
+  - apps/speckit-extension/commands/speckit.companion.doctor.md
+  - apps/speckit-extension/scripts/**
+  spec: capabilities/run-record/diagnose-a-run.spec.md
+- name: protect-the-run-record
+  match:
+  - apps/speckit-extension/scripts/**
+  - apps/vscode/src/features/specs/**
+  spec: capabilities/run-record/protect-the-run-record.spec.md
+- name: record-a-run
+  match:
+  - apps/speckit-extension/commands/speckit.companion.after-*.md
+  - apps/speckit-extension/commands/speckit.companion.after-implement.md
+  - apps/speckit-extension/presets/_parts/timing.md
+  - apps/speckit-extension/scripts/**
+  - apps/vscode/src/core/types/**
+  spec: capabilities/run-record/record-a-run.spec.md
+- name: see-where-a-spec-stands
+  match:
+  - apps/speckit-extension/commands/**
+  - apps/speckit-extension/scripts/**
+  - apps/vscode/src/features/specs/**
+  spec: capabilities/run-record/see-where-a-spec-stands.spec.md
+- name: act-on-a-spec
+  match:
+  - apps/vscode/src/features/specs/**
+  - package.json
+  spec: capabilities/sidebar/act-on-a-spec.spec.md
+- name: browse-specs
+  match:
+  - apps/vscode/src/core/utils/specDisplayName.ts
+  - apps/vscode/src/features/specs/**
+  spec: capabilities/sidebar/browse-specs.spec.md
+- name: browse-steering-files
+  match:
+  - apps/vscode/src/features/agents/**
+  - apps/vscode/src/features/skills/**
+  - apps/vscode/src/features/steering/**
+  - package.json
+  spec: capabilities/sidebar/browse-steering-files.spec.md
+- name: open-the-sidebar
+  match:
+  - apps/vscode/src/**
+  - package.json
+  spec: capabilities/sidebar/open-the-sidebar.spec.md
+- name: describe-a-new-spec
+  match:
+  - apps/vscode/src/features/spec-editor/**
+  - apps/vscode/webview/src/spec-editor/**
+  spec: capabilities/spec-editor/describe-a-new-spec.spec.md
+- name: hand-a-brief-to-the-assistant
+  match:
+  - apps/vscode/src/ai-providers/**
+  - apps/vscode/src/features/spec-editor/**
+  - apps/vscode/src/features/workflows/**
+  - apps/vscode/webview/src/spec-editor/**
+  spec: capabilities/spec-editor/hand-a-brief-to-the-assistant.spec.md
+- name: comment-on-a-spec
+  match:
+  - apps/vscode/src/features/spec-viewer/**
+  - apps/vscode/webview/src/spec-viewer/components/**
+  - apps/vscode/webview/src/spec-viewer/editor/**
+  - apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
+  spec: capabilities/spec-viewer/comment-on-a-spec.spec.md
+- name: move-a-spec-forward
+  match:
+  - apps/vscode/src/features/spec-viewer/**
+  - apps/vscode/webview/src/spec-viewer/components/**
+  - apps/vscode/webview/src/spec-viewer/stepInFlight.ts
+  spec: capabilities/spec-viewer/move-a-spec-forward.spec.md
+- name: read-a-spec
+  match:
+  - apps/vscode/src/features/spec-viewer/**
+  - apps/vscode/webview/src/spec-viewer/**
+  spec: capabilities/spec-viewer/read-a-spec.spec.md
+- name: see-what-the-run-recorded
+  match:
+  - apps/vscode/webview/src/spec-viewer/components/**
+  spec: capabilities/spec-viewer/see-what-the-run-recorded.spec.md
+- name: work-through-a-document
+  match:
+  - apps/vscode/src/features/spec-viewer/**
+  - apps/vscode/webview/src/spec-viewer/**
+  spec: capabilities/spec-viewer/work-through-a-document.spec.md
+- name: webview-safety
+  match:
+  - apps/vscode/src/features/spec-viewer/html/**
+  - apps/vscode/webview/src/pipeline-builder/**
+  - apps/vscode/webview/src/spec-editor/**
+  - apps/vscode/webview/src/spec-viewer/**
+  spec: capabilities/webview-safety/webview-safety.spec.md
+- name: operating-a-panel
+  match:
+  - apps/vscode/webview/src/shared/**
+  - apps/vscode/webview/styles/**
+  spec: capabilities/webview-shared/operating-a-panel.spec.md
+- name: reading-a-panel
+  match:
+  - apps/vscode/webview/src/shared/**
+  - apps/vscode/webview/styles/**
+  spec: capabilities/webview-shared/reading-a-panel.spec.md
 

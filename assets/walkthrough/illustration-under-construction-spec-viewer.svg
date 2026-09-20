@@ -8,7 +8,7 @@
 		tabs, and the rendered spec.md body with at least one user story
 		visible. Shoot it the way every other docs image is shot, through a
 		capture story plus scripts/capture-docs-images.mjs, on the capture
-		palette in .storybook/capture-theme.ts. Rules: capabilities/media-pipeline/asset-build.spec.md.
+		palette in .storybook/capture-theme.ts. Rules: capabilities/repo-tooling/produce-the-docs-media.spec.md.
 
 		When the real image lands, swap this file for it and point the
 		"sampleSpec" walkthrough step's media at the new path. Keep the media

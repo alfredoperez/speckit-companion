@@ -1,0 +1,23 @@
+# Found, not proposed
+
+- Install and update banner at the top of the panel (install, learn more, dismiss): shared with the Activity panel, belongs to the install-prompt area.
+- Telemetry events on create (`spec.created`, `phase.dispatched`, `chosenAs` default/picked/trial, install prompt shown/clicked): telemetry area owns the catalog; the one build constraint is in the rules file.
+- Workflow-backed draft store with 24 hour cleanup: nothing ever saves a draft into it, only the cleanup runs. Dead code.
+- `preview` message and `previewContent` reply: the handler only logs. No preview exists.
+- `restoreImages` message: handled by the page, never sent. Surfaced under Uncovered as a gap instead.
+- 10 MB total attachment limit, 20 image limit, 100px thumbnail size: declared constants nothing checks.
+- "Completed" temp-file status with a 5 minute grace period: nothing ever marks a set completed.
+- Image size validated on both the page and the extension: one behaviour, written once.
+- Thumbnails reuse the full image data rather than a resized copy: implementation detail.
+- Random nonce and content security policy on the page: standard webview hygiene, not specific to this area.
+- Session ids, temp-set ids and the manifest file format: internal bookkeeping that a rewrite would replace.
+- Image format inferred from the file extension with PNG as the fallback: implementation detail.
+- Picker is a dropdown rather than cards because cards pushed the brief below the fold: the why, not a requirement.
+- 500 ms delay before the panel closes after a successful create: cosmetic timing.
+- 300 ms debounce on saving typed text: tuning value.
+- Output channel log lines for each step: diagnostics.
+- A provider change forces a window reload, which is what keeps the cached workflow list correct: belongs to the AI providers area.
+- Fallback to `speckit` when the selected workflow name is unknown: defensive default, no user-visible contract.
+- Non-blocking "fell back to standard SpecKit" warning when the extension vanishes between the picker and the dispatch: one narrow edge of the install rule already written.
+- Storybook mock of the Create Spec form and its stories: media and review tooling, not product behaviour.
+- Custom command buttons skip the blank-brief check on the page and rely on the extension's "cannot be empty" error: inconsistency worth fixing, not worth specifying.

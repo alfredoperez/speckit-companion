@@ -11,7 +11,17 @@ The harness lives in the sibling [`speckit-bench`](https://github.com/alfredoper
 
 ### 1. Name the sweep
 
-`$ARGUMENTS` is what the experiment is testing. Turn it into a short label — "hook anchors", "living specs off", "fresh baseline". If there is nothing to name, use today's date and call it a baseline repeat, which is also useful: it is how the noise floor gets measured.
+`$ARGUMENTS` is what the experiment is testing, plus optional flags:
+
+| Flag | Default | What it does |
+|---|---|---|
+| `--sizes easy,hard` | all four | which sizes the round covers |
+| `--modes speckit,companion` | all arms | which arms to run |
+| `--ext code\|latest\|<tag>` | `code` | `code` = the working tree, `latest` = the published build, or a release tag to backtrack to |
+| `--speckit latest\|keep` | `latest` | pin or refresh spec-kit itself |
+| `--model sonnet\|opus` | the session's | model the driver agents run on |
+
+Pass `--sizes`/`--modes` straight through to `sync-templates.mjs`, `prep` and `capture` — the same list at every step, or the round measures cells it never ran. Pass `--model` as the `model` option on each driver Agent. Everything else in `$ARGUMENTS` is what the experiment is testing. Turn it into a short label — "hook anchors", "living specs off", "fresh baseline". If there is nothing to name, use today's date and call it a baseline repeat, which is also useful: it is how the noise floor gets measured.
 
 ### 2. Check the machine first
 
@@ -27,7 +37,7 @@ If it is missing, or if `ps aux | grep mds_stores` shows Spotlight busy, tell th
 
 ```bash
 npm run compile                          # the driver dispatches the GUI preamble from dist/
-node ../speckit-bench/sync-templates.mjs --sizes easy,medium,hard,oversized --ext code --sweep "<label>"
+node ../speckit-bench/sync-templates.mjs --sizes <sizes> --ext <ext> --speckit <speckit> --sweep "<label>"
 ```
 
 `--ext code` measures the extension in `COMPANION_DIR`, which is what an experiment on unreleased work needs. Use `--ext latest` only when the question is explicitly about the published build.
@@ -37,7 +47,7 @@ The bake prints the three versions it recorded and fails loudly if any cell can 
 ### 4. Prep and drive
 
 ```bash
-node ../speckit-bench/run-all.mjs prep --sizes easy,medium,hard,oversized
+node ../speckit-bench/run-all.mjs prep --sizes <sizes>
 ```
 
 Then one driver per cell, all twelve at once, following step 3 of `/bench-run-all` — the same GUI preamble, the same settle-wait, capture for the Companion arms only, and **the cell's letter, never its arm**. Twelve drivers in parallel is fine; the round costs the slowest cell rather than the sum.
@@ -47,7 +57,7 @@ Expect 20 to 30 minutes.
 ### 5. Measure — with nothing else running
 
 ```bash
-node ../speckit-bench/run-all.mjs capture --sizes easy,medium,hard,oversized --no-reset
+node ../speckit-bench/run-all.mjs capture --sizes <sizes> --no-reset
 ```
 
 This runs a build and two test passes in each of twelve cells. **Do not start the judges while it runs.** Stacking twelve judge agents on top of it is what took the machine down; it costs nothing to wait the ten minutes.
@@ -66,6 +76,7 @@ If the machine is under load, or the user has other work to do, stop after step 
 node ../speckit-bench/run-all.mjs compare --metric work
 node ../speckit-bench/run-all.mjs compare --metric oracle
 node ../speckit-bench/run-all.mjs compare --metric wall
+node ../speckit-bench/run-all.mjs runs --limit 12     # the index: what ran, on which model and which build
 ```
 
 Lead with what moved and whether it moved more than the spread of the sweeps before it. A change smaller than that spread has not been measured — say so plainly rather than reporting it as a result.

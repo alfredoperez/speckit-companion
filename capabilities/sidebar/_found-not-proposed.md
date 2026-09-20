@@ -1,0 +1,33 @@
+# Sidebar — Found, Not Proposed
+
+- Workflow step commands (Specify, Plan, Tasks, Implement, Clarify, Analyze, Checklist, Constitution): live in the specs folder but run from the viewer, belongs to the pipeline area.
+- Run Custom Command picker and `speckit.customCommands`: Command Palette and viewer surface, not the sidebar.
+- After-implement and after-commit checkpoints: workflow behaviour, not sidebar.
+- Per-step model and effort passed at dispatch: provider and pipeline concern.
+- The `.spec-context.json` read, write, reconcile, backfill, reset and wipe guard: the run record contract, another worker's area.
+- Step history derivation, substep timing, transition logging, implement close guard, terminal step tracking: run record and viewer internals.
+- Rebuilding a user-defined workflow's progression from its step outputs on disk: real behaviour, but only the spec viewer applies it. The sidebar tree never calls it, so it belongs to the spec-viewer area, not here.
+- Spec shape check and its diagnostics: editor diagnostics, not a sidebar action.
+- Pipeline build and preview commands, pipeline graph: Pipeline Builder area.
+- Companion preset reconcile on activation (ensure the standard command family, remove legacy presets): install upkeep, no sidebar surface.
+- Living Specs view, its welcome blocks, menus and commands: excluded by the brief.
+- Upgrade picker and Install Companion Extension command: Command Palette only, install area.
+- Status bar update indicator and the init suggestion toast: not in the sidebar.
+- Telemetry events fired from sidebar surfaces (install prompt shown, sample opened, steering opened, spec archived): telemetry area, no planner needs it here.
+- Loading row with a spinner while specs resolve: transient detail.
+- 300 ms debounce on the file watcher: tuning value, covered by "refreshes shortly after".
+- Exact icon glyphs and theme colors per state: the doc page has the table, the requirement keeps only the distinctions.
+- Known-acronym casing in display names (CLI, API, VS Code): naming detail of a shared helper.
+- How nested related-file names become labels ("Contracts: Webview Messages"): cosmetic.
+- Sub-files and sub-directories of a step from custom workflow config (`subFiles`, `subDir`, change roots): workflow config behaviour, only its visible result is kept.
+- Selection count and mixed-selection context keys: set but no menu reads them now, dead weight.
+- `speckit.specs.reveal`, `speckit.specs.revealInExplorer` and `speckit.specs.toggleCollapseAll`: registered but no menu uses them, superseded by the generic reveal and the two-state button.
+- `speckit.agents.refresh`, `speckit.hooks.refresh`, `speckit.skills.refresh`: leftovers from merged views, all just refresh Steering.
+- Steering manager `init` (generate a starter set of steering docs): no command or menu reaches it.
+- Steering view welcome content with Create User Rule and Create Project Rule: never shows because the provider node is always present.
+- Create Project Rule and Create User Rule behaviour: hard-wired to Claude regardless of provider, recorded as a likely defect in the steering spec's Uncovered.
+- Steering document file patterns per provider (`*.md`, `*.instructions.md`): provider configuration.
+- Agent tool-count parsing and plugin agent discovery paths: detail under the agent and skill row requirement.
+- "Steering files are never read at dispatch": a statement about what dispatch does not do, belongs with the dispatch capability.
+- Accessibility of the tree (keyboard reach, theming): provided by the native tree, nothing for a change to break beyond "no status by color alone", which is kept.
+- Sponsor and Check for Updates commands: palette commands outside the sidebar.

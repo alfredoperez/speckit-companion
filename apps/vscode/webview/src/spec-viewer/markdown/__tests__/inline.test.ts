@@ -214,6 +214,31 @@ describe('parseInline', () => {
     // -------------------------------------------------------------------------
     // Edge cases
     // -------------------------------------------------------------------------
+    describe('a link target is someone else\'s text', () => {
+        it('a quote in the target cannot close the attribute', () => {
+            const html = parseInline('[go](" onmouseover="alert(1))');
+            expect(html).not.toContain('onmouseover="alert(1)"');
+            expect(html).toContain('&quot;');
+        });
+
+        it('a script scheme does not survive as a target', () => {
+            expect(parseInline('[go](javascript:alert(1))')).toContain('href="#"');
+        });
+
+        it('an image target is held to the same rule', () => {
+            expect(parseInline('![x](javascript:alert(1))')).toContain('src="#"');
+        });
+
+        it('an ordinary link still works', () => {
+            expect(parseInline('[docs](https://example.com/a?b=1)'))
+                .toContain('href="https://example.com/a?b=1"');
+        });
+
+        it('a relative path still works', () => {
+            expect(parseInline('[spec](./spec.md)')).toContain('href="./spec.md"');
+        });
+    });
+
     describe('edge cases', () => {
         it('returns an empty string for empty input', () => {
             expect(parseInline('')).toBe('');

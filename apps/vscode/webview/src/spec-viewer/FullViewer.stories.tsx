@@ -63,8 +63,8 @@ import spec406 from '../../../../../specs/406-living-spec-components/spec.md?raw
 import plan406 from '../../../../../specs/406-living-spec-components/plan.md?raw';
 import tasks406 from '../../../../../specs/406-living-spec-components/tasks.md?raw';
 import ctx406Raw from '../../../../../specs/406-living-spec-components/.spec-context.json?raw';
-import viewerUiLiving from './viewer-ui-overview.spec.md?raw';
-import specViewerLiving from '../../../src/features/spec-viewer/spec-viewer-panel.spec.md?raw';
+import readASpecLiving from '../../../../../capabilities/spec-viewer/read-a-spec.spec.md?raw';
+import moveASpecForwardLiving from '../../../../../capabilities/spec-viewer/move-a-spec-forward.spec.md?raw';
 import spec393 from './__fixtures__/specs/393-implement-button-lost/spec.md?raw';
 import plan393 from './__fixtures__/specs/393-implement-button-lost/plan.md?raw';
 import tasks393 from './__fixtures__/specs/393-implement-button-lost/tasks.md?raw';
@@ -162,8 +162,8 @@ export const LivingComponents406: Story = {
             view="overview"
             vs={vsFromContext(ctx406, completedFooter)}
             livingDocs={{
-                'viewer-ui-overview': { md: viewerUiLiving, label: 'viewer-ui-overview' },
-                'spec-viewer-panel': { md: specViewerLiving, label: 'spec-viewer-panel' },
+                'read-a-spec': { md: readASpecLiving, label: 'read-a-spec' },
+                'move-a-spec-forward': { md: moveASpecForwardLiving, label: 'move-a-spec-forward' },
             }}
         />
     ),
@@ -172,7 +172,7 @@ export const LivingComponents406: Story = {
 /**
  * The requirement outline (#672 Wave 1), driven through the real renderer.
  *
- * `viewer-ui` is one of the repository's largest living specs — the case the
+ * `read-a-spec` is one of the repository's largest living specs — the case the
  * outline exists for. Open it from the Overview's living-spec chip: the viewer's
  * own "On this page" outline lists every requirement rather than the document's
  * three section headings, each row carrying a coverage dot and, once markers are
@@ -184,11 +184,11 @@ export const RequirementOutline672: Story = {
         <InteractiveViewer
             ctx={ctx406}
             docs={docs406}
-            initialDoc="living:viewer-ui-overview"
+            initialDoc="living:read-a-spec"
             vs={vsFromContext(ctx406, completedFooter)}
             livingDocs={{
-                'viewer-ui-overview': { md: viewerUiLiving, label: 'viewer-ui-overview' },
-                'spec-viewer-panel': { md: specViewerLiving, label: 'spec-viewer-panel' },
+                'read-a-spec': { md: readASpecLiving, label: 'read-a-spec' },
+                'move-a-spec-forward': { md: moveASpecForwardLiving, label: 'move-a-spec-forward' },
                 // A short, marked spec beside the long unmarked ones, so the file
                 // count and a narrow column are both visible in one story.
                 marked: {

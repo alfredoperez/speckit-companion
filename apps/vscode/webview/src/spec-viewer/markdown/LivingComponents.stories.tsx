@@ -12,7 +12,7 @@ import {
 import { navState } from '../signals';
 import type { NavState, RequirementLink } from '../types';
 import { applyHighlighting } from '../highlighting';
-import webviewSharedCapability from '../../../../../../capabilities/webview-shared/design-system.spec.md?raw';
+import webviewSharedCapability from '../../../../../../capabilities/webview-shared/reading-a-panel.spec.md?raw';
 
 /**
  * Shared living-mode host: renders a markdown fixture through the real

@@ -160,7 +160,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // No activation prompt for the Companion extension. The activity-bar badge and
     // the pinned CTA row already say it, ambiently and permanently, so a toast on
     // top delivered the same message a third time before the user had done
-    // anything. The badge and the row remain; see speckit-cli-companion-extension.spec.md.
+    // anything. The badge and the row remain; see capabilities/extension-services/keep-the-companion-extension-current.spec.md.
 
     // Reload ConfigManager settings on configuration changes (single listener for all consumers)
     const configManager = ConfigManager.getInstance();

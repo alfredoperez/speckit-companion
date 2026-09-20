@@ -1,0 +1,28 @@
+# Found, not proposed
+
+- A verdict's warning notice text and the arrow glyph in the routing list: presentation of the routing the board requirement already names.
+- Step numbering, singular/plural wording of "node/nodes" and "file/files": copy detail, a test already holds it.
+- File count names the files on hover: tooltip detail.
+- Long hook text is cut at a word with the whole on the tooltip: presentation.
+- An extension command is shown by its tail without the `speckit.` prefix, and paths or script names are left alone: label formatting.
+- GitHub mark for spec-kit's own git extension, neutral mark for third parties, Companion mascot for the project's own: iconography.
+- An extension entry with no command, or an unnamed extension, reads sensibly: one-bug fixes.
+- The heavy and light bar on a card for node kind: visual encoding, covered by "carries its kind".
+- Build button fill versus outline beyond "filled only when a build is owed": styling.
+- Docked narrow header folds Open companion.yml and Preview build under a `⋯` menu: responsive layout, no behaviour lost.
+- The Choose list opens toward the panel, not off its edge: layout fix.
+- Resting controls (seam, bin) are drawn without opacity tricks: styling invariant, one past fix.
+- Only one thing occupies the side column at a time, and every side pane shares one shell with a named close button: structure, not behaviour a planner needs.
+- Kind legend beside the Kind row: help text.
+- Frame cannot be removed from the run and reads as always first: follows from "held".
+- Opening a node with no source file falls back to its region of the built command, or asks for a build: rare fallback.
+- New step seeds a frame, an order file and one `<name>-work` node: the seeding belongs to the spec-kit extension's writer.
+- A new step gets a real `/speckit.companion.<name>` command after the next build: build behaviour, owned by the commands area.
+- Preset ids are prefixed when sent so they are not read as workflow names: wire detail.
+- Workflow name pattern differs slightly from step name pattern (may start with a digit): validation detail.
+- Build report times and the exact status sentences ("is yours now", "Build to apply"): copy.
+- Warnings the graph or the parked resolve reported are surfaced in the header: folded into the broken and parked requirements' spirit, not worth its own.
+- The header ignores a `customised` flag that contradicts the steps: one past bug, covered by counting from the board.
+- `retainContextWhenHidden`, CSP and nonce on the webview: platform plumbing.
+- Build state is decided by file modified times: owned by the build area, outside this one.
+- The Storybook Guide stories: documentation of the design, not product behaviour.

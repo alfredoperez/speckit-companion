@@ -15,6 +15,17 @@ const KNOWN_EXTENSIONS = new Set<string>([
     '.vsix',
 ]);
 
+const SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
+
+/**
+ * A link target from a spec is someone else's text. A quote would close the
+ * attribute it lands in, and a script scheme would run on click.
+ */
+export function safeUrl(target: string): string {
+    const url = target.trim();
+    return SAFE_URL.test(url) ? url.replace(/"/g, '&quot;') : '#';
+}
+
 /**
  * Escape HTML entities
  */
@@ -82,10 +93,12 @@ export function parseInline(text: string): string {
         .replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>')
         // Strikethrough
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
-        // Links
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
         // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, target) =>
+            `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`)
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, target) =>
+            `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)
         // Restore inline code spans
         .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
 
