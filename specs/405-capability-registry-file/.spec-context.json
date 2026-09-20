@@ -693,5 +693,6 @@
       "result": "9 of 9 reverts produced the expected failure: registry location, migrate-on-write, malformed-no-fallback (both runtimes), boundary probe (both runtimes), stale-legacy warning, wrapper shape, and registry-first read",
       "warnings": []
     }
-  ]
+  ],
+  "telemetryInstanceId": "c1eb44c7-2da3-45ba-a86f-07f00357a559"
 }

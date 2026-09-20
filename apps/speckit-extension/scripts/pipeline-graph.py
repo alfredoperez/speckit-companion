@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
+import assemble_nodes as assemble  # noqa: E402
 from _command_parts import (  # noqa: E402
     decomposed_commands,
     frame_source,
@@ -36,7 +37,6 @@ from _command_parts import (  # noqa: E402
     use_project_nodes,
 )
 
-assemble = importlib.import_module("assemble-nodes")
 build = importlib.import_module("build-pipeline")
 manifest_mod = importlib.import_module("manifest")
 template_render = importlib.import_module("template_render")

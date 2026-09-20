@@ -184,11 +184,33 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     private renderNodes(nodes: CapabilityTreeNode[]): Promise<LivingSpecItem[]> {
         return Promise.all(nodes.map(async node => {
             if (node.kind === 'group') {
-                return LivingSpecItem.dirGroup(node);
+                return LivingSpecItem.dirGroup(node, await this.driftedUnder(node));
             }
             const health = await this.health(node.capability);
             return this.capabilityItem(node.capability, node.label, health);
         }));
+    }
+
+    /**
+     * How many capabilities anywhere under `node` have drifted. The same total
+     * of health reads as before, but paid when the folder renders rather than
+     * when someone opens it. They run together and each is bounded, and the
+     * cache makes every later read free.
+     */
+    private async driftedUnder(node: CapabilityTreeGroup): Promise<number> {
+        const leaves: ResolvedCapability[] = [];
+        const walk = (children: CapabilityTreeNode[]): void => {
+            for (const child of children) {
+                if (child.kind === 'group') {
+                    walk(child.children);
+                } else {
+                    leaves.push(child.capability);
+                }
+            }
+        };
+        walk(node.children);
+        const health = await Promise.all(leaves.map(cap => this.health(cap)));
+        return health.filter(h => h?.drifted).length;
     }
 
     private async health(cap: ResolvedCapability): Promise<CapabilityHealth | undefined> {
@@ -350,11 +372,24 @@ class LivingSpecItem extends vscode.TreeItem {
         return item;
     }
 
-    static dirGroup(node: CapabilityTreeGroup): LivingSpecItem {
-        const item = new LivingSpecItem(node.label, vscode.TreeItemCollapsibleState.Expanded, 'living-specs-dir-group');
+    static dirGroup(node: CapabilityTreeGroup, drifted: number): LivingSpecItem {
+        // Collapsed by default: a folder of specs is one thing a reader is looking
+        // for, and fifty-six open rows are none. A folder holding drift opens
+        // itself, so the one thing that needs attention is never behind a triangle.
+        const item = new LivingSpecItem(
+            node.label,
+            drifted > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+            'living-specs-dir-group'
+        );
         item.id = `living-specs-dir:${node.path}`;
         item.iconPath = new vscode.ThemeIcon('folder');
         item.treeChildren = node.children;
+        if (drifted > 0) {
+            item.description = `${drifted} drifted`;
+            item.tooltip = drifted === 1
+                ? 'One spec in this folder is behind the code it describes'
+                : `${drifted} specs in this folder are behind the code they describe`;
+        }
         return item;
     }
 

@@ -41,6 +41,7 @@ import decision_routes as decisions_mod  # noqa: E402
 import emission_sync  # noqa: E402
 import hook_render  # noqa: E402
 import template_render  # noqa: E402
+import assemble_nodes as assemble  # noqa: E402
 from _command_parts import (  # noqa: E402
     PROJECT_NODES_REL,
     decomposed_commands,
@@ -52,7 +53,6 @@ from _command_parts import (  # noqa: E402
     use_project_nodes,
 )
 
-assemble = importlib.import_module("assemble-nodes")
 manifest_mod = importlib.import_module("manifest")
 
 CONFIG_REL = os.path.join(".specify", "companion.yml")

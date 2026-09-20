@@ -27,7 +27,7 @@ import template_render  # noqa: E402
 from builder_harness import Project  # noqa: E402
 
 build = importlib.import_module("build-pipeline")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 PRESETS_DIR = EXT / "workflows" / "presets"
 

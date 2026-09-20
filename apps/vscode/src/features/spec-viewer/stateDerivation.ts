@@ -37,22 +37,20 @@ import type { WorkflowStepConfig } from '../workflows/types';
 type DerivedHistory = Record<string, StepHistoryEntry>;
 
 /**
- * Pull a tolerated extra field from `SpecContext` (it has a permissive
- * `[key: string]: unknown` index signature). Returns `undefined` when the
- * field is missing or doesn't match the expected runtime type.
+ * `SpecContext`'s fields are declared but come straight from a user-editable
+ * file, so a declared string/number/array field can still hold the wrong
+ * runtime shape. These coerce a declared field's value, not pluck one from
+ * an untyped bag.
  */
-function pickString(ctx: SpecContext, key: string): string | undefined {
-    const v = (ctx as Record<string, unknown>)[key];
+function asString(v: unknown): string | undefined {
     return typeof v === 'string' && v.length > 0 ? v : undefined;
 }
 
-function pickNumber(ctx: SpecContext, key: string): number | undefined {
-    const v = (ctx as Record<string, unknown>)[key];
+function asNumber(v: unknown): number | undefined {
     return typeof v === 'number' ? v : undefined;
 }
 
-function pickStringArray(ctx: SpecContext, key: string): string[] | undefined {
-    const v = (ctx as Record<string, unknown>)[key];
+function asStringArray(v: unknown): string[] | undefined {
     if (!Array.isArray(v)) return undefined;
     const filtered = v.filter((x): x is string => typeof x === 'string');
     return filtered.length > 0 ? filtered : undefined;
@@ -70,7 +68,7 @@ function coerceNameList(v: unknown): string[] {
 }
 
 function pickLivingSpecs(ctx: SpecContext): LivingSpecsView | undefined {
-    const v = (ctx as Record<string, unknown>)['livingSpecs'];
+    const v: unknown = ctx.livingSpecs;
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const ls = v as Record<string, unknown>;
     const loaded = coerceNameList(ls.loaded);
@@ -79,8 +77,7 @@ function pickLivingSpecs(ctx: SpecContext): LivingSpecsView | undefined {
     return { loaded, synced };
 }
 
-function pickRecord<T>(ctx: SpecContext, key: string): Record<string, T> | undefined {
-    const v = (ctx as Record<string, unknown>)[key];
+function pickRecord<T>(v: unknown): Record<string, T> | undefined {
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     return v as Record<string, T>;
 }
@@ -92,11 +89,9 @@ function pickRecord<T>(ctx: SpecContext, key: string): Record<string, T> | undef
  * render side by side.
  */
 function pickEntryList<T extends Record<string, unknown>>(
-    ctx: SpecContext,
-    key: string,
+    v: unknown,
     identityKey: string,
 ): T[] | undefined {
-    const v = (ctx as Record<string, unknown>)[key];
     if (!Array.isArray(v) || v.length === 0) return undefined;
     const out: T[] = [];
     for (const entry of v) {
@@ -118,7 +113,7 @@ function optString(v: unknown): string | undefined {
 }
 
 function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
-    const raw = pickEntryList<Record<string, unknown>>(ctx, 'decisions', 'decision');
+    const raw = pickEntryList<Record<string, unknown>>(ctx.decisions, 'decision');
     return raw?.map(e => ({
         decision: e.decision as string,
         why: optString(e.why),
@@ -127,7 +122,7 @@ function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
 }
 
 function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
-    const raw = pickEntryList<Record<string, unknown>>(ctx, 'verified', 'what');
+    const raw = pickEntryList<Record<string, unknown>>(ctx.verified, 'what');
     return raw?.map(e => {
         const warnings = coerceNameList(e.warnings);
         // Only the exact string counts as derived. A context file is user-writable, and a
@@ -158,7 +153,7 @@ function coverageNames(v: unknown): string[] {
 }
 
 function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
-    const v = (ctx as Record<string, unknown>)['coverage'];
+    const v: unknown = ctx.coverage;
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const rows: ViewerCoverageRow[] = [];
     for (const [req, entry] of Object.entries(v as Record<string, unknown>)) {
@@ -213,7 +208,7 @@ function stripTestSuffix(ref: string): string {
 }
 
 function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
-    const v = (ctx as Record<string, unknown>)['classification'];
+    const v: unknown = ctx.classification;
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const e = v as Record<string, unknown>;
     if (typeof e.verdict !== 'string') return undefined;
@@ -221,7 +216,7 @@ function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
 }
 
 function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
-    const v = (ctx as Record<string, unknown>)['concerns'];
+    const v: unknown = ctx.concerns;
     if (!Array.isArray(v) || v.length === 0) return undefined;
     const out: ConcernEntry[] = [];
     for (const entry of v) {
@@ -238,7 +233,7 @@ function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
 }
 
 function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
-    const v = (ctx as Record<string, unknown>)['reviewComments'];
+    const v: unknown = ctx.reviewComments;
     if (!Array.isArray(v) || v.length === 0) return undefined;
     const out: ReviewComment[] = [];
     for (const entry of v) {
@@ -272,13 +267,23 @@ function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
     return out.length > 0 ? out : undefined;
 }
 
+// The checkpoint writer records a word and the panel wants a yes or no, so both shapes fold in.
+function asCheckpointDone(v: unknown): boolean | undefined {
+    if (typeof v === 'boolean') return v;
+    if (v === 'completed') return true;
+    if (v === 'pending' || v === 'skipped') return false;
+    return undefined;
+}
+
 function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
-    const v = (ctx as Record<string, unknown>)['checkpointStatus'];
+    const v: unknown = ctx.checkpointStatus;
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const r = v as Record<string, unknown>;
     const out: CheckpointStatus = {};
-    if (typeof r.commit === 'boolean') out.commit = r.commit;
-    if (typeof r.pr === 'boolean') out.pr = r.pr;
+    const commit = asCheckpointDone(r.commit);
+    const pr = asCheckpointDone(r.pr);
+    if (commit !== undefined) out.commit = commit;
+    if (pr !== undefined) out.pr = pr;
     return out.commit !== undefined || out.pr !== undefined ? out : undefined;
 }
 
@@ -358,8 +363,7 @@ export function deriveActiveSubstep(
         const active = entry?.substeps?.find(s => !s.completedAt);
         if (active) return { step, name: active.name };
     }
-    const progress = (ctx as { progress?: string | null }).progress;
-    if (progress) return { step: ctx.currentStep, name: progress };
+    if (ctx.progress) return { step: ctx.currentStep, name: ctx.progress };
     return null;
 }
 
@@ -386,21 +390,21 @@ export function deriveViewerState(
         history: ctx.history ?? [],
         stepHistory,
         timing: deriveTimingSummary(stepHistory, expectedTimingPhases),
-        approach: pickString(ctx, 'approach'),
-        lastAction: pickString(ctx, 'last_action'),
-        taskSummaries: pickRecord<TaskSummary>(ctx, 'task_summaries'),
+        approach: asString(ctx.approach),
+        lastAction: asString(ctx.last_action),
+        taskSummaries: pickRecord<TaskSummary>(ctx.task_summaries),
         decisions: pickDecisions(ctx),
         concerns: pickConcerns(ctx),
-        filesModified: pickStringArray(ctx, 'files_modified'),
-        prUrl: pickString(ctx, 'prUrl'),
-        prNumber: pickNumber(ctx, 'prNumber'),
+        filesModified: asStringArray(ctx.files_modified),
+        prUrl: asString(ctx.prUrl),
+        prNumber: asNumber(ctx.prNumber),
         checkpointStatus: pickCheckpointStatus(ctx),
-        stepSummaries: pickRecord<Record<string, unknown>>(ctx, 'step_summaries'),
+        stepSummaries: pickRecord<Record<string, unknown>>(ctx.step_summaries),
         reviewComments: pickReviewComments(ctx),
         livingSpecs: pickLivingSpecs(ctx),
-        intent: pickString(ctx, 'intent'),
-        expectations: pickStringArray(ctx, 'expectations'),
-        context: pickStringArray(ctx, 'context'),
+        intent: asString(ctx.intent),
+        expectations: asStringArray(ctx.expectations),
+        context: asStringArray(ctx.context),
         verified: pickVerified(ctx),
         coverage: pickCoverage(ctx),
         classification: pickClassification(ctx),

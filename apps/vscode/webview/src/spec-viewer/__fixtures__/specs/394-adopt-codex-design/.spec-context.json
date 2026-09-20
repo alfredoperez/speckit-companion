@@ -818,5 +818,6 @@
       "note": "README screenshots (viewer.png, comments.png, hero.jpg, walkthrough) show the old design — retake into the SAME filenames before the next release so the Marketplace listing matches",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "7f901862-b7a3-486d-aca8-ff57fee607e6"
 }

@@ -22,6 +22,8 @@ import statistics
 import sys
 from pathlib import Path
 
+from check_report import Report
+
 PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
 # Full lifecycle order — overlap handling must see clarify/analyze spans too,
 # exactly like the viewer's STEP_NAMES.
@@ -105,38 +107,6 @@ def _parse_at(s: object) -> dt.datetime | None:
         return None
     # Naive timestamps read as UTC so mixed offset styles stay comparable.
     return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
-
-
-class Report:
-    def __init__(self) -> None:
-        self.rows: list[tuple[str, str, str]] = []  # (status, id, detail)
-
-    def add(self, status: str, cid: str, detail: str) -> None:
-        self.rows.append((status, cid, detail))
-
-    @property
-    def failed(self) -> int:
-        return sum(1 for s, _, _ in self.rows if s == "FAIL")
-
-    @property
-    def warned(self) -> int:
-        return sum(1 for s, _, _ in self.rows if s == "WARN")
-
-    def to_text(self) -> str:
-        marks = {"PASS": "✓", "WARN": "!", "FAIL": "✗", "INFO": "·"}
-        out = [f"  {marks[s]} [{s}] {c}: {d}" for s, c, d in self.rows]
-        passes = sum(1 for s, _, _ in self.rows if s == "PASS")
-        out.append("")
-        out.append(f"  → {passes} pass / {self.warned} warn / {self.failed} fail / "
-                   f"{sum(1 for s, _, _ in self.rows if s == 'INFO')} info")
-        return "\n".join(out)
-
-    def to_dict(self) -> dict:
-        return {
-            "checks": [{"status": s, "id": c, "detail": d} for s, c, d in self.rows],
-            "failed": self.failed,
-            "warned": self.warned,
-        }
 
 
 def check_verbosity(r: Report, spec_dir: Path) -> None:

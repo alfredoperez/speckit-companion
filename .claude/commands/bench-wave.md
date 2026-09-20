@@ -25,7 +25,7 @@ Then prove the wave's text is what the cell will get: pick one line the wave cha
 
 ```bash
 python3 apps/speckit-extension/scripts/build.py --check
-python3 apps/speckit-extension/scripts/check-shape-parity.py
+python3 apps/speckit-extension/scripts/check_shape_parity.py
 python3 apps/speckit-extension/scripts/instruction-budget.py
 python3 -m pytest apps/speckit-extension/tests -q
 npx jest

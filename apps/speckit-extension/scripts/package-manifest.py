@@ -78,8 +78,8 @@ BUILD_ONLY = frozenset({
     # reaches is dead weight. It ships when the builder calls it (PRD R027).
     "instruction-budget.py",
     "build.py",
-    "check-shape-parity.py",
-    "assemble-nodes.py",
+    "check_shape_parity.py",
+    "assemble_nodes.py",
     "_command_parts.py",
     "package-manifest.py",
     "check-command-emissions.py",
@@ -112,6 +112,8 @@ BUILD_ONLY = frozenset({
     "check_quality.py",
     "check_capture.py",
     "check_living_spec.py",
+    # Their shared PASS/FAIL/WARN/INFO Report, imported by all three.
+    "check_report.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

@@ -323,5 +323,6 @@
       "command": "check_quality.py --commands-dir",
       "result": "12 pass / 0 fail"
     }
-  ]
+  ],
+  "telemetryInstanceId": "240570fb-9087-4719-8bc1-8c58ba52e7b7"
 }

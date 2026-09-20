@@ -473,5 +473,6 @@
       "command": "git status on .specify/companion.yml + capabilities/",
       "result": "untouched — no livingSpecs enablement, no capabilities dir"
     }
-  ]
+  ],
+  "telemetryInstanceId": "a557e953-2535-4696-9386-499247785822"
 }

@@ -168,6 +168,42 @@ describe('LivingSpecsExplorerProvider', () => {
         expect(byLabel(featuresChildren, 'Specs').contextValue).toBe('living-specs-capability');
     });
 
+    it('collapses a folder of specs, so the tree reads as a handful of families', async () => {
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'viewer-ui-state', spec: 'viewer/state.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+                { name: 'viewer-ui-chrome', spec: 'viewer/chrome.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+            ],
+            orphans: [],
+        });
+
+        const viewer = byLabel(await provider.getChildren(), 'Viewer');
+        expect(viewer.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(viewer.description).toBeUndefined();
+    });
+
+    it('opens a folder that holds drift, and says how much', async () => {
+        // Drift is the one thing in this tree that needs acting on, so it is never
+        // left behind a closed triangle.
+        (readLivingSpecs as jest.Mock).mockReturnValue({
+            enabled: true,
+            capabilities: [
+                { name: 'viewer-ui-state', spec: 'viewer/state.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+                { name: 'viewer-ui-chrome', spec: 'viewer/chrome.spec.md', location: 'colocated', exists: true, tiers: [], match: [], exclude: [] },
+            ],
+            orphans: [],
+        });
+        (readCapabilityHealth as jest.Mock).mockImplementation(
+            async (_root: string, cap: { spec: string }) =>
+                (cap.spec.endsWith('chrome.spec.md') ? { drifted: ['viewer/chrome.ts'] } : undefined),
+        );
+
+        const viewer = byLabel(await provider.getChildren(), 'Viewer');
+        expect(viewer.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+        expect(viewer.description).toBe('1 drifted');
+    });
+
     it('shows orphans as a group after the capability tree', async () => {
         (readLivingSpecs as jest.Mock).mockReturnValue({
             enabled: true,

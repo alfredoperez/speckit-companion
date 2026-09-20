@@ -11,7 +11,7 @@
  * Pure text in, findings out. No editor import, so the tests need no harness.
  */
 
-import { globMatches } from '../living-specs/livingSpecsModel';
+import { fenceFlags, globMatches } from '../living-specs/livingSpecsModel';
 
 /** Severity decides one thing: whether a fold stops. Nothing else reads it. */
 export type Severity = 'error' | 'warning';
@@ -65,21 +65,6 @@ export function fencesAreBalanced(text: string): boolean {
         if (/^\s*(```|~~~)/.test(line)) opened += 1;
     }
     return opened % 2 === 0;
-}
-
-/** True for every line inside a fenced block, and for the fences themselves. */
-function fenceFlags(lines: string[]): boolean[] {
-    const flags: boolean[] = [];
-    let inside = false;
-    for (const line of lines) {
-        if (/^\s*(```|~~~)/.test(line)) {
-            inside = !inside;
-            flags.push(true);
-            continue;
-        }
-        flags.push(inside);
-    }
-    return flags;
 }
 
 function finding(

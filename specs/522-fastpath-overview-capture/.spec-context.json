@@ -381,5 +381,6 @@
       "result": "512 tests OK; all evals + gates green"
     }
   ],
-  "last_action": "all 10 tasks done — 1751 TS + 512 py tests pass, evals + gates green"
+  "last_action": "all 10 tasks done — 1751 TS + 512 py tests pass, evals + gates green",
+  "telemetryInstanceId": "54481d1d-98df-4040-9b77-228ce7554b72"
 }

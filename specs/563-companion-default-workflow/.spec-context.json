@@ -319,5 +319,6 @@
       "warnings": []
     }
   ],
-  "last_action": "all tasks done — 130 suites / 1849 tests pass"
+  "last_action": "all tasks done — 130 suites / 1849 tests pass",
+  "telemetryInstanceId": "32e678c7-cab6-43e3-85bf-a75493daa1e8"
 }

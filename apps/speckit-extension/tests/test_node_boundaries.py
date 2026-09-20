@@ -28,7 +28,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import _command_parts as cp  # noqa: E402
 
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 
 class MarkersAreAdditive(unittest.TestCase):

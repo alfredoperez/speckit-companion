@@ -142,5 +142,5 @@ A step SHALL declare which default node each optional variant stands in for, suc
 
 ## Uncovered
 
-- `build.py`, `assemble-nodes.py`, `check-shape-parity.py`, `_command_parts.py`: build-time tooling, covered by the companion-commands specs.
+- `build.py`, `assemble_nodes.py`, `check_shape_parity.py`, `_command_parts.py`: build-time tooling, covered by the companion-commands specs.
 _None._

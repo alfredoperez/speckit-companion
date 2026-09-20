@@ -28,7 +28,7 @@ nodes/plan/
   handoff.md
 ```
 
-`scripts/assemble-nodes.py` builds the command body:
+`scripts/assemble_nodes.py` builds the command body:
 
 1. Read `_frame.md` verbatim — the command frontmatter, the `## User Input` block, the step-start / stock-hook / smallest-thing part fences, and the `## Outline` lead-in. This is connective glue you'd never reorder, so it has its own home outside the node list, and a rule that must reach every node lives here rather than in one of them.
 2. Read each node named in `_order.yml`, strip its frontmatter, and concatenate the bodies in order.
@@ -98,7 +98,7 @@ Parts (`sizing`, `timing`, `self-advance`, `routing`) stay in `presets/_parts/` 
 
 ## The stock carrier — what's single-sourced, what isn't
 
-The namespaced `/speckit.companion.*` commands above are assembled from nodes. The **stock** family (`presets/companion-standard/commands/speckit.*.md`) is a different shape: each carrier is the **raw upstream spec-kit command template** — it still carries the upstream placeholders (`{SCRIPT}`, `__CONTEXT_FILE__`, `/memory/constitution.md`), so it is the pre-render template, not an agent-rendered copy — **plus the shared `timing` part**, injected by a `<!-- speckit-companion:part timing -->` fence. The timing block is single-sourced: it is edited once in `presets/_parts/timing.md`, the parity check locks the fenced region to that part byte-for-byte, and `check-shape-parity.py` separately fails any carrier that drops the fence and inlines its own copy. So the timing single-source cannot silently regress.
+The namespaced `/speckit.companion.*` commands above are assembled from nodes. The **stock** family (`presets/companion-standard/commands/speckit.*.md`) is a different shape: each carrier is the **raw upstream spec-kit command template** — it still carries the upstream placeholders (`{SCRIPT}`, `__CONTEXT_FILE__`, `/memory/constitution.md`), so it is the pre-render template, not an agent-rendered copy — **plus the shared `timing` part**, injected by a `<!-- speckit-companion:part timing -->` fence. The timing block is single-sourced: it is edited once in `presets/_parts/timing.md`, the parity check locks the fenced region to that part byte-for-byte, and `check_shape_parity.py` separately fails any carrier that drops the fence and inlines its own copy. So the timing single-source cannot silently regress.
 
 The stock body *above* the fence is still hand-maintained against upstream. Assembling it from a separately-vendored upstream source byte-for-byte would require pinning an upstream-vendor input into the repo (there is no second copy of the raw template to assemble from today). That is deferred — a larger change than the timing single-sourcing, and out of scope for the anti-drift work that locked the timing part.
 

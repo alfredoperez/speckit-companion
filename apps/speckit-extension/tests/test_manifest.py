@@ -23,7 +23,7 @@ SCRIPTS = EXT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 manifest_mod = importlib.import_module("manifest")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 
 class TheManifestDescribesTheAssembledPipeline(unittest.TestCase):

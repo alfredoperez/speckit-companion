@@ -9,7 +9,7 @@
  */
 
 /** What a node does. Drawn as a chip beside its name. */
-export type NodeKind = 'investigate' | 'author' | 'gate' | 'control';
+type NodeKind = 'investigate' | 'author' | 'gate' | 'control';
 
 /** Where a hook attaches relative to its anchor. */
 export type HookWhen = 'before' | 'after';
@@ -53,7 +53,7 @@ export interface PipelineHook {
 }
 
 /** An alternative for one node's slot: same place in the run, different words. */
-export interface PipelineVariant {
+interface PipelineVariant {
     id: string;
     name: string;
     summary: string;
@@ -104,7 +104,7 @@ export interface PipelinePhase {
     hooks: PipelineHook[];
 }
 
-export interface PipelineVerdict {
+interface PipelineVerdict {
     name: string;
     /** Steps this verdict skips. Empty means it runs everything. */
     folds: string[];
@@ -131,7 +131,7 @@ export interface PipelineChanges {
     phases: string[];
 }
 
-export interface PipelineTemplate {
+interface PipelineTemplate {
     file: string;
     /** Sections this project replaced. */
     sections: string[];
@@ -159,7 +159,7 @@ export interface PipelineFragment {
 }
 
 /** A step's own preamble — the text every node in it sits under. */
-export interface PipelineFrame {
+interface PipelineFrame {
     source: string;
     /** Whether the project replaced it with its own. */
     replaced: boolean;
@@ -212,7 +212,7 @@ export interface PipelineStep {
 }
 
 /** The named configurations this project can switch between. */
-export interface PipelineWorkflows {
+interface PipelineWorkflows {
     /**
      * Every workflow this project can run. `""` is its own `companion.yml`,
      * offered whenever that file exists so a switch to `shipped` can be undone;
@@ -324,7 +324,7 @@ export interface PipelineRepair {
  * is exactly when someone opens the builder, and a panel that renders nothing
  * is no help in fixing it.
  */
-export interface PipelineGraphError {
+interface PipelineGraphError {
     error: string;
     /** Absent when the configuration is too broken to even diagnose. */
     repairs?: PipelineRepair[];

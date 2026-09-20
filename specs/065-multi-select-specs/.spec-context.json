@@ -31,41 +31,47 @@
       ]
     }
   },
-  "transitions": [
+  "status": "completed",
+  "history": [
     {
       "step": "specify",
       "substep": "parsing",
       "from": null,
       "by": "sdd",
-      "at": "2026-04-13T23:43:15Z"
+      "at": "2026-04-13T23:43:15Z",
+      "kind": "start"
     },
     {
       "step": "specify",
       "substep": "exploring",
       "from": "parsing",
       "by": "sdd",
-      "at": "2026-04-13T23:43:16Z"
+      "at": "2026-04-13T23:43:16Z",
+      "kind": "start"
     },
     {
       "step": "specify",
       "substep": "detecting",
       "from": "exploring",
       "by": "sdd",
-      "at": "2026-04-13T23:43:17Z"
+      "at": "2026-04-13T23:43:17Z",
+      "kind": "start"
     },
     {
       "step": "specify",
       "substep": "writing-spec",
       "from": "detecting",
       "by": "sdd",
-      "at": "2026-04-13T23:43:18Z"
+      "at": "2026-04-13T23:43:18Z",
+      "kind": "start"
     },
     {
       "step": "specify",
       "substep": null,
       "from": "writing-spec",
       "by": "sdd",
-      "at": "2026-04-13T23:43:19Z"
+      "at": "2026-04-13T23:43:19Z",
+      "kind": "start"
     },
     {
       "step": "specify",
@@ -75,7 +81,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:47:20.442Z"
+      "at": "2026-04-13T23:47:20.442Z",
+      "kind": "complete"
     },
     {
       "step": "plan",
@@ -85,7 +92,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:47:20.444Z"
+      "at": "2026-04-13T23:47:20.444Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -95,7 +103,8 @@
         "substep": null
       },
       "by": "sdd",
-      "at": "2026-04-13T23:48:00Z"
+      "at": "2026-04-13T23:48:00Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -105,7 +114,8 @@
         "substep": "loading"
       },
       "by": "sdd",
-      "at": "2026-04-13T23:48:01Z"
+      "at": "2026-04-13T23:48:01Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -115,7 +125,8 @@
         "substep": "writing-plan"
       },
       "by": "sdd",
-      "at": "2026-04-13T23:48:02Z"
+      "at": "2026-04-13T23:48:02Z",
+      "kind": "complete"
     },
     {
       "step": "specify",
@@ -125,7 +136,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:50:37.855Z"
+      "at": "2026-04-13T23:50:37.855Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -135,7 +147,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:50:38.521Z"
+      "at": "2026-04-13T23:50:38.521Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -145,7 +158,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:50:45.882Z"
+      "at": "2026-04-13T23:50:45.882Z",
+      "kind": "complete"
     },
     {
       "step": "tasks",
@@ -155,7 +169,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:50:45.883Z"
+      "at": "2026-04-13T23:50:45.883Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -165,7 +180,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:50:58.738Z"
+      "at": "2026-04-13T23:50:58.738Z",
+      "kind": "start"
     },
     {
       "step": "specify",
@@ -175,7 +191,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:51:00.397Z"
+      "at": "2026-04-13T23:51:00.397Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -185,7 +202,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:51:01.739Z"
+      "at": "2026-04-13T23:51:01.739Z",
+      "kind": "start"
     },
     {
       "step": "tasks",
@@ -195,7 +213,8 @@
         "substep": null
       },
       "by": "sdd",
-      "at": "2026-04-13T23:52:00Z"
+      "at": "2026-04-13T23:52:00Z",
+      "kind": "start"
     },
     {
       "step": "tasks",
@@ -205,7 +224,8 @@
         "substep": "loading"
       },
       "by": "sdd",
-      "at": "2026-04-13T23:52:01Z"
+      "at": "2026-04-13T23:52:01Z",
+      "kind": "start"
     },
     {
       "step": "tasks",
@@ -215,7 +235,8 @@
         "substep": "writing-tasks"
       },
       "by": "sdd",
-      "at": "2026-04-13T23:52:02Z"
+      "at": "2026-04-13T23:52:02Z",
+      "kind": "complete"
     },
     {
       "step": "plan",
@@ -225,7 +246,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:52:41.187Z"
+      "at": "2026-04-13T23:52:41.187Z",
+      "kind": "start"
     },
     {
       "step": "tasks",
@@ -235,7 +257,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:54:52.592Z"
+      "at": "2026-04-13T23:54:52.592Z",
+      "kind": "complete"
     },
     {
       "step": "implement",
@@ -245,7 +268,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:54:52.594Z"
+      "at": "2026-04-13T23:54:52.594Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -255,7 +279,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:56:38.422Z"
+      "at": "2026-04-13T23:56:38.422Z",
+      "kind": "start"
     },
     {
       "step": "specify",
@@ -265,7 +290,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:56:39.349Z"
+      "at": "2026-04-13T23:56:39.349Z",
+      "kind": "start"
     },
     {
       "step": "tasks",
@@ -275,7 +301,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:56:40.217Z"
+      "at": "2026-04-13T23:56:40.217Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -285,7 +312,8 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-13T23:56:45.242Z"
+      "at": "2026-04-13T23:56:45.242Z",
+      "kind": "start"
     },
     {
       "step": "plan",
@@ -295,26 +323,9 @@
         "substep": null
       },
       "by": "extension",
-      "at": "2026-04-21T11:44:04.483Z"
+      "at": "2026-04-21T11:44:04.483Z",
+      "kind": "complete"
     }
   ],
-  "status": "completed",
-  "stepHistory": {
-    "specify": {
-      "startedAt": "2026-04-13T23:47:20.442Z",
-      "completedAt": "2026-04-13T23:47:20.442Z"
-    },
-    "plan": {
-      "startedAt": "2026-04-13T23:47:20.444Z",
-      "completedAt": "2026-04-13T23:50:45.882Z"
-    },
-    "tasks": {
-      "startedAt": "2026-04-13T23:50:45.883Z",
-      "completedAt": "2026-04-13T23:54:52.592Z"
-    },
-    "implement": {
-      "startedAt": "2026-04-13T23:54:52.594Z",
-      "completedAt": "2026-04-13T23:56:38.422Z"
-    }
-  }
+  "telemetryInstanceId": "4306bee7-73d2-41e6-8b36-95be48ee0cc8"
 }

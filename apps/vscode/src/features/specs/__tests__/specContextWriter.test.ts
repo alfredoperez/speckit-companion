@@ -227,4 +227,21 @@ describe('updateSpecContext — profile pin back-fill', () => {
         await updateSpecContext(specDir, c => c, makeContext({ profile: 'turbo' }));
         expect(readProfile()).toBe('turbo');
     });
+
+    it('keeps a field no type declares, which is what removing the index signature relies on', async () => {
+        // `SpecContext` used to be "anything", so no consumer could trust a
+        // declared field. Taking that off is only safe because survival is the
+        // writer's job: it merges over values, not over the static type.
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ ...makeContext({}), somethingNobodyDeclared: { deep: [1, 2, 3] } }, null, 2),
+            'utf-8',
+        );
+
+        await updateSpecContext(specDir, c => ({ ...c, status: 'implementing' }), makeContext({}));
+
+        const after = JSON.parse(fs.readFileSync(path.join(specDir, '.spec-context.json'), 'utf-8'));
+        expect(after.somethingNobodyDeclared).toEqual({ deep: [1, 2, 3] });
+        expect(after.status).toBe('implementing');
+    });
 });

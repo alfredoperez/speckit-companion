@@ -1642,5 +1642,6 @@
       "note": "The oversized bench size needed an acceptance oracle to be wired at all — the harness looks for bench/acceptance/<size>.test.tsx and would have scored a run 0/0 silently without one. Added oversized.test.tsx and pinned its data-testid values into the prompt.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "bc86b452-4ba4-4ec3-a258-56efd93cabf9"
 }

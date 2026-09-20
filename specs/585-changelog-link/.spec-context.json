@@ -173,5 +173,6 @@
       "note": "The vscode mock had no withProgress/ProgressLocation, so the Skip branch of the update notification was untestable. Extended the mock rather than dropping the test — this is the config-mock harness gap CLAUDE.md already flags.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "2ff6b129-5dc8-49c4-a1ce-853591d8ecd9"
 }

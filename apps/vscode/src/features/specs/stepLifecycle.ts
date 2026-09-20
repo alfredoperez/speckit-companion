@@ -8,11 +8,11 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
+    HistoryEntryBy,
     inFlightStatusForStep,
     SpecContext,
     STATUS_OWNING_STEP,
     StepName,
-    TransitionBy,
 } from '../../core/types/specContext';
 import {
     appendTransition,
@@ -53,7 +53,7 @@ function buildFallback(specDir: string, step: StepName): SpecContext {
 export async function startStep(
     specDir: string,
     step: StepName,
-    by: TransitionBy
+    by: HistoryEntryBy
 ): Promise<void> {
     try {
         await updateSpecContext(
@@ -69,7 +69,7 @@ export async function startStep(
 export async function completeStep(
     specDir: string,
     step: StepName,
-    by: TransitionBy
+    by: HistoryEntryBy
 ): Promise<void> {
     try {
         await updateSpecContext(
@@ -86,7 +86,7 @@ export async function startSubstep(
     specDir: string,
     step: StepName,
     substep: string,
-    by: TransitionBy
+    by: HistoryEntryBy
 ): Promise<void> {
     try {
         await updateSpecContext(
@@ -103,7 +103,7 @@ export async function startSubstep(
 export async function setStatus(
     specDir: string,
     status: Status,
-    by: TransitionBy = 'extension'
+    by: HistoryEntryBy = 'extension'
 ): Promise<boolean> {
     try {
         await updateSpecContext(
@@ -148,7 +148,7 @@ export async function setStatus(
 export async function forceStatus(
     specDir: string,
     status: Status,
-    by: TransitionBy = 'user'
+    by: HistoryEntryBy = 'user'
 ): Promise<boolean> {
     if (status === 'completed' || status === 'archived') {
         return setStatus(specDir, status, by);
@@ -180,7 +180,7 @@ export async function forceStatus(
 /** Reactivate: derive in-progress status from `currentStep`. */
 export async function reactivate(
     specDir: string,
-    by: TransitionBy = 'extension'
+    by: HistoryEntryBy = 'extension'
 ): Promise<void> {
     try {
         await updateSpecContext(
@@ -211,7 +211,7 @@ export async function completeSubstep(
     specDir: string,
     step: StepName,
     substep: string,
-    by: TransitionBy
+    by: HistoryEntryBy
 ): Promise<void> {
     try {
         await updateSpecContext(

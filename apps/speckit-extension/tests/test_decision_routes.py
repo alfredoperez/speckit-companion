@@ -23,7 +23,7 @@ sys.path.insert(0, str(SCRIPTS))
 import decision_routes as d  # noqa: E402
 
 build = importlib.import_module("build-pipeline")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 NODES = str(EXT / "nodes")
 

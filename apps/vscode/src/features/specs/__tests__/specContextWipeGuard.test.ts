@@ -28,6 +28,7 @@ import { writeSpecContext } from '../specContextWriter';
 import { saveFeatureWorkflow } from '../../workflows/workflowManager';
 import { FEATURE_CONTEXT_FILE } from '../../workflows/types';
 import type { SpecContext } from '../../../core/types/specContext';
+import { __test } from '../../workflows/checkpointHandler';
 
 function makeTmpDir(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'speckit-wipeguard-'));
@@ -165,6 +166,42 @@ describe('saveFeatureWorkflow — ENOENT vs. other failures', () => {
             expect(after.history).toHaveLength(2);
             expect(after.currentStep).toBe('implement');
             expect(after.status).toBe('implemented');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('keeps a field no type declares, which is what the writer is for', async () => {
+        // This path does its own read-modify-write, separate from specContextWriter.
+        const dir = makeTmpDir();
+        try {
+            const target = path.join(dir, FEATURE_CONTEXT_FILE);
+            const before = { ...makeCtx(), somethingNobodyDeclared: { deep: [1, 2, 3] } };
+            fs.writeFileSync(target, JSON.stringify(before, null, 2), 'utf-8');
+
+            await saveFeatureWorkflow(dir, 'speckit');
+
+            const after = JSON.parse(fs.readFileSync(target, 'utf-8'));
+            expect(after.somethingNobodyDeclared).toEqual({ deep: [1, 2, 3] });
+            expect(after.workflow).toBe('speckit');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('the checkpoint writer also refuses a file it cannot read', async () => {
+        // This path does its own read-modify-write. It used to treat any read
+        // failure as "no file yet" and write a two-field skeleton over whatever
+        // was there, taking the history with it.
+        const dir = makeTmpDir();
+        try {
+            const target = path.join(dir, FEATURE_CONTEXT_FILE);
+            fs.writeFileSync(target, '{ partia');
+            const before = fs.readFileSync(target, 'utf-8');
+
+            await expect(__test.updateCheckpointStatus(dir, 'pr', 'completed')).resolves.toBeUndefined();
+
+            expect(fs.readFileSync(target, 'utf-8')).toBe(before);
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
         }

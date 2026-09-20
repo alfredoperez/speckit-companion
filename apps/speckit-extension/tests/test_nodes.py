@@ -15,10 +15,10 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
-asm = importlib.import_module("assemble-nodes")
+import assemble_nodes as asm  # noqa: E402
 cp = importlib.import_module("_command_parts")
 cc = importlib.import_module("companion_config")
-parity = importlib.import_module("check-shape-parity")
+import check_shape_parity as parity  # noqa: E402
 
 
 class NodeAssemblyParityTests(unittest.TestCase):

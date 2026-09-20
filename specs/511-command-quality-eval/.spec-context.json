@@ -394,5 +394,6 @@
       "result": "509: 6 pass/0 warn/0 fail; 510: 6 pass/0 warn/0 fail; prompting: 12 pass/0 fail; strict exit 0"
     }
   ],
-  "last_action": "all 9 tasks done — 489 python + 1726 jest tests pass, fixtures score clean"
+  "last_action": "all 9 tasks done — 489 python + 1726 jest tests pass, fixtures score clean",
+  "telemetryInstanceId": "4743b903-c372-424a-bef1-6d3e581dd944"
 }

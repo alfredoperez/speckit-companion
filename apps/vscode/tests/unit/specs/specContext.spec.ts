@@ -37,7 +37,7 @@ describe('writeSpecContext (US3 — unknown-field preservation & append-only)', 
         const loaded = await readSpecContext(dir);
         expect(loaded).not.toBeNull();
         const updated = setStepStarted(loaded!, 'specify', 'extension');
-        (updated as Record<string, unknown>).extraField = { foo: 'bar' };
+        (updated as unknown as Record<string, unknown>).extraField = { foo: 'bar' };
         await writeSpecContext(dir, updated);
         const raw = JSON.parse(fs.readFileSync(path.join(dir, '.spec-context.json'), 'utf-8'));
         expect(raw.extraField).toEqual({ foo: 'bar' });
@@ -82,7 +82,7 @@ describe('normalizeSpecContext (US3 — legacy shape migration)', () => {
         expect(out.history).toEqual([]);
         expect(out.currentStep).toBe('specify');
         // stepHistory is no longer persisted; the normalized object drops it.
-        expect((out as Record<string, unknown>).stepHistory).toBeUndefined();
+        expect((out as unknown as Record<string, unknown>).stepHistory).toBeUndefined();
     });
 
     it('coerces legacy `transitions` field into `history`', () => {
@@ -96,7 +96,7 @@ describe('normalizeSpecContext (US3 — legacy shape migration)', () => {
         expect(out.history).toHaveLength(1);
         expect(out.history[0].step).toBe('specify');
         // The legacy field name is dropped from the in-memory canonical shape.
-        expect((out as Record<string, unknown>).transitions).toBeUndefined();
+        expect((out as unknown as Record<string, unknown>).transitions).toBeUndefined();
     });
 
     it('coerces legacy status="active" → implementing', () => {

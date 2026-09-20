@@ -255,5 +255,6 @@
       "note": "The living-spec fold appended the ADDED requirement after the ## Uncovered section instead of inside ## Requirements; corrected by hand in this change. Worth a fix in the fold script so placement is right automatically.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "12bb4a2f-c1c5-4d19-b498-5ddc4dfaca4a"
 }
