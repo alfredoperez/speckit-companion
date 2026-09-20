@@ -46,9 +46,9 @@ If the diff matches the left, the right-hand doc(s) **must** be in the diff too 
 | Change | Required doc |
 |---|---|
 | New/changed AI provider | README "Supported AI Providers" matrix + provider count + `package.json` `speckit.aiProvider` enum |
-| New canonical workflow status | `docs/sidebar.md` badge tiers + README "Status vocabulary" |
+| New canonical workflow status | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) badge tiers + README "Status vocabulary" |
 | New/changed configuration setting | README "Configuration" section |
-| Sidebar action / right-click menu | `docs/sidebar.md` + README "Sidebar at a Glance" |
+| Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) + README "Sidebar at a Glance" |
 | Viewer statuses / badges / buttons / step tabs | `docs/viewer-states.md` |
 | Template profiles / preset reconciler / timing partial / `templateProfile` setting | `docs/template-profiles.md` |
 | `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | `docs/capture-and-timing.md` |

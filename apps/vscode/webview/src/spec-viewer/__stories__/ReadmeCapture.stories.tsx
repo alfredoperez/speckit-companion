@@ -16,7 +16,7 @@
  *
  * C2 · Pipeline stat strip (`generated/pipeline-stats.png`)
  *   The stat tiles under "Pick a pipeline once, run it end to end". Every
- *   number is the benchmark's, quoted from docs/configuration.md#workflow-choice
+ *   number is the benchmark's, quoted from the site's configuration reference
  *   (measured by /bench-run-all, 2026-06-10). Change the numbers THERE first;
  *   this image only repeats them.
  *
@@ -210,7 +210,7 @@ export const C1ReadmeHero: Story = {
 
 // ── C2 · the pipeline stat strip ──────────────────────────────────────────
 // Four tiles, one claim each, all quoted from the measured benchmark in
-// docs/configuration.md#workflow-choice. No chart: each figure is a single
+// the site's configuration reference. No chart: each figure is a single
 // headline number, which is stat-tile territory.
 
 function StatTile({ value, label, sub }: { value: string; label: string; sub: string }) {
@@ -259,7 +259,7 @@ export const C2PipelineStats: Story = {
                 </div>
                 <div style="font: 400 11px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); margin-top: 14px;">
                     Measured by /bench-run-all (2026-06-10): the same feature at three sizes, each
-                    workflow in an isolated sandbox, judged independently. Details: docs/configuration.md
+                    workflow in an isolated sandbox, judged independently. Details: speckit-companion.dev/docs/reference/configuration
                 </div>
             </div>
         </CaptureFrame>

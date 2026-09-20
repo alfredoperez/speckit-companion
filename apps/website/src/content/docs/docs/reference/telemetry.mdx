@@ -1,0 +1,56 @@
+---
+title: Telemetry
+description: What the extension sends, what gates it, and what it never collects.
+sidebar:
+  label: Telemetry
+  order: 2
+---
+
+The extension sends **anonymous, PII-free** usage telemetry to help prioritize which AI providers and pipeline features to invest in. It's gated on two switches: if **either** is off, nothing is sent.
+
+```json
+{
+  "speckit.telemetry": true
+}
+```
+
+| Switch | Effect when off |
+|--------|-----------------|
+| `speckit.telemetry` (default `true`) | Disables all extension telemetry, regardless of the global setting |
+| VS Code's global `telemetry.telemetryLevel` | Disables all extension telemetry, regardless of `speckit.telemetry` |
+
+## What is collected
+
+All anonymous:
+
+| Signal | Example value |
+|--------|---------------|
+| Selected AI provider | `claude`, `copilot`, `gemini`, … |
+| Default workflow | `speckit` / `companion` |
+| Which workflow phase was dispatched | `specify` / `plan` / `tasks` / `implement` |
+| The extension was installed | a bare event, once **ever** per install — never per session; a wiped VS Code global state legitimately reads as a new install |
+| Spec lifecycle counts | created / completed / archived |
+| Feature-flag on/off states | a snapshot reported once per session |
+| Extension / VS Code versions, platform | attached to **every** event, for version and platform breakdowns |
+| Spec count | for scale |
+| VS Code's anonymized machine id | the per-install identity events group under — random, editor-generated, never derived from you |
+| Chosen workflow | the built-in id, or the literal `custom` |
+| How the workflow was chosen in Create Spec | `default` (untouched pre-selection) / `picked` / `trial` (the *Try Companion for this spec* affordance) |
+| Whether the Companion Spec Kit extension is installed | `true` / `false`, reported once per session |
+| Whether an install prompt was shown or its Install button clicked | `shown` / `clicked`, per surface |
+| The Specs panel became visible | a bare event, once per session — repeated visibility toggles never re-count |
+| The welcome's live sample was opened | a bare event, once per session; the seeded sample never counts as a created spec |
+| A spec was opened in the viewer | a bare event, once per spec per session |
+| A living/capability spec was opened in the viewer | a bare event, once per capability per session |
+| A living-spec drift report or sync was run | a bare event, per run |
+| A steering doc was opened | a bare event, per open |
+
+**What is never collected**: prompt content, file paths, spec names, capability names, or custom workflow names. Only enum-like values, booleans, versions, counts, and a random per-spec id.
+
+That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created, dispatched, completed) without ever revealing which spec it is.
+
+A spec is only ever counted completed once, from whichever path completed it: the sidebar action, the viewer's lifecycle action, or the Companion pipeline's terminal step. A completion that lands while VS Code is closed goes unobserved.
+
+## Next
+
+[Configuration](/docs/reference/configuration) has the rest of the `speckit.*` settings, including the two that appear here.

@@ -12,7 +12,7 @@ Read it before the module map below. The prose says what each part is responsibl
 
 **It is generated, not drawn.** [`docs/architecture/speckit-companion.architecture.json`](./architecture/speckit-companion.architecture.json) is the source, and [archify](https://www.npmjs.com/package/archify) renders the HTML from it. Edit the JSON and regenerate; do not hand-edit the HTML, and expect anything you do edit there to be lost.
 
-**Its numbers are claims like any other.** They were last checked against the code on 2026-08-30: eleven providers (the `speckit.aiProvider` enum, matching the column count in [providers.md](./providers.md)), ten feature modules under `apps/vscode/src/features/`, 167 source and doc files under `apps/vscode/webview/src/`. The generator does not count anything for you, so a provider added without touching this file leaves the diagram quietly wrong — which it already was, claiming nine.
+**Its numbers are claims like any other.** They were last checked against the code on 2026-08-30: eleven providers (the `speckit.aiProvider` enum, matching the column count in [provider reference](https://speckit-companion.dev/docs/reference/providers/)), ten feature modules under `apps/vscode/src/features/`, 167 source and doc files under `apps/vscode/webview/src/`. The generator does not count anything for you, so a provider added without touching this file leaves the diagram quietly wrong — which it already was, claiming nine.
 
 ## High-level layout
 
@@ -130,7 +130,7 @@ User data is stored under the workspace `.claude/` and `specs/` directories, plu
 
 - `docs/spec-context-schema.md` — the on-disk schema for `.spec-context.json`.
 - `docs/viewer-states.md` — the full state machine for the spec viewer.
-- `docs/sidebar.md` — long-form sidebar reference.
+- The long-form sidebar reference is on the site, at `apps/website/src/content/docs/docs/anatomy/the-sidebar.mdx`.
 - `docs/how-it-works.md` — narrative walk-through that complements this structural overview.
 - `docs/capture-and-timing.md` — how `.spec-context.json` gets written (deterministic hooks vs best-effort AI journaling), the preset/command-override mechanism, install paths, and what the eval asserts.
 - `apps/speckit-extension/docs/node-model.md` — how the spec-kit extension's Companion commands are composed from nodes, the `.specify/companion.yml` hook/recipe model, and the byte-parity assembler.

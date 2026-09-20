@@ -10,7 +10,7 @@
 | Companion pipeline shape — the workflow choice (stock `speckit` vs `companion`) on `speckit.defaultWorkflow`, the `companion-standard` preset, its command bodies, the shared timing partial, the classify/routing step, the preset reconciler | `docs/template-profiles.md`. Note: the former `templateProfile` / `turboWorkflowPicker` / `complexityFastPath` toggles and the `companion-turbo` preset are **retired** — don't reintroduce them; `speckit.companion.templateProfile` survives only in `apps/vscode/src/core/settingsMigration.ts` to migrate old persisted values. |
 | Project structure, modules, architecture | `docs/architecture.md` |
 | `.spec-context.json` capture — lifecycle hooks, `write-context.py`, the timing part (`apps/speckit-extension/presets/_parts/timing.md` / `promptBuilder.ts`), preset command overrides, `derive-from-files.py`, the eval (`check_capture.py`) | `docs/capture-and-timing.md` (capture model, reliability principle, install paths, known timing gaps, what the eval asserts). Don't re-derive this flow from code — this doc is the map. |
-| Sidebar (filter, sort, lifecycle buttons, badge tiers, tree icons, transition logging) | `docs/sidebar.md` |
+| Sidebar (filter, sort, lifecycle buttons, badge tiers, tree icons, transition logging) | the website's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar) |
 | The Get Started walkthrough (`contributes.walkthroughs`, `assets/walkthrough/`) | `docs/getting-started.md` (the step table) + `docs/visual-assets.md` (which panels are still placeholders and what the real screenshots must show). Keep the step copy consistent with `contributes.viewsWelcome`: the two surfaces cover the same ground and must not contradict each other. |
 | The spec-kit workflow definition (`apps/speckit-extension/workflows/speckit-companion.workflow.yml`), its `classify`/`mark-complete` commands, or the routing step | `docs/template-profiles.md` (routing-step reference) + `docs/capture-and-timing.md` (run/resume capture path) + `apps/speckit-extension/README.md` + an `[Unreleased]` entry in `apps/speckit-extension/CHANGELOG.md` — never the root README/CHANGELOG/`package.json`, never `extension.yml` `version`. Capture is unchanged on this path: the engine dispatches the same `speckit.companion.*` commands, so the same hooks/bodies write `.spec-context.json`. |
 | Webview UI, styling, design tokens, capture stories, or the Teamboard fixtures | Regenerate `docs/screenshots/generated/` with `npm run clips:capture` and re-shoot + re-render any affected `content/media/feature-clips/` composition before shipping docs. A re-render doesn't stop at the MP4: follow the chain down through `clips:render`, `clips:stills`, `clips:gifs` and `clips:sync` or the README and the site keep showing the old frames. Rules in `docs/visual-assets.md`; the command-by-command chain is the `feature-clip` skill. |
@@ -25,9 +25,9 @@
 | Change you made | README section to update |
 |-----------------|--------------------------|
 | New AI provider | "Supported AI Providers" matrix (add column) + provider count anywhere it's stated (e.g. "Six providers ship today" in "Why it exists") + `package.json` `contributes.configuration["speckit.aiProvider"].enum` must match |
-| New canonical workflow status | "Header badge color tiers" in `docs/sidebar.md` + "Status vocabulary" under Spec Context in README |
-| New configuration setting | "Configuration" section in README (add subsection with JSON example + value table) |
-| New sidebar action / right-click menu item | `docs/sidebar.md` (full reference) + the brief "Sidebar at a Glance" summary in README |
+| New canonical workflow status | the website's [spec viewer anatomy](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer) (header badge color tiers) + "Status vocabulary" under Spec Context in README |
+| New configuration setting | "Configuration" section in README (add subsection with JSON example + value table) + the website's [Configuration reference](https://speckit-companion.dev/docs/reference/configuration) |
+| New sidebar action / right-click menu item | the website's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar) (full reference) + the brief "Sidebar at a Glance" summary in README |
 | New keyboard or visual safety affordance | "Safety Affordances for Destructive Actions" in README |
 | New workflow phase or sub-document type | "Spec-Driven Phases" in README + Step Properties table under Custom Workflows |
 | New custom command type | "Custom Commands" properties table in README |
@@ -43,7 +43,7 @@
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
 2. Cross-check `CHANGELOG.md` entries since the last release against the map above.
 3. For every CHANGELOG bullet under "New Features," confirm a README section was touched. If not, add one.
-4. Update the "Recently Shipped" block at the top of README with the current and previous two releases.
+4. Update the "What's new" block at the top of README: the version in its lead sentence, and its three lines to the new release's own highlights.
 5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
@@ -57,7 +57,7 @@ The root README's H1 has two alternates on file, either of which can swap in for
 
 ## Doc size ceiling
 
-A doc under `docs/` stays under 3,000 words. That's where the repo's healthy docs top out (`architecture.md`, `configuration.md`, `viewer.md`) and where the ones that need work start (`pipeline-builder.md`, `template-profiles.md`, and worse). Past the ceiling, split it: pull a self-contained topic into its own doc and link it from the original, or, if part of the doc describes behavior that's finished and superseded, archive that part the way `CHANGELOG.md` archives old releases into `docs/changelog-archive.md`.  Check with `wc -w docs/*.md`.
+A doc under `docs/` stays under 3,000 words. That's where the repo's healthy docs top out (`architecture.md`, `how-it-works.md`, `spec-context-schema.md`) and where the ones that need work start (`template-profiles.md`, `viewer-states.md`, and worse). Past the ceiling, split it: pull a self-contained topic into its own doc and link it from the original, or, if part of the doc describes behavior that's finished and superseded, archive that part the way `CHANGELOG.md` archives old releases into `docs/changelog-archive.md`.  Check with `wc -w docs/*.md`.
 
 **Split along what the reader came for, not by length.** A doc over the ceiling is almost always four docs stapled together: a lesson someone follows once, a recipe for a specific job, a reference to look things up in, and an explanation of why it works that way. Those four want different shapes and different readers, which is why the long ones read as heavy no matter how well each paragraph is written. Cut at those seams. `capture-and-timing.md` at 10,511 words is the clearest case: the schema is reference, the dated "fixed in #NNN" passages are explanation that mostly belongs in history, and the writer-script rules are a recipe. Splitting it by word count would just make two heavy docs.
 

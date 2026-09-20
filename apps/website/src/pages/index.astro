@@ -24,8 +24,7 @@ import manifest from '../../../../content/media/manifest.json';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
-const METHODOLOGY =
-  'https://github.com/alfredoperez/speckit-companion/blob/main/docs/configuration.md';
+const METHODOLOGY = '/docs/reference/configuration#workflow-choice';
 
 // The full --from URL form, verbatim. The short catalog form does not work:
 // the extension is not listed in the spec-kit catalog.
@@ -204,7 +203,7 @@ const rows = [
     id: 'living',
     title: 'Specs that outlive the ticket',
     body: 'Spec Kit writes the spec, ships the feature, and leaves the folder behind. What you learned about how that capability works goes quiet with it. Turn living specs on and each capability keeps one durable spec instead — at capabilities/<name>/spec.md, or next to the code with a path you choose. Drift lists the source files that changed since a capability’s spec was last committed. Drift and coverage are read-only reports that always exit zero, so neither can block a build.',
-    link: { label: 'living specs', href: '/docs/guides/living-specs/' },
+    link: { label: 'living specs', href: '/docs/discussions/living-specs/' },
     still: livingExplained,
     open: true,
   },
@@ -219,7 +218,7 @@ const rows = [
     id: 'bend',
     title: 'A pipeline you can bend',
     body: 'Two workflows ship in the box: stock SpecKit, and SpecKit Companion with a fifth step that marks the spec complete. Define your own phases, commands and output files in settings and Create Spec offers them. A companion.yml attaches a shell command, an inline instruction, or a node file of your own before or after any named node. Those attachments are instructions your assistant reads at run time, not an engine that executes them.',
-    link: { label: 'pick a pipeline', href: '/docs/guides/pick-a-pipeline/' },
+    link: { label: 'pick a pipeline', href: '/docs/discussions/pick-a-pipeline/' },
     still: makeItYours,
   },
   {

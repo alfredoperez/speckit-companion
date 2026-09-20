@@ -1,6 +1,6 @@
-# Getting Started
+# Getting Started (repo-local)
 
-The full install story and the first-spec walkthrough live on the website: [Install](https://speckit-companion.dev/docs/install) covers both halves in order, and [Getting started](https://speckit-companion.dev/docs/start/getting-started) takes you from an empty folder to a readable run record. What follows here is specific to working in this repo, plus the reference for the extension's own in-editor walkthrough.
+The full install story and the first-spec walkthrough live on the website: [Install](https://speckit-companion.dev/docs/install) covers both halves in order, and [Getting started](https://speckit-companion.dev/docs/start/getting-started) takes you from an empty folder to a readable run record. This page is what's left once that content moved: the extension's own in-editor walkthrough, the repo's sample specs, platform support, and running from source.
 
 ## The Get Started walkthrough
 
@@ -19,7 +19,7 @@ Six steps, each with its own button:
 
 The order is deliberate: reading a real spec comes *before* installing anything, because the viewer needs no CLI. The two CLI steps are marked optional in their own copy — install is the required piece, the CLI only runs the phase commands it dispatches.
 
-Full extension-side reference (both installs, the required-vs-optional pieces): [the spec-kit extension README](../apps/speckit-extension/README.md) and its [install guide](../apps/speckit-extension/docs/install.md). Dispatch styles, meaning a terminal CLI against your editor's own chat panel, are in [providers.md](./providers.md).
+Full extension-side reference (both installs, the required-vs-optional pieces): [the spec-kit extension README](../apps/speckit-extension/README.md) and its [install guide](../apps/speckit-extension/docs/install.md). Dispatch styles, meaning a terminal CLI against your editor's own chat panel, are on the website's [provider reference](https://speckit-companion.dev/docs/reference/providers).
 
 ## Sample specs
 

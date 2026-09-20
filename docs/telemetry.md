@@ -1,53 +1,30 @@
-# Telemetry
+# Telemetry (maintainer notes)
 
-The extension sends **anonymous, PII-free** usage telemetry to help prioritize which AI providers and pipeline features to invest in. It is gated on two switches: if **either** is off, nothing is sent.
+What the extension collects and how to opt out is user-facing and lives on the website: [Telemetry](https://speckit-companion.dev/docs/reference/telemetry). This page is the maintainer's side: the exact event catalog with its raw property names, and how to read them in PostHog.
 
-```json
-{
-  "speckit.telemetry": true
-}
-```
+## The event catalog
 
-| Switch | Effect when off |
-|--------|-----------------|
-| `speckit.telemetry` (default `true`) | Disables all extension telemetry, regardless of the global setting |
-| VS Code's global `telemetry.telemetryLevel` | Disables all extension telemetry, regardless of `speckit.telemetry` |
+The event names and properties below are what the dashboards and queries in this page filter on. The website's telemetry page describes the same signals in plain language; this table has the wire names.
 
-## What is collected
+| Event | Key properties | Notes |
+|--------|---------------|-------|
+| `extension.installed` | — | Once **ever** per install, never per session; a wiped VS Code global state legitimately reads as a new install |
+| `extension.activated` | `extensionVersion`, `vscodeVersion`, `platform` | Attached to every event, for version/platform breakdowns |
+| `spec.created` | `chosenAs` (`default`/`picked`/`trial`), `source` (`form`/`watcher`) | `chosenAs` is how the workflow got picked in Create Spec; `source` is what observed the creation |
+| `provider.selected` | provider id | Fires when the configured AI provider changes |
+| `spec.archived` | — | Fires from the sidebar's Archive action |
+| `phase.dispatched` | phase name | `specify`/`plan`/`tasks`/`implement` |
+| `spec.completed` | — | Fires from every completion path — sidebar action, viewer action, Companion's terminal step — observed at one seam (status transition to `completed`), exactly once per completion. A completion while VS Code is closed goes unobserved. |
+| `companion.installPrompt` | `action` (`shown`/`clicked`), `surface` | Surfaces: Create Spec, Activity, sidebar, `activation`. Out-of-date variants report separately as `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate`, so update adoption reads apart from first install |
+| `panel.opened` | — | Once per session; repeated visibility toggles don't re-count |
+| `sample.opened` | — | Once per session; the seeded sample never counts as a created spec |
+| `spec.opened`, `livingSpec.opened` | — | Once per spec/capability per session |
+| `livingSpec.drift`, `livingSpec.sync` | — | Per run |
+| `steering.opened` | — | Per open |
 
-All anonymous:
+The per-spec id riding these events is a random UUID stored in the spec's `.spec-context.json`, never the spec name or path.
 
-| Signal | Example value |
-|--------|---------------|
-| Selected AI provider | `claude`, `copilot`, `gemini`, … |
-| Default workflow | `speckit` / `companion` |
-| Which workflow phase was dispatched | `specify` / `plan` / `tasks` / `implement` |
-| The extension was installed (`extension.installed`) | a bare event, once **ever** per install — never per session; a wiped VS Code global state legitimately reads as a new install |
-| Spec lifecycle counts | created / completed / archived |
-| Feature-flag on/off states | a snapshot reported once per session |
-| Extension / VS Code versions, platform | attached to **every** event, for version and platform breakdowns |
-| Spec count | for scale |
-| VS Code's anonymized machine id | the per-install identity events group under — random, editor-generated, never derived from the user |
-| Chosen workflow | the built-in id, or the literal `custom` |
-| How the workflow was chosen in Create Spec (`spec.created` `chosenAs`) | `default` (untouched pre-selection) / `picked` / `trial` (the *Try Companion for this spec* affordance) |
-| What observed the spec's creation (`spec.created` `source`) | `form` (Create Spec) / `watcher` (a terminal-created spec first seen by the file watcher) |
-| Whether the companion spec-kit extension is installed | `true` / `false`, reported once per session |
-| Whether an install prompt was shown or its Install button clicked | `shown` / `clicked`, per surface (Create Spec, Activity, sidebar, and the on-open `activation` prompt). The out-of-date variant reports on its own surfaces — `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate` — so update adoption reads separately from first install |
-| The specs panel became visible (`panel.opened`) | a bare event, once per session — repeated visibility toggles never re-count |
-| The welcome's live sample was opened (`sample.opened`) | a bare event, once per session; the seeded sample never counts as a created spec |
-| A spec was opened in the viewer | a bare event, once per spec per session |
-| A living/capability spec was opened in the viewer | a bare event, once per capability per session |
-| A living-spec drift report was run | a bare event, per run |
-| A living-spec sync was run | a bare event, per run |
-| A steering doc was opened | a bare event, per open |
-
-**What is never collected**: prompt content, file paths, spec names, capability names, or custom workflow names. Only enum-like values, booleans, versions, counts, and a random per-spec id. The bare events above carry nothing event-specific — only the common facts (versions, platform) that ride on every event.
-
-That per-spec id is a **random UUID, not the spec name or path**. It correlates a single spec's events into a funnel (created, dispatched, completed) without ever revealing which spec it is. It is stored in the spec's `.spec-context.json` so the same id rides every event for that spec.
-
-`spec.completed` fires from **every** path that completes a spec — the sidebar action, the viewer's lifecycle action, and the Companion pipeline's terminal step — observed at one seam (the extension watching the spec's status transition into `completed`), exactly once per completion. A completion that lands while VS Code is closed goes unobserved.
-
-De-duplication never cheats the switches: an event that could not be sent (telemetry off) claims no once-ever or per-session slot, so the first send after telemetry turns on still happens.
+De-duplication never cheats the switches: an event that couldn't be sent (telemetry off) claims no once-ever or per-session slot, so the first send after telemetry turns on still happens.
 
 **Retired**: the `profile` property (`standard`/`turbo`) is no longer attached to any event — the pipeline-profile dimension was retired with the workflow-choice collapse. The `workflow.selected` event is retired: its only emitter was an unreachable picker that has been removed; the name is not reused.
 
