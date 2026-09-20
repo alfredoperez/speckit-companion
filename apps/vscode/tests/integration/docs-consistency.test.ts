@@ -112,7 +112,6 @@ describe('docs consistency', () => {
   describe('paths referenced in docs exist on disk', () => {
     const DOCS = [
       'docs/architecture.md',
-      'docs/how-it-works.md',
       'CLAUDE.md',
     ];
 
@@ -187,6 +186,34 @@ describe('docs consistency', () => {
       const map = read('CLAUDE.md').split('## Gotchas')[0];
       const named = [...map.matchAll(/`([a-z][a-z-]*)\/`/g)].map((m) => m[1]);
       expect(named.filter((dir) => !exists(dir))).toEqual([]);
+    });
+  });
+
+  describe('docs/ does not regrow', () => {
+    // A cleanup pass deleted the docs that restated, as prose, behaviour the
+    // living specs now state enforceably. This allowlist is what's left —
+    // anything else is a doc going stale again. See docs/doc-sync.md.
+    const ALLOWED_FILES = new Set([
+      'architecture.md',
+      'configuration.md',
+      'doc-sync.md',
+      'getting-started.md',
+      'pipeline-builder.md',
+      'providers.md',
+      'sidebar.md',
+      'telemetry.md',
+      'viewer.md',
+    ]);
+    const ALLOWED_DIRS = new Set(['architecture', 'media', 'providers', 'reference', 'screenshots', 'style-guide']);
+
+    it('holds no file outside the allowlist', () => {
+      const entries = fs
+        .readdirSync(path.join(REPO_ROOT, 'docs'), { withFileTypes: true })
+        .filter((e) => !e.name.startsWith('.'));
+      const stray = entries
+        .filter((e) => (e.isDirectory() ? !ALLOWED_DIRS.has(e.name) : !ALLOWED_FILES.has(e.name)))
+        .map((e) => e.name);
+      expect(stray).toEqual([]);
     });
   });
 

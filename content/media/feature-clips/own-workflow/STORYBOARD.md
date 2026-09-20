@@ -42,7 +42,7 @@ Cuts: the pick dissolves over 0.4 s at t=6.4, while beat 2's marker is still set
 npm run render                 # in this directory
 ```
 
-Then the established GIF recipe from `docs/visual-assets.md`:
+Then the established GIF recipe from `tooling/scripts/build-clip-gifs.mjs`:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

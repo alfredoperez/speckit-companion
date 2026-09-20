@@ -69,7 +69,7 @@ That last one is a hard cut on purpose. It was first built as a 0.7 s dissolve a
 npm run render                 # in this directory
 ```
 
-Then the established GIF recipe from `docs/visual-assets.md`:
+Then the established GIF recipe from `tooling/scripts/build-clip-gifs.mjs`:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

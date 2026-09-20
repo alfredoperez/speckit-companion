@@ -48,7 +48,7 @@ The last transition, at 9.2 s, is a 0.9 s dissolve from the implementing capture
 npm run render                 # in this directory
 ```
 
-There is no published GIF for this composition, so there are no as-shipped encode settings to record. If it's ever promoted, the standard recipe from `docs/visual-assets.md` applies:
+There is no published GIF for this composition, so there are no as-shipped encode settings to record. If it's ever promoted, the standard recipe from `tooling/scripts/build-clip-gifs.mjs` applies:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

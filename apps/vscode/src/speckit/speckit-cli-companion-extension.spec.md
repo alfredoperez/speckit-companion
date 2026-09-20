@@ -110,6 +110,15 @@ When a dispatched update changed the extension's files but not its version, ever
 - **WHEN** nothing on disk changes
 - **THEN** the gap is still reported
 
+### The activity-bar badge and the pinned Specs-tree row ignore the prompt preference
+<!-- touches: apps/vscode/src/extension.ts, apps/vscode/src/features/specs/specExplorerProvider.ts -->
+
+Unlike the banner and the fallback warning, the missing-extension badge and the pinned CTA row in the Specs tree SHALL stay visible even when the install prompt preference is off or its dismissal is recorded. They cost nothing to show and never interrupt, so they carry no dismissal of their own.
+
+#### Scenario: the install prompt preference is turned off
+- **WHEN** the companion extension is still missing
+- **THEN** the badge and the pinned row still show
+
 ## Uncovered
 
 _None. Every file in the area was read._

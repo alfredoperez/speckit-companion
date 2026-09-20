@@ -87,7 +87,7 @@ export const Poses: Story = {
                 ))}
             </div>
             <p style={`${LEDE} margin-top: 24px;`}>
-                `tending` is the hero: the pose the landing page's hero cycles through, the only one generated rather than cropped from the original poses (DESIGN.md and `docs/visual-assets.md`'s Mascot assets section say why). `pointing`, `waving`, `reading`, `thinking`, and `celebrating` are the ones an article figure reaches for today; the rest are available to any surface that names them.
+                `tending` is the hero: the pose the landing page's hero cycles through, the only one generated rather than cropped from the original poses (DESIGN.md and `tooling/scripts/build-mascot-assets.mjs` say why). `pointing`, `waving`, `reading`, `thinking`, and `celebrating` are the ones an article figure reaches for today; the rest are available to any surface that names them.
             </p>
         </div>
     ),

@@ -9,6 +9,7 @@ The extension dispatches text and gets no callback, so command bodies are the on
 ## Requirements
 
 ### The feature pointer is written under the exact key the capture calls read
+<!-- touches: apps/speckit-extension/nodes/specify/resolve-dir.md, apps/speckit-extension/nodes/specify/resolve-dir-git.md, apps/speckit-extension/nodes/auto/resolve-dir.md -->
 
 The pointer the first step writes SHALL name the feature directory under a key the capture scripts resolve, so every later call made without an explicit feature directory lands on this spec.
 
@@ -17,6 +18,7 @@ The pointer the first step writes SHALL name the feature directory under a key t
 - **THEN** it finds the directory the first step wrote
 
 ### A step stamps its start before its hooks and nodes run
+<!-- touches: apps/speckit-extension/presets/_parts/step-start.md -->
 
 Each step's start SHALL be recorded by a script call ahead of its extension hooks and every node, so the whole step falls inside its window. A step that creates the feature directory SHALL stamp the moment the directory exists, never against the pointer's previous spec.
 
@@ -33,6 +35,7 @@ Each step's start SHALL be recorded by a script call ahead of its extension hook
 - **THEN** no second start is appended and the earlier timestamp stands
 
 ### A step closes itself even when its after-hook never runs
+<!-- touches: apps/speckit-extension/presets/_parts/timing.md -->
 
 Every step except implement SHALL end by recording its own completion through an idempotent, first-writer-wins call, so a hook that was printed rather than dispatched still leaves the step closed. Clarify and analyze record a boundary without moving the status, and no step writes the next step's start.
 
@@ -45,6 +48,7 @@ Every step except implement SHALL end by recording its own completion through an
 - **THEN** nothing new is recorded
 
 ### Task finishes are folded into the shared record one at a time, as they land
+<!-- touches: apps/speckit-extension/presets/_parts/timing.md -->
 
 The main agent SHALL close each implement task the moment its work completes, not in a batch afterwards, so the panel and the task's checkbox advance as the run goes. The wave-join and end-of-step folds are backstops, not the cadence.
 
@@ -53,6 +57,7 @@ The main agent SHALL close each implement task the moment its work completes, no
 - **THEN** the context file and its checkbox advance before the next task starts
 
 ### Workers only append; the main agent does every fold
+<!-- touches: apps/speckit-extension/presets/_parts/timing.md, apps/speckit-extension/nodes/implement/implement-exec.md -->
 
 A fanned-out worker SHALL record its finish by appending one event-log line, and only the main agent folds, one returned result at a time, because a fold is a read-modify-write that concurrent writers would corrupt. Any prose that fans work out MUST name the main agent as the writer.
 
@@ -61,6 +66,7 @@ A fanned-out worker SHALL record its finish by appending one event-log line, and
 - **THEN** each appends only its own line and every finish reaches the record through the main agent's folds
 
 ### A host that cannot spawn workers produces the same artifacts sequentially
+<!-- touches: apps/speckit-extension/nodes/plan/gather-context.md, apps/speckit-extension/nodes/plan/side-files.md, apps/speckit-extension/nodes/implement/implement-exec.md -->
 
 Commands SHALL express parallel work as waves of independent tasks with explicit joins, so a host without workers runs the same waves in order with no error.
 

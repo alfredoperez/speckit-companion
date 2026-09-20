@@ -100,6 +100,15 @@ With `speckit.notifications.stepComplete` off, no step completion SHALL be annou
 - **WHEN** the completion is recorded
 - **THEN** no notice appears
 
+### Created and Last Updated are read from history, and hidden rather than guessed
+<!-- touches: apps/vscode/src/features/spec-viewer/phaseCalculation.ts -->
+
+Created SHALL come from specify's recorded start, falling back to the earliest recorded start of any step. Last Updated SHALL be the latest of every recorded start and completion, and SHALL be hidden when it would equal Created or when no second timestamp exists. Either date SHALL be hidden, never guessed, when the record is missing, unparseable or carries no step history.
+
+#### Scenario: only one timestamp exists in the record
+- **WHEN** the header renders
+- **THEN** Created shows and Last Updated is omitted rather than repeating it
+
 ## Uncovered
 
 _None: every file in the area was read, though test files under `__tests__/` were read only for the contracts they pin._

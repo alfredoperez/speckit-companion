@@ -54,7 +54,7 @@ Beat 4's label is flipped to the marker's right edge so it stays inside the fram
 npm run render                 # in this directory
 ```
 
-Then the established GIF recipe from `docs/visual-assets.md`, at the standard settings for a clip of this length:
+Then the established GIF recipe from `tooling/scripts/build-clip-gifs.mjs`, at the standard settings for a clip of this length:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

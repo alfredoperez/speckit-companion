@@ -9,6 +9,7 @@ Decides what a spec's recorded events mean: its status, current step, when a ste
 ## Requirements
 
 ### One fact has exactly one derivation
+<!-- touches: apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
 A step's start and end, whether it is complete, and a spec's effective status SHALL each be derived once and read by every surface, so no two surfaces can show the same step in different states.
 
@@ -17,6 +18,7 @@ A step's start and end, whether it is complete, and a spec's effective status SH
 - **THEN** both show the same state
 
 ### Status moves forward and never regresses out of a terminal state
+<!-- touches: apps/vscode/src/features/specs/specContextWriter.ts, apps/vscode/src/features/specs/historyHelpers.ts, apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
 Status and current step SHALL only move forward. A re-run, a double-fired hook or a late write for a step the spec has already passed SHALL be appended to the log and leave status and current step alone, and nothing moves a spec out of a terminal state.
 
@@ -26,6 +28,7 @@ Status and current step SHALL only move forward. A re-run, a double-fired hook o
 - **AND** status and current step stay where they were
 
 ### Only a terminal step that ran closes a spec
+<!-- touches: apps/vscode/src/features/specs/specContextReconciler.ts, apps/vscode/src/features/specs/implementCloseGuard.ts, apps/vscode/src/features/specs/specCommands.ts, apps/vscode/src/features/fileWatchers.ts -->
 
 A step on its own SHALL carry a spec no further than "implemented". Only an explicit terminal step that ran writes the closed state. A watcher, repair or reconciliation path never infers it, and when a recorded status is unreadable it restores no higher than "implemented".
 
@@ -42,6 +45,7 @@ A step on its own SHALL carry a spec no further than "implemented". Only an expl
 - **THEN** the spec is recorded as complete and no later write reverts it
 
 ### A project-added step leaves status unchanged
+<!-- touches: apps/vscode/src/features/specs/specContextWriter.ts -->
 
 A step the project added has no canonical status. Recording its start or finish SHALL append the history entry and leave status as it was, and the reconciler does not try to repair it.
 
@@ -50,6 +54,7 @@ A step the project added has no canonical status. Recording its start or finish 
 - **THEN** the entry lands and the status is unchanged
 
 ### Completion is reported exactly once per transition into the closed state
+<!-- touches: apps/vscode/src/features/fileWatchers.ts -->
 
 A `spec.completed` event SHALL be reported once each time a spec's recorded status moves into the closed state, whichever path wrote it. Re-writing the closed state, or first seeing a spec that was already closed, reports nothing.
 
@@ -66,6 +71,7 @@ A `spec.completed` event SHALL be reported once each time a spec's recorded stat
 - **THEN** no completion is reported for any of them
 
 ### The implementation step settles when its last task is checked, in every mode
+<!-- touches: apps/vscode/src/features/specs/implementCloseGuard.ts, apps/vscode/src/features/fileWatchers.ts -->
 
 The implementation step SHALL settle once when the task list shows every task checked, because it has no successor step to close it and chat surfaces give no completion callback.
 
@@ -82,6 +88,7 @@ The implementation step SHALL settle once when the task list shows every task ch
 - **THEN** no second closing event is recorded
 
 ### A fast-path folded step is derived as folded, once
+<!-- touches: apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
 A step SHALL be marked folded when its extension-stamped start and complete are under one second apart and it starts within one second of the previous step's extension-stamped close. A folded step still counts as measured timing.
 
@@ -94,6 +101,7 @@ A step SHALL be marked folded when its extension-stamped start and complete are 
 - **THEN** its entry is not marked folded
 
 ### A step's duration is trusted from any deterministic writer, gated on writer authority
+<!-- touches: apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
 A step's duration SHALL be trusted when it has exactly one start and an ordered close from a writer at least as authoritative as the start's. Instrumented writers (`extension`, `cli`, `derive`, `user`) rank above the agent (`ai`), which ranks above any unrecognized writer. A step with a close but no start claims no duration.
 

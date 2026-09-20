@@ -36,7 +36,7 @@ The first two beats carry `noZoom`, so the camera never moves between them: only
 npm run render                 # in this directory
 ```
 
-Then the standard GIF recipe from `docs/visual-assets.md`:
+Then the standard GIF recipe from `tooling/scripts/build-clip-gifs.mjs`:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

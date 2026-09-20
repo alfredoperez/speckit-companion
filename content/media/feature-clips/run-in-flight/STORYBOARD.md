@@ -43,7 +43,7 @@ State cuts land just before each beat's camera move; the last two transitions di
 npm run render                 # in this directory
 ```
 
-Then the established GIF recipe from `docs/visual-assets.md`:
+Then the established GIF recipe from `tooling/scripts/build-clip-gifs.mjs`:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=12,scale=880:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

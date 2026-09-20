@@ -67,7 +67,7 @@ Everything else is a tween: camera moves on `power3.inOut`, swipes as a `scaleX`
 npm run render                 # in this directory, writes to renders/
 ```
 
-Then the standard GIF recipe from `docs/visual-assets.md`, which is what the published file was actually made with:
+Then the standard GIF recipe from `tooling/scripts/build-clip-gifs.mjs`, which is what the published file was actually made with:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

@@ -147,9 +147,9 @@ Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a termina
 - [Configuration](https://speckit-companion.dev/docs/reference/configuration): all settings, custom workflows, custom commands
 - [Supported AI providers](https://speckit-companion.dev/docs/reference/providers): the compatibility matrix and dispatch styles
 - [Living specs](./apps/speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
-- [Telemetry](https://speckit-companion.dev/docs/reference/telemetry): exactly what is and isn't collected, and both off switches
-- [`.spec-context.json` schema](./docs/spec-context-schema.md): the on-disk state file
-- [How it works](./docs/how-it-works.md): architecture walkthrough
+- [Telemetry](./docs/telemetry.md): exactly what is and isn't collected, and both off switches
+- [How it works](https://speckit-companion.dev/docs): terms, what each half gives you, and where to start
+- [Architecture](./docs/architecture.md): module structure, extension/webview boundaries
 - [Contributing](CONTRIBUTING.md) · [Changelog](./CHANGELOG.md)
 
 ## Telemetry

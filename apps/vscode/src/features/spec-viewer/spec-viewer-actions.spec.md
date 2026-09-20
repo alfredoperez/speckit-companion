@@ -120,6 +120,24 @@ A living spec has no run record, so its comments SHALL travel with the refinemen
 - **WHEN** the reader refines a capability's tier document
 - **THEN** the prompt carries the comments from the request and names the tier file
 
+### Optional per-tab commands dispatch like the Command Palette, and a project override wins
+<!-- touches: apps/vscode/src/features/spec-viewer/optionalCommands.ts -->
+
+Clarify, Checklist and Analyze SHALL appear as built-in buttons on their own tab only, dispatching the same registered command the Command Palette runs, with no workflow opt-in required. A project-defined command sharing one's id SHALL be rendered and dispatched instead.
+
+#### Scenario: a project defines its own Clarify command
+- **WHEN** the spec tab's buttons are built
+- **THEN** the project's command is shown and dispatched, not the built-in one
+
+### A record write failure reaches the output channel, never the dispatch path
+<!-- touches: apps/vscode/src/features/specs/specContextWriter.ts -->
+
+A failure to write the spec's record SHALL be logged to the SpecKit output channel and SHALL NOT stop the step it accompanies from dispatching.
+
+#### Scenario: the record cannot be written when a step is dispatched
+- **WHEN** the write fails
+- **THEN** the failure is logged and the step still dispatches
+
 ## Uncovered
 
 _None: every file in the area was read, though test files under `__tests__/` were read only for the contracts they pin._

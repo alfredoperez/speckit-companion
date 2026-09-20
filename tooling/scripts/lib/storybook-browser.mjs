@@ -13,8 +13,8 @@
  * WHY playwright-core AND INSTALLED CHROME
  * `playwright-core` ships no browsers, so `channel: 'chrome'` drives the Google
  * Chrome already on the machine and nothing has to be downloaded. The pin is
- * exact on purpose — see docs/visual-assets.md, which also forbids swapping in
- * full `playwright`.
+ * exact on purpose — see capabilities/media-pipeline/asset-build.spec.md,
+ * which also forbids swapping in full `playwright`.
  */
 
 import { spawn } from 'node:child_process';

@@ -8,7 +8,7 @@ etc.).
 
 ## The three input screenshots
 
-Capture all three in **Dark Modern** (per `../../visual-assets.md`) so there's no purple —
+Capture all three in **Dark Modern** (per `../../../capabilities/media-pipeline/asset-build.spec.md`) so there's no purple —
 the art direction bans it, and the old hero's purple came from the old theme.
 
 1. **`viewer.png`** — VS Code **sidebar + spec viewer together**, on a spec's

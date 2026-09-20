@@ -2,7 +2,7 @@
 
 ## Purpose
 
-How the documentation images, README GIFs, and site renders get built, checked and kept in step with each other — restated as behaviour from `docs/visual-assets.md` and `docs/media-manifest.md`, which remain the narrated runbooks.
+How the documentation images, README GIFs, and site renders get built, checked and kept in step with each other — restated as behaviour from `the media commands in `package.json`` and ``content/media/manifest.json``, which remain the narrated runbooks.
 
 ## Requirements
 
@@ -96,4 +96,4 @@ The Pipeline Builder's visual tests SHALL separate a layout check that holds on 
 
 ## Uncovered
 
-_`tooling/scripts/build-favicons.mjs`, `build-lightwell.mjs`, `build-mascot-assets.mjs` and `new-clip.mjs` are page-chrome and scaffolding tools outside the capture-palette chain; `docs/visual-assets.md` documents each by name. `content/media/feature-clips/**` holds the compositions the requirements above build and check, not additional behaviour of its own._
+_`tooling/scripts/build-favicons.mjs`, `build-lightwell.mjs`, `build-mascot-assets.mjs` and `new-clip.mjs` are page-chrome and scaffolding tools outside the capture-palette chain; `the media commands in `package.json`` documents each by name. `content/media/feature-clips/**` holds the compositions the requirements above build and check, not additional behaviour of its own._
