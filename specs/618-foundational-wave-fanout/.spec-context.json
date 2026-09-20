@@ -222,6 +222,7 @@
       "at": "2026-09-19T14:38:18.999Z"
     }
   ],
+  "telemetryInstanceId": "3c12bf3b-b4f7-438f-8c1a-6fed7900586e",
   "unattended": true,
   "livingSpecs": {
     "loaded": [
@@ -246,7 +247,7 @@
     "loadedRequirements": {
       "commands-completion": [
         "Completion is an explicit terminal step with exactly one writer",
-        "Completion accounts for every loaded capability \u2014 a delta or an explicit skip, never silence",
+        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
         "A run that loaded nothing says so, because that is the one silence nothing else catches",
         "The tasks Polish phase validates the spec's Success Criteria in exactly one place"
       ],
@@ -524,7 +525,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 0.5,
-      "result": "................                                                         [100%] \u00b7 16 passed in 0.38s"
+      "result": "................                                                         [100%] · 16 passed in 0.38s"
     },
     {
       "what": "node word limit",
@@ -532,7 +533,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 0.0,
-      "result": "speckit.companion.living-drift.md                  4       0      4     506 \u00b7 speckit.companion.living-coverage.md               3       0      3     327 \u00b7 speckit.companion.living-show.md                   3       0      3     399"
+      "result": "speckit.companion.living-drift.md                  4       0      4     506 · speckit.companion.living-coverage.md               3       0      3     327 · speckit.companion.living-show.md                   3       0      3     399"
     },
     {
       "what": "shape parity",
@@ -540,7 +541,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 0.0,
-      "result": "[shape-parity] OK \u2014 14 bodies match parts, golden, and carry the timing fence"
+      "result": "[shape-parity] OK — 14 bodies match parts, golden, and carry the timing fence"
     }
   ],
   "concerns": [

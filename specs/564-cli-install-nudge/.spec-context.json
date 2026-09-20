@@ -232,11 +232,11 @@
     "area: src/features/specs (terminal dispatch chokepoints)",
     "area: src/ai-providers (terminal vs editor provider classification)",
     "constraint: reuse #543 install-nudge infra, shared installNudgeDismissed",
-    "constraint: extension isolation \u2014 src/ + prompt text only"
+    "constraint: extension isolation — src/ + prompt text only"
   ],
   "intent": "Give terminal-CLI users a single quiet dismissable hint to install the companion extension, matching #543's in-editor nudges",
   "expectations": [
-    "No new nudge system \u2014 reuse existing install commands and dismissal state",
+    "No new nudge system — reuse existing install commands and dismissal state",
     "No editing of .claude/** or .specify/** to implement the feature",
     "No change to the existing companion->stock fallback warning surface"
   ],
@@ -336,5 +336,6 @@
       "status": "DONE",
       "did": "Validated: npm run compile + npm test green (132 suites, 1867 tests)"
     }
-  }
+  },
+  "telemetryInstanceId": "46585b92-ce50-483d-9c72-2ded77591a0a"
 }

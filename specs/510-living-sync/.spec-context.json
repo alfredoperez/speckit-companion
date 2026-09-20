@@ -235,7 +235,7 @@
       ]
     },
     "FR-003": {
-      "title": "Grouping reuses the existing resolver membership rules \u2014 no second derivation",
+      "title": "Grouping reuses the existing resolver membership rules — no second derivation",
       "tasks": [
         "T001",
         "T003"
@@ -276,7 +276,7 @@
       ]
     },
     "FR-008": {
-      "title": "Sync grouping IS the working-tree drift derivation \u2014 one fact, one derivation",
+      "title": "Sync grouping IS the working-tree drift derivation — one fact, one derivation",
       "tasks": [
         "T001",
         "T003"
@@ -324,7 +324,7 @@
   "intent": "One command syncs every affected living spec from current changes, including uncommitted work, in a single pass",
   "expectations": [
     "No redraft/bootstrap of never-committed specs (living-adopt owns that)",
-    "No auto-commit of spec edits \u2014 they stay in the user's working tree",
+    "No auto-commit of spec edits — they stay in the user's working tree",
     "No change to default drift output or the fold-back pipeline path"
   ],
   "approach": "Extend drift.py with an opt-in --working mode (baseline-to-working-tree diff plus untracked files) and make that the single grouping derivation. A new hand-authored /speckit.companion.living-sync command consumes its JSON, applies the update-not-regenerate flow per drifted capability, reports synced/skipped, and leaves spec edits uncommitted. A Living Specs view title action dispatches the command.",
@@ -492,5 +492,6 @@
       "result": "working=true; caught the branch own uncommitted drift.py edit that default mode missed"
     }
   ],
-  "last_action": "all 14 tasks done - 1726 TS + 466 py tests pass, all gates green"
+  "last_action": "all 14 tasks done - 1726 TS + 466 py tests pass, all gates green",
+  "telemetryInstanceId": "09242dbf-43b0-4614-a390-2d0a087ce98f"
 }

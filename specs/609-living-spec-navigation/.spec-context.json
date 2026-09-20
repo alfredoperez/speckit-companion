@@ -1,5 +1,6 @@
 {
   "workflow": "companion",
+  "telemetryInstanceId": "5df4f62f-c4fc-4585-a0c7-ccf06354b748",
   "specName": "Living Spec Navigation",
   "branch": "main",
   "selectedAt": "2026-09-06T12:35:30.387Z",
@@ -308,7 +309,7 @@
         "A command that injects a step into a numbered body MUST NOT restart the numbering",
         "A step's branch points are declared as data beside its node order",
         "The command inventory records what each command's run must produce",
-        "Completion accounts for every loaded capability \u2014 a delta or an explicit skip, never silence",
+        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
         "Step boundaries are extension-stamped in order on every dispatch path",
         "Task finishes are folded into the shared record one at a time, as they land",
         "One command syncs every affected living spec from the current changes, uncommitted included",
@@ -351,12 +352,12 @@
         "The fold routes each capability's requirements to its own spec",
         "The drift detector offers an opt-in working-tree mode",
         "Recording which living specs cover a change MUST be deterministic, not AI-judged",
-        "Completion accounts for every loaded capability \u2014 fold it, or record a reasoned skip",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
         "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
         "Status resolution dispatches commands from the family the spec has been running",
         "Every handled call records itself, including the ones that fail",
         "A call count may shrink only when the record it produces stays identical",
-        "A capability relocation is transactional \u2014 a partial failure rolls back every applied move",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
         "A reader of a captured list MUST accept every form its writer stores",
         "A configuration the reader cannot fully read is rejected whole, never applied in part",
         "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
@@ -402,7 +403,7 @@
       "viewer-ui"
     ]
   },
-  "last_action": "all 24 tasks done \u2014 compile clean, 2844 Jest pass, 1349 Python pass, parity and emission gates green",
+  "last_action": "all 24 tasks done — compile clean, 2844 Jest pass, 1349 Python pass, parity and emission gates green",
   "coverage": {
     "FR-001": {
       "title": "A read-only command prints one capability requirement headings",
@@ -612,7 +613,7 @@
     },
     "T004": {
       "status": "DONE",
-      "did": "Wrote 12 failing tests for the three living-show modes and every degraded case: unregistered capability, registered-but-no-spec-file, no-match name, ambiguous name, unclaimed file, and disabled \u2014 all asserting exit 0",
+      "did": "Wrote 12 failing tests for the three living-show modes and every degraded case: unregistered capability, registered-but-no-spec-file, no-match name, ambiguous name, unclaimed file, and disabled — all asserting exit 0",
       "files": [
         "speckit-extension/tests/test_living_show.py"
       ]
@@ -700,7 +701,7 @@
     },
     "T015": {
       "status": "DONE",
-      "did": "Added four real house rules to this repo's own registry \u2014 two for specify, two for plan \u2014 so the feature is exercised by the project that ships it",
+      "did": "Added four real house rules to this repo's own registry — two for specify, two for plan — so the feature is exercised by the project that ships it",
       "files": [
         "living-specs.yml"
       ]
@@ -765,7 +766,7 @@
     },
     "T023": {
       "status": "DONE",
-      "did": "Wrote release notes under Unreleased in both changelogs \u2014 living-show and the rules block on the spec-kit side, the editor lookup on the VS Code side \u2014 and named the editor lookup in the README's living specs section",
+      "did": "Wrote release notes under Unreleased in both changelogs — living-show and the rules block on the spec-kit side, the editor lookup on the VS Code side — and named the editor lookup in the README's living specs section",
       "files": [
         "speckit-extension/CHANGELOG.md",
         "CHANGELOG.md",
@@ -800,7 +801,7 @@
     {
       "what": "Command shape parity",
       "command": "python3 speckit-extension/scripts/check-shape-parity.py",
-      "result": "OK \u2014 14 bodies match parts, golden, and carry the timing fence",
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence",
       "warnings": [
         "golden was re-frozen deliberately for the two intentional node edits"
       ]
@@ -808,7 +809,7 @@
     {
       "what": "Command emissions gate",
       "command": "python3 speckit-extension/scripts/check-command-emissions.py",
-      "result": "OK \u2014 21 commands agree across 7 install areas, 8 agent records, 2 documents"
+      "result": "OK — 21 commands agree across 7 install areas, 8 agent records, 2 documents"
     },
     {
       "what": "SC-001 one requirement instead of a file",
@@ -876,7 +877,7 @@
       "step": "implement"
     },
     {
-      "note": "Doctor: one capture call is recorded as failed \u2014 the implement --advance the command body asks for unconditionally, refused because mark-complete had already written completed. A designed no-op counted as a failure, not lost work. Every other check is clean."
+      "note": "Doctor: one capture call is recorded as failed — the implement --advance the command body asks for unconditionally, refused because mark-complete had already written completed. A designed no-op counted as a failure, not lost work. Every other check is clean."
     }
   ]
 }

@@ -17,7 +17,7 @@
     "living spec: companion-commands",
     "area: src/features/specs/specContextWriter.ts (setStepStarted dedup)",
     "area: src/features/specs/historyHelpers.ts (hasStepStart twin of _has_step_start)",
-    "constraint: cross-language derivation parity \u2014 TS dedup must match the Python writer"
+    "constraint: cross-language derivation parity — TS dedup must match the Python writer"
   ],
   "expectations": [
     "no change to the fast-path fold bodies or the workflow definition",
@@ -101,5 +101,6 @@
       "by": "extension",
       "at": "2026-07-21T14:25:00.000Z"
     }
-  ]
+  ],
+  "telemetryInstanceId": "3bf59851-1d79-4c41-9e1b-ec91fee32aaf"
 }

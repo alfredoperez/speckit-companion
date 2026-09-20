@@ -243,6 +243,7 @@
       "at": "2026-09-18T12:37:51.997Z"
     }
   ],
+  "telemetryInstanceId": "b65879df-e620-4393-b76d-27572210f734",
   "selectedAt": "2026-09-18T12:25:58.071Z",
   "livingSpecs": {
     "loaded": [
@@ -706,7 +707,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 9.9,
-      "result": "    [webpack-cli] Compiler starting...  \u00b7     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' \u00b7     [webpack-cli] Compiler finished"
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished"
     },
     {
       "what": "Full jest suite",
@@ -714,7 +715,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 41.2,
-      "result": "Tests:       3033 passed, 3033 total \u00b7 Snapshots:   0 total \u00b7 Time:        40.418 s, estimated 41 s"
+      "result": "Tests:       3033 passed, 3033 total · Snapshots:   0 total · Time:        40.418 s, estimated 41 s"
     },
     {
       "what": "Reader against examples/todo-living-central",

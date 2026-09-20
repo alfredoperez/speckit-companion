@@ -71,5 +71,6 @@
       "capture-runtime",
       "companion-commands"
     ]
-  }
+  },
+  "telemetryInstanceId": "a7276362-e3d7-4676-8d10-736d35b1877b"
 }

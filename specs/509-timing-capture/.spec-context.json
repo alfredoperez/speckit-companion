@@ -199,7 +199,7 @@
       ]
     },
     "FR-002": {
-      "title": "Parallel workers stay append-only; only the main agent folds \u2014 one writer of the shared files",
+      "title": "Parallel workers stay append-only; only the main agent folds — one writer of the shared files",
       "tasks": [
         "T007",
         "T008"
@@ -269,7 +269,7 @@
     "living spec: ai-providers",
     "area: speckit-extension command assembly (nodes/parts/goldens)",
     "area: src/ai-providers dispatch preamble",
-    "constraint: assembled bodies are generated \u2014 edit parts/nodes, re-bless goldens deliberately",
+    "constraint: assembled bodies are generated — edit parts/nodes, re-bless goldens deliberately",
     "constraint: forward-only status guard and idempotent completion appends must hold"
   ],
   "intent": "Make Companion timing capture honest: per-task live progress folded by the main agent, and extension-stamped step boundaries in order so all four phases carry trusted durations",
@@ -286,20 +286,20 @@
       "rejected": "Approach (a) dispatch-time stamping; trusting by:ai closes in derivation"
     },
     {
-      "decision": "No deriveStepHistory changes \u2014 prove 4-of-4 with tests only",
+      "decision": "No deriveStepHistory changes — prove 4-of-4 with tests only",
       "why": "Correctly ordered boundaries already satisfy the existing trust rule; changing close-preference would rewrite historical spans",
       "rejected": "Preferring own completion over next-step boundary for completedAt"
     },
     {
       "decision": "Per-task materialize by the MAIN agent only; workers append-only",
-      "why": "materialize is a read-modify-write of shared files \u2014 one named serializing writer, per the concurrency rule; idempotent fold makes per-task + wave-join backstop safe",
+      "why": "materialize is a read-modify-write of shared files — one named serializing writer, per the concurrency rule; idempotent fold makes per-task + wave-join backstop safe",
       "rejected": "Workers materializing their own finishes; extension-side sidecar watcher"
     }
   ],
   "step_summaries": {
     "plan": {
       "summary": "Prompt-surface-only fix: per-task fold cadence + extension-stamped plan/tasks boundaries via body starts and hook completes",
-      "key_finding": "The completion-append idempotency race is why the AI self-close must be removed \u2014 an earlier by:ai complete would block the hook by:extension complete forever"
+      "key_finding": "The completion-append idempotency race is why the AI self-close must be removed — an earlier by:ai complete would block the hook by:extension complete forever"
     },
     "tasks": {
       "summary": "12 tasks across 4 waves: boundary fixes (4 parallel) -> timing-part + tests -> cadence rewrites -> preamble mirror -> regenerate/docs/validate"
@@ -435,5 +435,6 @@
       ]
     }
   ],
-  "last_action": "all 12 tasks done \u2014 gates + 1724 tests green; awaiting completion fold"
+  "last_action": "all 12 tasks done — gates + 1724 tests green; awaiting completion fold",
+  "telemetryInstanceId": "b7b27e9b-bf82-44ba-9277-1a29d00aab27"
 }

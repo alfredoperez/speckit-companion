@@ -223,6 +223,7 @@
       "at": "2026-08-26T04:46:10.782Z"
     }
   ],
+  "telemetryInstanceId": "482f1afe-d09c-44db-9eb4-8be2b5a5ae70",
   "livingSpecs": {
     "loaded": [
       "capture-runtime"
@@ -231,7 +232,7 @@
       "capture-runtime"
     ]
   },
-  "last_action": "all 14 tasks done \u2014 697 extension tests, 1942 VS Code tests, 6 gates green; doctor 0 problems / 1 inherited drift warning",
+  "last_action": "all 14 tasks done — 697 extension tests, 1942 VS Code tests, 6 gates green; doctor 0 problems / 1 inherited drift warning",
   "coverage": {
     "FR-001": {
       "title": "Status lists a recorded decision captured in the structured form the pipeline writes, showing its decision text",
@@ -308,16 +309,16 @@
   },
   "intent": "Make the status report show the decisions a run actually recorded, in every stored form, instead of reporting none.",
   "expectations": [
-    "The Decisions section stays one line per decision \u2014 a verbose why/rejected report is separate work",
+    "The Decisions section stays one line per decision — a verbose why/rejected report is separate work",
     "No change to how decisions are recorded, only to how they are read back",
     "No de-duplication, reordering, or truncation of recorded decisions"
   ],
   "context": [
     "living spec: capture-runtime (speckit-extension/scripts/capture-runtime.spec.md)",
-    "area: speckit-extension/scripts \u2014 the capture read side (status-context.py) and its writers (capture.py, write-context.py)",
+    "area: speckit-extension/scripts — the capture read side (status-context.py) and its writers (capture.py, write-context.py)",
     "constraint: the read side never raises and never exits non-zero"
   ],
-  "approach": "Widen the status reader's decisions filter to accept both stored forms \u2014 a bare string renders as itself, an entry object renders its decision text, anything with no usable text is skipped \u2014 mirroring the rule the VS Code viewer's reader already uses. The report block and the machine-readable RESOLUTION line keep their exact shape, so resume and the test suite see no contract change. Sibling readers of the other captured lists are audited in the same pass and fixed only where they actually share the assumption.",
+  "approach": "Widen the status reader's decisions filter to accept both stored forms — a bare string renders as itself, an entry object renders its decision text, anything with no usable text is skipped — mirroring the rule the VS Code viewer's reader already uses. The report block and the machine-readable RESOLUTION line keep their exact shape, so resume and the test suite see no contract change. Sibling readers of the other captured lists are audited in the same pass and fixed only where they actually share the assumption.",
   "decisions": [
     {
       "decision": "Mirror the viewer reader's accept-both-shapes rule instead of inventing a second one",
@@ -336,7 +337,7 @@
     },
     {
       "decision": "Treat the sibling-reader sweep as an audit that reports, not speculative widening",
-      "why": "doctor_drift.py already branches on dict for verified[], and expectations/context go through a string-only writer so their shape is guaranteed \u2014 widening them would add branches no honest test can reach",
+      "why": "doctor_drift.py already branches on dict for verified[], and expectations/context go through a string-only writer so their shape is guaranteed — widening them would add branches no honest test can reach",
       "rejected": "widening every list reader for symmetry"
     },
     {
@@ -346,17 +347,17 @@
     },
     {
       "decision": "Drop a bare number or boolean decision instead of stringifying it, as the old filter did",
-      "why": "the viewer reader this one now mirrors accepts only strings and entry objects, so keeping the numeric passthrough would make the two surfaces disagree about which decisions exist \u2014 and a boolean rendering as the line \"True\" was never a decision anyone wrote",
+      "why": "the viewer reader this one now mirrors accepts only strings and entry objects, so keeping the numeric passthrough would make the two surfaces disagree about which decisions exist — and a boolean rendering as the line \"True\" was never a decision anyone wrote",
       "rejected": "preserving the int/float passthrough for strict output parity with the old filter"
     }
   ],
   "step_summaries": {
     "plan": {
       "summary": "One reader widened to accept both stored decision forms, mirroring the viewer rule, with the report and RESOLUTION contracts held byte-stable",
-      "key_finding": "capture.py always stores decisions as objects, so the string-only filter dropped every real run \u2014 only hand-authored fixtures ever rendered, which is why every test was green"
+      "key_finding": "capture.py always stores decisions as objects, so the string-only filter dropped every real run — only hand-authored fixtures ever rendered, which is why every test was green"
     },
     "tasks": {
-      "summary": "14 tasks across 5 phases \u2014 foundational baseline, three user-story phases (render both forms, degrade per entry, audit the sibling readers), and polish covering the changelog, the living-spec delta, the full gate run, and the doctor"
+      "summary": "14 tasks across 5 phases — foundational baseline, three user-story phases (render both forms, degrade per entry, audit the sibling readers), and polish covering the changelog, the living-spec delta, the full gate run, and the doctor"
     },
     "implement": {
       "summary": "Widened the status reader so recorded decisions in both stored forms render, with per-entry degradation, an unchanged output contract, and the sibling readers audited"
@@ -380,7 +381,7 @@
     },
     "T003": {
       "status": "DONE",
-      "did": "Ran the new cases against the unmodified reader: 4 failures + 1 error, while the existing string-form and non-list cases stayed green \u2014 failure direction proven",
+      "did": "Ran the new cases against the unmodified reader: 4 failures + 1 error, while the existing string-form and non-list cases stayed green — failure direction proven",
       "files": [
         "speckit-extension/tests/test_context.py"
       ]
@@ -401,7 +402,7 @@
     },
     "T006": {
       "status": "DONE",
-      "did": "Covered the malformed shapes in the skip case: an entry with no decision key, a blank decision, a non-string decision, a bare list, null, a bare number, and a whitespace string \u2014 all skipped while the good entries render",
+      "did": "Covered the malformed shapes in the skip case: an entry with no decision key, a blank decision, a non-string decision, a bare list, null, a bare number, and a whitespace string — all skipped while the good entries render",
       "files": [
         "speckit-extension/tests/test_context.py"
       ]
@@ -415,7 +416,7 @@
     },
     "T008": {
       "status": "DONE",
-      "did": "Audited the drift reader of verified[]: it already branches on dict before falling back to text, so no fix was needed \u2014 pinned that with a string-form claim test alongside the existing entry-form one",
+      "did": "Audited the drift reader of verified[]: it already branches on dict before falling back to text, so no fix was needed — pinned that with a string-form claim test alongside the existing entry-form one",
       "files": [
         "speckit-extension/scripts/doctor_drift.py",
         "speckit-extension/tests/test_doctor_drift.py"
@@ -460,7 +461,7 @@
     },
     "T014": {
       "status": "DONE",
-      "did": "Ran the doctor: 0 problems, 1 warning across 6 checks \u2014 the only warning is inherited drift on companion-commands from the prior commit on main, untouched by this run",
+      "did": "Ran the doctor: 0 problems, 1 warning across 6 checks — the only warning is inherited drift on companion-commands from the prior commit on main, untouched by this run",
       "files": [
         "speckit-extension/scripts/doctor.py"
       ]
@@ -482,33 +483,33 @@
       "command": "npm run compile && npm test",
       "result": "1942 tests across 137 suites, all pass",
       "warnings": [
-        "a jest worker did not exit gracefully \u2014 pre-existing, unrelated to this change"
+        "a jest worker did not exit gracefully — pre-existing, unrelated to this change"
       ]
     },
     {
       "what": "shape parity gate",
       "command": "python3 speckit-extension/scripts/check-shape-parity.py",
-      "result": "OK \u2014 14 bodies match parts, golden, and carry the timing fence"
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence"
     },
     {
       "what": "node assembly gate",
       "command": "python3 speckit-extension/scripts/assemble-nodes.py --check",
-      "result": "OK \u2014 checked 5 command bodies from nodes"
+      "result": "OK — checked 5 command bodies from nodes"
     },
     {
       "what": "command build gate",
       "command": "python3 speckit-extension/scripts/build-commands.py --check",
-      "result": "OK \u2014 checked 8 bodies from parts"
+      "result": "OK — checked 8 bodies from parts"
     },
     {
       "what": "package manifest gate",
       "command": "python3 speckit-extension/scripts/package-manifest.py --check",
-      "result": "OK \u2014 21 runtime scripts, closure matches the declared list"
+      "result": "OK — 21 runtime scripts, closure matches the declared list"
     },
     {
       "what": "command emissions gate",
       "command": "python3 speckit-extension/scripts/check-command-emissions.py",
-      "result": "OK \u2014 19 commands agree across 7 install areas, 8 agent records, and 2 documents"
+      "result": "OK — 19 commands agree across 7 install areas, 8 agent records, and 2 documents"
     },
     {
       "what": "command quality gate",

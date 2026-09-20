@@ -111,7 +111,7 @@
     }
   ],
   "selectedAt": "2026-07-22T10:48:13.715Z",
-  "last_action": "all 6 tasks done \u2014 webview typechecks, webpack builds, 1769 tests pass",
+  "last_action": "all 6 tasks done — webview typechecks, webpack builds, 1769 tests pass",
   "coverage": {
     "FR-001": {
       "title": "Compact run-timing summary renders in exactly one always-visible Overview location"
@@ -145,9 +145,9 @@
   },
   "context": [
     "area: webview/src/spec-viewer/components (OverviewDossier + cards/PhasesCard)",
-    "constraint: render-only \u2014 no change to captured timing in .spec-context.json"
+    "constraint: render-only — no change to captured timing in .spec-context.json"
   ],
-  "intent": "Show the run-timing summary once \u2014 Overview keeps the compact strip, Phases card keeps the deeper detail",
+  "intent": "Show the run-timing summary once — Overview keeps the compact strip, Phases card keeps the deeper detail",
   "expectations": [
     "No change to what timing data is captured or stored in .spec-context.json",
     "Not removing the Phases card's unique detail (overall stamps + per-phase event timeline)"
@@ -158,6 +158,7 @@
       "viewer-ui"
     ]
   },
+  "telemetryInstanceId": "aa8a1358-4837-463b-96f3-7a4b4ef93e43",
   "currentTask": "T006",
   "task_summaries": {
     "T001": {

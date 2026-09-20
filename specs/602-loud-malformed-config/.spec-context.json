@@ -273,7 +273,8 @@
       "capture-runtime"
     ]
   },
-  "last_action": "all 21 tasks done \u2014 714 Python tests, 1942 TypeScript tests, every gate green, doctor 0 problems",
+  "last_action": "all 21 tasks done — 714 Python tests, 1942 TypeScript tests, every gate green, doctor 0 problems",
+  "telemetryInstanceId": "a57c7deb-6b7c-41d3-8a47-0892e21a2061",
   "coverage": {
     "FR-001": {
       "title": "The config reader rejects, rather than partially accepts, a file using unsupported YAML",
@@ -412,7 +413,7 @@
   "context": [
     "living spec: capture-runtime",
     "area: speckit-extension/scripts/companion_config.py (constrained YAML reader)",
-    "constraint: a malformed config must never fail the host command \u2014 degrade to shipped defaults plus one warning",
+    "constraint: a malformed config must never fail the host command — degrade to shipped defaults plus one warning",
     "constraint: must not narrow what parses cleanly today; the repo's own .specify/companion.yml is the live regression fixture"
   ],
   "intent": "Make a companion.yml the constrained reader cannot handle fail loudly with the documented malformed warning, instead of returning a silently truncated config.",
@@ -426,11 +427,11 @@
     {
       "decision": "Detect the unsupported syntax and raise, rather than implement anchor support",
       "why": "The failure table already reports an unreadable file correctly; the reader just never noticed. Detection is a few line-shape checks against a substantially larger reader.",
-      "rejected": "Implementing real anchors, aliases and merge keys \u2014 a hook config gains almost nothing from reuse syntax."
+      "rejected": "Implementing real anchors, aliases and merge keys — a hook config gains almost nothing from reuse syntax."
     },
     {
       "decision": "Add a general check that the parser reached the last line, on top of the named-token checks",
-      "why": "A cursor that stops short is the mechanism behind every silent truncation, so checking it converts the whole class \u2014 including shapes nobody has hit yet \u2014 into a loud failure.",
+      "why": "A cursor that stops short is the mechanism behind every silent truncation, so checking it converts the whole class — including shapes nobody has hit yet — into a loud failure.",
       "rejected": "Named-token detection alone, which only patches the four spellings we enumerated."
     },
     {
@@ -440,7 +441,7 @@
     },
     {
       "decision": "Examine only the first token of a key or an unquoted value",
-      "why": "A marker later in a value is ordinary text \u2014 shell commands with &&, redirects with >, quoted globs with * must all keep parsing exactly as before.",
+      "why": "A marker later in a value is ordinary text — shell commands with &&, redirects with >, quoted globs with * must all keep parsing exactly as before.",
       "rejected": "Scanning the whole line for the marker characters."
     },
     {
@@ -455,7 +456,7 @@
       "key_finding": "The anchor is a symptom: the reader unwinds and returns whatever it collected whenever its cursor stops advancing, so the load-bearing fix is checking that the parser reached the last line."
     },
     "tasks": {
-      "summary": "21 tasks across 6 phases \u2014 foundational line identity and one guard, then a story per failure shape, a no-narrowing proof story, and polish."
+      "summary": "21 tasks across 6 phases — foundational line identity and one guard, then a story per failure shape, a no-narrowing proof story, and polish."
     },
     "implement": {
       "summary": "The config reader now rejects anchors, aliases, tab indentation and block scalars, and any file it does not read to the end, so an unreadable companion.yml degrades to shipped defaults plus one line-numbered warning instead of a silent partial parse."
@@ -486,7 +487,7 @@
     },
     "T004": {
       "status": "DONE",
-      "did": "Add a test that the anchored fixture applies nothing at all \u2014 no hook survives from above the anchor",
+      "did": "Add a test that the anchored fixture applies nothing at all — no hook survives from above the anchor",
       "files": [
         "speckit-extension/tests/test_config.py"
       ]
@@ -563,14 +564,14 @@
     },
     "T015": {
       "status": "DONE",
-      "did": "Reject any file the parser did not read to its last line, naming that line \u2014 no partial config can be returned",
+      "did": "Reject any file the parser did not read to its last line, naming that line — no partial config can be returned",
       "files": [
         "speckit-extension/scripts/companion_config.py"
       ]
     },
     "T016": {
       "status": "DONE",
-      "did": "Add a regression test loading this repo's own companion.yml \u2014 no warnings, 6 implement hooks in order, 1 each for specify/plan/tasks",
+      "did": "Add a regression test loading this repo's own companion.yml — no warnings, 6 implement hooks in order, 1 each for specify/plan/tasks",
       "files": [
         "speckit-extension/tests/test_config.py"
       ]
@@ -598,7 +599,7 @@
     },
     "T020": {
       "status": "DONE",
-      "did": "Confirmed the failure-table docstring's claim that anything outside the subset raises is now actually enforced \u2014 no edit needed",
+      "did": "Confirmed the failure-table docstring's claim that anything outside the subset raises is now actually enforced — no edit needed",
       "files": [
         "speckit-extension/scripts/companion_config.py"
       ]
@@ -623,13 +624,13 @@
       "command": "npm run compile && npm test",
       "result": "137 suites, 1942 tests pass",
       "warnings": [
-        "a Jest worker did not exit gracefully \u2014 pre-existing, unrelated to this change"
+        "a Jest worker did not exit gracefully — pre-existing, unrelated to this change"
       ]
     },
     {
       "what": "Every repository gate",
       "command": "check-shape-parity.py; assemble-nodes.py --check; build-commands.py --check; package-manifest.py --check; check-command-emissions.py; check_quality.py --strict",
-      "result": "all green \u2014 14 bodies, 5 node commands, 8 part bodies, 21 runtime scripts, 19 commands, 12 quality checks",
+      "result": "all green — 14 bodies, 5 node commands, 8 part bodies, 21 runtime scripts, 19 commands, 12 quality checks",
       "warnings": []
     },
     {
@@ -655,13 +656,13 @@
       "command": "python3 speckit-extension/scripts/doctor.py --feature-dir specs/602-loud-malformed-config",
       "result": "0 problems, 1 warning across 7 checks",
       "warnings": [
-        "companion-commands drift naming commit 2a908047 from #604 \u2014 inherited, predates this run"
+        "companion-commands drift naming commit 2a908047 from #604 — inherited, predates this run"
       ]
     }
   ],
   "concerns": [
     {
-      "note": "The doctor reports a companion-commands drift warning against baseline 038566aa naming commit 2a908047 from #604 \u2014 it predates this run and belongs to that change, so it was recorded rather than fixed here.",
+      "note": "The doctor reports a companion-commands drift warning against baseline 038566aa naming commit 2a908047 from #604 — it predates this run and belongs to that change, so it was recorded rather than fixed here.",
       "step": "implement"
     },
     {

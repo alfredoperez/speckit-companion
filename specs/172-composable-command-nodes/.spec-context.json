@@ -388,6 +388,7 @@
       "at": "2026-06-14T20:49:53Z"
     }
   ],
+  "telemetryInstanceId": "2b960801-fa62-479b-a300-ec96b5c5de3f",
   "currentTask": "T038",
   "task_summaries": {
     "T001": {
@@ -627,7 +628,7 @@
         "speckit-extension/workflows/speckit-companion.workflow.yml"
       ],
       "concerns": [
-        "SC-005/SC-006 (live agentic-CLI self-advance vs one-shot, and stock SpecKit stopping at 'implemented') were verified by code/wiring inspection, not by an end-to-end run in each environment \u2014 those require live CLIs."
+        "SC-005/SC-006 (live agentic-CLI self-advance vs one-shot, and stock SpecKit stopping at 'implemented') were verified by code/wiring inspection, not by an end-to-end run in each environment — those require live CLIs."
       ]
     },
     "T033": {

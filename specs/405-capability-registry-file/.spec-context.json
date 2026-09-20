@@ -253,7 +253,7 @@
       "at": "2026-07-20T00:39:05.365Z"
     }
   ],
-  "last_action": "all 23 tasks done \u2014 416 Python + 1647 JS tests pass, 9/9 drift proofs held",
+  "last_action": "all 23 tasks done — 416 Python + 1647 JS tests pass, 9/9 drift proofs held",
   "coverage": {
     "FR-001": {
       "title": "Capability registrations are stored in a dedicated registry file outside the folder the routine cleanup step restores",
@@ -431,17 +431,17 @@
   "context": [
     "area: speckit-extension/scripts (companion_config, register-capability, relocate-capability, resolve-spec-paths)",
     "area: src/features/specs/livingSpecsModel.ts and the Living Specs sidebar",
-    "constraint: extension isolation \u2014 shipped code must not depend on .claude/**",
-    "constraint: two extensions, two changelogs \u2014 speckit-extension/ changes never touch the root docs"
+    "constraint: extension isolation — shipped code must not depend on .claude/**",
+    "constraint: two extensions, two changelogs — speckit-extension/ changes never touch the root docs"
   ],
   "intent": "Give living-specs capability registrations their own committed, top-level file so the routine cleanup step can no longer silently delete them.",
   "expectations": [
     "Do not narrow or rewrite the git restore cleanup line itself",
     "Do not move pipeline hook or recipe settings out of the old location",
-    "Do not change how capabilities resolve, match, or order \u2014 only where they are stored",
+    "Do not change how capabilities resolve, match, or order — only where they are stored",
     "No version bumps in any manifest"
   ],
-  "approach": "Move the livingSpecs block from .specify/companion.yml to a new project-root living-specs.yml. One shared location rule per runtime \u2014 companion_config.py for the scripts, livingSpecsModel.ts for the editor \u2014 so no consumer re-derives the path. Readers prefer the registry and fall back to the old file; writers always write the registry and lift the block out of the old file in the same operation, reporting the move.",
+  "approach": "Move the livingSpecs block from .specify/companion.yml to a new project-root living-specs.yml. One shared location rule per runtime — companion_config.py for the scripts, livingSpecsModel.ts for the editor — so no consumer re-derives the path. Readers prefer the registry and fall back to the old file; writers always write the registry and lift the block out of the old file in the same operation, reporting the move.",
   "decisions": [
     {
       "decision": "Registry lives at project-root living-specs.yml",
@@ -647,7 +647,7 @@
     },
     "T022": {
       "status": "DONE",
-      "did": "Ran the full verification set: compile, 1647 JS tests, 416 Python tests, node assembly, shape parity, command emissions, and the package manifest \u2014 all green",
+      "did": "Ran the full verification set: compile, 1647 JS tests, 416 Python tests, node assembly, shape parity, command emissions, and the package manifest — all green",
       "files": [
         "specs/405-capability-registry-file/"
       ]
@@ -693,5 +693,6 @@
       "result": "9 of 9 reverts produced the expected failure: registry location, migrate-on-write, malformed-no-fallback (both runtimes), boundary probe (both runtimes), stale-legacy warning, wrapper shape, and registry-first read",
       "warnings": []
     }
-  ]
+  ],
+  "telemetryInstanceId": "c1eb44c7-2da3-45ba-a86f-07f00357a559"
 }

@@ -98,7 +98,7 @@
   "intent": "Make the update notification's View Changelog button open the release notes for the version it just offered, instead of whichever product published most recently.",
   "approach": "Build the changelog address from the version already in scope at the link site so it resolves by tag rather than by the shared latest lookup, and pin it with a test on the mocked browser-open.",
   "expectations": [
-    "No change to how the newer version is detected \u2014 that filter is already correct",
+    "No change to how the newer version is detected — that filter is already correct",
     "No version bump on the branch; the release flow owns it"
   ],
   "context": [
@@ -167,11 +167,12 @@
       "summary": "Changelog link resolves by tag from the offered version; the last live /releases/latest is gone from shipped source"
     }
   },
-  "last_action": "4/4 tasks done \u2014 tsc clean, 1895 tests pass",
+  "last_action": "4/4 tasks done — tsc clean, 1895 tests pass",
   "concerns": [
     {
-      "note": "The vscode mock had no withProgress/ProgressLocation, so the Skip branch of the update notification was untestable. Extended the mock rather than dropping the test \u2014 this is the config-mock harness gap CLAUDE.md already flags.",
+      "note": "The vscode mock had no withProgress/ProgressLocation, so the Skip branch of the update notification was untestable. Extended the mock rather than dropping the test — this is the config-mock harness gap CLAUDE.md already flags.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "2ff6b129-5dc8-49c4-a1ce-853591d8ecd9"
 }

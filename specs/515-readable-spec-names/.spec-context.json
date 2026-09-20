@@ -119,7 +119,7 @@
       "at": "2026-07-21T23:45:01.060Z"
     }
   ],
-  "last_action": "all 7 tasks done \u2014 1750/1750 tests pass, tsc clean",
+  "last_action": "all 7 tasks done — 1750/1750 tests pass, tsc clean",
   "coverage": {
     "FR-001": {
       "title": "Display a readable spec name for each sidebar row instead of the raw slug",
@@ -167,19 +167,20 @@
     "area: src/features/specs/specExplorerProvider.ts (sidebar tree rows)",
     "area: src/features/spec-viewer/specViewerProvider.ts (header title)",
     "reuse: deriveSpecName() humanizer in specContextManager.ts",
-    "constraint: presentation only \u2014 never rename dir or branch"
+    "constraint: presentation only — never rename dir or branch"
   ],
   "intent": "Show a readable, humanized spec name in the sidebar and viewer header instead of the raw NNN-dash slug, keeping the slug as the stable id",
   "expectations": [
     "Do not rename the spec directory or the git branch",
-    "No new second humanizer \u2014 reuse deriveSpecName",
+    "No new second humanizer — reuse deriveSpecName",
     "Slug stays the identifier for filter, sort, and open commands"
   ],
+  "telemetryInstanceId": "60b9c2a2-5e7e-4f75-8259-b22e2867c55f",
   "currentTask": "T007",
   "task_summaries": {
     "T001": {
       "status": "DONE",
-      "did": "Add pure resolveSpecDisplayName resolver: recorded name \u2192 heading \u2192 humanized slug",
+      "did": "Add pure resolveSpecDisplayName resolver: recorded name → heading → humanized slug",
       "files": [
         "src/core/utils/specDisplayName.ts"
       ]

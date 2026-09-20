@@ -1,5 +1,6 @@
 {
   "workflow": "companion",
+  "telemetryInstanceId": "8bacaec6-22cc-40c2-8ed8-8ab342778a3c",
   "specName": "Doctor Blind Spots",
   "branch": "604-doctor-blind-spots",
   "selectedAt": "2026-09-05T16:27:11.316Z",
@@ -341,18 +342,18 @@
   "context": [
     "living spec: capture-runtime (trace evidence + lower-bound counting contract)",
     "living spec: companion-commands (step boundary stamping in command bodies)",
-    "area: speckit-extension/scripts/doctor_checks.py \u2014 check_trace early return, _lost_entries",
-    "area: speckit-extension/nodes/implement/implement-exec.md \u2014 where the implement start is stamped",
+    "area: speckit-extension/scripts/doctor_checks.py — check_trace early return, _lost_entries",
+    "area: speckit-extension/nodes/implement/implement-exec.md — where the implement start is stamped",
     "constraint: nine of the fourteen mechanisms in #622 verified already fixed on main; excluded from scope",
     "constraint: history is append-only, so past batched journals cannot be repaired retroactively",
-    "constraint: no check may fail the host command \u2014 degrade to no-record",
-    "area: speckit-extension/presets/_parts/ \u2014 where the new step-start part lives; four _frame.md files fence it",
-    "area: speckit-extension/scripts/doctor.py \u2014 CHECKS tuple and run_check wiring for the new check",
+    "constraint: no check may fail the host command — degrade to no-record",
+    "area: speckit-extension/presets/_parts/ — where the new step-start part lives; four _frame.md files fence it",
+    "area: speckit-extension/scripts/doctor.py — CHECKS tuple and run_check wiring for the new check",
     "constraint: editing the four step frames invalidates tests/golden/commands, which must be regenerated",
     "constraint: check-shape-parity requires a shared rule to live in presets/_parts, not inlined per command",
     "finding: the extension dispatch seed (src/ai-providers/promptPreamble.ts:280) already carries the dispatch timestamp, so the extension path is already honest; the gap is terminal and self-advance dispatch"
   ],
-  "intent": "Close the three health-check blind spots still reproducing from #622 \u2014 an unreachable evidence marker, an unread verification record, and a step start stamped after the work.",
+  "intent": "Close the three health-check blind spots still reproducing from #622 — an unreachable evidence marker, an unread verification record, and a step start stamped after the work.",
   "decisions": [
     {
       "decision": "Read .trace-lost before check_trace returns its skip",

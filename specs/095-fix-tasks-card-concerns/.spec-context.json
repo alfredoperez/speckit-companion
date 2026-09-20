@@ -19,8 +19,8 @@
   },
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/159",
   "prNumber": 159,
-  "approach": "Tolerate non-array task_summaries.concerns/files at three layers \u2014 normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel \u2014 without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
-  "last_action": "PR #159 opened \u2014 fix(spec-viewer): tolerate non-array task_summaries concerns/files",
+  "approach": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
+  "last_action": "PR #159 opened — fix(spec-viewer): tolerate non-array task_summaries concerns/files",
   "files_modified": [
     "specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json",
     "webview/src/spec-viewer/components/cards/TasksCard.tsx",
@@ -40,14 +40,14 @@
   ],
   "decisions": [
     "Extracted toStringArray to its own .ts file (rather than keeping it module-local in TasksCard.tsx) so it can be imported by a non-JSX .test.ts file under the existing Jest config (testEnvironment: node, no jsx in tsconfig.test.json). Same helper logic; just lives one file over.",
-    "Skipped JSX render tests for TasksCard \u2014 Jest config has no jsdom and no preact-testing-library dep. The crash boundary is the toStringArray helper, so exercising it directly (plus the end-to-end reader normalization via the regression fixture) covers R001 + R006 without adding test infra.",
+    "Skipped JSX render tests for TasksCard — Jest config has no jsdom and no preact-testing-library dep. The crash boundary is the toStringArray helper, so exercising it directly (plus the end-to-end reader normalization via the regression fixture) covers R001 + R006 without adding test infra.",
     "Added a `specs/_*/` ignore rule for local-only demo spec dirs so the local reproducer (specs/_demo-string-concerns/) stays out of the PR."
   ],
   "concerns": [],
   "task_summaries": {
     "T001": {
       "status": "DONE",
-      "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json \u2014 verbatim reconstruction of the final legacy fixture state with 4 task_summary entries whose concerns are plain strings.",
+      "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json — verbatim reconstruction of the final legacy fixture state with 4 task_summary entries whose concerns are plain strings.",
       "files": [
         "specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json"
       ],
@@ -79,7 +79,7 @@
         "src/ai-providers/promptBuilder.ts"
       ],
       "concerns": [
-        "Initial four-line version overshot the 2000-char preamble budget (got 2044). Trimmed to three lines preserving every shape assertion to stay under the limit \u2014 adjusted T009 to match the trimmed wording."
+        "Initial four-line version overshot the 2000-char preamble budget (got 2044). Trimmed to three lines preserving every shape assertion to stay under the limit — adjusted T009 to match the trimmed wording."
       ]
     },
     "T005": {
@@ -97,7 +97,7 @@
     },
     "T006": {
       "status": "DONE",
-      "did": "Wrapped <ActivityPanel/> in <ActivityErrorBoundary> in App.tsx \u2014 no layout change.",
+      "did": "Wrapped <ActivityPanel/> in <ActivityErrorBoundary> in App.tsx — no layout change.",
       "files": [
         "webview/src/spec-viewer/App.tsx"
       ],
@@ -110,7 +110,7 @@
         "webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts"
       ],
       "concerns": [
-        "Wrote a .test.ts (not .test.tsx) and exercised the helper directly rather than rendering the component \u2014 testEnvironment: 'node', no jsdom, and tsconfig.test.json has no jsx setting. The error-boundary force-throw assertion was not added since rendering the boundary needs the same JSX infra; the boundary's own logic is type-checked by tsc and trivially exercised by usage."
+        "Wrote a .test.ts (not .test.tsx) and exercised the helper directly rather than rendering the component — testEnvironment: 'node', no jsdom, and tsconfig.test.json has no jsx setting. The error-boundary force-throw assertion was not added since rendering the boundary needs the same JSX infra; the boundary's own logic is type-checked by tsc and trivially exercised by usage."
       ]
     },
     "T008": {
@@ -147,11 +147,11 @@
       "key_finding": "TasksCard at webview/src/spec-viewer/components/cards/TasksCard.tsx:74-80 calls .map() on task_summaries[*].concerns assuming string[], but the AI-injected prompt directive in src/ai-providers/promptBuilder.ts:43-44 doesn't specify the shape, so writers emit a plain string like \"None\" and crash the whole Activity panel."
     },
     "plan": {
-      "approach_summary": "Tolerate non-array task_summaries.concerns/files at three layers \u2014 normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel \u2014 without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
+      "approach_summary": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
       "files_planned": 9,
       "risks": [
-        "Reader coercion changes data semantically when stripping \"None\" \u2014 mitigated by spec Out-of-Scope and verified-no-other-consumers grep.",
-        "Prompt drift between speckit-companion and SDD \u2014 handled by making the viewer tolerant of both shapes, not by coordinating the SDD repo."
+        "Reader coercion changes data semantically when stripping \"None\" — mitigated by spec Out-of-Scope and verified-no-other-consumers grep.",
+        "Prompt drift between speckit-companion and SDD — handled by making the viewer tolerant of both shapes, not by coordinating the SDD repo."
       ],
       "principles_concerns": 0,
       "domain_concerns": 0,
@@ -369,5 +369,6 @@
       "at": "2026-05-20T13:11:00Z",
       "kind": "start"
     }
-  ]
+  ],
+  "telemetryInstanceId": "8fbd16d6-6bd0-4dfe-9451-c3997de5859f"
 }

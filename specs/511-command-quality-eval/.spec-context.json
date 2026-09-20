@@ -288,7 +288,7 @@
   "step_summaries": {
     "plan": {
       "summary": "Three-dimension stdlib checker beside check_capture.py, tests in the existing python suite, three strict CI steps",
-      "key_finding": "A bare ask pattern matches tasks \u2014 word-bounded phrases plus fence-skipping and a negation window are what make the prompting scan pass honestly on main"
+      "key_finding": "A bare ask pattern matches tasks — word-bounded phrases plus fence-skipping and a negation window are what make the prompting scan pass honestly on main"
     },
     "tasks": {
       "summary": "9 tasks in 7 waves: skeleton -> verbosity+timing / prompting (parallel) -> tests -> CI -> docs pair -> validate"
@@ -375,7 +375,7 @@
       "command": "python3 -m unittest discover -s speckit-extension/tests",
       "result": "489 tests pass",
       "warnings": [
-        "package-manifest failing-direction test prints its expected refusal to stdout \u2014 benign"
+        "package-manifest failing-direction test prints its expected refusal to stdout — benign"
       ]
     },
     {
@@ -394,5 +394,6 @@
       "result": "509: 6 pass/0 warn/0 fail; 510: 6 pass/0 warn/0 fail; prompting: 12 pass/0 fail; strict exit 0"
     }
   ],
-  "last_action": "all 9 tasks done \u2014 489 python + 1726 jest tests pass, fixtures score clean"
+  "last_action": "all 9 tasks done — 489 python + 1726 jest tests pass, fixtures score clean",
+  "telemetryInstanceId": "4743b903-c372-424a-bef1-6d3e581dd944"
 }

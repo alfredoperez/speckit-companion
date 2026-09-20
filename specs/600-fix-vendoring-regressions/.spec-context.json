@@ -192,6 +192,7 @@
       "at": "2026-08-26T03:20:45.127Z"
     }
   ],
+  "telemetryInstanceId": "5ecd0023-5812-4f69-a1d8-1e118d0e8dd6",
   "livingSpecs": {
     "loaded": [
       "capture-runtime",
@@ -207,7 +208,7 @@
       "capture-runtime"
     ]
   },
-  "last_action": "all 11 tasks done \u2014 683 py + 1942 ts tests pass, gates green, doctor clean",
+  "last_action": "all 11 tasks done — 683 py + 1942 ts tests pass, gates green, doctor clean",
   "coverage": {
     "FR-001": {
       "title": "A relocation that fails partway rolls back every move already made",
@@ -290,14 +291,14 @@
     "living spec: companion-commands",
     "area: speckit-extension/scripts (relocate/register/derive writers)",
     "area: speckit-extension/nodes/implement (generated command source)",
-    "constraint: command bodies are generated \u2014 fix nodes, re-assemble, re-bless golden separately",
+    "constraint: command bodies are generated — fix nodes, re-assemble, re-bless golden separately",
     "constraint: no version bump; changelog under Unreleased in release-note voice"
   ],
   "intent": "Restore the four safety guards lost in the 0.20.2 vendoring pass: relocate rollback, derive dedup, atomic registry write, and implement step numbering",
   "expectations": [
     "No new behavior beyond restoring the 0.20.1 guards",
-    "No version bump \u2014 releases own it",
-    "No root README/CHANGELOG changes \u2014 this is a speckit-extension change"
+    "No version bump — releases own it",
+    "No root README/CHANGELOG changes — this is a speckit-extension change"
   ],
   "approach": "Restore each deleted guard to its documented 0.20.1 shape in the module that owns it: caller-owned rollback list inside the try, _has_step_start dedup in derive, temp-file+rename registry write, and the step renumber in the source node with a re-assembled body and re-blessed golden. Pin each behavioral fix with a regression test in the suite that already loads that module.",
   "decisions": [
@@ -433,7 +434,7 @@
   ],
   "concerns": [
     {
-      "note": "Doctor DRIFT warning: companion-commands flagged real (baseline 038566aa) for speckit.companion.implement.md and nodes/implement/complete.md. Not folded as a delta \u2014 the living spec already carries the no-restarted-numbering requirement, so this change restores conformance without changing the contract; an explicit skip was recorded instead.",
+      "note": "Doctor DRIFT warning: companion-commands flagged real (baseline 038566aa) for speckit.companion.implement.md and nodes/implement/complete.md. Not folded as a delta — the living spec already carries the no-restarted-numbering requirement, so this change restores conformance without changing the contract; an explicit skip was recorded instead.",
       "step": "implement"
     }
   ]

@@ -292,6 +292,7 @@
     }
   ],
   "unattended": true,
+  "telemetryInstanceId": "488f4800-3042-4d95-a4e0-1c8d4019fea9",
   "livingSpecs": {
     "loaded": [
       "capture-runtime",
@@ -303,7 +304,7 @@
     "skipped": [
       {
         "name": "spec-viewer",
-        "reason": "read as context for how the living panel presents a capability, but this feature changed nothing in it \u2014 the outline lives in the webview renderer (viewer-ui), not the panel provider"
+        "reason": "read as context for how the living panel presents a capability, but this feature changed nothing in it — the outline lives in the webview renderer (viewer-ui), not the panel provider"
       }
     ],
     "synced": [
@@ -313,7 +314,7 @@
       "viewer-ui"
     ]
   },
-  "last_action": "26/26 tasks done \u2014 all suites green, SC-001 measured at 86%",
+  "last_action": "26/26 tasks done — all suites green, SC-001 measured at 86%",
   "coverage": {
     "FR-001": {
       "title": "A requirement MAY carry one marker naming the files it describes, ignored by every existing reader.",
@@ -324,7 +325,7 @@
       "tasks": "T011,T015"
     },
     "FR-003": {
-      "title": "A marked spec contributes its purpose, matching requirements, and unmarked requirements \u2014 nothing else.",
+      "title": "A marked spec contributes its purpose, matching requirements, and unmarked requirements — nothing else.",
       "tasks": "T011,T012,T013,T015"
     },
     "FR-004": {
@@ -380,7 +381,7 @@
   "expectations": [
     "Validation, fold-back refusal, editor diagnostics and the retire guard (Wave 2)",
     "Command-line requirement reads (Wave 3)",
-    "Splitting the four large specs \u2014 measured after this lands",
+    "Splitting the four large specs — measured after this lands",
     "A cross-requirement graph",
     "Feature specs"
   ],
@@ -400,28 +401,28 @@
   "decisions": [
     {
       "decision": "The marker is an HTML comment on the line under the requirement heading",
-      "why": "The hard constraint is that no existing reader changes behaviour; an HTML comment is invisible to every markdown renderer and matches the <!-- capability: \u2026 --> convention fold-back already uses",
-      "rejected": "Per-requirement frontmatter (impossible \u2014 document-level), a sidecar map (drifts on rename), an attribute on the heading (changes the join key fold-back and coverage match on)"
+      "why": "The hard constraint is that no existing reader changes behaviour; an HTML comment is invisible to every markdown renderer and matches the <!-- capability: … --> convention fold-back already uses",
+      "rejected": "Per-requirement frontmatter (impossible — document-level), a sidecar map (drifts on rename), an attribute on the heading (changes the join key fold-back and coverage match on)"
     },
     {
       "decision": "Marker globs reuse each side existing registry matcher",
       "why": "Two glob dialects in one feature is a bug generator, and a marker is the same kind of statement as a capability match list",
-      "rejected": "A stricter prefix-only form, or a new matcher tuned for markers \u2014 both would drift from registry semantics"
+      "rejected": "A stricter prefix-only form, or a new matcher tuned for markers — both would drift from registry semantics"
     },
     {
       "decision": "Requirement slicing is implemented twice and pinned by one shared fixture set",
-      "why": "Forced \u2014 the viewer has no Python and the command bodies have no TypeScript; the risk is divergence not duplication, and core.spec.md already prescribes pinning two runtimes against shared cases",
+      "why": "Forced — the viewer has no Python and the command bodies have no TypeScript; the risk is divergence not duplication, and core.spec.md already prescribes pinning two runtimes against shared cases",
       "rejected": "Parse only in Python and round-trip from the viewer (slower, new failure mode at paint time); parse only in TS and shell out (command bodies must work with no extension installed)"
     },
     {
       "decision": "An unmarked requirement is contributed by every load",
       "why": "This is the safety property: a marker can only narrow, so a missing or too-narrow marker costs a run an extra requirement rather than starving it of one",
-      "rejected": "Unmarked means loaded only when nothing else matched \u2014 makes one requirement load depend on another marker"
+      "rejected": "Unmarked means loaded only when nothing else matched — makes one requirement load depend on another marker"
     },
     {
       "decision": "The outline is derived in the requirement-card pass",
       "why": "The spec forbids a second parse, and that pass already walks every heading and already keys coverage by the same verbatim text, so a row and its card cannot disagree",
-      "rejected": "A separate outline component re-parsing the markdown \u2014 the exact mechanism by which the two could diverge"
+      "rejected": "A separate outline component re-parsing the markdown — the exact mechanism by which the two could diverge"
     },
     {
       "decision": "The outline uses index-based anchors rather than the requirement title in an attribute",
@@ -430,14 +431,14 @@
     },
     {
       "decision": "Made the viewer card pass fence-aware",
-      "why": "It counted a ### inside a code block as a requirement where the resolver never did \u2014 the outline and the coverage denominator would have disagreed, which is precisely what FR-008 forbids",
+      "why": "It counted a ### inside a code block as a requirement where the resolver never did — the outline and the coverage denominator would have disagreed, which is precisely what FR-008 forbids",
       "rejected": "Fixing only the outline and leaving the cards counting fenced headings"
     }
   ],
   "step_summaries": {
     "plan": {
       "summary": "Additive marker + selective load + an outline derived from the existing card pass; two parsers pinned by shared fixtures.",
-      "key_finding": "The manifest of what to load is already computable \u2014 the resolver knows the changed files and the renderer already walks every heading; the feature is mostly wiring what exists, plus one genuinely duplicated parser that has to be pinned."
+      "key_finding": "The manifest of what to load is already computable — the resolver knows the changed files and the renderer already walks every heading; the feature is mostly wiring what exists, plus one genuinely duplicated parser that has to be pinned."
     },
     "tasks": {
       "summary": "26 tasks across 6 phases: a Foundational phase that pins the two parsers against shared fixtures blocks all three stories; markers are written before the load narrows on them, and the outline lands last."
@@ -450,7 +451,7 @@
   "task_summaries": {
     "T001": {
       "status": "DONE",
-      "did": "Eight parsing fixtures plus expected.json \u2014 the contract both runtimes read; a fixture only one suite exercises fails the drift guard",
+      "did": "Eight parsing fixtures plus expected.json — the contract both runtimes read; a fixture only one suite exercises fails the drift guard",
       "files": [
         "speckit-extension/tests/fixtures/requirement-slices/"
       ]
@@ -492,7 +493,7 @@
     },
     "T007": {
       "status": "DONE",
-      "did": "Drift guard: expected.json must name every fixture on disk, and the TS suite must iterate that manifest rather than a hand-kept list \u2014 so a new fixture cannot be covered by only one runtime",
+      "did": "Drift guard: expected.json must name every fixture on disk, and the TS suite must iterate that manifest rather than a hand-kept list — so a new fixture cannot be covered by only one runtime",
       "files": [
         "speckit-extension/tests/test_resolve_spec_paths.py"
       ]
@@ -506,7 +507,7 @@
     },
     "T009": {
       "status": "DONE",
-      "did": "Sync widens the touches marker of each requirement it updates \u2014 union with what it already named, never narrowing, with the reason stated",
+      "did": "Sync widens the touches marker of each requirement it updates — union with what it already named, never narrowing, with the reason stated",
       "files": [
         "speckit-extension/commands/speckit.companion.living-sync.md"
       ]
@@ -585,7 +586,7 @@
     },
     "T020": {
       "status": "DONE",
-      "did": "Made the card pass fence-aware so a ### inside a code block is not a requirement \u2014 the viewer was counting them where the resolver never did; the outline is living-mode only because the whole path already is",
+      "did": "Made the card pass fence-aware so a ### inside a code block is not a requirement — the viewer was counting them where the resolver never did; the outline is living-mode only because the whole path already is",
       "files": [
         "webview/src/spec-viewer/markdown/livingComponents.ts"
       ]
@@ -645,12 +646,12 @@
     {
       "what": "command shape parity after the two node edits",
       "command": "python3 speckit-extension/scripts/check-shape-parity.py",
-      "result": "OK \u2014 14 bodies match parts, golden, and carry the timing fence"
+      "result": "OK — 14 bodies match parts, golden, and carry the timing fence"
     },
     {
       "what": "command emissions",
       "command": "python3 speckit-extension/scripts/check-command-emissions.py",
-      "result": "OK \u2014 19 commands agree across 7 install areas, 8 agent records, 2 documents"
+      "result": "OK — 19 commands agree across 7 install areas, 8 agent records, 2 documents"
     },
     {
       "what": "typecheck, both projects",
@@ -660,7 +661,7 @@
     {
       "what": "SC-001 measured on the worst-case capability",
       "command": "resolver --requirements-for against a marked copy of capture-runtime.spec.md",
-      "result": "509 lines to 73 \u2014 an 86% reduction against a 60% target"
+      "result": "509 lines to 73 — an 86% reduction against a 60% target"
     }
   ],
   "concerns": [

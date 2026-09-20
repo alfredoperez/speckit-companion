@@ -1,6 +1,6 @@
 {
   "workflow": "speckit",
-  "specName": "Demo \u2014 Planned",
+  "specName": "Demo — Planned",
   "branch": "demo/planned",
   "selectedAt": "2026-05-20T20:00:00.000Z",
   "currentStep": "plan",
@@ -52,7 +52,7 @@
         "blockText": "- **R002** (MUST): The export respects the active filter and sort.",
         "line": 13
       },
-      "comment": "\ud83d\uddd1\ufe0f Remove this line",
+      "comment": "🗑️ Remove this line",
       "status": "pending",
       "createdAt": "2026-07-10T22:29:01.661Z"
     },
@@ -68,5 +68,6 @@
       "status": "pending",
       "createdAt": "2026-07-10T22:29:26.895Z"
     }
-  ]
+  ],
+  "telemetryInstanceId": "c3ce6bbf-27c0-47f4-8315-c31e3f85f2e1"
 }

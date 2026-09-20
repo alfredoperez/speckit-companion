@@ -119,7 +119,7 @@
       "at": "2026-07-22T13:56:32.972Z"
     }
   ],
-  "last_action": "all 7 tasks done \u2014 1790/1790 tests pass, compile clean",
+  "last_action": "all 7 tasks done — 1790/1790 tests pass, compile clean",
   "coverage": {
     "FR-001": {
       "title": "Writes to a single spec's context file are serialized (one read-modify-write in flight)",
@@ -170,13 +170,13 @@
     "area: src/features/specs/specContextWriter.ts (updateSpecContext read-modify-write)",
     "area: src/features/specs/specCommands.ts (executeWorkflowStep progress/start race)",
     "constraint: preserve append-only history + atomic write + non-JSON refusal",
-    "constraint: per-spec scope only \u2014 never a global write gate"
+    "constraint: per-spec scope only — never a global write gate"
   ],
   "intent": "Serialize per-spec .spec-context.json writes so a concurrent read-modify-write can't drop a step-start and untrust timing",
   "expectations": [
     "No schema change to .spec-context.json",
-    "No cross-process / file-system lock \u2014 single extension host is the only writer",
-    "No change to what is written (finish-only, append-only) \u2014 ordering only"
+    "No cross-process / file-system lock — single extension host is the only writer",
+    "No change to what is written (finish-only, append-only) — ordering only"
   ],
   "approach": "Per-target write queue in updateSpecContext (keyed by target path) + remove the redundant unawaited startStep in executeWorkflowStep",
   "livingSpecs": {
@@ -187,6 +187,7 @@
       "specs"
     ]
   },
+  "telemetryInstanceId": "35ed8164-4d0f-4b49-a0d3-cab66e1cc538",
   "currentTask": "T007",
   "task_summaries": {
     "T001": {
@@ -198,7 +199,7 @@
     },
     "T002": {
       "status": "DONE",
-      "did": "Chain is keyed by target path so different specs get independent chains and run concurrently \u2014 no global gate",
+      "did": "Chain is keyed by target path so different specs get independent chains and run concurrently — no global gate",
       "files": [
         "src/features/specs/specContextWriter.ts"
       ]
@@ -233,7 +234,7 @@
     },
     "T007": {
       "status": "DONE",
-      "did": "npm test (1790 pass) + npm run compile clean \u2014 no regressions in the context-write path"
+      "did": "npm test (1790 pass) + npm run compile clean — no regressions in the context-write path"
     }
   },
   "verified": [
@@ -254,12 +255,12 @@
     {
       "decision": "Serialize per target path via a module-level Map of promise chains; store a never-rejecting tail as the next writers prior",
       "why": "Keeps different specs concurrent (per-key chains) while a failed write releases the queue instead of poisoning it (FR-002, FR-004)",
-      "rejected": "A single global write mutex \u2014 would throttle unrelated specs and violate FR-002"
+      "rejected": "A single global write mutex — would throttle unrelated specs and violate FR-002"
     },
     {
       "decision": "Removed the redundant complete-on-advance + startStep block in executeWorkflowStep and awaited updateStepProgress instead",
       "why": "updateStepProgress already completes the prior step and starts the new one; awaiting it leaves exactly one start-write and removes the racing second writer (FR-006)",
-      "rejected": "Keeping both writers and only awaiting \u2014 leaves dead duplicate code relying on start-dedup"
+      "rejected": "Keeping both writers and only awaiting — leaves dead duplicate code relying on start-dedup"
     }
   ],
   "step_summaries": {

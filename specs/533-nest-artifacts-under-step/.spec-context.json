@@ -183,7 +183,7 @@
   ],
   "intent": "Nest each step's artifact files as indented sub-items under that step in the viewer rail instead of separate groups below",
   "expectations": [
-    "No new data model or capture change \u2014 reuses parentStep",
+    "No new data model or capture change — reuses parentStep",
     "Living-spec tier strip unchanged"
   ],
   "size": "normal",
@@ -262,5 +262,6 @@
       "viewer-ui"
     ]
   },
-  "last_action": "living specs loaded (viewer-ui)"
+  "last_action": "living specs loaded (viewer-ui)",
+  "telemetryInstanceId": "6b641181-23b9-41b4-ab92-2ba413ee12b9"
 }

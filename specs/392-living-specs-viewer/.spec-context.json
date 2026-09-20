@@ -190,7 +190,7 @@
     }
   ],
   "unattended": true,
-  "last_action": "15/15 tasks done \u2014 1197/1197 jest, stories screenshot-reviewed",
+  "last_action": "15/15 tasks done — 1197/1197 jest, stories screenshot-reviewed",
   "coverage": {
     "FR-001": {
       "title": "Viewer state carries structured capability content (name, purpose, requirement rows) parsed extension-side",
@@ -205,7 +205,7 @@
       ]
     },
     "FR-002": {
-      "title": "Capability resolution reuses the Spec Explorer's config rules \u2014 no second resolver",
+      "title": "Capability resolution reuses the Spec Explorer's config rules — no second resolver",
       "tasks": [
         "T003",
         "T004"
@@ -295,12 +295,12 @@
   },
   "context": [
     "area: src/features/spec-viewer stateDerivation + livingSpecsModel reuse + webview LivingSpecsCard",
-    "constraint: fixtures-only verification (user decision) \u2014 this repo's companion.yml and tree untouched",
+    "constraint: fixtures-only verification (user decision) — this repo's companion.yml and tree untouched",
     "constraint: injection safety (text nodes), token theming, panel one-surface/disclosure design language"
   ],
-  "intent": "Make the Activity panel show what the touched living specs actually say \u2014 purpose, requirements, and fold-back result \u2014 without opening raw files",
+  "intent": "Make the Activity panel show what the touched living specs actually say — purpose, requirements, and fold-back result — without opening raw files",
   "expectations": [
-    "scenario-tree rendering deferred \u2014 requirements-level content only this pass",
+    "scenario-tree rendering deferred — requirements-level content only this pass",
     "no livingSpecs enablement or capabilities/ dir in this repo",
     "no file watcher on capability specs this pass"
   ],
@@ -335,13 +335,13 @@
   "step_summaries": {
     "plan": {
       "summary": "Plan + research + data model + UI contract; provider-seam loader, writer-aligned parser, counts-only deltas, split fixtures",
-      "key_finding": "the living-spec document shape is pinned by write-context.py (_REQ_HEADING_RE / span rules) \u2014 the TS parser mirrors it so both ends agree"
+      "key_finding": "the living-spec document shape is pinned by write-context.py (_REQ_HEADING_RE / span rules) — the TS parser mirrors it so both ends agree"
     },
     "tasks": {
-      "summary": "15 tasks / 6 phases: types \u2192 loader \u2192 card+styles+provider, delta pass, degradation pass, fixtures+stories+docs; test file and card serialized"
+      "summary": "15 tasks / 6 phases: types → loader → card+styles+provider, delta pass, degradation pass, fixtures+stories+docs; test file and card serialized"
     },
     "implement": {
-      "summary": "Living specs render readably: loader+parser+provider seam, disclosure card with delta counts, demo fixture \u2014 1197 tests green"
+      "summary": "Living specs render readably: loader+parser+provider seam, disclosure card with delta counts, demo fixture — 1197 tests green"
     }
   },
   "currentTask": "T015",
@@ -418,7 +418,7 @@
     },
     "T011": {
       "status": "DONE",
-      "did": "specs/_03_demo-living fixture: completed context with loaded/synced names + a delta block \u2014 degraded path in this repo, rich path where capabilities resolve",
+      "did": "specs/_03_demo-living fixture: completed context with loaded/synced names + a delta block — degraded path in this repo, rich path where capabilities resolve",
       "files": [
         "specs/_03_demo-living/.spec-context.json",
         "specs/_03_demo-living/spec.md"
@@ -471,7 +471,8 @@
     {
       "what": "repo isolation (SC-004)",
       "command": "git status on .specify/companion.yml + capabilities/",
-      "result": "untouched \u2014 no livingSpecs enablement, no capabilities dir"
+      "result": "untouched — no livingSpecs enablement, no capabilities dir"
     }
-  ]
+  ],
+  "telemetryInstanceId": "a557e953-2535-4696-9386-499247785822"
 }

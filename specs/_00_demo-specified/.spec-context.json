@@ -1,6 +1,6 @@
 {
   "workflow": "speckit",
-  "specName": "Demo \u2014 Specified",
+  "specName": "Demo — Specified",
   "branch": "demo/specified",
   "selectedAt": "2026-05-20T20:00:00.000Z",
   "currentStep": "specify",
@@ -24,5 +24,6 @@
       "by": "ai",
       "at": "2026-05-20T20:05:00.000Z"
     }
-  ]
+  ],
+  "telemetryInstanceId": "4da56fc0-5dbe-49fd-bc94-7501e1e39b4b"
 }

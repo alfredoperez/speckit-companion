@@ -1,5 +1,6 @@
 {
   "workflow": "companion",
+  "telemetryInstanceId": "6b1b222f-2aa8-41ab-a5a9-866a83f156c2",
   "specName": "Hook Anchor Once",
   "branch": "608-hook-anchor-once",
   "selectedAt": "2026-09-06T10:56:20.893Z",
@@ -161,12 +162,12 @@
         "The fold routes each capability's requirements to its own spec",
         "The drift detector offers an opt-in working-tree mode",
         "Recording which living specs cover a change MUST be deterministic, not AI-judged",
-        "Completion accounts for every loaded capability \u2014 fold it, or record a reasoned skip",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
         "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
         "Status resolution dispatches commands from the family the spec has been running",
         "Every handled call records itself, including the ones that fail",
         "A call count may shrink only when the record it produces stays identical",
-        "A capability relocation is transactional \u2014 a partial failure rolls back every applied move",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
         "A reader of a captured list MUST accept every form its writer stores",
         "A configuration the reader cannot fully read is rejected whole, never applied in part",
         "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
@@ -224,13 +225,13 @@
   },
   "context": [
     "living spec: capture-runtime",
-    "area: speckit-extension/scripts/hook_render.py \u2014 insert_hooks already resolves one boundary per hook and breaks",
-    "area: speckit-extension/scripts/pipeline-graph.py \u2014 three independent anchor filters",
+    "area: speckit-extension/scripts/hook_render.py — insert_hooks already resolves one boundary per hook and breaks",
+    "area: speckit-extension/scripts/pipeline-graph.py — three independent anchor filters",
     "constraint: the shipped auto step has a phase and node both named orchestrate, so ambiguous anchors must stay legal"
   ],
   "intent": "Draw each attached hook once on the pipeline board, at the boundary it actually runs at.",
   "expectations": [
-    "Refusing an ambiguous anchor at write time \u2014 the shipped auto step would be refused",
+    "Refusing an ambiguous anchor at write time — the shipped auto step would be refused",
     "Changing how hooks are executed or where they run",
     "Changing Canvas.tsx or counts.ts"
   ],

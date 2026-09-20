@@ -624,7 +624,7 @@
       ]
     },
     "FR-006": {
-      "title": "The health check MUST report attribution anomalies \u2014 a step closed by an author that is not the one the pipeline reserves for that step.",
+      "title": "The health check MUST report attribution anomalies — a step closed by an author that is not the one the pipeline reserves for that step.",
       "tasks": [
         "T013"
       ],
@@ -787,7 +787,7 @@
       ]
     },
     "FR-023": {
-      "title": "The health check MUST verify the task list still carries its generated shape \u2014 one phase per user story, waves inside each phase, join lines and checkpoints intact.",
+      "title": "The health check MUST verify the task list still carries its generated shape — one phase per user story, waves inside each phase, join lines and checkpoints intact.",
       "tasks": [
         "T035"
       ],
@@ -814,7 +814,7 @@
       ]
     },
     "FR-026": {
-      "title": "When the debug switch is off, command bodies MUST contain no instrumentation text at all \u2014 absent, not dormant.",
+      "title": "When the debug switch is off, command bodies MUST contain no instrumentation text at all — absent, not dormant.",
       "tasks": [
         "T039",
         "T040"
@@ -959,7 +959,7 @@
       ]
     },
     "FR-041": {
-      "title": "The health check MUST report a specification that carries planning or tasking content \u2014 a task checklist, or a file-by-file breakdown \u2014 and name the evidence it found.",
+      "title": "The health check MUST report a specification that carries planning or tasking content — a task checklist, or a file-by-file breakdown — and name the evidence it found.",
       "tasks": [
         "T057"
       ],
@@ -1032,9 +1032,9 @@
   "context": [
     "living spec: capture-runtime (speckit-extension/scripts/capture-runtime.spec.md)",
     "living spec: companion-commands (capabilities/companion-commands/spec.md)",
-    "area: speckit-extension/scripts \u2014 write-context.py, drift.py, companion_config.py, build-commands.py",
-    "area: speckit-extension/nodes + commands \u2014 bodies are generated, never hand-edited",
-    "area: examples/todo-claude/bench \u2014 harness variants and scoring",
+    "area: speckit-extension/scripts — write-context.py, drift.py, companion_config.py, build-commands.py",
+    "area: speckit-extension/nodes + commands — bodies are generated, never hand-edited",
+    "area: examples/todo-claude/bench — harness variants and scoring",
     "constraint: recording MUST NOT be able to break the run it observes (never-fail-the-host)",
     "constraint: a probe that cannot determine an answer reports unknown, never the negative",
     "constraint: a report MUST NOT claim success for work it did not do",
@@ -1043,18 +1043,18 @@
   ],
   "intent": "Give every Companion run a free self-record, plus a read-only health check that recomputes reality instead of trusting claims, and a debug switch that only costs something while it is on.",
   "expectations": [
-    "The health check reports only \u2014 it never repairs a finding, and never gates or blocks a pipeline",
+    "The health check reports only — it never repairs a finding, and never gates or blocks a pipeline",
     "No change to capture, drift, or completion behavior for users who never run the health check or enable debug",
-    "The trace is a local, gitignored diagnostic \u2014 never uploaded, never committed, no telemetry contract",
+    "The trace is a local, gitignored diagnostic — never uploaded, never committed, no telemetry contract",
     "The deep transcript audit is a builder's tool, not a supported product surface; transcript format is not a stable contract",
-    "No new VS Code setting \u2014 the debug switch lives in the project's own companion configuration file",
+    "No new VS Code setting — the debug switch lives in the project's own companion configuration file",
     "Command bodies are not hand-edited; instrumentation arrives only through the existing assembly pipeline"
   ],
-  "approach": "Wire a tiny append-only tracer into the single funnel write-context.py and drift.py already have, so every call \u2014 including the early returns that currently vanish into stderr \u2014 leaves a line. Add a read-only doctor command backed by focused check modules that read the run record, the on-disk artifacts, and that trace, and that shells out to drift.py as ground truth rather than reimplementing drift. Deliver debug mode by appending a debug-timing part through the same conditional seam assemble-nodes.py already uses for the orchestrator part, so an off render carries no instrumentation text at all.",
+  "approach": "Wire a tiny append-only tracer into the single funnel write-context.py and drift.py already have, so every call — including the early returns that currently vanish into stderr — leaves a line. Add a read-only doctor command backed by focused check modules that read the run record, the on-disk artifacts, and that trace, and that shells out to drift.py as ground truth rather than reimplementing drift. Deliver debug mode by appending a debug-timing part through the same conditional seam assemble-nodes.py already uses for the orchestrator part, so an off render carries no instrumentation text at all.",
   "decisions": [
     {
       "decision": "Trace by wrapping main() in write-context.py and compute_drift() in drift.py",
-      "why": "Both scripts funnel every path through one entry point and return 0 on failure by design, so the funnel is the only placement that catches the early returns \u2014 unresolvable feature dir, refused lifecycle key, feature-dir/tasks-file mismatch \u2014 which are exactly the failures that vanish today",
+      "why": "Both scripts funnel every path through one entry point and return 0 on failure by design, so the funnel is the only placement that catches the early returns — unresolvable feature dir, refused lifecycle key, feature-dir/tasks-file mismatch — which are exactly the failures that vanish today",
       "rejected": "Decorating each capture writer, which would only trace calls that got far enough to reach a writer"
     },
     {
@@ -1075,7 +1075,7 @@
     {
       "decision": "Decide the status-vs-display triage from status-context.py against derive-from-files.py plus a Python re-derivation of the step badges",
       "why": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so status says specified but no Plan button is almost always a history[] gap; deciding from the readings the system already computes is what makes the verdict trustworthy",
-      "rejected": "Reading the TypeScript derivation through a Node shim \u2014 the doctor must run in a repo with no Node toolchain"
+      "rejected": "Reading the TypeScript derivation through a Node shim — the doctor must run in a repo with no Node toolchain"
     },
     {
       "decision": "Debug mode appends a debug-timing part through the existing conditional-append seam",
@@ -1090,7 +1090,7 @@
     {
       "decision": "Ship the doctor as a command with no VS Code panel",
       "why": "It must run on a repo with no VS Code session, retroactively on old specs, and headlessly inside the bench; a panel would also put the diagnosis behind the very display the doctor exists to put on trial",
-      "rejected": "Shipping a panel first \u2014 deferred to a follow-up once the verdict shape has settled"
+      "rejected": "Shipping a panel first — deferred to a follow-up once the verdict shape has settled"
     },
     {
       "decision": "Named the tracer module run_trace.py rather than trace.py",
@@ -1109,7 +1109,7 @@
     },
     {
       "decision": "The rename probe diffs without a pathspec and intersects afterwards",
-      "why": "a rename is a pair of paths, so narrowing the diff to the new name alone hides the pair and git reports an add \u2014 the check silently returned real drift for every rename",
+      "why": "a rename is a pair of paths, so narrowing the diff to the new name alone hides the pair and git reports an add — the check silently returned real drift for every rename",
       "rejected": "passing the flagged files as a pathspec, which is what failed"
     },
     {
@@ -1125,12 +1125,12 @@
   ],
   "step_summaries": {
     "plan": {
-      "summary": "Five new modules plus a debug part in speckit-extension/, all stdlib Python, hanging off seams that already exist \u2014 no new mechanism anywhere.",
-      "key_finding": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so the reported specified-but-no-Plan-button symptom is a history[] gap in almost every case \u2014 which is what makes the status-vs-display triage decidable from two readings the codebase already computes.",
+      "summary": "Five new modules plus a debug part in speckit-extension/, all stdlib Python, hanging off seams that already exist — no new mechanism anywhere.",
+      "key_finding": "The viewer derives its stepper badges from history[] alone with no file-existence fallback, so the reported specified-but-no-Plan-button symptom is a history[] gap in almost every case — which is what makes the status-vs-display triage decidable from two readings the codebase already computes.",
       "risks": "The --chat audit rides on a transcript format with no compatibility promise; it is quarantined in its own module and documented as a builders tool for that reason."
     },
     "tasks": {
-      "summary": "55 tasks across 11 phases \u2014 Setup, Foundational, one phase per user story (US1\u2013US8), and Polish; every phase laid out as waves with explicit join lines, and all 40 requirements mapped to tasks."
+      "summary": "55 tasks across 11 phases — Setup, Foundational, one phase per user story (US1–US8), and Polish; every phase laid out as waves with explicit join lines, and all 40 requirements mapped to tasks."
     },
     "implement": {
       "step": "implement",
@@ -1155,7 +1155,7 @@
     },
     "T003": {
       "status": "DONE",
-      "did": "Built five record fixtures \u2014 dangling start, unjournaled tasks, burst journal, attribution anomaly, and the earliest-state case that must produce no finding",
+      "did": "Built five record fixtures — dangling start, unjournaled tasks, burst journal, attribution anomaly, and the earliest-state case that must produce no finding",
       "files": [
         "speckit-extension/tests/fixtures/doctor/"
       ]
@@ -1169,14 +1169,14 @@
     },
     "T005": {
       "status": "DONE",
-      "did": "Implemented the TraceEvent shape \u2014 fixed field order, tracer-stamped clock, compact one-line serialization",
+      "did": "Implemented the TraceEvent shape — fixed field order, tracer-stamped clock, compact one-line serialization",
       "files": [
         "speckit-extension/scripts/trace.py"
       ]
     },
     "T006": {
       "status": "DONE",
-      "did": "Implemented the doctor CLI \u2014 flag surface, feature-dir resolution, always-exit-0, and per-check exception isolation that turns a crash into that check's skip reason",
+      "did": "Implemented the doctor CLI — flag surface, feature-dir resolution, always-exit-0, and per-check exception isolation that turns a crash into that check's skip reason",
       "files": [
         "speckit-extension/scripts/doctor.py"
       ]
@@ -1226,7 +1226,7 @@
     },
     "T013": {
       "status": "DONE",
-      "did": "Implemented the attribution-anomaly check for both directions \u2014 an ai close on an extension-owned step and the mirror case",
+      "did": "Implemented the attribution-anomaly check for both directions — an ai close on an extension-owned step and the mirror case",
       "files": [
         "speckit-extension/scripts/doctor_checks.py"
       ]
@@ -1247,7 +1247,7 @@
     },
     "T016": {
       "status": "DONE",
-      "did": "Wrote the tracer tests \u2014 one line per call, verbatim reasons, the size cap and its truncated marker, self-ignore idempotence, and that a tracer failure never propagates",
+      "did": "Wrote the tracer tests — one line per call, verbatim reasons, the size cap and its truncated marker, self-ignore idempotence, and that a tracer failure never propagates",
       "files": [
         "speckit-extension/tests/test_trace.py"
       ]
@@ -1261,14 +1261,14 @@
     },
     "T018": {
       "status": "DONE",
-      "did": "Implemented the self-ignore \u2014 a one-line .gitignore sibling written on first trace write, idempotent and skipped when a rule already covers the file",
+      "did": "Implemented the self-ignore — a one-line .gitignore sibling written on first trace write, idempotent and skipped when a rule already covers the file",
       "files": [
         "speckit-extension/scripts/run_trace.py"
       ]
     },
     "T019": {
       "status": "DONE",
-      "did": "Implemented the tracer reader \u2014 counts unparseable lines, separates drift verdict lines from call events, and surfaces a truncated marker as a lower bound",
+      "did": "Implemented the tracer reader — counts unparseable lines, separates drift verdict lines from call events, and surfaces a truncated marker as a lower bound",
       "files": [
         "speckit-extension/scripts/run_trace.py"
       ]
@@ -1282,14 +1282,14 @@
     },
     "T021": {
       "status": "DONE",
-      "did": "Traced every compute_drift call \u2014 inputs, verdict, and skips \u2014 so repeated drift verdicts can be compared over time",
+      "did": "Traced every compute_drift call — inputs, verdict, and skips — so repeated drift verdicts can be compared over time",
       "files": [
         "speckit-extension/scripts/drift.py"
       ]
     },
     "T022": {
       "status": "DONE",
-      "did": "Implemented the trace-derived doctor section \u2014 failure counts with reasons, call volumes, per-file rewrite counts, and unattributed failures inside the spec's run window",
+      "did": "Implemented the trace-derived doctor section — failure counts with reasons, call volumes, per-file rewrite counts, and unattributed failures inside the spec's run window",
       "files": [
         "speckit-extension/scripts/doctor_checks.py"
       ]
@@ -1314,7 +1314,7 @@
     },
     "T025": {
       "status": "DONE",
-      "did": "Wrote the drift-audit tests over real throwaway git repos \u2014 real, self-inflicted, suspect-baseline, unknown, and the false-claim case",
+      "did": "Wrote the drift-audit tests over real throwaway git repos — real, self-inflicted, suspect-baseline, unknown, and the false-claim case",
       "files": [
         "speckit-extension/tests/test_doctor_drift.py"
       ]
@@ -1328,21 +1328,21 @@
     },
     "T027": {
       "status": "DONE",
-      "did": "Implemented the commit-attribution walk \u2014 the commits since each capability's baseline that touched its flagged files, with sha and subject",
+      "did": "Implemented the commit-attribution walk — the commits since each capability's baseline that touched its flagged files, with sha and subject",
       "files": [
         "speckit-extension/scripts/doctor_drift.py"
       ]
     },
     "T028": {
       "status": "DONE",
-      "did": "Implemented the three classifiers in order \u2014 self-inflicted, suspect-baseline (non-ancestor or pure rename), real otherwise",
+      "did": "Implemented the three classifiers in order — self-inflicted, suspect-baseline (non-ancestor or pure rename), real otherwise",
       "files": [
         "speckit-extension/scripts/doctor_drift.py"
       ]
     },
     "T029": {
       "status": "DONE",
-      "did": "Implemented false-claim detection \u2014 a recorded drift-clean claim contradicted by the recomputation is reported with both sides and their timestamps",
+      "did": "Implemented false-claim detection — a recorded drift-clean claim contradicted by the recomputation is reported with both sides and their timestamps",
       "files": [
         "speckit-extension/scripts/doctor_drift.py"
       ]
@@ -1364,14 +1364,14 @@
     },
     "T032": {
       "status": "DONE",
-      "did": "Implemented the completion check \u2014 resolves to completed, refused with the writer's own reason, never-arrived, or not-attempted",
+      "did": "Implemented the completion check — resolves to completed, refused with the writer's own reason, never-arrived, or not-attempted",
       "files": [
         "speckit-extension/scripts/doctor_checks.py"
       ]
     },
     "T033": {
       "status": "DONE",
-      "did": "Built the completion fixtures \u2014 refused, reported-success-but-never-landed, never-attempted, and the happy case",
+      "did": "Built the completion fixtures — refused, reported-success-but-never-landed, never-attempted, and the happy case",
       "files": [
         "speckit-extension/tests/fixtures/doctor/",
         ".gitignore"
@@ -1379,7 +1379,7 @@
     },
     "T034": {
       "status": "DONE",
-      "did": "Wrote the template-fidelity tests \u2014 intact, flattened, joins stripped, single-story, and no task file",
+      "did": "Wrote the template-fidelity tests — intact, flattened, joins stripped, single-story, and no task file",
       "files": [
         "speckit-extension/tests/test_doctor.py"
       ]
@@ -1393,21 +1393,21 @@
     },
     "T056": {
       "status": "DONE",
-      "did": "Wrote the bleed tests \u2014 artifact shapes, duplication, early source commits, time share, and the fast-path case that must stay clean",
+      "did": "Wrote the bleed tests — artifact shapes, duplication, early source commits, time share, and the fast-path case that must stay clean",
       "files": [
         "speckit-extension/tests/test_doctor_bleed.py"
       ]
     },
     "T057": {
       "status": "DONE",
-      "did": "Implemented the artifact-shape signals \u2014 plan or task content in spec.md, a task checklist in plan.md, implementation code in tasks.md \u2014 with the fast-path shape exempt",
+      "did": "Implemented the artifact-shape signals — plan or task content in spec.md, a task checklist in plan.md, implementation code in tasks.md — with the fast-path shape exempt",
       "files": [
         "speckit-extension/scripts/doctor_bleed.py"
       ]
     },
     "T058": {
       "status": "DONE",
-      "did": "Built the bleed fixtures \u2014 clean, spec-does-plan, spec-does-tasks, plan-does-tasks, tasks-does-code, and the fast-tracked shape",
+      "did": "Built the bleed fixtures — clean, spec-does-plan, spec-does-tasks, plan-does-tasks, tasks-does-code, and the fast-tracked shape",
       "files": [
         "speckit-extension/tests/fixtures/doctor/"
       ]
@@ -1429,7 +1429,7 @@
     },
     "T036": {
       "status": "DONE",
-      "did": "Wrote the debug tests \u2014 off renders byte-identical to golden, on renders carry the part, any non-literal-true value reads as off, and render time is when it is consumed",
+      "did": "Wrote the debug tests — off renders byte-identical to golden, on renders carry the part, any non-literal-true value reads as off, and render time is when it is consumed",
       "files": [
         "speckit-extension/tests/test_config.py",
         "speckit-extension/tests/test_nodes.py"
@@ -1444,7 +1444,7 @@
     },
     "T038": {
       "status": "DONE",
-      "did": "Wrote the debug-timing part \u2014 per-section boundary finishes, finish-only, authored once and shared by every pipeline command",
+      "did": "Wrote the debug-timing part — per-section boundary finishes, finish-only, authored once and shared by every pipeline command",
       "files": [
         "speckit-extension/presets/_parts/debug-timing.md"
       ]
@@ -1466,7 +1466,7 @@
     },
     "T041": {
       "status": "DONE",
-      "did": "Wrote the chat-audit tests over a committed synthetic transcript \u2014 causes, contradictions, waste, and every degradation path",
+      "did": "Wrote the chat-audit tests over a committed synthetic transcript — causes, contradictions, waste, and every degradation path",
       "files": [
         "speckit-extension/tests/test_doctor_chat.py",
         "speckit-extension/tests/fixtures/doctor/chat/"
@@ -1474,7 +1474,7 @@
     },
     "T042": {
       "status": "DONE",
-      "did": "Implemented transcript discovery \u2014 project-path match under ~/.claude/projects intersected with the step's recorded time window, with an explicit override",
+      "did": "Implemented transcript discovery — project-path match under ~/.claude/projects intersected with the step's recorded time window, with an explicit override",
       "files": [
         "speckit-extension/scripts/doctor_chat.py"
       ]
@@ -1488,7 +1488,7 @@
     },
     "T044": {
       "status": "DONE",
-      "did": "Implemented cause classification \u2014 tried-and-failed, retried, and stopped \u2014 and surfaced recorded claims the recomputation contradicts, showing both sides",
+      "did": "Implemented cause classification — tried-and-failed, retried, and stopped — and surfaced recorded claims the recomputation contradicts, showing both sides",
       "files": [
         "speckit-extension/scripts/doctor_chat.py"
       ]
@@ -1503,7 +1503,7 @@
     },
     "T046": {
       "status": "DONE",
-      "did": "Added the oversized size and its Boards prompt \u2014 15+ files and 25+ tasks with real wait-lines, so batched journaling has somewhere to show up",
+      "did": "Added the oversized size and its Boards prompt — 15+ files and 25+ tasks with real wait-lines, so batched journaling has somewhere to show up",
       "files": [
         "examples/todo-claude/bench/lib.mjs",
         "examples/todo-claude/bench/prompts/oversized.md"
@@ -1511,14 +1511,14 @@
     },
     "T047": {
       "status": "DONE",
-      "did": "Added the failure-injection fixture \u2014 a removed feature.json and a read-only context file, both reversible, reproducing real foreign-repo failures",
+      "did": "Added the failure-injection fixture — a removed feature.json and a read-only context file, both reversible, reproducing real foreign-repo failures",
       "files": [
         "examples/todo-claude/bench/fixtures/failure-injection/"
       ]
     },
     "T048": {
       "status": "DONE",
-      "did": "Folded the doctor's --json verdict into bench scoring \u2014 each problem costs a tenth of the capture component, so a record that does not hold up scores lower",
+      "did": "Folded the doctor's --json verdict into bench scoring — each problem costs a tenth of the capture component, so a record that does not hold up scores lower",
       "files": [
         "examples/todo-claude/bench/lib.mjs"
       ]
@@ -1540,7 +1540,7 @@
     },
     "T051": {
       "status": "DONE",
-      "did": "Documented the doctor command, the self-trace, and the debug flag \u2014 including that debug affects the next dispatched command, not one in flight",
+      "did": "Documented the doctor command, the self-trace, and the debug flag — including that debug affects the next dispatched command, not one in flight",
       "files": [
         "speckit-extension/README.md",
         "speckit-extension/docs/commands.md"
@@ -1555,7 +1555,7 @@
     },
     "T053": {
       "status": "DONE",
-      "did": "Brought every command-inventory surface in line with the manifest \u2014 agent records, install emissions, and both documentation tables",
+      "did": "Brought every command-inventory surface in line with the manifest — agent records, install emissions, and both documentation tables",
       "files": [
         ".specify/extensions/.registry",
         "speckit-extension/README.md",
@@ -1572,7 +1572,7 @@
     },
     "T055": {
       "status": "DONE",
-      "did": "Validated against the Success Criteria \u2014 657 capture tests, 1942 VS Code tests, and every CI gate (shape parity, node assembly, packaging, command inventory, command-quality eval) green",
+      "did": "Validated against the Success Criteria — 657 capture tests, 1942 VS Code tests, and every CI gate (shape parity, node assembly, packaging, command inventory, command-quality eval) green",
       "files": [
         "repo-wide"
       ]
@@ -1629,7 +1629,7 @@
     {
       "what": "the doctor against this very run",
       "command": "python3 speckit-extension/scripts/doctor.py --feature-dir specs/599-pipeline-doctor --chat",
-      "result": "it caught the two capture failures this run deliberately provoked while smoke-testing the tracer, with their exact reasons \u2014 the feature reporting on its own construction"
+      "result": "it caught the two capture failures this run deliberately provoked while smoke-testing the tracer, with their exact reasons — the feature reporting on its own construction"
     },
     {
       "what": "local extension reinstall",
@@ -1639,8 +1639,9 @@
   ],
   "concerns": [
     {
-      "note": "The oversized bench size needed an acceptance oracle to be wired at all \u2014 the harness looks for bench/acceptance/<size>.test.tsx and would have scored a run 0/0 silently without one. Added oversized.test.tsx and pinned its data-testid values into the prompt.",
+      "note": "The oversized bench size needed an acceptance oracle to be wired at all — the harness looks for bench/acceptance/<size>.test.tsx and would have scored a run 0/0 silently without one. Added oversized.test.tsx and pinned its data-testid values into the prompt.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "bc86b452-4ba4-4ec3-a258-56efd93cabf9"
 }

@@ -234,6 +234,7 @@
     }
   ],
   "unattended": true,
+  "telemetryInstanceId": "2edfe797-44b5-4fd9-ae1b-98558171153e",
   "livingSpecs": {
     "loaded": [
       "capture-runtime"
@@ -270,12 +271,12 @@
         "The fold routes each capability's requirements to its own spec",
         "The drift detector offers an opt-in working-tree mode",
         "Recording which living specs cover a change MUST be deterministic, not AI-judged",
-        "Completion accounts for every loaded capability \u2014 fold it, or record a reasoned skip",
+        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
         "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
         "Status resolution dispatches commands from the family the spec has been running",
         "Every handled call records itself, including the ones that fail",
         "A call count may shrink only when the record it produces stays identical",
-        "A capability relocation is transactional \u2014 a partial failure rolls back every applied move",
+        "A capability relocation is transactional — a partial failure rolls back every applied move",
         "A reader of a captured list MUST accept every form its writer stores",
         "A configuration the reader cannot fully read is rejected whole, never applied in part",
         "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
@@ -394,7 +395,7 @@
   "step_summaries": {
     "plan": {
       "summary": "Plan for a per-project command catalog carried in the graph message, offered through the panel own menu with descriptions, with free text still beside it.",
-      "key_finding": "The form already cascades and already clears on a kind change \u2014 what is missing is that the command kind offers nothing and the entries carry no description."
+      "key_finding": "The form already cascades and already clears on a kind change — what is missing is that the command kind offers nothing and the entries carry no description."
     },
     "tasks": {
       "summary": "17 tasks in 5 phases and 4 waves: the per-project catalog first, then the picker, then the placement on the row, then the surfaces and the fold."

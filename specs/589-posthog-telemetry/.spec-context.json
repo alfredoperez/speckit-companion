@@ -212,7 +212,7 @@
       "core"
     ]
   },
-  "last_action": "all 15 tasks done \u2014 full suite 1913/1913, tsc clean; awaiting PostHog key for SC-001 rollout",
+  "last_action": "all 15 tasks done — full suite 1913/1913, tsc clean; awaiting PostHog key for SC-001 rollout",
   "coverage": {
     "FR-001": {
       "title": "Anonymous usage events are delivered to the new analytics backend and visible in its dashboard",
@@ -379,7 +379,7 @@
   "step_summaries": {
     "plan": {
       "summary": "Transport swap confined to TelemetryService: fetch-to-PostHog, re-implemented dual gate, service-attached common props; API and call sites frozen; Azure dep, mock, and docs removed.",
-      "key_finding": "The 501-line telemetry test suite encodes the privacy contract and must survive the swap re-pointed at a fetch mock \u2014 it is the regression net for the frozen event catalog."
+      "key_finding": "The 501-line telemetry test suite encodes the privacy contract and must survive the swap re-pointed at a fetch mock — it is the regression net for the frozen event catalog."
     },
     "tasks": {
       "summary": "15 tasks: Setup + 5 story phases + Polish; sequential spine on telemetry.ts/test (frozen API), parallel waves only in US1 tests/dep-removal, docs (US5), and Polish"
@@ -388,6 +388,7 @@
       "summary": "Transport swapped to fire-and-forget PostHog capture POSTs behind the frozen API; editor-wide gate re-implemented with live toggling; common facts re-attached; old dependency, credential, mock, and Azure docs fully excised; 1913 tests green"
     }
   },
+  "telemetryInstanceId": "96ba1237-4b1c-44f2-a0e5-82eebf8f7e39",
   "currentTask": "T015",
   "task_summaries": {
     "T001": {
@@ -406,7 +407,7 @@
     },
     "T003": {
       "status": "DONE",
-      "did": "Re-pointed the 501-line telemetry suite at a captured global-fetch mock (shared helper in tests/helpers/telemetryFetch.ts); every behavior block kept, plus new wire-shape and silent-failure blocks \u2014 50/50 green",
+      "did": "Re-pointed the 501-line telemetry suite at a captured global-fetch mock (shared helper in tests/helpers/telemetryFetch.ts); every behavior block kept, plus new wire-shape and silent-failure blocks — 50/50 green",
       "files": [
         "src/core/__tests__/telemetry.test.ts",
         "tests/helpers/telemetryFetch.ts"
@@ -414,7 +415,7 @@
     },
     "T004": {
       "status": "DONE",
-      "did": "Removed @vscode/extension-telemetry end-to-end: npm uninstall (package.json + lock), deleted the reporter mock and its jest moduleNameMapper entry, and re-pointed the activationInstallNudge suite (also asserting through the old mock) at the shared fetch helper \u2014 14/14 green",
+      "did": "Removed @vscode/extension-telemetry end-to-end: npm uninstall (package.json + lock), deleted the reporter mock and its jest moduleNameMapper entry, and re-pointed the activationInstallNudge suite (also asserting through the old mock) at the shared fetch helper — 14/14 green",
       "files": [
         "package.json",
         "package-lock.json",
@@ -439,14 +440,14 @@
     },
     "T007": {
       "status": "DONE",
-      "did": "Dual-gate tests: extension switch off, editor-wide off with extension on, mid-session toggle via the fireable mock event without reconstructing the service, and subscription disposal \u2014 all green",
+      "did": "Dual-gate tests: extension switch off, editor-wide off with extension on, mid-session toggle via the fireable mock event without reconstructing the service, and subscription disposal — all green",
       "files": [
         "src/core/__tests__/telemetry.test.ts"
       ]
     },
     "T008": {
       "status": "DONE",
-      "did": "Service now merges extensionVersion (manifest via getExtension), vscodeVersion, and platform \u2014 sourced once at construction \u2014 into every event's properties, event-specific keys winning on collision",
+      "did": "Service now merges extensionVersion (manifest via getExtension), vscodeVersion, and platform — sourced once at construction — into every event's properties, event-specific keys winning on collision",
       "files": [
         "src/core/telemetry.ts"
       ]
@@ -524,7 +525,7 @@
   ],
   "concerns": [
     {
-      "note": "SC-001 (event visible in dashboard within 5 minutes) is unverifiable until the maintainer creates the PostHog project and commits the phc_ key into POSTHOG_PROJECT_API_KEY \u2014 the committed key is empty, so shipped builds stay silent exactly as today",
+      "note": "SC-001 (event visible in dashboard within 5 minutes) is unverifiable until the maintainer creates the PostHog project and commits the phc_ key into POSTHOG_PROJECT_API_KEY — the committed key is empty, so shipped builds stay silent exactly as today",
       "step": "implement"
     },
     {

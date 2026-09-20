@@ -324,7 +324,7 @@
     }
   ],
   "unattended": true,
-  "last_action": "30/30 tasks done \u2014 PR #431 open for review (1266/1266 jest, 22/22 AA)",
+  "last_action": "30/30 tasks done — PR #431 open for review (1266/1266 jest, 22/22 AA)",
   "coverage": {
     "FR-001": {
       "title": "Adopt Codex hybrid theme: owned light/dark palette, host fonts/accessibility inherited",
@@ -512,7 +512,7 @@
     },
     {
       "decision": "Overview replaces the Activity toggle, defaulting by data presence; living mode exempt",
-      "why": "panel is already a peer region behind a signal \u2014 default-state change delivers the design cheaply",
+      "why": "panel is already a peer region behind a signal — default-state change delivers the design cheaply",
       "rejected": "keeping the toggle and only restyling it"
     },
     {
@@ -532,12 +532,12 @@
     },
     {
       "decision": "theme-dependent tokens are per-theme literals, never :root var() chains",
-      "why": "a :root alias resolves at :root \u2014 the light theme shipped invisible headings until --header-* was re-declared per block",
+      "why": "a :root alias resolves at :root — the light theme shipped invisible headings until --header-* was re-declared per block",
       "rejected": "aliasing --header-* to --text-primary once at :root"
     },
     {
       "decision": "hero stat chips serve as the Overview metrics row",
-      "why": "ActivityHero already carries task/coverage/check counts \u2014 a second metrics band would double-report",
+      "why": "ActivityHero already carries task/coverage/check counts — a second metrics band would double-report",
       "rejected": "adding a separate cx-metrics grid"
     }
   ],
@@ -550,7 +550,7 @@
       "summary": "30 tasks, 8 phases: tokens foundation -> US1 data-display skin (8-way parallel wave) -> US2 lifecycle verification -> US3 Overview-first shell (5-way component wave) -> US4 custom workflows -> US5 layout+comments -> polish/docs/reconciliation"
     },
     "implement": {
-      "summary": "Codex design shipped across tokens, 14 CSS partials, and the shell (Overview-first, document rail, run aside, floating footer) with zero protocol/derivation changes \u2014 30/30 tasks, 1266/1266 tests, 22/22 AA"
+      "summary": "Codex design shipped across tokens, 14 CSS partials, and the shell (Overview-first, document rail, run aside, floating footer) with zero protocol/derivation changes — 30/30 tasks, 1266/1266 tests, 22/22 AA"
     }
   },
   "currentTask": "T030",
@@ -645,7 +645,7 @@
     },
     "T013": {
       "status": "DONE",
-      "did": "State-matrix verified on Transitions stories (specifying/tasks-created/completed, both themes): badges, step marks, footer affordances all per docs/viewer-states.md; stories needed no markup changes \u2014 reactivity flowed through",
+      "did": "State-matrix verified on Transitions stories (specifying/tasks-created/completed, both themes): badges, step marks, footer affordances all per docs/viewer-states.md; stories needed no markup changes — reactivity flowed through",
       "files": [
         "webview/src/spec-viewer/components/__stories__/ViewerTransitions.stories.tsx"
       ]
@@ -754,7 +754,7 @@
     },
     "T027": {
       "status": "DONE",
-      "did": "Bundled Geist retired end-to-end: font-face injection, webview URI, webpack copy rule, and the 27KB asset removed \u2014 webview typography now inherits the host editor",
+      "did": "Bundled Geist retired end-to-end: font-face injection, webview URI, webpack copy rule, and the 27KB asset removed — webview typography now inherits the host editor",
       "files": [
         "src/features/spec-viewer/html/generator.ts",
         "webpack.config.js",
@@ -790,7 +790,7 @@
     {
       "what": "full jest suite",
       "command": "npm test",
-      "result": "1266/1266 pass, 99 suites \u2014 zero behavioral test rewrites"
+      "result": "1266/1266 pass, 99 suites — zero behavioral test rewrites"
     },
     {
       "what": "webpack compile",
@@ -815,8 +815,9 @@
   ],
   "concerns": [
     {
-      "note": "README screenshots (viewer.png, comments.png, hero.jpg, walkthrough) show the old design \u2014 retake into the SAME filenames before the next release so the Marketplace listing matches",
+      "note": "README screenshots (viewer.png, comments.png, hero.jpg, walkthrough) show the old design — retake into the SAME filenames before the next release so the Marketplace listing matches",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "7f901862-b7a3-486d-aca8-ff57fee607e6"
 }

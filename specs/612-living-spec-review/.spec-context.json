@@ -1,5 +1,6 @@
 {
   "workflow": "companion",
+  "telemetryInstanceId": "f6b75a9c-c6a7-4d82-9044-fb32373a88a2",
   "specName": "Living Spec Review",
   "branch": "612-living-spec-review",
   "selectedAt": "2026-09-17T17:18:04.122Z",
@@ -1156,7 +1157,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 2.2,
-      "result": "> speckit-companion@0.33.0 compile \u00b7 > tsc -p ./"
+      "result": "> speckit-companion@0.33.0 compile · > tsc -p ./"
     },
     {
       "what": "webview type-checks",
@@ -1172,7 +1173,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 41.3,
-      "result": "Tests:       2996 passed, 2996 total \u00b7 Snapshots:   0 total \u00b7 Time:        40.645 s, estimated 43 s"
+      "result": "Tests:       2996 passed, 2996 total · Snapshots:   0 total · Time:        40.645 s, estimated 43 s"
     },
     {
       "what": "spec-kit extension Python suite",
@@ -1180,7 +1181,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 125.6,
-      "result": "........................................................................ [ 98%] \u00b7 ....................                                                     [100%] \u00b7 1452 passed, 8 skipped in 125.35s (0:02:05)"
+      "result": "........................................................................ [ 98%] · ....................                                                     [100%] · 1452 passed, 8 skipped in 125.35s (0:02:05)"
     },
     {
       "what": "Living-spec screenshots regenerated and inspected",
