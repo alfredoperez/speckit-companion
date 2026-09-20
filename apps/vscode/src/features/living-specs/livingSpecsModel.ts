@@ -786,7 +786,7 @@ const ADOPTED_RE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
 const ALIGNS_RE = /^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$/;
 
 /** True for every line inside a fenced block, and for the fences themselves. */
-function fenceFlags(lines: string[]): boolean[] {
+export function fenceFlags(lines: string[]): boolean[] {
     const flags: boolean[] = [];
     let inside = false;
     for (const line of lines) {
@@ -1355,15 +1355,7 @@ export async function readCapabilityHealth(
     if (requirementCoverage) {
         health.requirementCoverage = requirementCoverage;
     }
-    const timeoutMs = opts?.timeoutMs ?? 1500;
-    // Typed loosely because tsc and ts-jest resolve setTimeout against different libs.
-    let timer: unknown;
-    const driftedFiles = await Promise.race([
-        computeDriftedFiles(workspaceRoot, cap, opts?.git ?? makeDefaultGitRunner(timeoutMs)),
-        new Promise<undefined>(resolve => { timer = setTimeout(resolve, timeoutMs); }),
-    ])
-        .catch(() => undefined)
-        .finally(() => clearTimeout(timer as ReturnType<typeof setTimeout>));
+    const driftedFiles = await readDriftedFiles(workspaceRoot, cap, opts);
     if (driftedFiles !== undefined) {
         health.drifted = driftedFiles.length > 0;
         health.driftedFiles = driftedFiles;

@@ -436,7 +436,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
     anchor: string;
     /** The file this project's own hooks are in, which heads their group. */
     yours: HookHome;
-    onEdit?: (hook: PipelineHook) => void;
+    onEdit: (hook: PipelineHook) => void;
 }) {
     const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
         ['before', before, stockBefore],
@@ -475,7 +475,7 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                             ) : (
                                                 <button class="pb-hook"
                                                     title={`${hook.summary}\n\nClick to edit`}
-                                                    onClick={() => onEdit?.(hook)}>
+                                                    onClick={() => onEdit(hook)}>
                                                     <HookLine hook={hook} />
                                                 </button>
                                             )}
@@ -517,9 +517,8 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
 function Seam({ side, anchor, onAdd }: {
     side: 'before' | 'after';
     anchor: string;
-    onAdd?: () => void;
+    onAdd: () => void;
 }) {
-    if (!onAdd) { return null; }
     return (
         <button class={`pb-slot pb-slot--${side}`} onClick={onAdd}
             title={`Attach a skill, an instruction or a command ${side} ${anchor}`}>
@@ -532,7 +531,7 @@ function Node({ node, actions, stock, seams }: {
     node: PipelineNode;
     actions: NodeActions;
     /** Extension hooks that fire at this node's boundary, by side. */
-    stock?: { before: StockHook[]; after: StockHook[] };
+    stock: { before: StockHook[]; after: StockHook[] };
     /**
      * Which empty seams this node draws.
      *
@@ -542,7 +541,7 @@ function Node({ node, actions, stock, seams }: {
      * one seam: a node draws only the seam above it, and only when something
      * precedes it. The phase's own seams cover its two edges.
      */
-    seams?: { before: boolean; after: boolean };
+    seams: { before: boolean; after: boolean };
 }) {
     const before = node.hooks.filter(hook => hook.when === 'before');
     const after = node.hooks.filter(hook => hook.when === 'after');
@@ -552,14 +551,14 @@ function Node({ node, actions, stock, seams }: {
 
     return (
         <div class="pb-node-group">
-            {(seams?.before ?? true) && (
+            {seams.before && (
                 <Seam side="before" anchor={node.id}
                     onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
             {/* Above the card, because BEFORE is an ordering claim and one
                 block under the card made it twice: a phase heading, the card,
                 and then a second BEFORE belonging to the card above it. */}
-            <Attached before={before} after={[]} stockBefore={stock?.before}
+            <Attached before={before} after={[]} stockBefore={stock.before}
                 anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
             <div
                 class={[
@@ -659,9 +658,9 @@ function Node({ node, actions, stock, seams }: {
                         onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
                 )}
             </div>
-            <Attached before={[]} after={after} stockAfter={stock?.after}
+            <Attached before={[]} after={after} stockAfter={stock.after}
                 anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
-            {(seams?.after ?? true) && (
+            {seams.after && (
                 <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
             )}
         </div>
@@ -699,8 +698,8 @@ interface PhaseControls {
      * Extension hooks that fire at the step's edges, given to the phase that
      * holds those edges — empty for every phase in between.
      */
-    stockBefore?: StockHook[];
-    stockAfter?: StockHook[];
+    stockBefore: StockHook[];
+    stockAfter: StockHook[];
     /** A phase needs two nodes to split, since neither half may be empty. */
     canSplit: boolean;
     /** A step needs at least one phase, so the last one cannot be removed. */
@@ -894,9 +893,8 @@ function Phase({ phase, actions, controls }: {
                     // node — so its hooks land on the step's real edges: the
                     // first node's `before` and the last node's `after`.
                     <Node key={node.id} node={node} actions={actions} stock={{
-                        before: controls.stockBefore && at === 0 ? controls.stockBefore : [],
-                        after: controls.stockAfter && at === phase.nodes.length - 1
-                            ? controls.stockAfter : [],
+                        before: at === 0 ? controls.stockBefore : [],
+                        after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
                     }} seams={{
                         // One seam per gap. The phase's own seams own its edges,
                         // and each node owns the gap above it, so the first
