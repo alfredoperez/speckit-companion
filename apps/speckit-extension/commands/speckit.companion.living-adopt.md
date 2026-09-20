@@ -24,17 +24,17 @@ If the argument names **several areas**, adopt them in one run. Propose the full
 
 If the argument is `.`, the developer asked for the **whole project**. Read the conventions as always, then propose the tree for the whole source tree. Say at the gate how many capabilities and how many spec files that comes to, and offer a coarser cut (one spec per area) and a finer one (a spec per concern within an area) with the count each gives. Nothing is written until they pick.
 
-<!-- speckit-companion:part smallest-thing -->
+<!-- speckit-companion:part concise -->
 ## The smallest thing that works
 
 **Before building anything, stop at the first rung that holds:** does it need to exist at all; does this codebase already have it; does the standard library, the platform, or an installed dependency do it; can it be one line; only then, the minimum code that works. Fix the cause where every caller passes through, not the symptom one caller reported. Delete rather than add, boring rather than clever: no interface with one implementation, no factory for one product, no scaffolding for later. Lean governs what you build and write, not how the work is split: sending work to a worker where a step says to is not extra.
 
-**The same test governs what you write.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss.
-
 **Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A": remove it instead.
 
+**The same test governs what you write, and again once it is written.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss. Then reread and cut: the sentence restating the one before it, the example longer than its rule, the clause defending a choice nobody challenged, the prose repeating a table. Each reads as thoroughness and is what makes a body too long to follow.
+
 **Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
-<!-- /speckit-companion:part smallest-thing -->
+<!-- /speckit-companion:part concise -->
 
 ## What to do
 
@@ -52,7 +52,7 @@ If no conventions doc and no enforcement config names a constraint, ask once, be
 
 What fails the test stays out of the draft. List it at the gate as *found, not proposed*, one line each, so the developer can pull any of it back in.
 
-**The code says what it does, never what it guards against.** A lock under a fixed root, a merge instead of an overwrite: each is a scar from a bug and looks like any other line. Find them where the reason survives: a test named for a defect, a `Fixed` changelog entry, a comment that explains instead of labels, a guard with no obvious caller. Follow each back. If a person loses work or is told something untrue without it, write what must stay true, with the failure as its scenario. Found a guard but not its reason? Ask at the gate. Unexplained guards are what rewrites delete.
+**The code says what it does, never what it guards against.** A lock under a fixed root, a merge instead of an overwrite: each is a scar from a bug and looks like any other line. Find them where the reason survives: a test named for a defect, a `Fixed` changelog entry, in every changelog covering the code in scope and not only the nearest one, a comment that explains instead of labels, a guard with no obvious caller. Follow each back. If a person loses work or is told something untrue without it, write what must stay true, with the failure as its scenario. Found a guard but not its reason? Ask at the gate. Unexplained guards are what rewrites delete.
 
 **A rule binding every capability belongs to none, so every draft drops it and it lands nowhere.** Escaping user text before it reaches a page; an accessibility floor every screen owes. Where a transcribed convention or a guard binds more than one proposed capability, propose one capability for it, named for what it protects, carrying the union of their globs.
 

@@ -31,7 +31,7 @@ import { hasStepStart } from './historyHelpers';
  * the lock file's existence, created O_CREAT|O_EXCL and holding `<pid>:<nonce>`.
  * A waiter reclaims it only from a holder that is provably gone or has stopped
  * touching it; a working holder is waited for however long it works. Protocol
- * and rationale: `apps/speckit-extension/scripts/capture-runtime-context.spec.md`.
+ * and rationale: `capabilities/run-record/protect-the-run-record.spec.md`.
  */
 /**
  * Mutable so tests can shrink the wait without a real clock — e.g. shrinking

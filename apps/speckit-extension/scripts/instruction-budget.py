@@ -37,6 +37,11 @@ from _command_parts import PART_FENCE as _PART_FENCE  # noqa: E402
 #: What the bodies should reach, and what --ceiling flags them against.
 DEFAULT_CEILING = 40
 
+#: What --strict refuses to let grow: today's worst command. The aspiration above
+#: went years unenforced and specify drifted to nearly twice it, so this one only
+#: ever ratchets down. Cut a command, lower this to the new worst. Never raise it.
+HARD_CEILING = 69
+
 #: The most words one node or shared part may carry. Fixed on purpose: no file to re-record.
 NODE_WORD_LIMIT = 1000
 NODES = os.path.join(EXT, "nodes")
@@ -130,7 +135,13 @@ def main() -> int:
     for path, words in over:
         print(f"{path}: {words} words, over the {NODE_WORD_LIMIT}-word node limit. Split it.",
               file=sys.stderr)
-    return 1 if (args.strict and over) else 0
+
+    grown = [r for r in rows if r["total"] > HARD_CEILING]
+    for r in grown:
+        print(f"{r['command']}: {r['total']} instructions, past the {HARD_CEILING} ceiling. "
+              f"Cut it, or move what it shares into a part.", file=sys.stderr)
+
+    return 1 if (args.strict and (over or grown)) else 0
 
 if __name__ == "__main__":
     sys.exit(main())

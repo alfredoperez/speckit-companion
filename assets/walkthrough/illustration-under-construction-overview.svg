@@ -9,7 +9,7 @@
 		alternative, and the top of the requirement to test coverage table.
 		Shoot it through a capture story plus scripts/capture-docs-images.mjs
 		on the capture palette in .storybook/capture-theme.ts, from the
-		Teamboard fixtures, never from a real spec. Rules: capabilities/media-pipeline/asset-build.spec.md.
+		Teamboard fixtures, never from a real spec. Rules: capabilities/repo-tooling/produce-the-docs-media.spec.md.
 
 		When the real image lands, swap this file for it and point the
 		"overview" walkthrough step's media at the new path.

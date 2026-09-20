@@ -1,0 +1,36 @@
+# Found, not proposed
+
+- Stdlib only and exit codes of the build scripts: build rule, in the rules file.
+- Shape parity's three assertions as separate requirements: folded into "built from its sources" and "frozen presets"; the timing fence is a rule.
+- Counts (14 carriers, 7 presets, 7 node-assembled commands): numbers that a new command falsifies.
+- Giving up the namespaced goldens and why: history and rationale, not behaviour.
+- Instruction budget report and the 1000-word node limit: a gate on how sources are written, rules file.
+- The forty-directive adherence reasoning: the why.
+- Packing list failure classes, all six by name: one two-way rule says it.
+- Declared-versus-derived packing list design: rules file.
+- Discovered-then-known install areas: rules file, kept only as "an unknown folder fails" in the spec.
+- Emission sync writing through symlinks and preserving installer banners: implementation detail, rules file.
+- Archive shape (zip, single top folder, allow-list): packaging rule, rules file.
+- Release order, spec-kit first: process rule, rules file. Unsure, see report.
+- Catalog submission as an issue, display gotchas of the community site: release runbook, another party's behaviour.
+- What a real install prints (untrusted prompt, already-installed guard): runbook, not ours.
+- Pre-submit checklist items (id casing, tag count, description length): catalog's rules, checked once.
+- No version bump on a feature branch: repo convention, rules file.
+- Story groups A to H and what each shoots: inventory, the script's list is the authority.
+- GIF encode settings (960 wide, 14 fps, lossy 30, the two stepped-down clips, 4 MB target): tuning values.
+- Web encode settings and the 16:9 crop geometry: tuning, lives in WEB-RENDERS.md.
+- Which Overview composition publishes `overview.gif`: one fact the manifest already records.
+- Two clips sharing a byte-identical poster: consequence of frame zero, not a rule.
+- Capture palette roles, the shipped palettes and which is active: rules file, and a retheme changes it.
+- The palette does not reach the spec viewer's body: belongs to the viewer's own area.
+- Capture size as a contract for camera rects: rules file.
+- Article figures (frame, violet palette, `--only figure-`): one more entry in the capture list, no separate behaviour.
+- Pipeline Builder guide images and their capture heights: same, inventory.
+- Lightwell and favicon builds: page chrome off the chain, rules file.
+- Mascot derivatives (sizes, alpha crop threshold, per-pose manifest, how `tending` was made): asset recipe, one rules line.
+- Pipeline Builder visual tests (two widths, both themes, render counts): a test harness, not something a change must respect.
+- Storyboard drift check: part of `clips:check`, no reader outside the clip skill.
+- `unnormalized` timestamped renders and ticket references: backlog state.
+- X posts and articles as manifest surfaces: readers outside this repo, the manifest lists them.
+- Landing video under `content/media/landing-video/`: no documented chain found.
+- The five hand-taken screenshots runbook: manual steps, noted under Uncovered.

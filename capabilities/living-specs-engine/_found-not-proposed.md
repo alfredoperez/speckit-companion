@@ -1,0 +1,28 @@
+# Found, not proposed
+
+- The glob translation details beyond `**`, `*` and trailing `/**` (`?`, `**/` at zero depth): mechanics, the membership requirement covers what a planner needs.
+- Discovered-orphan name collisions widening to more of the path: edge case of one listing.
+- `layout: central|colocated` key in the registry and its fallback to central on a bad value: only read by adoption, which is outside this rebuild's method overrides. Could be pulled into the layout requirement.
+- The adoption wizard's own flow (review gate, clarification walk, `[DRAFT]`, `adopted` sources, `## Uncovered`, layer capability): it is prompt text for an assistant, and only its registration half is deterministic. Registration is specified, the rest left out.
+- `adopted` marker being badged in the viewer: VS Code side, another area.
+- Status bar "N living specs" and save-time validation in the editor: VS Code side.
+- `check_living_spec.py` as a PASS/FAIL eval of a fold (added-folded, removed-gone, count-delta, `--strict`): a developer eval tool, its one product fact (idempotence) is in the fold spec.
+- Fold summary line format (`+1 added, ~0 modified ...`) and the exact stderr wording of each reason: wording, not behaviour.
+- Promoted MODIFIED that is already present counts as redundant: bookkeeping inside the idempotence rule.
+- `added-heading-near-existing`, `requirement-bundles-rules` (more than 4 SHALL), `requirement-too-wordy` (120 words), `spec-too-large` (160 lines), `spec-too-thin` (under 3 with siblings): thresholds live in the docs table, the spec names the classes only.
+- WHEN/THEN recognised with or without bold: parser tolerance.
+- Requirements counted anywhere in the file, not only under `## Requirements`, and a requirement ending at the next `##`: parser detail born from one bug.
+- Marker must be the first non-blank lines under the heading because a formatter inserts a blank line: past bug, kept only as "blank lines allowed".
+- Fences are respected when finding headings and the purpose section: parser detail.
+- The `--rules` resolver mode on its own: the rules requirement covers delivery.
+- Legacy `.arch.md` and legacy `capabilities/<name>/spec.md` renamed to the new shape on a central move: folded into one clause each.
+- Relocate details: destination collision check, git-aware moves, pruning empty folders, exit code 1 for a partial `--all`, display name changing with the file stem: the move requirement carries the contract, the rest is mechanics or VS Code display.
+- Register emitting `spec` only when it differs from the default: output tidiness.
+- `should_drop_legacy` and `legacy_stale` handling: covered by the both-files scenario.
+- Drift `tracked` degrading to `unspeced` when git cannot scope it: fallback detail.
+- Drift ignoring changes to spec documents themselves: obvious from the definition.
+- Coverage test-reference patterns (`.test.`, `.spec.`, `_test`, `tests/`, `file::Case`): listed in the docs, one clause in the spec.
+- `livingSpecs.skipped` being written by `write-context.py --living-spec-skip`: the capture runtime's area; the fold spec only says a skip with a reason counts.
+- The rest of `companion_config.py` (hooks, recipes, node order, phases, `debug`, `reads` validation): the pipeline configuration area, not living specs.
+- The maturity ladder and the note on upstream spec-kit's different meaning of "living spec": explanation, not behaviour.
+- The note that spec-kit ships no `/speckit.converge`: a point-in-time remark.

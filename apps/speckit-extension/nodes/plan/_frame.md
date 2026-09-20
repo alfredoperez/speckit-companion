@@ -20,9 +20,9 @@ $ARGUMENTS
 
 <!-- /speckit-companion:part speckit-hooks -->
 
-<!-- speckit-companion:part smallest-thing -->
+<!-- speckit-companion:part concise -->
 
-<!-- /speckit-companion:part smallest-thing -->
+<!-- /speckit-companion:part concise -->
 
 ## Outline
 
