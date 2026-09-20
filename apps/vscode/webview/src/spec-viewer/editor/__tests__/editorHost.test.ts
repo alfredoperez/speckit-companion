@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
-import { closeInlineEditor, isInlineEditorOpen } from './editorHost';
-import { showInlineEditor, showInlineEditorForRow } from './inlineEditor';
-import { clearAllRefinements } from './refinements';
-import { navState, viewerState } from '../signals';
+import { closeInlineEditor, isInlineEditorOpen } from '../editorHost';
+import { showInlineEditor, showInlineEditorForRow } from '../inlineEditor';
+import { clearAllRefinements } from '../refinements';
+import { navState, viewerState } from '../../signals';
 
 (globalThis as unknown as { vscode: unknown }).vscode = { postMessage: jest.fn() };
 

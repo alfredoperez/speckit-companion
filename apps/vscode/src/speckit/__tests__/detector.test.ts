@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SpecKitDetector } from './detector';
+import { SpecKitDetector } from '../detector';
 
 // Mock child_process and fs since detector uses them
 jest.mock('child_process', () => ({

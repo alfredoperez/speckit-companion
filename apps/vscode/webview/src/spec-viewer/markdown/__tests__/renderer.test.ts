@@ -9,8 +9,8 @@
  *  - Documents without frontmatter are returned unchanged.
  */
 
-import { renderMarkdown } from './renderer';
-import { stripFrontmatter, stripTaskFormatLegend } from './preprocessors';
+import { renderMarkdown } from '../renderer';
+import { stripFrontmatter, stripTaskFormatLegend } from '../preprocessors';
 
 describe('renderMarkdown — CRLF normalization (issue #158)', () => {
     it('renders a CRLF heading as <h1>, not a literal "#" paragraph', () => {

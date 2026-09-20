@@ -1,26 +1,26 @@
 import * as vscode from 'vscode';
-import { SpecEditorProvider } from './specEditorProvider';
-import { WorkflowSteps } from '../../core/constants';
+import { SpecEditorProvider } from '../specEditorProvider';
+import { WorkflowSteps } from '../../../core/constants';
 
-jest.mock('../workflows', () => ({
+jest.mock('../../workflows', () => ({
     buildWorkflowChoices: jest.fn().mockReturnValue([]),
     resolveEffectiveDefaultWorkflow: jest.fn().mockReturnValue('speckit'),
 }));
 
-jest.mock('../../ai-providers', () => ({
+jest.mock('../../../ai-providers', () => ({
     AIProviderFactory: { getProvider: jest.fn().mockReturnValue({ executeInTerminal: jest.fn() }) },
     getConfiguredProviderType: jest.fn().mockReturnValue('claudeCode'),
 }));
 
-jest.mock('../../ai-providers/aiProvider', () => ({
+jest.mock('../../../ai-providers/aiProvider', () => ({
     formatCommandForProvider: (c: string) => c,
 }));
 
-jest.mock('../../ai-providers/promptBuilder', () => ({
+jest.mock('../../../ai-providers/promptBuilder', () => ({
     buildSpecifyCreationPreamble: () => null,
 }));
 
-jest.mock('../../core/telemetry', () => ({
+jest.mock('../../../core/telemetry', () => ({
     sendTelemetryEvent: jest.fn(),
     reportSpecCreated: jest.fn(),
     workflowTelemetryId: (name: string | undefined) =>
@@ -29,7 +29,7 @@ jest.mock('../../core/telemetry', () => ({
     reportInstallPromptClicked: jest.fn(),
 }));
 
-import { sendTelemetryEvent, reportSpecCreated } from '../../core/telemetry';
+import { sendTelemetryEvent, reportSpecCreated } from '../../../core/telemetry';
 
 function createProvider(): SpecEditorProvider {
     const context = {

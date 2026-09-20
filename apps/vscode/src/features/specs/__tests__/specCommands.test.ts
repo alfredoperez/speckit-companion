@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { registerSpecKitCommands } from './specCommands';
+import { registerSpecKitCommands } from '../specCommands';
 
 // Mock dependencies that specCommands imports
-jest.mock('../../extension', () => ({
+jest.mock('../../../extension', () => ({
     getAIProvider: jest.fn().mockReturnValue({
         executeInTerminal: jest.fn(),
         executeSlashCommand: jest.fn(),
     }),
 }));
 
-jest.mock('./specExplorerProvider', () => ({
+jest.mock('../specExplorerProvider', () => ({
     SpecExplorerProvider: jest.fn(),
     isSpecLifecycleItem: (cv: string | undefined) =>
         cv !== undefined &&
@@ -17,13 +17,13 @@ jest.mock('./specExplorerProvider', () => ({
     lifecycleContextValue: jest.fn(),
 }));
 
-jest.mock('../../core/utils/notificationUtils', () => ({
+jest.mock('../../../core/utils/notificationUtils', () => ({
     NotificationUtils: {
         showAutoDismissNotification: jest.fn(),
     },
 }));
 
-jest.mock('../../core/specDirectoryResolver', () => ({
+jest.mock('../../../core/specDirectoryResolver', () => ({
     isInsideSpecDirectory: jest.fn(),
     getFileWatcherPatterns: jest.fn().mockReturnValue({
         specs: [],
@@ -32,13 +32,13 @@ jest.mock('../../core/specDirectoryResolver', () => ({
     }),
 }));
 
-jest.mock('../workflows', () => ({
+jest.mock('../../workflows', () => ({
     getOrSelectWorkflow: jest.fn(),
     resolveStepCommand: jest.fn(),
     executeCheckpointsForTrigger: jest.fn(),
 }));
 
-jest.mock('./stepLifecycle', () => ({
+jest.mock('../stepLifecycle', () => ({
     startStep: jest.fn(),
     completeStep: jest.fn(),
     setStatus: jest.fn().mockResolvedValue(true),
@@ -46,20 +46,20 @@ jest.mock('./stepLifecycle', () => ({
     reactivate: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('./selectionContextKeys', () => ({
+jest.mock('../selectionContextKeys', () => ({
     updateSelectionContextKeys: jest.fn(),
 }));
 
-jest.mock('./specContextReader', () => ({
-    ...jest.requireActual('./specContextReader'),
+jest.mock('../specContextReader', () => ({
+    ...jest.requireActual('../specContextReader'),
     readSpecContextSyncSafe: jest.fn(),
 }));
 
-jest.mock('../settings/companionPresetReconciler', () => ({
+jest.mock('../../settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(false),
 }));
 
-jest.mock('../../speckit/detector', () => ({
+jest.mock('../../../speckit/detector', () => ({
     SpecKitDetector: {
         getInstance: jest.fn().mockReturnValue({
             workspaceInitialized: true,
@@ -68,9 +68,9 @@ jest.mock('../../speckit/detector', () => ({
     },
 }));
 
-import { setStatus, forceStatus, reactivate } from './stepLifecycle';
-import { NotificationUtils } from '../../core/utils/notificationUtils';
-import { readSpecContextSyncSafe } from './specContextReader';
+import { setStatus, forceStatus, reactivate } from '../stepLifecycle';
+import { NotificationUtils } from '../../../core/utils/notificationUtils';
+import { readSpecContextSyncSafe } from '../specContextReader';
 
 const mockCommands = vscode.commands as jest.Mocked<typeof vscode.commands>;
 

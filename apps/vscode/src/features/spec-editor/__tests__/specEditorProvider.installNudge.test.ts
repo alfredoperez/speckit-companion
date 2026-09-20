@@ -1,22 +1,22 @@
 import * as vscode from 'vscode';
-import { SpecEditorProvider } from './specEditorProvider';
-import { COMPANION_WORKFLOW_NAME } from '../../core/constants';
+import { SpecEditorProvider } from '../specEditorProvider';
+import { COMPANION_WORKFLOW_NAME } from '../../../core/constants';
 
-jest.mock('../workflows', () => ({
+jest.mock('../../workflows', () => ({
     buildWorkflowChoices: jest.fn().mockReturnValue([]),
     resolveEffectiveDefaultWorkflow: jest.fn().mockReturnValue('speckit'),
 }));
 
-jest.mock('../../ai-providers', () => ({
+jest.mock('../../../ai-providers', () => ({
     AIProviderFactory: { getProvider: jest.fn() },
     getConfiguredProviderType: jest.fn().mockReturnValue('claudeCode'),
 }));
 
-jest.mock('../../ai-providers/aiProvider', () => ({
+jest.mock('../../../ai-providers/aiProvider', () => ({
     formatCommandForProvider: (c: string) => c,
 }));
 
-import { buildWorkflowChoices } from '../workflows';
+import { buildWorkflowChoices } from '../../workflows';
 
 const BUILDER_CHOICES = [
     { name: 'speckit', displayName: 'SpecKit', description: 'Standard SpecKit workflow', installed: true, entryCommand: 'speckit.specify' },

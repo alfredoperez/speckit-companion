@@ -1,4 +1,4 @@
-import { convertPathIfWSL } from './pathUtils';
+import { convertPathIfWSL } from '../pathUtils';
 
 const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform')!;
 const originalEnv = { ...process.env };

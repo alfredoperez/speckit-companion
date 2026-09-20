@@ -15,7 +15,7 @@ import {
     isInstallInFlight,
     notePublishedCompanionVersion,
     publishedCompanionVersion,
-} from './companionVersionGap';
+} from '../companionVersionGap';
 
 describe('companionVersionGap', () => {
     // `publishedVersion` is module state, so a case that sets it would otherwise be the yardstick

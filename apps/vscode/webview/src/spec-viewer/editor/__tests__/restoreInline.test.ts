@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
-import { restoreComments } from './restoreComments';
-import { clearAllRefinements, showInlineEditorForEdit } from './refinements';
-import { navState, pendingRefinements, viewerState } from '../signals';
-import type { ReviewComment } from '../types';
+import { restoreComments } from '../restoreComments';
+import { clearAllRefinements, showInlineEditorForEdit } from '../refinements';
+import { navState, pendingRefinements, viewerState } from '../../signals';
+import type { ReviewComment } from '../../types';
 
 const postMessage = jest.fn();
 (globalThis as unknown as { vscode: unknown }).vscode = { postMessage };

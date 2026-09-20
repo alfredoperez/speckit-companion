@@ -188,4 +188,25 @@ describe('docs consistency', () => {
       expect(named.filter((dir) => !exists(dir))).toEqual([]);
     });
   });
+
+  describe('where unit tests live', () => {
+    // CLAUDE.md: "Unit tests live in `__tests__` beside the code they cover."
+    // Twenty-five had drifted out of that before this test existed, and nothing
+    // failed, because Jest matches a test file wherever it sits.
+    const walk = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) return e.name === 'node_modules' ? [] : walk(full);
+        return /\.(test|spec)\.tsx?$/.test(e.name) ? [full] : [];
+      });
+
+    it('every unit test sits in a __tests__ folder beside its code', () => {
+      const roots = ['apps/vscode/src', 'apps/vscode/webview/src'].map((d) => path.join(REPO_ROOT, d));
+      const stray = roots
+        .flatMap(walk)
+        .filter((f) => path.basename(path.dirname(f)) !== '__tests__')
+        .map((f) => path.relative(REPO_ROOT, f));
+      expect(stray).toEqual([]);
+    });
+  });
 });

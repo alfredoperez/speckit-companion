@@ -5,7 +5,7 @@ import {
     getFileWatcherPatterns,
     hasDuplicateNames,
     deriveChangeRoot,
-} from './specDirectoryResolver';
+} from '../specDirectoryResolver';
 
 const mockWorkspace = vscode.workspace as jest.Mocked<typeof vscode.workspace>;
 

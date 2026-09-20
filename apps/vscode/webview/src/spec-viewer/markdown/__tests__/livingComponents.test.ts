@@ -18,10 +18,10 @@ import {
     setLivingCoverage,
     setLivingDrifted,
     setLivingNew,
-} from './livingComponents';
-import { navState } from '../signals';
-import type { NavState, RequirementLink } from '../types';
-import { renderMarkdown, setLivingMode } from './renderer';
+} from '../livingComponents';
+import { navState } from '../../signals';
+import type { NavState, RequirementLink } from '../../types';
+import { renderMarkdown, setLivingMode } from '../renderer';
 
 afterEach(() => {
     setLivingMode(false);

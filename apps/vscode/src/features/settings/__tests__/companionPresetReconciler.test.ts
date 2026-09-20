@@ -7,7 +7,7 @@ import {
     ensureStandardFamily,
     isCompanionInstalled,
     PresetOp,
-} from './companionPresetReconciler';
+} from '../companionPresetReconciler';
 
 const NONE = { 'companion-standard': false, 'companion-turbo': false };
 

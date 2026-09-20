@@ -14,7 +14,7 @@ import {
     noteInstallLanded,
     updateAlreadyAttempted,
     __resetForceProbe,
-} from './specKitExtensionInstall';
+} from '../specKitExtensionInstall';
 
 /** `promisify(exec)` calls `exec(cmd, options, cb)`, so the callback is always the last argument. */
 const done = (args: unknown[]) => args[args.length - 1] as (e: unknown, r: unknown) => void;
@@ -22,16 +22,16 @@ const execMock = jest.fn((...args: unknown[]) =>
     done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' }));
 jest.mock('child_process', () => ({ exec: (...args: unknown[]) => execMock(...args) }));
 
-jest.mock('../features/settings/companionPresetReconciler', () => ({
+jest.mock('../../features/settings/companionPresetReconciler', () => ({
     isCompanionInstalled: jest.fn().mockReturnValue(false),
 }));
-jest.mock('./companionVersionGap', () => ({
-    ...jest.requireActual('./companionVersionGap'),
+jest.mock('../companionVersionGap', () => ({
+    ...jest.requireActual('../companionVersionGap'),
     readInstalledCompanionVersion: jest.fn().mockReturnValue(undefined),
 }));
-import { clearInstallInFlight, isInstallInFlight } from './companionVersionGap';
-import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
-import { readInstalledCompanionVersion } from './companionVersionGap';
+import { clearInstallInFlight, isInstallInFlight } from '../companionVersionGap';
+import { isCompanionInstalled } from '../../features/settings/companionPresetReconciler';
+import { readInstalledCompanionVersion } from '../companionVersionGap';
 
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };

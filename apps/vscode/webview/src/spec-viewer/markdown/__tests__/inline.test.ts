@@ -8,7 +8,7 @@
  *  - Multiple file extensions are recognised
  */
 
-import { parseInline } from './inline';
+import { parseInline } from '../inline';
 
 describe('parseInline', () => {
     // -------------------------------------------------------------------------

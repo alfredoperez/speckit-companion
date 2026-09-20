@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { registerCliCommands } from './cliCommands';
-import { SpecKitDetector } from './detector';
+import { registerCliCommands } from '../cliCommands';
+import { SpecKitDetector } from '../detector';
 
 jest.mock('child_process', () => ({ exec: jest.fn() }));
 jest.mock('fs', () => ({ existsSync: jest.fn().mockReturnValue(false), readFileSync: jest.fn() }));

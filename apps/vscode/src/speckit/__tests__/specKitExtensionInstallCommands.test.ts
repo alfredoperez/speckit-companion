@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { registerSpecKitExtensionInstallCommands } from './specKitExtensionInstallCommands';
-import { INSTALL_PROMPT_EVENT, initTelemetry, TelemetryService } from '../core/telemetry';
+import { registerSpecKitExtensionInstallCommands } from '../specKitExtensionInstallCommands';
+import { INSTALL_PROMPT_EVENT, initTelemetry, TelemetryService } from '../../core/telemetry';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };
 
-jest.mock('./specKitExtensionInstall', () => ({
+jest.mock('../specKitExtensionInstall', () => ({
     runInstallSpecKitExtension: jest.fn(),
     openReadmeFallback: jest.fn(),
 }));

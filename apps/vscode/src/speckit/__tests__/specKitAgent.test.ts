@@ -1,5 +1,5 @@
-import { resolveSpecKitAgent, PROVIDER_TO_AGENT } from './specKitAgent';
-import { HostIde } from '../ai-providers/ideChatProvider';
+import { resolveSpecKitAgent, PROVIDER_TO_AGENT } from '../specKitAgent';
+import { HostIde } from '../../ai-providers/ideChatProvider';
 
 const ANY_HOST: HostIde = 'vscode';
 const ALL_HOSTS: HostIde[] = ['vscode', 'cursor', 'windsurf', 'antigravity', 'unknown'];

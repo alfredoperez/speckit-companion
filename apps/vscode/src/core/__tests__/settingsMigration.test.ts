@@ -6,7 +6,7 @@ import {
     removeRetiredSettings,
     BETA_BOOLEAN_SETTINGS,
     RETIRED_SETTINGS,
-} from './settingsMigration';
+} from '../settingsMigration';
 
 type Inspection = { globalValue?: unknown; workspaceValue?: unknown; workspaceFolderValue?: unknown };
 

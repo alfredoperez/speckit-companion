@@ -2,8 +2,8 @@
  * Unit tests for resolveAnchorLine — the pure re-anchoring decision used to
  * restore persisted review comments inline (R002, R003).
  */
-import { resolveAnchorLine, type RenderedLine } from './reanchor';
-import type { ReviewComment } from '../types';
+import { resolveAnchorLine, type RenderedLine } from '../reanchor';
+import type { ReviewComment } from '../../types';
 
 function comment(over: Partial<ReviewComment> = {}): ReviewComment {
     return {

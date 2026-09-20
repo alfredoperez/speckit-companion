@@ -4,16 +4,16 @@ import {
     createCompanionUpdateStatusBar,
     maybeShowCompanionUpdateNudge,
     shouldShowCompanionUpdateNudge,
-} from './companionUpdateNudge';
-import type { CompanionGap } from './companionVersionGap';
+} from '../companionUpdateNudge';
+import type { CompanionGap } from '../companionVersionGap';
 
-jest.mock('./specKitExtensionInstall', () => ({
+jest.mock('../specKitExtensionInstall', () => ({
     readInstallPromptEnabled: jest.fn().mockReturnValue(true),
     dismissInstallPrompt: jest.fn(),
     updateAlreadyAttempted: jest.fn().mockReturnValue(false),
 }));
 
-import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
+import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from '../specKitExtensionInstall';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };

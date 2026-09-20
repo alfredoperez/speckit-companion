@@ -1,6 +1,6 @@
-import { renderInstallBannerHtml } from './installBanner';
-import { updateBannerText } from '../../protocol/viewer';
-import { shouldShowInstallPrompt } from '../../speckit/specKitExtensionInstall';
+import { renderInstallBannerHtml } from '../installBanner';
+import { updateBannerText } from '../../../protocol/viewer';
+import { shouldShowInstallPrompt } from '../../../speckit/specKitExtensionInstall';
 
 describe('renderInstallBannerHtml — gated banner visibility', () => {
     it('renders the banner with both action buttons when visible', () => {

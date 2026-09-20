@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { UpdateChecker } from './updateChecker';
-import { notePublishedCompanionVersion, publishedCompanionVersion } from './companionVersionGap';
+import { UpdateChecker } from '../updateChecker';
+import { notePublishedCompanionVersion, publishedCompanionVersion } from '../companionVersionGap';
 const { createMockExtensionContext } = vscode as unknown as {
     createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
 };

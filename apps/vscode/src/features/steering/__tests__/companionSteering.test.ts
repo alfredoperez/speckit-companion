@@ -7,7 +7,7 @@ import {
     readCompanionTemplates,
     companionCommandFilePath,
     isWithinRoot,
-} from './companionSteering';
+} from '../companionSteering';
 
 describe('companionSteering', () => {
     let root: string;

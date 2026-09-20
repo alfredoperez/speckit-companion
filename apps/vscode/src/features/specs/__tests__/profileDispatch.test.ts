@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { resolveDispatchWithFallback, resolveDispatchForRoot } from './profileDispatch';
+import { resolveDispatchWithFallback, resolveDispatchForRoot } from '../profileDispatch';
 
 const installExtension = (wsRoot: string): void => {
     fs.mkdirSync(path.join(wsRoot, '.specify', 'extensions', 'companion'), { recursive: true });
