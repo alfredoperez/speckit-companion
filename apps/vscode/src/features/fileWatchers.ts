@@ -12,7 +12,7 @@ import {
 } from '../speckit/taskProgressService';
 import { NotificationUtils } from '../core/utils/notificationUtils';
 import { getFileWatcherPatterns } from '../core/specDirectoryResolver';
-import { readSpecContextSync } from './specs/specContextReader';
+import { readSpecContextSyncSafe } from './specs/specContextReader';
 import { completeStep } from './specs/stepLifecycle';
 import { shouldCloseImplement } from './specs/implementCloseGuard';
 import { detectExternalTransition, transitionCache } from './specs/transitionLogger';
@@ -358,7 +358,7 @@ export function setupTasksWatcher(
                 // a failure here is logged-and-swallowed by the enclosing try/catch and
                 // never blocks the watcher.
                 const specDir = path.dirname(uri.fsPath);
-                const ctx = readSpecContextSync(specDir);
+                const ctx = readSpecContextSyncSafe(specDir);
                 if (shouldCloseImplement(ctx, progress)) {
                     // `completeStep` is best-effort: it logs-and-swallows write
                     // failures internally and returns void, so we can't confirm the

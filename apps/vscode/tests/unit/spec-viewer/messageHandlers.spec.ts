@@ -34,6 +34,15 @@ jest.mock("../../../src/features/specs/specContextReader", () => ({
     history: [],
     reviewComments: [],
   })),
+  readSpecContextSyncSafe: jest.fn().mockImplementation(() => ({
+    workflow: "speckit-companion",
+    specName: "test",
+    branch: "main",
+    currentStep: mockCtx.currentStep,
+    status: "draft",
+    history: [],
+    reviewComments: [],
+  })),
 }));
 
 jest.mock("../../../src/features/specs/specContextWriter", () => ({

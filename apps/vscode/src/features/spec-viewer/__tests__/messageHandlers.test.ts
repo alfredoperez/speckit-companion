@@ -34,6 +34,7 @@ jest.mock('../../specs/specContextReader', () => ({
     ...jest.requireActual('../../specs/specContextReader'),
     readSpecContext: jest.fn(),
     readSpecContextSync: jest.fn(),
+    readSpecContextSyncSafe: jest.fn(),
 }));
 jest.mock('../../specs/specContextWriter', () => ({
     updateSpecContext: jest.fn(),
@@ -705,14 +706,14 @@ describe('messageHandlers - persisted review comments', () => {
 describe("recording a start for a project's added step (US3)", () => {
     const path = require('path');
     const { resolveCompanionSteps } = require('../../workflows/pipelineResolution');
-    const { readSpecContextSync } = require('../../specs/specContextReader');
+    const { readSpecContextSyncSafe } = require('../../specs/specContextReader');
     const { startStep } = require('../../specs/stepLifecycle');
     const steps = resolveCompanionSteps(path.join(__dirname, '../../../../tests/fixtures/project-steps'));
 
     async function approveFrom(currentStep: string, pipeline = steps) {
         jest.clearAllMocks();
         (vscode.window.showWarningMessage as jest.Mock).mockResolvedValue(undefined);
-        (readSpecContextSync as jest.Mock).mockReturnValue({
+        (readSpecContextSyncSafe as jest.Mock).mockReturnValue({
             workflow: 'companion',
             currentStep,
             status: 'active',

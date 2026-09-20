@@ -30,7 +30,7 @@ import { createDispatcher, DispatcherMap } from "../../core/utils/dispatcher";
 import {
   SPEC_CONTEXT_FILENAME,
   readSpecContext,
-  readSpecContextSync,
+  readSpecContextSyncSafe,
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
@@ -375,7 +375,7 @@ async function handleRegenerate(
   // tab. Clicking regenerate while on a child doc (data-model.md,
   // research.md) would otherwise no-op or write a start entry for the
   // wrong step.
-  const ctx = readSpecContextSync(specDirectory);
+  const ctx = readSpecContextSyncSafe(specDirectory);
   const targetStepName = ctx?.currentStep;
   const steps = await deps.resolveWorkflowSteps();
   const stepDef = targetStepName
@@ -407,7 +407,7 @@ async function handleApprove(
   // files their commands produced. Reconstruct the real position from the step output
   // files so Approve dispatches the correct next command (no-op otherwise).
   const ctx = synthesizeCustomProgress(
-    readSpecContextSync(specDirectory),
+    readSpecContextSyncSafe(specDirectory),
     steps,
     (s) => stepHasOutput(specDirectory, s, steps),
   );
@@ -564,7 +564,7 @@ async function handleClarify(
 
   const docType = instance.state.currentDocument;
   const targetPath = instance.state.changeRoot || specDirectory;
-  const currentStep = readSpecContextSync(specDirectory)?.currentStep;
+  const currentStep = readSpecContextSyncSafe(specDirectory)?.currentStep;
 
   // Source 1: custom commands from settings.
   for (const cmd of customCommandsFromConfig()) {
