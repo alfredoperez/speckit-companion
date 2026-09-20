@@ -49,9 +49,9 @@ If the diff matches the left, the right-hand doc(s) **must** be in the diff too 
 | New canonical workflow status | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) badge tiers + README "Status vocabulary" |
 | New/changed configuration setting | README "Configuration" section |
 | Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) + README "Sidebar at a Glance" |
-| Viewer statuses / badges / buttons / step tabs | the `viewer-ui-*` and `spec-viewer-*` living specs |
-| Template profiles / preset reconciler / timing partial / `templateProfile` setting | the `commands-*` and `workflows-*` living specs |
-| `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | the `capture-runtime-*` living specs under `apps/speckit-extension/scripts/` |
+| Viewer statuses / badges / buttons / step tabs | the living specs under `capabilities/spec-viewer/` |
+| Template profiles / preset reconciler / timing partial / `templateProfile` setting | the living specs under `capabilities/companion-pipeline/` |
+| `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | the living specs under `capabilities/run-record/` |
 | Project structure / modules / architecture | `docs/architecture.md` |
 | Webview component with a sibling `*.stories.tsx` | update the stories (or add one if a non-trivial component lacks it) |
 | New workflow phase / sub-document type | README "Spec-Driven Phases" + Step Properties table |
@@ -64,7 +64,7 @@ If the diff matches the left, the right-hand doc(s) **must** be in the diff too 
 When you change what an existing setting **value does** (not just add a value), its description lives in a fixed set of places — reconcile **all** of them or a stale guarantee ships:
 - `package.json` `enumDescriptions` (the settings-dropdown text)
 - README "Configuration" — both the prose summary **and** the value-table row
-- the setting's long-form coverage (a `commands-*` / `workflows-*` living spec, etc.)
+- the setting's long-form coverage (the living spec that covers it under `capabilities/`)
 - `apps/speckit-extension/README.md` if the value is named there
 
 Re-check these red-flag words against the **new** behavior: "no … behavior", "plain upstream", "always", "never", "removes", "guarantees", "added". (This is exactly how `templateProfile: "off"` shipped a false "no Companion behavior" claim in four places after `off` stopped uninstalling `companion-standard` — the behavior changed, the descriptions didn't.)
