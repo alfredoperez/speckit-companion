@@ -170,6 +170,24 @@ describe('saveFeatureWorkflow — ENOENT vs. other failures', () => {
         }
     });
 
+    it('keeps a field no type declares, which is what the writer is for', async () => {
+        // This path does its own read-modify-write, separate from specContextWriter.
+        const dir = makeTmpDir();
+        try {
+            const target = path.join(dir, FEATURE_CONTEXT_FILE);
+            const before = { ...makeCtx(), somethingNobodyDeclared: { deep: [1, 2, 3] } };
+            fs.writeFileSync(target, JSON.stringify(before, null, 2), 'utf-8');
+
+            await saveFeatureWorkflow(dir, 'speckit');
+
+            const after = JSON.parse(fs.readFileSync(target, 'utf-8'));
+            expect(after.somethingNobodyDeclared).toEqual({ deep: [1, 2, 3] });
+            expect(after.workflow).toBe('speckit');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
     it('refuses to write (throws) when the existing file is unparseable', async () => {
         const dir = makeTmpDir();
         try {

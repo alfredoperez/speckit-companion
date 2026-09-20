@@ -28,7 +28,7 @@ describe('spec-context workflow integration (SC-001, US3)', () => {
         expect(migrated.status).toBe('completed');
         // stepHistory is no longer persisted; legacy files are accepted but
         // the field is dropped from the in-memory canonical shape.
-        expect((migrated as Record<string, unknown>).stepHistory).toBeUndefined();
+        expect((migrated as unknown as Record<string, unknown>).stepHistory).toBeUndefined();
         // 055 lacks identity fields — a subsequent backfill fills them in.
         const backfilled = { ...migrated, specName: '055-fix-bullet-rendering', branch: '055-fix-bullet-rendering' };
         expect(validateSpecContext(backfilled).valid).toBe(true);

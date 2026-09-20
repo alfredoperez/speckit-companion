@@ -156,8 +156,8 @@ export function normalizeSpecContext(raw: Record<string, unknown>): SpecContext 
         status,
         history,
     };
-    delete (out as Record<string, unknown>).stepHistory;
-    delete (out as Record<string, unknown>).transitions;
+    delete (out as unknown as Record<string, unknown>).stepHistory;
+    delete (out as unknown as Record<string, unknown>).transitions;
 
     const normalizedTaskSummaries = normalizeTaskSummaries(raw.task_summaries);
     if (normalizedTaskSummaries) {

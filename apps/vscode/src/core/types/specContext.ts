@@ -209,13 +209,6 @@ export interface HistoryEntry {
     at: string;
 }
 
-// Type-only aliases retained so call sites that import `Transition` keep
-// compiling. The on-disk field is `history` only — these are pure imports.
-export type Transition = HistoryEntry;
-export type TransitionFrom = HistoryEntryFrom;
-export type TransitionBy = HistoryEntryBy;
-
-
 /**
  * Document a review comment is anchored to. Was previously restricted to the
  * three core docs (`spec`/`plan`/`tasks`); now accepts any document type
@@ -356,10 +349,19 @@ export interface SpecContext {
     history: HistoryEntry[];
     /** Persisted inline review comments (replaces `<doc>-extra.md`). */
     reviewComments?: ReviewComment[];
-    // Skill-authored fields, viewer-relevant — declared optional;
-    // other unknown fields remain tolerated via the index signature.
+    // Skill-authored fields, viewer-relevant — declared optional; preserving an undeclared field on write is the writer's job, not this type's.
     /** Last action one-liner written by the implement skill. */
     last_action?: string;
+    /** In-progress indicator for the active step (e.g. "exploring", "phase1"). */
+    progress?: string | null;
+    /** Paths touched by the run, skill-authored. */
+    files_modified?: string[];
+    /** PR URL recorded at a commit/PR checkpoint. */
+    prUrl?: string;
+    /** PR number recorded at a commit/PR checkpoint. */
+    prNumber?: number;
+    /** Commit/PR checkpoint completion, written by the workflow checkpoint handler. */
+    checkpointStatus?: CheckpointStatus;
     /**
      * Legacy per-spec profile field from before the workflow-choice collapse.
      * No longer written or read for dispatch — the `workflow` field now drives the
@@ -403,8 +405,6 @@ export interface SpecContext {
     coverage?: Record<string, CoverageEntry>;
     /** The size classification's inputs + verdict. */
     classification?: ClassificationEntry;
-    // Unknown / legacy fields tolerated and preserved.
-    [key: string]: unknown;
 }
 
 /** Viewer-side step badge */

@@ -12,8 +12,6 @@
  */
 
 import {
-    HistoryEntry,
-    SpecContext,
     Status,
     StepName,
     STEP_NAMES,
@@ -25,7 +23,7 @@ import {
     setStepCompleted as canonicalSetStepCompleted,
     updateSpecContext as canonicalUpdateSpecContext,
 } from './specContextWriter';
-import { readSpecContext, normalizeSpecContext, SpecContextParseError } from './specContextReader';
+import { normalizeSpecContext } from './specContextReader';
 import { hasStepStart, lastEntryIsCompletionFor } from './historyHelpers';
 
 function isStepName(value: string | undefined): value is StepName {
@@ -38,21 +36,20 @@ export async function updateStepProgress(
     _workflowStepNames: string[]
 ): Promise<void> {
     const isLifecycle = isStepName(stepName);
-    let ctx: SpecContext | null;
-    try {
-        ctx = await readSpecContext(specDir);
-    } catch (err) {
-        if (!(err instanceof SpecContextParseError)) throw err;
-        ctx = null;
-    }
-    const specName = ctx?.specName || deriveSpecName(specDir);
+    const fallback = normalizeSpecContext({
+        specName: deriveSpecName(specDir),
+        branch: '',
+        currentStep: 'specify',
+        status: 'draft',
+        history: [],
+    });
 
     if (isLifecycle) {
-        // One atomic write: close any in-flight prior step and start this one.
+        // One atomic write: close any in-flight prior step and start this one, off the freshly-read `c`.
         await canonicalUpdateSpecContext(
             specDir,
             (c) => {
-                let next = { ...c, specName };
+                let next = { ...c, specName: c.specName || deriveSpecName(specDir) };
                 const prevStep = c.currentStep;
                 if (prevStep === stepName && hasStepStart(c.history ?? [], stepName as StepName)) {
                     return next;
@@ -67,13 +64,7 @@ export async function updateStepProgress(
                 next = canonicalSetStepStarted(next, stepName as StepName, 'extension');
                 return next;
             },
-            normalizeSpecContext({
-                specName,
-                branch: '',
-                currentStep: 'specify',
-                status: 'draft',
-                history: [],
-            }),
+            fallback,
         );
         return;
     }
@@ -84,15 +75,9 @@ export async function updateStepProgress(
         (c) => ({
             ...c,
             currentStep: stepName as StepName,
-            status: (ctx?.status ?? c.status ?? SpecStatuses.ACTIVE) as Status,
-            specName,
+            status: (c.status ?? SpecStatuses.ACTIVE) as Status,
+            specName: c.specName || deriveSpecName(specDir),
         }),
-        normalizeSpecContext({
-            specName,
-            branch: '',
-            currentStep: 'specify',
-            status: 'draft',
-            history: [],
-        }),
+        fallback,
     );
 }

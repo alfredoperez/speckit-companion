@@ -131,7 +131,7 @@ describe('normalizeSpecContext — task_summaries coercion', () => {
                 },
             },
         });
-        expect((ctx as Record<string, unknown>).customTopLevel).toBe('preserved');
+        expect((ctx as unknown as Record<string, unknown>).customTopLevel).toBe('preserved');
         const summaries = ctx.task_summaries as Record<string, Record<string, unknown>>;
         expect(summaries.T001.customPerEntry).toBe('preserved');
         expect(summaries.T001.status).toBe('DONE');

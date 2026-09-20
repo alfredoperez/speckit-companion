@@ -43,7 +43,7 @@ describe('deriveViewerState — history', () => {
 
     it('defaults to [] when history is missing on the context', () => {
         const ctx = makeContext();
-        delete (ctx as Record<string, unknown>).history;
+        delete (ctx as unknown as Record<string, unknown>).history;
         const state = deriveViewerState(ctx as SpecContext);
         expect(state.history).toEqual([]);
     });

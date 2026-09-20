@@ -1,8 +1,8 @@
 import { deriveStepHistory, deriveDocumentState, deriveTimingSummary } from '../stepHistoryDerivation';
 import { findRunningStep } from '../../spec-viewer/stateDerivation';
-import type { Transition } from '../../../core/types/specContext';
+import type { HistoryEntry } from '../../../core/types/specContext';
 
-const tx = (overrides: Partial<Transition>): Transition => ({
+const tx = (overrides: Partial<HistoryEntry>): HistoryEntry => ({
     step: 'specify',
     substep: null,
     kind: 'start',
@@ -363,7 +363,7 @@ describe('deriveStepHistory', () => {
             // currentStep still 'plan' (the AI self-closed before the user
             // advanced), status flipped to 'planned'. Mirrors the
             // specs/_01_demo-planned fixture inline (no .specify dependency).
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-05-20T20:05:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-05-20T20:05:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-05-20T20:10:00Z' }),
@@ -374,7 +374,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('keeps a genuinely-running step in flight (started, no completion)', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-05-20T20:05:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-05-20T20:05:00Z' }),
                 // Substep finishes recorded, but no step-level complete yet.
@@ -388,7 +388,7 @@ describe('deriveStepHistory', () => {
 
     describe('duration honesty: durationTrusted only from extension-stamped boundaries', () => {
         it('trusts a span whose start and close are both extension-stamped', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:05:00Z' }),
             ];
@@ -397,7 +397,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('does not trust a span closed by an ai-journaled finish', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
             ];
@@ -407,7 +407,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('does not trust a span whose start was ai-journaled (fast-path fold)', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'ai', substep: 'fast-path', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', substep: 'fast-path', at: '2026-07-01T10:00:00.094Z' }),
             ];
@@ -416,7 +416,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('trusts an extension-closed boundary via the next step\'s extension start', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:06:00Z' }),
             ];
@@ -426,7 +426,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('does not call an in-flight start a measured duration', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'implement', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
             ];
             const sh = deriveStepHistory(history, 'implement', 'implementing');
@@ -456,7 +456,7 @@ describe('deriveStepHistory', () => {
     // an ai finish must still not close an extension-started span (a premature
     // finish) and an advance-only phase must claim no duration.
     describe('duration honesty: CLI-only ai-stamped spans are trusted', () => {
-        const cliRun = (): Transition[] => [
+        const cliRun = (): HistoryEntry[] => [
             tx({ step: 'specify', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00.000Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:00.000Z' }),
             tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:03:00.000Z' }),
@@ -479,7 +479,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('trusts an ai start closed by the next step\'s ai start', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:06:00Z' }),
             ];
@@ -488,7 +488,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('still does NOT trust an extension start closed by a premature ai finish', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
             ];
@@ -497,7 +497,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('claims no duration for an advance-only phase (ai complete, no start)', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'complete', by: 'ai', at: '2026-07-01T10:05:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:06:00Z' }),
             ];
@@ -506,7 +506,7 @@ describe('deriveStepHistory', () => {
         });
 
         it('keeps a repeated ai start untrusted (anomaly stays visible)', () => {
-            const history: Transition[] = [
+            const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:00:00Z' }),
                 tx({ step: 'plan', kind: 'start', by: 'ai', at: '2026-07-01T10:01:00Z' }),
                 tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:03:00Z' }),
@@ -521,7 +521,7 @@ describe('deriveStepHistory', () => {
         // extension-stamped, step-level start+complete pairs. The four fold
         // writes are separate `python3` processes tens of ms apart, so the
         // spans are honestly near-zero but strictly increasing.
-        const foldedRun = (): Transition[] => [
+        const foldedRun = (): HistoryEntry[] => [
             tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00.100Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00.100Z' }),
             tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:03:00.200Z' }),
@@ -629,7 +629,7 @@ describe('deriveTimingSummary', () => {
     });
 
     it('models feature 484 as Implement-only timing (~6m 30s), never a run total', () => {
-        const history: Transition[] = [
+        const history: HistoryEntry[] = [
             tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T04:54:47.394Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T04:56:53.041Z' }),
             tx({ step: 'plan', substep: 'research', kind: 'complete', by: 'ai', at: '2026-07-21T04:58:08.019Z' }),
@@ -653,7 +653,7 @@ describe('deriveTimingSummary', () => {
     });
 
     it('trusts all four phases for the fixed capture order (body starts + hook completes)', () => {
-        const history: Transition[] = [
+        const history: HistoryEntry[] = [
             tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T10:00:00.100Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T10:04:00.200Z' }),
             tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-21T10:04:30.300Z' }),
@@ -680,7 +680,7 @@ describe('deriveTimingSummary', () => {
     });
 
     it('models feature 406 repeated/reversed boundaries without four trusted phases', () => {
-        const history: Transition[] = [
+        const history: HistoryEntry[] = [
             tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-21T00:25:21.186Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'extension', at: '2026-07-21T00:28:53.117Z' }),
             tx({ step: 'specify', kind: 'complete', by: 'user', at: '2026-07-21T00:40:36.886Z' }),
