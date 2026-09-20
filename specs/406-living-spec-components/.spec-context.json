@@ -602,7 +602,7 @@
   "context": [
     "living spec: viewer-ui",
     "living spec: spec-viewer",
-    "area: webview/src/spec-viewer/markdown (string→innerHTML renderer, preprocessors, scenarios)",
+    "area: webview/src/spec-viewer/markdown (string\u2192innerHTML renderer, preprocessors, scenarios)",
     "area: src/features/spec-viewer (livingDocs isLivingDraft, buildLivingHeaderMeta #457)",
     "constraint: no document content interpolated into HTML attributes via string-built markup",
     "constraint: preserve source-line data-line identity so line-comments keep working",
@@ -610,12 +610,11 @@
   ],
   "intent": "Render a living spec's repeating structures (draft notice, purpose, requirement cards, scenarios, uncovered evidence) as components inside the existing viewer so readers can scan a draft before reading it, while ordinary markdown renders unchanged",
   "expectations": [
-    "No new reader UI or product surface — works inside the viewer we already ship",
+    "No new reader UI or product surface \u2014 works inside the viewer we already ship",
     "No change to how living specs are authored",
     "Feature (non-living) specs render byte-for-byte unchanged",
-    "Not an editing change — authored wording and document order are preserved exactly"
+    "Not an editing change \u2014 authored wording and document order are preserved exactly"
   ],
-  "telemetryInstanceId": "c6862489-d00b-42b4-a04d-56e7849a9594",
   "approach": "Render living-spec repeating structures as preprocessor components inside the existing webview string-render pipeline, gated to living mode by a setLivingMode flag so feature specs are byte-identical. Each component emits recognized HTML wrapped in a per-region fallback that hands a failing region back to the base renderer, preserving data-line comment identity throughout.",
   "decisions": [
     {
@@ -850,7 +849,7 @@
     },
     "T026": {
       "status": "DONE",
-      "did": "Implemented uncovered preprocessor: sentinel/empty→living-uncovered-none, else count+scope over reason-grouped <details> closed by default, defensive fallback, in safe()",
+      "did": "Implemented uncovered preprocessor: sentinel/empty\u2192living-uncovered-none, else count+scope over reason-grouped <details> closed by default, defensive fallback, in safe()",
       "files": [
         "webview/src/spec-viewer/markdown/livingComponents.ts"
       ]
@@ -871,7 +870,7 @@
     },
     "T029": {
       "status": "DONE",
-      "did": "Audited emitted nodes: only data-req carries authored text and uses quote-escaping escapeHtml; all other attrs are internal counters — attribute-safe",
+      "did": "Audited emitted nodes: only data-req carries authored text and uses quote-escaping escapeHtml; all other attrs are internal counters \u2014 attribute-safe",
       "files": [
         "webview/src/spec-viewer/markdown/livingComponents.ts"
       ]
@@ -920,5 +919,5 @@
       ]
     }
   ],
-  "last_action": "all 32 tasks done — 1689/1689 jest pass, webview build clean"
+  "last_action": "all 32 tasks done \u2014 1689/1689 jest pass, webview build clean"
 }

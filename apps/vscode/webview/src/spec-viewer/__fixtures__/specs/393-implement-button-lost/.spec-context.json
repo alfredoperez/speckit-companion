@@ -110,7 +110,7 @@
       "at": "2026-07-10T10:07:05.111Z"
     }
   ],
-  "last_action": "all 6 tasks done — 1211/1211 tests pass, tsc clean",
+  "last_action": "all 6 tasks done \u2014 1211/1211 tests pass, tsc clean",
   "coverage": {
     "FR-001": {
       "title": "Forcing status back to a settled earlier stage restores that stage's forward-motion button",
@@ -161,12 +161,12 @@
     "area: src/features/spec-viewer/footerActions.ts (shouldShowApprove later-step check)",
     "area: src/features/specs/stepHistoryDerivation.ts (deriveStepHistory back-fill)",
     "area: src/features/specs/stepLifecycle.ts (forceStatus gear recovery, #347)",
-    "constraint: history[] is append-only — fix must live in derivation, not data rewrites",
-    "evidence: bug reproduced via throwaway jest test on main — footer showed only [regenerate], implement badge falsely completed"
+    "constraint: history[] is append-only \u2014 fix must live in derivation, not data rewrites",
+    "evidence: bug reproduced via throwaway jest test on main \u2014 footer showed only [regenerate], implement badge falsely completed"
   ],
   "intent": "Make the forward-motion (Implement) button recover after an interrupted run, so the gear force-status escape hatch actually works and nobody has to delete .spec-context.json",
   "expectations": [
-    "No new recovery UI — the existing gear force-status stays the manual recovery surface",
+    "No new recovery UI \u2014 the existing gear force-status stays the manual recovery surface",
     "No migration or rewriting of stored .spec-context.json data",
     "No change to the documented forward-flow button matrix for genuinely advanced specs"
   ],
@@ -188,7 +188,7 @@
     },
     "T003": {
       "status": "DONE",
-      "did": "shouldShowApprove now derives the workflow frontier from history[] order — a rolled-back dangling start no longer strands the forward button",
+      "did": "shouldShowApprove now derives the workflow frontier from history[] order \u2014 a rolled-back dangling start no longer strands the forward button",
       "files": [
         "src/features/spec-viewer/footerActions.ts"
       ]
@@ -237,12 +237,12 @@
     {
       "decision": "Judge the workflow frontier by history[] array order (newest step-level entry wins)",
       "why": "Array order is trustworthy even when AI-written timestamps are not; forceStatus already appends the realigning boundary",
-      "rejected": "Comparing timestamps across entries — unreliable for hand-typed AI times"
+      "rejected": "Comparing timestamps across entries \u2014 unreliable for hand-typed AI times"
     },
     {
       "decision": "Drop a rolled-back never-completed attempt from derived stepHistory entirely (reads not-started)",
       "why": "Leaving it in-flight would fake a running pulse; back-filling an end fakes completion; the attempt stays in raw history[] for audit",
-      "rejected": "Adding an interrupted flag to StepHistoryEntry — would ripple through every renderer for the same outcome"
+      "rejected": "Adding an interrupted flag to StepHistoryEntry \u2014 would ripple through every renderer for the same outcome"
     }
   ],
   "concerns": [
@@ -255,6 +255,5 @@
     "implement": {
       "summary": "Rollback-aware footer + derivation: forced status after an interrupted run restores the Implement button; interrupted attempts stop reading as completed"
     }
-  },
-  "telemetryInstanceId": "c137fd22-2a53-4710-9bef-5fa0728e61a4"
+  }
 }

@@ -361,7 +361,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "15763ba0-8bbc-4631-a0bf-6f65c6459b0b",
   "selectedAt": "2026-09-17T20:27:51.540Z",
   "livingSpecs": {
     "loaded": [
@@ -933,7 +932,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 41.7,
-      "result": "Tests:       3019 passed, 3019 total · Snapshots:   0 total · Time:        40.95 s, estimated 41 s"
+      "result": "Tests:       3019 passed, 3019 total \u00b7 Snapshots:   0 total \u00b7 Time:        40.95 s, estimated 41 s"
     },
     {
       "what": "Extension type check",

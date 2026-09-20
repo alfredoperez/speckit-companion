@@ -110,7 +110,7 @@
       "at": "2026-07-21T18:47:35.929Z"
     }
   ],
-  "last_action": "all 5 tasks done — 1732/1732 tests pass, builds clean",
+  "last_action": "all 5 tasks done \u2014 1732/1732 tests pass, builds clean",
   "coverage": {
     "FR-001": {
       "title": "Rail renders entries only for document-producing steps; action-only steps never appear",
@@ -120,7 +120,7 @@
       ]
     },
     "FR-002": {
-      "title": "Footer behavior unchanged (Approve → Implement, Mark Completed / Archive)"
+      "title": "Footer behavior unchanged (Approve \u2192 Implement, Mark Completed / Archive)"
     },
     "FR-003": {
       "title": "Task completion percent stays visible on the last document entry during implement",
@@ -135,7 +135,7 @@
       ]
     },
     "FR-005": {
-      "title": "Workflow definition and lifecycle unaffected — rendering-only removal"
+      "title": "Workflow definition and lifecycle unaffected \u2014 rendering-only removal"
     }
   },
   "size": "simple",
@@ -148,15 +148,14 @@
   "context": [
     "area: webview/src/spec-viewer/components/NavigationBar.tsx (pipeline rail rendering)",
     "area: StepTab.tsx index-based lock/percent props",
-    "constraint: render-only filter — coreDocs keeps carrying action steps for footer/state logic",
+    "constraint: render-only filter \u2014 coreDocs keeps carrying action steps for footer/state logic",
     "constraint: stories updated in same change (NavigationBar.stories.tsx is the visual baseline)"
   ],
-  "intent": "The viewer's side nav lists only openable documents — Implement and Mark Complete stop rendering as dead rail entries",
+  "intent": "The viewer's side nav lists only openable documents \u2014 Implement and Mark Complete stop rendering as dead rail entries",
   "expectations": [
-    "Footer behavior stays unchanged (Approve → Implement, Mark Completed / Archive)",
-    "The workflow definition keeps the steps — only their side-nav rendering is removed"
+    "Footer behavior stays unchanged (Approve \u2192 Implement, Mark Completed / Archive)",
+    "The workflow definition keeps the steps \u2014 only their side-nav rendering is removed"
   ],
-  "telemetryInstanceId": "2c37567a-3324-47d3-a35b-ebbd6d97cae8",
   "currentTask": "T005",
   "task_summaries": {
     "T001": {

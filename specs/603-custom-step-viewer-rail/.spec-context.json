@@ -344,7 +344,6 @@
       "at": "2026-09-05T14:49:18.553Z"
     }
   ],
-  "telemetryInstanceId": "a7eae63b-96f9-44ef-abe8-fb36ae1b506a",
   "selectedAt": "2026-09-05T14:06:23.549Z",
   "livingSpecs": {
     "loaded": [
@@ -366,7 +365,7 @@
       "workflows"
     ]
   },
-  "last_action": "all 23 tasks done — 163 suites / 2652 tests pass, tsc clean",
+  "last_action": "all 23 tasks done \u2014 163 suites / 2652 tests pass, tsc clean",
   "coverage": {
     "FR-001": {
       "title": "The viewer and the sidebar MUST draw the Companion pipeline as the project actually runs it, including any step the project added.",
@@ -493,7 +492,7 @@
     "living spec: workflows (capabilities/workflows/spec.md)",
     "living spec: spec-viewer (src/features/spec-viewer/spec-viewer.spec.md)",
     "living spec: specs",
-    "area: src/features/workflows/workflowManager.ts — COMPANION_WORKFLOW is a fixed 5-step list",
+    "area: src/features/workflows/workflowManager.ts \u2014 COMPANION_WORKFLOW is a fixed 5-step list",
     "area: src/features/spec-viewer/specViewerProvider.ts + specExplorerProvider.ts resolve steps via getWorkflow/resolveWorkflow",
     "area: speckit-extension/scripts/pipeline-graph.py already exposes name/after/inSequence/own/artifacts per step",
     "constraint: built-in workflow names are reserved; a custom workflow may not shadow them",
@@ -523,11 +522,11 @@
     {
       "decision": "No cache on the directory read",
       "why": "The common case is one readdir that ENOENTs; a cache would need a watcher and a disposal lifecycle to save unmeasured work.",
-      "rejected": "Cache per workspace root invalidated by the existing .specify watcher — held in reserve if the sidebar gets slow"
+      "rejected": "Cache per workspace root invalidated by the existing .specify watcher \u2014 held in reserve if the sidebar gets slow"
     },
     {
       "decision": "Detect a built-in pipeline by its command family (speckit.companion.*)",
-      "why": "A spliced Companion pipeline no longer matches the literal signature, so customWorkflowProgress would switch it to file-presence progression — exactly what FR-009 rules out. The command family is what actually distinguishes a pipeline that captures.",
+      "why": "A spliced Companion pipeline no longer matches the literal signature, so customWorkflowProgress would switch it to file-presence progression \u2014 exactly what FR-009 rules out. The command family is what actually distinguishes a pipeline that captures.",
       "rejected": "Compare the sequence with project steps removed, or add an explicit isBuiltin flag to WorkflowConfig"
     },
     {
@@ -559,7 +558,7 @@
   "step_summaries": {
     "plan": {
       "summary": "Plan, research, data model and contract written: read the project step directory in TS, splice into Companion at one shared resolver, widen three guards that key on a fixed step list.",
-      "key_finding": "Splicing the Companion pipeline trips two existing guards nobody would look for — customWorkflowProgress would reclassify it as user-defined and start inferring completion from files on disk (violating FR-009), and the two hardcoded lifecycle-step sets would refuse to write a start for the added step."
+      "key_finding": "Splicing the Companion pipeline trips two existing guards nobody would look for \u2014 customWorkflowProgress would reclassify it as user-defined and start inferring completion from files on disk (violating FR-009), and the two hardcoded lifecycle-step sets would refuse to write a start for the added step."
     },
     "tasks": {
       "summary": "23 tasks across 6 phases: Foundational (reader + one shared resolver, 3 waves), four story phases (rail, document tab, forward walk, timing), Polish."
@@ -659,7 +658,7 @@
     },
     "T013": {
       "status": "DONE",
-      "did": "No change needed: the document lookup already runs scanDocuments over the resolved pipeline and keys off each step's file, so an added step's document opens once the resolver supplies it — verified by T012",
+      "did": "No change needed: the document lookup already runs scanDocuments over the resolved pipeline and keys off each step's file, so an added step's document opens once the resolver supplies it \u2014 verified by T012",
       "files": [
         "src/features/spec-viewer/specViewerProvider.ts"
       ]
@@ -702,7 +701,7 @@
     },
     "T019": {
       "status": "DONE",
-      "did": "No change needed: the phase denominator already derives from the workflowSteps passed into deriveViewerState, so it counts the added step the moment the resolver supplies it — verified by T018",
+      "did": "No change needed: the phase denominator already derives from the workflowSteps passed into deriveViewerState, so it counts the added step the moment the resolver supplies it \u2014 verified by T018",
       "files": [
         "src/features/spec-viewer/stateDerivation.ts"
       ]

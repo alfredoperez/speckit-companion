@@ -180,7 +180,7 @@
       "viewer-ui"
     ]
   },
-  "last_action": "all 10 tasks done — compile clean, 1801 tests pass, real 528 data renders folded",
+  "last_action": "all 10 tasks done \u2014 compile clean, 1801 tests pass, real 528 data renders folded",
   "coverage": {
     "FR-001": {
       "title": "A folded phase never renders a near-zero duration; it renders a folded note",
@@ -268,14 +268,14 @@
     "living spec: viewer-ui",
     "living spec: specs",
     "area: webview/src/spec-viewer (Run overview timing strip)",
-    "constraint: one fact one derivation — folded flag derived only in stepHistoryDerivation",
+    "constraint: one fact one derivation \u2014 folded flag derived only in stepHistoryDerivation",
     "constraint: run-timing coverage and elapsed totals unchanged"
   ],
   "intent": "Present fast-path folded plan/tasks phases as folded into Specify instead of a misleading <1s duration",
   "expectations": [
     "No change to timing coverage counts or total elapsed",
     "No change to PhasesCard (folded steps already render no events there)",
-    "No new setting or toggle — folded detection is built-in"
+    "No new setting or toggle \u2014 folded detection is built-in"
   ],
   "approach": "Derive a folded flag once in deriveStepHistory from the deterministic fast-path signature (extension-stamped pair within 1s, adjacent to the previous step's close); OverviewTiming renders 'folded into Specify' with a distinct visual instead of a duration. No schema, coverage, or elapsed-total changes.",
   "decisions": [
@@ -394,6 +394,5 @@
       "command": "node -e deriveStepHistory(...528 history)",
       "result": "plan folded:true span 161ms, tasks folded:true, specify/implement folded:false"
     }
-  ],
-  "telemetryInstanceId": "e563a418-2d3c-45e7-9023-56dfd3a9f413"
+  ]
 }

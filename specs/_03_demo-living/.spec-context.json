@@ -1,6 +1,6 @@
 {
   "workflow": "speckit-companion",
-  "specName": "Demo — Living Specs",
+  "specName": "Demo \u2014 Living Specs",
   "branch": "demo/living",
   "selectedAt": "2026-07-01T14:00:00.000Z",
   "currentStep": "implement",
@@ -72,6 +72,5 @@
       "by": "extension",
       "at": "2026-07-01T14:40:00.000Z"
     }
-  ],
-  "telemetryInstanceId": "75bbe863-2cc0-4837-ae48-83ddd6321203"
+  ]
 }

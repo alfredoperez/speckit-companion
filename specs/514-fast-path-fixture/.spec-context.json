@@ -16,7 +16,7 @@
       "companion-commands"
     ]
   },
-  "intent": "A small change proves the fast path shows trusted timing — specify, plan, and tasks fold into one run and still measure real durations",
+  "intent": "A small change proves the fast path shows trusted timing \u2014 specify, plan, and tasks fold into one run and still measure real durations",
   "approach": "Fold plan and tasks into the specify run with extension-stamped step boundaries, then implement the tasks; the viewer counts all four phases and shows the elapsed block.",
   "context": [
     "living spec: companion-commands",
@@ -128,6 +128,5 @@
       ]
     }
   },
-  "last_action": "all 3 tasks done — fast path shows trusted timing",
-  "telemetryInstanceId": "bf6e8119-bfde-435e-b095-e748dd804b81"
+  "last_action": "all 3 tasks done \u2014 fast path shows trusted timing"
 }

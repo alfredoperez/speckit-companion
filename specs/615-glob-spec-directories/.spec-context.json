@@ -144,7 +144,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "46cb8a05-be24-42df-b86a-af313d091b13",
   "livingSpecs": {
     "loaded": [
       "core-spec-discovery"
@@ -271,7 +270,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 2.2,
-      "result": "Snapshots:   0 total · Time:        1.219 s · Ran all test suites matching /src\\/core\\/specDirectoryResolver.test.ts/i."
+      "result": "Snapshots:   0 total \u00b7 Time:        1.219 s \u00b7 Ran all test suites matching /src\\/core\\/specDirectoryResolver.test.ts/i."
     },
     {
       "what": "type-check",
@@ -279,7 +278,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 2.4,
-      "result": "> speckit-companion@0.33.0 compile · > tsc -p ./"
+      "result": "> speckit-companion@0.33.0 compile \u00b7 > tsc -p ./"
     }
   ],
   "decisions": [

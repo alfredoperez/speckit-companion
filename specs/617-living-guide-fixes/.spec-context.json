@@ -107,7 +107,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "79a5de05-8316-4eff-8251-4cf7fd44d3e2",
   "last_action": "review fixes applied; jest, extension pytest and website build pass",
   "coverage": {
     "FR-001": {
@@ -177,7 +176,7 @@
       "source": "derived",
       "exitCode": 1,
       "durationSeconds": 0.7,
-      "result": "09:12:09 [build] Building static entrypoints... · 09:12:09 [ERROR] [vite] ✗ Build failed in 16ms · [UNRESOLVED_ENTRY] Cannot resolve entry module astro/entrypoints/prerender.",
+      "result": "09:12:09 [build] Building static entrypoints... \u00b7 09:12:09 [ERROR] [vite] \u2717 Build failed in 16ms \u00b7 [UNRESOLVED_ENTRY] Cannot resolve entry module astro/entrypoints/prerender.",
       "warnings": [
         "exited 1"
       ]
@@ -188,7 +187,7 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 3.4,
-      "result": "........................................................................ [ 79%] · ......................................                                   [100%] · 182 passed, 1293 deselected in 2.96s"
+      "result": "........................................................................ [ 79%] \u00b7 ......................................                                   [100%] \u00b7 182 passed, 1293 deselected in 2.96s"
     }
   ],
   "decisions": [

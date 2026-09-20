@@ -237,4 +237,32 @@ describe('docs consistency', () => {
       expect(stray).toEqual([]);
     });
   });
+
+  describe('pinned fixtures stay pinned', () => {
+    // The installed extension writes a per-machine id into any run record it
+    // watches, including the committed fixtures. It reached main three times
+    // during one cleanup, each time through a blanket `git add`.
+    const fixtureRecords = (): string[] => {
+      const out: string[] = [];
+      const walk = (dir: string): void => {
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, e.name);
+          if (e.isDirectory()) walk(full);
+          else if (e.name === '.spec-context.json') out.push(full);
+        }
+      };
+      for (const root of ['specs', 'apps/vscode/webview/src/spec-viewer/__fixtures__']) {
+        const abs = path.join(REPO_ROOT, root);
+        if (fs.existsSync(abs)) walk(abs);
+      }
+      return out;
+    };
+
+    it('no committed run record carries a per-machine telemetry id', () => {
+      const carrying = fixtureRecords()
+        .filter(f => 'telemetryInstanceId' in JSON.parse(fs.readFileSync(f, 'utf8')))
+        .map(f => path.relative(REPO_ROOT, f));
+      expect(carrying).toEqual([]);
+    });
+  });
 });

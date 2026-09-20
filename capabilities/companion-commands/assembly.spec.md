@@ -9,7 +9,7 @@ Shipped command bodies are generated from single-sourced parts and nodes, and ga
 ## Requirements
 
 ### Command bodies are assembled from single-sourced parts and nodes, and the assembly is the contract
-<!-- touches: apps/speckit-extension/scripts/check-shape-parity.py -->
+<!-- touches: apps/speckit-extension/scripts/check_shape_parity.py -->
 
 A rule shared by more than one command SHALL live in one part file, and each assembled region of a committed body MUST match its source byte for byte. Editing a shipped body by hand forks the shared rule, so the parity gate treats it as a defect.
 
@@ -22,7 +22,7 @@ A rule shared by more than one command SHALL live in one part file, and each ass
 - **THEN** the parity gate fails naming the command and the region
 
 ### Assembly changes MUST be proved against a frozen baseline
-<!-- touches: apps/speckit-extension/scripts/check-shape-parity.py -->
+<!-- touches: apps/speckit-extension/scripts/check_shape_parity.py -->
 
 A change to how bodies are built MUST NOT change the text of any command not deliberately reworded: each SHALL equal its frozen capture after the assembly markers are normalized. Re-freezing is a separate, deliberate act, never done by the build.
 

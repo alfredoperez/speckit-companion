@@ -362,7 +362,7 @@
     },
     {
       "what": "Capture shape parity",
-      "result": "OK — 14 bodies match",
+      "result": "OK \u2014 14 bodies match",
       "command": "python3 speckit-extension/scripts/check-shape-parity.py"
     },
     {
@@ -371,6 +371,5 @@
       "command": "python3 -m unittest discover -s tests"
     }
   ],
-  "last_action": "all 12 tasks done — 1721 jest + 446 python green, shape parity OK",
-  "telemetryInstanceId": "54f2a4a4-8d45-4db0-9183-ae24202c4556"
+  "last_action": "all 12 tasks done \u2014 1721 jest + 446 python green, shape parity OK"
 }

@@ -201,7 +201,7 @@
         "T006"
       ],
       "tests": [
-        "src/core/__tests__/telemetry.test.ts::carries only the action + surface enum fields — no identifier or path"
+        "src/core/__tests__/telemetry.test.ts::carries only the action + surface enum fields \u2014 no identifier or path"
       ]
     },
     "FR-006": {
@@ -240,9 +240,9 @@
     "area: install banner (spec-editor + spec-viewer) + specKitExtensionInstallCommands",
     "constraint: booleans/enums only, no identifiers/paths; respect existing telemetry gate"
   ],
-  "intent": "Measure companion spec-kit install rate and install-banner prompt→install conversion via opt-in, privacy-scrubbed telemetry",
+  "intent": "Measure companion spec-kit install rate and install-banner prompt\u2192install conversion via opt-in, privacy-scrubbed telemetry",
   "expectations": [
-    "No new usage event for used-vs-installed — reuse existing spec/phase/workflow events",
+    "No new usage event for used-vs-installed \u2014 reuse existing spec/phase/workflow events",
     "No identifiers, paths, or free text in any new telemetry field"
   ],
   "approach": "Add companionInstalled boolean to extension.activated; new companion.installPrompt event with action(shown|clicked)+surface(createSpec|activity); emit helpers + session dedupe live in telemetry.ts; shown from render sites, clicked from banner message handlers only.",
@@ -277,7 +277,7 @@
       "summary": "9 tasks across setup(0)/foundational(1)/US1(1)/US2(2)/US3(1 verify)/polish(4); waves parallelize spec-editor+spec-viewer and docs+tests"
     },
     "implement": {
-      "summary": "Shipped install-rate (companionInstalled on extension.activated) + banner conversion (companion.installPrompt shown/clicked × surface) telemetry, privacy-scrubbed, with emit-proof tests"
+      "summary": "Shipped install-rate (companionInstalled on extension.activated) + banner conversion (companion.installPrompt shown/clicked \u00d7 surface) telemetry, privacy-scrubbed, with emit-proof tests"
     }
   },
   "currentTask": "T009",
@@ -361,6 +361,5 @@
       "warnings": []
     }
   ],
-  "last_action": "all 9 tasks done — compile clean, 1768 tests pass",
-  "telemetryInstanceId": "38943a95-904e-45e6-950e-2bcb77b7918f"
+  "last_action": "all 9 tasks done \u2014 compile clean, 1768 tests pass"
 }

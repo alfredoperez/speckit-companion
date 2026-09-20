@@ -228,14 +228,14 @@
     "skipped": [
       {
         "name": "spec-viewer",
-        "reason": "read for context only — the viewer's derive-from-recorded-run requirement already covered this; the defect and the fix both live in the specs capability, and no spec-viewer file changed"
+        "reason": "read for context only \u2014 the viewer's derive-from-recorded-run requirement already covered this; the defect and the fix both live in the specs capability, and no spec-viewer file changed"
       }
     ],
     "synced": [
       "specs"
     ]
   },
-  "last_action": "all 17 tasks done — tsc clean, 1892 jest + 554 python tests pass",
+  "last_action": "all 17 tasks done \u2014 tsc clean, 1892 jest + 554 python tests pass",
   "coverage": {
     "FR-001": {
       "title": "Never reconstruct progression from files for a built-in workflow, including SpecKit Companion with its terminal completion step",
@@ -328,14 +328,14 @@
     "living spec: specs",
     "area: src/features/specs/customWorkflowProgress.ts",
     "area: src/features/spec-viewer (footer + stepper derivation)",
-    "constraint: fix must be additive — no workflow may move from developer-authored to built-in",
-    "constraint: extension isolation — no .claude/** or .specify/** edits for product behavior"
+    "constraint: fix must be additive \u2014 no workflow may move from developer-authored to built-in",
+    "constraint: extension isolation \u2014 no .claude/** or .specify/** edits for product behavior"
   ],
   "intent": "Make the spec viewer footer offer the step the stepper says is pending, so a freshly specified Companion spec goes to Plan instead of skipping to Tasks.",
   "expectations": [
     "No plumbing of the workflow name through resolveWorkflowSteps into the two progression call sites",
     "No change to how developer-authored workflows are detected today (strictly additive exemption)",
-    "No version bump — the release flow owns that",
+    "No version bump \u2014 the release flow owns that",
     "No changes to the personal speckit-companion-shorts skill itself; only proof it stays out of both distributions"
   ],
   "approach": "Close both fail-open guards inside src/features/specs/customWorkflowProgress.ts: front-load isCustomWorkflow with an exact step-name-sequence match against DEFAULT_WORKFLOW and COMPANION_WORKFLOW so a shipped pipeline never enters the file-driven fallback, and prune every step's subDir from the relatedDocsPresent scan so a sub-folder document can never count as another step's related doc. Pin the fix with a composed regression test that stages spec.md plus checklists/requirements.md on disk and asserts the footer yields approve:Plan. Verification-only: audit both distributions for shorts, and prove capture works from a genuinely fresh specify init plus constitution plus extension install in a disposable sandbox.",
@@ -352,7 +352,7 @@
     },
     {
       "decision": "Assert the fix on the composition of synthesizeCustomProgress and getFooterActions, not on either function alone",
-      "why": "getFooterActions already yields approve:Plan on its own — the defect only appears after synthesizeCustomProgress rewrites the context, so only the composition actually reproduces it",
+      "why": "getFooterActions already yields approve:Plan on its own \u2014 the defect only appears after synthesizeCustomProgress rewrites the context, so only the composition actually reproduces it",
       "rejected": "A unit assertion on isCustomWorkflow alone (locks in mechanism, would have passed before the fix) and driving it through specViewerProvider (needs a webview/config mock harness the repo lacks)"
     },
     {
@@ -367,13 +367,13 @@
     },
     {
       "decision": "Match built-in workflows on step name AND command, not name alone",
-      "why": "Review caught that a user workflow mirroring the Companion step names would be exempted and stranded at specify with no forward button — confirmed by temporarily reverting to name-only matching and watching the new test fail",
+      "why": "Review caught that a user workflow mirroring the Companion step names would be exempted and stranded at specify with no forward button \u2014 confirmed by temporarily reverting to name-only matching and watching the new test fail",
       "rejected": "Name-only matching, and keying the exemption off reserved workflow ids (which would need the workflow name plumbed through both call sites)"
     }
   ],
   "step_summaries": {
     "plan": {
-      "summary": "Two additive guards in customWorkflowProgress.ts — built-in sequence exemption plus subDir pruning — pinned by one composed footer regression test; shorts audit and fresh-install validation are evidence-only",
+      "summary": "Two additive guards in customWorkflowProgress.ts \u2014 built-in sequence exemption plus subDir pruning \u2014 pinned by one composed footer regression test; shorts audit and fresh-install validation are evidence-only",
       "key_finding": "The bug needs BOTH defects to fire: the misclassification lets the fallback run at all, and the unclaimed checklists folder is what makes disk look ahead. Fixing either alone hides it; fixing only one leaves the trap armed for developer-authored workflows."
     },
     "tasks": {
@@ -429,7 +429,7 @@
     },
     "T007": {
       "status": "DONE",
-      "did": "Full suite green with zero deletions in the test file — every pre-existing developer-authored-pipeline test passes unmodified",
+      "did": "Full suite green with zero deletions in the test file \u2014 every pre-existing developer-authored-pipeline test passes unmodified",
       "files": [
         "src/features/specs/__tests__/customWorkflowProgress.test.ts"
       ]
@@ -450,7 +450,7 @@
     },
     "T010": {
       "status": "DONE",
-      "did": "Ran a real specify init 0.12.16.dev0 into a disposable gitignored sandbox — stock install with no extensions.yml and no companion extension",
+      "did": "Ran a real specify init 0.12.16.dev0 into a disposable gitignored sandbox \u2014 stock install with no extensions.yml and no companion extension",
       "files": [
         "examples/bench-sandboxes/582-fresh-install"
       ]
@@ -485,7 +485,7 @@
     },
     "T013": {
       "status": "DONE",
-      "did": "Added user-facing entries to both changelogs under Unreleased — the footer fix at the root, the status/resume dispatch fix in the spec-kit extension",
+      "did": "Added user-facing entries to both changelogs under Unreleased \u2014 the footer fix at the root, the status/resume dispatch fix in the spec-kit extension",
       "files": [
         "CHANGELOG.md",
         "speckit-extension/CHANGELOG.md"
@@ -534,7 +534,7 @@
     {
       "what": "The fix is additive to the test file",
       "command": "git diff --stat on the test file",
-      "result": "114 insertions, 0 deletions — no pre-existing test edited",
+      "result": "114 insertions, 0 deletions \u2014 no pre-existing test edited",
       "warnings": []
     },
     {
@@ -574,6 +574,5 @@
       "note": "Only the companion specify command pins workflow=companion. A run that joins Companion later (stock specify, then companion plan) stays recorded as speckit, so status and resume dispatch stock commands for the rest of the run. Reproduced in the fresh sandbox; filed as its own issue rather than widened into this PR because the fix touches three command bodies and turns on whether one companion command should retroactively pin the whole spec.",
       "step": "implement"
     }
-  ],
-  "telemetryInstanceId": "2b0aee1d-263a-4f9d-b08f-a9222e241e36"
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "workflow": "companion",
-  "specName": "Living specs — trust the fold",
+  "specName": "Living specs \u2014 trust the fold",
   "branch": "606-living-spec-validation",
   "currentStep": "implement",
   "status": "completed",
@@ -468,7 +468,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "e5096784-c79a-4f38-adfa-b2e5af72ae03",
   "livingSpecs": {
     "loaded": [
       "companion-commands",
@@ -493,7 +492,7 @@
         "A command that injects a step into a numbered body MUST NOT restart the numbering",
         "A step's branch points are declared as data beside its node order",
         "The command inventory records what each command's run must produce",
-        "Completion accounts for every loaded capability — a delta or an explicit skip, never silence",
+        "Completion accounts for every loaded capability \u2014 a delta or an explicit skip, never silence",
         "Step boundaries are extension-stamped in order on every dispatch path",
         "Task finishes are folded into the shared record one at a time, as they land",
         "One command syncs every affected living spec from the current changes, uncommitted included",
@@ -535,12 +534,12 @@
         "The fold routes each capability's requirements to its own spec",
         "The drift detector offers an opt-in working-tree mode",
         "Recording which living specs cover a change MUST be deterministic, not AI-judged",
-        "Completion accounts for every loaded capability — fold it, or record a reasoned skip",
+        "Completion accounts for every loaded capability \u2014 fold it, or record a reasoned skip",
         "An unmatched MODIFIED requirement is promoted to ADDED, not dropped",
         "Status resolution dispatches commands from the family the spec has been running",
         "Every handled call records itself, including the ones that fail",
         "A call count may shrink only when the record it produces stays identical",
-        "A capability relocation is transactional — a partial failure rolls back every applied move",
+        "A capability relocation is transactional \u2014 a partial failure rolls back every applied move",
         "A reader of a captured list MUST accept every form its writer stores",
         "A configuration the reader cannot fully read is rejected whole, never applied in part",
         "The health check MUST consult the unrecorded-calls marker before concluding a spec has no trace evidence",
@@ -675,7 +674,7 @@
     },
     {
       "decision": "Severity is two values, error and warning, and only error refuses a fold",
-      "why": "Severity answers exactly one question here — does this stop the write — and the split follows the damage: a delta naming a missing heading corrupts the record, a requirement with no scenario is untidy",
+      "why": "Severity answers exactly one question here \u2014 does this stop the write \u2014 and the split follows the damage: a delta naming a missing heading corrupts the record, a requirement with no scenario is untidy",
       "rejected": "A numeric scale, and per-project configurability that would make safety a project-by-project question"
     },
     {
@@ -707,7 +706,7 @@
   "step_summaries": {
     "plan": {
       "summary": "Plan for a two-runtime shape check, an in-process fold refusal on error findings, save-time diagnostics, and a registry-declared retire guard.",
-      "key_finding": "The fold must import the validator rather than shell out to it — a correctness gate that can be defeated by a missing interpreter is not a gate."
+      "key_finding": "The fold must import the validator rather than shell out to it \u2014 a correctness gate that can be defeated by a missing interpreter is not a gate."
     },
     "tasks": {
       "summary": "41 tasks in 7 phases and 10 waves: shared fixtures, the two check runtimes, then the CLI, the fold refusal, save-time diagnostics, the retire guard, and a polish phase that folds this work back into three capabilities."

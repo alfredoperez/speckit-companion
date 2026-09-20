@@ -203,7 +203,7 @@
       "companion-commands"
     ]
   },
-  "last_action": "all tasks done — item 2 shipped, item 1 measured (9492 tokens) + escalated; gates + 2374 tests green",
+  "last_action": "all tasks done \u2014 item 2 shipped, item 1 measured (9492 tokens) + escalated; gates + 2374 tests green",
   "approach": "Two decoupled changes: a read-only measurement script (item 1, escalated) and a single-owner-validation node edit (item 2)",
   "decisions": [
     {
@@ -323,6 +323,5 @@
       "command": "check_quality.py --commands-dir",
       "result": "12 pass / 0 fail"
     }
-  ],
-  "telemetryInstanceId": "240570fb-9087-4719-8bc1-8c58ba52e7b7"
+  ]
 }

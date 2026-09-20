@@ -155,7 +155,7 @@
       "specs"
     ]
   },
-  "last_action": "all tasks done — 1840 TS + 551 py tests pass",
+  "last_action": "all tasks done \u2014 1840 TS + 551 py tests pass",
   "coverage": {
     "FR-001": {
       "title": "Trust gate counts a span measured for a deterministic start+close (extension/hook OR ai), not by:extension alone",
@@ -334,13 +334,12 @@
     {
       "what": "shape parity",
       "command": "python3 speckit-extension/scripts/check-shape-parity.py",
-      "result": "OK — 14 bodies match"
+      "result": "OK \u2014 14 bodies match"
     },
     {
       "what": "quality eval trusted-boundaries",
       "command": "check_quality.py --feature-dir specs/562-trust-cli-timing",
       "result": "3/4 trusted (implement in-flight until mark-complete closes it)"
     }
-  ],
-  "telemetryInstanceId": "c2fe8da2-0f8a-4e0a-8e79-b4e053077450"
+  ]
 }

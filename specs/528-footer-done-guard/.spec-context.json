@@ -152,7 +152,6 @@
     "Changing which lifecycle statuses count as done"
   ],
   "approach": "Add an isSpecDone early-return guard to shouldShowApprove, add a skew row to the footer matrix fixtures, and update the viewer-states footer matrix doc",
-  "telemetryInstanceId": "ad553b6a-d35a-4ddb-a24d-4b1f3fd81203",
   "currentTask": "T004",
   "task_summaries": {
     "T001": {
@@ -188,7 +187,7 @@
     {
       "what": "footer matrix oracle incl. new fast-path skew row",
       "command": "npx jest footerMatrix",
-      "result": "17 pass / 0 fail (was 16 — +1 skew row)",
+      "result": "17 pass / 0 fail (was 16 \u2014 +1 skew row)",
       "warnings": []
     },
     {

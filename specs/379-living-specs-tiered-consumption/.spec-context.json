@@ -1,6 +1,6 @@
 {
   "workflow": "speckit-companion",
-  "specName": "Living Specs — Tiered consumption: arch + coverage (LS·8)",
+  "specName": "Living Specs \u2014 Tiered consumption: arch + coverage (LS\u00b78)",
   "branch": "379-living-specs-tiered-consumption",
   "selectedAt": "2026-06-25T00:00:00.000Z",
   "currentStep": "implement",
@@ -78,6 +78,5 @@
       "by": "ai",
       "at": "2026-06-25T00:30:00.000Z"
     }
-  ],
-  "telemetryInstanceId": "ba70059f-6b2b-40f3-a6d0-6dda498b4c3b"
+  ]
 }

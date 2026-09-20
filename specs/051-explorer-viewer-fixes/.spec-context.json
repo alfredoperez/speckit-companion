@@ -12,13 +12,13 @@
   "auto": true,
   "status": "completed",
   "approach": "Split getOrSelectWorkflow() into read-only resolveWorkflow() and keep existing for explicit actions; fix 7 webview UI issues across CSS and TypeScript",
-  "last_action": "T011 complete — all 11 tasks done, 143 tests passing",
+  "last_action": "T011 complete \u2014 all 11 tasks done, 143 tests passing",
   "step_summaries": {
     "specify": {
       "complexity": "normal",
       "requirements": 12,
       "scenarios": 10,
-      "key_finding": "getOrSelectWorkflow() always calls saveFeatureWorkflow() on line 167 — the only caller that should persist is specCommands.ts"
+      "key_finding": "getOrSelectWorkflow() always calls saveFeatureWorkflow() on line 167 \u2014 the only caller that should persist is specCommands.ts"
     },
     "plan": {
       "approach_summary": "Split getOrSelectWorkflow() into read-only resolveWorkflow() and keep existing for explicit actions; fix 7 webview UI issues across CSS and TypeScript",
@@ -107,7 +107,7 @@
     },
     "T010": {
       "status": "DONE",
-      "did": "Verified badge is already correct — only set from extension-side computeBadgeText()",
+      "did": "Verified badge is already correct \u2014 only set from extension-side computeBadgeText()",
       "files": [],
       "concerns": []
     },
@@ -150,8 +150,7 @@
   "concerns": [],
   "decisions": [
     "Extracted resolveDefaultWorkflow() as shared private helper to prevent divergence between resolveWorkflow() and getOrSelectWorkflow()",
-    "T010: Badge already correctly reflects context state — no code change needed"
+    "T010: Badge already correctly reflects context state \u2014 no code change needed"
   ],
-  "history": [],
-  "telemetryInstanceId": "7b5004ba-670e-4f5b-b491-feec42342a34"
+  "history": []
 }
