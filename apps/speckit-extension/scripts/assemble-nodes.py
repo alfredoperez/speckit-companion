@@ -8,13 +8,13 @@ A command under nodes/<command>/ is composed of:
      with YAML frontmatter (id/kind/command/writes/reads) + a body; bodies are
      concatenated in order.
 Then the assembled text passes the existing part-fence step (shared with
-build-commands.py) so inner ``<!-- speckit-companion:part NAME -->`` fences fill,
+build.py) so inner ``<!-- speckit-companion:part NAME -->`` fences fill,
 and — when present — the orchestrator part is appended.
 
-This is a behavior-preserving refactor: the output must equal the frozen golden
-(tests/golden/commands/) byte-for-byte. Default mode writes each command body;
-`--check` re-assembles in memory and exits 1 + a diff on any drift from golden.
-Stdlib only.
+This is a behavior-preserving refactor: the output must equal the committed body
+at commands/speckit.companion.<c>.md byte-for-byte, marker lines aside. Default
+mode writes each command body; `--check` re-assembles in memory and exits 1 + a
+diff on any drift from the committed body. Stdlib only.
 """
 import difflib
 import importlib
@@ -30,7 +30,6 @@ from _command_parts import (
     debug_on,
     decomposed_commands,
     fill_parts,
-    golden_path,
     nodes_command_dir,
     parse_after,
     parse_optional,
@@ -38,6 +37,7 @@ from _command_parts import (
     parse_phases,
     parse_variants,
     part_path,
+    read,
     read_node,
     strip_node_markers,
 )
@@ -382,22 +382,23 @@ def main() -> int:
     drift = []
     for command in commands:
         assembled = assemble_command(command, debug=debug)
-        gpath = golden_path(f"commands/speckit.companion.{command}.md")
+        rel = f"commands/speckit.companion.{command}.md"
         if check:
-            if not os.path.isfile(gpath):
-                drift.append((command, f"missing golden for {command}"))
+            path = os.path.join(EXT, rel)
+            if not os.path.isfile(path):
+                drift.append((command, f"missing committed body for {command}"))
                 continue
-            with open(gpath, encoding="utf-8") as fh:
-                golden = fh.read()
-            # The goldens stay marker-free, so this comparison is what proves the
-            # boundaries are additive: strip the marker lines and the body must be
-            # byte-identical to the contract frozen before they existed.
-            if strip_node_markers(assembled) != golden:
+            committed = strip_node_markers(read(rel))
+            # The committed body carries its own markers from the last build, so
+            # both sides are stripped: this proves re-assembly reproduces the same
+            # content, not that the marker placement happens to match too.
+            reassembled = strip_node_markers(assembled)
+            if reassembled != committed:
                 diff = "".join(
                     difflib.unified_diff(
-                        golden.splitlines(keepends=True),
-                        strip_node_markers(assembled).splitlines(keepends=True),
-                        fromfile=f"{command} (golden)",
+                        committed.splitlines(keepends=True),
+                        reassembled.splitlines(keepends=True),
+                        fromfile=f"{command} (committed)",
                         tofile=f"{command} (assembled)",
                     )
                 )

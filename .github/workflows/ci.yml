@@ -50,8 +50,8 @@ jobs:
       - name: Check capture shape parity
         run: python3 apps/speckit-extension/scripts/check-shape-parity.py
 
-      - name: Check node-assembly parity (commands re-assemble byte-identical)
-        run: python3 apps/speckit-extension/scripts/assemble-nodes.py --check
+      - name: Check command bodies (part fills, preset goldens, node-assembly parity)
+        run: python3 apps/speckit-extension/scripts/build.py --check
 
       - name: Check release packaging (every script a shipped command calls is packaged)
         run: python3 apps/speckit-extension/scripts/package-manifest.py --check

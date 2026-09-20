@@ -22,18 +22,18 @@ parity = importlib.import_module("check-shape-parity")
 
 
 class NodeAssemblyParityTests(unittest.TestCase):
-    def test_every_decomposed_command_matches_golden(self) -> None:
+    def test_every_decomposed_command_matches_its_committed_body(self) -> None:
         commands = cp.decomposed_commands()
         self.assertTrue(commands, "expected at least one nodes/<command>/ dir")
         for command in commands:
             with self.subTest(command=command):
                 assembled = asm.assemble_command(command)
-                gpath = cp.golden_path(f"commands/speckit.companion.{command}.md")
-                golden = Path(gpath).read_text(encoding="utf-8")
-                # The goldens are kept marker-free, so this comparison doubles as
-                # the proof that node boundaries add nothing but their own lines.
-                self.assertEqual(cp.strip_node_markers(assembled), golden,
-                                 f"{command} assembly drifted from golden")
+                committed = cp.read(f"commands/speckit.companion.{command}.md")
+                # Both sides stripped of markers: the committed body carries its
+                # own from the last build, so this proves re-assembly reproduces
+                # the same content, not that the marker placement happens to match.
+                self.assertEqual(cp.strip_node_markers(assembled), cp.strip_node_markers(committed),
+                                 f"{command} assembly drifted from its committed body")
 
     def test_order_lists_only_existing_nodes(self) -> None:
         for command in cp.decomposed_commands():
@@ -65,12 +65,12 @@ class RecipeOverrideTests(unittest.TestCase):
         self.assertIn("Complexity Tracking", default_out)
         self.assertNotIn("Complexity Tracking", recipe_out)
 
-    def test_default_assembly_still_matches_golden(self) -> None:
-        golden = Path(cp.golden_path("commands/speckit.companion.plan.md")).read_text(encoding="utf-8")
+    def test_default_assembly_still_matches_the_committed_body(self) -> None:
+        committed = cp.strip_node_markers(cp.read("commands/speckit.companion.plan.md"))
         self.assertEqual(
             cp.strip_node_markers(asm.assemble_command("plan", order=asm.default_order("plan"))),
-            golden)
-        self.assertEqual(cp.strip_node_markers(asm.assemble_command("plan")), golden)
+            committed)
+        self.assertEqual(cp.strip_node_markers(asm.assemble_command("plan")), committed)
 
     def test_valid_recipe_passes_reads_validation(self) -> None:
         recipe = [n for n in asm.default_order("plan") if n != "constitution-check"]
@@ -95,7 +95,7 @@ class TimingFencePresenceTests(unittest.TestCase):
     """The stock carriers must keep the shared timing block as a fence, not a copy."""
 
     def _carriers(self) -> list:
-        return [r for r in cp.GOLDEN_BODIES if r.startswith(parity.STANDARD_CARRIER_PREFIX)]
+        return [r for r in cp.PART_CARRIERS if r.startswith(parity.STANDARD_CARRIER_PREFIX)]
 
     def test_every_stock_carrier_currently_carries_the_timing_fence(self) -> None:
         carriers = self._carriers()

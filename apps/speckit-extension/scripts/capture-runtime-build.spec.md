@@ -142,5 +142,5 @@ A step SHALL declare which default node each optional variant stands in for, suc
 
 ## Uncovered
 
-- `capture-golden.py`, `assemble-nodes.py`, `build-commands.py`, `check-shape-parity.py`, `_command_parts.py`: build-time tooling, covered by the companion-commands specs.
+- `build.py`, `assemble-nodes.py`, `check-shape-parity.py`, `_command_parts.py`: build-time tooling, covered by the companion-commands specs.
 _None._

@@ -21,10 +21,13 @@ PRESET_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "c
 # Namespaced /speckit.companion.* bodies the parts mechanism covers.
 NAMESPACED_CMDS = ["specify", "plan", "tasks", "implement", "classify", "mark-complete", "auto"]
 
-GOLDEN_BODIES = (
-    [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]
-    + [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
-)
+# Every part-fence carrier: the region-equality and timing-fence checks run over
+# all 14. The namespaced bodies are generated (assembled from nodes/) and their
+# ground truth is the committed body itself, not a frozen golden — only the
+# hand-kept presets, with no generator to re-derive them from, are compared
+# against a golden snapshot.
+GOLDEN_CARRIERS = [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]
+PART_CARRIERS = GOLDEN_CARRIERS + [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
 
 # Part fence: <!-- speckit-companion:part NAME -->\n<content>\n<!-- /speckit-companion:part NAME -->
 PART_FENCE = re.compile(
