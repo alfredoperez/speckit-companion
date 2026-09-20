@@ -3,12 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { createMessageHandlers, MessageHandlerDependencies, LivingUndoAction } from '../messageHandlers';
-import { livingTierDocuments } from '../livingDocs';
-
-// Mock specContextManager
-jest.mock('../../specs/specContextManager', () => ({
-    updateStepProgress: jest.fn().mockResolvedValue(undefined),
-}));
+import { livingTierDocuments } from '../../living-specs/livingDocs';
 
 // Mock stepLifecycle (canonical writer wrappers)
 jest.mock('../../specs/stepLifecycle', () => ({
@@ -45,7 +40,6 @@ jest.mock('../../specs/specContextWriter', () => ({
 }));
 
 import { setStatus, reactivate } from '../../specs/stepLifecycle';
-import { updateStepProgress } from '../../specs/specContextManager';
 import { NotificationUtils } from '../../../core/utils/notificationUtils';
 import { readSpecContext } from '../../specs/specContextReader';
 import { updateSpecContext } from '../../specs/specContextWriter';
@@ -480,7 +474,6 @@ describe('messageHandlers - stepperClick', () => {
 
         await handler({ type: 'stepperClick', phase: 'plan' } as any);
 
-        expect(updateStepProgress).not.toHaveBeenCalled();
         expect(deps.sendContentUpdateMessage).toHaveBeenCalledWith(SPEC_DIR, 'plan');
     });
 
@@ -503,7 +496,6 @@ describe('messageHandlers - stepperClick', () => {
 
         expect(deps.sendContentUpdateMessage).not.toHaveBeenCalled();
         expect(deps.updateContent).not.toHaveBeenCalled();
-        expect(updateStepProgress).not.toHaveBeenCalled();
     });
 });
 

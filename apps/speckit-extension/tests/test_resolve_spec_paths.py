@@ -147,7 +147,7 @@ class BothSuitesReadEveryFixture(unittest.TestCase):
 
     FIXTURES = Path(__file__).resolve().parent / "fixtures" / "requirement-slices"
     TS_SUITE = (Path(__file__).resolve().parents[3]
-                / "apps" / "vscode" / "src" / "features" / "specs" / "__tests__" / "requirementSlices.test.ts")
+                / "apps" / "vscode" / "src" / "features" / "living-specs" / "__tests__" / "requirementSlices.test.ts")
 
     def test_expected_json_names_every_fixture_on_disk(self):
         on_disk = {p.name for p in self.FIXTURES.glob("*.md")} - {"README.md"}

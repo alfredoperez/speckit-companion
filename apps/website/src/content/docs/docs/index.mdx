@@ -17,7 +17,7 @@ Your specs already live in files. Spec Kit writes a `spec.md`, a `plan.md` and a
 
 ## Terms used on this site
 
-Seven terms do most of the work on this site, and two of them are easy to swap by accident.
+Fourteen terms do most of the work on this site, and two of them are easy to swap by accident.
 
 | Term | What it means here |
 | --- | --- |
@@ -25,9 +25,16 @@ Seven terms do most of the work on this site, and two of them are easy to swap b
 | **SpecKit Companion** | This product: the VS Code extension that renders specs, comments, run state and steering files. |
 | **Companion Spec Kit extension** | A second, separately installed piece that adds the `/speckit.companion.*` commands and records what each run did. |
 | **Workflow** | The ordered set of steps a spec follows. "Pipeline" is the same thing, said conversationally. |
+| **Companion workflow** | The second built-in workflow: SpecKit Companion's own commands, plus a fifth, terminal step, `mark-complete`, that stock Spec Kit doesn't have. |
 | **Run record** | The `.spec-context.json` file written next to a feature spec. Everything the Overview shows comes out of it. |
 | **Overview** | The second view inside the spec viewer. It lays out what the run record says: intent, timing, decisions, checks, coverage. |
 | **Steering view** | The sidebar view that lists the standing instruction files your AI provider and Spec Kit already read. |
+| **Node** | One section inside a Companion command. What a hook attaches to. |
+| **Hook** | Work attached before or after a node, without forking the command it's attached to. |
+| `auto` | One command that runs a workflow's steps end to end without pausing between them. |
+| `mark-complete` | The Companion workflow's terminal step. It closes a spec as part of the run instead of leaving you to close it by hand. |
+| **Living specs** | A capability's spec, kept next to the code and updated by the runs that change that code, instead of a feature spec that's finished the day it ships. |
+| **Drift** | Source files that changed since a capability's living spec was last committed, without a run folding the change back into it. |
 
 ## What the VS Code extension gives you
 

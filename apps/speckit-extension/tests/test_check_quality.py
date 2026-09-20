@@ -17,9 +17,8 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
-SKILL_DIR = (Path(__file__).resolve().parents[3]
-             / ".claude" / "skills" / "eval-speckit-extension")
-sys.path.insert(0, str(SKILL_DIR))
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
 cq = importlib.import_module("check_quality")
 
 

@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { checkFeatureDeltas, checkLivingSpec, Finding } from './specShapeCheck';
-import { readLivingSpecs } from './livingSpecsModel';
+import { readLivingSpecs } from '../living-specs/livingSpecsModel';
 
 const SOURCE = 'SpecKit Companion';
 

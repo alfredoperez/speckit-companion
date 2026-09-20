@@ -22,8 +22,12 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
 // Imported with Vite's ?raw so the two files are inlined at build time and the
 // path is resolved relative to this source file, not to the build's cwd.
-import vscodeChangelog from '../../../../CHANGELOG.md?raw';
+import vscodeChangelogCurrent from '../../../../CHANGELOG.md?raw';
+// The archive holds 0.30.0 and older; this page is the whole history, so it reads both.
+import vscodeChangelogArchive from '../../../../docs/changelog-archive.md?raw';
 import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
+
+const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;
 
 import Analytics from '../components/Analytics.astro';
 import LogoMark from '../components/LogoMark.astro';
@@ -177,6 +181,20 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
     </div>
 
     <script is:inline>
+      // A permalink to a collapsed release must show it, on load and on later hash changes.
+      (function () {
+        function openHash() {
+          if (!location.hash) return;
+          var card = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
+          if (!card) return;
+          var box = card.querySelector('details');
+          if (box) box.open = true;
+          card.scrollIntoView();
+        }
+        window.addEventListener('hashchange', openHash);
+        openHash();
+      })();
+
       (function () {
         var body = document.body;
         var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
@@ -507,6 +525,32 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         gap: 10px;
         padding-bottom: 18px;
         border-bottom: 1px solid var(--rule);
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .cl-release-head::-webkit-details-marker {
+        display: none;
+      }
+
+      .cl-release-head-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .cl-chevron {
+        width: 8px;
+        height: 8px;
+        flex-shrink: 0;
+        border-right: 1.5px solid var(--text-dim);
+        border-bottom: 1.5px solid var(--text-dim);
+        transform: rotate(45deg);
+        transition: transform 0.15s ease;
+      }
+
+      details[open] > .cl-release-head .cl-chevron {
+        transform: rotate(-135deg);
       }
 
       .cl-release-title {

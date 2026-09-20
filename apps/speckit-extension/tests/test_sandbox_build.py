@@ -58,9 +58,9 @@ class BuildingAnUnconfiguredProjectChangesNothing(unittest.TestCase):
     def test_the_instructions_are_untouched_once_the_scaffolding_comes_off(self):
         for command, body in self.built.items():
             with self.subTest(command=command):
-                golden = Path(cp.golden_path(f"commands/speckit.companion.{command}.md"))
+                committed = cp.read(f"commands/speckit.companion.{command}.md")
                 self.assertEqual(cp.strip_node_markers(body),
-                                 golden.read_text(encoding="utf-8"))
+                                 cp.strip_node_markers(committed))
 
     def test_the_only_additions_are_comment_markers(self):
         for command, body in self.built.items():

@@ -77,10 +77,9 @@ BUILD_ONLY = frozenset({
     # shipped invokes it, and the gate is right that a packaged script no command
     # reaches is dead weight. It ships when the builder calls it (PRD R027).
     "instruction-budget.py",
-    "build-commands.py",
+    "build.py",
     "check-shape-parity.py",
     "assemble-nodes.py",
-    "capture-golden.py",
     "_command_parts.py",
     "package-manifest.py",
     "check-command-emissions.py",
@@ -109,6 +108,10 @@ BUILD_ONLY = frozenset({
     # Diagnoses a configuration the builder could not read and offers the ways
     # back. Runs from the panel, beside the writer it undoes.
     "config_repair.py",
+    # The eval gates: CI runs them, a release never ships them.
+    "check_quality.py",
+    "check_capture.py",
+    "check_living_spec.py",
 })
 
 INSTALLED_SCRIPT_REF = re.compile(

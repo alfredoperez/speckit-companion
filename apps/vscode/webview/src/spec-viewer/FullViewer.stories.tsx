@@ -34,23 +34,23 @@ import {
     type SpecContextData,
 } from './__stories__/viewerHarness';
 
-import spec392 from '../../../specs/392-living-specs-viewer/spec.md?raw';
-import plan392 from '../../../specs/392-living-specs-viewer/plan.md?raw';
-import tasks392 from '../../../specs/392-living-specs-viewer/tasks.md?raw';
-import research392 from '../../../specs/392-living-specs-viewer/research.md?raw';
-import dataModel392 from '../../../specs/392-living-specs-viewer/data-model.md?raw';
-import checklist392 from '../../../specs/392-living-specs-viewer/checklists/requirements.md?raw';
-import contract392 from '../../../specs/392-living-specs-viewer/contracts/ui-contract.md?raw';
-import ctx392Raw from '../../../specs/392-living-specs-viewer/.spec-context.json?raw';
-import spec172 from '../../../specs/172-composable-command-nodes/spec.md?raw';
-import plan172 from '../../../specs/172-composable-command-nodes/plan.md?raw';
-import tasks172 from '../../../specs/172-composable-command-nodes/tasks.md?raw';
-import research172 from '../../../specs/172-composable-command-nodes/research.md?raw';
-import dataModel172 from '../../../specs/172-composable-command-nodes/data-model.md?raw';
-import quickstart172 from '../../../specs/172-composable-command-nodes/quickstart.md?raw';
-import checklist172 from '../../../specs/172-composable-command-nodes/checklists/requirements.md?raw';
-import contract172 from '../../../specs/172-composable-command-nodes/contracts/assembly-and-parity.md?raw';
-import ctx172Raw from '../../../specs/172-composable-command-nodes/.spec-context.json?raw';
+import spec392 from '../../../../../specs/392-living-specs-viewer/spec.md?raw';
+import plan392 from '../../../../../specs/392-living-specs-viewer/plan.md?raw';
+import tasks392 from '../../../../../specs/392-living-specs-viewer/tasks.md?raw';
+import research392 from '../../../../../specs/392-living-specs-viewer/research.md?raw';
+import dataModel392 from '../../../../../specs/392-living-specs-viewer/data-model.md?raw';
+import checklist392 from '../../../../../specs/392-living-specs-viewer/checklists/requirements.md?raw';
+import contract392 from '../../../../../specs/392-living-specs-viewer/contracts/ui-contract.md?raw';
+import ctx392Raw from '../../../../../specs/392-living-specs-viewer/.spec-context.json?raw';
+import spec172 from '../../../../../specs/172-composable-command-nodes/spec.md?raw';
+import plan172 from '../../../../../specs/172-composable-command-nodes/plan.md?raw';
+import tasks172 from '../../../../../specs/172-composable-command-nodes/tasks.md?raw';
+import research172 from '../../../../../specs/172-composable-command-nodes/research.md?raw';
+import dataModel172 from '../../../../../specs/172-composable-command-nodes/data-model.md?raw';
+import quickstart172 from '../../../../../specs/172-composable-command-nodes/quickstart.md?raw';
+import checklist172 from '../../../../../specs/172-composable-command-nodes/checklists/requirements.md?raw';
+import contract172 from '../../../../../specs/172-composable-command-nodes/contracts/assembly-and-parity.md?raw';
+import ctx172Raw from '../../../../../specs/172-composable-command-nodes/.spec-context.json?raw';
 import spec394 from './__fixtures__/specs/394-adopt-codex-design/spec.md?raw';
 import plan394 from './__fixtures__/specs/394-adopt-codex-design/plan.md?raw';
 import tasks394 from './__fixtures__/specs/394-adopt-codex-design/tasks.md?raw';
@@ -59,12 +59,12 @@ import dataModel394 from './__fixtures__/specs/394-adopt-codex-design/data-model
 import checklist394 from './__fixtures__/specs/394-adopt-codex-design/checklists/requirements.md?raw';
 import contract394 from './__fixtures__/specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
 import ctx394Raw from './__fixtures__/specs/394-adopt-codex-design/.spec-context.json?raw';
-import spec406 from '../../../specs/406-living-spec-components/spec.md?raw';
-import plan406 from '../../../specs/406-living-spec-components/plan.md?raw';
-import tasks406 from '../../../specs/406-living-spec-components/tasks.md?raw';
-import ctx406Raw from '../../../specs/406-living-spec-components/.spec-context.json?raw';
-import viewerUiLiving from './viewer-ui.spec.md?raw';
-import specViewerLiving from '../../../src/features/spec-viewer/spec-viewer.spec.md?raw';
+import spec406 from '../../../../../specs/406-living-spec-components/spec.md?raw';
+import plan406 from '../../../../../specs/406-living-spec-components/plan.md?raw';
+import tasks406 from '../../../../../specs/406-living-spec-components/tasks.md?raw';
+import ctx406Raw from '../../../../../specs/406-living-spec-components/.spec-context.json?raw';
+import viewerUiLiving from './viewer-ui-overview.spec.md?raw';
+import specViewerLiving from '../../../src/features/spec-viewer/spec-viewer-panel.spec.md?raw';
 import spec393 from './__fixtures__/specs/393-implement-button-lost/spec.md?raw';
 import plan393 from './__fixtures__/specs/393-implement-button-lost/plan.md?raw';
 import tasks393 from './__fixtures__/specs/393-implement-button-lost/tasks.md?raw';
@@ -162,8 +162,8 @@ export const LivingComponents406: Story = {
             view="overview"
             vs={vsFromContext(ctx406, completedFooter)}
             livingDocs={{
-                'viewer-ui': { md: viewerUiLiving, label: 'viewer-ui' },
-                'spec-viewer': { md: specViewerLiving, label: 'spec-viewer' },
+                'viewer-ui-overview': { md: viewerUiLiving, label: 'viewer-ui-overview' },
+                'spec-viewer-panel': { md: specViewerLiving, label: 'spec-viewer-panel' },
             }}
         />
     ),
@@ -184,11 +184,11 @@ export const RequirementOutline672: Story = {
         <InteractiveViewer
             ctx={ctx406}
             docs={docs406}
-            initialDoc="living:viewer-ui"
+            initialDoc="living:viewer-ui-overview"
             vs={vsFromContext(ctx406, completedFooter)}
             livingDocs={{
-                'viewer-ui': { md: viewerUiLiving, label: 'viewer-ui' },
-                'spec-viewer': { md: specViewerLiving, label: 'spec-viewer' },
+                'viewer-ui-overview': { md: viewerUiLiving, label: 'viewer-ui-overview' },
+                'spec-viewer-panel': { md: specViewerLiving, label: 'spec-viewer-panel' },
                 // A short, marked spec beside the long unmarked ones, so the file
                 // count and a narrow column are both visible in one story.
                 marked: {

@@ -8,14 +8,14 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 
-import mascotPointing from '../../../../website/public/mascot/pointing-256.png';
-import mascotWaving from '../../../../website/public/mascot/waving-256.png';
-import mascotReading from '../../../../website/public/mascot/reading-256.png';
-import mascotThinking from '../../../../website/public/mascot/thinking-256.png';
-import mascotCelebrating from '../../../../website/public/mascot/celebrating-256.png';
-import geistRegular from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
-import geistMedium from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
-import geistSemiBold from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
+import mascotPointing from '../../../../../website/public/mascot/pointing-256.png';
+import mascotWaving from '../../../../../website/public/mascot/waving-256.png';
+import mascotReading from '../../../../../website/public/mascot/reading-256.png';
+import mascotThinking from '../../../../../website/public/mascot/thinking-256.png';
+import mascotCelebrating from '../../../../../website/public/mascot/celebrating-256.png';
+import geistRegular from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
+import geistMedium from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
+import geistSemiBold from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
 
 export const MASCOT_POSES = {
     pointing: mascotPointing,

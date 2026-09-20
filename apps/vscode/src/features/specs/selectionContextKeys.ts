@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { readSpecContextSync } from './specContextManager';
+import { readSpecContextSyncSafe } from './specContextReader';
 import { SpecStatuses } from '../../core/constants';
 import { isSpecLifecycleItem } from './specExplorerProvider';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
@@ -16,7 +16,7 @@ export interface SelectableSpecItem {
 function resolveStatus(item: SelectableSpecItem): string {
     const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!ws || !item.specPath) return SpecStatuses.ACTIVE;
-    const ctx = readSpecContextSync(path.join(ws, item.specPath));
+    const ctx = readSpecContextSyncSafe(path.join(ws, item.specPath));
     return ctx?.status || SpecStatuses.ACTIVE;
 }
 

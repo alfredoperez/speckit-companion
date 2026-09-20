@@ -113,7 +113,7 @@ class AssemblyEmitsIt(unittest.TestCase):
 
     def test_the_check_run_reports_the_manifest_without_writing_it(self):
         result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "assemble-nodes.py"), "--check"],
+            [sys.executable, str(SCRIPTS / "build.py"), "--check"],
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

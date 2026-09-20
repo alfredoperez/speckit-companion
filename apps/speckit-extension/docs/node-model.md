@@ -32,10 +32,10 @@ nodes/plan/
 
 1. Read `_frame.md` verbatim — the command frontmatter, the `## User Input` block, the step-start / stock-hook / smallest-thing part fences, and the `## Outline` lead-in. This is connective glue you'd never reorder, so it has its own home outside the node list, and a rule that must reach every node lives here rather than in one of them.
 2. Read each node named in `_order.yml`, strip its frontmatter, and concatenate the bodies in order.
-3. Run the **part-fence pass** (shared with `build-commands.py`) so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
+3. Run the **part-fence pass** (shared with the preset carriers) so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
 4. Append the **orchestrator** part, when present (run-time hook instructions; see below).
 
-The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `assemble-nodes.py --check` re-assembles in memory and fails on any drift from the frozen golden.
+The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `build.py --check` re-assembles in memory and fails on any drift from the committed body. The 7 companion-standard presets keep a frozen golden, because nothing can re-derive them; `build.py --bless` is the one sanctioned way to move it, and it belongs in its own commit.
 
 ## A node file
 
@@ -255,7 +255,7 @@ The resolution is one seam (`node_source` in `_command_parts.py`), so everything
 Three properties this deliberately keeps:
 
 - **The shipped sources are never written to.** An upgrade replaces `nodes/` wholesale and cannot touch a project's copy — and cannot silently revert it either.
-- **Parity never points at a project.** The overlay is off unless a build turns it on for one project root, so `assemble-nodes.py --check` compares the shipped goldens to the shipped nodes no matter what any project has replaced.
+- **Parity never points at a project.** The overlay is off unless a build turns it on for one project root, so `build.py --check` compares the shipped bodies to the shipped nodes no matter what any project has replaced.
 - **A replacement is still a node.** It keeps its id, its phase, its `reads:` and `writes:`, so hooks anchored to it still fire and the manifest still attributes its artifact to it.
 
 To go back, delete the file — there is no state anywhere else recording that a node was replaced.

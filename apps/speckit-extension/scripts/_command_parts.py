@@ -21,10 +21,9 @@ PRESET_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "c
 # Namespaced /speckit.companion.* bodies the parts mechanism covers.
 NAMESPACED_CMDS = ["specify", "plan", "tasks", "implement", "classify", "mark-complete", "auto"]
 
-GOLDEN_BODIES = (
-    [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]
-    + [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
-)
+# All 14 carriers get region + timing checks; only the 7 presets get a golden.
+GOLDEN_CARRIERS = [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]
+PART_CARRIERS = GOLDEN_CARRIERS + [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
 
 # Part fence: <!-- speckit-companion:part NAME -->\n<content>\n<!-- /speckit-companion:part NAME -->
 PART_FENCE = re.compile(

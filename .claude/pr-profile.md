@@ -81,4 +81,4 @@ Re-check these red-flag words against the **new** behavior: "no … behavior", "
 
 ## Verify (typical commands)
 
-`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check-shape-parity.py` (preset changes) · `python3 .claude/skills/eval-speckit-extension/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).
+`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check-shape-parity.py` (preset changes) · `python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).

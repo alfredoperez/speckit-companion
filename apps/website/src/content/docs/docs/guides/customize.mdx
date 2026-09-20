@@ -6,7 +6,7 @@ sidebar:
   order: 5
 ---
 
-By the end of this page you'll have a slash command of your own in the viewer's quick pick, and a `companion.yml` that attaches work to a Companion command, reorders its nodes, or swaps the whole pipeline, without forking anything.
+By the end of this page you'll have a slash command of your own in the viewer's quick pick, and a `companion.yml` that attaches work to a Companion command, reorders its nodes, or swaps the whole workflow, without forking anything.
 
 Two different customizations get confused with each other, so they're worth separating before either one makes sense.
 
@@ -88,10 +88,10 @@ Hooks are the most common entry, but the same file carries four more keys.
 | --- | --- |
 | `commands.<name>.nodes` | A recipe: replaces the command's node order with the list you give, so you can drop a node or add one of your own. Dropping a node that a kept node still reads from is refused at load time. |
 | `commands.<name>.phases` | Renames and regroups the command's phases, each with its own `nodes` list. It replaces the shipped grouping whole, and a phase name becomes a hook anchor. |
-| `workflow` | Names a file under `.specify/companion/workflows/` that replaces this whole configuration, so a project can keep several pipelines and switch between them. The reserved name `shipped` selects none. |
+| `workflow` | Names a file under `.specify/companion/workflows/` that replaces this whole configuration, so a project can keep several workflows and switch between them. The reserved name `shipped` selects none. |
 | `debug` | Read by the build-time renderers only. On an installed project it does nothing. |
 
-A node file at `.specify/companion/nodes/<command>/<node id>.md` replaces the shipped node of that id, and `_frame.md` in the same folder replaces the step's preamble. The Pipeline Builder, opened from the Specs sidebar's toolbar, draws the pipeline these settings resolve to and can write hooks and node edits back into this file for you.
+A node file at `.specify/companion/nodes/<command>/<node id>.md` replaces the shipped node of that id, and `_frame.md` in the same folder replaces the step's preamble. The Pipeline Builder, opened from the Specs sidebar's toolbar, draws the workflow these settings resolve to and can write hooks and node edits back into this file for you.
 
 ## What executing this actually means
 

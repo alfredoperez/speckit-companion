@@ -85,6 +85,24 @@ function isEnoent(err: unknown): boolean {
     return !!err && typeof err === 'object' && (err as NodeJS.ErrnoException).code === 'ENOENT';
 }
 
+/**
+ * Sync read that treats a malformed file as absent instead of throwing.
+ *
+ * `readSpecContextSync` throws `SpecContextParseError` on unparseable JSON so
+ * write paths can refuse to clobber real history — but a render path (the
+ * Specs tree, bulk-action eligibility checks) must survive one bad file
+ * without taking out every other spec alongside it. Use this wherever a
+ * parse failure should degrade to "no context" rather than propagate.
+ */
+export function readSpecContextSyncSafe(specDir: string): SpecContext | null {
+    try {
+        return readSpecContextSync(specDir);
+    } catch (err) {
+        if (err instanceof SpecContextParseError) return null;
+        throw err;
+    }
+}
+
 function parseAndNormalize(raw: string, filePath: string): SpecContext {
     let parsed: Record<string, unknown>;
     try {

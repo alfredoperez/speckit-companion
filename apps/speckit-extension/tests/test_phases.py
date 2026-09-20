@@ -65,16 +65,6 @@ class PhasesAppearInTheAssembledCommand(unittest.TestCase):
             for node in phase["nodes"]:
                 self.assertIn(f"speckit-companion:node {node}", fenced[phase["name"]])
 
-    def test_the_markers_are_additive(self):
-        # Same guarantee the node boundaries carry: the golden bodies predate
-        # phases, so stripping the markers has to reproduce them exactly.
-        for command in assemble.decomposed_commands():
-            with self.subTest(command=command):
-                marked = assemble.assemble_command(command)
-                golden = Path(cp.golden_path(f"commands/speckit.companion.{command}.md"))
-                self.assertEqual(cp.strip_node_markers(marked),
-                                 golden.read_text(encoding="utf-8"))
-
     def test_phases_are_balanced(self):
         for command in assemble.decomposed_commands():
             with self.subTest(command=command):

@@ -1,0 +1,846 @@
+jest.mock('fs', () => {
+    const actual = jest.requireActual('fs');
+    return { ...actual, statSync: jest.fn(actual.statSync) };
+});
+
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { readLivingSpecs, readCapabilityHealth, claimsForFile, readMainCopy, __test } from '../livingSpecsModel';
+import { countLivingFacts } from '../livingHeaderMeta';
+
+const realStatSync = jest.requireActual('fs').statSync;
+const statSyncMock = fs.statSync as unknown as jest.Mock;
+
+const { globMatches } = __test;
+
+/**
+ * Build a temp workspace from a flat map of repo-relative path -> file contents,
+ * plus an optional `.specify/companion.yml` body. Returns the root.
+ */
+function makeWorkspace(files: Record<string, string>, companionYml?: string): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'living-specs-'));
+    const write = (rel: string, body: string): void => {
+        const full = path.join(root, rel);
+        fs.mkdirSync(path.dirname(full), { recursive: true });
+        fs.writeFileSync(full, body);
+    };
+    for (const [rel, body] of Object.entries(files)) {
+        write(rel, body);
+    }
+    if (companionYml !== undefined) {
+        write('.specify/companion.yml', companionYml);
+    }
+    return root;
+}
+
+describe('readLivingSpecs', () => {
+    const created: string[] = [];
+    const ws = (files: Record<string, string>, yml?: string): string => {
+        const root = makeWorkspace(files, yml);
+        created.push(root);
+        return root;
+    };
+    afterAll(() => {
+        for (const root of created) {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('returns an inert empty listing when there is no companion.yml', () => {
+        const root = ws({ 'capabilities/x/spec.md': '# x' });
+        const listing = readLivingSpecs(root);
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false });
+    });
+
+    it('returns an inert empty listing when livingSpecs.enabled is false', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: false\n  capabilities:\n    - name: x\n'
+        );
+        const listing = readLivingSpecs(root);
+        expect(listing.enabled).toBe(false);
+        expect(listing.capabilities).toEqual([]);
+        expect(listing.orphans).toEqual([]);
+    });
+
+    it('does not throw on a malformed companion.yml — treats it as disabled', () => {
+        const root = ws({ 'capabilities/x/spec.md': '# x' }, ':::not: valid: yaml: [');
+        expect(() => readLivingSpecs(root)).not.toThrow();
+        expect(readLivingSpecs(root).enabled).toBe(false);
+    });
+
+    it('resolves a centralized capability to capabilities/<name>/<name>.spec.md', () => {
+        const root = ws(
+            { 'capabilities/checkout/checkout.spec.md': '# checkout' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.spec).toBe('capabilities/checkout/checkout.spec.md');
+        expect(cap.exists).toBe(true);
+    });
+
+    it('keeps a declared central path even when only the old file exists', () => {
+        const root = ws(
+            { 'capabilities/checkout/spec.md': '# checkout' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      spec: capabilities/checkout/checkout.spec.md\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.spec).toBe('capabilities/checkout/checkout.spec.md');
+        expect(cap.exists).toBe(false);
+    });
+
+    it('still finds a centralized spec written before the rename, at capabilities/<name>/spec.md', () => {
+        const root = ws(
+            { 'capabilities/checkout/spec.md': '# checkout' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n'
+        );
+        const listing = readLivingSpecs(root);
+        expect(listing.capabilities).toHaveLength(1);
+        const cap = listing.capabilities[0];
+        expect(cap.name).toBe('checkout');
+        expect(cap.spec).toBe('capabilities/checkout/spec.md');
+        expect(cap.location).toBe('centralized');
+        expect(cap.exists).toBe(true);
+    });
+
+    it('resolves a colocated capability with an explicit spec path', () => {
+        const root = ws(
+            { 'src/billing/billing.spec.md': '# billing' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: billing\n      spec: src/billing/billing.spec.md\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.spec).toBe('src/billing/billing.spec.md');
+        expect(cap.location).toBe('colocated');
+        expect(cap.exists).toBe(true);
+    });
+
+    it('marks a capability whose spec file is missing as not existing but still lists it', () => {
+        const root = ws(
+            {},
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: ghost\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.name).toBe('ghost');
+        expect(cap.exists).toBe(false);
+    });
+
+    it('reports tier siblings only when the files exist on disk', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/checkout/spec.rules.md': '# arch',
+                // no coverage sibling
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        const kinds = cap.tiers.map(t => t.kind);
+        expect(kinds).toContain('rules');
+        expect(kinds).not.toContain('coverage');
+        expect(cap.tiers.find(t => t.kind === 'rules')!.path).toBe('capabilities/checkout/spec.rules.md');
+    });
+
+    it('derives colocated tier siblings from a *.spec.md base', () => {
+        const root = ws(
+            {
+                'src/billing/billing.spec.md': '# billing',
+                'src/billing/billing.coverage.md': '# coverage',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: billing\n      spec: src/billing/billing.spec.md\n'
+        );
+        const cap = readLivingSpecs(root).capabilities[0];
+        expect(cap.tiers.map(t => t.kind)).toEqual(['coverage']);
+        expect(cap.tiers[0].path).toBe('src/billing/billing.coverage.md');
+    });
+
+    it('de-dupes capabilities that resolve to the same spec path', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: x\n    - name: x\n'
+        );
+        expect(readLivingSpecs(root).capabilities).toHaveLength(1);
+    });
+
+    it('lists a genuine orphan spec but excludes specs/, reserved tiers, claimed and owned files', () => {
+        const root = ws(
+            {
+                // claimed centralized spec + a reserved tier sibling
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/checkout/spec.rules.md': '# arch',
+                // another file inside the owned capability dir — not an orphan
+                'capabilities/checkout/legacy.spec.md': '# legacy',
+                // a feature spec under specs/ — never an orphan
+                'specs/100-feature/feature.spec.md': '# feature',
+                // a genuine orphan elsewhere
+                'src/payments/payments.spec.md': '# payments',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        const listing = readLivingSpecs(root);
+        expect(listing.orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
+    it('stops at a nested project that carries its own companion.yml', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'src/payments/payments.spec.md': '# payments',
+                'examples/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/sample/src/store/todos.spec.md': '# todos',
+                'examples/optout/.specify/companion.yml': 'livingSpecs:\n  enabled: false\n',
+                'examples/optout/notes/stray.spec.md': '# stray',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
+    it('stops at a nested project whose companion.yml cannot be read', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'src/payments/payments.spec.md': '# payments',
+                'examples/locked/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/locked/src/store/todos.spec.md': '# todos',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        const blocked = path.join(root, 'examples', 'locked', '.specify', 'companion.yml');
+        statSyncMock.mockImplementation((p: fs.PathLike, ...rest: unknown[]) => {
+            if (p === blocked) {
+                const denied = new Error('EACCES: permission denied') as NodeJS.ErrnoException;
+                denied.code = 'EACCES';
+                throw denied;
+            }
+            return realStatSync(p, ...rest);
+        });
+        try {
+            expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+        } finally {
+            statSyncMock.mockImplementation(realStatSync);
+        }
+    });
+
+    it('treats a plain directory with no companion.yml as walkable, not a boundary', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'examples/plain/src/store/todos.spec.md': '# todos',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['examples/plain/src/store/todos.spec.md']);
+    });
+
+    it('reports an unregistered centralized spec as an orphan', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/workflows/spec.md': '# workflows',
+                'capabilities/extension-services/spec.md': '# services',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([
+            'capabilities/extension-services/spec.md',
+            'capabilities/workflows/spec.md',
+        ]);
+    });
+
+    it('reports centralized and colocated orphans in one listing', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/workflows/spec.md': '# workflows',
+                'src/payments/payments.spec.md': '# payments',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([
+            'capabilities/workflows/spec.md',
+            'src/payments/payments.spec.md',
+        ]);
+    });
+
+    it('does not treat a bare or deeply nested spec.md as the centralized layout', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'spec.md': '# root readme-ish',
+                'capabilities/deep/nested/spec.md': '# too deep',
+                'src/payments/payments.spec.md': '# payments',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['src/payments/payments.spec.md']);
+    });
+
+    it('still prunes a capabilities directory inside a nested project', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'examples/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'examples/sample/capabilities/todos/spec.md': '# todos',
+                'examples/sample/capabilities/todos/todos.spec.md': '# todos colocated',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([]);
+    });
+
+    it('still prunes a nested project that sits at a capability path', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'capabilities/sample/.specify/companion.yml':
+                    'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: todos\n',
+                'capabilities/sample/spec.md': '# a different project entirely',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual([]);
+    });
+
+    it('never scans vendored dependencies', () => {
+        const root = ws(
+            {
+                'capabilities/checkout/spec.md': '# checkout',
+                'node_modules/pkg/vendored.spec.md': '# vendored',
+                'node_modules/pkg/capabilities/a/spec.md': '# vendored central',
+                'docs/wandering.spec.md': '# wandering',
+            },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n'
+        );
+        expect(readLivingSpecs(root).orphans).toEqual(['docs/wandering.spec.md']);
+    });
+
+    it('drops a capability whose spec path is absolute', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: evil\n      spec: /etc/passwd\n'
+        );
+        expect(readLivingSpecs(root).capabilities).toEqual([]);
+    });
+
+    it('drops a capability whose spec path escapes the workspace root', () => {
+        const root = ws(
+            { 'capabilities/x/spec.md': '# x' },
+            'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: evil\n      spec: ../escape.md\n'
+        );
+        expect(readLivingSpecs(root).capabilities).toEqual([]);
+    });
+
+    describe('glob semantics — a single * never crosses /', () => {
+        it('matches direct children only for src/*.ts', () => {
+            expect(globMatches('src/*.ts', 'src/a.ts')).toBe(true);
+            expect(globMatches('src/*.ts', 'src/deep/a.ts')).toBe(false);
+        });
+
+        it('** matches any depth and the bare directory for a trailing /**', () => {
+            expect(globMatches('src/checkout/**', 'src/checkout/cart/x.ts')).toBe(true);
+            expect(globMatches('src/checkout/**', 'src/checkout')).toBe(true);
+            expect(globMatches('src/checkout/**', 'src/other/x.ts')).toBe(false);
+        });
+    });
+});
+
+describe('readCapabilityHealth', () => {
+    const created: string[] = [];
+    afterAll(() => {
+        for (const root of created) {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    const YML = 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n';
+
+    function capFor(root: string) {
+        const listing = readLivingSpecs(root);
+        return listing.capabilities[0];
+    }
+
+    it('counts covered/total requirements from the coverage tier (CLI rule)', async () => {
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': '# Checkout\n\nFR-001 add\nFR-002 remove\nFR-003 persist\n',
+                'capabilities/checkout/spec.coverage.md': '- FR-001 → src/cart.test.ts::adds\n- FR-003 covered by tests/persist.test.ts\n- FR-002 planned, no test yet\n',
+            },
+            YML
+        );
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(health.coverage).toEqual({ covered: 2, total: 3 });
+    });
+
+    it('keeps the coverage denominator equal to the viewer requirement count', async () => {
+        const spec = [
+            '# Checkout',
+            '',
+            'FR-001 add',
+            'FR-002 remove',
+            '',
+            '```md',
+            'FR-900 an example, not a requirement',
+            '```',
+            '',
+        ].join('\n');
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': spec,
+                'capabilities/checkout/spec.coverage.md': '- FR-001 → src/cart.test.ts::adds\n',
+            },
+            YML
+        );
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+
+        expect(health.coverage?.total).toBe(2);
+        expect(countLivingFacts(spec).requirements).toBe(health.coverage?.total);
+    });
+
+    describe('per-requirement coverage', () => {
+        const SPEC = '# Checkout\n\n## Requirements\n\n### Adds an item\n\nBody.\n\n### Removes an item [inferred]\n\nBody.\n\n### Persists the cart\n\nBody.\n\n### FR-007 Clears the cart\n\nBody.\n';
+        const health = async (coverage: string | undefined, extra: Record<string, string> = {}) => {
+            const files: Record<string, string> = { 'capabilities/checkout/spec.md': SPEC, ...extra };
+            if (coverage !== undefined) files['capabilities/checkout/spec.coverage.md'] = coverage;
+            const root = makeWorkspace(files, YML);
+            created.push(root);
+            return readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        };
+
+        it('labels a requirement whose named test exists, joined on its heading', async () => {
+            const h = await health('| Adds an item | src/cart.test.ts (adds) | ✅ |\n', { 'src/cart.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('says how many were found when a named test is missing', async () => {
+            const h = await health('| Adds an item | src/a.test.ts, src/b.test.ts, src/c.spec.ts::case |\n', { 'src/a.test.ts': '', 'src/c.spec.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2/3 tests' });
+        });
+
+        it('joins an [inferred] heading through the shared requirement key', async () => {
+            const h = await health('| Removes an item | src/rm.test.ts |\n', { 'src/rm.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Removes an item': '1 test' });
+        });
+
+        it('joins on a requirement id the heading carries', async () => {
+            const h = await health('- FR-007 → src/clear.test.ts::clears\n', { 'src/clear.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'FR-007 Clears the cart': '1 test' });
+        });
+
+        it('gives no entry to a line that names no test', async () => {
+            const h = await health('| Adds an item | — | ❌ |\n| Persists the cart | specs/001 tasks T001 | ❌ |\n');
+            expect(h.requirementCoverage).toBeUndefined();
+        });
+
+        it('counts a test path that escapes the workspace as not found', async () => {
+            const h = await health('| Adds an item | ../outside.test.ts |\n');
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '0/1 tests' });
+        });
+
+        it('gives a line to the longest heading it names', async () => {
+            const spec = '# C\n\n### Adds\n\nBody.\n\n### Adds an item\n\nBody.\n';
+            const h = await health('| Adds an item | src/cart.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'src/cart.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('reads a test path that carries route-group parens, and one wrapped in parens', async () => {
+            const h = await health('| Adds an item | app/(shop)/cart.test.tsx (src/b.test.ts) |\n', { 'app/(shop)/cart.test.tsx': '', 'src/b.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('reads Go and pytest file names, and never takes a spec document for a test', async () => {
+            const h = await health('| Adds an item | pkg/cart_test.go, pkg/test_cart.py::test_add, src/cart.spec.md |\n', { 'pkg/cart_test.go': '', 'pkg/test_cart.py': '', 'src/cart.spec.md': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('labels every requirement one line names, and keeps FR-7 out of a line for FR-70', async () => {
+            const spec = '# C\n\n### FR-7 One\n\nBody.\n\n### FR-8 Two\n\nBody.\n';
+            const files = { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' };
+            expect((await health('- FR-7, FR-8 → src/a.test.ts\n', files)).requirementCoverage)
+                .toEqual({ 'FR-7 One': '1 test', 'FR-8 Two': '1 test' });
+            expect((await health('- FR-70 and NFR-7 → src/a.test.ts\n', files)).requirementCoverage).toBeUndefined();
+        });
+
+        it('never gives a line to a requirement whose name only appears in the test path', async () => {
+            const spec = '# C\n\n### Add\n\nBody.\n\n### Checkout\n\nBody.\n';
+            const h = await health('| Add | tests/Checkout.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'tests/Checkout.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ Add: '1 test' });
+        });
+
+        it('keeps a label when another heading mentions the same id', async () => {
+            const spec = '# C\n\n### FR-001: Adds\n\nBody.\n\n### FR-002: Replaces FR-001 rounding\n\nBody.\n';
+            const h = await health('- FR-001 → src/a.test.ts\n', { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'FR-001: Adds': '1 test' });
+        });
+
+        it('reads a path out of a markdown link, bold text, a line reference and a trailing paren, and ignores a URL', async () => {
+            const h = await health(
+                '- Adds an item: [a](src/a.test.ts), **src/b.test.ts**, (see src/c.test.ts:42) https://x.dev/tests/d.html\n',
+                { 'src/a.test.ts': '', 'src/b.test.ts': '', 'src/c.test.ts': '' },
+            );
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '3 tests' });
+        });
+
+        it('ignores an id that only appears in a test selector or behind an underscore', async () => {
+            const files = { 'src/add.test.ts': '' };
+            expect((await health('| Adds an item | src/add.test.ts::FR-007 |\n', files)).requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+            expect((await health('| Adds an item helper_FR-007 | src/add.test.ts |\n', files)).requirementCoverage).toEqual({ 'Adds an item': '1 test' });
+        });
+
+        it('counts a heading-named capability as covered by exactly its labelled cards', async () => {
+            const h = await health('| Adds an item | src/a.test.ts |\n| Persists the cart | tests/cart.test.ts |\n| Removes an item | — |\n', { 'src/a.test.ts': '' });
+            expect(h.coverage).toEqual({ covered: 2, total: 4 }); // three named headings plus FR-007
+            expect(Object.keys(h.requirementCoverage ?? {})).toHaveLength(h.coverage?.covered ?? -1);
+        });
+
+        it('reads a selector with no file path and a Windows path, and skips a fixture under tests/', async () => {
+            const h = await health('| Adds an item | pkg.cart::test_add, src\\a.test.ts, tests/fixtures/cart.json |\n', { 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toEqual({ 'Adds an item': '2 tests' });
+        });
+
+        it('matches a heading as whole words only', async () => {
+            const spec = '# C\n\n### Login\n\nBody.\n';
+            const h = await health('| Logins are rate limited | src/a.test.ts |\n', { 'capabilities/checkout/spec.md': spec, 'src/a.test.ts': '' });
+            expect(h.requirementCoverage).toBeUndefined();
+        });
+
+        it('is absent when there is no coverage file', async () => {
+            expect((await health(undefined)).requirementCoverage).toBeUndefined();
+        });
+    });
+
+    it('omits coverage when there is no coverage tier', async () => {
+        const root = makeWorkspace({ 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' }, YML);
+        created.push(root);
+        const health = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(health.coverage).toBeUndefined();
+    });
+
+    it('leaves a sibling in sync when another capability\'s requirement names the changed file', async () => {
+        const root = makeWorkspace(
+            {
+                'capabilities/checkout/spec.md': '# Checkout\n\n## Requirements\n\n### Refunds\n\nBody.\n',
+                'capabilities/cart/spec.md': '# Cart\n\n## Requirements\n\n### Adds\n<!-- touches: src/checkout/cart.ts -->\n\nBody.\n',
+            },
+            YML + '    - name: cart\n      match: ["src/checkout/**"]\n      spec: capabilities/cart/spec.md\n'
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log' ? 'abc123\n' : 'src/checkout/cart.ts\n';
+        const listing = readLivingSpecs(root);
+        const byName = (n: string) => listing.capabilities.find(c => c.name === n)!;
+        const checkout = await readCapabilityHealth(root, byName('checkout'), { git });
+        const cart = await readCapabilityHealth(root, byName('cart'), { git });
+        expect(checkout.drifted).toBe(false);
+        expect(cart.drifted).toBe(true);
+    });
+
+    it('reports drift when a matched file changed since the spec commit', async () => {
+        const root = makeWorkspace(
+            { 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' },
+            YML
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log' ? 'abc123\n' : 'src/checkout/cart.ts\nREADME.md\n';
+        const health = await readCapabilityHealth(root, capFor(root), { git });
+        expect(health.drifted).toBe(true);
+    });
+
+    it('does not report drift for excluded/exempt/own-spec files', async () => {
+        const root = makeWorkspace(
+            { 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' },
+            YML
+        );
+        created.push(root);
+        const git = async (args: string[]) =>
+            args[0] === 'log'
+                ? 'abc123\n'
+                : 'src/checkout/cart.test.ts\ncapabilities/checkout/spec.md\nREADME.md\n';
+        const health = await readCapabilityHealth(root, capFor(root), { git });
+        expect(health.drifted).toBe(false);
+    });
+
+    it('omits drift entirely when git fails or the spec was never committed', async () => {
+        const root = makeWorkspace({ 'capabilities/checkout/spec.md': '# Checkout\nFR-001\n' }, YML);
+        created.push(root);
+        const failing = await readCapabilityHealth(root, capFor(root), {
+            git: async () => { throw new Error('not a repo'); },
+        });
+        expect(failing.drifted).toBeUndefined();
+        const uncommitted = await readCapabilityHealth(root, capFor(root), { git: async () => '' });
+        expect(uncommitted.drifted).toBeUndefined();
+    });
+
+    it('never rejects — total failure yields an empty health object', async () => {
+        const root = makeWorkspace({}, YML); // spec file itself missing
+        created.push(root);
+        const cap = { ...capFor(root) };
+        await expect(readCapabilityHealth(root, cap, { git: async () => { throw new Error('boom'); } }))
+            .resolves.toEqual({});
+    });
+});
+
+describe('capability registry location', () => {
+    const created: string[] = [];
+    const root = (files: Record<string, string>, yml?: string): string => {
+        const r = makeWorkspace(files, yml);
+        created.push(r);
+        return r;
+    };
+    afterAll(() => {
+        for (const r of created) {
+            fs.rmSync(r, { recursive: true, force: true });
+        }
+    });
+
+    const REGISTRY = 'enabled: true\ncapabilities:\n  - name: billing\n    match: ["src/billing/**"]\n';
+    const LEGACY = 'livingSpecs:\n  enabled: true\n  capabilities:\n    - name: checkout\n      match: ["src/checkout/**"]\n';
+
+    it('reads capabilities from the project-root registry', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': REGISTRY }));
+        expect(listing.enabled).toBe(true);
+        expect(listing.capabilities.map(c => c.name)).toEqual(['billing']);
+        expect(listing.legacyStale).toBe(false);
+    });
+
+    it('falls back to the legacy config when no registry exists', () => {
+        const listing = readLivingSpecs(root({}, LEGACY));
+        expect(listing.enabled).toBe(true);
+        expect(listing.capabilities.map(c => c.name)).toEqual(['checkout']);
+        expect(listing.legacyStale).toBe(false);
+    });
+
+    it('prefers the registry and flags the stale legacy block when both exist', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': REGISTRY }, LEGACY));
+        expect(listing.capabilities.map(c => c.name)).toEqual(['billing']);
+        expect(listing.legacyStale).toBe(true);
+    });
+
+    it('accepts a registry that still carries the livingSpecs wrapper', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': LEGACY }));
+        expect(listing.capabilities.map(c => c.name)).toEqual(['checkout']);
+    });
+
+    it('stays inert on an unparseable registry instead of falling back', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '\tnot: [valid' }, LEGACY));
+        expect(listing.enabled).toBe(false);
+        expect(listing.capabilities).toEqual([]);
+    });
+
+    it('reports an unparseable registry rather than reading as not adopted', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '\tnot: [valid' }, LEGACY));
+        expect(listing.error).toBeDefined();
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('reports a registry whose top level is not a mapping', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': '- just\n- a list\n' }));
+        expect(listing.enabled).toBe(false);
+        expect(listing.error).toContain('living-specs.yml');
+    });
+
+    it('leaves error absent for an empty registry, so empty never reads as broken', () => {
+        const listing = readLivingSpecs(root({ 'living-specs.yml': 'enabled: true\ncapabilities: []\n' }));
+        expect(listing.enabled).toBe(true);
+        expect(listing.error).toBeUndefined();
+    });
+
+    it('reads as not adopted, with no error, when neither location exists', () => {
+        expect(readLivingSpecs(root({ 'src/a.ts': 'x' })).error).toBeUndefined();
+    });
+
+    it('reads as not adopted when neither location exists', () => {
+        const listing = readLivingSpecs(root({ 'src/a.ts': 'x' }));
+        expect(listing).toEqual({ enabled: false, capabilities: [], orphans: [], legacyStale: false, configured: false });
+    });
+
+    it('treats a nested directory with only a registry as its own project', () => {
+        const r = root({
+            'living-specs.yml': REGISTRY,
+            'examples/sample/living-specs.yml': 'enabled: false\ncapabilities: []\n',
+            'examples/sample/thing.spec.md': '# nested\n',
+            'src/loose.spec.md': '# mine\n',
+        });
+        expect(readLivingSpecs(r).orphans).toEqual(['src/loose.spec.md']);
+    });
+});
+
+describe('claimsForFile', () => {
+    const created: string[] = [];
+    const ws = (files: Record<string, string>): string => {
+        const root = makeWorkspace(files);
+        created.push(root);
+        return root;
+    };
+    afterAll(() => {
+        for (const root of created) {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    const ALPHA = [
+        '# Alpha',
+        '',
+        '## Requirements',
+        '',
+        '### Users can set a due date',
+        '<!-- touches: src/alpha/due-date/** -->',
+        '',
+        'Prose.',
+        '',
+        '### Everything is audited',
+        '',
+        'No marker, so this one describes the whole capability.',
+        '',
+    ].join('\n');
+
+    const REGISTRY = [
+        'enabled: true',
+        'exempt: ["*.test.*"]',
+        'capabilities:',
+        '  - name: alpha',
+        '    match: ["src/alpha/**"]',
+        '    spec: src/alpha/alpha.spec.md',
+        '  - name: platform',
+        '    match: ["src/**"]',
+        '    exclude: ["src/vendor/**"]',
+        '    spec: src/platform.spec.md',
+        '',
+    ].join('\n');
+
+    const files = {
+        'living-specs.yml': REGISTRY,
+        'src/alpha/alpha.spec.md': ALPHA,
+        'src/platform.spec.md': '# Platform\n\n### Everything is logged\n\nProse.\n',
+    };
+
+    it('orders the claiming capabilities most-specific first', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/due-date/index.ts');
+        expect(claims.map((c) => c.capability)).toEqual(['alpha', 'platform']);
+    });
+
+    it('lists the requirements whose marker matches the file', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/due-date/index.ts');
+        expect(claims[0].requirements).toEqual([
+            'Users can set a due date',
+            'Everything is audited',
+        ]);
+    });
+
+    it('drops a marked requirement that claims another file', () => {
+        const claims = claimsForFile(ws(files), 'src/alpha/other.ts');
+        expect(claims[0].requirements).toEqual(['Everything is audited']);
+    });
+
+    it('lists every requirement of a spec that carries no markers', () => {
+        const claims = claimsForFile(ws(files), 'src/platform.spec.md');
+        const platform = claims.find((c) => c.capability === 'platform');
+        expect(platform?.requirements).toEqual(['Everything is logged']);
+    });
+
+    it('claims nothing for a file the registry exempts', () => {
+        expect(claimsForFile(ws(files), 'src/alpha/thing.test.ts')).toEqual([]);
+    });
+
+    it('claims nothing for a file a capability excludes', () => {
+        expect(claimsForFile(ws(files), 'src/vendor/lib.ts')).toEqual([]);
+    });
+
+    it('claims nothing when living specs are disabled', () => {
+        const root = ws({ 'living-specs.yml': 'enabled: false\ncapabilities: []\n' });
+        expect(claimsForFile(root, 'src/alpha/index.ts')).toEqual([]);
+    });
+
+    it('claims nothing for a path that escapes the workspace', () => {
+        expect(claimsForFile(ws(files), '../elsewhere/thing.ts')).toEqual([]);
+    });
+
+    it('still claims a capability whose spec file is missing, with no requirements', () => {
+        const root = ws({
+            'living-specs.yml': [
+                'enabled: true',
+                'capabilities:',
+                '  - name: ghost',
+                '    match: ["src/ghost/**"]',
+                '    spec: src/ghost/ghost.spec.md',
+                '',
+            ].join('\n'),
+        });
+        const claims = claimsForFile(root, 'src/ghost/thing.ts');
+        expect(claims.map((c) => c.capability)).toEqual(['ghost']);
+        expect(claims[0].requirements).toEqual([]);
+        expect(claims[0].readable).toBe(false);
+    });
+});
+
+/**
+ * The other half of a rule that has to exist twice: the resolver orders
+ * capabilities by specificity in Python, the status bar re-implements it here.
+ * `apps/speckit-extension/tests/test_living_show.py` reads the same file.
+ */
+describe('capability order agrees with the resolver', () => {
+    const fixture = JSON.parse(
+        fs.readFileSync(
+            path.join(
+                __dirname, '..', '..', '..', '..', '..', '..',
+                'apps', 'speckit-extension', 'tests', 'fixtures', 'claim-order', 'cases.json'
+            ),
+            'utf8'
+        )
+    ) as {
+        capabilities: Array<{ name: string; match: string[]; spec: string }>;
+        cases: Array<{ file: string; order: string[] }>;
+    };
+
+    let root = '';
+    beforeAll(() => {
+        const registry = [
+            'enabled: true',
+            'exempt: []',
+            'capabilities:',
+            ...fixture.capabilities.flatMap(c => [
+                `  - name: ${c.name}`,
+                `    match: [${c.match.map(m => `"${m}"`).join(', ')}]`,
+                `    spec: ${c.spec}`,
+            ]),
+            '',
+        ].join('\n');
+        const files: Record<string, string> = { 'living-specs.yml': registry };
+        for (const c of fixture.capabilities) {
+            files[c.spec] = `# ${c.name}\n`;
+        }
+        root = makeWorkspace(files);
+    });
+    afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+    it.each(fixture.cases.map(c => [c.file, c.order] as const))(
+        '%s',
+        (file, order) => {
+            expect(claimsForFile(root, file).map(c => c.capability)).toEqual(order);
+        }
+    );
+});
+
+describe('readMainCopy', () => {
+    it("returns main's copy of the file", async () => {
+        const git = jest.fn().mockResolvedValue('# On main\n');
+        await expect(readMainCopy('/w', 'capabilities/todos/spec.md', { git })).resolves.toBe('# On main\n');
+        expect(git).toHaveBeenCalledWith(['show', 'main:./capabilities/todos/spec.md'], '/w');
+    });
+
+    it('is undefined when git exits non-zero, as for a file main lacks', async () => {
+        const git = async () => { throw new Error("fatal: path 'x' exists on disk, but not in 'main'"); };
+        await expect(readMainCopy('/w', 'x.md', { git })).resolves.toBeUndefined();
+    });
+
+    it('is undefined when git does not answer in time', async () => {
+        const git = () => new Promise<string>(() => undefined);
+        await expect(readMainCopy('/w', 'x.md', { git, timeoutMs: 5 })).resolves.toBeUndefined();
+    });
+});

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as headerMeta from '../../../src/features/spec-viewer/livingHeaderMeta';
+import * as headerMeta from '../../../src/features/living-specs/livingHeaderMeta';
 import { SpecViewerProvider } from '../../../src/features/spec-viewer/specViewerProvider';
 import type { LivingHeaderMeta } from '../../../src/protocol/viewer';
 

@@ -1,0 +1,926 @@
+import * as vscode from 'vscode';
+import { registerSpecKitCommands } from '../specCommands';
+
+// Mock dependencies that specCommands imports
+jest.mock('../../../extension', () => ({
+    getAIProvider: jest.fn().mockReturnValue({
+        executeInTerminal: jest.fn(),
+        executeSlashCommand: jest.fn(),
+    }),
+}));
+
+jest.mock('../specExplorerProvider', () => ({
+    SpecExplorerProvider: jest.fn(),
+    isSpecLifecycleItem: (cv: string | undefined) =>
+        cv !== undefined &&
+        ['spec-active', 'spec-tasks-done', 'spec-completed', 'spec-archived'].includes(cv),
+    lifecycleContextValue: jest.fn(),
+}));
+
+jest.mock('../../../core/utils/notificationUtils', () => ({
+    NotificationUtils: {
+        showAutoDismissNotification: jest.fn(),
+    },
+}));
+
+jest.mock('../../../core/specDirectoryResolver', () => ({
+    isInsideSpecDirectory: jest.fn(),
+    getFileWatcherPatterns: jest.fn().mockReturnValue({
+        specs: [],
+        tasks: [],
+        markdown: [],
+    }),
+}));
+
+jest.mock('../../workflows', () => ({
+    getOrSelectWorkflow: jest.fn(),
+    resolveStepCommand: jest.fn(),
+    executeCheckpointsForTrigger: jest.fn(),
+}));
+
+jest.mock('../stepLifecycle', () => ({
+    startStep: jest.fn(),
+    completeStep: jest.fn(),
+    setStatus: jest.fn().mockResolvedValue(true),
+    forceStatus: jest.fn().mockResolvedValue(true),
+    reactivate: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../selectionContextKeys', () => ({
+    updateSelectionContextKeys: jest.fn(),
+}));
+
+jest.mock('../specContextReader', () => ({
+    ...jest.requireActual('../specContextReader'),
+    readSpecContextSyncSafe: jest.fn(),
+}));
+
+jest.mock('../../settings/companionPresetReconciler', () => ({
+    isCompanionInstalled: jest.fn().mockReturnValue(false),
+}));
+
+jest.mock('../../../speckit/detector', () => ({
+    SpecKitDetector: {
+        getInstance: jest.fn().mockReturnValue({
+            workspaceInitialized: true,
+            cliInstalled: false,
+        }),
+    },
+}));
+
+import { setStatus, forceStatus, reactivate } from '../stepLifecycle';
+import { NotificationUtils } from '../../../core/utils/notificationUtils';
+import { readSpecContextSyncSafe } from '../specContextReader';
+
+const mockCommands = vscode.commands as jest.Mocked<typeof vscode.commands>;
+
+// Capture registered command handlers by name
+function captureCommandHandlers(context: vscode.ExtensionContext, specsTreeView?: any) {
+    const handlers = new Map<string, (...args: any[]) => any>();
+
+    mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
+        handlers.set(name, handler);
+        return { dispose: jest.fn() };
+    });
+
+    lastMockExplorer = { refresh: jest.fn(), expandAllSpecs: true } as any;
+    const mockOutputChannel = { appendLine: jest.fn() } as any;
+
+    registerSpecKitCommands(context, lastMockExplorer as any, mockOutputChannel, specsTreeView);
+
+    return handlers;
+}
+
+let lastMockExplorer: { refresh: jest.Mock; expandAllSpecs: boolean };
+
+function createMockContext(): vscode.ExtensionContext {
+    return {
+        subscriptions: [],
+    } as any;
+}
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+describe('registerSpecKitCommands', () => {
+    it('has no specKitDetector parameter', () => {
+        // Signature is (context, specExplorer, outputChannel, specsTreeView?, filterState?, sortState?) — no specKitDetector.
+        expect(registerSpecKitCommands.length).toBe(6);
+    });
+
+    it('registers the speckit.create command', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        expect(handlers.has('speckit.create')).toBe(true);
+    });
+
+    it('registers the collapse/expand toggle commands', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        expect(handlers.has('speckit.specs.toggleCollapseAll')).toBe(true);
+        expect(handlers.has('speckit.specs.collapseAll')).toBe(true);
+        expect(handlers.has('speckit.specs.expandAll')).toBe(true);
+    });
+});
+
+describe('speckit.specs.toggleCollapseAll handler', () => {
+    it('first invocation collapses: flips flag, sets context true, refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const handler = handlers.get('speckit.specs.toggleCollapseAll')!;
+        await handler();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            true
+        );
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        // Must NOT call the built-in collapseAll — it would collapse group
+        // headers too, which we want left alone.
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'workbench.actions.treeView.speckit.views.explorer.collapseAll'
+        );
+    });
+
+    it('second invocation expands: flips flag, sets context false, refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = false;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const handler = handlers.get('speckit.specs.toggleCollapseAll')!;
+        await handler();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            false
+        );
+    });
+
+});
+
+describe('speckit.specs.collapseAll / expandAll handlers', () => {
+    function lastContextValueFor(key: string): unknown {
+        const calls = (mockCommands.executeCommand as jest.Mock).mock.calls.filter(
+            c => c[0] === 'setContext' && c[1] === key
+        );
+        return calls[calls.length - 1]?.[2];
+    }
+
+    it('collapseAll collapses, and stays collapsed when run again', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        await collapseAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+
+        await collapseAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(true);
+    });
+
+    it('expandAll expands, and stays expanded when run on an already-expanded tree', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        lastMockExplorer.expandAllSpecs = true;
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+
+        await expandAll();
+
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+    });
+
+    it('neither command flips the other’s state', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const collapseAll = handlers.get('speckit.specs.collapseAll')!;
+        const expandAll = handlers.get('speckit.specs.expandAll')!;
+
+        lastMockExplorer.expandAllSpecs = false;
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+
+        await collapseAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(false);
+        await expandAll();
+        expect(lastMockExplorer.expandAllSpecs).toBe(true);
+        expect(lastContextValueFor('speckit.specs.allCollapsed')).toBe(false);
+    });
+});
+
+describe('bulk status command handlers', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    const makeItem = (name: string, contextValue: string = 'spec-active') => ({
+        label: name,
+        specPath: `specs/${name}`,
+        contextValue,
+    });
+
+    it('markCompleted on 3-item selection calls setStatus 3x, refreshes once, shows plural toast', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        const items = [makeItem('a'), makeItem('b'), makeItem('c')];
+        await handler(items[0], items);
+
+        expect(setStatus).toHaveBeenCalledTimes(3);
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/a'), 'completed');
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/b'), 'completed');
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/c'), 'completed');
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs marked as completed');
+    });
+
+    it('markCompleted with only item (no items) behaves like single-select with singular toast', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        await handler(makeItem('x'), undefined);
+
+        expect(setStatus).toHaveBeenCalledTimes(1);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('1 spec marked as completed');
+    });
+
+    it('archive follows bulk semantics', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.archive')!;
+
+        await handler(undefined, [makeItem('a'), makeItem('b')]);
+
+        expect(setStatus).toHaveBeenCalledTimes(2);
+        expect(setStatus).toHaveBeenCalledWith(expect.stringContaining('specs/a'), 'archived');
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('2 specs archived');
+    });
+
+    it('reactivate follows bulk semantics', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.reactivate')!;
+
+        // Reactivate skips already-active targets via the no-op filter; stub
+        // readSpecContextSyncSafe so each target reads as completed and passes the
+        // filter.
+        (readSpecContextSyncSafe as jest.Mock)
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'completed' });
+
+        await handler(undefined, [
+            makeItem('a', 'spec-completed'),
+            makeItem('b', 'spec-completed'),
+            makeItem('c', 'spec-completed'),
+        ]);
+
+        expect(reactivate).toHaveBeenCalledTimes(3);
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs moved to active');
+    });
+
+    it('markCompleted is silently skipped when the only target is already completed', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.markCompleted')!;
+
+        (readSpecContextSyncSafe as jest.Mock).mockReturnValueOnce({ status: 'completed' });
+
+        await handler(makeItem('done', 'spec-completed'), undefined);
+
+        expect(setStatus).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('reactivate on a mixed [active, completed] selection only reactivates the completed target', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.reactivate')!;
+
+        (readSpecContextSyncSafe as jest.Mock)
+            .mockReturnValueOnce({ status: 'active' })
+            .mockReturnValueOnce({ status: 'completed' });
+
+        const items = [makeItem('a', 'spec-active'), makeItem('c', 'spec-completed')];
+        await handler(items[1], items);
+
+        expect(reactivate).toHaveBeenCalledTimes(1);
+        expect(reactivate).toHaveBeenCalledWith(expect.stringContaining('specs/c'));
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('1 spec moved to active');
+    });
+
+    it('resolveTargets accepts all four lifecycle viewItems and rejects spec-document/spec-related-doc', async () => {
+        const context = createMockContext();
+        const treeView = {
+            selection: [
+                makeItem('a', 'spec-active'),
+                makeItem('b', 'spec-tasks-done'),
+                makeItem('c', 'spec-completed'),
+                makeItem('d', 'spec-archived'),
+                { label: 'spec.md', specPath: 'specs/a/spec.md', contextValue: 'spec-document-spec' },
+                { label: 'notes', specPath: 'specs/a/notes.md', contextValue: 'spec-related-doc' },
+            ],
+        };
+        const handlers = captureCommandHandlers(context, treeView);
+        const handler = handlers.get('speckit.archive')!;
+
+        // archive's skipIf only drops already-archived targets; our four
+        // lifecycle items include one archived (skipped) and three eligible.
+        (readSpecContextSyncSafe as jest.Mock)
+            .mockReturnValueOnce({ status: 'active' })
+            .mockReturnValueOnce({ status: 'tasks-done' })
+            .mockReturnValueOnce({ status: 'completed' })
+            .mockReturnValueOnce({ status: 'archived' });
+
+        await handler(undefined, undefined);
+
+        // 6 selected items → 4 are lifecycle specs → 1 is already-archived →
+        // 3 actually archived. Confirms (a) the spec-document / spec-related-doc
+        // entries were filtered by resolveTargets, and (b) the no-op filter
+        // dropped the archived one.
+        expect(setStatus).toHaveBeenCalledTimes(3);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith('3 specs archived');
+    });
+});
+
+describe('speckit.specs.setStatus command handler', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+    const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    const makeItem = (name: string, contextValue: string = 'spec-active') => ({
+        label: name,
+        specPath: `specs/${name}`,
+        contextValue,
+    });
+
+    it('registers the command', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        expect(handlers.has('speckit.specs.setStatus')).toBe(true);
+    });
+
+    it('on pick + confirm: writes the chosen status through forceStatus authored by:user, then refreshes', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('planned');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+
+        await handler(makeItem('stuck'));
+
+        expect(forceStatus).toHaveBeenCalledTimes(1);
+        expect(forceStatus).toHaveBeenCalledWith(
+            expect.stringContaining('specs/stuck'),
+            'planned',
+            'user'
+        );
+        expect(lastMockExplorer.refresh).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('planned')
+        );
+    });
+
+    it('when forceStatus fails: shows an error, does not refresh or toast success', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('planned');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+        (forceStatus as jest.Mock).mockResolvedValueOnce(false);
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledWith(
+            expect.stringContaining('Could not set status')
+        );
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+
+    it('confirm prompt is worded "Force status to X?"', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('implementing');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce('Force status');
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showWarningMessage).toHaveBeenCalledWith(
+            'Force status to implementing?',
+            { modal: true },
+            'Force status'
+        );
+    });
+
+    it('writes nothing when the picker is cancelled', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        expect(mockWindow.showWarningMessage).not.toHaveBeenCalled();
+        expect(forceStatus).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing when the confirm is cancelled', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce('completed');
+        (mockWindow.showWarningMessage as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        expect(setStatus).not.toHaveBeenCalled();
+        expect(lastMockExplorer.refresh).not.toHaveBeenCalled();
+    });
+
+    it('offers the eight canonical statuses and excludes draft/archived', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        (mockWindow.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handler(makeItem('stuck'));
+
+        const choices = (mockWindow.showQuickPick as jest.Mock).mock.calls[0][0];
+        expect(choices).toEqual([
+            'specifying',
+            'specified',
+            'planning',
+            'planned',
+            'ready-to-implement',
+            'implementing',
+            'implemented',
+            'completed',
+        ]);
+        expect(choices).not.toContain('draft');
+        expect(choices).not.toContain('archived');
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.setStatus')!;
+
+        await handler(undefined);
+
+        expect(mockWindow.showQuickPick).not.toHaveBeenCalled();
+        expect(setStatus).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.reveal command handler', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+    const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    it('registers speckit.specs.reveal when registerSpecKitCommands runs', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+
+        expect(handlers.has('speckit.specs.reveal')).toBe(true);
+    });
+
+    it('calls revealFileInOS with absolute folder URI resolved from specPath', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        const calls = (mockCommands.executeCommand as jest.Mock).mock.calls;
+        const revealCall = calls.find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/my-spec');
+    });
+
+    it('falls back to specs/<label> when specPath is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: 'foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/foo');
+    });
+
+    it('shows error and does not call revealFileInOS when folder is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await handler({ label: 'gone', specPath: 'specs/gone' });
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledTimes(1);
+        expect((mockWindow.showErrorMessage as jest.Mock).mock.calls[0][0])
+            .toContain('/ws/specs/gone');
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'revealFileInOS',
+            expect.anything()
+        );
+    });
+
+    it('calls revealFileInOS with file URI when item has filePath', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 1 });
+
+        await handler({ label: 'spec.md', filePath: 'specs/080-foo/spec.md', specPath: 'specs/080-foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo/spec.md');
+    });
+
+    it('falls back to specPath when filePath is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: '080-foo', specPath: 'specs/080-foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealFileInOS');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo');
+    });
+
+    it('shows error when filePath does not exist', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await handler({ label: 'plan.md', filePath: 'specs/080-foo/plan.md' });
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledTimes(1);
+        expect((mockWindow.showErrorMessage as jest.Mock).mock.calls[0][0])
+            .toContain('/ws/specs/080-foo/plan.md');
+    });
+
+    it('no-op when no workspace folder is open', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.reveal')!;
+
+        (vscode.workspace as any).workspaceFolders = undefined;
+        (vscode.workspace.fs.stat as jest.Mock).mockClear();
+
+        await handler({ label: 'anything', specPath: 'specs/anything' });
+
+        expect(vscode.workspace.fs.stat).not.toHaveBeenCalled();
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'revealFileInOS',
+            expect.anything()
+        );
+    });
+});
+
+describe('speckit.specs.revealInExplorer command handler', () => {
+    const originalWorkspaceFolders = (vscode.workspace as any).workspaceFolders;
+    const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+
+    beforeEach(() => {
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = originalWorkspaceFolders;
+    });
+
+    it('registers speckit.specs.revealInExplorer when registerSpecKitCommands runs', () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        expect(handlers.has('speckit.specs.revealInExplorer')).toBe(true);
+    });
+
+    it('calls revealInExplorer with file URI when item has filePath', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.revealInExplorer')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 1 });
+
+        await handler({ label: 'spec.md', filePath: 'specs/080-foo/spec.md' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealInExplorer');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo/spec.md');
+    });
+
+    it('falls back to specPath when filePath is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.revealInExplorer')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 });
+
+        await handler({ label: '080-foo', specPath: 'specs/080-foo' });
+
+        const revealCall = (mockCommands.executeCommand as jest.Mock).mock.calls
+            .find(c => c[0] === 'revealInExplorer');
+        expect(revealCall).toBeDefined();
+        expect(revealCall![1].fsPath).toBe('/ws/specs/080-foo');
+    });
+
+    it('shows error when target does not exist', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.revealInExplorer')!;
+
+        (vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await handler({ label: 'plan.md', filePath: 'specs/080-foo/plan.md' });
+
+        expect(mockWindow.showErrorMessage).toHaveBeenCalledTimes(1);
+        expect((mockWindow.showErrorMessage as jest.Mock).mock.calls[0][0])
+            .toContain('/ws/specs/080-foo/plan.md');
+        expect(mockCommands.executeCommand).not.toHaveBeenCalledWith(
+            'revealInExplorer',
+            expect.anything()
+        );
+    });
+});
+
+describe('speckit.create command handler', () => {
+    it('always opens the spec editor without any initialization check', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const createHandler = handlers.get('speckit.create')!;
+
+        await createHandler();
+
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith('speckit.openSpecEditor');
+    });
+
+    it('does not check workspaceInitialized or show any init warning', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const createHandler = handlers.get('speckit.create')!;
+
+        await createHandler();
+
+        // Should not show any error or warning messages
+        expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
+        expect(vscode.window.showWarningMessage).not.toHaveBeenCalled();
+        expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.copyPath command handler', () => {
+    const mockClipboardWriteText = (vscode.env as any).clipboard.writeText as jest.Mock;
+
+    it('writes specPath to clipboard when item.specPath is set', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: '089-copy-spec-path-name', specPath: 'specs/089-copy-spec-path-name' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('specs/089-copy-spec-path-name');
+    });
+
+    it('falls back to specs/${label} when specPath is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: 'my-spec' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('specs/my-spec');
+    });
+
+    it('shows an auto-dismiss notification after copying', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('Copied')
+        );
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyPath')!;
+
+        await handler(undefined);
+
+        expect(mockClipboardWriteText).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('speckit.specs.copyName command handler', () => {
+    const mockClipboardWriteText = (vscode.env as any).clipboard.writeText as jest.Mock;
+
+    it('writes slug (specPath without specs/ prefix) when specPath is set', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: '089-copy-spec-path-name', specPath: 'specs/089-copy-spec-path-name' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('089-copy-spec-path-name');
+    });
+
+    it('falls back to label when specPath is missing', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: 'my-spec' });
+
+        expect(mockClipboardWriteText).toHaveBeenCalledTimes(1);
+        expect(mockClipboardWriteText).toHaveBeenCalledWith('my-spec');
+    });
+
+    it('shows an auto-dismiss notification after copying', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler({ label: 'my-spec', specPath: 'specs/my-spec' });
+
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledTimes(1);
+        expect(NotificationUtils.showAutoDismissNotification).toHaveBeenCalledWith(
+            expect.stringContaining('Copied')
+        );
+    });
+
+    it('does nothing when item is undefined', async () => {
+        const context = createMockContext();
+        const handlers = captureCommandHandlers(context);
+        const handler = handlers.get('speckit.specs.copyName')!;
+
+        await handler(undefined);
+
+        expect(mockClipboardWriteText).not.toHaveBeenCalled();
+        expect(NotificationUtils.showAutoDismissNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('specs title-bar handlers', () => {
+    function registerWithState() {
+        const handlers = new Map<string, (...args: any[]) => any>();
+        mockCommands.registerCommand.mockImplementation((name: string, handler: any) => {
+            handlers.set(name, handler);
+            return { dispose: jest.fn() };
+        });
+        const explorer = { refresh: jest.fn(), expandAllSpecs: false } as any;
+        const filterState = {
+            getQuery: jest.fn().mockReturnValue(''),
+            setQuery: jest.fn().mockResolvedValue(undefined),
+            clear: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        const sortState = {
+            getMode: jest.fn().mockReturnValue('number'),
+            setMode: jest.fn().mockResolvedValue(undefined),
+        } as any;
+        registerSpecKitCommands(
+            createMockContext(),
+            explorer,
+            { appendLine: jest.fn() } as any,
+            undefined,
+            filterState,
+            sortState
+        );
+        return { handlers, explorer, filterState, sortState };
+    }
+
+    it('seeds the all-collapsed context key from the provider default', () => {
+        (mockCommands.executeCommand as jest.Mock).mockClear();
+        registerWithState();
+        expect(mockCommands.executeCommand).toHaveBeenCalledWith(
+            'setContext',
+            'speckit.specs.allCollapsed',
+            true
+        );
+    });
+
+    it('clears the filter when the input is submitted empty', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('   ');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.clear).toHaveBeenCalled();
+        expect(filterState.setQuery).not.toHaveBeenCalled();
+    });
+
+    it('sets the filter when the input carries a query', async () => {
+        const { handlers, filterState } = registerWithState();
+        (vscode.window.showInputBox as jest.Mock).mockResolvedValueOnce('auth');
+
+        await handlers.get('speckit.specs.filter')!();
+
+        expect(filterState.setQuery).toHaveBeenCalledWith('auth');
+    });
+
+    it('offers five compact sort options with a check on the current one', async () => {
+        const { handlers, sortState } = registerWithState();
+        (vscode.window.showQuickPick as jest.Mock).mockResolvedValueOnce(undefined);
+
+        await handlers.get('speckit.specs.sort')!();
+
+        const [items, options] = (vscode.window.showQuickPick as jest.Mock).mock.calls.at(-1)!;
+        expect(options.title).toBe('Sort Specs');
+        expect(options.placeHolder).toBe('Choose sort order');
+        expect(items).toHaveLength(5);
+        expect(items[0].label).toBe('$(check) Number');
+        expect(items.map((i: any) => i.description)).toEqual([
+            'Default · Highest number first',
+            'A–Z',
+            'Newest first',
+            'Recently edited first',
+            'Current progress',
+        ]);
+        expect(sortState.setMode).not.toHaveBeenCalled();
+    });
+});

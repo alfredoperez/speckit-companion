@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { unsupportedForRuntime } from '../livingSpecsModel';
+import { unsupportedForRuntime } from '../../living-specs/livingSpecsModel';
 
 /**
  * `companion.yml` is read by two implementations in two languages: the runtime

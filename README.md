@@ -88,7 +88,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
      tooling/scripts/capture-docs-images.mjs). The whole image is a link to the engine
      extension's install guide; the extension README carries the mirror banner
      (C6) pointing back at this extension. -->
-[![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](./docs/getting-started.md#install-the-spec-kit-extension)
+[![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](https://speckit-companion.dev/docs/install)
 
 ### See the pipeline your project runs
 
@@ -122,7 +122,7 @@ Build from the same panel, or from the palette:
 | **Preview Pipeline Build** | Show what a build would change, writing nothing |
 | **Build Pipeline from companion.yml** | Apply the configuration |
 
-When `companion.yml` is newer than the commands built from it, the panel's header says so — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](./docs/getting-started.md#install-the-spec-kit-extension), which holds the pipeline sources.
+When `companion.yml` is newer than the commands built from it, the panel's header says so — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](https://speckit-companion.dev/docs/install), which holds the pipeline sources.
 
 ## No lock-in, no server
 
@@ -130,13 +130,7 @@ Everything lives in plain files in your repo: the spec markdown plus a `.spec-co
 
 ## Install
 
-1. Install **SpecKit Companion** from the VS Code Marketplace.
-2. Click the SpecKit icon in the activity bar and open a folder.
-3. Click **+** in the Specs view, describe your feature, and pick the AI you already use.
-
-That's it: the viewer, review comments, and sidebar work on their own. To also get the lean Companion pipeline, live progress capture, and the Resume button, add the [companion Spec Kit extension](./docs/getting-started.md#install-the-spec-kit-extension): the sidebar offers a one-click install when it's missing. The two halves are versioned separately and the spec-kit one never updates itself, so when the commands in your project fall behind the version this extension expects, a status-bar warning, the panel banner, and a one-time notification say so and offer the same one-click update.
-
-Prefer to be walked through it? VS Code opens a **Get Started with SpecKit Companion** walkthrough after install, and **Help → Get Started** reopens it any time. It runs the same three steps above, plus a one-click sample spec you can read before writing one of your own.
+Install **SpecKit Companion** from the VS Code Marketplace, then add the [companion Spec Kit extension](https://speckit-companion.dev/docs/install) for the lean Companion pipeline, live progress capture, and the Resume button. Full walkthrough, both halves in order: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install).
 
 ## Works with your AI
 
@@ -144,7 +138,7 @@ Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a termina
 
 ## Docs
 
-- [Getting started](./docs/getting-started.md): full install story, required vs. optional pieces, platform support
+- [Getting started](./docs/getting-started.md): platform support, sample specs, and running the extension from source (install story: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install))
 - [Spec viewer reference](./docs/viewer.md): reading, reviewing, creating, safety affordances
 - [Sidebar reference](./docs/sidebar.md): every view, icon, and action
 - [Pipeline builder](./docs/pipeline-builder.md): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building

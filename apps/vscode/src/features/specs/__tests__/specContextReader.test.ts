@@ -6,8 +6,9 @@
  */
 
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
-import { normalizeSpecContext } from '../specContextReader';
+import { normalizeSpecContext, readSpecContextSyncSafe } from '../specContextReader';
 
 describe('normalizeSpecContext — task_summaries coercion', () => {
     it('passes a canonical string[] concerns through unchanged', () => {
@@ -190,5 +191,33 @@ describe('normalizeSpecContext — task_summaries coercion', () => {
             'Original exploration findings were wrong — superseded by RT1-RT3',
         ]);
         expect((summaries.RT2.concerns as string[])[0]).toContain('Section three');
+    });
+});
+
+describe('readSpecContextSyncSafe', () => {
+    function mkTmp(): string {
+        return fs.mkdtempSync(path.join(os.tmpdir(), 'spec-ctx-reader-safe-'));
+    }
+
+    it('returns null (not a throw) for an unparseable file, so a sidebar render survives one bad spec', () => {
+        const dir = mkTmp();
+        fs.writeFileSync(path.join(dir, '.spec-context.json'), '{ not valid json');
+
+        expect(() => readSpecContextSyncSafe(dir)).not.toThrow();
+        expect(readSpecContextSyncSafe(dir)).toBeNull();
+    });
+
+    it('returns null when no file exists', () => {
+        const dir = mkTmp();
+        expect(readSpecContextSyncSafe(dir)).toBeNull();
+    });
+
+    it('returns the normalized context for a well-formed file', () => {
+        const dir = mkTmp();
+        fs.writeFileSync(
+            path.join(dir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: 'demo', branch: 'main', currentStep: 'specify', status: 'draft', history: [] }),
+        );
+        expect(readSpecContextSyncSafe(dir)?.specName).toBe('demo');
     });
 });

@@ -41,14 +41,13 @@ class MarkersAreAdditive(unittest.TestCase):
                 plain = assemble.assemble_command(command, markers=False)
                 self.assertEqual(cp.strip_node_markers(marked), plain)
 
-    def test_stripping_the_markers_reproduces_the_frozen_golden(self):
-        # The goldens predate the markers. This is the contract: whatever the
-        # boundaries do, the instructions the assistant receives are unchanged.
+    def test_stripping_the_markers_reproduces_the_committed_body(self):
+        # The contract: whatever the boundaries do, the assistant's instructions are unchanged.
         for command in assemble.decomposed_commands():
             with self.subTest(command=command):
                 marked = assemble.assemble_command(command)
-                golden = Path(cp.golden_path(f"commands/speckit.companion.{command}.md"))
-                self.assertEqual(cp.strip_node_markers(marked), golden.read_text(encoding="utf-8"))
+                committed = cp.read(f"commands/speckit.companion.{command}.md")
+                self.assertEqual(cp.strip_node_markers(marked), cp.strip_node_markers(committed))
 
     def test_the_markers_add_only_whole_lines(self):
         for command in assemble.decomposed_commands():
@@ -61,53 +60,6 @@ class MarkersAreAdditive(unittest.TestCase):
                             r"^<!-- /?speckit-companion:node [\w-]+ -->$",
                             "a node marker shares its line with content",
                         )
-
-
-class TheSanctionedRebless(unittest.TestCase):
-    """`capture-golden.py` is the documented way to re-bless after an intentional
-    command change. It has to produce goldens the parity tests accept.
-
-    It froze the shipped bodies raw, and those carry the boundary markers now, so
-    running it blessed the markers into the baseline and broke every parity test
-    that compares through `strip_node_markers` — the one tool for the job left the
-    build red.
-    """
-
-    def _freeze_into(self, tmp: Path) -> dict:
-        """Run the real script with its output redirected, and read back what it wrote."""
-        capture = importlib.import_module("capture-golden")
-        written = {}
-
-        def fake_path(rel: str) -> str:
-            path = tmp / Path(cp.golden_path(rel)).name
-            written[rel] = path
-            return str(path)
-
-        original = capture.golden_path
-        capture.golden_path = fake_path
-        try:
-            self.assertEqual(capture.main(), 0)
-        finally:
-            capture.golden_path = original
-        return {rel: path.read_text(encoding="utf-8") for rel, path in written.items()}
-
-    def test_it_writes_what_the_parity_check_expects(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            frozen = self._freeze_into(Path(tmp))
-        for command in assemble.decomposed_commands():
-            with self.subTest(command=command):
-                rel = f"commands/speckit.companion.{command}.md"
-                self.assertEqual(
-                    frozen[rel], cp.strip_node_markers(assemble.assemble_command(command)),
-                    "capture-golden froze a body the parity check rejects")
-
-    def test_the_frozen_body_carries_no_boundary_marker(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            frozen = self._freeze_into(Path(tmp))
-        for rel, body in frozen.items():
-            with self.subTest(body=rel):
-                self.assertNotIn("speckit-companion:node", body)
-                self.assertNotIn("speckit-companion:phase", body)
 
 
 class EveryNodeIsAddressable(unittest.TestCase):

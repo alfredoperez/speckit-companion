@@ -158,7 +158,7 @@
 > With the override removed, an in-flight specify / plan / tasks step has
 > no manual "mark complete" button — only `Regenerate`. In practice each
 > of these steps settles on its own: the AI writes each step's completion
-> per the dispatch preamble. `plan`/`tasks`/`clarify`/`analyze` always do;
+> per the dispatch preamble. `clarify`/`analyze` always do, and `plan`/`tasks` do in stock mode;
 > `specify` was the exception — it deferred to "the specify command," which
 > only closes it in companion mode. #332 made that **mode-aware**: in **stock**
 > the preamble now tells the AI to self-close `specify` too, so it advances to
@@ -192,50 +192,6 @@
 > the right-side bar typically holds 1–3 buttons. If more lifecycle
 > actions are added later, group secondary entries into an overflow
 > `⋯` menu — keep the dynamic next-step button as the primary surface.
-
-## Status Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> active : spec created
-    active --> tasks_done : all tasks checked (auto)
-    tasks_done --> active : task unchecked
-    tasks_done --> completed : "Complete" button
-    active --> completed : "Complete" button
-    active --> archived : "Archive" button
-    completed --> archived : "Archive" button
-    completed --> active : "Reactivate" button
-    archived --> active : "Reactivate" button
-
-    state active {
-        [*] --> specifying
-        specifying --> planning : spec.md done
-        planning --> creating_tasks : plan.md done
-        creating_tasks --> implementing : tasks.md done
-    }
-```
-
-## Status Determination
-
-```mermaid
-flowchart TD
-    A[Read .spec-context.json] --> B{status = archived?<br/>OR currentStep = archived/done?}
-    B -- yes --> C[archived]
-    B -- no --> D{status = completed?}
-    D -- yes --> E[completed]
-    D -- no --> F{taskCompletionPercent = 100?}
-    F -- yes --> G[tasks-done]
-    F -- no --> H[active]
-```
-
-| Status | How it's reached | Editable? |
-|--------|-----------------|-----------|
-| `active` | Default / Reactivate button | Yes |
-| `tasks-done` | All task checkboxes checked (auto-detected) | Yes |
-| `completed` | User clicks "Complete" button | No |
-| `archived` | User clicks "Archive" button | No |
-
----
 
 ## Footer Buttons
 
@@ -418,8 +374,8 @@ Notes:
 
 - **The title is authored, so it is not re-cased.** Feature-spec names are cased in data by `toDisplayCase()` (`apps/vscode/src/core/utils/specDisplayName.ts`) — acronym-aware, so `cli install nudge` becomes `CLI Install Nudge`, not `Cli Install Nudge` — and `.spec-header-title` no longer applies any CSS `text-transform`, so the data value is authoritative. A heading-derived title is never fed to the caser (it takes the heading branch of `resolveSpecDisplayName`), so `SpecKit` stays `SpecKit`.
 - **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
-- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `apps/vscode/src/features/specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
-- **The requirement count and the coverage denominator are one derivation.** Both call `requirementKeys()` in `apps/vscode/src/features/specs/livingSpecsModel.ts`: every `FR-nnn` id, plus every `###` heading that carries no id itself or in its body, which is how the command-line coverage check counts them. Fenced code blocks are ignored, so `N requirements` and the `M` in `N/M covered` cannot drift apart. For a requirement named by its heading, covered means its card carries a test count. `N scenarios` counts numbered Given/When/Then lines and `#### Scenario:` headings.
+- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `apps/vscode/src/features/living-specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
+- **The requirement count and the coverage denominator are one derivation.** Both call `requirementKeys()` in `apps/vscode/src/features/living-specs/livingSpecsModel.ts`: every `FR-nnn` id, plus every `###` heading that carries no id itself or in its body, which is how the command-line coverage check counts them. Fenced code blocks are ignored, so `N requirements` and the `M` in `N/M covered` cannot drift apart. For a requirement named by its heading, covered means its card carries a test count. `N scenarios` counts numbered Given/When/Then lines and `#### Scenario:` headings.
 - **Health is discarded if the panel moved on.** Colocated capabilities share a panel key, so a health result is dropped unless the panel's current spec tier is still the one the call was made for — otherwise a slow git check on one capability could land on another.
 - **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.
 - **New is measured against `main`.** The same push runs `git show main:<path>` and lists the working-copy headings `main`'s copy lacks. A body-only change is not new, and a renamed heading is. When `main` has no copy of the file, there is no `main`, or git does not answer, `newRequirements` is absent and nothing is marked. Nothing is written to the spec, so the marks go away once the branch merges.
@@ -446,8 +402,8 @@ Under the title, one chip per `touches` pattern (click reveals it) and, when ado
 
 | File | Role |
 |------|------|
-| `apps/vscode/src/features/spec-viewer/livingDocs.ts` | `livingSpecHeading()` / `livingSpecTitle()` — the authored title |
-| `apps/vscode/src/features/spec-viewer/livingHeaderMeta.ts` | `countLivingFacts()`, `buildLivingHeaderMeta()`, `resolveLivingHealth()` |
+| `apps/vscode/src/features/living-specs/livingDocs.ts` | `livingSpecHeading()` / `livingSpecTitle()` — the authored title |
+| `apps/vscode/src/features/living-specs/livingHeaderMeta.ts` | `countLivingFacts()`, `buildLivingHeaderMeta()`, `resolveLivingHealth()` |
 | `apps/vscode/src/features/spec-viewer/html/generator.ts` | `buildHeaderHtml()` — server-side header generation |
 | `apps/vscode/webview/src/spec-viewer/navigation.ts` | `updateNavState()` — client-side header updates on tab switch |
 | `apps/vscode/webview/src/spec-viewer/markdown/preprocessors.ts` | `preprocessSpecMetadata()` — strips metadata when context-driven |

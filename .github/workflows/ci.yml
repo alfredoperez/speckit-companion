@@ -47,11 +47,10 @@ jobs:
       - name: Run capture tests (stdlib unittest, no deps)
         run: python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 
-      - name: Check capture shape parity
-        run: python3 apps/speckit-extension/scripts/check-shape-parity.py
-
-      - name: Check node-assembly parity (commands re-assemble byte-identical)
-        run: python3 apps/speckit-extension/scripts/assemble-nodes.py --check
+      # build.py --check runs the shape-parity sweep itself, so it is not a
+      # separate step.
+      - name: Check command bodies (part fills, preset goldens, node-assembly parity)
+        run: python3 apps/speckit-extension/scripts/build.py --check
 
       - name: Check release packaging (every script a shipped command calls is packaged)
         run: python3 apps/speckit-extension/scripts/package-manifest.py --check
@@ -71,7 +70,35 @@ jobs:
 
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
         run: |
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/509-timing-capture
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/510-living-sync
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
-          python3 .claude/skills/eval-speckit-extension/check_quality.py --strict --commands-dir apps/speckit-extension/commands
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/509-timing-capture
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/510-living-sync
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/514-fast-path-fixture
+          python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands
+
+  visual-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No browser needed, so it runs first and fails fast.
+      - name: Check storyboard drift and the media manifest
+        run: npm run clips:check
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Pipeline Builder visual gate (layout only)
+        run: npm run test:visual:ci

@@ -6,12 +6,11 @@ import {
     resolveSpecPipeline,
     getStepFile,
     WorkflowStepConfig,
-    FeatureWorkflowContext,
-    SpecStatus,
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps, ConfigKeys } from '../../core/constants';
-import { readSpecContextSync } from './specContextManager';
+import { readSpecContextSyncSafe } from './specContextReader';
+import type { SpecContext } from '../../core/types/specContext';
 import { featureSpecName, isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
 import { deriveDocumentState } from './stepHistoryDerivation';
 import { deriveLastTransition } from './lastTransition';
@@ -62,11 +61,12 @@ export function isSpecGroupItem(contextValue: string | undefined): boolean {
 }
 
 export function lifecycleContextValue(
-    specContext: FeatureWorkflowContext | undefined
+    specContext: SpecContext | null | undefined
 ): SpecLifecycleContextValue {
     const status = specContext?.status;
     switch (status) {
-        case SpecStatuses.TASKS_DONE:
+        // The canonical status; the reader maps legacy `tasks-done` here.
+        case 'ready-to-implement':
             return 'spec-tasks-done';
         case SpecStatuses.IMPLEMENTED:
             // Terminal: pipeline finished implement. Must NOT match the Resume
@@ -149,14 +149,6 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         return item;
     }
 
-    /**
-     * Read spec context to determine status for grouping
-     */
-    private getSpecStatus(specFullPath: string): SpecStatus {
-        const context = readSpecContextSync(specFullPath);
-        return context?.status || SpecStatuses.ACTIVE;
-    }
-
     async getChildren(element?: SpecItem): Promise<SpecItem[]> {
         if (!vscode.workspace.workspaceFolders) {
             return [];
@@ -197,7 +189,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
             for (const spec of specs) {
                 const specFullPath = path.join(basePath, spec.path);
-                const context = readSpecContextSync(specFullPath);
+                const context = readSpecContextSyncSafe(specFullPath) ?? undefined;
                 const status = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
                 statusByPath.set(spec.path, context?.currentStep);
@@ -300,7 +292,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             return specs.map(spec => {
                 const isActive = this.activeSpecName === spec.name;
                 const specFullPath = path.join(basePath, spec.path);
-                const specContext = readSpecContextSync(specFullPath);
+                const specContext = readSpecContextSyncSafe(specFullPath) ?? undefined;
                 const displayName = resolveSpecDisplayName(specContext?.specName, spec.name);
                 const item = new SpecItem(
                     displayName,
@@ -540,7 +532,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 
         const basePath = workspaceFolder.uri.fsPath;
         const specFullPath = path.join(basePath, specPath);
-        const specContext = readSpecContextSync(specFullPath);
+        const specContext = readSpecContextSyncSafe(specFullPath) ?? undefined;
 
         // Compute change root for two-level layouts
         const changeRoot = deriveChangeRoot(specFullPath, basePath);
@@ -669,7 +661,7 @@ class SpecItem extends vscode.TreeItem {
         public readonly relatedDocs?: string[],
         private readonly iconName?: string,
         private readonly isActive?: boolean,
-        private readonly specContext?: FeatureWorkflowContext
+        private readonly specContext?: SpecContext
     ) {
         super(label, collapsibleState);
 

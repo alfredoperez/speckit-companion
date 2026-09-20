@@ -56,7 +56,7 @@ Two layouts, and the registry picks between them by whether you wrote a `spec:` 
 
 You can mix both in one registry, and the sidebar's Living Specs tree mirrors whichever you chose, so a colocated spec appears nested under its source directories. `/speckit.companion.living-move` moves a capability from one layout to the other later, so the first choice isn't final.
 
-Each spec has two sibling files, named from the spec's own stem and kept beside it: `<stem>.rules.md` and `<stem>.coverage.md`. For a central `capabilities/<name>/<name>.spec.md` that means `<name>.rules.md` and `<name>.coverage.md`. The rules file holds the capability's conventions as plain bullets, for people and assistants to read; the pipeline does not load it on its own. An older `.arch.md` beside a spec is still read as the rules file. The coverage file maps requirements to the tests that exercise them, and it's what the coverage count on a sidebar row and in the viewer header is read from. `/speckit.companion.living-adopt` writes a rules file for a layer it drafts; otherwise you create both files yourself.
+Each spec has two sibling files, named from the spec's own stem and kept beside it: `<stem>.rules.md` and `<stem>.coverage.md`. For a central `capabilities/<name>/<name>.spec.md` that means `<name>.rules.md` and `<name>.coverage.md`. The rules file holds the capability's conventions as plain bullets, for people and assistants to read; the workflow does not load it on its own. An older `.arch.md` beside a spec is still read as the rules file. The coverage file maps requirements to the tests that exercise them, and it's what the coverage count on a sidebar row and in the viewer header is read from. `/speckit.companion.living-adopt` writes a rules file for a layer it drafts; otherwise you create both files yourself.
 
 Two more rules decide which capability a given file belongs to.
 
@@ -74,7 +74,7 @@ All seven are named `/speckit.companion.living-<verb>`, and all seven come from 
 | --- | --- |
 | `/speckit.companion.living-adopt` | Drafts a spec for one code area you name, then a script registers the capability. The drafting is assistant work, read from the code's surface, and every draft is marked as a starting point. |
 | `/speckit.companion.living-sync` | Rewrites the affected specs from your current changes. Also assistant work. "Update, don't regenerate" is an instruction in the command, not something a script enforces. |
-| `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the pipeline without being folded back from the ones the spec never saw. Committed history only by default; `--working` counts uncommitted edits and untracked files as drift too. |
+| `/speckit.companion.living-drift` | Lists, per capability, the source files that changed since that capability's spec was last committed. It separates the ones that went through the workflow without being folded back from the ones the spec never saw. Committed history only by default; `--working` counts uncommitted edits and untracked files as drift too. |
 | `/speckit.companion.living-coverage` | Reads each capability's coverage file and reports what it finds. `--capability <name>` limits it to one. |
 | `/speckit.companion.living-show` | Prints one slice of a living spec: a capability's requirement headings, one requirement in full, or the requirements that describe one file. Read-only. |
 | `/speckit.companion.living-validate` | Checks the shape of living specs and of a feature spec's deltas: a requirement with no scenario, a scenario missing WHEN or THEN, a duplicate heading, a delta pointing at a requirement that isn't there. Read-only. |
@@ -99,7 +99,7 @@ At mark-complete the assistant authors those blocks, and a script folds each one
 
 Because the blocks land in the feature's own spec first, they show up in that feature's diff, which is where they get reviewed.
 
-The standard specify, plan, tasks pipeline emits no deltas, so a run folds only if the completion step did its part. Every capability the run loaded has to end with either a delta or a recorded skip note. When one has neither, the fold prints a named receipt saying the loop didn't close. It never blocks the run.
+The standard specify, plan, tasks workflow emits no deltas, so a run folds only if the completion step did its part. Every capability the run loaded has to end with either a delta or a recorded skip note. When one has neither, the fold prints a named receipt saying the loop didn't close. It never blocks the run.
 
 ## What stays manual
 

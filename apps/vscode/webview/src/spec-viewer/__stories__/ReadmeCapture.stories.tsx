@@ -100,10 +100,10 @@ import { SpecHeader } from '../components/SpecHeader';
 // The cross-promo banner ground (C5/C6): the mossy sprout mascot cradling its
 // glowing seedling, plus the Geist faces the banner type renders in (the same
 // font files the video compositions embed).
-import bannerArt from '../../../../speckit-extension/assets/hero-draft-a.png';
-import geistRegular from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
-import geistMedium from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
-import geistSemiBold from '../../../../media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
+import bannerArt from '../../../../../speckit-extension/assets/hero-draft-a.png';
+import geistRegular from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
+import geistMedium from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
+import geistSemiBold from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
 
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
 import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';

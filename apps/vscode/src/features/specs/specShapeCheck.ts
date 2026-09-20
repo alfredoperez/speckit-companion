@@ -11,7 +11,7 @@
  * Pure text in, findings out. No editor import, so the tests need no harness.
  */
 
-import { globMatches } from './livingSpecsModel';
+import { globMatches } from '../living-specs/livingSpecsModel';
 
 /** Severity decides one thing: whether a fold stops. Nothing else reads it. */
 export type Severity = 'error' | 'warning';

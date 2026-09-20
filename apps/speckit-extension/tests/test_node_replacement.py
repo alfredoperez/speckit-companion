@@ -201,7 +201,7 @@ class ParityNeverPointsAtAProject(unittest.TestCase):
             cp.use_project_nodes(project)
             try:
                 result = subprocess.run(
-                    [sys.executable, str(SCRIPTS / "assemble-nodes.py"), "--check"],
+                    [sys.executable, str(SCRIPTS / "build.py"), "--check"],
                     capture_output=True, text=True,
                 )
             finally:

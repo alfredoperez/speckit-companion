@@ -69,7 +69,7 @@ class ReportingIsAdditive(unittest.TestCase):
         # The report is printed after the check, never woven into it: every
         # command body must still equal its golden byte for byte.
         result = subprocess.run(
-            [sys.executable, str(SCRIPTS / "assemble-nodes.py"), "--check"],
+            [sys.executable, str(SCRIPTS / "build.py"), "--check"],
             capture_output=True, text=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
