@@ -33,12 +33,13 @@ describe('docs consistency', () => {
       return properties['speckit.aiProvider'].enum;
     })();
 
-    it('package.json enum, docs/providers.md matrix, and architecture.md prose agree', () => {
+    it('package.json enum, the website provider matrix, and architecture.md prose agree', () => {
       const count = enumValues.length;
 
-      // The provider matrix moved from README.md to docs/providers.md in the
-      // README rewrite; the README now names a few providers and links here.
-      const providersDoc = read('docs/providers.md');
+      // The provider matrix moved from README.md to the site's provider reference in the
+      // README rewrite, then to the website's provider reference when the repo
+      // docs merged into the site.
+      const providersDoc = read('apps/website/src/content/docs/docs/reference/providers.mdx');
       const matrixHeader = providersDoc.match(/^\| Feature \|([^\n]+)\|$/m);
       expect(matrixHeader).not.toBeNull();
       const matrixColumns = matrixHeader![1].split('|').map((s) => s.trim()).filter(Boolean);

@@ -31,7 +31,7 @@ Derived from `speckit-extension/assets/HERO-PROMPT.md`, the repo's codified bran
 |---|---|---|
 | 1 | Hook, names the audience | "Copilot writes the code. **You never see the plan.**" plus the Specify / Plan / Tasks / Done pill row |
 | 2 | Visualization payoff | "Every phase, **timed as it ran**" over the run overview |
-| 3 | Proof | The 60–68% leaner-specs stat, sourced from `docs/configuration.md#workflow-choice` |
+| 3 | Proof | The 60–68% leaner-specs stat, sourced from the site's configuration reference, Workflow choice |
 | 4 | Customization | Swap the pipeline, shape commands, pick the assistant — Copilot named first |
 | 5 | Close | "See and steer **everything your AI builds**", with the Marketplace search term |
 

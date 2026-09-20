@@ -106,7 +106,7 @@ const STORIES = [
     {
         // The benchmark stat strip under "Pick a pipeline once, run it end to
         // end" (ReadmeCapture.stories.tsx C2). Numbers quoted from
-        // docs/configuration.md#workflow-choice; change them there first.
+        // the site's configuration reference, Workflow choice; change them there first.
         story: 'scenes-readme-composites--c-2-pipeline-stats',
         out: 'pipeline-stats.png',
     },
@@ -147,7 +147,7 @@ const STORIES = [
         story: 'scenes-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
-    // ── The pipeline builder guide (docs/pipeline-builder.md) ──
+    // ── The pipeline builder guide (the site's guides/pipeline-builder) ──
     // One shot per gesture the guide teaches. Re-shoot just these with
     // `node tooling/scripts/capture-docs-images.mjs --only builder-`.
     //

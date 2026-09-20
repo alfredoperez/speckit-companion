@@ -9,9 +9,11 @@
 
 **[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/getting-started/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
 
+**What's new in 0.33.0:** a Pipeline Builder panel that draws your Companion workflow as steps, phases and nodes, and lets you attach hooks and rewrite one from the panel. A living spec now reads as requirement cards you can approve instead of a wall of markdown. The Overview tells a check the run actually ran apart from one it only claims to have. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+
 The site shows each feature as a short clip of the real thing — the Overview a finished run leaves behind, inline review, living specs — rather than describing it.
 
-**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](./docs/configuration.md#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
+**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](https://speckit-companion.dev/docs/reference/configuration#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
 
 <!-- The hero is the Overview GIF (built from content/media/feature-clips/overview): frame
      zero is a representative still by design, so it reads even paused. The composed C1
@@ -59,9 +61,9 @@ Specs grouped by lifecycle with live status per document, resume-where-you-left-
 
 ### Pick a pipeline once, run it end to end
 
-Choose stock Spec Kit or the leaner **SpecKit Companion** workflow in a single setting, and every step of the run dispatches that choice. The Companion pipeline writes specs roughly 60 to 68% smaller, produces zero throwaway side files, and right-sizes itself: a small change skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark, correctness was a tie; the difference is ceremony, not outcomes. Details and the measured numbers: [Workflow choice](./docs/configuration.md#workflow-choice).
+Choose stock Spec Kit or the leaner **SpecKit Companion** workflow in a single setting, and every step of the run dispatches that choice. The Companion pipeline writes specs roughly 60 to 68% smaller, produces zero throwaway side files, and right-sizes itself: a small change skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark, correctness was a tie; the difference is ceremony, not outcomes. Details and the measured numbers: [Workflow choice](https://speckit-companion.dev/docs/reference/configuration#workflow-choice).
 
-<!-- Numbers quoted from docs/configuration.md#workflow-choice; change them there
+<!-- Numbers quoted from the website's Configuration reference (workflow-choice section); change them there
      first, then regenerate this image (C2 in ReadmeCapture.stories.tsx). -->
 ![The benchmark in four tiles: 60 to 68% smaller specs, zero throwaway side files, ceremony right-sized to the change, and a 5.0 out of 5 correctness tie](docs/screenshots/generated/pipeline-stats.png)
 
@@ -76,8 +78,8 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 ### Also in the box
 
-- **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](./docs/configuration.md#custom-workflows)
-- **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](./docs/viewer.md)
+- **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
+- **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer)
 
 <!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
      and value on screen is real: change the contributed configuration in package.json
@@ -94,7 +96,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 The Companion pipeline is assembled: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](./docs/pipeline-builder.md).
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](https://speckit-companion.dev/docs/guides/pipeline-builder).
 
 **One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
 
@@ -126,7 +128,7 @@ When `companion.yml` is newer than the commands built from it, the panel's heade
 
 ## No lock-in, no server
 
-Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](./docs/getting-started.md).
+Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](https://speckit-companion.dev/docs/start/getting-started).
 
 ## Install
 
@@ -134,25 +136,25 @@ Install **SpecKit Companion** from the VS Code Marketplace, then add the [compan
 
 ## Works with your AI
 
-Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](./docs/providers.md).
+Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
 ## Docs
 
 - [Getting started](./docs/getting-started.md): platform support, sample specs, and running the extension from source (install story: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install))
-- [Spec viewer reference](./docs/viewer.md): reading, reviewing, creating, safety affordances
-- [Sidebar reference](./docs/sidebar.md): every view, icon, and action
-- [Pipeline builder](./docs/pipeline-builder.md): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
-- [Configuration](./docs/configuration.md): all settings, custom workflows, custom commands
-- [Supported AI providers](./docs/providers.md): the compatibility matrix and dispatch styles
+- [Spec viewer reference](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer): reading, reviewing, creating, safety affordances
+- [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar): every view, icon, and action
+- [Pipeline builder](https://speckit-companion.dev/docs/guides/pipeline-builder): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
+- [Configuration](https://speckit-companion.dev/docs/reference/configuration): all settings, custom workflows, custom commands
+- [Supported AI providers](https://speckit-companion.dev/docs/reference/providers): the compatibility matrix and dispatch styles
 - [Living specs](./apps/speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
-- [Telemetry](./docs/telemetry.md): exactly what is and isn't collected, and both off switches
+- [Telemetry](https://speckit-companion.dev/docs/reference/telemetry): exactly what is and isn't collected, and both off switches
 - [`.spec-context.json` schema](./docs/spec-context-schema.md): the on-disk state file
 - [How it works](./docs/how-it-works.md): architecture walkthrough
 - [Contributing](CONTRIBUTING.md) · [Changelog](./CHANGELOG.md)
 
 ## Telemetry
 
-The extension sends anonymous, PII-free usage telemetry (provider choice, phase dispatched, lifecycle counts; never prompt content, paths, or names). Two switches gate it, and if either is off nothing is sent: `speckit.telemetry` and VS Code's global telemetry level. Full disclosure: [Telemetry](./docs/telemetry.md).
+The extension sends anonymous, PII-free usage telemetry (provider choice, phase dispatched, lifecycle counts; never prompt content, paths, or names). Two switches gate it, and if either is off nothing is sent: `speckit.telemetry` and VS Code's global telemetry level. Full disclosure: [Telemetry](https://speckit-companion.dev/docs/reference/telemetry).
 
 ## Support
 

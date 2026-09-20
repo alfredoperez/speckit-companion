@@ -67,7 +67,7 @@ The workflow ends with a terminal `mark-complete` step (`speckit.companion.mark-
 
 ## Picking a different node or shape
 
-The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first. This section is the single list of what ships; the [Pipeline Builder guide](./pipeline-builder.md) teaches the gestures and links here rather than keeping a second copy that can drift.
+The pipeline ships one implementation of each node and one shape for each document. Both are choices, and the panel offers the alternatives rather than asking anyone to write a file first. This section is the single list of what ships; the [Pipeline Builder guide](https://speckit-companion.dev/docs/guides/pipeline-builder/) teaches the gestures and links here rather than keeping a second copy that can drift.
 
 **A variant is a shipped node with its own id.** `apps/speckit-extension/nodes/<step>/_order.yml` names them under `optional:`, and `variants:` says which default node each stands in for:
 

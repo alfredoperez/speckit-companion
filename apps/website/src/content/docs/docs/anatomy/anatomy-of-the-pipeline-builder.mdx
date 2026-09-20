@@ -1,0 +1,90 @@
+---
+title: Anatomy of the Pipeline Builder
+description: Every mark on the Pipeline Builder board named — steps, phases, nodes, hooks — plus what a workflow and a preset mean.
+sidebar:
+  label: Pipeline Builder
+  order: 4
+---
+
+By the end of this page you'll be able to read every mark on the Pipeline Builder board and know what a workflow and a preset are. [The Pipeline Builder](/docs/guides/pipeline-builder) covers actually changing something with what you learn here.
+
+Your assistant runs a workflow: a handful of steps, each assembled from **nodes** of instruction. The builder draws that workflow as a board. Open it from the circuit icon at the top of the Specs sidebar, or from the palette: **SpecKit Companion: Open Pipeline Builder**. The icon appears once the Companion Spec Kit extension is installed, because that's what the panel reads the workflow from.
+
+## What you see
+
+![Two lanes of the board, specify and plan, with a changed step, a rewritten node, a gate and an attached hook](../../../../../../../docs/screenshots/generated/builder-lanes.png)
+
+The run reads left to right, in the order it happens in. Four steps ship, and a project can add more. Here is every mark in that crop:
+
+| Mark | What it means |
+|---|---|
+| **specify**, **plan** | A step. Click the name to read the step's own preamble, the text every node in it sits under. |
+| `changed` | This step differs from the workflow as it ships. The header's chip lists how. |
+| `4 nodes · 2 files` | How many nodes it runs, and how many files a run of it produces. The file count names them on hover. |
+| `Document shape` | The shape of the document this step writes. Click it to change that shape; a count beside it says how many sections you have swapped. |
+| **GATHER**, **AUTHOR** | A phase. It groups nodes and gives work a coarser place to attach than a single node. |
+| `+` | Everything a phase can do, in one menu. |
+| A card | A node. One piece of instruction the assistant reads. |
+| The bar down a card's left edge | What kind of node it is. A heavy bar writes a deliverable, a light one reads context or sets things up. |
+| `gate` | This node can stop the run. |
+| `held` | This node cannot be reordered. Something after it reads what it writes, and the panel names what. |
+| `yours` | You rewrote this node. |
+| `spec.md` in green | A file this node produces. |
+| `before`, `after` | A heading over the work attached on that side. A node's `before` block sits above its card and its `after` block below, so the words match the order. |
+| `+` on a dashed rule between two cards | Attach work exactly there. |
+| `+` in the gap between two lanes | Add a step in that place. |
+
+Anything the project changed carries one colour and nothing else does, so *"what did we change here"* is answerable without reading.
+
+The whole board, at the width it really has:
+
+![The pipeline builder, showing four steps as columns with their phases, nodes and attached hooks](../../../../../../../docs/screenshots/generated/builder-board.png)
+
+At the far right, **Outside the run** holds what does not take a turn: `auto`, which runs the other steps hands-off.
+
+The header names the configuration you are on under **Workflow**. Beside it, a chip reading `No changes` or `2 steps differ from shipped` — click that one and the first lane that differs scrolls into view. Next to it, a chip reading `5 hooks`, which opens onto what the workflow holds: how many steps, phases and nodes there are, how many hooks are yours, and how many an installed extension registered. **Add step** is the last of the three; it appends, and a seam between two lanes adds a step in that place instead. Docked narrow, the band folds and **Open companion.yml** and **Preview build** move under the `⋯`, where **Add step** also appears; **Add step** stays on the band as well.
+
+![The header's tally chip open on the counts: steps, phases, nodes, and whose hooks these are](../../../../../../../docs/screenshots/generated/builder-changes.png)
+
+### A step, close up
+
+![A step header showing its name, node count, file count and template chip, above its phases](../../../../../../../docs/screenshots/generated/builder-step.png)
+
+The name is the step. Under it, quietly: how many nodes it runs, how many files a run of it produces, and the template it writes into.
+
+### What a phase can do
+
+![The phase menu open, offering Add hook, Add node, Rename phase, Split phase and Merge](../../../../../../../docs/screenshots/generated/builder-phase-menu.png)
+
+The `+` on every phase rule is the one control the board never hides. A row that cannot run here is shown greyed with the reason, because that is what teaches the capability: *"one node here, so there is nothing to split off"* says a phase can be split at the same moment it says why this one cannot.
+
+## Workflows and presets
+
+A **workflow** is a whole named configuration. Switching between them swaps everything at once, including node order, hooks, templates and routing, so a one-line fix and a client deliverable can run different workflows out of one repository. Your nodes and fragments are shared across all of them. The switcher is the **Workflow** dropdown in the header.
+
+![The New workflow form, offering three whole configurations to start from as cards](../../../../../../../docs/screenshots/generated/builder-preset.png)
+
+A new workflow starts from what you run today, or from one of the two configurations Companion ships:
+
+| Preset | For |
+|---|---|
+| **Classic spec-kit** | Stock spec-kit's document shapes: prioritized P1/P2/P3 user stories, the full Technical Context block. Changes what the documents look like, not what the run does. |
+| **Brownfield** | Changing a system that already exists: the spec written as a delta, the folder numbered against every branch, the task list attacked before it runs, and a person opening the thing before it counts as done. |
+
+Whichever you pick is copied in and yours to change from there. A preset is a start, not a fixed thing. [Pick a pipeline](/docs/discussions/pick-a-pipeline) covers the two workflows Companion ships as commands; this dropdown is where a project defines and switches between its own.
+
+## Where things live
+
+| Path | What it holds |
+|---|---|
+| `.specify/companion.yml` | Your configuration, the source of truth |
+| `.specify/companion/workflows/<name>.yml` | A whole named configuration you can switch to |
+| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added |
+| `.specify/companion/fragments/<name>.md` | A document section you wrote |
+| `.specify/extensions/companion/commands/` | What a build produces: derived, not edited |
+
+The reference for the configuration format, and the full list of the alternatives, add-ons, fragments and presets that ship, is the project's `docs/template-profiles.md`.
+
+## Next
+
+[The Pipeline Builder](/docs/guides/pipeline-builder) walks attaching a hook, editing a node and building a change, using the marks named on this page.

@@ -20,7 +20,7 @@
 > truly closed. Because of this gate, the sidebar keeps `implemented`
 > specs in the **Active** group, not **Completed** — only `completed`
 > specs surface under Completed, so the "still needs a manual
-> Mark Completed" state stays visible (see `docs/sidebar.md`).
+> Mark Completed" state stays visible (see the site's sidebar reference).
 >
 > **Visible-label overrides**: The viewer's status badge uses friendlier
 > labels for two canonical keys without changing the on-disk values:
@@ -374,7 +374,7 @@ Notes:
 
 - **The title is authored, so it is not re-cased.** Feature-spec names are cased in data by `toDisplayCase()` (`apps/vscode/src/core/utils/specDisplayName.ts`) — acronym-aware, so `cli install nudge` becomes `CLI Install Nudge`, not `Cli Install Nudge` — and `.spec-header-title` no longer applies any CSS `text-transform`, so the data value is authoritative. A heading-derived title is never fed to the caser (it takes the heading branch of `resolveSpecDisplayName`), so `SpecKit` stays `SpecKit`.
 - **The title belongs to the capability, not the tier on screen.** It is read from the spec tier's document whichever of Spec / Architecture / Coverage is selected.
-- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `apps/vscode/src/features/living-specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See [`docs/sidebar.md`](./sidebar.md).
+- **Coverage and drift are the sidebar's own numbers.** They come from `readCapabilityHealth()` in `apps/vscode/src/features/living-specs/livingSpecsModel.ts` — the exact call the Living Specs tree makes — so the two surfaces cannot disagree. See the [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/).
 - **The requirement count and the coverage denominator are one derivation.** Both call `requirementKeys()` in `apps/vscode/src/features/living-specs/livingSpecsModel.ts`: every `FR-nnn` id, plus every `###` heading that carries no id itself or in its body, which is how the command-line coverage check counts them. Fenced code blocks are ignored, so `N requirements` and the `M` in `N/M covered` cannot drift apart. For a requirement named by its heading, covered means its card carries a test count. `N scenarios` counts numbered Given/When/Then lines and `#### Scenario:` headings.
 - **Health is discarded if the panel moved on.** Colocated capabilities share a panel key, so a health result is dropped unless the panel's current spec tier is still the one the call was made for — otherwise a slow git check on one capability could land on another.
 - **Health arrives after first paint.** Drift runs git, so the header renders from the synchronous facts and the extension pushes `livingHealthResolved` once the health call returns. A repository without git, a spec never committed, or a timed-out check simply leaves both fields absent.

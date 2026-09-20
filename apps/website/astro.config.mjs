@@ -28,8 +28,9 @@ export default defineConfig({
   site: 'https://speckit-companion.dev',
   output: 'static',
   trailingSlash: 'ignore',
-  // Retired URLs. Both pages were folded or split rather than deleted, so the
-  // old address keeps working instead of 404ing for anyone who bookmarked it.
+  // Retired URLs. Every one of these pages was folded, split or moved rather
+  // than deleted, so the old address keeps working instead of 404ing for
+  // anyone who bookmarked it.
   //
   // reading-the-overview  was a narrative retelling of the anatomy page: same
   //                       regions, same order, same sentences.
@@ -38,9 +39,15 @@ export default defineConfig({
   //                       which is where a reader arriving at the old URL is
   //                       least likely to want to land, so it points at the
   //                       sidebar and that page links on to Steering.
+  // pick-a-pipeline,
+  // living-specs          moved out of Guides into Discussions: both explain a
+  //                       concept rather than walk a job, so they read next to
+  //                       each other instead of next to a recipe.
   redirects: {
     '/docs/guides/reading-the-overview': '/docs/anatomy/anatomy-of-the-overview',
     '/docs/anatomy/sidebar-and-steering': '/docs/anatomy/the-sidebar',
+    '/docs/guides/pick-a-pipeline': '/docs/discussions/pick-a-pipeline',
+    '/docs/guides/living-specs': '/docs/discussions/living-specs',
   },
   integrations: [
     starlight({
@@ -82,17 +89,25 @@ export default defineConfig({
           href: 'https://github.com/alfredoperez/speckit-companion',
         },
       ],
-      // Three groups, in the order a reader moves through them: get it running,
-      // learn what each surface is showing you, then do a specific job. The
-      // directory is the group, so a new page lands in the right section by
-      // where it's saved and nothing here has to be edited.
+      // Four groups, in the order a reader moves through them: get it running,
+      // learn what each surface is showing you, do a specific job, then read
+      // the reasoning behind a choice. The directory is the group, so a new
+      // page lands in the right section by where it's saved and nothing here
+      // has to be edited.
       //
-      // docs/start   onboarding. Introduction and Install are named by slug
-      //              because /docs/ is the section root and cannot sit in a
-      //              subdirectory; everything after them autogenerates.
-      // docs/anatomy the surface references. One page per surface, read region
-      //              by region: what it shows and what it means.
-      // docs/guides  how-to. One page per job, read start to finish.
+      // docs/start       onboarding. Introduction and Install are named by
+      //                  slug because /docs/ is the section root and cannot
+      //                  sit in a subdirectory; everything after them
+      //                  autogenerates.
+      // docs/anatomy     the surface references. One page per surface, read
+      //                  region by region: what it shows and what it means.
+      // docs/reference   the dictionaries: every setting, the provider
+      //                  matrix, what telemetry sends. Complete and uniform,
+      //                  meant to be looked up rather than read start to end.
+      // docs/guides      how-to. One page per job, read start to finish, no
+      //                  theory.
+      // docs/discussions explanation. Free to digress, no steps: what a
+      //                  workflow is, why living specs exist.
       //
       // Every page carries its own `sidebar.label` and `sidebar.order` in
       // frontmatter, so the nav reads Overview, Spec viewer, Sidebar under the
@@ -101,7 +116,7 @@ export default defineConfig({
       // back to alphabetical, which put Living specs first even though it is
       // the most advanced guide. The order below is the reading order, which is
       // also the order the footer's previous and next buttons walk: install it,
-      // learn the surfaces, then do a job.
+      // learn the surfaces, do a job, then read the "why".
       sidebar: [
         {
           label: 'Start here',
@@ -116,8 +131,16 @@ export default defineConfig({
           items: [{ autogenerate: { directory: 'docs/anatomy' } }],
         },
         {
+          label: 'Reference',
+          items: [{ autogenerate: { directory: 'docs/reference' } }],
+        },
+        {
           label: 'Guides',
           items: [{ autogenerate: { directory: 'docs/guides' } }],
+        },
+        {
+          label: 'Discussions',
+          items: [{ autogenerate: { directory: 'docs/discussions' } }],
         },
       ],
     }),

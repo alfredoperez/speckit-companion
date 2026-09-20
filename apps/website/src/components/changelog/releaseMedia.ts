@@ -38,7 +38,16 @@ export interface ReleaseImage {
 }
 
 export const RELEASE_MEDIA: Record<string, ReleaseImage> = {
-  // No releases are illustrated yet. Add entries as captures are produced.
+  'vscode@0.33.0': {
+    src: '/changelog/vscode-0.33.0-pipeline-builder.png',
+    alt: 'The Pipeline Builder panel, showing the specify and plan steps as columns of phases and nodes with an attached hook.',
+    caption: 'The Pipeline Builder, the release this version shipped it in.',
+  },
+  'vscode@0.29.0': {
+    src: '/changelog/vscode-0.29.0-overview.png',
+    alt: 'The spec viewer Overview, annotated: intent, expectations, verified checks, decisions and coverage.',
+    caption: 'The Overview, redesigned in this release from an activity feed into a durable-context dossier.',
+  },
 };
 
 export function mediaKey(product: ProductId, version: string | null): string {

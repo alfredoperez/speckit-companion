@@ -23,7 +23,9 @@ Two statuses get a friendlier visible label than the value stored on disk: `task
 
 Under the title sits a run strip: a row of facts the badge and the rail don't already say. It shows tasks done out of total, requirements traced, concerns, checks, elapsed time (or `Timing N/M phases` while the record is partial), and a link to the pull request when one was recorded. Facts drop off from the least important end as the window narrows, and the strip doesn't render at all when there's nothing to say.
 
-A living spec's header carries different facts, because a capability isn't a run: requirement and scenario counts, the globs the capability claims, where its spec lives, and an `N/M covered` count. That count appears only when the capability has a coverage file beside its spec. No file means no number, which reads the same as zero coverage without being it. When source files matching the capability changed since its spec was last committed, the header adds a drift chip and an **Update** button that asks your assistant to bring the spec back in line with the code. [Living specs](/docs/guides/living-specs) covers what those files are.
+A living spec's header carries different facts, because a capability isn't a run: requirement and scenario counts, the globs the capability claims, where its spec lives, and an `N/M covered` count. That count appears only when the capability has a coverage file beside its spec. No file means no number, which reads the same as zero coverage without being it. When source files matching the capability changed since its spec was last committed, the header adds a drift chip and an **Update** button that asks your assistant to bring the spec back in line with the code. A spec a wizard drafted rather than one a run wrote leads its title with a **DRAFT** badge, the one place the viewer says so, and a branch that added requirements says how many are new. [Living specs](/docs/discussions/living-specs) covers what those files are.
+
+Every canonical status maps to one of three color treatments, so the badge reads at a glance without re-reading the label: in-progress statuses (Specifying, Planning, Tasking, Implementing) carry an accent tint with a gentle border-breath animation, intermediate-done ones (Specified, Planned, Tasks Created, Completed) carry a quiet success-green tint, and idle ones (Draft, Archived) carry a muted, low-weight token.
 
 ## The outline
 
@@ -31,7 +33,7 @@ On the right of the page, an "On this page" outline lists the document's heading
 
 ## The pipeline rail
 
-The rail lists the documents of whichever workflow the spec recorded when it was created, so a custom workflow gets its own rail rather than a translation of a built-in one. [Pick a pipeline](/docs/guides/pick-a-pipeline) is where workflows get chosen. The Overview sits at the top of the rail as its own destination.
+The rail lists the documents of whichever workflow the spec recorded when it was created, so a custom workflow gets its own rail rather than a translation of a built-in one. [Pick a pipeline](/docs/discussions/pick-a-pipeline) is where workflows get chosen. The Overview sits at the top of the rail as its own destination.
 
 <MediaSlot
   feature="workflow-documents"
@@ -42,7 +44,13 @@ The rail lists the documents of whichever workflow the spec recorded when it was
 
 **A step's own sub-documents nest under it.** The Plan step's research and data-model files, and a step's `checklists/` or `contracts/` directory, belong to that step rather than becoming a later step's related file. Other files in the spec folder show up as related documents alongside the rail.
 
-**A living spec doesn't get a rail at all.** In living-spec mode the rail is replaced by a flat tab strip across the tiers that exist: Spec, Architecture, Coverage. With only one tier on disk, there's nothing to switch between and no strip renders.
+**On a narrow pane, the rail folds into a horizontal chip strip** rather than disappearing.
+
+**A living spec doesn't get a rail at all.** In living-spec mode the rail is replaced by a flat tab strip: Overview, then Spec, Rules and Coverage for whichever tiers exist on disk. Opening a capability lands on its Overview, which shows the spec's purpose verbatim, what it covers and where it lives, its health (coverage, drift, and how many requirements are still adopted and unconfirmed), and one row per requirement that jumps to that requirement on the Spec tab. Opening a specific requirement from the sidebar or the status bar skips straight to the Spec tab.
+
+A living spec's Spec tab reads as components rather than plain markdown: a purpose callout leads, each requirement renders as its own card in authored order with a quiet `inferred` badge where the spec says so, and scenario steps separate the WHEN condition from the THEN outcome. A requirement transcribed from existing code rather than confirmed by a run carries an `adopted` badge, and every adopted badge has an **Approve** control beside it that deletes the marker; the tab's **Approve all N** does the whole tier at once, with a five-second **Undo**, and a draft with nothing adopted yet offers **Approve spec** in its place. The `DRAFT` state itself isn't written as text in the body: it's the header badge from the previous section. Anything the component renderer doesn't recognize falls back to plain markdown, so the page always renders.
+
+Inline comments work the same way on a living spec as on a feature spec, with one difference: a living spec has no `.spec-context.json` to persist them to, so its comments live in the open viewer tab only, and **Refine** sends them as the same in-place edit request aimed at the tier file on screen.
 
 ### Every state a step can be in
 
@@ -56,7 +64,9 @@ The rail lists the documents of whichever workflow the spec recorded when it was
 
 Current means the tab you're reading, which is not necessarily the step the run is on. Open an earlier document while implement is running and that document is Current; the header badge and the footer keep reporting the spec's real state. Clicking a tab never rewrites where the run thinks it is.
 
-Locked is the one worth being exact about. A tab is disabled only when four things are true at once: a step is currently running, the tab sits after that step in the rail, it isn't the tab you're already viewing, and its own document doesn't exist yet. That's the entire rule.
+Locked is the one worth being exact about. A tab is disabled only when four things are true at once: a step is currently running, the tab sits after that step in the rail, it isn't the tab you're already viewing, and its own document doesn't exist yet. That's the entire rule. A locked tab carries a tooltip saying why, so the disabled state is never just a dead click.
+
+**The body drops what the header already tells you.** Once the structured header carries the metadata, the viewer suppresses the duplicates inside the document itself — the `Input:` block, the repeated branch chips, a literal `Slug:` or `Date:` paragraph — so what you read is the spec and not its filing card.
 
 Separately from locking, a tab whose document isn't on disk can't be clicked, because there's nothing to open. The first tab is the exception, so a brand-new spec always has somewhere to land. The rail does not enforce sequential approval: any step whose document exists stays freely clickable, including steps you already went past and steps ahead of where the run stopped.
 
@@ -99,7 +109,7 @@ Sub-bullets under a task fold into a details group rather than sprawling down th
 
 ## Mermaid diagrams
 
-A Mermaid code fence renders as a diagram in the page, and each diagram gets its own control strip: zoom out, Reset, zoom in.
+A Mermaid code fence renders as a diagram in the page, and each diagram gets its own control strip: zoom out, Reset, zoom in. A diagram wider than the prose column scrolls horizontally inside it instead of bleeding past it.
 
 Zoom is a CSS scale and nothing more. There's no pan, no drag, and no fullscreen, and the zoom isn't remembered across a re-render.
 
@@ -128,11 +138,29 @@ Six real states show no forward action at all:
 
 The in-flight one is the one you'll meet most often. While the step runs, the forward-motion buttons are dropped and the context line reads "Step running, actions unlock when it settles". The closure actions, archive, complete, reactivate and refine, are unaffected.
 
+### Undo and confirm
+
+Regenerate queues behind a five-second undo toast; clicking **Undo** or pressing Esc cancels it, otherwise it fires when the timer runs out. Archive, Complete and Reactivate each need two clicks: the first swaps the label to "Confirm?" for three seconds, and a second click inside that window is what commits it. Let it sit and the label reverts on its own, nothing changed. The OS-level Reduce Motion preference is honored throughout, so the in-flight pulses and this toast's own animation stop when it's on.
+
+### SpecKit's own commands, per tab
+
+Spec Kit's three refinement commands surface as one-click footer buttons, each on the tab where it's most useful: **Clarify** on Spec, **Checklist** on Plan, **Analyze** on Tasks. No configuration is needed for these; a custom command sharing the same id takes over from it. Like the closure actions, they disappear once the spec reaches its closure gate.
+
 ### Other actions
 
-A custom command is a slash command you defined yourself in settings, so that the viewer can dispatch it the same way it dispatches a workflow step. [Pick a pipeline](/docs/guides/pick-a-pipeline) has the shape of one.
+A custom command is a slash command you defined yourself in settings, so that the viewer can dispatch it the same way it dispatches a workflow step. [Pick a pipeline](/docs/discussions/pick-a-pipeline) has the shape of one.
 
 Yours appear in a collapsed **Other actions** menu in the footer, scoped to the tab or step you assign them to. It's a menu rather than a toolbar, and it renders only when the spec is still active, isn't at its closure gate (the point where the footer is offering Mark Completed or Reactivate), and the list isn't empty. Only the object form of a custom command reaches the footer; a bare string shows up in the quick pick and nowhere else. The same commands are reachable from a **Run SpecKit Custom Command** quick pick.
+
+## Creating a spec
+
+**SpecKit: New Spec** opens a dialog rather than a blank file: describe what you want built, pick a workflow, and optionally attach screenshots or mockups for context. **Create Spec** stays disabled until you've written something. Picking the Companion workflow shows an **Auto** button beside it that runs the whole pipeline hands-off; [pick a pipeline](/docs/discussions/pick-a-pipeline) covers what it dispatches.
+
+The dialog is built for keyboard and screen-reader use: errors, submission progress and image attach or remove are all announced, every control has a visible focus ring, the character limit is conveyed beyond color and blocks submission once you're over it, and pressing Esc with something typed asks before it discards your draft.
+
+## Works offline
+
+Fonts and icons ship bundled inside the extension itself, so the viewer and the spec editor render identically with no internet connection and make no runtime requests to a CDN.
 
 ## Next
 

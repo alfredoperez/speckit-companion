@@ -37,6 +37,7 @@ import ReleaseCard from '../components/changelog/ReleaseCard.astro';
 import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
 import { assertMediaKeysResolve, imageFor } from '../components/changelog/releaseMedia';
+import { leadFor } from '../components/changelog/releaseLead';
 
 const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
 const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
@@ -50,6 +51,7 @@ assertMediaKeysResolve([...released, ...unreleased]);
 const processor = await createMarkdownProcessor({});
 const renderRelease = async (release: Release) => ({
   ...release,
+  lead: leadFor(release),
   sections: await Promise.all(
     release.sections.map(async (section) => ({
       title: section.title,
@@ -518,11 +520,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       }
 
       .cl-release-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
         padding-bottom: 18px;
         border-bottom: 1px solid var(--rule);
         cursor: pointer;
@@ -533,10 +530,27 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         display: none;
       }
 
+      .cl-release-head-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
       .cl-release-head-right {
         display: flex;
         align-items: center;
         gap: 10px;
+      }
+
+      /* The one line visible before a reader expands the card. It has to
+         stand on its own, since the sections below it start collapsed. */
+      .cl-lead {
+        margin: 10px 0 0;
+        color: var(--text-body);
+        font-size: var(--fs-ui);
+        line-height: var(--lh-ui);
       }
 
       .cl-chevron {

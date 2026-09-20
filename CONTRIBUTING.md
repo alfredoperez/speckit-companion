@@ -103,7 +103,7 @@ For `chore` commits (version bumps, release prep) the scope is usually omitted.
 |---|---|
 | A new AI provider | "Supported AI Providers" matrix + provider count + `package.json` enum |
 | A new configuration setting | "Configuration" section (JSON example + value table) |
-| A new sidebar action | `docs/sidebar.md` + the "Sidebar at a Glance" summary in README |
+| A new sidebar action | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) + the "Sidebar at a Glance" summary in README |
 | A new webview UI element | "Reading Specs" subsection + retake the screenshot |
 
 If your change is documented in `CLAUDE.md`'s map but not in the README after your PR, reviewers will ask. Save the round trip.
@@ -122,7 +122,7 @@ If your change is documented in `CLAUDE.md`'s map but not in the README after yo
 Long-form docs live under `docs/` and are linked from the README:
 
 - [docs/architecture.md](docs/architecture.md) — module structure, extension/webview boundaries, build pipeline
-- [docs/sidebar.md](docs/sidebar.md) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
+- [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
 - [docs/viewer-states.md](docs/viewer-states.md) — spec viewer state machine: status lifecycle, footer buttons, badge text, step tabs
 - [docs/how-it-works.md](docs/how-it-works.md) — end-to-end walkthrough
 - [docs/spec-context-schema.md](docs/spec-context-schema.md) — `.spec-context.json` schema reference

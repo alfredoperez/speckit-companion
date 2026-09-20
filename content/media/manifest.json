@@ -573,7 +573,7 @@
           "README.md"
         ]
       },
-      "notes": "The numbers on this image are quoted from docs/configuration.md#workflow-choice. Change them there first, then regenerate."
+      "notes": "The numbers on this image are quoted from the site's configuration reference, Workflow choice. Change them there first, then regenerate."
     },
     {
       "id": "benefits-strip",
