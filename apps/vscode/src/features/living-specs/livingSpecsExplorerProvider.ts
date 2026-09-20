@@ -192,8 +192,10 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     }
 
     /**
-     * How many capabilities anywhere under `node` have drifted. Health is cached
-     * per spec, so asking here costs nothing the rows would not have paid anyway.
+     * How many capabilities anywhere under `node` have drifted. The same total
+     * of health reads as before, but paid when the folder renders rather than
+     * when someone opens it. They run together and each is bounded, and the
+     * cache makes every later read free.
      */
     private async driftedUnder(node: CapabilityTreeGroup): Promise<number> {
         const leaves: ResolvedCapability[] = [];

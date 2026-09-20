@@ -317,5 +317,6 @@
         "reason": "new provider added through the existing factory+registry contract; no documented capability requirement changed (matches the 'a new assistant is supported' scenario already in the living spec)"
       }
     ]
-  }
+  },
+  "telemetryInstanceId": "9fcdf0e4-f9f7-45d6-a3be-3eb4aac2247b"
 }

@@ -13,20 +13,6 @@
   "status": "completed",
   "approach": "Split getOrSelectWorkflow() into read-only resolveWorkflow() and keep existing for explicit actions; fix 7 webview UI issues across CSS and TypeScript",
   "last_action": "T011 complete — all 11 tasks done, 143 tests passing",
-  "stepHistory": {
-    "specify": {
-      "startedAt": "2026-04-05T00:00:00.000Z",
-      "completedAt": "2026-04-06T00:45:41.586Z"
-    },
-    "plan": {
-      "startedAt": "2026-04-06T00:45:40.167Z",
-      "completedAt": "2026-04-06T00:45:40.827Z"
-    },
-    "tasks": {
-      "startedAt": "2026-04-06T00:46:04.648Z",
-      "completedAt": "2026-04-06T00:46:05.635Z"
-    }
-  },
   "step_summaries": {
     "specify": {
       "complexity": "normal",
@@ -165,5 +151,7 @@
   "decisions": [
     "Extracted resolveDefaultWorkflow() as shared private helper to prevent divergence between resolveWorkflow() and getOrSelectWorkflow()",
     "T010: Badge already correctly reflects context state — no code change needed"
-  ]
+  ],
+  "history": [],
+  "telemetryInstanceId": "7b5004ba-670e-4f5b-b491-feec42342a34"
 }

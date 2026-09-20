@@ -371,5 +371,6 @@
       "command": "python3 -m unittest discover -s tests"
     }
   ],
-  "last_action": "all 12 tasks done — 1721 jest + 446 python green, shape parity OK"
+  "last_action": "all 12 tasks done — 1721 jest + 446 python green, shape parity OK",
+  "telemetryInstanceId": "54f2a4a4-8d45-4db0-9183-ae24202c4556"
 }

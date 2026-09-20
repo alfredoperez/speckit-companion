@@ -394,5 +394,6 @@
       "command": "node -e deriveStepHistory(...528 history)",
       "result": "plan folded:true span 161ms, tasks folded:true, specify/implement folded:false"
     }
-  ]
+  ],
+  "telemetryInstanceId": "e563a418-2d3c-45e7-9023-56dfd3a9f413"
 }

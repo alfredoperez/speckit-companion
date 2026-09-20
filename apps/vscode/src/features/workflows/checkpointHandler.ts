@@ -223,14 +223,30 @@ async function updateCheckpointStatus(
     try {
         let context: FeatureWorkflowContext;
 
+        let content: string | null = null;
         try {
-            const content = await fs.promises.readFile(contextPath, 'utf-8');
-            context = JSON.parse(content);
-        } catch {
-            context = {
-                workflow: 'speckit',
-                selectedAt: new Date().toISOString(),
-            };
+            content = await fs.promises.readFile(contextPath, 'utf-8');
+        } catch (err) {
+            // Only a missing file is a legitimate first write. Any other read
+            // failure means the record exists and we cannot see it, and writing
+            // a fresh skeleton over it would take the history with it.
+            if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+                throw new Error(
+                    `refusing to record the ${checkpointId} checkpoint: existing ${FEATURE_CONTEXT_FILE} at ${contextPath} is unreadable (${(err as Error)?.message ?? err}).`,
+                );
+            }
+        }
+
+        if (content === null) {
+            context = { workflow: 'speckit', selectedAt: new Date().toISOString() };
+        } else {
+            try {
+                context = JSON.parse(content);
+            } catch (err) {
+                throw new Error(
+                    `refusing to record the ${checkpointId} checkpoint: existing ${FEATURE_CONTEXT_FILE} at ${contextPath} will not parse (${(err as Error)?.message ?? err}).`,
+                );
+            }
         }
 
         // Update checkpoint status
@@ -287,3 +303,6 @@ export async function executeCheckpointsForTrigger(
 
     return results;
 }
+
+/** Seam for the wipe-guard suite; not part of this module's interface. */
+export const __test = { updateCheckpointStatus };

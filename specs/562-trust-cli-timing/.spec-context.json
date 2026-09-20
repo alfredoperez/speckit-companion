@@ -341,5 +341,6 @@
       "command": "check_quality.py --feature-dir specs/562-trust-cli-timing",
       "result": "3/4 trusted (implement in-flight until mark-complete closes it)"
     }
-  ]
+  ],
+  "telemetryInstanceId": "c2fe8da2-0f8a-4e0a-8e79-b4e053077450"
 }

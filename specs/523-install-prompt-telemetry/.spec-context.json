@@ -361,5 +361,6 @@
       "warnings": []
     }
   ],
-  "last_action": "all 9 tasks done — compile clean, 1768 tests pass"
+  "last_action": "all 9 tasks done — compile clean, 1768 tests pass",
+  "telemetryInstanceId": "38943a95-904e-45e6-950e-2bcb77b7918f"
 }

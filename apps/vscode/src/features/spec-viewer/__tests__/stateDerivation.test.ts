@@ -169,6 +169,30 @@ describe('deriveActiveSubstep', () => {
 });
 
 describe('deriveViewerState', () => {
+
+    it('reads a checkpoint the writer recorded as a word, not only as a flag', () => {
+        // The checkpoint writer stores 'completed'; the panel wants a yes or no.
+        // While only a boolean counted, a finished checkpoint never reached the
+        // Activity panel at all.
+        const state = deriveViewerState(makeContext({
+            checkpointStatus: { pr: 'completed', commit: 'pending' },
+        }));
+        expect(state.checkpointStatus).toEqual({ pr: true, commit: false });
+    });
+
+    it('still reads a checkpoint stored as a flag', () => {
+        const state = deriveViewerState(makeContext({
+            checkpointStatus: { commit: true },
+        }));
+        expect(state.checkpointStatus).toEqual({ commit: true });
+    });
+
+    it('ignores a checkpoint value it does not understand', () => {
+        const state = deriveViewerState(makeContext({
+            checkpointStatus: { pr: 'something else' },
+        }));
+        expect(state.checkpointStatus).toBeUndefined();
+    });
     it('produces correct state for auto incomplete history', () => {
         // Simulates what auto leaves behind: specify was started but its
         // completion was never appended; currentStep advanced to "tasks".

@@ -267,13 +267,23 @@ function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
     return out.length > 0 ? out : undefined;
 }
 
+// The checkpoint writer records a word and the panel wants a yes or no, so both shapes fold in.
+function asCheckpointDone(v: unknown): boolean | undefined {
+    if (typeof v === 'boolean') return v;
+    if (v === 'completed') return true;
+    if (v === 'pending' || v === 'skipped') return false;
+    return undefined;
+}
+
 function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
     const v: unknown = ctx.checkpointStatus;
     if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
     const r = v as Record<string, unknown>;
     const out: CheckpointStatus = {};
-    if (typeof r.commit === 'boolean') out.commit = r.commit;
-    if (typeof r.pr === 'boolean') out.pr = r.pr;
+    const commit = asCheckpointDone(r.commit);
+    const pr = asCheckpointDone(r.pr);
+    if (commit !== undefined) out.commit = commit;
+    if (pr !== undefined) out.pr = pr;
     return out.commit !== undefined || out.pr !== undefined ? out : undefined;
 }
 

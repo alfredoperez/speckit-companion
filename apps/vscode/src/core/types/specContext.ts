@@ -361,7 +361,8 @@ export interface SpecContext {
     /** PR number recorded at a commit/PR checkpoint. */
     prNumber?: number;
     /** Commit/PR checkpoint completion, written by the workflow checkpoint handler. */
-    checkpointStatus?: CheckpointStatus;
+    /** As a file can hold it: the panel reads booleans, the checkpoint writer records a word. */
+    checkpointStatus?: Record<string, boolean | string>;
     /**
      * Legacy per-spec profile field from before the workflow-choice collapse.
      * No longer written or read for dispatch — the `workflow` field now drives the

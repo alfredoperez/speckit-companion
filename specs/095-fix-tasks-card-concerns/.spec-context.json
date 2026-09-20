@@ -1,6 +1,6 @@
 {
   "workflow": "sdd",
-  "currentStep": "done",
+  "currentStep": "implement",
   "currentTask": null,
   "progress": null,
   "next": "done",
@@ -13,7 +13,10 @@
   "type": "fix",
   "createdAt": "2026-05-20T12:50:17Z",
   "loadedDomains": [],
-  "checkpointStatus": { "commit": true, "pr": true },
+  "checkpointStatus": {
+    "commit": true,
+    "pr": true
+  },
   "prUrl": "https://github.com/alfredoperez/speckit-companion/pull/159",
   "prNumber": 159,
   "approach": "Tolerate non-array task_summaries.concerns/files at three layers — normalize at the reader, guard in TasksCard, error-boundary around ActivityPanel — without changing the canonical TaskSummary type or forcing SDD writers to change shape.",
@@ -45,7 +48,9 @@
     "T001": {
       "status": "DONE",
       "did": "Wrote specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json — verbatim reconstruction of the final legacy fixture state with 4 task_summary entries whose concerns are plain strings.",
-      "files": ["specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json"],
+      "files": [
+        "specs/095-fix-tasks-card-concerns/fixtures/legacy-string-concerns.spec-context.json"
+      ],
       "concerns": []
     },
     "T002": {
@@ -62,13 +67,17 @@
     "T003": {
       "status": "DONE",
       "did": "Extended normalizeSpecContext to coerce every task_summaries[*].concerns and .files; mutates only when at least one entry changes (NFR001).",
-      "files": ["src/features/specs/specContextReader.ts"],
+      "files": [
+        "src/features/specs/specContextReader.ts"
+      ],
       "concerns": []
     },
     "T004": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Replaced the two-line TASK SUMMARIES directive with explicit shape guidance: status DONE/DONE_WITH_CONCERNS, files string[], concerns string[], omit when empty.",
-      "files": ["src/ai-providers/promptBuilder.ts"],
+      "files": [
+        "src/ai-providers/promptBuilder.ts"
+      ],
       "concerns": [
         "Initial four-line version overshot the 2000-char preamble budget (got 2044). Trimmed to three lines preserving every shape assertion to stay under the limit — adjusted T009 to match the trimmed wording."
       ]
@@ -89,13 +98,17 @@
     "T006": {
       "status": "DONE",
       "did": "Wrapped <ActivityPanel/> in <ActivityErrorBoundary> in App.tsx — no layout change.",
-      "files": ["webview/src/spec-viewer/App.tsx"],
+      "files": [
+        "webview/src/spec-viewer/App.tsx"
+      ],
       "concerns": []
     },
     "T007": {
       "status": "DONE_WITH_CONCERNS",
       "did": "Added 8 unit tests against toStringArray covering all R001 / R006 shapes including the regression fixture's strings.",
-      "files": ["webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts"],
+      "files": [
+        "webview/src/spec-viewer/components/cards/__tests__/TasksCard.test.ts"
+      ],
       "concerns": [
         "Wrote a .test.ts (not .test.tsx) and exercised the helper directly rather than rendering the component — testEnvironment: 'node', no jsdom, and tsconfig.test.json has no jsx setting. The error-boundary force-throw assertion was not added since rendering the boundary needs the same JSX infra; the boundary's own logic is type-checked by tsc and trivially exercised by usage."
       ]
@@ -103,13 +116,17 @@
     "T008": {
       "status": "DONE",
       "did": "Added 9 unit tests for normalizeSpecContext.task_summaries covering every R002 coercion rule plus a regression test that reads the regression fixture and asserts every concerns/files field is string[] (or omitted).",
-      "files": ["src/features/specs/__tests__/specContextReader.test.ts"],
+      "files": [
+        "src/features/specs/__tests__/specContextReader.test.ts"
+      ],
       "concerns": []
     },
     "T009": {
       "status": "DONE",
       "did": "Added a single test against the new directive's exact wording (DONE_WITH_CONCERNS, string[], Omit concerns when empty, never write \"None\"/\"N/A\") so future drift fails loudly.",
-      "files": ["src/ai-providers/__tests__/promptBuilder.test.ts"],
+      "files": [
+        "src/ai-providers/__tests__/promptBuilder.test.ts"
+      ],
       "concerns": []
     },
     "FOLLOWUP": {
@@ -145,25 +162,213 @@
       "parallel_groups": 2
     }
   },
-  "transitions": [
-    { "step": "specify",   "substep": "parsing",       "from": null,                                                "by": "sdd", "at": "2026-05-20T12:50:17Z" },
-    { "step": "specify",   "substep": "exploring",     "from": { "step": "specify",   "substep": "parsing" },       "by": "sdd", "at": "2026-05-20T12:50:18Z" },
-    { "step": "specify",   "substep": "detecting",     "from": { "step": "specify",   "substep": "exploring" },     "by": "sdd", "at": "2026-05-20T12:50:19Z" },
-    { "step": "specify",   "substep": "writing-spec",  "from": { "step": "specify",   "substep": "detecting" },     "by": "sdd", "at": "2026-05-20T12:50:20Z" },
-    { "step": "specify",   "substep": null,            "from": { "step": "specify",   "substep": "writing-spec" },  "by": "sdd", "at": "2026-05-20T12:50:21Z" },
-    { "step": "plan",      "substep": "loading",       "from": { "step": "specify",   "substep": null },            "by": "sdd", "at": "2026-05-20T12:51:00Z" },
-    { "step": "plan",      "substep": "writing-plan",  "from": { "step": "plan",      "substep": "loading" },       "by": "sdd", "at": "2026-05-20T12:51:01Z" },
-    { "step": "plan",      "substep": null,            "from": { "step": "plan",      "substep": "writing-plan" },  "by": "sdd", "at": "2026-05-20T12:51:02Z" },
-    { "step": "tasks",     "substep": "loading",       "from": { "step": "plan",      "substep": null },            "by": "sdd", "at": "2026-05-20T12:52:00Z" },
-    { "step": "tasks",     "substep": "writing-tasks", "from": { "step": "tasks",     "substep": "loading" },       "by": "sdd", "at": "2026-05-20T12:52:01Z" },
-    { "step": "tasks",     "substep": null,            "from": { "step": "tasks",     "substep": "writing-tasks" }, "by": "sdd", "at": "2026-05-20T12:52:02Z" },
-    { "step": "implement", "substep": "phase1",        "from": { "step": "tasks",     "substep": null },            "by": "sdd", "at": "2026-05-20T12:53:00Z" },
-    { "step": "implement", "substep": "hooks",         "from": { "step": "implement", "substep": "phase1" },        "by": "sdd", "at": "2026-05-20T13:00:00Z" },
-    { "step": "implement", "substep": "code-review",   "from": { "step": "implement", "substep": "hooks" },         "by": "sdd", "at": "2026-05-20T13:00:01Z" },
-    { "step": "implement", "substep": "test-results",  "from": { "step": "implement", "substep": "code-review" },   "by": "sdd", "at": "2026-05-20T13:10:00Z" },
-    { "step": "implement", "substep": "commit-review", "from": { "step": "implement", "substep": "test-results" },  "by": "sdd", "at": "2026-05-20T13:10:01Z" },
-    { "step": "implement", "substep": "commit",        "from": { "step": "implement", "substep": "commit-review" }, "by": "sdd", "at": "2026-05-20T13:10:02Z" },
-    { "step": "done",      "substep": null,            "from": { "step": "implement", "substep": "commit" },        "by": "sdd", "at": "2026-05-20T13:10:03Z" },
-    { "step": "done",      "substep": "pr-opened",     "from": { "step": "done",      "substep": null },            "by": "sdd", "at": "2026-05-20T13:11:00Z" }
-  ]
+  "history": [
+    {
+      "step": "specify",
+      "substep": "parsing",
+      "from": null,
+      "by": "sdd",
+      "at": "2026-05-20T12:50:17Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "exploring",
+      "from": {
+        "step": "specify",
+        "substep": "parsing"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:50:18Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "detecting",
+      "from": {
+        "step": "specify",
+        "substep": "exploring"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:50:19Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": "writing-spec",
+      "from": {
+        "step": "specify",
+        "substep": "detecting"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:50:20Z",
+      "kind": "start"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "from": {
+        "step": "specify",
+        "substep": "writing-spec"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:50:21Z",
+      "kind": "complete"
+    },
+    {
+      "step": "plan",
+      "substep": "loading",
+      "from": {
+        "step": "specify",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:51:00Z",
+      "kind": "start"
+    },
+    {
+      "step": "plan",
+      "substep": "writing-plan",
+      "from": {
+        "step": "plan",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:51:01Z",
+      "kind": "start"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "from": {
+        "step": "plan",
+        "substep": "writing-plan"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:51:02Z",
+      "kind": "complete"
+    },
+    {
+      "step": "tasks",
+      "substep": "loading",
+      "from": {
+        "step": "plan",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:52:00Z",
+      "kind": "start"
+    },
+    {
+      "step": "tasks",
+      "substep": "writing-tasks",
+      "from": {
+        "step": "tasks",
+        "substep": "loading"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:52:01Z",
+      "kind": "start"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "from": {
+        "step": "tasks",
+        "substep": "writing-tasks"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:52:02Z",
+      "kind": "complete"
+    },
+    {
+      "step": "implement",
+      "substep": "phase1",
+      "from": {
+        "step": "tasks",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-20T12:53:00Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "hooks",
+      "from": {
+        "step": "implement",
+        "substep": "phase1"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:00:00Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "code-review",
+      "from": {
+        "step": "implement",
+        "substep": "hooks"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:00:01Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "test-results",
+      "from": {
+        "step": "implement",
+        "substep": "code-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:10:00Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "commit-review",
+      "from": {
+        "step": "implement",
+        "substep": "test-results"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:10:01Z",
+      "kind": "start"
+    },
+    {
+      "step": "implement",
+      "substep": "commit",
+      "from": {
+        "step": "implement",
+        "substep": "commit-review"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:10:02Z",
+      "kind": "start"
+    },
+    {
+      "step": "done",
+      "substep": null,
+      "from": {
+        "step": "implement",
+        "substep": "commit"
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:10:03Z",
+      "kind": "start"
+    },
+    {
+      "step": "done",
+      "substep": "pr-opened",
+      "from": {
+        "step": "done",
+        "substep": null
+      },
+      "by": "sdd",
+      "at": "2026-05-20T13:11:00Z",
+      "kind": "start"
+    }
+  ],
+  "telemetryInstanceId": "8fbd16d6-6bd0-4dfe-9451-c3997de5859f"
 }

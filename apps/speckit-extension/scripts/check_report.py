@@ -12,6 +12,7 @@ Stdlib only.
 from __future__ import annotations
 
 _LEGACY_STATUS = {True: "PASS", False: "FAIL", None: "INFO"}
+_STATUSES = ("PASS", "WARN", "FAIL", "INFO")
 
 
 class Report:
@@ -21,6 +22,10 @@ class Report:
     def add(self, status: bool | str | None, cid: str, detail: str) -> None:
         if not isinstance(status, str):
             status = _LEGACY_STATUS[status]
+        # A status this class does not know would vanish from the tally and blow
+        # up the render, so it is refused where it was written, not where it is read.
+        if status not in _STATUSES:
+            raise ValueError(f"unknown status {status!r} for {cid}; expected one of {_STATUSES}")
         self.rows.append((status, cid, detail))
 
     @property

@@ -574,5 +574,6 @@
       "note": "Only the companion specify command pins workflow=companion. A run that joins Companion later (stock specify, then companion plan) stays recorded as speckit, so status and resume dispatch stock commands for the rest of the run. Reproduced in the fresh sandbox; filed as its own issue rather than widened into this PR because the fix touches three command bodies and turns on whether one companion command should retroactively pin the whole spec.",
       "step": "implement"
     }
-  ]
+  ],
+  "telemetryInstanceId": "2b0aee1d-263a-4f9d-b08f-a9222e241e36"
 }

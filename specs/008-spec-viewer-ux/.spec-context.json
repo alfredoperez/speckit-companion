@@ -1,5 +1,10 @@
 {
   "status": "completed",
   "workflow": "sdd",
-  "selectedAt": "2026-04-05T20:27:34.380Z"
+  "selectedAt": "2026-04-05T20:27:34.380Z",
+  "specName": "",
+  "branch": "",
+  "currentStep": "specify",
+  "history": [],
+  "telemetryInstanceId": "d11a9e33-8802-4e29-b3b2-a1df3d65657f"
 }
