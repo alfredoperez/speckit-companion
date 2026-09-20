@@ -1,0 +1,34 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
+const REPO = path.resolve(__dirname, '../../../..');
+const WEBVIEW = path.join(REPO, 'apps/vscode/webview/src');
+const SUFFIXES = ['', '.ts', '.tsx', '.js', '.json', '/index.ts', '/index.tsx'];
+
+function tsxFiles(dir: string): string[] {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) return tsxFiles(full);
+        return entry.isFile() && entry.name.endsWith('.tsx') ? [full] : [];
+    });
+}
+
+describe('webview story imports', () => {
+    // Storybook resolves these at story-open time, so a folder move breaks them
+    // silently: the suite stays green and the story 404s in the browser. The
+    // repo restructure left 28 of them pointing at directories that had moved,
+    // and two more at living specs that had been split into several files.
+    it('every relative import in a webview module resolves on disk', () => {
+        const broken: string[] = [];
+        for (const file of tsxFiles(WEBVIEW)) {
+            const source = fs.readFileSync(file, 'utf8');
+            for (const match of source.matchAll(/from '(\.\.?\/[^']*)'/g)) {
+                const spec = match[1].split('?')[0];
+                const target = path.resolve(path.dirname(file), spec);
+                if (SUFFIXES.some(suffix => fs.existsSync(target + suffix))) continue;
+                broken.push(`${path.relative(REPO, file)} -> ${match[1]}`);
+            }
+        }
+        expect(broken).toEqual([]);
+    });
+});

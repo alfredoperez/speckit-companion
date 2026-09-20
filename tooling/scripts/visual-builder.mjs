@@ -46,10 +46,10 @@ const BASELINE_DIR = join(
 const DIFF_DIR = join(REPO_ROOT, 'apps', 'vscode', 'webview', 'src', 'pipeline-builder', '__screenshots__', 'diff');
 
 /** Every story whose id starts with this belongs to the panel. */
-const PREFIX = 'pipeline-builder-';
+const PREFIX = 'vs-code-extension-pipeline-builder-';
 
 /** Pixel baselines cover the situation stories: whole panel, real states. */
-const PIXEL_PREFIX = 'pipeline-builder-situations--';
+const PIXEL_PREFIX = 'vs-code-extension-pipeline-builder-situations--';
 
 /**
  * The panel docked wide, and squeezed into a side panel. The narrow one is

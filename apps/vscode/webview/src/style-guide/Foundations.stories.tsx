@@ -15,12 +15,12 @@ import {
     constellationLight,
     constellationViolet,
     type CapturePalette,
-} from '../../../.storybook/capture-theme';
+} from '../../../../../.storybook/capture-theme';
 import { GEIST_FACES, MASCOT_POSES, T, Wordmark } from '../spec-viewer/__stories__/figure';
 
-import figtree from '../../../media/feature-clips/step-rail/assets/fonts/Figtree.ttf';
-import jetbrains from '../../../media/landing-video/hf/assets/fonts/JetBrainsMono-400.woff2';
-import fraunces from '../../../media/landing-video/hf/assets/fonts/Fraunces-400.ttf';
+import figtree from '../../../../../content/media/feature-clips/step-rail/assets/fonts/Figtree.ttf';
+import jetbrains from '../../../../../content/media/landing-video/hf/assets/fonts/JetBrainsMono-400.woff2';
+import fraunces from '../../../../../content/media/landing-video/hf/assets/fonts/Fraunces-400.ttf';
 
 const meta: Meta = {
     title: 'Core/Foundations',

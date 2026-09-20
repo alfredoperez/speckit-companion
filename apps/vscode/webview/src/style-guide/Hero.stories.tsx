@@ -10,9 +10,9 @@
 
 import type { Meta, StoryObj } from '@storybook/preact';
 import { GEIST_FACES, T } from '../spec-viewer/__stories__/figure';
-import heroA from '../../../docs/style-guide/hero-brush-ivory.jpg';
-import heroB from '../../../docs/style-guide/hero-brush-ivory-2.jpg';
-import bannerArt from '../../../speckit-extension/assets/hero-draft-a.png';
+import heroA from '../../../../../docs/style-guide/hero-brush-ivory.jpg';
+import heroB from '../../../../../docs/style-guide/hero-brush-ivory-2.jpg';
+import bannerArt from '../../../../speckit-extension/assets/hero-draft-a.png';
 
 const meta: Meta = {
     title: 'Content/Post Images',
