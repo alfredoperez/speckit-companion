@@ -1,5 +1,5 @@
 enabled: true
-exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts", "apps/vscode/src/core/types/config.ts"]
+exempt: ["**/*.config.*", "**/*.test.*", "**/__tests__/**", "**/__stories__/**", "**/__fixtures__/**", "**/*.stories.*", "**/migrations/**", "**/index.ts", "apps/vscode/src/core/types/config.ts"]
 capabilities:
   - name: spec-editor
     match: ["apps/vscode/src/features/spec-editor/**"]
@@ -42,6 +42,9 @@ capabilities:
   - name: specs-living-view
     match: ["apps/vscode/src/features/living-specs/**"]
     spec: apps/vscode/src/features/living-specs/specs-living-view.spec.md
+  - name: specs-living-actions
+    match: ["apps/vscode/src/features/living-specs/**"]
+    spec: apps/vscode/src/features/living-specs/specs-living-actions.spec.md
   - name: specs-living-model
     match: ["apps/vscode/src/features/living-specs/**"]
     spec: apps/vscode/src/features/living-specs/specs-living-model.spec.md

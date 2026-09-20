@@ -9,6 +9,7 @@ The frame around the document: the header, the footer bar, the Activity panel's 
 ## Requirements
 
 ### The header prints the title exactly as it arrives
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/SpecHeader.tsx -->
 
 The header SHALL render the title it is given without re-casing it. Casing is decided before the title reaches the webview.
 
@@ -17,6 +18,7 @@ The header SHALL render the title it is given without re-casing it. Casing is de
 - **THEN** it prints "CLI Install Nudge"
 
 ### A living spec's footer states the capability's condition in words
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx -->
 
 The footer's left side SHALL read "In sync", "N requirements drifted", "Drift unknown" or "No spec yet".
 
@@ -25,6 +27,7 @@ The footer's left side SHALL read "In sync", "N requirements drifted", "Drift un
 - **THEN** it reads "2 requirements drifted"
 
 ### The living footer offers Approve while the spec is a draft or has adopted requirements
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx -->
 
 Approve SHALL read "Approve all N" when N requirements are adopted, and "Approve spec" when none is adopted but the spec is a draft.
 
@@ -37,6 +40,7 @@ Approve SHALL read "Approve all N" when N requirements are adopted, and "Approve
 - **THEN** it offers "Approve spec"
 
 ### Sync is offered only once drift is found
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx -->
 
 The living footer SHALL always offer "Adopt an area" and "Validate", and SHALL add "Sync" only when the capability has drifted.
 
@@ -49,6 +53,7 @@ The living footer SHALL always offer "Adopt an area" and "Validate", and SHALL a
 - **THEN** it also offers "Sync"
 
 ### The living footer shows Undo while an action can be undone
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx -->
 
 While the extension reports a pending undo, the footer SHALL show Undo counting down the time left, and pressing it SHALL send that undo's token.
 
@@ -57,6 +62,7 @@ While the extension reports a pending undo, the footer SHALL show Undo counting 
 - **THEN** an Undo reading "Requirement removed" counts down from five seconds
 
 ### A living spec's header carries facts, never buttons
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/SpecHeader.tsx -->
 
 The header SHALL hold no controls except the covers glob. It shows each fact once: requirement count, adopted, new, drifted, coverage, where the capability applies and where its file lives. While the document is a draft, DRAFT reads as part of the title.
 
@@ -65,6 +71,7 @@ The header SHALL hold no controls except the covers glob. It shows each fact onc
 - **THEN** DRAFT sits beside the title and no approve button is in the header
 
 ### A covers glob shows its full text
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/SpecHeader.tsx -->
 
 A covers glob SHALL render as a control carrying its whole text, never truncated, that asks the extension to reveal it.
 
@@ -82,6 +89,7 @@ The Activity panel's banner SHALL render the install or update prompt as the ext
 - **THEN** the banner names the installed and the expected version
 
 ### Motion stops for readers who ask for reduced motion
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/StepTab.tsx, apps/vscode/webview/styles/tokens.css -->
 
 Every animation SHALL have a still equivalent under the reduced-motion preference.
 
@@ -90,6 +98,7 @@ Every animation SHALL have a still equivalent under the reduced-motion preferenc
 - **THEN** the in-flight indicator does not animate
 
 ### Decorative glyphs are hidden from assistive technology
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/StepTab.tsx -->
 
 A glyph that carries nothing its label does not SHALL be hidden from assistive technology.
 
@@ -98,6 +107,7 @@ A glyph that carries nothing its label does not SHALL be hidden from assistive t
 - **THEN** only the label is announced
 
 ### Accent-filled buttons use the accent's own ink
+<!-- touches: apps/vscode/webview/src/shared/components/Button.tsx, apps/vscode/webview/src/spec-viewer/components/footer/LivingFooter.tsx -->
 
 A button filled with the accent colour SHALL take the accent's ink token for its text, whether built from the shared button or assembled by hand, because a hardcoded white is unreadable on the default dark theme's mint accent.
 
@@ -106,6 +116,7 @@ A button filled with the accent colour SHALL take the accent's ink token for its
 - **THEN** its label uses the same ink as the shared primary button
 
 ### The viewer's own microcopy reads as plain sentences
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/footer/CatalogFooter.tsx -->
 
 Strings the webview composes (a footer context line, a summary title, a sizing line) SHALL join clauses with a comma and introduce figures with a colon, never with a dash.
 

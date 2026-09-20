@@ -9,6 +9,7 @@ How the reader moves between the Overview, the pipeline documents and their arti
 ## Requirements
 
 ### The viewer is one page whose content is swapped, never reloaded
+<!-- touches: apps/vscode/webview/src/spec-viewer/App.tsx, apps/vscode/webview/src/spec-viewer/messageHandlers.ts -->
 
 Moving between documents, or between the Overview and a document, SHALL swap content in place and keep the reader's current view, mounted comments and scroll position. A path that makes the host regenerate the page loses that state and bounces the reader to the landing view.
 
@@ -21,6 +22,7 @@ Moving between documents, or between the Overview and a document, SHALL swap con
 - **THEN** it appears immediately, without re-rendering
 
 ### Opening the spec lands on the Overview, opening a document lands on that document
+<!-- touches: apps/vscode/webview/src/spec-viewer/signals.ts -->
 
 What shows on open SHALL be decided by what was opened: the Overview for the spec itself, the document for any document, step or artifact row. This SHALL outrank the reader's earlier pick in the same panel.
 
@@ -33,6 +35,7 @@ What shows on open SHALL be decided by what was opened: the Overview for the spe
 - **THEN** it lands on the Overview, not on the document last read
 
 ### Exactly one rail item reads as current
+<!-- touches: apps/vscode/webview/src/spec-viewer/signals.ts, apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx -->
 
 The Overview SHALL be a rail destination alongside the documents, so selecting any item deselects every other.
 
@@ -41,6 +44,7 @@ The Overview SHALL be a rail destination alongside the documents, so selecting a
 - **THEN** the Overview deselects and only that document reads as current
 
 ### The Overview is offered only for a spec with recorded activity
+<!-- touches: apps/vscode/webview/src/spec-viewer/signals.ts -->
 
 The Overview SHALL NOT be offered when the spec has no recorded activity or the reader has turned the Activity panel off.
 
@@ -49,6 +53,7 @@ The Overview SHALL NOT be offered when the spec has no recorded activity or the 
 - **THEN** the rail has no Overview and the viewer lands on the document
 
 ### The pipeline rail lists document-producing steps only
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx -->
 
 The rail SHALL list only steps that produce a document of their own, so Implement, Mark Complete or a custom step with no document never appear. A hidden step SHALL neither shift nor lock a tab, even while it runs.
 
@@ -57,6 +62,7 @@ The rail SHALL list only steps that produce a document of their own, so Implemen
 - **THEN** it does not appear in the rail and locks none of the document tabs
 
 ### A step's artifact files nest under it in the rail
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx -->
 
 Each step's artifact documents SHALL render as an indented sub-list under that step. A document belongs to the step it names as its parent, or to the first pipeline step when it names none.
 
@@ -69,6 +75,7 @@ Each step's artifact documents SHALL render as an indented sub-list under that s
 - **THEN** that document opens and reads as current, while clicking the parent step still opens the step's own document
 
 ### An artifact whose step is not in the rail is still reachable
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx -->
 
 An artifact whose owning step has no rail entry SHALL render in a labelled fallback group, so no artifact is dropped.
 
@@ -77,6 +84,7 @@ An artifact whose owning step has no rail entry SHALL render in a labelled fallb
 - **THEN** the artifact appears in the fallback group
 
 ### A narrow pane folds the rail into a strip that keeps each step beside its files
+<!-- touches: apps/vscode/webview/styles/spec-viewer/_base.css -->
 
 Below the rail's fold width, the rail SHALL become a horizontally scrolling strip where each step and its artifact chips form one inline unit, with a divider between units.
 
@@ -85,6 +93,7 @@ Below the rail's fold width, the rail SHALL become a horizontally scrolling stri
 - **THEN** each step reads beside its own files rather than colliding with the next step
 
 ### A control that mounts late still responds to clicks
+<!-- touches: apps/vscode/webview/src/spec-viewer/actions.ts -->
 
 A control that appears after the page's scripts ran SHALL respond to clicks the same as one present at load.
 

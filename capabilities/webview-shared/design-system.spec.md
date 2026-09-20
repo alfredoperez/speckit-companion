@@ -7,6 +7,7 @@ The visual and accessibility floor every webview stands on: readable text meets 
 ## Requirements
 
 ### Readable content meets contrast; low-contrast tokens are for metadata only
+<!-- touches: apps/vscode/webview/src/shared/components/** -->
 
 Text a user must read to act uses the body or primary text token. The secondary and muted tokens fall below WCAG AA on dark themes, so they are for chrome such as timestamps, counts and labels.
 
@@ -15,6 +16,7 @@ Text a user must read to act uses the body or primary text token. The secondary 
 - **THEN** it uses the body or primary text token, even when it is visually secondary
 
 ### Accessible names and states survive the way they are hidden
+<!-- touches: apps/vscode/webview/src/shared/components/** -->
 
 Text referenced by an accessibility relationship is hidden by clipping, not removed, so assistive technology still announces it.
 
@@ -23,6 +25,7 @@ Text referenced by an accessibility relationship is hidden by clipping, not remo
 - **THEN** it announces the hidden description
 
 ### Busy state sits on the region that becomes unavailable
+<!-- touches: apps/vscode/webview/src/shared/components/** -->
 
 While work blocks interaction, the busy state is set on the content region, not on the loading overlay.
 

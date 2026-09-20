@@ -1,5 +1,7 @@
 # Workflows pipeline — Living Spec
 
+<!-- reviewed: e14af436 -->
+
 ## Purpose
 
 The pipeline a spec actually runs: its ordered steps with any the project added, the checkpoints along it, how the Companion workflow routes by size, and what the shipped presets promise.
@@ -32,12 +34,25 @@ A step directory that is unreadable, malformed, or named like a shipped step is 
 ### Checkpoints run at their declared trigger, ask before acting, and record their outcome
 <!-- touches: apps/vscode/src/features/workflows/checkpointHandler.ts -->
 
-A checkpoint asks for approval unless its definition sets `requiresApproval: false`, and records its status on the spec. A declined checkpoint is recorded as skipped.
+A checkpoint asks for approval unless its definition sets `requiresApproval: false`, and records its status on the spec. A declined checkpoint is recorded as skipped. Recording a checkpoint SHALL NOT overwrite a record it could not read: only a missing record is a first write, and any other failure to read refuses rather than starting the file again.
 
 #### Scenario: the user declines a checkpoint
 - **WHEN** the approval prompt is dismissed or answered no
 - **THEN** no git or PR action is taken
 - **AND** the checkpoint is recorded as skipped
+
+#### Scenario: the record exists but will not parse
+- **WHEN** a checkpoint is recorded against an unreadable record
+- **THEN** the file is left exactly as it was
+
+### A checkpoint's outcome reaches the panel whichever way it was recorded
+<!-- touches: apps/vscode/src/features/workflows/checkpointHandler.ts, apps/vscode/src/features/spec-viewer/stateDerivation.ts -->
+
+The writer records a checkpoint as a word and the panel shows it as done or not done, so the reader SHALL accept either shape. A finished checkpoint that was recorded as a word still reads as finished.
+
+#### Scenario: a checkpoint was recorded as a word
+- **WHEN** the panel reads a checkpoint stored as completed
+- **THEN** it shows that checkpoint as done
 
 ### A failed checkpoint lets the user retry, skip, or cancel the rest
 <!-- touches: apps/vscode/src/features/workflows/checkpointHandler.ts -->
