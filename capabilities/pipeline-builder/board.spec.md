@@ -18,7 +18,7 @@ The side column SHALL show at most one of a node, an attach-hook form, a templat
 ### The divergence chip names how much changed and goes to the first of it
 <!-- touches: apps/vscode/webview/src/pipeline-builder/Header.tsx, apps/vscode/webview/src/pipeline-builder/changes.ts -->
 
-The header SHALL show "No changes" as plain text when no step differs from the shipped pipeline, and otherwise a chip naming how many steps differ that scrolls the first differing step into view when clicked.
+The header SHALL show "No changes" as a flat chip when no step differs from the shipped pipeline, and otherwise a chip naming how many steps differ that scrolls the first differing step into view when clicked.
 
 #### Scenario: two steps differ from the shipped pipeline
 - **WHEN** the reader clicks the chip

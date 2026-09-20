@@ -63,7 +63,7 @@ Choosing a Skill or a Node hook SHALL offer only the names this project has for 
 ### A new step or workflow name is refused before anything is written
 <!-- touches: apps/vscode/webview/src/pipeline-builder/AttachForm.tsx -->
 
-A new step's or workflow's name SHALL be refused, with the reason shown beside the field, when it is not lowercase letters, digits and dashes, or when a step or workflow of that name already exists; the create action SHALL stay disabled until the name is clean.
+A new step's or workflow's name SHALL be refused, with the reason shown beside the field, when it does not start with a lowercase letter and continue in lowercase letters, digits and dashes, or, for a workflow, start with either a letter or a digit, or when a step or workflow of that name already exists; the create action SHALL stay disabled until the name is clean.
 
 #### Scenario: a name with a space or an uppercase letter is typed
 - **WHEN** the field is read

@@ -198,11 +198,13 @@ describe('docs consistency', () => {
       'configuration.md',
       'doc-sync.md',
       'getting-started.md',
+      'media-manifest.md',
       'pipeline-builder.md',
       'providers.md',
       'sidebar.md',
       'telemetry.md',
       'viewer.md',
+      'visual-assets.md',
     ]);
     const ALLOWED_DIRS = new Set(['architecture', 'media', 'providers', 'reference', 'screenshots', 'style-guide']);
 

@@ -73,10 +73,14 @@ A step outside the built-in lifecycle has no status of its own. Recording its st
 ### A duration is only shown when the writers at both ends can be trusted with a clock
 <!-- touches: apps/vscode/src/core/types/specContext.ts, apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
-A span SHALL be trusted only when both boundaries come from an instrumented writer, or from an agent's own script at both ends. A close SHALL NOT outrank the start it finishes, so an agent finishing what the extension started reads as untrusted: that shape is a premature finish, not a measurement.
+Writers rank by how much a clock can be trusted to them: the extension and the other instrumented writers highest, an agent's own script below them, anything unrecognised not at all. A span SHALL be trusted only when both its boundaries come from a ranked writer and **the close ranks at least as high as the start**. An agent finishing what the extension started is therefore untrusted, because that shape is a premature finish rather than a measurement, while an agent's own run measured end to end is trusted.
 
-#### Scenario: the assistant journaled a step's completion
-- **WHEN** a step's start or end was written by something other than the extension
+#### Scenario: a run journals both of a step's boundaries itself
+- **WHEN** an agent's script stamps a step's start and the next boundary
+- **THEN** the elapsed time is shown
+
+#### Scenario: the assistant closes a step the extension started
+- **WHEN** a step started by the extension is finished by the assistant
 - **THEN** no elapsed time is shown for that step
 
 #### Scenario: the whole run's elapsed time is requested

@@ -7,7 +7,7 @@ in the alfredo-perez.dev repo). See **`PROMPT.md`** for the image-edit prompt.
 ## Inputs (the three key screenshots)
 
 These are the same shots used in the README body — capture once, use for both.
-Capture in **Dark Modern** (per `../../../capabilities/media-pipeline/asset-build.spec.md`) so there's no purple. They live
+Capture in **Dark Modern** (per `../../visual-assets.md`) so there's no purple. They live
 in `../` (the `docs/screenshots/` folder):
 
 1. `../viewer.png` — VS Code sidebar + spec viewer, **Plan** phase with a diagram

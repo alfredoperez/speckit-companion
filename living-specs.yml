@@ -61,10 +61,10 @@ capabilities:
     match: ["apps/vscode/src/features/spec-viewer/**"]
     spec: apps/vscode/src/features/spec-viewer/spec-viewer-actions.spec.md
   - name: spec-viewer-living
-    match: ["apps/vscode/src/features/spec-viewer/**"]
+    match: ["apps/vscode/src/features/spec-viewer/**", "apps/vscode/src/features/living-specs/livingDocs.ts", "apps/vscode/src/features/living-specs/livingHeaderMeta.ts", "apps/vscode/src/features/living-specs/livingSpecsContent.ts"]
     spec: apps/vscode/src/features/spec-viewer/spec-viewer-living.spec.md
   - name: spec-viewer-living-review
-    match: ["apps/vscode/src/features/spec-viewer/**"]
+    match: ["apps/vscode/src/features/spec-viewer/**", "apps/vscode/src/features/living-specs/livingDocs.ts", "apps/vscode/src/features/living-specs/livingHeaderMeta.ts", "apps/vscode/src/features/living-specs/livingSpecsContent.ts"]
     spec: apps/vscode/src/features/spec-viewer/spec-viewer-living-review.spec.md
   - name: commands-assembly
     match: ["apps/speckit-extension/commands/**", "apps/speckit-extension/nodes/**", "apps/speckit-extension/presets/**"]

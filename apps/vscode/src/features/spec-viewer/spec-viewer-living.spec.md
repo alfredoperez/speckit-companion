@@ -1,7 +1,6 @@
 # Spec Viewer Living — Living Spec
 
-<!-- reviewed: 763a4a8b -->
-
+<!-- reviewed: 01379900 -->
 ## Purpose
 
 What the extension does for a panel showing a capability rather than a run: resolving its tiers, computing its health facts (coverage, drift, new requirements, test counts), and opening its links and run-log chips.
@@ -9,6 +8,7 @@ What the extension does for a panel showing a capability rather than a run: reso
 ## Requirements
 
 ### A living spec is presented as a capability, not a run
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/living-specs/livingDocs.ts -->
 
 A living-spec panel SHALL show the capability's requirement cards with no run state, no Overview, no rail and no workflow forward action. Its tiers open from the tree.
 
@@ -17,6 +17,7 @@ A living-spec panel SHALL show the capability's requirement cards with no run st
 - **THEN** it shows the requirement cards, with no Overview and no rail
 
 ### A rules file with the retired suffix still opens as the rules tier
+<!-- touches: apps/vscode/src/features/living-specs/livingDocs.ts -->
 
 A capability whose rules file still carries the old `.arch.md` suffix SHALL list it as its rules tier, not report the tier missing.
 
@@ -25,6 +26,7 @@ A capability whose rules file still carries the old `.arch.md` suffix SHALL list
 - **THEN** it is listed as the rules tier
 
 ### Sync from the footer updates the spec on screen
+<!-- touches: apps/vscode/src/features/spec-viewer/messageHandlers.ts, apps/vscode/src/features/living-specs/livingSpecsCommands.ts -->
 
 The footer's Sync SHALL resolve the capability's spec tier from the open panel and run the same living-specs update command the sidebar uses.
 
@@ -33,6 +35,7 @@ The footer's Sync SHALL resolve the capability's spec tier from the open panel a
 - **THEN** the update runs against that capability's spec tier
 
 ### A covers glob reveals its place in the Explorer
+<!-- touches: apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
 Activating a covers glob SHALL reveal the glob's static prefix in the Explorer, confined to the workspace. A prefix that is not a real path SHALL open a find-in-files scoped to the glob instead.
 
@@ -45,6 +48,7 @@ Activating a covers glob SHALL reveal the glob's static prefix in the Explorer, 
 - **THEN** find-in-files opens with the glob as its include pattern
 
 ### A living-spec chip opens its capability in the living viewer
+<!-- touches: apps/vscode/src/features/spec-viewer/messageHandlers.ts, apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 Clicking a run's living-spec chip SHALL open that capability in living mode. A chip without a stored path SHALL be resolved by capability name, a path outside the workspace SHALL never be opened, and a capability that cannot be found SHALL raise a warning naming it.
 
@@ -57,6 +61,7 @@ Clicking a run's living-spec chip SHALL open that capability in living mode. A c
 - **THEN** a warning says the living spec was not found
 
 ### Best-effort facts are omitted, never rendered as zeros
+<!-- touches: apps/vscode/src/features/living-specs/livingHeaderMeta.ts -->
 
 Any fact the viewer cannot determine (a count, date, coverage ratio or drift verdict) SHALL be omitted, not shown as empty or zero.
 
@@ -65,6 +70,7 @@ Any fact the viewer cannot determine (a count, date, coverage ratio or drift ver
 - **THEN** the coverage and drift facts are absent from the header and nothing renders as `0`
 
 ### Slow facts never delay the panel's first render
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/living-specs/livingHeaderMeta.ts -->
 
 Coverage, drift and new-requirement facts SHALL be resolved after the panel first renders and pushed when ready.
 
@@ -73,6 +79,7 @@ Coverage, drift and new-requirement facts SHALL be resolved after the panel firs
 - **THEN** its cards render before the coverage and drift facts arrive
 
 ### A late fact for a capability no longer on screen is discarded
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 A pushed fact SHALL be dropped when the panel has since switched to a different capability.
 
@@ -81,6 +88,7 @@ A pushed fact SHALL be dropped when the panel has since switched to a different 
 - **THEN** the header shows only the second capability's facts
 
 ### An open living spec redraws when its file changes on disk
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 An open living-spec panel SHALL redraw when its spec file is changed or created on disk, wherever the capability lives.
 
@@ -89,6 +97,7 @@ An open living-spec panel SHALL redraw when its spec file is changed or created 
 - **THEN** the open panel redraws with its cards
 
 ### Drift is named per requirement by its touches marker
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts, apps/vscode/src/features/living-specs/livingHeaderMeta.ts -->
 
 A requirement SHALL be named as drifted when its `touches` marker matches a drifted file, using the same drift result as the sidebar. A requirement with no marker never drifts, and when drift cannot be computed no requirement is named.
 
@@ -97,6 +106,7 @@ A requirement SHALL be named as drifted when its `touches` marker matches a drif
 - **THEN** only that requirement is named as drifted
 
 ### Requirements added on the branch are marked new without writing the spec
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsContent.ts -->
 
 The extension SHALL name as new the requirement headings the working copy has and `main`'s copy lacks. A body-only change SHALL NOT count as new, and when `main`'s copy cannot be read no requirement is named new. The spec file SHALL never be written.
 
@@ -109,6 +119,7 @@ The extension SHALL name as new the requirement headings the working copy has an
 - **THEN** no requirement is named new
 
 ### Each requirement card says how many of its tests exist
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts, apps/vscode/webview/src/spec-viewer/markdown/livingComponents.ts -->
 
 Each requirement whose coverage line names tests SHALL get a label counting them, saying how many exist when some do not. A requirement that names no test SHALL have no label, never a zero, and labels SHALL NOT carry over to another capability's cards.
 
