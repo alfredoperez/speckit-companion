@@ -29,9 +29,7 @@ class NodeAssemblyParityTests(unittest.TestCase):
             with self.subTest(command=command):
                 assembled = asm.assemble_command(command)
                 committed = cp.read(f"commands/speckit.companion.{command}.md")
-                # Both sides stripped of markers: the committed body carries its
-                # own from the last build, so this proves re-assembly reproduces
-                # the same content, not that the marker placement happens to match.
+                # Strip both sides: the committed body already carries the last build's markers.
                 self.assertEqual(cp.strip_node_markers(assembled), cp.strip_node_markers(committed),
                                  f"{command} assembly drifted from its committed body")
 

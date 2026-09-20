@@ -44,7 +44,7 @@ export const lockTiming = {
     /** Untouched for this long: nobody is coming back for it. */
     abandonedMs: 30_000,
     /** The last bound. Only a holder that keeps touching a lock it never releases reaches it. */
-    maxWaitMs: 5_000,
+    maxWaitMs: 60_000,
 };
 
 let warnedLockUnavailable = false;

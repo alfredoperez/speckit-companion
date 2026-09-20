@@ -23,8 +23,7 @@ describe('updateStepProgress', () => {
         const history = written.history as Array<Record<string, unknown>>;
         expect(history.length).toBeGreaterThanOrEqual(1);
         expect(history[history.length - 1].step).toBe('specify');
-        // The canonical writer never persists `stepHistory` or the legacy
-        // `transitions` field — both must be absent.
+        // The canonical writer never persists `stepHistory` or the legacy keys.
         expect(written.stepHistory).toBeUndefined();
         expect(written.transitions).toBeUndefined();
     });
@@ -46,9 +45,7 @@ describe('updateStepProgress', () => {
     it('does not emit a redundant completion if previous step is already complete', async () => {
         const dir = mkTmp();
         await updateStepProgress(dir, 'specify', ['specify', 'plan', 'tasks']);
-        // Simulate a manual completion of specify (lifecycle writer would
-        // already have appended a completion entry on advance, but here we
-        // re-advance through updateStepProgress and verify no duplicate).
+        // A manual specify completion, as the lifecycle writer would record it.
         await updateStepProgress(dir, 'plan', ['specify', 'plan', 'tasks']);
         const lengthAfterFirstAdvance = (readJson(dir).history as unknown[]).length;
         await updateStepProgress(dir, 'plan', ['specify', 'plan', 'tasks']);

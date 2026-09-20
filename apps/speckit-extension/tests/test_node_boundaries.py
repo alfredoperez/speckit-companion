@@ -42,8 +42,7 @@ class MarkersAreAdditive(unittest.TestCase):
                 self.assertEqual(cp.strip_node_markers(marked), plain)
 
     def test_stripping_the_markers_reproduces_the_committed_body(self):
-        # This is the contract: whatever the boundaries do, the instructions
-        # the assistant receives are unchanged from what is committed.
+        # The contract: whatever the boundaries do, the assistant's instructions are unchanged.
         for command in assemble.decomposed_commands():
             with self.subTest(command=command):
                 marked = assemble.assemble_command(command)

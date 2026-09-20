@@ -26,20 +26,10 @@ import {
     updateSpecContext as canonicalUpdateSpecContext,
 } from './specContextWriter';
 import { readSpecContext, normalizeSpecContext, SpecContextParseError } from './specContextReader';
-import { isStepLevelEntry, lastEntryIsCompletionFor } from './historyHelpers';
+import { hasStepStart, lastEntryIsCompletionFor } from './historyHelpers';
 
 function isStepName(value: string | undefined): value is StepName {
     return !!value && (STEP_NAMES as readonly string[]).includes(value);
-}
-
-/** True iff `history` contains any *start* entry for `step` (not a completion). */
-function stepHasBeenStarted(history: HistoryEntry[], step: StepName): boolean {
-    for (const e of history) {
-        if (e.step !== step) continue;
-        if (!isStepLevelEntry(e)) continue;
-        if (e.kind === 'start') return true;
-    }
-    return false;
 }
 
 export async function updateStepProgress(
@@ -58,15 +48,13 @@ export async function updateStepProgress(
     const specName = ctx?.specName || deriveSpecName(specDir);
 
     if (isLifecycle) {
-        // Complete any in-flight prior lifecycle step + start the new one,
-        // atomically, via the canonical writer. Idempotent: re-advancing
-        // to the step that's already current is a no-op.
+        // One atomic write: close any in-flight prior step and start this one.
         await canonicalUpdateSpecContext(
             specDir,
             (c) => {
                 let next = { ...c, specName };
                 const prevStep = c.currentStep;
-                if (prevStep === stepName && stepHasBeenStarted(c.history ?? [], stepName as StepName)) {
+                if (prevStep === stepName && hasStepStart(c.history ?? [], stepName as StepName)) {
                     return next;
                 }
                 if (
@@ -90,8 +78,7 @@ export async function updateStepProgress(
         return;
     }
 
-    // Non-lifecycle (custom) step — record it in `currentStep` without a
-    // canonical history entry (only recognized lifecycle steps append one).
+    // A custom step: record it in `currentStep` without a lifecycle status.
     await canonicalUpdateSpecContext(
         specDir,
         (c) => ({

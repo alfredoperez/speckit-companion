@@ -11,10 +11,8 @@
 
 import type { Meta, StoryObj } from '@storybook/preact';
 
-import geistRegular from '../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
-import geistMedium from '../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
-import geistSemiBold from '../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
 import jetbrains from '../../../../../content/media/landing-video/hf/assets/fonts/JetBrainsMono-400.woff2';
+import { GEIST_FACES, T } from '../spec-viewer/__stories__/figure';
 
 import building from '../../../../website/public/mascot/building-256.png';
 import celebrating from '../../../../website/public/mascot/celebrating-256.png';
@@ -33,22 +31,7 @@ import waving from '../../../../website/public/mascot/waving-256.png';
 import welcoming from '../../../../website/public/mascot/welcoming-256.png';
 import writing from '../../../../website/public/mascot/writing-256.png';
 
-// The site's own Constellation tokens, transcribed. Literal on purpose: the
-// mascot's identity never follows the capture palette (see DESIGN.md).
-const T = {
-    ground: '#0a0913',
-    panel: '#0d0b1a',
-    borderPanel: '#2a2545',
-    textPrimary: '#edeaf6',
-    textBody: '#b6b0d2',
-    textMuted: '#9d97bd',
-    accent: '#a78bfa',
-};
-
-const FACES = `
-@font-face { font-family: 'Geist'; src: url('${geistRegular}') format('truetype'); font-weight: 400; font-style: normal; }
-@font-face { font-family: 'Geist'; src: url('${geistMedium}') format('truetype'); font-weight: 500; font-style: normal; }
-@font-face { font-family: 'Geist'; src: url('${geistSemiBold}') format('truetype'); font-weight: 600; font-style: normal; }
+const FACES = `${GEIST_FACES}
 @font-face { font-family: 'JetBrains Mono'; src: url('${jetbrains}') format('woff2'); font-weight: 400; font-style: normal; }
 `;
 
@@ -64,8 +47,7 @@ const H1 = `font: 600 30px/1.1 Geist, system-ui, sans-serif; letter-spacing: -0.
 const LEDE = `font: 400 16px/1.5 Geist, system-ui, sans-serif; color: ${T.textBody}; max-width: 64ch; margin: 0;`;
 const KICK = `font: 500 11px/1 'JetBrains Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; color: ${T.textMuted};`;
 
-// Named for the pose file's own segment (assets/mascot/poses/mascot-<pose>-*.png),
-// which is the key every derivative and manifest.json entry addresses it by.
+// Named for the pose file's own segment in assets/mascot/poses/.
 const POSES: Record<string, string> = {
     building,
     celebrating,

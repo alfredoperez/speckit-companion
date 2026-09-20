@@ -162,7 +162,7 @@ def tests(files: list) -> dict:
         "python_test_files": len([f for f in files if re.search(r"/tests/test_.*\.py$", f)]),
         "golden_command_files": len([f for f in files if "tests/golden/commands" in f]),
         "ci_run_steps": len(re.findall(r"(?m)^\s+run: ", ci)),
-        "release_runs_tests": "npm test" in _read(".github/workflows/release.yml"),
+        "release_runs_tests": bool(re.search(r"run: npm (test|run test)", _read(".github/workflows/release.yml"))),
         "webview_typechecked_in_ci": "tsconfig.webview.json" in ci,
         "fixture_roots": sorted({f.split("/fixtures/")[0] + "/fixtures" for f in files if "/fixtures/" in f}),
     }

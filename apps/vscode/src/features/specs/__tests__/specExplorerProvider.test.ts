@@ -152,9 +152,7 @@ describe('SpecExplorerProvider', () => {
         });
 
         it('should still render the tree when one spec has a malformed .spec-context.json', async () => {
-            // readSpecContextSyncSafe returns null (never throws) for an
-            // unparseable file — the tree must degrade that one spec to
-            // "no context" rather than losing the whole sidebar.
+            // readSpecContextSyncSafe returns null rather than throwing on a corrupt file.
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'broken-feature', path: 'specs/broken-feature' },
                 { name: 'good-feature', path: 'specs/good-feature' },

@@ -49,7 +49,7 @@ The GUI preamble stays as the extra path; the body-embedded partial is the stand
 
 ## Companion workflow routing step
 
-> The Companion commands are themselves assembled from composable **nodes** (sections inside a command) — see [`docs/node-model.md`](./node-model.md). Here "routing" is a `switch` **step** in the workflow, not a command node; the node-model glossary keeps the two terms apart.
+> The Companion commands are themselves assembled from composable **nodes** (sections inside a command) — see [`docs/node-model.md`](../apps/speckit-extension/docs/node-model.md). Here "routing" is a `switch` **step** in the workflow, not a command node; the node-model glossary keeps the two terms apart.
 
 Right-sizing the ceremony to the change runs **inside the Companion workflow** (`apps/speckit-extension/workflows/speckit-companion.workflow.yml`) via `specify workflow run speckit-companion`. The command-driven `/speckit.companion.specify` path also right-sizes automatically — its small-change fast-path is **on by default**, with no flag to set. Either way there is **no user-facing on/off setting**: the thresholds live in the workflow definition (and, for the command path, in the specify body) and a small change is routed automatically.
 

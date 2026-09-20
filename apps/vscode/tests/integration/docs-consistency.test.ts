@@ -190,9 +190,7 @@ describe('docs consistency', () => {
   });
 
   describe('where unit tests live', () => {
-    // CLAUDE.md: "Unit tests live in `__tests__` beside the code they cover."
-    // Twenty-five had drifted out of that before this test existed, and nothing
-    // failed, because Jest matches a test file wherever it sits.
+    // CLAUDE.md pins unit tests to `__tests__`; 25 had drifted out with nothing failing.
     const walk = (dir: string): string[] =>
       fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
         const full = path.join(dir, e.name);

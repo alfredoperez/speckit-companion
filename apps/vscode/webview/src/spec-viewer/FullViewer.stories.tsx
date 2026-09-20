@@ -184,7 +184,7 @@ export const RequirementOutline672: Story = {
         <InteractiveViewer
             ctx={ctx406}
             docs={docs406}
-            initialDoc="living:viewer-ui"
+            initialDoc="living:viewer-ui-overview"
             vs={vsFromContext(ctx406, completedFooter)}
             livingDocs={{
                 'viewer-ui-overview': { md: viewerUiLiving, label: 'viewer-ui-overview' },

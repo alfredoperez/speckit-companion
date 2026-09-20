@@ -11,6 +11,16 @@ Default mode does two passes, in order:
   2. assemble every `nodes/<command>/` into its command body, and write the
      artifact manifest. Replaces `assemble-nodes.py`'s former default mode.
 
+`--bless` re-freezes the 7 preset goldens after a deliberate preset or part edit.
+It is the only sanctioned writer of `tests/golden/commands/`.
+
+What deleting the namespaced goldens gave up, said plainly: a change to the
+assembler itself that rewrites all 7 node-assembled bodies now passes `--check`
+once the author reruns the build and commits, because each body is compared to
+its own committed copy. The net moved from a gate to the diff, where 7 changed
+command bodies are visible in review. The preset goldens still catch the same
+class of regression in the shared part-filling code, which is why they stayed.
+
 `--check` asserts, without writing anything:
   - part-region equality for all 14 carriers (`_command_parts.PART_CARRIERS`)
   - timing-fence presence on the 7 stock carriers
@@ -28,6 +38,7 @@ import glob
 import importlib
 import os
 import sys
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
@@ -99,10 +110,28 @@ def check() -> list:
     return parity.check() + node_assembly_problems()
 
 
+def bless() -> int:
+    """Re-freeze the 7 preset goldens after a deliberate preset or part edit.
+
+    The namespaced bodies need no such step: each is its own baseline. The preset
+    carriers have no generator to re-derive them from, so their frozen snapshot is
+    the only independent copy, and an intentional edit has to move it on purpose.
+    Run this in its own commit so the re-freeze is visible as a separate act.
+    """
+    _fill_parts_write(debug=False)
+    for rel in cp.GOLDEN_CARRIERS:
+        dest = Path(cp.golden_path(rel))
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(cp.strip_node_markers(cp.read(rel)), encoding="utf-8")
+    print(f"[build] re-froze {len(cp.GOLDEN_CARRIERS)} preset goldens — commit this on its own")
+    return 0
+
+
 def main() -> int:
+    if "--bless" in sys.argv[1:]:
+        return bless()
     do_check = "--check" in sys.argv[1:]
-    # Opt-in per invocation, never from ambient config: these bodies are
-    # committed, gated artifacts, and `--check` always compares the OFF render.
+    # Opt-in per invocation, never ambient: these bodies are committed artifacts.
     debug = "--debug" in sys.argv[1:] and not do_check
     if debug:
         print("[build] --debug — bodies carry timing instrumentation (do not commit)")

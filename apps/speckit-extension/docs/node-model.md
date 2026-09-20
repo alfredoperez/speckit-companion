@@ -35,7 +35,7 @@ nodes/plan/
 3. Run the **part-fence pass** (shared with the preset carriers) so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
 4. Append the **orchestrator** part, when present (run-time hook instructions; see below).
 
-The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `build.py --check` re-assembles in memory and fails on any drift from the committed body.
+The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `build.py --check` re-assembles in memory and fails on any drift from the committed body. The 7 companion-standard presets keep a frozen golden, because nothing can re-derive them; `build.py --bless` is the one sanctioned way to move it, and it belongs in its own commit.
 
 ## A node file
 

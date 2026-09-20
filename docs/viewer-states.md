@@ -158,7 +158,7 @@
 > With the override removed, an in-flight specify / plan / tasks step has
 > no manual "mark complete" button — only `Regenerate`. In practice each
 > of these steps settles on its own: the AI writes each step's completion
-> per the dispatch preamble. `plan`/`tasks`/`clarify`/`analyze` always do;
+> per the dispatch preamble. `clarify`/`analyze` always do, and `plan`/`tasks` do in stock mode;
 > `specify` was the exception — it deferred to "the specify command," which
 > only closes it in companion mode. #332 made that **mode-aware**: in **stock**
 > the preamble now tells the AI to self-close `specify` too, so it advances to

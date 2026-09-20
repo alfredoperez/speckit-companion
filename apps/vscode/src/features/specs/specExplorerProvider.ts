@@ -65,8 +65,7 @@ export function lifecycleContextValue(
 ): SpecLifecycleContextValue {
     const status = specContext?.status;
     switch (status) {
-        // Canonical status for "tasks step finished, ready to implement" —
-        // the normalizing reader maps the legacy `tasks-done` value here.
+        // The canonical status; the reader maps legacy `tasks-done` here.
         case 'ready-to-implement':
             return 'spec-tasks-done';
         case SpecStatuses.IMPLEMENTED:

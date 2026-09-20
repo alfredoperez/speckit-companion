@@ -47,9 +47,8 @@ jobs:
       - name: Run capture tests (stdlib unittest, no deps)
         run: python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 
-      - name: Check capture shape parity
-        run: python3 apps/speckit-extension/scripts/check-shape-parity.py
-
+      # build.py --check runs the shape-parity sweep itself, so it is not a
+      # separate step.
       - name: Check command bodies (part fills, preset goldens, node-assembly parity)
         run: python3 apps/speckit-extension/scripts/build.py --check
 

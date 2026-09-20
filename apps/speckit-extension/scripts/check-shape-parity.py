@@ -87,9 +87,7 @@ def check() -> list:
         if missing_timing_fence(rel, body):
             problems.append(f"missing timing fence: {rel}")
 
-    # (b) golden equality — the 7 hand-kept presets only. The 7 namespaced
-    # bodies are generated from nodes/ and have no golden to compare against;
-    # their ground truth is their own committed body (assemble-nodes.py --check).
+    # (b) golden equality: the 7 hand-kept presets only, since nothing can re-derive them.
     for rel in GOLDEN_CARRIERS:
         body = read(rel)
         gpath = golden_path(rel)

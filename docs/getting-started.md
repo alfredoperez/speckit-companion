@@ -19,7 +19,7 @@ Six steps, each with its own button:
 
 The order is deliberate: reading a real spec comes *before* installing anything, because the viewer needs no CLI. The two CLI steps are marked optional in their own copy — install is the required piece, the CLI only runs the phase commands it dispatches.
 
-Full extension-side reference (both installs, the required-vs-optional pieces, dispatch styles): [the spec-kit extension README](../apps/speckit-extension/README.md) and its [install guide](../apps/speckit-extension/docs/install.md).
+Full extension-side reference (both installs, the required-vs-optional pieces): [the spec-kit extension README](../apps/speckit-extension/README.md) and its [install guide](../apps/speckit-extension/docs/install.md). Dispatch styles, meaning a terminal CLI against your editor's own chat panel, are in [providers.md](./providers.md).
 
 ## Sample specs
 

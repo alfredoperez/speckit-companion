@@ -32,7 +32,7 @@ const { id, product, productLabel, version, date, unreleased, sections, image } 
       </h2>
       <span class="cl-release-head-right">
         {date && (
-          <a class="cl-date" href={`#${id}`}>
+          <a class="cl-date" href={`#${id}`} onclick="event.stopPropagation()">
             <time datetime={date}>{date}</time>
           </a>
         )}

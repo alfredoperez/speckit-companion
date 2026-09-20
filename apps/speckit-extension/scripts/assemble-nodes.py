@@ -389,9 +389,7 @@ def main() -> int:
                 drift.append((command, f"missing committed body for {command}"))
                 continue
             committed = strip_node_markers(read(rel))
-            # The committed body carries its own markers from the last build, so
-            # both sides are stripped: this proves re-assembly reproduces the same
-            # content, not that the marker placement happens to match too.
+            # Strip both sides: the committed body already carries the last build's markers.
             reassembled = strip_node_markers(assembled)
             if reassembled != committed:
                 diff = "".join(
