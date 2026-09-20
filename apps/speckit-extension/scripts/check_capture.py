@@ -21,6 +21,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from check_report import Report
+
 # Inline fallbacks (used only when the schema can't be read).
 _FALLBACK_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
 _FALLBACK_STATUSES = [
@@ -120,36 +122,6 @@ def _looks_handtyped(at: str) -> bool:
     return frac.startswith("000")
 
 
-class Report:
-    def __init__(self) -> None:
-        self.rows: list[tuple[str, str, str]] = []  # (status, id, detail)
-
-    def add(self, ok: bool | None, cid: str, detail: str) -> None:
-        status = "INFO" if ok is None else ("PASS" if ok else "FAIL")
-        self.rows.append((status, cid, detail))
-
-    @property
-    def failed(self) -> int:
-        return sum(1 for s, _, _ in self.rows if s == "FAIL")
-
-    def to_text(self) -> str:
-        out = []
-        for status, cid, detail in self.rows:
-            mark = {"PASS": "✓", "FAIL": "✗", "INFO": "·"}[status]
-            out.append(f"  {mark} [{status}] {cid}: {detail}")
-        passes = sum(1 for s, _, _ in self.rows if s == "PASS")
-        out.append("")
-        out.append(f"  → {passes} pass / {self.failed} fail / "
-                   f"{sum(1 for s, _, _ in self.rows if s == 'INFO')} info")
-        return "\n".join(out)
-
-    def to_dict(self) -> dict:
-        return {
-            "checks": [{"status": s, "id": c, "detail": d} for s, c, d in self.rows],
-            "failed": self.failed,
-        }
-
-
 def run_checks(spec_dir: Path) -> Report:
     r = Report()
     target = spec_dir / ".spec-context.json"
@@ -218,8 +190,8 @@ def run_checks(spec_dir: Path) -> Report:
     # monotonic timestamps — strict only for DETERMINISTIC writes (extension/derive/
     # cli/user), which read the real clock in order. AI-journaled entries may burst
     # (the AI batches `date -u`); that coarseness is graded by task-cadence, not failed.
-    det_times = [_parse_at(e.get("at")) for e in history
-                 if e.get("by") in DETERMINISTIC_BY and _parse_at(e.get("at"))]
+    det_times = [at for e in history if e.get("by") in DETERMINISTIC_BY
+                 and (at := _parse_at(e.get("at")))]
     det_mono = all(det_times[i] <= det_times[i + 1] for i in range(len(det_times) - 1)) \
         if len(det_times) > 1 else True
     r.add(det_mono, "timestamps-monotonic",
@@ -295,17 +267,17 @@ def run_checks(spec_dir: Path) -> Report:
         # the non-zero-gap check yet are clearly one end-of-step dump → FAIL. Only
         # by:ai finishes count; the by:extension backstop legitimately bursts.
         span = _step_span(history, "implement")
-        ai_finishes = [e for e in history
-                       if isinstance(e.get("task"), str) and e.get("by") == "ai"
-                       and e.get("kind") == "complete" and _parse_at(e.get("at"))]
-        if span is not None and span[2] > 0 and len(ai_finishes) >= 3:
+        ai_finish_times = [at for e in history
+                            if isinstance(e.get("task"), str) and e.get("by") == "ai"
+                            and e.get("kind") == "complete" and (at := _parse_at(e.get("at")))]
+        if span is not None and span[2] > 0 and len(ai_finish_times) >= 3:
             step_span = span[2]
-            ts = sorted(_parse_at(e["at"]) for e in ai_finishes)
+            ts = sorted(ai_finish_times)
             finish_span = (ts[-1] - ts[0]).total_seconds()
             pct = finish_span / step_span * 100
             ok = finish_span >= step_span * MIN_CADENCE_SPAN_PCT / 100
             r.add(ok, "task-cadence-span",
-                  f"{len(ai_finishes)} ai finishes span {_fmt(finish_span)} = {pct:.2f}% of "
+                  f"{len(ai_finish_times)} ai finishes span {_fmt(finish_span)} = {pct:.2f}% of "
                   f"{_fmt(step_span)} implement step (need ≥ {MIN_CADENCE_SPAN_PCT}%)"
                   + ("" if ok else " — finishes clustered into one end-of-step burst"))
 
@@ -457,14 +429,14 @@ def _timing(r: Report, history: list) -> None:
     # non-zero gaps are the HEALTHY honest-cadence signal. The end-of-step hook
     # (by:extension) is the backstop; if it journaled the batch, the finishes share
     # a tight window (near-zero gaps) — acceptable, not a defect.
-    task_evts = [e for e in history
-                 if isinstance(e.get("task"), str) and _parse_at(e.get("at"))]
+    task_evts = [(e, at) for e in history
+                 if isinstance(e.get("task"), str) and (at := _parse_at(e.get("at")))]
     if len(task_evts) >= 2:
-        task_times = [_parse_at(e["at"]) for e in task_evts]
+        task_times = [at for _, at in task_evts]
         gaps = [(task_times[i] - task_times[i - 1]).total_seconds()
                 for i in range(1, len(task_times))]
-        ai = sum(1 for e in task_evts if e.get("by") == "ai")
-        ext = sum(1 for e in task_evts if e.get("by") == "extension")
+        ai = sum(1 for e, _ in task_evts if e.get("by") == "ai")
+        ext = sum(1 for e, _ in task_evts if e.get("by") == "extension")
         source = ("live (by:ai, script-stamped) — honest cadence" if ai and not ext
                   else "backstop (by:extension, end-of-step) — tight window acceptable" if ext and not ai
                   else f"mixed (ai={ai}, extension={ext})")

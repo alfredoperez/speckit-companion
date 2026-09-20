@@ -4,7 +4,7 @@
 Given a feature spec (carrying `## ADDED / MODIFIED / REMOVED / RENAMED
 Requirements` delta blocks), the living spec BEFORE the fold, and the living spec
 AFTER the fold, assert the archive-as-merge contract and print a PASS/FAIL report.
-Sibling of check_capture.py (same Report / --json shape). Stdlib only.
+Sibling of check_capture.py (shares check_report.Report / --json shape). Stdlib only.
 
 Asserts:
   - added-folded:   every ADDED requirement heading is present in the after-spec.
@@ -28,6 +28,8 @@ import re
 import sys
 from pathlib import Path
 
+from check_report import Report
+
 _SCRIPTS = Path(__file__).resolve().parent
 
 
@@ -45,36 +47,6 @@ _REQ_HEADING_RE = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
 
 def _headings(text: str) -> list[str]:
     return [m.strip() for m in _REQ_HEADING_RE.findall(text)]
-
-
-class Report:
-    def __init__(self) -> None:
-        self.rows: list[tuple[str, str, str]] = []
-
-    def add(self, ok: bool | None, cid: str, detail: str) -> None:
-        status = "INFO" if ok is None else ("PASS" if ok else "FAIL")
-        self.rows.append((status, cid, detail))
-
-    @property
-    def failed(self) -> int:
-        return sum(1 for s, _, _ in self.rows if s == "FAIL")
-
-    def to_text(self) -> str:
-        out = []
-        for status, cid, detail in self.rows:
-            mark = {"PASS": "✓", "FAIL": "✗", "INFO": "·"}[status]
-            out.append(f"  {mark} [{status}] {cid}: {detail}")
-        passes = sum(1 for s, _, _ in self.rows if s == "PASS")
-        out.append("")
-        out.append(f"  → {passes} pass / {self.failed} fail / "
-                   f"{sum(1 for s, _, _ in self.rows if s == 'INFO')} info")
-        return "\n".join(out)
-
-    def to_dict(self) -> dict:
-        return {
-            "checks": [{"status": s, "id": c, "detail": d} for s, c, d in self.rows],
-            "failed": self.failed,
-        }
 
 
 def run_checks(feature_spec: str, before: str, after: str) -> Report:
