@@ -60,7 +60,15 @@ A healthy capability row SHALL have no icon. Only a drifted row, a row with no s
 
 ### The capability tree groups by folder and labels its rows as words
 
-A folder holding two or more capability specs SHALL be its own group, and a folder holding one collapses into its leaf. Labels read as words, using the same naming rule as the viewer's Overview, and leaves in a group drop the leading words every sibling shares, keeping at least one.
+A folder holding two or more capability specs SHALL be its own group, and a folder holding one collapses into its leaf. Labels read as words, using the same naming rule as the viewer's Overview, and leaves in a group drop the leading words every sibling shares, keeping at least one. A group SHALL start closed, so the view reads as a handful of folders rather than one row per capability, and SHALL start open and say how many drifted when it holds a drifted capability, because drift is the one thing here that asks to be acted on.
+
+#### Scenario: every spec in a folder matches its code
+- **WHEN** the tree is built
+- **THEN** the folder is closed and carries no count
+
+#### Scenario: one spec in a folder is behind its code
+- **WHEN** the tree is built
+- **THEN** the folder is open and its row reads the number that drifted
 
 #### Scenario: eight specs share one folder and one leading word
 - **WHEN** the tree is built
