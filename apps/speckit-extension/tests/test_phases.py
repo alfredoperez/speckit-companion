@@ -26,7 +26,7 @@ sys.path.insert(0, str(SCRIPTS))
 import _command_parts as cp  # noqa: E402
 import hook_render  # noqa: E402
 
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 build = importlib.import_module("build-pipeline")
 
 

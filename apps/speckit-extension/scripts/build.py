@@ -9,7 +9,7 @@ Default mode does two passes, in order:
      classify, mark-complete) from `presets/_parts/NAME.md`. Replaces the
      former `build-commands.py`.
   2. assemble every `nodes/<command>/` into its command body, and write the
-     artifact manifest. Replaces `assemble-nodes.py`'s former default mode.
+     artifact manifest. Replaces `assemble_nodes.py`'s former default mode.
 
 `--bless` re-freezes the 7 preset goldens after a deliberate preset or part edit.
 It is the only sanctioned writer of `tests/golden/commands/`.
@@ -35,7 +35,6 @@ Exit 0 clean, 1 on any drift. Stdlib only.
 from __future__ import annotations
 
 import glob
-import importlib
 import os
 import sys
 from pathlib import Path
@@ -45,9 +44,8 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import _command_parts as cp  # noqa: E402
-
-asm = importlib.import_module("assemble-nodes")
-parity = importlib.import_module("check-shape-parity")
+import assemble_nodes as asm  # noqa: E402
+import check_shape_parity as parity  # noqa: E402
 
 EXT = cp.EXT
 

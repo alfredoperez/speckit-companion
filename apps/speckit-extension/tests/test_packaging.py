@@ -78,7 +78,7 @@ class TestClosureDerivation(unittest.TestCase):
         self.assertNotIn("json.py", deps)
 
     def test_the_builder_closure_reaches_an_importlib_loaded_sibling(self):
-        self.assertIn("assemble-nodes.py", pm.vsix_closure())
+        self.assertIn("assemble_nodes.py", pm.vsix_closure())
 
 
 class TestGateFailsOnDrift(unittest.TestCase):
@@ -96,9 +96,9 @@ class TestGateFailsOnDrift(unittest.TestCase):
             self.assertProblem(pm.check(), "needed but not packaged: companion_config.py")
 
     def test_a_packaged_script_nothing_reaches_fails(self):
-        padded = frozenset(pm.RUNTIME_SCRIPTS | {"check-shape-parity.py"})
+        padded = frozenset(pm.RUNTIME_SCRIPTS | {"check_shape_parity.py"})
         with mock.patch.object(pm, "RUNTIME_SCRIPTS", padded):
-            self.assertProblem(pm.check(), "packaged but unreachable: check-shape-parity.py")
+            self.assertProblem(pm.check(), "packaged but unreachable: check_shape_parity.py")
 
     def test_a_declared_script_that_does_not_exist_fails(self):
         padded = frozenset(pm.RUNTIME_SCRIPTS | {"ghost.py"})
@@ -106,8 +106,8 @@ class TestGateFailsOnDrift(unittest.TestCase):
             self.assertProblem(pm.check(), "declared but absent: ghost.py")
 
     def test_a_new_script_with_no_shipping_decision_fails(self):
-        with mock.patch.object(pm, "BUILD_ONLY", frozenset(pm.BUILD_ONLY - {"check-shape-parity.py"})):
-            self.assertProblem(pm.check(), "unclassified: check-shape-parity.py")
+        with mock.patch.object(pm, "BUILD_ONLY", frozenset(pm.BUILD_ONLY - {"check_shape_parity.py"})):
+            self.assertProblem(pm.check(), "unclassified: check_shape_parity.py")
 
     def test_a_command_calling_a_script_that_does_not_exist_fails(self):
         refs = pm.direct_refs() | {"ghost.py"}

@@ -26,7 +26,7 @@ Paths: `apps/speckit-extension/**`
 - **Version**: `apps/speckit-extension/extension.yml` `extension.version` · **Release**: `/publish-speckit-ext` → `speckit-ext-v*` tag → catalog
 - Sub-areas:
   - **commands** — `apps/speckit-extension/commands/**` (a new command must be in `extension.yml` `provides.commands` or the installer skips it → ⚠️ if missing)
-  - **presets** — `apps/speckit-extension/presets/**` (turbo/standard bodies; run `python3 apps/speckit-extension/scripts/check-shape-parity.py`)
+  - **presets** — `apps/speckit-extension/presets/**` (turbo/standard bodies; run `python3 apps/speckit-extension/scripts/check_shape_parity.py`)
   - **scripts / hooks** — `apps/speckit-extension/scripts/**`
   - **version** — `extension.yml` `extension.version`
 
@@ -81,4 +81,4 @@ Re-check these red-flag words against the **new** behavior: "no … behavior", "
 
 ## Verify (typical commands)
 
-`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check-shape-parity.py` (preset changes) · `python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).
+`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check_shape_parity.py` (preset changes) · `python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).

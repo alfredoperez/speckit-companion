@@ -17,7 +17,6 @@ Read-only. Stdlib only.
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
 import os
 import sys
@@ -27,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
+import assemble_nodes as assemble  # noqa: E402
 from _command_parts import decomposed_commands, read_node  # noqa: E402
 from spec_context import feature_spec_path  # noqa: E402
 
@@ -70,7 +70,6 @@ def build(orders: dict | None = None) -> dict:
     `orders` lets a caller pass the order actually assembled (a project's recipe,
     once configuration reaches the assembler) instead of the shipped default.
     """
-    assemble = importlib.import_module("assemble-nodes")
     commands = {}
     for command in decomposed_commands():
         order = (orders or {}).get(command) or assemble.default_order(command)

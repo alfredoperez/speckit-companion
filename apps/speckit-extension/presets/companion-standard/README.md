@@ -16,4 +16,4 @@ Off / switch: `specify preset remove companion-standard` (or pick a different pr
 
 ## Shared parts
 
-Every command body is assembled from single-source blocks in [`../_parts/`](../_parts/) — `timing.md` (the shared timing block every body ends with), plus `sizing.md`, `routing.md`, and `self-advance.md` where a command uses them. The blocks are expanded into whole, self-contained bodies by `speckit-extension/scripts/build.py`, and `speckit-extension/scripts/check-shape-parity.py` enforces that each fenced region matches its part byte-for-byte.
+Every command body is assembled from single-source blocks in [`../_parts/`](../_parts/) — `timing.md` (the shared timing block every body ends with), plus `sizing.md`, `routing.md`, and `self-advance.md` where a command uses them. The blocks are expanded into whole, self-contained bodies by `speckit-extension/scripts/build.py`, and `speckit-extension/scripts/check_shape_parity.py` enforces that each fenced region matches its part byte-for-byte.

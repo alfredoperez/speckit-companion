@@ -87,7 +87,7 @@ speckit-extension/**
 !apps/speckit-extension/scripts/template_render.py
 !apps/speckit-extension/scripts/decision_routes.py
 !apps/speckit-extension/scripts/manifest.py
-!apps/speckit-extension/scripts/assemble-nodes.py
+!apps/speckit-extension/scripts/assemble_nodes.py
 !apps/speckit-extension/scripts/instruction-budget.py
 !apps/speckit-extension/scripts/_command_parts.py
 !apps/speckit-extension/scripts/emission_sync.py

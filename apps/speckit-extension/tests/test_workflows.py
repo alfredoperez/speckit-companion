@@ -27,7 +27,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import config_write  # noqa: E402
 
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 build = importlib.import_module("build-pipeline")
 graph_mod = importlib.import_module("pipeline-graph")
 

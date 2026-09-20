@@ -263,7 +263,7 @@ def fill_parts(text: str, rel: str) -> str:
 
     Deterministic and idempotent: a fence already holding its part's content is
     rewritten to the same bytes. Unbalanced fences or an unknown part name are a
-    hard error (never a silent no-op). Shared by build-commands and assemble-nodes
+    hard error (never a silent no-op). Shared by build.py and assemble_nodes.py
     so both pass commands through the identical part-fence step.
     """
     opens = PART_OPEN.findall(text)

@@ -15,7 +15,7 @@ Three assertions:
       after normalizing fence-marker comment lines (so the timing marker rename
       and the part-fence convention are not miscounted as content changes). The
       7 namespaced bodies are generated from nodes/ and checked against their
-      own committed body instead (see assemble-nodes.py / build.py).
+      own committed body instead (see assemble_nodes.py / build.py).
       Failure: `golden drift: <command>`.
 
   (c) TIMING PRESENCE — over all 14 carriers, every companion-standard carrier

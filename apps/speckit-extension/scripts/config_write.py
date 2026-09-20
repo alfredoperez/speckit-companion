@@ -825,32 +825,34 @@ def order_in_force(command: str) -> list:
     """The order this step runs, so a phase check knows what needs placing."""
     if command in _order_in_force:
         return _order_in_force[command]
-    import importlib
     import sys
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    assemble = importlib.import_module("assemble-nodes")
+    import assemble_nodes as assemble
     return assemble.default_order(command)
 
 
-def resolved_order(project_root: str, command: str) -> list:
+def resolved_order(project_root: str, command: str, config: dict = None) -> list:
     """The nodes this step runs today, read the way a build reads them.
 
     Falls back to the shipped order for a project that has declared none, and on
     any read failure — a validation that cannot tell what is running should let
     the write through and leave the build to refuse it, rather than block an
     edit because the file it was about to fix could not be parsed.
+
+    `config` lets a caller that already loaded it (e.g. to also resolve phases
+    in the same write) pass it in rather than have this reparse the same file.
     """
-    import importlib
     import sys
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    assemble = importlib.import_module("assemble-nodes")
+    import assemble_nodes as assemble
     default = assemble.default_order(command)
     try:
         import companion_config as cc
 
-        config, _warnings = cc.load_config(config_path(project_root))
+        if config is None:
+            config, _warnings = cc.load_config(config_path(project_root))
         return cc.resolve_order(config, command, default) or default
     except Exception:  # noqa: BLE001 — see the docstring
         return default
@@ -890,7 +892,7 @@ def check_template_section(project_root: str, command: str, heading: str,
                 f"no fragment called '{fragment}' — shipped ones are: {known}")
 
 
-def use_phases_in_force(project_root: str, command: str, pending: list = None) -> None:
+def use_phases_in_force(project_root: str, command: str, pending: list = None, config: dict = None) -> None:
     """Point the phase checks at the grouping that will be in force, not the shipped one.
 
     `unexpressible_order` asks whether an order can be expressed as contiguous
@@ -901,19 +903,22 @@ def use_phases_in_force(project_root: str, command: str, pending: list = None) -
     `pending` is the grouping this same write is about to save, so the pair of
     writes the panel makes (phases, then order) validates against each other
     rather than against what was there before.
+
+    `config` lets a caller that already loaded it pass it in rather than have
+    this reparse the same file.
     """
-    import importlib
     import sys
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    assemble = importlib.import_module("assemble-nodes")
+    import assemble_nodes as assemble
     if pending:
         assemble.use_project_phases({command: pending})
         return
     try:
         import companion_config as cc
 
-        config, _warnings = cc.load_config(config_path(project_root))
+        if config is None:
+            config, _warnings = cc.load_config(config_path(project_root))
         declared = cc.resolve_phases(config, command)
         if declared:
             assemble.use_project_phases({command: declared})
@@ -923,11 +928,10 @@ def use_phases_in_force(project_root: str, command: str, pending: list = None) -
 
 def check_phases(command: str, phases: list) -> None:
     """Refuse a grouping the pipeline could not build, before it reaches the file."""
-    import importlib
     import sys
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    assemble = importlib.import_module("assemble-nodes")
+    import assemble_nodes as assemble
 
     import _command_parts as cp
 
@@ -971,11 +975,10 @@ def check_order(command: str, nodes: list) -> None:
     than one that was never written: the panel would show the new order and the
     assistant would keep reading the old body.
     """
-    import importlib
     import sys
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    assemble = importlib.import_module("assemble-nodes")
+    import assemble_nodes as assemble
     import companion_config as cc
 
     import _command_parts as cp
@@ -1185,8 +1188,16 @@ def main() -> int:
             # A phase is owed only to a node the step RUNS, and an order is only
             # expressible if its phases can hold it — so each check reads what
             # this write is about to make true, not what the file says now.
-            use_order(args.command, nodes or resolved_order(project, args.command))
-            use_phases_in_force(project, args.command, phases)
+            # Loaded once and threaded through both checks below, so a project
+            # with hundreds of nodes doesn't reparse companion.yml twice for
+            # one write.
+            try:
+                import companion_config as cc
+                loaded_config, _warnings = cc.load_config(config_path(project))
+            except Exception:  # noqa: BLE001 — both checks fall back on their own
+                loaded_config = None
+            use_order(args.command, nodes or resolved_order(project, args.command, loaded_config))
+            use_phases_in_force(project, args.command, phases, loaded_config)
             check_phases(args.command, phases)
             if nodes is not None:
                 check_order(args.command, nodes)

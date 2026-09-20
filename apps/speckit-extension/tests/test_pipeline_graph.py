@@ -24,7 +24,7 @@ SCRIPTS = EXT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 graph_mod = importlib.import_module("pipeline-graph")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 hook_render = importlib.import_module("hook_render")
 
 

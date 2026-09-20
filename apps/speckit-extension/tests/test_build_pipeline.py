@@ -28,7 +28,7 @@ import hook_render  # noqa: E402
 import _command_parts as cp  # noqa: E402
 
 build = importlib.import_module("build-pipeline")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 
 def project_with(config_text: str) -> tempfile.TemporaryDirectory:

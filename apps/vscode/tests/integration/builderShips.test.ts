@@ -30,7 +30,7 @@ const REQUIRED_SCRIPTS = [
     'pipeline-graph.py',      // the structure the panel draws
     'config_write.py',        // saves a reorder, a hook or a workflow switch
     'config_repair.py',       // the ways out of a configuration it cannot read
-    'assemble-nodes.py',      // both of the above assemble through it
+    'assemble_nodes.py',      // both of the above assemble through it
     '_command_parts.py',      // …which reads the node files through this
     'hook_render.py',         // hooks into the body
     'template_render.py',     // a reshaped template

@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _command_parts as cp  # noqa: E402
 from builder_harness import Project  # noqa: E402
 
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 MARKER = re.compile(r"<!-- /?speckit-companion:(?:node|phase|hook) [\w-]+ -->")
 

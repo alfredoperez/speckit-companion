@@ -22,7 +22,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 budget = importlib.import_module("instruction-budget")
-assemble = importlib.import_module("assemble-nodes")
+import assemble_nodes as assemble  # noqa: E402
 
 
 class CountsWhatItClaimsTo(unittest.TestCase):

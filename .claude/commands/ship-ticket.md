@@ -42,7 +42,7 @@ git status --porcelain                        # work should be committed; a clea
 - If there are **uncommitted** changes that are the real work, commit them first (real change + `specs/<NNN>/` spec folder); do **not** commit `.specify/` regenerated artifacts (`git checkout origin/main -- .specify/<file>` for any swept in).
 
 ### 0b. Verify it actually builds — subagent
-- `npm run compile && npm test`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check-shape-parity.py`. If capture/timing changed, run the capture eval.
+- `npm run compile && npm test`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
 - Confirm the spec is in a shippable state: `specs/<NNN>-<slug>/` committed, tasks checked, `.spec-context.json` `specName` real (not a `[FEATURE NAME]` placeholder).
 - If anything is red, **stop and report** — don't ship a broken branch.
 
