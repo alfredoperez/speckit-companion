@@ -239,30 +239,27 @@ describe('docs consistency', () => {
   });
 
   describe('pinned fixtures stay pinned', () => {
-    // The installed extension writes a per-machine id into any run record it
-    // watches, including the committed fixtures. It reached main three times
-    // during one cleanup, each time through a blanket `git add`.
-    const fixtureRecords = (): string[] => {
-      const out: string[] = [];
-      const walk = (dir: string): void => {
-        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-          const full = path.join(dir, e.name);
-          if (e.isDirectory()) walk(full);
-          else if (e.name === '.spec-context.json') out.push(full);
-        }
-      };
-      for (const root of ['specs', 'apps/vscode/webview/src/spec-viewer/__fixtures__']) {
-        const abs = path.join(REPO_ROOT, root);
-        if (fs.existsSync(abs)) walk(abs);
-      }
-      return out;
-    };
+    // These are baselines, each frozen at one viewer state. The extension writes
+    // a per-machine id into any run record it watches, which is right for a
+    // user's project and wrong for a file this repo ships: it reached main three
+    // times in one cleanup, through a blanket `git add`. CLAUDE.md says to
+    // restore these rather than commit them; this is that rule, enforced.
+    const PINNED = [
+      'specs/_00_demo-specified',
+      'specs/_01_demo-planned',
+      'specs/_02_demo-tasked',
+      'specs/_03_demo-living',
+      'apps/vscode/webview/src/spec-viewer/__fixtures__/specs/393-implement-button-lost',
+      'apps/vscode/webview/src/spec-viewer/__fixtures__/specs/394-adopt-codex-design',
+    ];
 
-    it('no committed run record carries a per-machine telemetry id', () => {
-      const carrying = fixtureRecords()
-        .filter(f => 'telemetryInstanceId' in JSON.parse(fs.readFileSync(f, 'utf8')))
-        .map(f => path.relative(REPO_ROOT, f));
+    it('no pinned fixture carries a per-machine telemetry id', () => {
+      const carrying = PINNED.filter(dir => {
+        const file = path.join(REPO_ROOT, dir, '.spec-context.json');
+        return fs.existsSync(file) && 'telemetryInstanceId' in JSON.parse(fs.readFileSync(file, 'utf8'));
+      });
       expect(carrying).toEqual([]);
     });
   });
+
 });

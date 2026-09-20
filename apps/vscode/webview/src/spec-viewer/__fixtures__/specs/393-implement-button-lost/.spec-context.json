@@ -255,6 +255,5 @@
     "implement": {
       "summary": "Rollback-aware footer + derivation: forced status after an interrupted run restores the Implement button; interrupted attempts stop reading as completed"
     }
-  },
-  "telemetryInstanceId": "c137fd22-2a53-4710-9bef-5fa0728e61a4"
+  }
 }
