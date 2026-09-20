@@ -24,33 +24,38 @@ const { id, product, productLabel, version, date, unreleased, sections, image } 
 ---
 
 <article class="cl-release" id={id} data-product={product} data-unreleased={unreleased ? 'true' : 'false'}>
-  <header class="cl-release-head">
-    <h2 class="cl-release-title">
-      <span class:list={['cl-product', `cl-product--${product}`]}>{productLabel}</span>
-      <span class="cl-version">{unreleased ? 'Not released yet' : version}</span>
-    </h2>
-    {date && (
-      <a class="cl-date" href={`#${id}`}>
-        <time datetime={date}>{date}</time>
-      </a>
+  <details class="cl-details" open={unreleased}>
+    <summary class="cl-release-head">
+      <h2 class="cl-release-title">
+        <span class:list={['cl-product', `cl-product--${product}`]}>{productLabel}</span>
+        <span class="cl-version">{unreleased ? 'Not released yet' : version}</span>
+      </h2>
+      <span class="cl-release-head-right">
+        {date && (
+          <a class="cl-date" href={`#${id}`}>
+            <time datetime={date}>{date}</time>
+          </a>
+        )}
+        <span class="cl-chevron" aria-hidden="true"></span>
+      </span>
+    </summary>
+
+    {image && (
+      <figure class="cl-figure">
+        <div class="cl-figure-frame">
+          <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        </div>
+        {image.caption && <figcaption>{image.caption}</figcaption>}
+      </figure>
     )}
-  </header>
 
-  {image && (
-    <figure class="cl-figure">
-      <div class="cl-figure-frame">
-        <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
-      </div>
-      {image.caption && <figcaption>{image.caption}</figcaption>}
-    </figure>
-  )}
-
-  <div class="cl-body">
-    {sections.map((section) => (
-      <section class="cl-section">
-        {section.title && <h3 class="cl-section-title">{section.title}</h3>}
-        <div class="cl-prose" set:html={section.html} />
-      </section>
-    ))}
-  </div>
+    <div class="cl-body">
+      {sections.map((section) => (
+        <section class="cl-section">
+          {section.title && <h3 class="cl-section-title">{section.title}</h3>}
+          <div class="cl-prose" set:html={section.html} />
+        </section>
+      ))}
+    </div>
+  </details>
 </article>

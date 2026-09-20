@@ -507,6 +507,32 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         gap: 10px;
         padding-bottom: 18px;
         border-bottom: 1px solid var(--rule);
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .cl-release-head::-webkit-details-marker {
+        display: none;
+      }
+
+      .cl-release-head-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .cl-chevron {
+        width: 8px;
+        height: 8px;
+        flex-shrink: 0;
+        border-right: 1.5px solid var(--text-dim);
+        border-bottom: 1.5px solid var(--text-dim);
+        transform: rotate(45deg);
+        transition: transform 0.15s ease;
+      }
+
+      details[open] > .cl-release-head .cl-chevron {
+        transform: rotate(-135deg);
       }
 
       .cl-release-title {
