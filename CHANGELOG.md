@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
 ### Fixed
+- **The docs no longer claim the spec viewer works fully offline.** Syntax highlighting and diagrams load from a CDN; without a connection code blocks show as plain text and a diagram stays as its source.
 - **Living specs now fold correctly when only the VS Code extension is installed.** The capability resolver ships inside the extension.
 - **The Living Specs view finds a central spec at its current path.** A capability with no `spec:` path in the registry pointed the sidebar at `capabilities/<name>/spec.md`, the name from before the rename, so a spec at `capabilities/<name>/<name>.spec.md` showed as missing. The view now looks for the current name first and still finds the old one.
 - **A spec directory pattern like `apps/*/specs` lists the specs inside it.** In a monorepo, a wildcard pattern that points at each project's `specs` folder used to show one empty row per project named Specs, and none of the specs inside. Each project's specs now appear, the same way the default `specs` entry lists its children. Patterns that end in a wildcard, like `apps/*/specs/*` or `openspec/changes/*`, work as before. A pattern that ends in a plain name and pointed at spec folders one by one now lists their children instead: add `/*` to keep the old meaning.
