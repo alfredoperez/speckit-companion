@@ -1,7 +1,6 @@
 # Spec Viewer Panel — Living Spec
 
-<!-- reviewed: d589a63e -->
-
+<!-- reviewed: 2b4fbe2c -->
 ## Purpose
 
 The extension-side host for a spec's reading surface: one panel per spec, kept current as the spec's files and record change on disk.

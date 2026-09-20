@@ -1,7 +1,6 @@
 # Capture runtime build — Living Spec
 
-<!-- reviewed: a9c0b02b -->
-
+<!-- reviewed: 2b4fbe2c -->
 ## Purpose
 
 The build renders a project's `companion.yml` into the command bodies the assistant reads, all-or-nothing, and reaches every agent's copy. A command is an ordered list of nodes with declared boundaries and phases, so a project attaches work at a known point.
