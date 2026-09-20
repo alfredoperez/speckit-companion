@@ -122,7 +122,7 @@ specify workflow run speckit-companion
 specify workflow resume <run_id>   # paused at a gate? pick up from the exact node
 ```
 
-On an agentic CLI each Companion command also continues into the next step on its own, honoring the same gates, so you get the hands-off flow without `workflow run`. Full reference: [template-profiles.md](../../docs/template-profiles.md). Either way, hands-off or gated, the run leaves the same Overview record as a run you watched.
+On an agentic CLI each Companion command also continues into the next step on its own, honoring the same gates, so you get the hands-off flow without `workflow run`. Full reference: the `commands-*` and `workflows-*` living specs. Either way, hands-off or gated, the run leaves the same Overview record as a run you watched.
 
 <!-- Cross-promo banner (C6 in ReadmeCapture.stories.tsx, captured by
      scripts/capture-docs-images.mjs). Committed src, per this file's

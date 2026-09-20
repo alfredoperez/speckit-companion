@@ -122,10 +122,9 @@ If your change is documented in `CLAUDE.md`'s map but not in the README after yo
 Long-form docs live under `docs/` and are linked from the README:
 
 - [docs/architecture.md](docs/architecture.md) — module structure, extension/webview boundaries, build pipeline
-- [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
-- [docs/viewer-states.md](docs/viewer-states.md) — spec viewer state machine: status lifecycle, footer buttons, badge text, step tabs
-- [docs/how-it-works.md](docs/how-it-works.md) — end-to-end walkthrough
-- [docs/spec-context-schema.md](docs/spec-context-schema.md) — `.spec-context.json` schema reference
+- [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
+- the `viewer-ui-*` and `spec-viewer-*` living specs — spec viewer behaviour: status lifecycle, footer buttons, badge text, step tabs
+- `apps/vscode/src/core/core-spec-context.spec.md` — `.spec-context.json` contract
 - [CLAUDE.md](CLAUDE.md) — instructions for AI assistants editing this repo, plus the README docs map and per-release checklist
 
 Look at a recent spec under `specs/` (for example, [specs/058-floating-toast/](specs/058-floating-toast/)) for an example of the SDD format used here.

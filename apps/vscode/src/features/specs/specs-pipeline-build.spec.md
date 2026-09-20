@@ -9,6 +9,7 @@ Builds the project's pipeline configuration into the command bodies the assistan
 ## Requirements
 
 ### A built pipeline reports when it is older than what it was built from
+<!-- touches: apps/vscode/src/features/specs/pipelineBuild.ts -->
 
 The build SHALL be reported out of date whenever any input is newer than it: the configuration file, a node, a workflow, a fragment or a template. Checking the configuration file alone misses the most common edit, a node.
 
@@ -17,6 +18,7 @@ The build SHALL be reported out of date whenever any input is newer than it: the
 - **THEN** it reports the build as stale
 
 ### A build is previewable, and its log is kept rather than summarized
+<!-- touches: apps/vscode/src/features/specs/pipelineBuildCommands.ts -->
 
 Running a build from the editor SHALL offer a preview that writes nothing alongside the build that writes.
 
@@ -25,6 +27,7 @@ Running a build from the editor SHALL offer a preview that writes nothing alongs
 - **THEN** it lists the commands that would change and no file on disk has changed
 
 ### A build's full output goes to the log, which takes focus only on failure
+<!-- touches: apps/vscode/src/features/specs/pipelineBuildCommands.ts -->
 
 The full output of a build SHALL go to the log, not a notification, and the log SHALL come forward only when the build failed.
 
@@ -37,6 +40,7 @@ The full output of a build SHALL go to the log, not a notification, and the log 
 - **THEN** the log is brought forward with the whole output
 
 ### A hung build is abandoned
+<!-- touches: apps/vscode/src/features/specs/pipelineBuildCommands.ts -->
 
 A build that has not finished within a minute SHALL be stopped and reported as failed.
 
@@ -45,6 +49,7 @@ A build that has not finished within a minute SHALL be stopped and reported as f
 - **THEN** the build is abandoned and the failure is shown
 
 ### The pipeline structure shown is the one a build would produce
+<!-- touches: apps/vscode/src/features/specs/pipelineGraph.ts -->
 
 The pipeline builder SHALL draw the structure the build itself derives from the same configuration, never a second derivation in the editor.
 

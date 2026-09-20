@@ -1,5 +1,7 @@
 # Capture runtime living resolve — Living Spec
 
+<!-- reviewed: 2b4fbe2c -->
+
 ## Purpose
 
 The resolver is the one reading of the living-specs registry: which capability owns a file, which requirements a change should read, and how a spec is sliced for a load. Every other tool calls it, so boundaries and markers mean the same thing everywhere. It also governs how the specify and plan steps load those requirements and the project's authored rules.

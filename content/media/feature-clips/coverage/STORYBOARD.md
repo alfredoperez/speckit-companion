@@ -40,7 +40,7 @@ Frame zero is the capture at 1:1 with no marker and no scrim, which is the pose 
 npm run render                 # in this directory
 ```
 
-There is no published GIF for this composition, so there are no as-shipped encode settings to record. If it is ever promoted, the standard recipe from `docs/visual-assets.md` applies:
+There is no published GIF for this composition, so there are no as-shipped encode settings to record. If it is ever promoted, the standard recipe from `tooling/scripts/build-clip-gifs.mjs` applies:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

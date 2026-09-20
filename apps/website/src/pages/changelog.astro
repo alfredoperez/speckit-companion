@@ -24,7 +24,7 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 // path is resolved relative to this source file, not to the build's cwd.
 import vscodeChangelogCurrent from '../../../../CHANGELOG.md?raw';
 // The archive holds 0.30.0 and older; this page is the whole history, so it reads both.
-import vscodeChangelogArchive from '../../../../docs/changelog-archive.md?raw';
+import vscodeChangelogArchive from '../data/changelog-archive.md?raw';
 import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
 
 const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;

@@ -9,6 +9,7 @@ The commands that adopt, sync, check, show and report on living specs are opt-in
 ## Requirements
 
 ### Living-spec commands are opt-in, non-halting, and honest about what they did not examine
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-sync.md, apps/speckit-extension/commands/speckit.companion.living-drift.md, apps/speckit-extension/commands/speckit.companion.living-coverage.md, apps/speckit-extension/commands/speckit.companion.living-validate.md, apps/speckit-extension/commands/speckit.companion.living-show.md -->
 
 Every living-spec command except adopt, which is how a project opts in, SHALL do nothing on a project without an enabled registry, and none SHALL fail the run.
 
@@ -17,6 +18,7 @@ Every living-spec command except adopt, which is how a project opts in, SHALL do
 - **THEN** it says there is nothing to do and exits successfully
 
 ### A living-spec report names what it skipped and why
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-drift.md, apps/speckit-extension/commands/speckit.companion.living-coverage.md, apps/speckit-extension/commands/speckit.companion.living-validate.md -->
 
 The drift, coverage and shape-check reports SHALL state how much they examined and list each skipped item with its reason.
 
@@ -25,6 +27,7 @@ The drift, coverage and shape-check reports SHALL state how much they examined a
 - **THEN** it gives both counts and the reason for each skip
 
 ### Living-spec reports edit nothing
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-drift.md, apps/speckit-extension/commands/speckit.companion.living-coverage.md, apps/speckit-extension/commands/speckit.companion.living-validate.md -->
 
 The drift, coverage and shape-check commands SHALL make no edits, and the shape check SHALL NOT tell the assistant to edit a spec to clear a finding, because fixing is the author's call.
 
@@ -33,6 +36,7 @@ The drift, coverage and shape-check commands SHALL make no edits, and the shape 
 - **THEN** it names each finding's file, line and fix, and no file changes
 
 ### One command syncs every affected living spec from the current changes, uncommitted included
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-sync.md -->
 
 Sync SHALL group all working-tree changes (uncommitted edits, deletions, untracked files and commits since each spec's baseline) by capability and update every affected spec in one pass.
 
@@ -41,6 +45,7 @@ Sync SHALL group all working-tree changes (uncommitted edits, deletions, untrack
 - **THEN** every affected capability's spec is updated, each from its own changed files, with no hand-picking
 
 ### Sync updates a spec in place rather than regenerating it
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-sync.md -->
 
 Sync SHALL keep verbatim any content the change does not invalidate, never commit, and never redraft a spec that has never been committed.
 
@@ -80,6 +85,7 @@ A spec still carrying its surface-draft banner SHALL get a warning until the ban
 - **THEN** the check warns that nobody has reviewed it
 
 ### A spec that is still true can say so, and stop drifting
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-drift.md -->
 
 The drift report SHALL take an explicit per-capability acceptance that writes the commit the spec was read against into the spec itself, and nothing SHALL write one on its own, because a review is a claim a person makes.
 
@@ -92,6 +98,7 @@ The drift report SHALL take an explicit per-capability acceptance that writes th
 - **THEN** no acceptance is recorded
 
 ### A living spec is readable one slice at a time, from a terminal
+<!-- touches: apps/speckit-extension/commands/speckit.companion.living-show.md -->
 
 The show command SHALL print a capability's headings, one named requirement with its scenarios, or the requirements that describe a file. Every miss (unregistered capability, missing spec file, unmatched or ambiguous name, unclaimed file) SHALL exit successfully and name the alternatives.
 

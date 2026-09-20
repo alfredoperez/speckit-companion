@@ -1,5 +1,7 @@
 # Capture runtime config — Living Spec
 
+<!-- reviewed: e14af436 -->
+
 ## Purpose
 
 `companion.yml` is a file people read and a panel edits. Reading, writing back, repairing and drawing it must agree with the build, so what the board shows is what would run.

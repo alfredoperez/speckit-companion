@@ -9,6 +9,7 @@ A Companion run ends at one terminal step that marks a spec complete only over c
 ## Requirements
 
 ### Completion is an explicit terminal step with exactly one writer
+<!-- touches: apps/speckit-extension/nodes/implement/complete.md, apps/speckit-extension/commands/speckit.companion.mark-complete.md -->
 
 The Companion pipeline SHALL end at a completion step that promotes the spec to completed through the shared status writer, and no other path SHALL write that status. The stock pipeline has no terminal step.
 
@@ -22,6 +23,7 @@ The Companion pipeline SHALL end at a completion step that promotes the spec to 
 - **THEN** it refuses and reports, without failing the host
 
 ### A spec is never marked complete over a failing check the run introduced
+<!-- touches: apps/speckit-extension/nodes/implement/complete.md -->
 
 "The work validates" SHALL mean the project's own checks ran and passed. When a check the run introduced fails, it is fixed, or the spec stays at implemented with the reason stated.
 
@@ -30,6 +32,7 @@ The Companion pipeline SHALL end at a completion step that promotes the spec to 
 - **THEN** the failure is fixed before completion, or the spec stays at implemented and the summary says why
 
 ### A check that could not run is recorded as a concern, never as a verification
+<!-- touches: apps/speckit-extension/nodes/implement/complete.md -->
 
 A check the run could not execute SHALL be recorded as a concern naming what was skipped and why, with no verification entry for it, because readers trust the completed status without opening anything.
 
@@ -38,6 +41,7 @@ A check the run could not execute SHALL be recorded as a concern naming what was
 - **THEN** the summary says so, a concern is recorded, and no verification entry claims the check
 
 ### Completion accounts for every loaded capability with a delta or a recorded skip
+<!-- touches: apps/speckit-extension/nodes/implement/complete.md, apps/speckit-extension/commands/speckit.companion.mark-complete.md -->
 
 Before folding, both implement's close and the completion command SHALL give every loaded capability exactly one outcome: a delta block when its behaviour changed, or a recorded skip with a reason when it was only read.
 
@@ -50,6 +54,7 @@ Before folding, both implement's close and the completion command SHALL give eve
 - **THEN** a skip with its reason is recorded and the capability's spec is untouched
 
 ### The tasks Polish phase validates the spec's Success Criteria in exactly one place
+<!-- touches: apps/speckit-extension/nodes/tasks/tasks-doc.md -->
 
 The Polish phase SHALL generate a task that runs the project's suites against the Success Criteria, unless a post-implement hook in the project's configuration carries `owns: validation`, in which case it defers to that hook. An unmarked hook does not defer, because review, PR and deploy hooks share the same anchor.
 

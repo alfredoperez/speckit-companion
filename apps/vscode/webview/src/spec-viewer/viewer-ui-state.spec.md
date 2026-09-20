@@ -10,6 +10,7 @@ How the webview takes in what the extension knows without adding facts of its ow
 ## Requirements
 
 ### The webview never decides the run's state — it renders the state it is given
+<!-- touches: apps/vscode/webview/src/spec-viewer/messageHandlers.ts, apps/vscode/webview/src/spec-viewer/components/FooterActions.tsx -->
 
 Status, the running step, the available actions and their labels MUST come from the state the extension sends. The webview SHALL NOT re-derive any of them from documents, file presence or progress numbers. Its own derivations are limited to presentation: which given facts to show, in what order, and in what words.
 
@@ -24,6 +25,7 @@ Status, the running step, the available actions and their labels MUST come from 
 - **AND** the re-run and closure actions remain available
 
 ### A state message replaces the snapshot, it never merges into it
+<!-- touches: apps/vscode/webview/src/spec-viewer/messageHandlers.ts, apps/vscode/src/core/utils/dispatcher.ts -->
 
 Each state message MUST be applied wholesale and SHALL NOT be merged onto the snapshot already held. The webview MUST tolerate a state message arriving before any content message. Merging lets a fresh field sit beside a stale one, showing a combination the spec was never in.
 
@@ -43,6 +45,7 @@ Incoming messages SHALL be routed through a compiler-checked handler map, using 
 - **THEN** the same routine applies it, so neither can update the signals while leaving a renderer flag stale
 
 ### One derivation decides whether a step is running
+<!-- touches: apps/vscode/webview/src/spec-viewer/stepInFlight.ts -->
 
 Whether a step is in flight MUST be answered in one place, and every surface that shows motion (the step's spinner, its live progress label, its elapsed timer and the footer's forward-motion gate) MUST read that answer. A settled spec-level status SHALL stop all of them, even when a step's completion record never landed. A progress percentage below complete MUST NOT on its own be read as evidence that anything is running.
 
@@ -57,6 +60,7 @@ Whether a step is in flight MUST be answered in one place, and every surface tha
 - **AND** the step with no document of its own reads as running only while the workflow sits on it with work outstanding
 
 ### Status values from the record are untrusted keys
+<!-- touches: apps/vscode/webview/src/spec-viewer/stepInFlight.ts -->
 
 A value from the spec's record or user configuration (a status, a step name, a document type) MUST NOT be used as a key into a plain object literal, because inherited properties resolve as hits. Such lookups SHALL use a prototype-free structure.
 
@@ -66,6 +70,7 @@ A value from the spec's record or user configuration (a status, a step name, a d
 - **AND** the surface falls back to its neutral default rather than rendering an inherited value
 
 ### Tolerance for an old on-disk shape lives at the one conversion point
+<!-- touches: apps/vscode/webview/src/spec-viewer/timelineEvents.ts -->
 
 When an older version persisted a field in a different shape, the widened type SHALL be declared only on the function that converts it, not on the contract every consumer reads. Consumers all take the current shape, so only the converter handles the legacy form.
 

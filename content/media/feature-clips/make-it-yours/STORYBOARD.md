@@ -48,7 +48,7 @@ A state change is a push, not a dissolve. The outgoing card keeps travelling 420
 npm run render                 # in this directory
 ```
 
-Then the standard GIF recipe from `docs/visual-assets.md` (960 px, 14 fps, palettegen `stats_mode=diff` 128 colors, paletteuse `dither=none diff_mode=rectangle`, `gifsicle -O3 --lossy=30`): 807 KB, 189 frames. The flat dark ground and large type compress far better than a screen capture, so no step-down is needed.
+Then the standard GIF recipe from `tooling/scripts/build-clip-gifs.mjs` (960 px, 14 fps, palettegen `stats_mode=diff` 128 colors, paletteuse `dither=none diff_mode=rectangle`, `gifsicle -O3 --lossy=30`): 807 KB, 189 frames. The flat dark ground and large type compress far better than a screen capture, so no step-down is needed.
 
 - Loop verified: frame zero and the final frame are the same state-1 rest pose, PSNR 48.1 dB (quantization noise only), `loop forever` flag set.
 - `hyperframes check`: 0 errors, 0 warnings, 110/110 text checks pass WCAG AA.

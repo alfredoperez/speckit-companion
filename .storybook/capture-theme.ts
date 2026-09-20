@@ -15,7 +15,7 @@
  * HOW TO RETHEME
  *   1. Copy a palette below, change its roles, give it a name.
  *   2. Point `activeCapturePalette` at it. That one line is the switch.
- *   3. Re-run every capture and re-render every clip (docs/visual-assets.md).
+ *   3. Re-run every capture and re-render every clip (capabilities/media-pipeline/asset-build.spec.md).
  *
  * WHAT IS NOT DERIVABLE
  * A theme carries a few colours that answer to no role: a stock current-line
@@ -411,7 +411,7 @@ export const constellationLight: CapturePalette = {
 /**
  * THE SWITCH. One line: which palette every story, screenshot and clip frame
  * renders in. Changing it means re-running every capture and re-rendering
- * every clip (docs/visual-assets.md).
+ * every clip (capabilities/media-pipeline/asset-build.spec.md).
  */
 export const activeCapturePalette: CapturePalette = constellationLight;
 

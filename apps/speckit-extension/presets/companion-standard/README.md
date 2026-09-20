@@ -2,7 +2,7 @@
 
 The **stock** spec-kit pipeline, unchanged — same sections, same files as upstream — with Companion **timing capture** baked into every command body (so per-step durations and per-task cadence stay accurate for any dispatcher, not only the GUI). Overrides the 7 pipeline commands (`specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `constitution`) — replace strategy, the spec-kit default (the `strategy` key is omitted in `preset.yml`); `checklist` and `taskstoissues` stay on stock.
 
-This is the **default** profile. See [`docs/template-profiles.md`](../../../docs/template-profiles.md) for the full picture (profiles, the commands-vs-templates mechanism, the timing partial, selection).
+This is the **default** profile. See the `commands-*` and `workflows-*` living specs for the full picture (profiles, the commands-vs-templates mechanism, the timing partial, selection).
 
 ## Install (local / dev)
 

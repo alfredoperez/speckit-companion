@@ -1,5 +1,7 @@
 # Steering Tree — Living Spec
 
+<!-- reviewed: 2b4fbe2c -->
+
 ## Purpose
 
 Shows the guidance an AI assistant reads before acting: provider rules files, agents and skills, SpecKit project scaffolding, and a custom workflow's reference folders. The Companion node reads the installed extension's configuration, commands and templates live, confined to its folder.

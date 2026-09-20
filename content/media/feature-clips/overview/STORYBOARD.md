@@ -62,7 +62,7 @@ Two things about this page are deliberately outside the clip. The floating actio
 npm run render                 # in this directory
 ```
 
-Then the GIF recipe from `docs/visual-assets.md`, at this composition's stepped-down settings, which is what the published file was made with:
+Then the GIF recipe from `tooling/scripts/build-clip-gifs.mjs`, at this composition's stepped-down settings, which is what the published file was made with:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=12,scale=880:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

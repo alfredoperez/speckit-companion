@@ -6,7 +6,7 @@ A short loop over the Specs tree: the features it lists, the documents each one 
 
 That README section had a still (`docs/screenshots/generated/specs-sidebar.png`) and nothing that pointed at anything in it. The `597-activation-funnel` research decision was to render the three existing compositions (`spec-viewer`, `inline-comments`, `specs-sidebar`) and swap the stills for GIFs, leaving the referenced PNGs in place so no published Marketplace listing 404s. This clip is that swap for the sidebar: the same capture, held still, with a marker walking three rows so the reader is told what the tree is saying instead of decoding a dense screenshot.
 
-One caveat carried over from `docs/visual-assets.md`: the Specs view is a native VS Code TreeView and can't be storybooked, so the capture under this clip is `sidebarTree.tsx`'s presentational recreation, measured off the DevTools snapshots in `docs/reference/sidebar-snapshots/`. When the icon or state logic in `src/features/specs/specExplorerProvider.ts` changes, the recreation has to be updated by hand and this clip re-rendered.
+One caveat carried over from `capabilities/media-pipeline/asset-build.spec.md`: the Specs view is a native VS Code TreeView and can't be storybooked, so the capture under this clip is `sidebarTree.tsx`'s presentational recreation, measured off the DevTools snapshots in `docs/reference/sidebar-snapshots/`. When the icon or state logic in `src/features/specs/specExplorerProvider.ts` changes, the recreation has to be updated by hand and this clip re-rendered.
 
 ## Source captures
 
@@ -41,7 +41,7 @@ Every beat carries `noZoom`, so all four resolve to the same rest camera: the ca
 npm run render                 # in this directory
 ```
 
-Then the standard GIF recipe from `docs/visual-assets.md`:
+Then the standard GIF recipe from `tooling/scripts/build-clip-gifs.mjs`:
 
 ```
 ffmpeg -i <render>.mp4 -vf "fps=14,scale=960:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=128" pal.png

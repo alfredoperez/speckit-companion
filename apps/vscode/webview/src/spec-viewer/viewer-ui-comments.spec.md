@@ -9,6 +9,7 @@ How inline comments survive a re-render, what the reader's comment actions send 
 ## Requirements
 
 ### Comments survive re-render by re-anchoring, and the card speaks for where it sits
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/restoreComments.ts -->
 
 Saved comments SHALL be restored inline after every render and state change, never as duplicate cards, and a document switch SHALL clear the old mounts before re-anchoring.
 
@@ -21,6 +22,7 @@ Saved comments SHALL be restored inline after every render and state change, nev
 - **THEN** no comment is left pointing at a removed element
 
 ### A comment follows its text when the document shifts
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/reanchor.ts -->
 
 A comment SHALL mount on its stored line when that line still matches, else on a line matching its stored text, else on the first line under its stored heading, else on the stored line if it still exists.
 
@@ -29,6 +31,7 @@ A comment SHALL mount on its stored line when that line still matches, else on a
 - **THEN** the card mounts on the line where the text now lives
 
 ### A comment that matches no line stays in the list
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/restoreComments.ts -->
 
 A comment none of the anchoring steps can place SHALL remain in the consolidated comment list rather than be dropped.
 
@@ -37,6 +40,7 @@ A comment none of the anchoring steps can place SHALL remain in the consolidated
 - **THEN** the comment is still listed
 
 ### A restored card names the line it mounted on
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/refinements.ts -->
 
 A card SHALL describe the line it actually sits on, never the stored anchor it started from.
 
@@ -45,6 +49,7 @@ A card SHALL describe the line it actually sits on, never the stored anchor it s
 - **THEN** the card reports the new line number
 
 ### An edit that changes nothing sends nothing
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/refinements.ts -->
 
 Saving a comment whose trimmed text is empty or unchanged SHALL post no change to the extension.
 
@@ -53,6 +58,7 @@ Saving a comment whose trimmed text is empty or unchanged SHALL post no change t
 - **THEN** no edit is posted
 
 ### Deleting a card returns focus to its line
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/refinements.ts -->
 
 Deleting a comment SHALL unmount its card, update the pending count and return focus to the line's own comment control.
 
@@ -61,6 +67,7 @@ Deleting a comment SHALL unmount its card, update the pending count and return f
 - **THEN** focus lands on that line's comment control
 
 ### Sending comments for refinement clears the local cards
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/refinements.ts -->
 
 Dispatching refinement for a document SHALL clear its local cards and let the refreshed record render them again.
 
@@ -69,6 +76,7 @@ Dispatching refinement for a document SHALL clear its local cards and let the re
 - **THEN** the cards clear until the extension's refresh arrives
 
 ### Structural line actions are offered as suggestions
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/lineActions.ts, apps/vscode/webview/src/spec-viewer/editor/inlineEditor.ts -->
 
 The remove actions on a story, scenario, task, section or line SHALL read "Suggest removing …" and post a request for the assistant, never edit the document in place.
 
@@ -77,6 +85,7 @@ The remove actions on a story, scenario, task, section or line SHALL read "Sugge
 - **THEN** it offers "Suggest removing task", and choosing it leaves the document unchanged
 
 ### A settled spec is readable but not annotatable
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/readOnly.ts, apps/vscode/webview/src/spec-viewer/editor/inlineEditor.ts, apps/vscode/webview/src/spec-viewer/components/InlineComment.tsx -->
 
 Once a spec is completed or archived its comments SHALL stay visible, the composer SHALL NOT open, and cards SHALL render without edit or delete controls.
 
@@ -85,6 +94,7 @@ Once a spec is completed or archived its comments SHALL stay visible, the compos
 - **THEN** the composer does not open and existing comments show without controls
 
 ### Annotation closes in place when a spec settles
+<!-- touches: apps/vscode/webview/src/spec-viewer/editor/readOnly.ts -->
 
 The read-only decision SHALL follow the spec's live status, so a spec that settles while open stops taking comments without a reopen.
 

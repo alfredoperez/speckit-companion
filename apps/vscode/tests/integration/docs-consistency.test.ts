@@ -112,7 +112,6 @@ describe('docs consistency', () => {
   describe('paths referenced in docs exist on disk', () => {
     const DOCS = [
       'docs/architecture.md',
-      'docs/how-it-works.md',
       'CLAUDE.md',
     ];
 
@@ -190,6 +189,36 @@ describe('docs consistency', () => {
     });
   });
 
+  describe('docs/ does not regrow', () => {
+    // A cleanup pass deleted the docs that restated, as prose, behaviour the
+    // living specs now state enforceably. This allowlist is what's left —
+    // anything else is a doc going stale again. See docs/doc-sync.md.
+    const ALLOWED_FILES = new Set([
+      'architecture.md',
+      'configuration.md',
+      'doc-sync.md',
+      'getting-started.md',
+      'media-manifest.md',
+      'pipeline-builder.md',
+      'providers.md',
+      'sidebar.md',
+      'telemetry.md',
+      'viewer.md',
+      'visual-assets.md',
+    ]);
+    const ALLOWED_DIRS = new Set(['architecture', 'media', 'providers', 'reference', 'screenshots', 'style-guide']);
+
+    it('holds no file outside the allowlist', () => {
+      const entries = fs
+        .readdirSync(path.join(REPO_ROOT, 'docs'), { withFileTypes: true })
+        .filter((e) => !e.name.startsWith('.'));
+      const stray = entries
+        .filter((e) => (e.isDirectory() ? !ALLOWED_DIRS.has(e.name) : !ALLOWED_FILES.has(e.name)))
+        .map((e) => e.name);
+      expect(stray).toEqual([]);
+    });
+  });
+
   describe('where unit tests live', () => {
     // CLAUDE.md pins unit tests to `__tests__`; 25 had drifted out with nothing failing.
     const walk = (dir: string): string[] =>
@@ -208,4 +237,29 @@ describe('docs consistency', () => {
       expect(stray).toEqual([]);
     });
   });
+
+  describe('pinned fixtures stay pinned', () => {
+    // These are baselines, each frozen at one viewer state. The extension writes
+    // a per-machine id into any run record it watches, which is right for a
+    // user's project and wrong for a file this repo ships: it reached main three
+    // times in one cleanup, through a blanket `git add`. CLAUDE.md says to
+    // restore these rather than commit them; this is that rule, enforced.
+    const PINNED = [
+      'specs/_00_demo-specified',
+      'specs/_01_demo-planned',
+      'specs/_02_demo-tasked',
+      'specs/_03_demo-living',
+      'apps/vscode/webview/src/spec-viewer/__fixtures__/specs/393-implement-button-lost',
+      'apps/vscode/webview/src/spec-viewer/__fixtures__/specs/394-adopt-codex-design',
+    ];
+
+    it('no pinned fixture carries a per-machine telemetry id', () => {
+      const carrying = PINNED.filter(dir => {
+        const file = path.join(REPO_ROOT, dir, '.spec-context.json');
+        return fs.existsSync(file) && 'telemetryInstanceId' in JSON.parse(fs.readFileSync(file, 'utf8'));
+      });
+      expect(carrying).toEqual([]);
+    });
+  });
+
 });

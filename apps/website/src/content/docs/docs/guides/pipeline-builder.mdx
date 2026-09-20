@@ -94,7 +94,7 @@ Some nodes ship with a step and are not part of the default run. **Add node** in
 
 ![The Add node menu open, offering a shipped add-on and a node the project removed](../../../../../../../docs/screenshots/generated/builder-add-node.png)
 
-The alternatives and add-ons that ship today are listed in the project's `docs/template-profiles.md`, which is also where you would go to write one of your own.
+The alternatives and add-ons that ship today are listed in the project's `commands-*` living specs, which are also where you would go to write one of your own.
 
 ## Change what a step writes
 
@@ -104,7 +104,7 @@ A node says what the assistant does. The **template** chip on a step says what t
 
 One row per `##` section the template has. A section with alternatives offers the fragments written for it, plus **As shipped**, with the chosen one's summary underneath. A section with none draws no field at all, since a control that cannot be operated invites a click that answers nothing; it says `As shipped` and that nothing else is written for it. Restoring a section removes the entry rather than writing "shipped", because an absent entry already means the template's own words.
 
-A reshaped document is one the command tells the assistant to follow. A step you left alone is byte-identical to the shipped one. The fragments that ship today are also listed in `docs/template-profiles.md`.
+A reshaped document is one the command tells the assistant to follow. A step you left alone is byte-identical to the shipped one. The fragments that ship today are also listed in the `commands-*` living specs.
 
 ## Add a step
 
@@ -159,4 +159,12 @@ It says so, and offers the ways out as buttons rather than telling you to open a
 
 ## Next
 
-[Custom commands and hooks](/docs/guides/customize) covers the same hooks written by hand, for when a file is faster than the panel. If the built-in workflows don't fit at all, [Pick a pipeline](/docs/discussions/pick-a-pipeline) has the option of defining your own outright.
+| Path | What it holds |
+|---|---|
+| `.specify/companion.yml` | Your configuration, the source of truth |
+| `.specify/companion/workflows/<name>.yml` | A whole named configuration you can switch to |
+| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added |
+| `.specify/companion/fragments/<name>.md` | A document section you wrote |
+| `.specify/extensions/companion/commands/` | What a build produces: derived, not edited |
+
+The reference for the configuration format, and the full list of the alternatives, add-ons, fragments and presets that ship, is the project's `commands-*` and `workflows-*` living specs.

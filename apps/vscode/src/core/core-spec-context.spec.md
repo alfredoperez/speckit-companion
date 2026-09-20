@@ -70,13 +70,17 @@ A step outside the built-in lifecycle has no status of its own. Recording its st
 - **WHEN** the writer records its boundary
 - **THEN** the history entry is appended and the spec's status is unchanged
 
-### A duration is only shown when the extension itself stamped both ends
-<!-- touches: apps/vscode/src/core/types/specContext.ts -->
+### A duration is only shown when the writers at both ends can be trusted with a clock
+<!-- touches: apps/vscode/src/core/types/specContext.ts, apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
-A span SHALL be trusted only when the extension's own clock stamped both boundaries. Timestamps written by the assistant or a CLI order events correctly but record when the write ran, so no elapsed time is shown from them.
+Writers rank by how much a clock can be trusted to them: the extension and the other instrumented writers highest, an agent's own script below them, anything unrecognised not at all. A span SHALL be trusted only when both its boundaries come from a ranked writer and **the close ranks at least as high as the start**. An agent finishing what the extension started is therefore untrusted, because that shape is a premature finish rather than a measurement, while an agent's own run measured end to end is trusted.
 
-#### Scenario: the assistant journaled a step's completion
-- **WHEN** a step's start or end was written by something other than the extension
+#### Scenario: a run journals both of a step's boundaries itself
+- **WHEN** an agent's script stamps a step's start and the next boundary
+- **THEN** the elapsed time is shown
+
+#### Scenario: the assistant closes a step the extension started
+- **WHEN** a step started by the extension is finished by the assistant
 - **THEN** no elapsed time is shown for that step
 
 #### Scenario: the whole run's elapsed time is requested

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: docs/media-manifest.md.",
+  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: capabilities/media-pipeline/asset-build.spec.md.",
   "conventions": {
     "captureSize": "1836x1164",
     "captureAspect": "1.577:1",
@@ -303,7 +303,7 @@
           "README.md"
         ]
       },
-      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See docs/visual-assets.md."
+      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See capabilities/media-pipeline/asset-build.spec.md."
     },
     {
       "id": "run-in-flight",

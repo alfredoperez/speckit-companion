@@ -53,7 +53,7 @@ Render a verdict table (PASS / PARTIAL / FAIL + one-line evidence):
 |---|------------|
 | A1 | Each lifecycle step the user ran produced a capture (`after_specify/plan/tasks/implement` → a `history[]` entry). |
 | A2 | Writes use canonical `history[]` with explicit `kind` — no legacy `transitions[]`/`stepHistory`. |
-| A3 | Timing is real **for deterministic writes** (`by:extension`/`derive`/`cli`/`user`): ms-precision and monotonic (`timestamps-real`/`timestamps-monotonic` check these only). `by:ai` entries carry second precision (`date -u +%SZ`) and may burst — that's graded by `task-cadence`, not failed. See `docs/capture-and-timing.md`. |
+| A3 | Timing is real **for deterministic writes** (`by:extension`/`derive`/`cli`/`user`): ms-precision and monotonic (`timestamps-real`/`timestamps-monotonic` check these only). `by:ai` entries carry second precision (`date -u +%SZ`) and may burst — that's graded by `task-cadence`, not failed. See the `capture-runtime-*` living specs under `apps/speckit-extension/scripts/`. |
 | A4 | `/speckit.implement` journaled per-task progress as implement **substeps** (`substep == task id`), matching `tasks.md` completed markers. |
 | A5 | No-backward-clobber held — no step regressed; an advanced/terminal spec was never dragged back. |
 | A6 | (On demand) `derive-from-files.py` reconstructs the same state from artifacts when a hook didn't fire. Test: back up `.spec-context.json`, delete it, run `python3 apps/speckit-extension/scripts/derive-from-files.py --feature-dir specs/<NNN>-<slug>`, diff, restore. |

@@ -9,6 +9,7 @@ Shipped command bodies are generated from single-sourced parts and nodes, and ga
 ## Requirements
 
 ### Command bodies are assembled from single-sourced parts and nodes, and the assembly is the contract
+<!-- touches: apps/speckit-extension/scripts/check_shape_parity.py -->
 
 A rule shared by more than one command SHALL live in one part file, and each assembled region of a committed body MUST match its source byte for byte. Editing a shipped body by hand forks the shared rule, so the parity gate treats it as a defect.
 
@@ -21,6 +22,7 @@ A rule shared by more than one command SHALL live in one part file, and each ass
 - **THEN** the parity gate fails naming the command and the region
 
 ### Assembly changes MUST be proved against a frozen baseline
+<!-- touches: apps/speckit-extension/scripts/check_shape_parity.py -->
 
 A change to how bodies are built MUST NOT change the text of any command not deliberately reworded: each SHALL equal its frozen capture after the assembly markers are normalized. Re-freezing is a separate, deliberate act, never done by the build.
 
@@ -33,6 +35,7 @@ A change to how bodies are built MUST NOT change the text of any command not del
 - **THEN** the baseline check fails until the baseline is re-frozen explicitly
 
 ### The manifest is the command inventory's single authority, and every downstream surface is gated against it
+<!-- touches: apps/speckit-extension/scripts/check-command-emissions.py, apps/speckit-extension/extension.yml -->
 
 Installed agent files, the extension registry and the documentation tables MUST agree with the manifest's command list in both directions. A missing entry is a command the user cannot reach, and an orphan is a retired name that stays live because reinstalling never deletes.
 
@@ -45,6 +48,7 @@ Installed agent files, the extension registry and the documentation tables MUST 
 - **THEN** it fails, because the installer would never ship that command
 
 ### Companion's document shape comes from its command bodies, not the stock templates
+<!-- touches: apps/speckit-extension/scripts/template_render.py, apps/speckit-extension/scripts/_command_parts.py -->
 
 A Companion authoring step SHALL carry the shape of the document it writes in its own instructions, so the stock templates on disk do not change its output. When a project reshapes a section, the body SHALL carry a note pointing at the resolved copy for that section only, and a project that reshaped nothing gets a byte-identical body.
 
@@ -57,6 +61,7 @@ A Companion authoring step SHALL carry the shape of the document it writes in it
 - **THEN** the plan body tells the agent to follow the resolved copy for that section and keeps its own shape for the rest
 
 ### A command that injects a step into a numbered body MUST NOT restart the numbering
+<!-- touches: apps/speckit-extension/nodes/specify/load-living-specs.md, apps/speckit-extension/nodes/plan/load-living-specs.md -->
 
 A node adding a step to a command whose numbering continues after it SHALL use a sub-bullet or an unnumbered note. Nodes are concatenated, so the check is made on the assembled body.
 
@@ -65,6 +70,7 @@ A node adding a step to a command whose numbering continues after it SHALL use a
 - **THEN** its top-level step numbers run without a repeat
 
 ### The prompting contract is held by a static gate, not by convention
+<!-- touches: apps/speckit-extension/scripts/check_quality.py -->
 
 A scan SHALL fail any command on the never-halts roster (the four lifecycle hooks, the living-spec drift, sync and coverage reports, mark-complete, status, resume and classify) that gains an instruction to stop and ask the user. It ignores negated mentions and fenced templates, and a roster file it cannot find fails the scan.
 
@@ -77,6 +83,7 @@ A scan SHALL fail any command on the never-halts roster (the four lifecycle hook
 - **THEN** it fails, rather than passing over fewer commands
 
 ### The clarify command must still ask
+<!-- touches: apps/speckit-extension/scripts/check_quality.py -->
 
 The same scan SHALL fail when the clarify command body no longer contains an instruction to ask the user, because asking is that command's purpose.
 
@@ -85,6 +92,7 @@ The same scan SHALL fail when the clarify command body no longer contains an ins
 - **THEN** the gate fails
 
 ### A shipped body never names a command in a spelling the host cannot resolve
+<!-- touches: apps/speckit-extension/presets/_parts/command-spelling.md -->
 
 A shipped command, node or preset SHALL name a command without a leading slash, and every body that prints or dispatches a name SHALL carry the rule to use the spelling the project installed. A scan over the shipped corpus enforces this, including names held as data in scripts, because hand sweeps kept leaving residue.
 
@@ -97,6 +105,7 @@ A shipped command, node or preset SHALL name a command without a leading slash, 
 - **THEN** it leaves them alone
 
 ### Optional instrumentation is delivered by re-rendering the bodies, never left dormant in them
+<!-- touches: apps/speckit-extension/presets/_parts/debug-timing.md -->
 
 Instrumentation text SHALL be present only in a body rendered with it switched on, never as an inactive passage, so the off render matches the frozen baseline. It reaches the next dispatched command, never one already running.
 

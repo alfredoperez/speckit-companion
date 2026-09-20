@@ -1,7 +1,6 @@
 # Spec Viewer Panel — Living Spec
 
-<!-- reviewed: d589a63e -->
-
+<!-- reviewed: 2b4fbe2c -->
 ## Purpose
 
 The extension-side host for a spec's reading surface: one panel per spec, kept current as the spec's files and record change on disk.
@@ -9,6 +8,7 @@ The extension-side host for a spec's reading surface: one panel per spec, kept c
 ## Requirements
 
 ### One panel per spec, revealed rather than duplicated
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/spec-viewer/panelRegistry.ts -->
 
 Opening any document of a spec SHALL reveal that spec's existing panel, keyed by the spec's directory, instead of creating another.
 
@@ -17,6 +17,7 @@ Opening any document of a spec SHALL reveal that spec's existing panel, keyed by
 - **THEN** that panel switches to the document and comes to the front, and no second panel is created
 
 ### The reader's choice of view survives a refresh
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 Once the reader picks the Overview or a document, a later refresh SHALL keep showing that pick. The pick is recorded as the Overview or a named document, never as no choice, because an absent choice falls back to the opened document.
 
@@ -43,6 +44,7 @@ When the files that decide the spec-kit extension nudge change, every open run p
 - **THEN** every open run panel drops the install banner without the reader touching a spec file
 
 ### Document text cannot break out of the webview shell
+<!-- touches: apps/vscode/src/features/spec-viewer/html/generator.ts, apps/vscode/src/features/spec-viewer/utils.ts -->
 
 A document body carried into the shell through an HTML attribute SHALL be base64-encoded, because element-content escaping does not escape attribute quotes. Every other value interpolated into the shell SHALL be escaped.
 
@@ -51,6 +53,7 @@ A document body carried into the shell through an HTML attribute SHALL be base64
 - **THEN** the document renders as text and adds no element or attribute to the shell
 
 ### The webview loads only the extension's own scripts
+<!-- touches: apps/vscode/src/features/spec-viewer/html/generator.ts -->
 
 Each render SHALL emit a content-security policy with a fresh nonce, allowing scripts only from the extension's assets and the named script sources.
 
@@ -86,6 +89,7 @@ Dismissing the banner SHALL record the dismissal for the prompt the banner showe
 - **THEN** the panel refreshes without the banner
 
 ### A document is addressed by its path under the spec
+<!-- touches: apps/vscode/src/features/spec-viewer/utils.ts, apps/vscode/src/features/spec-viewer/specViewerProvider.ts -->
 
 A document SHALL be identified by its path relative to the spec directory, so a subfolder stays part of its identity. A path that resolves to no document SHALL raise a warning rather than silently keep showing the previous document.
 
@@ -98,6 +102,7 @@ A document SHALL be identified by its path relative to the spec directory, so a 
 - **THEN** a warning names the missing document
 
 ### Opening a spec can name the requirement to bring into view
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/spec-viewer/specViewerCommands.ts -->
 
 The viewer's open command SHALL accept an optional requirement heading and bring that requirement into view once the spec renders. A heading that matches nothing SHALL still open the spec without an error.
 

@@ -1,5 +1,7 @@
 # Specs Living Model — Living Spec
 
+<!-- reviewed: e14af436 -->
+
 ## Purpose
 
 Reads the living-specs registry and spec files inside the extension process: which capability claims a file, which requirements mark it, what drifted, and whether a saved spec has a shape the pipeline can update. The editor never shells out to spec-kit scripts it cannot assume are installed.
@@ -7,6 +9,7 @@ Reads the living-specs registry and spec files inside the extension process: whi
 ## Requirements
 
 ### A source file reports the living specs that claim it, in the editor's own process
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts, apps/vscode/src/features/living-specs/livingSpecsStatusBar.ts -->
 
 For a workspace-relative path, the extension SHALL list the capabilities that claim it, most specific first, honouring exclusions and the registry's exempt list, with each one's requirements whose marker matches the path. It resolves this in its own process, so it works without spec-kit installed.
 
@@ -23,6 +26,7 @@ For a workspace-relative path, the extension SHALL list the capabilities that cl
 - **THEN** the capability still appears with no requirements, so the claim is not lost
 
 ### A file one capability's requirement names drifts only that capability
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 When capabilities share a folder, a changed file named by a requirement in one of them SHALL drift that capability alone, not a sibling that claims it only by glob.
 
@@ -31,6 +35,7 @@ When capabilities share a folder, a changed file named by a requirement in one o
 - **THEN** only the capability whose requirement names it is drifted
 
 ### Requirement slicing lives beside the requirement-id parser and counts the same headings
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 The extension and the spec-kit scripts SHALL find the same requirements in a spec: every requirement heading in the document, including ones appended after the uncovered-files section, and none inside a fenced block. Both share one fixture set, and a fixture only one of them exercises fails the build.
 
@@ -47,6 +52,7 @@ The extension and the spec-kit scripts SHALL find the same requirements in a spe
 - **THEN** the drift guard fails
 
 ### A requirement's markers are the lines directly under its heading
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 A requirement's `touches`, `adopted` and `aligns` markers SHALL be the run of marker lines starting at the first non-blank line under its heading, in any order, and are not part of its body. A marker line further down is prose.
 
@@ -93,6 +99,7 @@ On saving a `*.spec.md` in a project with living specs enabled, the extension SH
 - **THEN** no problem is reported, since bullet style is not a shape error
 
 ### Requirement links are computed in-process over the requirement slicer
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 For each requirement, the extension SHALL report its own `aligns` links, each marked resolved or broken, and the requirements in other capabilities that align to it. Headings match exactly. The requirement cards and the Remove refusal read this same answer.
 
@@ -105,6 +112,7 @@ For each requirement, the extension SHALL report its own `aligns` links, each ma
 - **THEN** that link is marked broken
 
 ### Per-requirement coverage joins on the requirement key and checks the named files
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts -->
 
 A coverage line SHALL count only the test files it names that exist inside the workspace, and the label is built from those counts alone. When no line names a test, or the coverage file cannot be read, there are no labels at all.
 
@@ -117,6 +125,7 @@ A coverage line SHALL count only the test files it names that exist inside the w
 - **THEN** that path counts as not found
 
 ### The editor refuses exactly the registry the runtime refuses
+<!-- touches: apps/vscode/src/features/living-specs/livingSpecsModel.ts, apps/vscode/src/features/specs/specShapeCheck.ts -->
 
 A registry the spec-kit scripts cannot read SHALL be refused by the editor too, with the reason and the line at fault shown in the Living Specs view rather than only in a terminal.
 
