@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Changed
+- **You can see what the living specs cost.** Reviewing and folding a change back into them is now timed separately instead of disappearing into the implementation step, so the time they take is a number rather than a guess.
+- **A step's internal timings are recorded as they happen.** Stamping them together at the end read as zero seconds each, which cost a write and measured nothing.
 - **Adoption looks for what the code guards against, not only what it does.** A test named for a defect, a `Fixed` changelog entry, a guard with no obvious caller: each is a past bug the code alone cannot explain, and each now becomes a requirement rather than being read straight past.
 - **A requirement says what a person gets, not what the product looks up.** "A reader sees the site in the language they chose" instead of a resolution order over a settings key.
 - **A rule that binds every capability gets a capability of its own.** Escaping what a person typed before it reaches a screen belongs to no single area, so every draft used to drop it and it ended up written nowhere.
