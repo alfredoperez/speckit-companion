@@ -31,16 +31,16 @@ If the argument is `.`, the developer asked for the **whole project**. Read the 
 
 **Write it the way you would say it.** One idea per sentence. No em-dashes: a full stop, a comma or a colon says it. Say what happens, not what the system "shall be capable of". Never a section that exists to say "N/A": remove it instead.
 
-**The same test governs what you write, and again once it is written.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. A third scenario has to cover a failure the first two miss. Then reread and cut: the sentence restating the one before it, the example longer than its rule, the clause defending a choice nobody challenged, the prose repeating a table. Each reads as thoroughness and is what makes a body too long to follow.
+**The same test governs what you write, and again once it is written.** A section nobody acts on is removed, not filled in. No requirement for what a type or a test already enforces. Every requirement keeps its first scenario whatever else is cut; a third one has to cover a failure the first two miss. Then reread and cut: the sentence restating the one before it, the example longer than its rule, the clause defending a choice nobody challenged, the prose repeating a table. Each reads as thoroughness and is what makes a body too long to follow.
 
 **Never simplify away** validation at a trust boundary, error handling that prevents data loss, security, accessibility, or anything the spec asks for. **A corner cut on purpose** carries `// simplified: <ceiling>, <what to do when it binds>` in the code and one `concerns` entry in this step's capture.
 <!-- /speckit-companion:part concise -->
 
 ## What to do
 
-### 1. Read the rules before you read the code
+### 1. Read the conventions before you read the code
 
-Before listing a single file, read the project's own conventions, stopping at the first source that names a constraint: `CLAUDE.md` or `AGENTS.md`, `CONTRIBUTING.md`, the README's architecture section, then the enforcement configs. Those are `.dependency-cruiser.js`, `eslint.config.*` (`no-restricted-imports`, `boundaries/*`, `import/no-restricted-paths`), `nx.json` `depConstraints`, `tsconfig` project references, and any test matching `*arch*`, `*boundar*` or `*layer*`. Copy each constraint into a working list with the file and line it came from. A file-by-file read can never produce these rules, because their evidence is an import that does not exist, in a file you will never open.
+Before listing a single file, read the project's own conventions, stopping at the first source that names a constraint: `CLAUDE.md` or `AGENTS.md`, `CONTRIBUTING.md`, the README's architecture section, then the enforcement configs. Those are `.dependency-cruiser.js`, `eslint.config.*` (`no-restricted-imports`, `boundaries/*`, `import/no-restricted-paths`), `nx.json` `depConstraints`, `tsconfig` project references, and any test matching `*arch*`, `*boundar*` or `*layer*`. Copy each constraint into a working list with the file and line it came from. A file-by-file read can never produce these rules, because their evidence is an import that does not exist, in a file you will never open. **The list is for your judgement, not for a file**: it tells you which behaviour the project already guarantees elsewhere, so you do not write a requirement restating a rule a linter enforces. A constraint no capability owns goes under `## Uncovered`, where a person can see it was noticed and left alone.
 
 If no conventions doc and no enforcement config names a constraint, ask once, before proposing anything: *"Does this codebase have rules about what may import what, or about how a directory is sliced?"* Cite the answer the way you would cite a file. If the answer is no, record that under `## Uncovered` rather than inventing one.
 
@@ -83,33 +83,23 @@ Deriving a **colocated** path: take the capability's match glob, strip the trail
 Two consequences of colocated placement to say out loud:
 
 1. **The filename stem becomes the capability's display name.** A capability named `billing-invoice-export` colocated as `export.spec.md` shows as `export` in the sidebar. Keep the stem equal to the name, or say what it will display as.
-2. **The rules file sits beside its spec**, same stem, `<name>.rules.md`.
+2. **A rules file an earlier adoption wrote sits beside its spec**, same stem, `<name>.rules.md`, and keeps being read.
 
 Show the proposed capability tree to the developer, names, match globs, and the resolved spec path for each, and pause for confirmation before drafting and registering. This is the one review gate in this command.
 
-### 2. Draft two files per capability: what the area does, and how it is built
+### 2. Draft one file per capability: what the area does
 
-**A spec says what the area does. It is not a style guide.** Import direction, file naming, barrels and path helpers are real rules worth keeping, but they describe how the code is written, not what the software does. Living specs ship two tiers for that split, and adoption writes both.
+**A spec says what the area does. It is not a style guide.** Import direction, file naming, barrels and path helpers are real rules worth keeping, but they describe how the code is written, not what the software does — and they are already written down, in `CLAUDE.md` and in the linters that enforce them. Adoption does not copy them into a second place that can then disagree with the first.
 
-**`<name>.spec.md` is the hot tier, read on every run.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects. Adoption does not write behaviour it has not observed, and a requirement naming a function, a hook or a component is not observable: it belongs in the rules file or nowhere.
+**Adoption writes the spec and nothing else.** A capability with no observable behaviour is not a capability: do not create one to hold conventions. Where a rule matters to an area's behaviour, it belongs in that requirement; otherwise it stays where it already lives.
 
-**`<name>.rules.md` is the cold tier, read only when a plan is large enough to care.** The conventions you transcribed in step 1, as **plain bullets**. No headings per rule, no SHALL, no scenarios. One line per rule, in this order: the rule, where it is stated, what enforces it or `unenforced`. Written the way `CLAUDE.md` says it.
+**`<name>.spec.md` is what a run reads.** What a person can do in this area, in observable terms. Routes and screens, what each one needs before it can render, what happens when the thing asked for is missing, and what changes when nobody is signed in. Derive it from the routes, the loaders and the redirects. Adoption does not write behaviour it has not observed, and a requirement naming a function, a hook or a component is not observable: it does not belong in the spec.
 
-```markdown
-# Pages — Rules
+**A `<name>.rules.md` beside a spec is still read** when an older project has one, and `living-move` still carries it. Adoption no longer writes one.
 
-> [DRAFT] Adopted from the project's conventions. Review before trusting.
+The spec, at the path chosen at the review gate:
 
-- A page imports downward only: widgets, features, entities, shared. Never app, never a sibling page. `CLAUDE.md:18`, unenforced.
-- Route paths come from `pathKeys`, never a string literal. `CLAUDE.md:48`, unenforced.
-- Files are named `<slice>.<segment>.<ext>`. `CLAUDE.md:31`, unenforced.
-```
-
-The rules file has no per-rule markers. Its `[DRAFT]` line says it is unreviewed, and approving the spec clears it.
-
-Both files, at the paths chosen at the review gate:
-
-1. **Title**: `# <Capability> — Living Spec`; the rules file is `# <Capability> — Rules`.
+1. **Title**: `# <Capability> — Living Spec`.
 2. **Draft banner** on each, `[DRAFT]` first: `> [DRAFT] Adopted from the code's surface and the project's conventions. Review before trusting.` The banner summarises the per-requirement markers below it, so it goes when the last one does.
 3. **`## Purpose`**: one or two sentences on why this capability exists and what would go wrong without it.
 4. **`## Requirements`**: in the shape the fold and the resolver both read. A spec requirement:
@@ -185,6 +175,7 @@ Then summarize, in plain language: which capabilities you proposed and registere
 - **Opt-in and isolated.** This command changes no existing command's behavior and touches no spec's lifecycle. It only creates spec files and appends to the capability registry.
 - **The layout is already the developer's call.** Never assume central because it is the default. Read the `layout` field, and show the resulting spec paths before writing anything.
 - **Only what was named.** Adopt the areas the developer named or chose, and nothing else. Several areas in one run is fine. Silently widening past the agreed scope is not.
-- - **Write the shape the pipeline can update.** Named `###` requirements with scenarios, never numbered `FR-` bullets, and never `###` section groupings. Fold-back matches requirements by heading text, and a spec in any other shape is one the pipeline can silently fail to update.
+- **Write the shape the pipeline can update.** Named `###` requirements with scenarios, never numbered `FR-` bullets, and never `###` section groupings. Fold-back matches requirements by heading text, and a spec in any other shape is one the pipeline can silently fail to update.
+- **One scenario is the floor, not a thing to earn.** Every requirement carries at least one `#### Scenario:` with its WHEN and THEN. Brevity governs prose — the restated sentence, the example longer than its rule — and never the scenario, which is the only part a reader can check against the code and the only part `living-coverage` can map to a test. A requirement with none is what `living-validate` reports as an error. The judgement about a *third* scenario earning its place says nothing about the first.
 - **Honest by construction.** The `[inferred]` tag, clarification markers, and the `## Uncovered` section are required.
 - **Never fail the host.** A missing resolver, missing helper, or unparseable config is reported and skipped, not crashed through.

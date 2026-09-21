@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Changed
+- **Adopting an area writes one spec, not a spec and a rules file.** The conventions a rules file held are already in `CLAUDE.md` and in the linters that enforce them, and a second copy is one that can disagree with the first. A rules file an earlier run wrote is still read.
+- **Every adopted requirement keeps a scenario.** Trimming for brevity was cutting the one part a reader can check against the code, and the part that maps a requirement to a test.
 - **You can see what the living specs cost.** Reviewing and folding a change back into them is now timed separately instead of disappearing into the implementation step, so the time they take is a number rather than a guess.
 - **A step's internal timings are recorded as they happen.** Stamping them together at the end read as zero seconds each, which cost a write and measured nothing.
 - **Adoption looks for what the code guards against, not only what it does.** A test named for a defect, a `Fixed` changelog entry, a guard with no obvious caller: each is a past bug the code alone cannot explain, and each now becomes a requirement rather than being read straight past.
