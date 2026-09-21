@@ -185,13 +185,15 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
      ```
      By the end, every name in `livingSpecs.loaded` is accounted for by a delta block or a recorded skip. A capability that is neither is a hole the fold flags.
 
-   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints.
+   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints. Stamp `--substep living-review --finish` the moment the review ends, before folding.
 
    - **Fold living-spec deltas (opt-in, best-effort).** After the completion write, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
      ```
      It parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and applies each to the resolved `capabilities/<name>/<name>.spec.md`: the changed-files-matched capability for unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest. Opt-in (it only acts when `livingSpecs.enabled: true`), a clean no-op when there is no delta block, idempotent on re-run, and it records the synced names onto `livingSpecs.synced`. Never fails the host command.
+
+     Stamp `--substep living-fold --finish` as soon as it returns, so what the living specs cost is a number rather than a subtraction between two runs.
 <!-- /speckit-companion:node complete -->
 <!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->
@@ -207,7 +209,7 @@ Record every boundary by **running the writer script**. Never edit `.spec-contex
 
   `--advance` appends the step's complete and flips `status` in one atomic write. It is idempotent and first-writer-wins, so it changes nothing when the after-hook already closed the step, and it is the only thing that closes the step when that hook was printed rather than dispatched. Run it every time, with two exceptions: **clarify** and **analyze** use `--finish`, which records a boundary without owning a status; **implement** runs neither, because its own final node writes `completed` and closes the step in the same write.
 
-- **One finish per substep, the moment it ends.** Plan records `research` and `design`, tasks records `generate`, implement records `living-review` and `living-fold` when living specs are on. Never two in one batch, never a separate start. A finish measures the gap back to the previous boundary, so several stamped together at the close of a step read as `0s` each: they cost a call and record nothing. Stamp late and you have measured nothing; stamp at the moment and the step's own shape is readable afterwards.
+- **One finish per substep, the moment it ends.** Plan records `research` and `design`, tasks records `generate`, implement records `living-review` and `living-fold` when living specs are on. Never two in one batch, never a separate start: a finish measures the gap back to the previous boundary, so several stamped together at the close of a step read as `0s` each and record nothing.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai

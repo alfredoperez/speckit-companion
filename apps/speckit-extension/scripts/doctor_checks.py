@@ -506,6 +506,51 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
     )]
 
 
+def check_briefed(feature_dir: Path, ctx: dict) -> tuple:
+    """Did a run with living specs turned on actually read any?
+
+    Loading them is best-effort and never fails, so a run that skipped the load
+    looks exactly like one with nothing to load: `livingSpecs.loaded` is empty
+    either way, no step reports a miss, and the run proceeds unbriefed. The two
+    cases are told apart by the registry — a project with capabilities and the
+    feature on had something to load, and an empty `loaded` there means the
+    briefing did not happen rather than that it was not wanted.
+    """
+    skip = _no_record("briefed", feature_dir, ctx)
+    if skip is not None:
+        return skip, []
+
+    living = ctx.get("livingSpecs") or {}
+    loaded = living.get("loaded") or []
+    if loaded:
+        return CheckStatus("briefed", "ran"), []
+
+    registry = None
+    for name in ("living-specs.yml", "living-specs.yaml"):
+        candidate = feature_dir.parent.parent / name
+        if candidate.exists():
+            registry = candidate
+            break
+    if registry is None:
+        return CheckStatus("briefed", "skipped", "no living-spec registry — nothing to load"), []
+
+    text = registry.read_text(encoding="utf-8", errors="replace")
+    if "enabled: true" not in text:
+        return CheckStatus("briefed", "skipped", "living specs are off for this project"), []
+    if "- name:" not in text:
+        return CheckStatus("briefed", "skipped", "registry holds no capabilities"), []
+
+    return CheckStatus("briefed", "ran"), [Finding(
+        "briefed", "problem",
+        "The run was never briefed",
+        "living specs are enabled and the registry holds capabilities, but `livingSpecs.loaded` "
+        "is empty: the load step was skipped, so this run drafted and implemented without the "
+        "context every other run in this project gets. Nothing failed, which is why it went "
+        "unnoticed — the load never fails by design.",
+        {"registry": registry.name, "loaded": 0},
+    )]
+
+
 def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
     """Did plan and implement hand out the workers `dispatch-briefs.py` told them to?
 
