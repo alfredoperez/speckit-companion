@@ -34,12 +34,10 @@ reads: []
      ```
      By the end, every name in `livingSpecs.loaded` is accounted for by a delta block or a recorded skip. A capability that is neither is a hole the fold flags.
 
-   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints. Stamp `--substep living-review --finish` the moment the review ends, before folding.
+   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints.
 
    - **Fold living-spec deltas (opt-in, best-effort).** After the completion write, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
      ```
      It parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and applies each to the resolved `capabilities/<name>/<name>.spec.md`: the changed-files-matched capability for unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest. Opt-in (it only acts when `livingSpecs.enabled: true`), a clean no-op when there is no delta block, idempotent on re-run, and it records the synced names onto `livingSpecs.synced`. Never fails the host command.
-
-     Stamp `--substep living-fold --finish` as soon as it returns, so what the living specs cost is a number rather than a subtraction between two runs.
