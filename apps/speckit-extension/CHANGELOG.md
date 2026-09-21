@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **A run that never read the living specs now says so.** Loading them never fails by design, so a skipped load looked exactly like a project with nothing to load, and the run carried on without the context every other run gets. The health check reports it as a problem.
 
 ### Changed
+- **Adoption checks its own output before it reports.** A drafted spec that fails the project's own shape check is not a draft, and the check was only ever run afterwards, by hand, if at all.
+- **An area with only conventions no longer becomes a capability.** It had no requirements, so every run loaded it to learn nothing, and it existed only to give the conventions a second home.
 - **Adopting an area writes one spec, not a spec and a rules file.** The conventions a rules file held are already in `CLAUDE.md` and in the linters that enforce them, and a second copy is one that can disagree with the first. A rules file an earlier run wrote is still read.
 - **Every adopted requirement keeps a scenario.** Trimming for brevity was cutting the one part a reader can check against the code, and the part that maps a requirement to a test.
 - **A step's internal timings are recorded as they happen.** Stamping them together at the end read as zero seconds each, which cost a write and measured nothing.
