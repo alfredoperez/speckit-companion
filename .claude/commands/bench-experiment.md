@@ -53,7 +53,7 @@ The bake prints the three versions it recorded and fails loudly if any cell can 
 node ../speckit-bench/run-all.mjs prep --sizes <sizes>
 ```
 
-Then one driver per cell, all twelve at once, following step 3 of `/bench-run-all` — the same GUI preamble, the same settle-wait, capture for the Companion arms only, and **the cell's letter, never its arm**. Twelve drivers in parallel is fine; the round costs the slowest cell rather than the sum.
+Then one driver per cell, all twelve at once, following step 3 of `/bench-run-all` and the driver contract in `../speckit-bench/DRIVER.md` — **one command per step, never `/speckit-companion-auto`** — the same GUI preamble, the same settle-wait, capture for the Companion arms only, and **the cell's letter, never its arm**. Twelve drivers in parallel is fine; the round costs the slowest cell rather than the sum.
 
 Expect 20 to 30 minutes.
 
