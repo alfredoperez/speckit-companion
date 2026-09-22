@@ -9,7 +9,9 @@ The automated version of `/bench-prep` → run it → `/bench-capture`, for one 
 
 Size from `$ARGUMENTS` (`easy`/`medium`/`hard`/`oversized`).
 
-> Faithful dispatch: a driver mimics the GUI, it does not follow raw command bodies. The bench is a trustworthy **relative** comparator with capture overhead isolated; it does not reproduce a human's absolute wall clock.
+> Faithful dispatch: a driver mimics the GUI, it does not follow raw command bodies.
+>
+> **Never `/speckit-companion-auto`.** It is a different product path — it decides its own shape and folds on its own judgement — and a round driven by it is measuring auto, not the pipeline a GUI user drives. A round that used it also loaded no living specs at all in one measured cell, while the per-step run of the same feature in the same cell loaded three and caught a planted contradiction. The full driver contract is `../speckit-bench/DRIVER.md`. The bench is a trustworthy **relative** comparator with capture overhead isolated; it does not reproduce a human's absolute wall clock.
 
 ### 1. Check the cells
 

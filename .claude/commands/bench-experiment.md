@@ -20,6 +20,9 @@ The harness lives in the sibling [`speckit-bench`](https://github.com/alfredoper
 | `--ext code\|latest\|<tag>` | `code` | `code` = the working tree, `latest` = the published build, or a release tag to backtrack to |
 | `--speckit latest\|keep` | `latest` | pin or refresh spec-kit itself |
 | `--model sonnet\|opus` | the session's | model the driver agents run on |
+| `--preamble on\|off` | `off` | whether drivers are handed the GUI preamble |
+
+**`--preamble on` is a promise the drivers have to keep.** The bake records it, nothing enforces it: a round baked `on` whose drivers were handed nothing has a column that lies, which is worse than no column. When it is on, every driver prompt starts with the output of `node ../speckit-bench/preamble.mjs creation <speckit|companion> <specDir>` — the same text the GUI sends — and the arm decides which workflow name it takes. When it is off, drivers dispatch the command bodies alone.
 
 Pass `--sizes`/`--modes` straight through to `sync-templates.mjs`, `prep` and `capture` — the same list at every step, or the round measures cells it never ran. Pass `--model` as the `model` option on each driver Agent. Everything else in `$ARGUMENTS` is what the experiment is testing. Turn it into a short label — "hook anchors", "living specs off", "fresh baseline". If there is nothing to name, use today's date and call it a baseline repeat, which is also useful: it is how the noise floor gets measured.
 
@@ -50,7 +53,7 @@ The bake prints the three versions it recorded and fails loudly if any cell can 
 node ../speckit-bench/run-all.mjs prep --sizes <sizes>
 ```
 
-Then one driver per cell, all twelve at once, following step 3 of `/bench-run-all` — the same GUI preamble, the same settle-wait, capture for the Companion arms only, and **the cell's letter, never its arm**. Twelve drivers in parallel is fine; the round costs the slowest cell rather than the sum.
+Then one driver per cell, all twelve at once, following step 3 of `/bench-run-all` and the driver contract in `../speckit-bench/DRIVER.md` — **one command per step, never `/speckit-companion-auto`** — the same GUI preamble, the same settle-wait, capture for the Companion arms only, and **the cell's letter, never its arm**. Twelve drivers in parallel is fine; the round costs the slowest cell rather than the sum.
 
 Expect 20 to 30 minutes.
 
