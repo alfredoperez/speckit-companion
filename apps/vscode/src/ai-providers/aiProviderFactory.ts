@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { IAIProvider, AIProviderType, getConfiguredProviderType, PROVIDER_PATHS } from './aiProvider';
 import { ClaudeCodeProvider } from './claudeCodeProvider';
+import { OmpProvider } from './ompProvider';
 import { GeminiCliProvider } from './geminiCliProvider';
 import { CopilotCliProvider } from './copilotCliProvider';
 import { CodexCliProvider } from './codexCliProvider';
@@ -20,6 +21,7 @@ type ProviderConstructor = (
 
 const PROVIDER_CONSTRUCTORS: Record<AIProviderType, ProviderConstructor> = {
     [AIProviders.CLAUDE]: (ctx, out) => new ClaudeCodeProvider(ctx, out),
+    [AIProviders.OMP]: (ctx, out) => new OmpProvider(ctx, out),
     [AIProviders.GEMINI]: (ctx, out) => new GeminiCliProvider(ctx, out),
     [AIProviders.COPILOT]: (ctx, out) => new CopilotCliProvider(ctx, out),
     [AIProviders.CODEX]: (ctx, out) => new CodexCliProvider(ctx, out),

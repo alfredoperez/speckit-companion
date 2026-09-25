@@ -26,6 +26,7 @@ const MONOCHROME: Record<string, string> = {
 
 /** Providers with no shipped vendor mark fall back to a themed Codicon that matches their QuickPick icon rather than the neutral chat glyph. */
 const CODICON: Record<string, string> = {
+    [AIProviders.OMP]: 'hubot',
     [AIProviders.ANTIGRAVITY]: 'rocket',
 };
 

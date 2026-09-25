@@ -60,6 +60,17 @@ describe('docs consistency', () => {
       expect(hasNumeric || hasWord).toBe(true);
     });
 
+    it('custom workflows accept every selectable provider id', () => {
+      const pkg = JSON.parse(read('package.json'));
+      const cfg = pkg.contributes.configuration;
+      const properties = Array.isArray(cfg)
+        ? Object.assign({}, ...cfg.map((c: { properties?: object }) => c.properties ?? {}))
+        : (cfg.properties ?? {});
+      const workflowProviders = properties['speckit.customWorkflows'].items.properties
+        .supportedAiProviders.items.enum;
+      expect(workflowProviders).toEqual(expect.arrayContaining(enumValues));
+    });
+
     it('every speckit.* setting is window- or machine-scoped, so the migration needs no folder tier', () => {
       const pkg = JSON.parse(read('package.json'));
       const cfg = pkg.contributes.configuration;
@@ -78,6 +89,7 @@ describe('docs consistency', () => {
       // Map enum ids to expected source files. "ide-chat" → ideChatProvider; "claude-vscode" → claudePanelProvider.
       const idToFile: Record<string, string> = {
         claude: 'claudeCodeProvider.ts',
+        omp: 'ompProvider.ts',
         'claude-vscode': 'claudePanelProvider.ts',
         gemini: 'geminiCliProvider.ts',
         copilot: 'copilotCliProvider.ts',

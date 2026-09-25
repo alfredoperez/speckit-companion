@@ -1004,6 +1004,7 @@
             "default": "claude",
             "enum": [
               "claude",
+              "omp",
               "claude-vscode",
               "gemini",
               "copilot",
@@ -1017,6 +1018,7 @@
             ],
             "enumItemLabels": [
               "Claude Code",
+              "Oh My Pi",
               "Claude Code (VS Code)",
               "Gemini CLI",
               "GitHub Copilot CLI",
@@ -1030,6 +1032,7 @@
             ],
             "enumDescriptions": [
               "Claude Code - Full feature support (steering, agents, skills, hooks)",
+              "Oh My Pi - Interactive terminal agent with steering, agents, skills, hooks, and MCP support",
               "Claude Code (VS Code) - Opens the Claude Code panel (anthropic.claude-code) and pre-fills the prompt (press Enter to send)",
               "Gemini CLI - Steering support",
               "GitHub Copilot CLI - Steering and agents support",
@@ -1054,7 +1057,7 @@
               "dash"
             ],
             "enumDescriptions": [
-              "Use provider default (Claude/Codex → dash, Gemini/Copilot/Qwen → dot)",
+              "Use provider default (Claude/Codex/Antigravity → dash, Oh My Pi/Gemini/Copilot/Qwen → dot)",
               "Always use dot notation (speckit.plan)",
               "Always use dash notation (speckit-plan)"
             ],
@@ -1075,7 +1078,7 @@
             ],
             "scope": "machine",
             "order": 3,
-            "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
+            "description": "Controls how the AI CLI handles permission prompts. 'interactive' is honored only by providers whose CLI supports interactive prompting (Claude, Oh My Pi, Gemini, Codex, Qwen, OpenCode). Copilot's CLI cannot surface prompts in -p mode and is auto-switched to auto-approve at dispatch time, regardless of this setting — dismissing the startup warning will not re-enable interactive mode for Copilot."
           },
           "speckit.specDirectories": {
             "type": "array",
@@ -1303,12 +1306,16 @@
                     "type": "string",
                     "enum": [
                       "claude",
+                      "omp",
                       "gemini",
                       "copilot",
                       "codex",
                       "qwen",
                       "opencode",
                       "ide-chat",
+                      "wibey",
+                      "wibey-vscode",
+                      "antigravity",
                       "claude-vscode"
                     ]
                   },

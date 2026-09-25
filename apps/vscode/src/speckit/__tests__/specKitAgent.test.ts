@@ -6,6 +6,9 @@ const ALL_HOSTS: HostIde[] = ['vscode', 'cursor', 'windsurf', 'antigravity', 'un
 
 describe('resolveSpecKitAgent', () => {
     describe('direct non-Claude providers (US1)', () => {
+        it('maps omp → omp', () => {
+            expect(resolveSpecKitAgent('omp', ANY_HOST)).toBe('omp');
+        });
         it('maps gemini → gemini', () => {
             expect(resolveSpecKitAgent('gemini', ANY_HOST)).toBe('gemini');
         });
