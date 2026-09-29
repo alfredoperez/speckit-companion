@@ -8,7 +8,7 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-The Overview is the record a run leaves behind, on one page: why the spec exists, how long each phase took, what was checked, what was decided, and which requirement got which test. It is for reading. Nothing on it runs or re-checks anything.
+The Overview shows what a run did, on one page: why the spec exists, how long each phase took, what was checked, what was decided and which requirement got which test. It is read from the **run record**, a `.spec-context.json` file next to the spec. Nothing on the page runs or re-checks anything.
 
 <MediaSlot
   feature="overview"
@@ -17,7 +17,7 @@ The Overview is the record a run leaves behind, on one page: why the spec exists
   wide
 />
 
-It appears for a regular feature spec whose run record has something in it. A living spec has its own overview instead, and `speckit.viewer.activityPanel` (on by default) turns the view off. A region with nothing recorded doesn't render, so a thin page means a thin record. A spec with nothing recorded shows "No activity recorded yet".
+It appears for a regular feature spec whose run record has something in it. A living spec has its own overview instead. The `speckit.viewer.activityPanel` setting, on by default, turns the page off. A region with nothing recorded doesn't render, so a thin page means a thin record. A spec with nothing recorded shows "No activity recorded yet".
 
 ## The tour
 
@@ -31,7 +31,7 @@ Each region has a small kicker, a title and, on the right, a count. Skim the cou
 6. **Coverage.** Requirement, the tasks that delivered it, the tests that exercise it.
 7. **Run log.** Collapsed: the per-phase timeline, per-task records, concerns, files touched, review comments.
 
-## Reading each region
+## What each region tells you
 
 **Intent.** Read it first. If it doesn't match what you expected, stop there. Living specs are the durable specs for one capability of the codebase, listed as links.
 
@@ -61,4 +61,4 @@ Each region has a small kicker, a title and, on the right, a count. Skim the cou
 
 ## Next
 
-[Anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) covers the other view in the same window. If a decision here is wrong, [Review and refine](/docs/guides/review-and-refine) is how you say so.
+If a decision here is wrong, [Review and refine](/docs/guides/review-and-refine) is how you say so.

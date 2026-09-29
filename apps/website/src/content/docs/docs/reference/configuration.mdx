@@ -27,6 +27,8 @@ GitHub Copilot CLI cannot show permission prompts in `-p` mode. The extension sw
 
 ## Choose a workflow
 
+<span id="workflow-choice"></span>
+
 | Setting | Default | Effect |
 | --- | --- | --- |
 | `speckit.defaultWorkflow` | `"speckit"` | The workflow Create New Spec pre-selects: `"speckit"` (stock) or `"companion"` (needs the Companion Spec Kit extension). Only a value you set yourself is honored. Unset, installing the extension makes Companion the pre-selection. |
@@ -122,3 +124,7 @@ This one is for [Agent Teams Lite](https://github.com/Gentleman-Programming/agen
 | `model`, `effort` | No | Per-step model or reasoning effort, for Claude Code. |
 
 The chosen workflow is saved to `.spec-context.json` when a spec is created, and every later action uses it. With none chosen, `speckit.defaultWorkflow` applies. Steps whose file is missing show as not started.
+
+## Next
+
+[Supported AI providers](/docs/reference/providers) lists what each assistant reads and how it is reached.

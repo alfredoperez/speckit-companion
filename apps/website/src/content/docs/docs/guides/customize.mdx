@@ -8,7 +8,7 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-**I want to add my own commands or attach my own steps.** There are two ways, and they are easy to mix up.
+Add your own slash commands to the viewer, or attach your own work to a Companion command without forking it. The two are easy to mix up.
 
 | | Custom command | Node hook |
 | --- | --- | --- |
@@ -74,7 +74,7 @@ Hooks at one anchor run top to bottom.
 | Type | What it is |
 | --- | --- |
 | `command` | A shell command. Needs a provider with a terminal tool. |
-| `prompt` | An inline instruction dropped in at that point. |
+| `prompt` | An inline instruction dropped in at that point. The Pipeline Builder calls it **Instruction**. |
 | `skill` | `{ type: skill, ref: <name> }`: asks the assistant to invoke one of your skills. |
 | `node` | Your node file at `.specify/companion/nodes/<id>.md`. |
 
@@ -92,7 +92,7 @@ The Pipeline Builder, opened from the Specs toolbar, can write hooks for you. Se
 
 A node file at `.specify/companion/nodes/<command>/<node id>.md` replaces the shipped node, and `_frame.md` in that folder replaces the step's preamble.
 
-## What "runs" means
+## What actually runs
 
 Nothing executes `companion.yml`. Your assistant reads it at run time, because instructions for doing so are appended to each command. A hook is a strong convention, not an enforced step. If something must never be skipped, put it in CI.
 
@@ -102,3 +102,7 @@ Nothing executes `companion.yml`. Your assistant reads it at run time, because i
 | File cannot be parsed | Shipped defaults and one warning. Nothing partial is applied. |
 | Hook anchored to a missing node | Warning, anchor skipped |
 | `type: node` hook with a missing file | Error |
+
+## Next
+
+[The Pipeline Builder](/docs/guides/pipeline-builder) writes these hooks for you and lets you build them from a board.

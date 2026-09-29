@@ -1,132 +1,87 @@
 ---
 title: The Pipeline Builder
-description: Open the panel that draws your Companion workflow as nodes, attach a hook, edit a node, reshape a document, and build.
+description: 'Change what your assistant does at each Companion step: attach a hook, edit a node, reshape a document, add a step, then build.'
 sidebar:
   label: Pipeline Builder
   order: 6
 ---
 
-**I want to change what my assistant does at each step.** The Pipeline Builder draws your Companion workflow as lanes of nodes. You change it there, then build. [Anatomy of the Pipeline Builder](/docs/anatomy/anatomy-of-the-pipeline-builder) names every mark on the board.
+**I want to change what my assistant does at each step.** The Pipeline Builder draws your Companion workflow as lanes of small instruction blocks called **nodes**. You change them on the board, then build. [Anatomy of the Pipeline Builder](/docs/anatomy/anatomy-of-the-pipeline-builder) names every mark on it.
 
-Open it from the circuit icon at the top of the Specs sidebar, or run **SpecKit Companion: Open Pipeline Builder**.
+Open it from the circuit icon at the top of the Specs sidebar, or run **SpecKit Companion: Open Pipeline Builder**. It needs the Companion Spec Kit extension.
 
-![The Pipeline Builder board: one lane per step, nodes grouped by phase, hooks attached, and the header with Preview build and Build](../../../../../../../docs/screenshots/generated/builder-board.png)
+![The Pipeline Builder board with one lane per step](../../../../../../../docs/screenshots/generated/builder-board.png)
 
-## Quick start
+## Change something in four steps
 
-1. Click a node to read what it tells the assistant, then press **Edit**.
-2. **Save.** Your version is written to `.specify/companion/nodes/` and marked `yours`. The shipped file is untouched.
-3. **Preview build** lists which commands would change. Nothing is written.
-4. **Build.** The header says what it wrote and when.
+1. Click a node to read what it tells your assistant.
+2. Press **Edit**, change the text and **Save**. Your version is written to `.specify/companion/nodes/` and marked `yours`. The shipped file is untouched.
+3. Press **Preview build** to list which commands would change. Nothing is written.
+4. Press **Build**. The header says what it wrote and when.
 
-A project that has changed nothing sees exactly what ships. Every change goes into `.specify/companion.yml`, and nothing takes effect until you build. Each write says what it did at the foot of the panel, with an **Undo** until the next write.
+Nothing takes effect until you build. Every write says what it did at the foot of the panel, with an **Undo** until the next write.
 
 ## Attach a hook
 
-Attach your own work before or after a node, a phase or a whole step. The same hooks written by hand are in [Custom commands and hooks](/docs/guides/customize).
+A hook is your own work that runs before or after a node, a phase or a whole step. Use **Add hook** from a phase's `+` menu, a node's panel, or the dotted slot between nodes.
 
-![A node with hooks attached, grouped under before and after and under the mark of whoever registered them](../../../../../../../docs/screenshots/generated/builder-hooks.png)
-
-Hooks sit in one block per anchor, headed by the side they run on and grouped by who registered them. Yours show under the Companion mascot and `companion.yml`. An installed extension's show as `via <extension>`. Extension hooks run too, but the panel only shows them. One marked `asks first` does not run without being asked.
-
-Use **Add hook** from a phase's `+` menu, a node's panel, or the dotted slot between nodes.
-
-![The Add hook form: a Runs row naming before and the anchor, then a four-segment Kind control](../../../../../../../docs/screenshots/generated/builder-attach.png)
+![The Add hook form: where it runs, then the kind](../../../../../../../docs/screenshots/generated/builder-attach.png)
 
 Pick where it runs, then the kind.
 
 | Kind | What it is |
 |---|---|
-| **Skill** | A skill you already have. Editing the skill later changes what runs. Try this first. |
-| **Instruction** | One instruction kept in `companion.yml`. Also how you ask for a registered hook command such as spec-kit's `git` commit. |
-| **Command** | A shell line. The assistant needs a terminal. |
+| **Skill** | A skill you already have. Try this first. |
+| **Instruction** | One instruction kept in `companion.yml`. |
+| **Command** | A shell line. Your assistant needs a terminal. |
 | **Node** | A file from `.specify/companion/nodes/`, reusable in more than one place. |
 
-**Choose...** lists what this project actually has, so a typed name cannot invoke nothing. Click an existing hook to change or remove it.
+Your hooks show under the Companion mascot. Hooks from an installed extension show as `via <extension>`. The same hooks written by hand are in [Custom commands and hooks](/docs/guides/customize).
 
 ## Edit a node, and go back
 
-![The side panel showing one node's rendered instructions, with what it needs, what it writes, and whether it can move](../../../../../../../docs/screenshots/generated/builder-read-block.png)
+![The side panel showing one node's instructions and facts](../../../../../../../docs/screenshots/generated/builder-read-block.png)
 
-The node panel shows what the node tells the assistant, plus:
+The node panel shows the instructions plus what the node writes, what it needs first and whether it can move. To go back, open **More** and choose **Use the shipped node**. The status line offers **Undo**.
 
-| Fact | Meaning |
-|---|---|
-| **Kind** | What the node is for |
-| **Writes** | Files it produces |
-| **Needs** | Nodes that must run first |
-| **Order** | Whether it can move (**Move up**, **Move down**) |
-| **Source** | Shipped with Companion, or yours |
-
-**Edit** opens the instructions. Saving writes `.specify/companion/nodes/<step>/<node>.md`, so saving is what makes the copy. An upgrade never overwrites or reverts it.
-
-![The node panel on a node this project rewrote, its Source row reading "yours, this project replaced it"](../../../../../../../docs/screenshots/generated/builder-yours.png)
-
-To go back, open **More** and choose **Use the shipped node**. The status line then offers **Undo**. **More** also has **Remove from the run**, which keeps the file so the node stays under **Add node**.
-
-![The status line saying draft-spec runs the shipped node again, with an Undo](../../../../../../../docs/screenshots/generated/builder-revert.png)
+![The status line after going back to the shipped node](../../../../../../../docs/screenshots/generated/builder-revert.png)
 
 ## Replace or add a node
 
-A node with alternatives has a **Replace** menu. Your hooks on the old node move with it.
+A node with alternatives has a **Replace** menu, and your hooks move with it.
 
-![The Replace menu open, offering two alternatives with a line describing each](../../../../../../../docs/screenshots/generated/builder-replace.png)
+![The Replace menu offering two alternatives](../../../../../../../docs/screenshots/generated/builder-replace.png)
 
-**Add node** in a phase's `+` menu offers add-ons that ship with a step but are off by default, and nodes the project dropped.
+**Add node** in a phase's `+` menu offers add-ons that ship switched off, and nodes you removed earlier.
 
-![The Add node menu open, offering a shipped add-on and a node the project removed](../../../../../../../docs/screenshots/generated/builder-add-node.png)
+![The Add node menu](../../../../../../../docs/screenshots/generated/builder-add-node.png)
 
 ## Reshape a document
 
-The **Document shape** chip on a step opens a row per `##` section of its template. Sections with alternatives offer them plus **As shipped**. Sections without alternatives say so and draw no control.
+The **Document shape** chip on a step lists each `##` section of its template. Pick an alternative for a section, or **As shipped**.
 
-![The template panel, one row per section of the document, each offering the alternatives written for it](../../../../../../../docs/screenshots/generated/builder-template.png)
+![The template panel with one row per section](../../../../../../../docs/screenshots/generated/builder-template.png)
 
 ## Add a step
 
-**Add step** in the header appends a step. Click the `+` between two lanes to insert one there.
+Press **Add step** in the header, or the `+` between two lanes. Give it a name and say where it runs and what it writes. After the next build, your assistant can run it as `/speckit.companion.<name>`.
 
-![The New step form, asking for a name, a display name, where it runs and what it writes](../../../../../../../docs/screenshots/generated/builder-new-step.png)
-
-The panel writes `.specify/companion/nodes/<name>/` with a frame, an order file and one node, then opens that node.
-
-![A step the project added, drawn between implement and the end of the run](../../../../../../../docs/screenshots/generated/builder-own-step.png)
-
-```yaml
-# Omit this line for a step you launch when you want it.
-after: implement
-```
-
-With `after:` the step takes its turn in the run. Without it, it is drawn under **Outside the run**. After the next build your assistant can dispatch `/speckit.companion.<name>`.
-
-## Compare with the shipped workflow
-
-Choose **As shipped** in the **Workflow** dropdown to see Companion with nothing changed. Your configuration is parked, not deleted. Its hooks show dashed and labelled `parked`. **Use this project's pipeline** (or **This project** in the dropdown) switches back.
+![The New step form](../../../../../../../docs/screenshots/generated/builder-new-step.png)
 
 ## Build
 
-**Preview build** writes nothing. **Build** resolves the nodes each step runs, splices in your hooks, applies reshaped templates and writes the command bodies where your assistant loads them. **Show the log** opens the detail.
+**Build** writes the command files your assistant loads, with your hooks, nodes and reshaped templates in place. **Show the log** opens the detail.
 
-![The header saying one changed step has not been built yet](../../../../../../../docs/screenshots/generated/builder-stale.png)
+![The header after a finished build](../../../../../../../docs/screenshots/generated/builder-built.png)
 
-![The header reporting a finished build: built at 14:02, five commands written](../../../../../../../docs/screenshots/generated/builder-built.png)
+## Good to know
 
-A build that cannot finish names the step and leaves the working workflow as it was.
+- **Compare with the shipped workflow.** Choose **As shipped** in the **Workflow** dropdown. Your configuration is parked, not deleted.
+- **Your configuration is one file.** `.specify/companion.yml` is the source of truth. Build output lives in `.specify/extensions/companion/commands/` and is never edited by hand.
+- **A failed build changes nothing.** It names the step and leaves the working workflow as it was.
+- **If the panel cannot draw,** it offers repairs as buttons, narrowest first. **Open companion.yml** is always there.
+- **Extension hooks run, but the panel only shows them.** A hook marked `asks first` does not run unless you ask.
 
-## When the panel cannot draw
+## Next
 
-A phase with nothing in it, or a node naming something that does not exist, stops the drawing. The panel offers repairs as buttons, narrowest first, each saying what it costs. Your hooks survive all of them. **Open companion.yml** is always there.
-
-![The broken state, naming the problem and offering three repairs as buttons](../../../../../../../docs/screenshots/generated/builder-broken.png)
-
-## Files
-
-| Path | What it holds |
-|---|---|
-| `.specify/companion.yml` | Your configuration, the source of truth |
-| `.specify/companion/workflows/<name>.yml` | A named configuration you can switch to |
-| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added |
-| `.specify/companion/fragments/<name>.md` | A document section you wrote |
-| `.specify/extensions/companion/commands/` | Build output. Derived, never edited. |
-
-The shipped alternatives, add-ons, fragments and presets are listed in the `commands-*` and `workflows-*` living specs.
+[Configuration](/docs/reference/configuration) lists every `speckit.*` setting.

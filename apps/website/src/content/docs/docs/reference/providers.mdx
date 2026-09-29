@@ -6,7 +6,7 @@ sidebar:
   order: 3
 ---
 
-SpecKit Companion sends spec commands to the assistant you already use. Pick yours with **Settings > `speckit.aiProvider`** (default `claude`).
+Pick the AI assistant that runs your spec commands with **Settings > `speckit.aiProvider`** (default `claude`). SpecKit Companion sends commands to the assistant you already use, and this page lists how each one is reached and which files it reads.
 
 ## How each one is reached
 
@@ -28,7 +28,7 @@ SpecKit Companion sends spec commands to the assistant you already use. Pick you
 
 Paths are relative to your project. IDE Chat owns none of these.
 
-| Provider | Steering file | Steering folder | Agents | Skills | Hooks | MCP config |
+| Provider | Steering file (rules your AI always follows) | Steering folder | Agents | Skills | Hooks | MCP config |
 |---|---|---|---|---|---|---|
 | Claude Code, and in VS Code | `CLAUDE.md` | `.claude/steering/` | `.claude/agents/*.md` | `.claude/skills/` | `.claude/settings.json` | `.claude/settings.json` |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md` | `.github/agents/*.agent.md` | none | none | `.copilot/mcp-config.json` |
@@ -55,4 +55,4 @@ This opens the Claude Code panel through its URI handler and prefills the comman
 
 ## Next
 
-[Steering](/docs/guides/steering) shows where these files appear. [Configuration](/docs/reference/configuration) covers permission mode.
+[Steering](/docs/guides/steering) shows where these files appear in the sidebar.

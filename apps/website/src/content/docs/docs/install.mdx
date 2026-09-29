@@ -20,7 +20,7 @@ export const COMPANION_COMMAND = 'specify extension add companion --from https:/
 
 export const SOURCE_CLI = 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
 
-Two installs, through two channels: the VS Code extension from the Marketplace, and the Companion Spec Kit extension from the `specify` CLI. You need a folder open as a workspace, and Spec Kit 0.9.5 or newer for step 2.
+Install SpecKit Companion in four steps: the VS Code extension from the Marketplace, then the Companion Spec Kit extension from the `specify` command. Open a folder as your workspace first. Step 2 needs Spec Kit 0.9.5 or newer.
 
 <GuidedStep n={1} title="Install the VS Code extension">
 
@@ -58,7 +58,7 @@ A SpecKit icon in the activity bar with two views, **Specs** and **Steering**. T
 
 <GuidedStep n={2} title="Get an extension-capable Spec Kit CLI">
 
-The stock PyPI `specify-cli` has no `extension` command, so step 3 would fail with `No such command 'extension'`. Install the GitHub build instead. This changes your global `uv` tools.
+The stock PyPI `specify-cli` has no `extension` command, so step 3 would fail. Install the GitHub build instead. This changes your global `uv` tools.
 
 <div slot="action">
   <CodeLine command={SOURCE_CLI} />
@@ -80,7 +80,7 @@ The stock PyPI `specify-cli` has no `extension` command, so step 3 would fail wi
 
 <GuidedStep n={3} title="Add the Companion Spec Kit extension">
 
-This half writes the run record, a `.spec-context.json` file next to each spec. Run it from your project root and copy the command whole. The short catalog form does not work.
+This half writes the run record, a `.spec-context.json` file next to each spec. Run the command from your project root and copy it whole. The short catalog form does not work.
 
 <div slot="action">
   <CodeLine
@@ -128,11 +128,11 @@ A **Living Specs** view has joined the sidebar.
 
 </GuidedStep>
 
-## Updating
+## Update later
 
-Re-run the step 3 command. The URL always serves the newest build and `--force` refreshes in place. In the editor, the Specs view **More Actions** menu has **Install Companion Extension**, and its **Upgrade…** submenu has **Update spec-kit Extension**. To silence the install nudges, set `speckit.companion.installPrompt` to `false`.
+Re-run the step 3 command. The URL always serves the newest build, and `--force` refreshes in place. To silence the install prompts, set `speckit.companion.installPrompt` to `false`.
 
-## When something didn't take
+## If something did not work
 
 **`No such command 'extension'`.** You have the stock PyPI build. Redo step 2, then step 3.
 

@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: What SpecKit Companion is, which half does what, and where to start reading.
+description: What SpecKit Companion gives you in VS Code, which half does what, and where to start.
 sidebar:
   label: Introduction
   order: 1
@@ -8,11 +8,11 @@ sidebar:
 
 import MediaSlot from '../../../components/docs/MediaSlot.astro';
 
-Spec Kit writes your specs as markdown files. SpecKit Companion lets you read, review and track them in VS Code.
+SpecKit Companion lets you read, review and track your specs in VS Code. A **spec** is a markdown file that describes what to build before your AI assistant builds it. [Spec Kit](https://github.com/github/spec-kit), the open source tool behind the `specify` command, has your assistant write those files.
 
 <MediaSlot
   feature="readme-hero"
-  caption="The sidebar and the viewer, mid-plan. Both read the folder your assistant already wrote; there is no second copy of the spec."
+  caption="The sidebar and the viewer, mid-plan. Both read the folder your assistant already wrote. There is no second copy of the spec."
 />
 
 ## What you get in VS Code
@@ -38,30 +38,30 @@ Spec Kit writes your specs as markdown files. SpecKit Companion lets you read, r
   caption="Active and Completed specs, with the state of each document inside."
 />
 
-There is also a **Steering** view, which lists the standing instruction files your AI provider already reads.
+A **Steering** view also lists the standing instruction files your AI provider already reads.
 
 ## What the Companion Spec Kit extension adds
 
-A second, separately installed piece. It rides your Spec Kit runs and writes a run record next to each spec: what each step did, how long it took, what it decided and what it checked. The **Overview** in the viewer shows that record.
+This is a second piece that you install separately with the `specify` command. It records what each step did, how long it took, what it decided and what it checked, in a **run record** next to each spec. The **Overview** in the viewer shows that record.
 
 <MediaSlot
   feature="overview"
   caption="The Overview reads the run record: intent, timing, decisions, checks and coverage."
 />
 
-It also brings the `/speckit.companion.*` commands, a Resume button, a closing `mark-complete` step, and Living Specs.
+It also brings the `/speckit.companion.*` commands, a Resume button, a closing `mark-complete` step and Living Specs. A **living spec** is a spec for behavior that outlives any one change.
 
 <MediaSlot
   feature="living-specs"
   caption="Living Specs sit next to the code they describe and flag when the code moves on."
 />
 
-Either half works alone. With only the VS Code extension you get the viewer, comments and sidebar. A spec made without the second half simply has less recorded on it.
+Either half works alone. With only the VS Code extension you get the viewer, comments and sidebar. A spec made without the second half just has less recorded on it.
 
 ## What it does not do
 
-The extension gives your assistant the text of a command, then reads whatever lands on disk. It never reads the chat back and gets no callback when your assistant finishes. Everything you see was written to a file or seen changing on disk.
+SpecKit Companion hands your assistant the text of a command, then reads whatever lands on disk. It never reads the chat back, and it gets no signal when your assistant finishes.
 
-## Where to start
+## Next
 
-[Install](/docs/install) covers both halves. Already installed? [Getting started](/docs/start/getting-started) takes one spec from creation to a finished record.
+[Install](/docs/install) sets up both halves in four steps.

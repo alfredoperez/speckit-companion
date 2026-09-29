@@ -1,6 +1,6 @@
 ---
 title: Anatomy of the spec viewer
-description: 'Every part of the spec viewer named in order: the header, the pipeline rail, requirement rows, acceptance scenarios, task phases, diagrams, and the footer.'
+description: 'Read a spec as a page: the header, the step rail, the document, the outline and the footer, one numbered stop at a time.'
 sidebar:
   label: Spec viewer
   order: 2
@@ -8,114 +8,81 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-The spec viewer opens your spec markdown as a page instead of a file. Same bytes on disk, laid out so you can read them fast.
+The spec viewer shows your spec markdown as a readable page. The file on disk is unchanged.
 
 <MediaSlot
   feature="spec-viewer"
-  caption="Header on top, pipeline rail on the left, the document in the middle, the outline on the right. Editing the file in a text editor still works, because the page is only a reading of it."
+  caption="Header on top, step rail on the left, the document in the middle, the outline on the right."
   wide
 />
 
 ## The tour
 
-1. **Header.** The spec's name, a status badge, the branch, and the creation date. It reads the run record next to the spec, the same file the Specs sidebar reads, so the two never disagree.
-2. **Run strip.** Small facts at the right of the header: tasks done out of total, requirements traced, checks, elapsed time, and a pull request link when one was recorded. It shows only what the badge and the rail don't already say.
-3. **Pipeline rail.** One entry for each step that writes a document, plus the Overview at the top.
+1. **Header.** The spec's name, a status badge, the branch and the creation date.
+2. **Run strip.** Tasks done, requirements traced, checks, elapsed time and a pull request link.
+3. **Step rail.** One tab for each step that writes a document, plus the [Overview](/docs/anatomy/anatomy-of-the-overview) at the top.
 4. **Document.** Your markdown, with requirements, scenarios and tasks drawn as rows and chips.
-5. **Outline.** "On this page" lists the headings and follows where you are. A **Subsections** toggle adds the third level.
+5. **Outline.** "On this page" lists the headings and follows where you are.
 6. **Footer.** The next step, plus archive, complete, regenerate and refine.
 
-Two badges read differently from the stored status: `tasking` shows as **Creating Tasks** and `ready-to-implement` as **Tasks Created**. In-progress statuses get an accent tint, finished ones a quiet green, idle ones a muted tone.
-
-## The pipeline rail
-
-The rail lists the documents of the workflow the spec recorded when it was created. A custom workflow gets its own rail.
-
-<MediaSlot
-  feature="workflow-documents"
-  caption="Plan is open, with its Research and Data Model files nested under it. The highlight moves as you switch documents."
-/>
-
-- **Steps that only act don't appear.** Implement, Mark Complete and any action-only custom step have no document, so their actions live in the footer.
-- **Sub-documents nest under their step.** Research, data model, and a step's `checklists/` or `contracts/` files sit under it. Other files in the spec folder show as related documents.
-- **A narrow pane folds the rail into a row of chips.**
-
-Each entry is in one state:
-
-| State | Look |
-| --- | --- |
-| Done | Check mark. Its document exists. |
-| Current | Highlighted. It is the document you are reading. |
-| In flight | Spinner and a timer. The step is running. |
-| Locked | Disabled, with a tooltip saying why. Only when a step ahead is running and this document doesn't exist yet. |
-| Not started | Plain. Its document doesn't exist yet. |
+## Read the step rail
 
 <MediaSlot
   feature="step-rail"
-  caption="Specification, Plan and Tasks each carry a check. Tasks is the one being read, drawn as phases with P1 and P2 chips."
+  caption="Specification, Plan and Tasks each carry a check. Tasks is open, drawn as phases with P1 and P2 chips."
 />
 
-Current means the tab you are reading, not where the run is. Open an earlier document mid-run and the header and footer still report the real state. Clicking a tab never moves the run.
+| Look | Meaning |
+| --- | --- |
+| Check mark | Done. The document exists. |
+| Highlighted | Current. This is the tab you are reading. |
+| Spinner and timer | In flight. The step is running. |
+| Disabled, with a tooltip | Locked. A step ahead is running and this document does not exist yet. |
+| Plain | Not started. |
 
-During implement, a live percentage counts the checked boxes in `tasks.md`. It sits on the implement entry when the workflow gives it one, otherwise on the last document tab.
+Clicking a tab never moves the run. Steps that only act, such as Implement and Mark Complete, have no tab. Their actions live in the footer.
 
 ## What the document adds
 
-- **Requirement rows.** A bullet like `- **FR-001** The system must ...` becomes a labeled row. Any prefix of two to five capital letters and a number qualifies, so FR, NFR, SC and your own prefixes all work.
-- **Acceptance scenarios.** Given, When and Then are emphasized in place. Each scenario stays one sentence.
-- **Task phases.** `## Phase N: Title` becomes a phase header with MVP and P1 to P5 chips. A task like `- [ ] **T001** [P] [US2] Add the parser` becomes a checkbox with chips: `[P]` runs in parallel, `[US#]` names the user story. Sub-bullets fold into a details group.
-- **Mermaid diagrams.** Each diagram gets zoom out, Reset and zoom in. There is no pan or fullscreen.
-- **A stale banner.** A document generated before the one above it changed gets a banner with a **Regenerate** action. It warns, it never locks.
+- **Requirement rows.** A bullet like `- **FR-001** The system must ...` becomes a labelled row. Any prefix of two to five capital letters and a number works.
+- **Acceptance scenarios.** Given, When and Then are emphasized in place.
+- **Task phases.** `## Phase N: Title` becomes a phase header with MVP and P1 to P5 chips. In a task line, `[P]` runs in parallel and `[US2]` names the user story.
+- **Stale banner.** A document generated before the one above it changed gets a banner with **Regenerate**.
 
-Anything that doesn't match these shapes renders as ordinary markdown.
+## Comment on a line
 
-## Comments
-
-Hover a paragraph, heading, list item, task, requirement or scenario and a comment button appears. Code blocks, tables and diagrams have none. Comments pin under their line, and **Refine** hands the pending ones to your assistant. [Review and refine](/docs/guides/review-and-refine) covers the flow.
+Hover a line and a comment button appears. **Refine** hands the pending comments to your assistant. [Review and refine](/docs/guides/review-and-refine) covers the flow.
 
 <MediaSlot
   feature="review"
-  caption="A comment open under FR-001 with Refine, Edit and Delete, above the other requirements."
+  caption="A comment open under FR-001, with Refine, Edit and Delete."
 />
 
-## The footer
+## Use the footer
 
-The main button is the next step, named after it: **Plan**, **Tasks**, with a line above reading `Next: Plan`. Pressing it records the current step as done, starts the next one, and sends that step's command to your assistant.
+The main button is the next step, named after it, with a line above reading `Next: Plan`. Press it and the viewer records the current step as done, starts the next one and sends its command to your assistant.
 
-Beside it sit Archive, Reactivate, Mark Completed, Regenerate and Refine.
+**Regenerate** redoes the current step. **Other actions** holds Spec Kit's **Clarify**, **Checklist** and **Analyze**, plus your [custom commands](/docs/guides/customize). At the end of a run the footer offers **Mark Completed**, **Archive** and **Reactivate**.
 
-- **Confirm and undo.** Archive, Complete and Reactivate need two clicks: the first shows "Confirm?" for three seconds. Regenerate waits behind a five-second **Undo** toast.
-- **Spec Kit's own commands.** **Clarify** shows on Spec, **Checklist** on Plan, **Analyze** on Tasks.
-- **Other actions.** Custom commands you define in settings collect in a collapsed **Other actions** menu. See [Pick a pipeline](/docs/discussions/pick-a-pipeline).
+No forward button is normal while a step runs, after a run is complete, or when you are reading a tab that is not the current step.
 
-There is no forward button in six cases, and none of them is a fault:
-
-- the implement step, where closing belongs to Mark Completed
-- you are viewing a tab that isn't the current step
-- a later step is already in the history
-- the step never started
-- the step is running (the line reads "Step running, actions unlock when it settles")
-- the spec is implemented, completed or archived ("Run complete" or "Archived, read-only")
-
-## Living specs look different
-
-A living spec has no rail. It gets a flat tab strip: Overview, then Spec, Rules and Coverage for whichever files exist. Its header shows requirement and scenario counts, the globs it covers, where it lives, and an `N/M covered` count when a coverage file exists. A drift chip and an **Update** button appear when matching source files changed after the spec was last committed.
+## A living spec looks different
 
 <MediaSlot
   feature="living-specs"
-  caption="A capability spec in the same viewer: globs instead of a branch, a coverage count instead of a status, requirements as cards with WHEN and THEN lines."
+  caption="A capability spec in the same viewer: globs instead of a branch, a coverage count instead of a status."
   wide
 />
 
-Requirements transcribed from existing code carry an **adopted** badge with an **Approve** control. **Approve all N** does the tier at once, with a five-second **Undo**. A drafted spec leads its title with a **DRAFT** badge. Comments on a living spec live in the open tab only. [Living specs](/docs/discussions/living-specs) explains what these files are.
+A living spec has a flat tab strip instead of a rail. Its header shows the code it covers and an `N/M covered` count. A drift chip and an **Update** button appear when that code changed after the spec was last committed. [Living specs](/docs/discussions/living-specs) explains what these files are.
 
 ## Good to know
 
-- **Broken run record.** If `.spec-context.json` can't be parsed, the viewer renders the spec read-only and offers **Reset context**. It moves the broken file to a timestamped backup and writes a fresh one. The check runs only when a spec first opens.
-- **Creating a spec.** **SpecKit: New Spec** opens a dialog: describe the feature, pick a workflow, attach images if you like. **Create Spec** stays disabled until you type something. There is no still of this dialog on this page yet.
-- **Offline.** Fonts and icons ship inside the extension. Syntax highlighting and Mermaid load from a CDN, so offline you get plain code blocks and diagram source.
-- **Reduce Motion** is honored everywhere.
+- **Two badges are renamed.** The stored status `tasking` shows as **Creating Tasks**, and `ready-to-implement` as **Tasks Created**.
+- **Broken run record.** If `.spec-context.json` cannot be parsed, the viewer shows the spec read-only and offers **Reset context**, which backs the file up first.
+- **Adopted requirements.** In a living spec, requirements drafted from existing code carry an **adopted** badge and an **Approve** control.
+- **Offline.** Syntax highlighting and Mermaid load from a CDN, so offline you get plain code and diagram source.
 
 ## Next
 
-[Anatomy of the Overview](/docs/anatomy/anatomy-of-the-overview) takes apart the rail's other destination. [Review and refine](/docs/guides/review-and-refine) is the guide for acting on what you read.
+[The Overview](/docs/anatomy/anatomy-of-the-overview) is the first tab in the rail, and the record of what the run did.

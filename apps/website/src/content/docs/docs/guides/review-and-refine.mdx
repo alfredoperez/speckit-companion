@@ -8,7 +8,7 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-**I want to tell my AI what to change in a spec, line by line.** Open a spec in the viewer and hover any line. A comment button appears. Click it, type, and the card pins under that line.
+Comment on a spec line by line, then send every pending comment to your AI in one prompt. Open a spec in the viewer and hover any line. Click the comment button that appears, type, and the card pins under that line.
 
 <MediaSlot
   feature="inline-comments"
@@ -58,7 +58,11 @@ After the prompt is handed over, the comments flip to **Applied** and stay as hi
 
 On completed or archived specs, cards stay readable but Refine, Edit and Delete are gone.
 
-## If something looks wrong
+## If a comment goes missing
 
 - **A comment did not save.** The write is skipped when the run record is missing or unreadable. The viewer creates it on first open, so check the spec folder.
 - **A comment vanished after an edit.** Look for it in the Activity list under Run log.
+
+## Next
+
+[Steering](/docs/guides/steering) is the other way to shape what your AI does, for every spec instead of one.

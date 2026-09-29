@@ -1,18 +1,18 @@
 ---
 title: Anatomy of the Pipeline Builder
-description: Every mark on the Pipeline Builder board named — steps, phases, nodes, hooks — plus what a workflow and a preset mean.
+description: 'What every mark on the Pipeline Builder board means: steps, phases, nodes and hooks, plus workflows and presets.'
 sidebar:
   label: Pipeline Builder
   order: 4
 ---
 
-The Pipeline Builder draws your assistant's workflow as a board: a handful of steps, each assembled from **nodes** of instruction. Open it from the circuit icon at the top of the Specs sidebar, or run **SpecKit Companion: Open Pipeline Builder**. It needs the Companion Spec Kit extension, because that is where the panel reads the workflow from. [The Pipeline Builder](/docs/guides/pipeline-builder) covers changing something.
+The Pipeline Builder shows your assistant's workflow as a board. Each step is built from **nodes**, small blocks of instruction. Open it from the circuit icon at the top of the Specs sidebar, or run **SpecKit Companion: Open Pipeline Builder**. It needs the Companion Spec Kit extension. [The Pipeline Builder guide](/docs/guides/pipeline-builder) shows how to change something.
 
 ![The pipeline builder, showing four steps as columns with their phases, nodes and attached hooks](../../../../../../../docs/screenshots/generated/builder-board.png)
 
 The run reads left to right, in the order it happens. Four steps ship, and a project can add more. At the far right, **Outside the run** holds what doesn't take a turn, such as `auto`, which runs the other steps hands-off.
 
-## Marks on a lane
+## What the marks on a lane mean
 
 ![Two lanes of the board, specify and plan, with a changed step, a rewritten node, a gate and an attached hook](../../../../../../../docs/screenshots/generated/builder-lanes.png)
 
@@ -35,7 +35,7 @@ The run reads left to right, in the order it happens. Four steps ship, and a pro
 
 Anything the project changed carries one color and nothing else does, so "what did we change here" needs no reading.
 
-## The phase menu
+## Change a phase with the + menu
 
 ![The phase menu open, offering Add hook, Add node, Rename phase, Split phase and Merge](../../../../../../../docs/screenshots/generated/builder-phase-menu.png)
 
@@ -43,12 +43,14 @@ The `+` on every phase rule is the one control the board never hides. A row that
 
 ## The header
 
+![The header with the workflow switcher, the changes chip, the hooks tally and Add step](../../../../../../../docs/screenshots/generated/builder-changes.png)
+
 - **Workflow.** The configuration you are on. It is also the switcher.
 - **Changes chip.** `No changes` or `2 steps differ from shipped`. Click it to scroll to the first lane that differs.
 - **Hooks chip.** `5 hooks`, opening the tally of steps, phases, nodes, your hooks and extension hooks.
 - **Add step.** Appends a step. Docked narrow, **Open companion.yml** and **Preview build** move under `⋯`.
 
-## Workflows and presets
+## Switch workflows and start from a preset
 
 A **workflow** is a whole named configuration. Switching swaps node order, hooks, templates and routing at once, so a one-line fix and a client deliverable can run different workflows in one repository. Nodes and fragments are shared across them.
 
@@ -63,7 +65,7 @@ A new workflow starts from what you run today, or from one of two presets:
 
 A preset is copied in and yours to change. [Pick a pipeline](/docs/discussions/pick-a-pipeline) covers the two workflows Companion ships as commands.
 
-## Good to know
+## Files it reads and writes
 
 | Path | What it holds |
 |---|---|
@@ -73,8 +75,6 @@ A preset is copied in and yours to change. [Pick a pipeline](/docs/discussions/p
 | `.specify/companion/fragments/<name>.md` | A document section you wrote |
 | `.specify/extensions/companion/commands/` | What a build produces. Derived, not edited. |
 
-The full list of alternatives, add-ons, fragments and presets is in the project's `docs/template-profiles.md`.
-
 ## Next
 
-[The Pipeline Builder](/docs/guides/pipeline-builder) walks attaching a hook, editing a node and building a change.
+[The Pipeline Builder guide](/docs/guides/pipeline-builder) walks through attaching a hook, editing a node and building a change.

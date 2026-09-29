@@ -8,9 +8,9 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-**I want one place for the rules my AI follows.** A spec says what to build this time. A **steering document** says how this project builds anything: conventions, architecture, testing habits.
+See and manage the standing rules your AI follows, in one view. A spec says what to build this time. A **steering document** says how this project builds anything: conventions, architecture, testing habits.
 
-Your provider already has a place for those. Claude Code reads `CLAUDE.md`, Codex and OpenCode read `AGENTS.md`, and the others have their own filenames. The [provider matrix](/docs/reference/providers) lists every path. The Steering view adds no new format. It gathers what your provider already reads.
+Your AI provider, the assistant you chose in `speckit.aiProvider`, already has a place for those. Claude Code reads `CLAUDE.md`, Codex and OpenCode read `AGENTS.md`, and the others have their own filenames. The [provider matrix](/docs/reference/providers) lists every path. The Steering view adds no new format. It gathers what your provider already reads.
 
 <MediaSlot
   feature="specs-sidebar"
@@ -52,3 +52,7 @@ Refine and Delete appear only on Steering Docs and References. Provider and Spec
 ## The Companion node
 
 With the Companion Spec Kit extension installed, a Companion node comes first. **Configuration** opens `.specify/companion.yml` (see [Custom commands and hooks](/docs/guides/customize)). **Commands** lists the `/speckit.companion.*` set from the installed manifest. **Templates** lists the extension's markdown templates and is hidden when there are none.
+
+## Next
+
+[Custom commands and hooks](/docs/guides/customize) adds your own commands and work to the workflow.
