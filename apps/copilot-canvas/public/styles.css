@@ -25,6 +25,7 @@
     --border: #344044;
     --border-hover: #52615e;
     --code-text: #d9e3df;
+    --brand-violet: #a78bfa;
     --focus: color-mix(in srgb, var(--accent) 70%, transparent);
     --shadow-md: 0 6px 18px rgb(0 0 0 / 18%);
     --radius-sm: 4px;
@@ -60,6 +61,7 @@
     --border: #ced9d5;
     --border-hover: #9daca7;
     --code-text: #1d2a27;
+    --brand-violet: #7c3aed;
     --shadow-md: 0 6px 18px rgb(20 32 29 / 10%);
 }
 
@@ -129,7 +131,8 @@ button { font: inherit; color: inherit; }
 .brand-mark { flex: none; }
 .brand { flex: 1; min-width: 0; }
 .brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.2; color: var(--text-primary); }
-.brand-mark { border-radius: 7px; }
+.mark-pale { fill: var(--text-primary); }
+.mark-violet { fill: var(--brand-violet); }
 .brand-sub { margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }

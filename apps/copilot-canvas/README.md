@@ -57,6 +57,6 @@ Clicking through the demo specs (`specs/_0N_demo-*`) can change their `.spec-con
 | `tasks.mjs` | Task checkbox parsing. It agrees with the VS Code extension through the shared `apps/vscode/tests/fixtures/task-grammar/` cases. |
 | `markdown.mjs` | A small markdown renderer that escapes everything first. |
 | `prompts.mjs` | The chat lines the buttons send. |
-| `public/` | The board page: plain HTML, CSS and JS, with no build step. The logo mark is a copy of the site's small-cut mark (`apps/website/public/favicon.svg`). |
+| `public/` | The board page: plain HTML, CSS and JS, with no build step. The header's logo is the site's full mark, inlined from `apps/website/src/components/LogoMark.astro`. |
 
 The folder has the same layout as an entry in [awesome-copilot's extensions](https://github.com/github/awesome-copilot/tree/main/extensions). `plugin.json` is the listing manifest, ready to copy to their `plugins/speckit-companion/plugin.json`. Its `logo` is the `assets/preview.png` screenshot, which is also the listing card image. The app lists the canvas by its `displayName` (SpecKit Companion) and `description` from `extension.mjs`. To submit it, follow their [contributing guide](https://github.com/github/awesome-copilot/blob/main/CONTRIBUTING.md#adding-canvas-extensions).
