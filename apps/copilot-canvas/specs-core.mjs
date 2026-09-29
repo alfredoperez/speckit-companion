@@ -4,7 +4,8 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, basename, relative, sep } from 'node:path';
 import { countTaskCheckboxes, listTasks, phaseProgress } from './tasks.mjs';
-import { renderMarkdown } from './markdown.mjs';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './vendor/viewer-markdown.mjs';
+import { renderOverview, stepTiming } from './overview.mjs';
 
 export const PIPELINE_STEPS = ['specify', 'plan', 'tasks', 'implement'];
 export const DEFAULT_SPEC_DIRS = ['specs', '.specify/specs'];
@@ -273,6 +274,17 @@ function listDocuments(dir, specFile) {
     return docs.sort((a, b) => rank(a) - rank(b) || a.fileName.localeCompare(b.fileName));
 }
 
+/** The task in flight: started in the history and not finished since. */
+function currentTask(ctx) {
+    const open = new Set();
+    for (const entry of Array.isArray(ctx.history) ? ctx.history : []) {
+        if (typeof entry?.task !== 'string') continue;
+        if (entry.kind === 'start') open.add(entry.task);
+        else if (entry.kind === 'complete') open.delete(entry.task);
+    }
+    return [...open].pop() ?? null;
+}
+
 function asText(value) {
     if (typeof value === 'string') return value;
     if (value && typeof value === 'object') return value.what ?? value.decision ?? value.summary ?? null;
@@ -284,10 +296,16 @@ export function readSpecDetail(root, id, { html = true } = {}) {
     const spec = scanSpec(root, id);
     const dir = join(root, id);
     const ctx = readSpecContext(dir) ?? {};
+    const hasContext = spec.hasContext;
+    setHasSpecContext(hasContext);
+    setLivingMode(false);
+    setCurrentTask(currentTask(ctx));
+    setTaskSummaries(ctx.task_summaries && typeof ctx.task_summaries === 'object' ? ctx.task_summaries : null);
     const documents = listDocuments(dir, featureSpecName(dir)).map(doc => {
         const raw = readText(join(dir, doc.fileName));
         return html ? { ...doc, html: renderMarkdown(raw ?? '') } : doc;
     });
+    const overviewHtml = html ? renderOverview(ctx, root) : undefined;
     const tasksText = spec.files.tasks ? readText(join(dir, 'tasks.md')) ?? '' : '';
     const history = (Array.isArray(ctx.history) ? ctx.history : [])
         .filter(e => e && typeof e.step === 'string' && typeof e.at === 'string')
@@ -299,6 +317,8 @@ export function readSpecDetail(root, id, { html = true } = {}) {
         documents,
         taskList: listTasks(tasksText),
         phases: phaseProgress(tasksText),
+        overviewHtml,
+        timing: stepTiming(ctx),
         history,
         intent: typeof ctx.intent === 'string' ? ctx.intent : null,
         approach: typeof ctx.approach === 'string' ? ctx.approach : null,

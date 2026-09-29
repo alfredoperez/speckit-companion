@@ -1,68 +1,14 @@
 /* Token values mirror apps/vscode/webview/styles/spec-viewer/_tokens-viewer.css. */
+/* Design tokens come from vendor/viewer.css, the VS Code viewer's own sheet (loaded first).
+   Only what the board adds on top lives here. */
 :root {
-    color-scheme: dark;
-    --bg-primary: #101416;
-    --bg-secondary: #171d20;
-    --bg-elevated: #20282c;
-    --bg-inset: #293337;
-    --bg-code: #0b0f11;
-    --text-primary: #f1f5f4;
-    --text-body: #b4c0bd;
-    --text-muted: #82908d;
-    --accent: #65e6bd;
-    --accent-ink: #071b15;
-    --accent-subtle: #173b32;
-    --info: #78bdf7;
-    --info-subtle: #182f43;
-    --success: #8adb77;
-    --success-subtle: #1f3823;
-    --warning: #f2c66d;
-    --warning-subtle: #3c311a;
-    --error: #ff8c8c;
-    --review: #b48df0;
-    --review-ink: #c9adf5;
-    --review-subtle: color-mix(in srgb, #b48df0 14%, transparent);
-    --border: #344044;
-    --border-hover: #52615e;
-    --code-text: #d9e3df;
     --brand-violet: #a78bfa;
+    --review-ink: #c9adf5;
     --focus: color-mix(in srgb, var(--accent) 70%, transparent);
-    --shadow-md: 0 6px 18px rgb(0 0 0 / 18%);
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
-
-/* app.js sets data-theme from ?theme= or the system preference. */
-:root[data-theme="light"] {
-    color-scheme: light;
-    --bg-primary: #f4f7f6;
-    --bg-secondary: #ffffff;
-    --bg-elevated: #eaf0ee;
-    --bg-inset: #dfe8e5;
-    --bg-code: #eef3f1;
-    --text-primary: #14201d;
-    --text-body: #43524e;
-    --text-muted: #63726e;
-    --accent: #087d63;
-    --accent-ink: #ffffff;
-    --accent-subtle: #d8eee7;
-    --info: #176da8;
-    --info-subtle: #dcecf7;
-    --success: #277a35;
-    --success-subtle: #e0f0e1;
-    --warning: #8b5a00;
-    --warning-subtle: #f7ebce;
-    --error: #b72f39;
-    --review: #6e40c9;
-    --review-ink: #5b30b0;
-    --review-subtle: color-mix(in srgb, #6e40c9 12%, transparent);
-    --border: #ced9d5;
-    --border-hover: #9daca7;
-    --code-text: #1d2a27;
+body.vscode-light {
     --brand-violet: #7c3aed;
-    --shadow-md: 0 6px 18px rgb(20 32 29 / 10%);
+    --review-ink: #5b30b0;
 }
 
 * { box-sizing: border-box; }
@@ -75,7 +21,8 @@ body {
     flex-direction: column;
     background: var(--bg-primary);
     color: var(--text-body);
-    font: 14px/1.5 var(--font-sans);
+    font: 14px/1.5 var(--font-family);
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -243,7 +190,7 @@ button { font: inherit; color: inherit; }
 
 .card-top { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
 .card-num { flex: none; font: 12px var(--font-mono); color: var(--text-muted); }
-.card-title {
+.sb-title {
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -303,7 +250,7 @@ button { font: inherit; color: inherit; }
 }
 .detail-empty p { max-width: 260px; margin: 0; color: var(--text-body); }
 
-.detail-inner { max-width: 880px; padding: 20px 24px 40px; }
+.detail-inner { max-width: 880px; margin: 0 auto; padding: 20px 24px 40px; }
 
 .back { display: none; margin-bottom: 12px; }
 
@@ -350,8 +297,8 @@ button { font: inherit; color: inherit; }
 }
 .rail li[data-state="completed"] .rail-node { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .rail li[data-state="in-progress"] .rail-node { border-color: var(--warning); color: var(--warning); animation: pulse 1.6s ease-in-out infinite; }
-.rail-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.rail li[data-state="not-started"] .rail-label { color: var(--text-body); }
+.sb-rail-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.rail li[data-state="not-started"] .sb-rail-label { color: var(--text-body); }
 .rail-state { font-size: 11.5px; color: var(--text-muted); }
 
 /* next action */
@@ -371,18 +318,8 @@ button { font: inherit; color: inherit; }
 .btn.sent { background: var(--success-subtle); border-color: var(--success); color: var(--success); }
 .command-hint { margin: 0; font-size: 12px; color: var(--text-muted); }
 .command-hint code { font: 12px var(--font-mono); color: var(--text-body); }
-.command-hint.stock { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--warning-subtle); color: var(--text-body); }
-.command-hint.stock strong { color: var(--warning); }
+.command-hint__stock { color: var(--warning); }
 
-.intent {
-    margin: 16px 0 0;
-    padding: 10px 14px;
-    border-left: 3px solid var(--accent);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: var(--bg-secondary);
-    color: var(--text-body);
-}
-.intent strong { color: var(--text-primary); }
 
 /* tabs */
 .tabs {
@@ -413,14 +350,6 @@ button { font: inherit; color: inherit; }
 
 .panel { padding-top: 16px; }
 
-/* phases */
-.phases { display: grid; gap: 8px; margin-bottom: 20px; }
-.phase { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
-.phase-name { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.phase-count { color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--bg-inset); overflow: hidden; }
-.bar span { display: block; height: 100%; border-radius: 3px; background: var(--accent); transition: width 300ms ease; }
-
 /* activity */
 .timeline { margin: 0; padding: 0; list-style: none; }
 .timeline li {
@@ -438,38 +367,19 @@ button { font: inherit; color: inherit; }
 .tl-text strong { color: var(--text-primary); font-weight: 600; }
 .tl-by { color: var(--text-muted); }
 .tl-time { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dossier { display: grid; gap: 14px; margin-bottom: 20px; }
-.dossier h3 { margin: 0 0 4px; font-size: 13px; color: var(--text-primary); }
-.dossier ul { margin: 0; padding-left: 18px; }
-
-/* ---------- markdown ---------- */
-
-.markdown { color: var(--text-body); overflow-wrap: break-word; }
-.markdown h1, .markdown h2, .markdown h3, .markdown h4 { color: var(--text-primary); line-height: 1.3; margin: 1.4em 0 0.5em; }
-.markdown h1 { font-size: 20px; margin-top: 0; }
-.markdown h2 { font-size: 16px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-.markdown h3 { font-size: 14.5px; }
-.markdown h4 { font-size: 13.5px; }
-.markdown p, .markdown ul, .markdown ol, .markdown blockquote, .markdown pre, .markdown .table-wrap { margin: 0 0 12px; }
-.markdown ul, .markdown ol { padding-left: 22px; }
-.markdown li { margin: 3px 0; }
-.markdown li.task { list-style: none; margin-left: -20px; display: flex; gap: 8px; align-items: baseline; }
-.markdown li.task input { flex: none; accent-color: var(--accent); margin: 0; transform: translateY(2px); }
-.markdown li.task.done > span { color: var(--text-muted); }
-.markdown strong { color: var(--text-primary); }
-.markdown a { color: var(--info); }
-.markdown .md-ref { color: var(--info); border-bottom: 1px dotted currentColor; }
-.markdown code { padding: 1px 5px; border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--code-text); font: 12.5px var(--font-mono); }
-.markdown pre { padding: 12px 14px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-code); }
-.markdown pre code { padding: 0; background: none; font-size: 12.5px; line-height: 1.55; }
-.markdown blockquote { padding: 4px 14px; border-left: 3px solid var(--border-hover); color: var(--text-body); }
-.markdown hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
-.markdown .table-wrap { overflow-x: auto; }
-.markdown table { border-collapse: collapse; font-size: 13px; }
-.markdown th, .markdown td { padding: 6px 10px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
-.markdown th { background: var(--bg-secondary); color: var(--text-primary); }
 
 .doc-missing { padding: 24px; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--text-muted); text-align: center; }
+
+/* ---------- the viewer's document, embedded ----------
+   vendor/viewer.css styles #markdown-content and .dossier exactly as the VS Code viewer does.
+   The board has no line comments or checkbox editing, so those affordances stay inert. */
+.viewer-scope { container-type: inline-size; container-name: viewer; }
+.viewer-scope .content-area { padding: 0; overflow: visible; grid-template-columns: minmax(0, 1fr); }
+.viewer-scope #markdown-content { max-width: none; margin: 0; }
+.viewer-scope .dossier { grid-column: 1 / -1; }
+.viewer-scope .line-add-btn { display: none; }
+.viewer-scope #markdown-content input[type="checkbox"] { pointer-events: none; }
+.viewer-scope .dossier { width: 100%; }
 
 /* ---------- toast ---------- */
 
@@ -490,7 +400,7 @@ button { font: inherit; color: inherit; }
     transform: translate(-50%, 8px);
     transition: opacity 160ms ease, transform 160ms ease;
 }
-.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+.toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .toast code { font: 12px var(--font-mono); overflow-wrap: anywhere; }
 
 /* ---------- narrow panel: one pane at a time ---------- */

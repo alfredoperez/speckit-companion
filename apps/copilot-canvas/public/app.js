@@ -3,7 +3,12 @@ const token = params.get('token') ?? '';
 
 const forcedTheme = ['light', 'dark'].includes(params.get('theme')) ? params.get('theme') : null;
 const systemLight = window.matchMedia('(prefers-color-scheme: light)');
-const applyTheme = () => { document.documentElement.dataset.theme = forcedTheme ?? (systemLight.matches ? 'light' : 'dark'); };
+const applyTheme = () => {
+    const theme = forcedTheme ?? (systemLight.matches ? 'light' : 'dark');
+    document.documentElement.dataset.theme = theme;
+    document.body.classList.toggle('vscode-light', theme === 'light');
+    document.body.classList.toggle('vscode-dark', theme === 'dark');
+};
 applyTheme();
 systemLight.addEventListener('change', applyTheme);
 
@@ -84,9 +89,9 @@ async function api(path, body) {
 
 function toast(...parts) {
     els.toast.replaceChildren(...parts);
-    els.toast.classList.add('visible');
+    els.toast.classList.add('is-visible');
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => els.toast.classList.remove('visible'), 3200);
+    toast.timer = setTimeout(() => els.toast.classList.remove('is-visible'), 3200);
 }
 
 function relativeTime(iso) {
@@ -145,7 +150,7 @@ function renderBoard() {
         },
         el('span', { class: 'card-top' },
             spec.number ? el('span', { class: 'card-num' }, spec.number) : null,
-            el('span', { class: 'card-title', title: spec.title }, spec.title)),
+            el('span', { class: 'sb-title', title: spec.title }, spec.title)),
         el('span', { class: 'card-meta' },
             statusPill(spec),
             miniRail(spec.steps),
@@ -193,7 +198,7 @@ async function run(command, button) {
 function renderRail(steps) {
     return el('ol', { class: 'rail', 'aria-label': 'Pipeline' }, STEPS.map((step, i) => el('li', { dataset: { state: steps[step] } },
         el('span', { class: 'rail-node', 'aria-hidden': 'true' }, steps[step] === 'completed' ? '✓' : String(i + 1)),
-        el('span', { class: 'rail-label' }, STEP_LABELS[step]),
+        el('span', { class: 'sb-rail-label' }, STEP_LABELS[step]),
         el('span', { class: 'rail-state' }, BADGE_LABELS[steps[step]]),
         el('span', { class: 'sr-only' }, `: ${BADGE_LABELS[steps[step]]}`))));
 }
@@ -214,20 +219,17 @@ function renderNext(spec) {
             el('div', { class: 'next-copy' }, el('p', { class: 'next-title' }, next.title), el('p', { class: 'next-why' }, next.why)),
             primary),
         el('div', { class: 'next-more' }, more),
-        state.snapshot.commandSet === 'companion'
-            ? el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.')
-            : el('p', { class: 'command-hint stock' },
-                el('strong', {}, 'Running stock GitHub Spec Kit. '),
-                'The SpecKit Companion commands aren\'t installed in this workspace, so buttons send ', el('code', {}, `/speckit.<step>`),
-                '. Add them with ', el('code', {}, 'specify extension add companion'), ' to get live capture, Resume and Doctor.'));
+        el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.',
+            state.snapshot.commandSet === 'companion' ? null : el('span', { class: 'command-hint__stock', title: 'Install with: specify extension add companion' }, ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.')));
 }
 
 function tabsFor(detail) {
-    const tabs = detail.documents.map(doc => ({
+    const tabs = detail.overviewHtml ? [{ id: 'overview', label: 'Overview' }] : [];
+    tabs.push(...detail.documents.map(doc => ({
         id: `doc:${doc.type}`,
         label: doc.label,
         count: doc.type === 'tasks' && detail.spec.tasks ? `${detail.spec.tasks.checked}/${detail.spec.tasks.total}` : null,
-    }));
+    })));
     for (const step of ['plan', 'tasks']) {
         if (!detail.documents.some(d => d.type === step)) tabs.push({ id: `missing:${step}`, label: STEP_LABELS[step], missing: true });
     }
@@ -235,26 +237,25 @@ function tabsFor(detail) {
     return tabs;
 }
 
+function viewerScope(...children) {
+    return el('div', { class: 'viewer-scope' }, el('main', { class: 'content-area' }, children));
+}
+
 function renderPanel(detail, tabId) {
     if (tabId === 'activity') return renderActivity(detail);
+    if (tabId === 'overview') {
+        const dossier = el('div');
+        dossier.innerHTML = detail.overviewHtml;
+        return viewerScope(dossier.firstElementChild ?? dossier);
+    }
     if (tabId.startsWith('missing:')) {
         const step = tabId.slice(8);
         return el('div', { class: 'doc-missing' }, `No ${step}.md yet. `, step === 'plan' ? 'Run plan to write it.' : 'Run tasks to write it.');
     }
     const doc = detail.documents.find(d => `doc:${d.type}` === tabId);
-    const body = el('article', { class: 'markdown' });
+    const body = el('div', { id: 'markdown-content', dataset: { doc: doc?.type ?? '' } });
     body.innerHTML = doc?.html ?? '';
-    if (doc?.type !== 'tasks' || !detail.phases.length) return body;
-    const phases = el('div', { class: 'phases', 'aria-label': 'Progress by phase' }, detail.phases.map(phase => {
-        const pct = phase.total ? Math.round((phase.checked / phase.total) * 100) : 0;
-        const fill = el('span');
-        fill.style.width = `${pct}%`;
-        return el('div', { class: 'phase' },
-            el('span', { class: 'phase-name', title: phase.name }, phase.name),
-            el('span', { class: 'phase-count' }, `${phase.checked}/${phase.total}`),
-            el('span', { class: 'bar', role: 'progressbar', 'aria-valuenow': pct, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-label': phase.name }, fill));
-    }));
-    return el('div', {}, phases, body);
+    return viewerScope(body);
 }
 
 function historyLine(entry) {
@@ -265,27 +266,14 @@ function historyLine(entry) {
 }
 
 function renderActivity(detail) {
-    const sections = [];
-    const dossier = [
-        ['Decisions', detail.decisions],
-        ['Verified', detail.verified],
-        ['Concerns', detail.concerns],
-    ].filter(([, items]) => items.length);
-    if (detail.approach || dossier.length) {
-        sections.push(el('div', { class: 'dossier' },
-            detail.approach ? el('div', {}, el('h3', {}, 'Approach'), el('p', {}, detail.approach)) : null,
-            dossier.map(([title, items]) => el('div', {}, el('h3', {}, title), el('ul', {}, items.slice(0, 8).map(item => el('li', {}, item)))))));
-    }
     if (!detail.history.length) {
-        sections.push(el('div', { class: 'doc-missing' }, detail.spec.hasContext ? 'No history recorded yet.' : 'No run record. This spec was written without SpecKit Companion capture.'));
-        return el('div', {}, sections);
+        return el('div', { class: 'doc-missing' }, detail.spec.hasContext ? 'No history recorded yet.' : 'No run record. This spec was written without SpecKit Companion capture.');
     }
-    const entries = [...detail.history].reverse().slice(0, 60);
-    sections.push(el('ol', { class: 'timeline', 'aria-label': 'Run history, newest first' }, entries.map(entry => el('li', { dataset: { kind: entry.kind ?? '' } },
+    const entries = [...detail.history].reverse().slice(0, 80);
+    return el('ol', { class: 'timeline', 'aria-label': 'Run history, newest first' }, entries.map(entry => el('li', { dataset: { kind: entry.kind ?? '' } },
         el('span', { class: 'tl-dot', 'aria-hidden': 'true' }),
         el('span', { class: 'tl-text' }, historyLine(entry), entry.by ? el('span', { class: 'tl-by' }, ` · by ${entry.by}`) : null),
-        el('time', { class: 'tl-time', datetime: entry.at, title: new Date(entry.at).toLocaleString() }, relativeTime(entry.at))))));
-    return el('div', {}, sections);
+        el('time', { class: 'tl-time', datetime: entry.at, title: new Date(entry.at).toLocaleString() }, relativeTime(entry.at)))));
 }
 
 function renderDetail() {
@@ -296,9 +284,10 @@ function renderDetail() {
         return;
     }
     const { spec } = detail;
+    document.body.dataset.hasSpecContext = spec.hasContext ? 'true' : 'false';
     const tabs = tabsFor(detail);
     if (!tabs.some(t => t.id === state.tab)) {
-        const preferred = spec.steps.implement !== 'not-started' || spec.steps.tasks === 'completed' ? 'doc:tasks' : 'doc:spec';
+        const preferred = spec.steps.implement === 'in-progress' ? 'doc:tasks' : detail.overviewHtml ? 'overview' : 'doc:spec';
         state.tab = tabs.some(t => t.id === preferred) ? preferred : tabs[0].id;
     }
     const scrollTop = els.detail.scrollTop;
@@ -327,7 +316,6 @@ function renderDetail() {
         head,
         renderRail(spec.steps),
         renderNext(spec),
-        detail.intent ? el('p', { class: 'intent' }, el('strong', {}, 'Intent: '), detail.intent) : null,
         tabBar,
         el('div', { class: 'panel', role: 'tabpanel' }, renderPanel(detail, state.tab))));
     els.detail.scrollTop = scrollTop;
