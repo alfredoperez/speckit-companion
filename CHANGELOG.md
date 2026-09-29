@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
 ### Fixed
+- **The extension package is smaller.** The installed extension no longer carries the webview's source files or its test files, taking the download from about 2.1 MB to 1.75 MB.
 - **Clicking Plan or Specification from the Overview now opens that document.** The tab title changed but the Overview stayed on screen, because the viewer never recorded that you had picked a document. The tab is also titled Overview while the Overview shows, instead of keeping the last document's name.
 - **A spec folder that is renamed or deleted while its tab is open now says so.** The old tab stayed open with an empty body and a header without its branch. It now reads "moved or deleted" and points you to the sidebar, which already opens the renamed spec.
 - **Creating a spec with the stock Spec Kit command now finishes its specify step.** The instructions sent with the command named no folder, so the agent closed the step against the previous spec and the new one stayed on Specifying. Every call now names the folder the command created.
