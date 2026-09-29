@@ -61,6 +61,7 @@ function createMockDeps(overrides?: Partial<MessageHandlerDependencies>): Messag
         updateContent: jest.fn().mockResolvedValue(undefined),
         sendContentUpdateMessage: jest.fn().mockResolvedValue(undefined),
         refreshContextIfDisplaying: jest.fn().mockResolvedValue(undefined),
+        refreshPanelTitle: jest.fn(),
         resolveWorkflowSteps: jest.fn().mockResolvedValue([]),
         executeInTerminal: jest.fn().mockResolvedValue(undefined),
         outputChannel: {
@@ -497,6 +498,59 @@ describe('messageHandlers - stepperClick', () => {
 
         expect(deps.sendContentUpdateMessage).not.toHaveBeenCalled();
         expect(deps.updateContent).not.toHaveBeenCalled();
+    });
+
+    it('records the document landing before the update, so the Overview does not win it back', async () => {
+        // The webview resets its own choice on every nav state and falls back to
+        // the recorded landing; a rail click that left it at 'overview' renamed
+        // the tab and kept the Overview on screen.
+        const deps = createMockDeps();
+        const instance = deps.getInstance(SPEC_DIR)!;
+        instance.state.landing = 'overview';
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'stepperClick', phase: 'plan' } as any);
+
+        expect(instance.state.landing).toBe('document');
+        expect(deps.sendContentUpdateMessage).toHaveBeenCalledWith(SPEC_DIR, 'plan');
+    });
+});
+
+describe('messageHandlers - switchDocument', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+        jest.clearAllMocks();
+    });
+
+    it('records the document landing on a non-living panel too', async () => {
+        const deps = createMockDeps();
+        const instance = deps.getInstance(SPEC_DIR)!;
+        instance.state.landing = 'overview';
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'switchDocument', documentType: 'research' } as any);
+        jest.advanceTimersByTime(60);
+
+        expect(instance.state.landing).toBe('document');
+        expect(deps.sendContentUpdateMessage).toHaveBeenCalledWith(SPEC_DIR, 'research');
+    });
+});
+
+describe('messageHandlers - overviewChosen', () => {
+    it('records the Overview landing and renames the tab', async () => {
+        const deps = createMockDeps();
+        const instance = deps.getInstance(SPEC_DIR)!;
+        instance.state.landing = 'document';
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'overviewChosen' } as any);
+
+        expect(instance.state.landing).toBe('overview');
+        expect(deps.refreshPanelTitle).toHaveBeenCalledWith(SPEC_DIR);
     });
 });
 

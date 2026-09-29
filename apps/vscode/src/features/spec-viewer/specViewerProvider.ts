@@ -482,6 +482,51 @@ export class SpecViewerProvider {
   }
 
   /**
+   * The spec folder a panel is keyed by was moved, renamed or deleted. The
+   * panel cannot follow it, so it says so instead of rendering a stale rail
+   * over an empty document. Fired by the folder watcher; a no-op for paths
+   * that are not an open panel or that still exist.
+   */
+  public handleSpecDirectoryGone(specDirectory: string): void {
+    const instance = this.panels.get(specDirectory);
+    if (!instance || fs.existsSync(specDirectory)) return;
+    this.markSpecMoved(specDirectory);
+  }
+
+  /**
+   * True once a folder the panel has rendered from stops existing. A folder
+   * that was never seen is not "gone" — the panel is still opening it.
+   */
+  private specDirectoryGone(instance: PanelInstance): boolean {
+    if (fs.existsSync(instance.state.specDirectory)) {
+      instance.specDirectorySeen = true;
+      return false;
+    }
+    return !!instance.specDirectorySeen;
+  }
+
+  private markSpecMoved(specDirectory: string): void {
+    const instance = this.panels.get(specDirectory);
+    if (!instance) return;
+    this.outputChannel.appendLine(`[SpecViewer] Spec folder gone: ${specDirectory}`);
+    instance.panel.title = `${instance.state.living ? "Living Spec" : "Spec"}: ${instance.state.specName} (moved)`;
+    this.postMessage(specDirectory, { type: "specMoved", specDirectory });
+  }
+
+  /** The tab names the Overview when that is what the panel shows, else the document. */
+  private panelTitle(instance: PanelInstance, docLabel: string | undefined): string {
+    const suffix = instance.state.landing === "overview" ? "Overview" : docLabel || "Spec";
+    return `Spec: ${instance.state.specName} - ${suffix}`;
+  }
+
+  private refreshPanelTitle(specDirectory: string): void {
+    const instance = this.panels.get(specDirectory);
+    if (!instance || instance.state.living) return;
+    const doc = instance.state.availableDocuments.find(d => d.type === instance.state.currentDocument);
+    instance.panel.title = this.panelTitle(instance, doc?.label);
+  }
+
+  /**
    * Create the webview panel
    */
   private async createPanel(
@@ -565,6 +610,7 @@ export class SpecViewerProvider {
       sendContentUpdateMessage: (dir, docType) =>
         this.sendContentUpdateMessage(dir, docType),
       refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
+      refreshPanelTitle: dir => this.refreshPanelTitle(dir),
       resolveWorkflowSteps: () => this.resolveWorkflowSteps(specDirectory),
       executeInTerminal: async (prompt: string) => {
         await getAIProvider().executeInTerminal(prompt);
@@ -785,6 +831,10 @@ export class SpecViewerProvider {
         documentType ?? instance.state.currentDocument,
       );
     }
+    if (this.specDirectoryGone(instance)) {
+      this.markSpecMoved(specDirectory);
+      return;
+    }
 
     try {
       // Compute change root for two-level layouts
@@ -859,8 +909,7 @@ export class SpecViewerProvider {
         taskCompletionPercent: derived.taskCompletionPercent,
       };
 
-      const docLabel = doc?.label || "Spec";
-      instance.panel.title = `Spec: ${specName} - ${docLabel}`;
+      instance.panel.title = this.panelTitle(instance, doc?.label);
 
       // Staleness is I/O (filesystem probes); compute here after derived state.
       const stalenessMap = isStalenessRelevant(featureCtx?.status)
@@ -1062,6 +1111,10 @@ export class SpecViewerProvider {
       // viewerState to diff against.
       return this.updateLivingContent(specDirectory, documentType);
     }
+    if (this.specDirectoryGone(instance)) {
+      this.markSpecMoved(specDirectory);
+      return;
+    }
 
     try {
       const built = await this.buildViewerPayload(specDirectory, documentType);
@@ -1091,8 +1144,7 @@ export class SpecViewerProvider {
       instance.state.taskCompletionPercent = derived.taskCompletionPercent;
       instance.state.currentPhase = getPhaseNumber(resolvedType);
 
-      const docLabel = doc.label || "Spec";
-      instance.panel.title = `Spec: ${instance.state.specName} - ${docLabel}`;
+      instance.panel.title = this.panelTitle(instance, doc.label);
 
       // Send content via message (no full HTML regeneration)
       const encodedContent = Buffer.from(content).toString("base64");

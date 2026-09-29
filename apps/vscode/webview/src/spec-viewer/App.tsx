@@ -5,7 +5,7 @@ import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
 import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, showingOverview, viewerState } from './signals';
+import { markdownHtml, navState, showingOverview, specMoved, viewerState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
 import type { VSCodeApi } from './types';
 
@@ -25,7 +25,9 @@ export function App({ specStatus }: AppProps) {
     const living = !!ns?.livingMode;
     // A registered capability whose spec file does not exist yet renders nothing but the call to adopt it.
     const livingEmpty = living && !!ns?.livingMeta?.missing;
-    const showOverview = showingOverview.value && !livingEmpty;
+    // The folder is gone: nothing on the rail or in the footer can act on it any more.
+    const moved = specMoved.value;
+    const showOverview = showingOverview.value && !livingEmpty && !moved;
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
@@ -64,8 +66,8 @@ export function App({ specStatus }: AppProps) {
     return (
         <>
             <PageChrome />
-            <div class={`shell-grid${living ? ' shell-grid--no-rail' : ''}`}>
-                {!living && <NavigationBar />}
+            <div class={`shell-grid${living || moved ? ' shell-grid--no-rail' : ''}`}>
+                {!living && !moved && <NavigationBar />}
                 <div class="main-column">
                     {/* Document-scoped: it must not span the rail. */}
                     <StaleBanner />
@@ -74,9 +76,12 @@ export function App({ specStatus }: AppProps) {
                             id="markdown-content"
                             ref={contentRef}
                             dangerouslySetInnerHTML={{ __html: html }}
-                            hidden={showOverview}
+                            hidden={showOverview || moved}
                         />
-                        {livingEmpty && (
+                        {moved && (
+                            <div class="empty-state">This spec folder was moved or deleted. Open it again from the sidebar.</div>
+                        )}
+                        {livingEmpty && !moved && (
                             <div class="living-empty">
                                 <p>This capability has no spec yet.</p>
                                 <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt', thisCapability: true })}>
@@ -91,11 +96,11 @@ export function App({ specStatus }: AppProps) {
                                 </ActivityErrorBoundary>
                             </div>
                         )}
-                        <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview}></aside>
+                        <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview || moved}></aside>
                     </main>
                 </div>
             </div>
-            <FooterActions initialSpecStatus={specStatus} />
+            {!moved && <FooterActions initialSpecStatus={specStatus} />}
         </>
     );
 }

@@ -31,6 +31,8 @@ export interface PanelInstance {
      * subsequent navigation is strictly read-only.
      */
     firstOpenComplete: boolean;
+    /** True once the spec folder has been found on disk; a later miss means it moved. */
+    specDirectorySeen?: boolean;
 }
 
 export class PanelRegistry {

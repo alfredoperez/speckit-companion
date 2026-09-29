@@ -77,9 +77,9 @@ Text from a spec SHALL reach the page as the characters that were typed, so mark
 - **THEN** it shows in the file control as typed and does not become markup
 
 ### The viewer follows the files on disk
-<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/fileWatchers.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts -->
 
-An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer says so instead of showing stale content.
+An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer says so instead of showing stale content. When the spec folder itself is moved, renamed or deleted, the open panel SHALL say the folder is gone and ask the reader to reopen it from the sidebar, with its tab marked moved, instead of keeping a rail over an empty document.
 
 #### Scenario: the plan appears during a run
 - **WHEN** the viewer is showing the Spec and the assistant writes plan.md for the first time
@@ -88,6 +88,10 @@ An open viewer SHALL re-render when the document it shows changes on disk, and S
 #### Scenario: the run record changes
 - **WHEN** a step closes and the run record is rewritten while the reader is halfway down the Spec
 - **THEN** the badge, rail and footer update and the document stays where it was
+
+#### Scenario: the spec folder is renamed while open
+- **WHEN** the folder of an open spec is renamed on disk
+- **THEN** the panel says the folder was moved or deleted and the sidebar opens the renamed spec in its own panel
 
 ### A document older than the one above it is flagged as stale
 <!-- touches: apps/vscode/src/features/spec-viewer/staleness.ts, apps/vscode/webview/src/spec-viewer/components/StaleBanner.tsx -->

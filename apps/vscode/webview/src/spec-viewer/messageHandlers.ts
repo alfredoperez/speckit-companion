@@ -12,7 +12,7 @@
 
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
-import { navState, viewerState, historyEntries, viewerMode } from './signals';
+import { navState, viewerState, historyEntries, viewerMode, specMoved } from './signals';
 import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
@@ -49,6 +49,7 @@ export function buildHandlers(
 ): DispatcherMap<ExtensionToViewerMessage, []> {
     return {
         contentUpdated: message => {
+            specMoved.value = false;
             if (message.navState) applyNavState(message.navState);
             if (message.viewerState) applyViewerState(message.viewerState);
             updateContent(message.content);
@@ -94,6 +95,10 @@ export function buildHandlers(
                 empty.textContent = 'The file has been deleted.';
                 contentArea.appendChild(empty);
             }
+        },
+
+        specMoved: () => {
+            specMoved.value = true;
         },
 
         actionToast: message => {

@@ -93,6 +93,8 @@ export interface MessageHandlerDependencies {
     documentType: DocumentType,
   ) => Promise<void>;
   refreshContextIfDisplaying: (specContextPath: string) => Promise<void>;
+  /** Re-derive the editor tab title from the instance's landing and document. */
+  refreshPanelTitle: (specDirectory: string) => void;
   resolveWorkflowSteps: () => Promise<WorkflowStepConfig[]>;
   executeInTerminal: (prompt: string) => Promise<void>;
   outputChannel: vscode.OutputChannel;
@@ -206,11 +208,9 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     },
     overviewChosen: async (_msg, dir, deps) => {
       const instance = deps.getInstance(dir);
-      if (instance) instance.state.landing = 'overview';
-    },
-    documentChosen: async (_msg, dir, deps) => {
-      const instance = deps.getInstance(dir);
-      if (instance) instance.state.landing = "document";
+      if (!instance) return;
+      instance.state.landing = 'overview';
+      deps.refreshPanelTitle(dir);
     },
     approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
     removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
@@ -283,7 +283,9 @@ async function handleSwitchDocument(
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
-  if (instance.state.living) instance.state.landing = "document";
+  // Recorded here, not echoed back by the webview: the next nav state resets
+  // the webview's own choice, so an unrecorded pick snaps back to the Overview.
+  instance.state.landing = "document";
 
   // Debounce rapid clicks
   if (instance.debounceTimer) {
@@ -353,6 +355,9 @@ async function handleStepperClick(
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   if (phase === "done") return; // Done is not clickable
+
+  const instance = deps.getInstance(specDirectory);
+  if (instance) instance.state.landing = "document";
 
   // Message-based update, like the artifact chips: a full HTML regeneration
   // would reload the webview and wipe its in-memory shell state (the

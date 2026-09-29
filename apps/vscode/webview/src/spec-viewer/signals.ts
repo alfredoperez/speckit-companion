@@ -28,6 +28,9 @@ export const markdownHtml = signal('');
 /** Which view the reader picked; null until they pick, so the data decides. */
 export const viewerMode = signal<'overview' | 'document' | null>(null);
 
+/** The spec folder this panel is keyed by no longer exists; the panel cannot follow it. */
+export const specMoved = signal(false);
+
 /** Whether this spec has an Overview at all (no recorded run → no Overview). */
 export const overviewAvailable = computed(() => {
     const ns = navState.value;

@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
 ### Fixed
+- **Clicking Plan or Specification from the Overview now opens that document.** The tab title changed but the Overview stayed on screen, because the viewer never recorded that you had picked a document. The tab is also titled Overview while the Overview shows, instead of keeping the last document's name.
+- **A spec folder that is renamed or deleted while its tab is open now says so.** The old tab stayed open with an empty body and a header without its branch. It now reads "moved or deleted" and points you to the sidebar, which already opens the renamed spec.
+- **Creating a spec with the stock Spec Kit command now finishes its specify step.** The instructions sent with the command named no folder, so the agent closed the step against the previous spec and the new one stayed on Specifying. Every call now names the folder the command created.
 - **The Get Started walkthrough shows the real thing.** Its two illustration panels, the spec viewer and the Overview, were placeholders that said a screenshot belonged there. They now show the viewer with a finished spec open and the Overview of a completed run.
 - **A link in a spec can no longer run code in the viewer.** A link whose target carried a quote could break out and attach its own behaviour to the page, and a link pointing at a script scheme ran when clicked. Both are now inert, and images in a spec render as images for the first time instead of as a link with a stray exclamation mark.
 - **The docs no longer claim the spec viewer works fully offline.** Syntax highlighting and diagrams load from a CDN; without a connection code blocks show as plain text and a diagram stays as its source.
