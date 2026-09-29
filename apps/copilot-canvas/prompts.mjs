@@ -26,6 +26,13 @@ export function writerPath(root) {
     return existsSync(CHECKOUT_WRITER) ? CHECKOUT_WRITER : WORKSPACE_WRITER;
 }
 
+/** The model reads only title, status and url from a canvas's `open` result, so the instruction to stop rides in `status`. */
+export const OPEN_NOTE = 'The board is open: wait for the user\'s next instruction and do not start any work.';
+
+export function openStatus(active, total) {
+    return `${active} active · ${total} specs. ${OPEN_NOTE}`;
+}
+
 /** Which commands the board can offer for this workspace's command set. */
 export function availableCommands(commandSet) {
     return SPEC_COMMANDS.filter(command => commandSet === 'companion' || !COMPANION_ONLY.has(command));

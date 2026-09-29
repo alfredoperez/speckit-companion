@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
+import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -271,5 +271,15 @@ describe('step preamble for the run buttons', () => {
         const root = workspace({ companion: true });
         const prompt = buildPrompt('plan', 'specs/042-x', 'companion', null, buildStepPreamble('plan', 'specs/042-x', root, 'companion', AT));
         assert.ok(prompt.startsWith('/speckit.companion.plan specs/042-x\n\n<!--'));
+    });
+});
+
+describe('opening the canvas', () => {
+    it('tells the agent the board is open and to wait, in the status the model reads', () => {
+        const status = openStatus(4, 6);
+        assert.match(status, /^4 active · 6 specs\. /);
+        assert.ok(status.endsWith(OPEN_NOTE));
+        assert.match(OPEN_NOTE, /wait for the user's next instruction/);
+        assert.match(OPEN_NOTE, /do not start any work/);
     });
 });
