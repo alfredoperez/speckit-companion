@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - **SpecKit: Open Living Spec.** Pick a capability, then a requirement or Open at the top, and the viewer opens right there.
 
 ### Fixed
+- **The Get Started walkthrough shows the real thing.** Its two illustration panels, the spec viewer and the Overview, were placeholders that said a screenshot belonged there. They now show the viewer with a finished spec open and the Overview of a completed run.
 - **A link in a spec can no longer run code in the viewer.** A link whose target carried a quote could break out and attach its own behaviour to the page, and a link pointing at a script scheme ran when clicked. Both are now inert, and images in a spec render as images for the first time instead of as a link with a stray exclamation mark.
 - **The docs no longer claim the spec viewer works fully offline.** Syntax highlighting and diagrams load from a CDN; without a connection code blocks show as plain text and a diagram stays as its source.
 - **Living specs now fold correctly when only the VS Code extension is installed.** The capability resolver ships inside the extension.
