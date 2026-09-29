@@ -25,6 +25,13 @@ cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
 cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
 ```
 
+The Copilot app runs each session in a fresh git worktree cut from your default branch. So a project copy only shows up once it's merged, and until then the canvas is missing from the session. While you're trying the board from a branch, install it for your user instead. A one-line loader keeps it pointed at your checkout:
+
+```bash
+mkdir -p ~/.copilot/extensions/speckit-companion
+echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
+```
+
 Then open the project in the Copilot app, start a session, and ask for the **SpecKit Spec Board** canvas. It also appears under **Customize → Canvas**.
 
 The run buttons need the Companion commands in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)). Without them the buttons send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`.
