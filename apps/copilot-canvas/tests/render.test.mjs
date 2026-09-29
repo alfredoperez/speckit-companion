@@ -43,6 +43,12 @@ describe('overview dossier', () => {
         assert.match(html, /&lt;img/);
     });
 
+    it('shows timing without an empty Intent heading when the record has no intent', () => {
+        const html = renderOverview({ history: [{ step: 'specify', kind: 'start', at: '2026-01-01T00:00:00Z' }, { step: 'specify', kind: 'complete', at: '2026-01-01T00:05:00Z' }] }, null);
+        assert.match(html, /dossier-timing/);
+        assert.ok(!html.includes('>Intent<'));
+    });
+
     it('is empty for a record with nothing to say', () => {
         assert.equal(renderOverview({ status: 'planned', history: [] }, null), '');
     });

@@ -86,8 +86,8 @@ function intentSection(ctx) {
             + (sizing ? `<span class="dossier-meta-label">Size</span><p>${e(sizing)}</p>` : '')
             + '</div>');
     }
-    return '<section class="dossier-intent" aria-label="Intent"><p class="dossier-kicker">Intent</p>'
-        + (intent ? `<p class="dossier-intent__statement">${e(intent)}</p>` : '')
+    return '<section class="dossier-intent" aria-label="Intent">'
+        + (intent ? `<p class="dossier-kicker">Intent</p><p class="dossier-intent__statement">${e(intent)}</p>` : '')
         + timing
         + (meta.length ? `<div class="dossier-intent__meta">${meta.join('')}</div>` : '')
         + '</section>';
