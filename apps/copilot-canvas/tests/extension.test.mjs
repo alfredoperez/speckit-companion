@@ -16,14 +16,18 @@ describe('what the extension tells the agent about opening the board', () => {
         const [canvas] = config.canvases;
         assert.equal(canvas.id, 'speckit-spec-board');
         assert.equal(canvas.description, CANVAS_DESCRIPTION);
-        assert.match(canvas.description, /show it and stop/);
-        assert.match(canvas.description, /Do not read, test or implement any spec unless the user asks for that spec by name/);
+        assert.match(canvas.description, /only asks to open it, show it and stop/);
+        assert.match(canvas.description, /do not read, test or implement any spec until they ask/);
     });
 
     it('says the same thing in the rule, the description and the open result', () => {
-        assert.match(SYSTEM_RULE, /show it and stop\. Do not read, test or implement any spec unless the user asks for that spec by name\.$/);
-        assert.ok(CANVAS_DESCRIPTION.endsWith('Do not read, test or implement any spec unless the user asks for that spec by name.'));
+        assert.match(SYSTEM_RULE, /^If the user only asks to open the SpecKit Companion canvas, open it and stop: do not read, test or implement any spec until they ask\./);
+        assert.ok(CANVAS_DESCRIPTION.endsWith('do not read, test or implement any spec until they ask.'));
         assert.match(OPEN_NOTE, /wait for the user's next instruction/);
+    });
+
+    it('does not stop the agent from running a /speckit command the board sends', () => {
+        assert.match(SYSTEM_RULE, /A message that starts with a \/speckit command is a request to run that command, so run it\.$/);
     });
 
     it('opens with the wait note in its status and accepts a null input', async () => {
