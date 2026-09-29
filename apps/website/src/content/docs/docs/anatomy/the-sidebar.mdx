@@ -8,171 +8,97 @@ sidebar:
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-By the end of this page you'll be able to read every icon, count and description line in the SpecKit sidebar, and know which view each action lives in. The SpecKit icon in the activity bar opens a container with four views: Specs, Living Specs, Steering, and Settings & Feedback.
+The SpecKit icon in the activity bar opens one container with up to four views: Specs, Living Specs, Steering, and Settings & Feedback.
 
 <MediaSlot
   feature="specs-sidebar"
   still="sidebar-triptych.png"
-  caption="Three of the four views. Specs tracks your work, Steering lists the files your provider and Spec Kit already read (the extension itself never reads them when it dispatches a step), and Living Specs lists the capability specs that outlive any one change."
+  caption="Specs tracks your work, Steering lists the standing files your provider and Spec Kit read, and Living Specs lists the capability specs that outlive any one change."
+  wide
 />
 
-Only two of them show on a fresh install with only the VS Code extension. Living Specs appears once the Companion Spec Kit extension is installed, and Settings & Feedback is hidden until you turn it on. So a first run usually looks like Specs and Steering, and that's correct, not a broken install.
+A fresh install with only the VS Code extension shows Specs and Steering. Living Specs appears once the Companion Spec Kit extension is installed. Settings & Feedback is hidden until you turn on `speckit.views.settings.visible`. That is expected, not a broken install.
 
-The whole sidebar is a native VS Code tree, so the editor owns row height, indentation, keyboard navigation, and theming. You can reorder the views yourself: the order here is the default, not a lock.
-
-A note about the pictures on this page. The Specs view is a native TreeView, so it can't be driven by Storybook the way the spec viewer can. The sidebar art in these docs is a presentational recreation, drawn from fixture rows and measured against DevTools snapshots of the real tree. Treat it as an accurate drawing, not as a capture.
+These are native VS Code trees, so the editor owns keyboard navigation and theming, and you can reorder the views. The pictures here are drawings built from fixture rows, not live captures.
 
 ## Specs
 
-### The empty state
+<MediaSlot
+  feature="specs-sidebar"
+  caption="Groups with counts, one row per spec with its last activity, and per-document marks under the expanded spec."
+/>
 
-A workspace with zero specs shows exactly one welcome block, never two stacked boxes: a value line plus **Create your first spec** and **Open a live sample**, which seeds a copy of the bundled sample spec into `specs/` and opens it, so you can see a populated pipeline before writing anything of your own. Opening the sample again reopens the same copy rather than duplicating it, and deleting it brings the welcome block back.
+1. **Toolbar.** Refresh, Filter, Sort, Collapse All or Expand All, Open Pipeline Builder, and New Spec. Pipeline Builder appears only with the Companion Spec Kit extension.
+2. **Groups.** **Active**, **Completed** and **Archived**, each with a live count. Empty groups are hidden. Active starts open, the others closed. The group comes from the run record next to the spec.
+3. **Spec rows.** The name is read from the slug, so `515-readable-spec-names` shows as "Readable Spec Names". Clicking the name opens the viewer on the Overview and expands the row. Clicking the chevron only expands.
+4. **Description line.** An in-flight spec shows the last finished task and how long ago anything last happened, like `T004 · 22h ago`. Hover for a tooltip in full words.
+5. **Document rows.** Each shows its own state.
+6. **Hover actions.** **Resume** when eligible, and **More Actions…**. Right-click opens the same menu.
 
-### Opening a spec
+**Spec icons**
 
-Click a spec's name to open it in the viewer, landing on its Overview, or on its first document if it has no recorded run yet. The name click also expands the row, the same way VS Code's Testing view opens a suite's file and expands it in one click. To browse without opening the viewer, click the chevron instead; it only expands and collapses. Clicking a document row opens that document, as you'd expect.
+| Icon | Meaning |
+| --- | --- |
+| Plain beaker | Created, nothing captured yet |
+| Blue beaker | A workflow step is current |
+| Yellow beaker | Implement finished, you haven't confirmed |
+| Green beaker | You marked it complete |
+| Spinner | A step is running now |
 
-### Three groups, each carrying its own count
+An implemented spec stays in **Active** on purpose, so it isn't buried until you confirm it.
 
-Specs group into **Active**, **Completed**, and **Archived**, and each group header carries a live count. A group with nothing in it doesn't appear at all.
+**Document rows**
 
-Active is expanded by default and the other two start collapsed. Individual spec rows start collapsed too, so a workspace with hundreds of finished specs opens to a short list.
+| Mark | Meaning |
+| --- | --- |
+| Green check | Done, and the file has real content |
+| Blue dot | In progress, or counted done but the file is still a stub |
+| Hollow circle | File exists, workflow hasn't reached it |
+| `not created` | File isn't on disk, so there is nothing to open |
 
-Which group a spec lands in is read straight from the run record next to it. There's no separate index. A spec in `specs/515-readable-spec-names/` reads as "Readable Spec Names" in the tree, with the slug staying the identifier underneath.
+"Done" is a presence check: more than three non-blank lines. It is not a judgement of the writing.
 
-### The description line and the tooltip
+**Filter and sort.** Filter fuzzy-matches the slug and the spec name by subsequence, so `ftr` finds `filter-specs-tree`. Submit an empty value to clear it. Sort offers Number (default, highest first), Name, Date Created, Date Modified and Workflow Step. Both survive a restart.
 
-An in-flight spec's row shows the active task and how long ago it last moved, in the form `T004 · 22h ago`. The relative time is measured from the most recent history entry, not from when the step started, so it answers "when did anything last happen here".
+**Resume.** Reads the run record, finds where the spec stopped, and sends one command to your assistant. Inside implement it names the next unchecked task. It sends text and gets nothing back. It needs the Companion Spec Kit extension.
 
-That task label appears only after an implement task has finished; a spec that hasn't reached implement shows the relative time alone. Hover the row and a tooltip repeats the facts in full words: the display name, the status, the last activity, and a line saying so when a step is running.
+**More Actions…** groups Set Status, the lifecycle actions that apply (Mark Complete, Archive, Reactivate), copy name and path, reveal, and Delete last. **Set Status…** is the recovery path for a spec the buttons won't move: it force-sets one of the eight statuses after a confirmation.
 
-### What each icon means
-
-| Row | Icon | What it says |
-| --- | --- | --- |
-| Active group | Pulse | Specs in progress |
-| Completed group | Filled check, in the theme's passed color | Specs you marked complete |
-| Archived group | Archive box | Archived specs |
-| Spec, no recorded step | Plain beaker | Created, nothing captured yet |
-| Spec, step in progress | Blue beaker | A workflow step is the current one |
-| Spec, implemented | Yellow beaker | Implement finished, your confirmation hasn't |
-| Spec, completed | Green beaker | You marked it complete |
-| Spec, running now | Spinner | A step is running at this moment |
-
-The yellow one is worth learning. An implemented spec sits in **Active** on purpose: the workflow got through implement, but nobody has confirmed it done, and burying it under Completed would hide that.
-
-No status here rides on color alone. The icon shape, the group, the description line, and the tooltip each carry it independently, and the tooltip says in words when a step is running.
-
-### Document rows carry their own state
-
-Expand a spec and you get its documents, plus any related files in the folder. Those rows hold their own state rather than inheriting the parent's.
-
-| Icon | Label | Meaning |
-| --- | --- | --- |
-| Green check | Complete | The step is done and the file holds real content |
-| Blue filled dot | In Progress | The current step, or a step counted done whose file is still a stub |
-| Hollow circle | Not Started | The file exists, the workflow hasn't reached this step |
-| No icon, with a `not created` note | Not Created | The file isn't on disk, and the row offers no open or reveal action |
-
-Read "complete" narrowly. It's a presence heuristic, not a judgement about the writing: a file counts as complete when it has more than three non-blank lines.
-
-### The toolbar
-
-The Specs title bar shows up to six actions, always in this order: Refresh, Filter, Sort, Collapse All or Expand All (one button in two states, showing whichever the tree currently calls for), Open Pipeline Builder, and New Spec as the trailing primary. Pipeline Builder is a panel that draws the Companion workflow as a graph of nodes and lets you edit it, so the button appears only when the Companion Spec Kit extension is installed. The filter fuzzy-matches on both the slug and the recorded spec name. Matching is case-insensitive and by subsequence, so `ftr` finds `filter-specs-tree`. The box opens prefilled with whatever you last typed, so edits are incremental, and **submitting an empty value clears it** — which is why there is no separate clear button. The query survives a restart, an empty result offers a one-click clear, and `SpecKit: Clear Filter` is in the Command Palette.
-
-Sort opens a small picker with a check beside the current order:
-
-| Option | Meaning |
-|---|---|
-| **Number** | The default. Highest number first |
-| **Name** | A to Z |
-| **Date Created** | Newest first |
-| **Date Modified** | Recently edited first |
-| **Workflow Step** | How far each spec has got |
-
-Ties fall back to the numeric prefix and then the name, so the order never wobbles between refreshes. Your choice survives a restart. The three groups always stay in the same order: Active, then Completed, then Archived.
-
-There's no overflow menu on this bar. The two rare maintenance actions that used to live behind one, upgrading Spec Kit and installing the Companion Spec Kit extension, are commands in the Command Palette instead (`SpecKit: Upgrade…` and `SpecKit: Install Companion Extension`), not buttons in this view.
-
-**Upgrade…** opens a picker with three options, because they do different things:
-
-| Option | What it does |
-|---|---|
-| **Upgrade All** | Upgrades the Spec Kit CLI, then re-scaffolds this project. The "just do it" choice. |
-| **Upgrade Project** | Re-runs `specify init` here to refresh this workspace's scaffolding only. |
-| **Upgrade CLI** | Upgrades the globally installed Spec Kit CLI and nothing else. |
-
-The first two resolve which agent to scaffold for from your configured provider. The entry appears once Spec Kit is detected in the workspace or the CLI is installed.
-
-### Hovering and right-clicking a spec
-
-A spec row shows at most two icons on hover: Resume, when the spec is currently eligible, and a **More Actions…** button. Right-clicking the row opens the identical menu, so the two surfaces can never disagree. Both present the same five groups, in the same order, with the one destructive action isolated at the bottom: Set Status, then the lifecycle actions (Mark Complete, Archive, Reactivate — filtered to whichever apply to that spec), then Copy Spec Name and Copy Spec Path, then the two reveal actions, then Delete.
-
-**Set Status…** is the recovery path for a spec the lifecycle buttons won't move. It opens a picker of the eight canonical statuses; picking one force-sets the spec there and re-points its current step to that status's phase, so the viewer's buttons line up with where you just said the spec is. It always asks for confirmation, because it bypasses the normal lifecycle gates.
-
-A document row shows **Open Source File** on hover when the file exists, plus both reveal actions. A missing document offers nothing, so there's no dead click.
-
-### Acting on several specs at once
-
-Select several specs with shift-click or cmd-click and you can mark, archive, or reactivate them in one action. Group headers carry the same three as bulk actions over everything currently visible in that group, with a confirmation naming the count before anything is written; specs already in the target status are silently skipped.
-
-Those two facts combine in a way worth knowing before you use them: an active filter narrows what a bulk action touches, because "visible" is what the filter left.
-
-### The Resume action
-
-An active or tasks-done row shows a Resume action on hover, but only when the Companion Spec Kit extension is installed. There's no stock equivalent.
-
-Resume reads the run record, works out where the spec stopped, and dispatches one command to your assistant. If the run stopped inside implement, it names the next unchecked task and continues from there instead of restarting the step. It sends text. It doesn't run the workflow, and it gets nothing back.
-
-### The install badge
-
-When the Companion Spec Kit extension isn't installed, the Specs view carries a single-dot badge tooltipped "Install SpecKit Companion", and VS Code aggregates that dot onto the activity bar icon, so it's visible even with the view collapsed. A pinned first row offers the same install in words, and it stays until you install, with no dismiss. The zero-spec welcome block folds in the same offer with a **Dismiss** link, the one nudge that's dismissable and remembered. The Create Spec workflow picker offers a third: picking the Companion workflow without the extension shows the benefits and a one-click install first. All of them disappear the moment the extension is present, with no reload.
-
-That dot is the only badge the sidebar itself sets. The status badges you see on a spec, like **Specifying** or **Completed**, live in the spec viewer's header, not in the tree.
+**Several at once.** Shift-click or cmd-click to select specs and mark, archive or reactivate them together. Group headers do the same for everything visible in that group, so an active filter narrows what they touch.
 
 ## Living Specs
 
-A **capability** is a piece of behavior your codebase keeps having, rather than one change you made to it. A **living spec** is the durable spec for one capability. This view lists them.
-
 <MediaSlot
   feature="living-specs"
-  caption="A capability spec reads in the same viewer a feature spec does. What changes is the header: globs instead of a branch, and a coverage count instead of a status."
+  caption="The Living Specs tree beside a capability open in the viewer. Rows carry a coverage count or a drift warning."
+  wide
 />
 
-The view appears only when the Companion Spec Kit extension is installed, and it starts collapsed. Whether it lists anything is a second gate: a `living-specs.yml` at the repo root with `enabled: true`. Without that file, or with `enabled: false`, the view shows a single "Living Specs are off" row whose tooltip says what to set; a registry that won't parse shows "Can't read living-specs.yml" with the error instead.
+A **capability** is behavior your codebase keeps having. A **living spec** is its durable spec. This view is a directory tree mirroring where the specs live, with an **Orphans** group for spec files no capability claims.
 
-It's a directory tree rather than a flat list, so its shape mirrors where the capability specs actually live: a spec at `src/features/specs/specs.spec.md` shows up as a leaf under `src`, then `features`. Below the capabilities sits an **Orphans** group holding spec files no capability claims, omitted entirely when there are none.
+- **Coverage** (`7/9 covered`) counts requirements with recorded evidence. It appears only when a coverage file sits beside the spec. No file means no number, which is not the same as zero coverage.
+- **Drift** turns the icon to the warning color when source files matching the capability changed after its spec was last committed.
+- **Off state.** Without a `living-specs.yml` at the repo root with `enabled: true`, the view shows "Living Specs are off". An unreadable registry shows "Can't read living-specs.yml".
+- **Toolbar and menu.** Refresh, Adopt Code Area and Sync. Right-click a row for Check for Drift, Check Requirement Coverage, copy actions, Delete, and Update to Match Code on a drifted row.
 
-Each capability row carries two numbers the extension works out for itself, without dispatching anything to your AI.
-
-**Coverage** is how many of that capability's requirements have evidence recorded against them. It appears only when the capability has a coverage file beside its spec, which is a file you write rather than one anything generates. No coverage file means no number, which on screen looks exactly like zero coverage. The two are not the same thing.
-
-**Drift** means source files matching that capability changed since its living spec was last committed. When they have, the row's icon turns the warning color. The lookup is bounded by a timeout, so a slow repository renders the row as it would otherwise rather than stalling the tree.
-
-The title bar carries Refresh, Adopt Code Area, and Sync. Right-click a capability row for its own menu: Check for Drift, Check Requirement Coverage, Copy Name, Copy Path, Copy Relative Path, and Delete, plus Update to Match Code on a row that has drifted. The [living specs guide](/docs/discussions/living-specs) covers the registry and the commands.
+[Living specs](/docs/discussions/living-specs) covers the registry and commands.
 
 ## Steering
 
-A **steering document** is a standing instruction, not a per-run one. A spec says what to build this time; a steering document says how this project builds anything.
-
-The view gathers what your AI provider already reads, plus Spec Kit's own project files, into one tree next to your specs. When the Companion Spec Kit extension is installed a Companion node sits first, with its Configuration file, its Commands, and its Templates when the install ships any. It doesn't invent a format, and nothing in it is read by the extension when it dispatches a step. The [steering guide](/docs/guides/steering) has the tree shape, the authoring actions, and the provider boundary.
+A steering document is a standing instruction: a spec says what to build this time, steering says how this project builds anything. The view gathers what your provider already reads plus Spec Kit's project files, such as the constitution, scripts and templates. With the Companion Spec Kit extension a Companion node comes first. The extension itself never reads these files when it dispatches a step. See the [steering guide](/docs/guides/steering).
 
 ## Settings & Feedback
 
-Five rows and nothing else: Pipeline Builder, Open Settings, Report a Bug, Request a Feature, and Rate on Marketplace. It's hidden by default; turn on `speckit.views.settings.visible` to get it. `speckit.views.steering.visible` is the matching switch for Steering, which is on out of the box.
+Five rows: Pipeline Builder, Open Settings, Report a Bug, Request a Feature, Rate on Marketplace. Hidden by default. `speckit.views.steering.visible` is the matching switch for Steering, on by default.
 
-## What the sidebar won't tell you
+## Good to know
 
-It doesn't know whether a document is finished. It knows whether the file has more than three non-blank lines.
-
-It runs two things and dispatches everything else. The coverage and drift numbers on a Living Specs row are computed locally, from files on disk and from git. Everything else, Resume, Adopt, Sync, and every steering authoring action, builds a command and hands it to the assistant you configured. Once it's handed over, the extension gets no completion callback. It reads what lands on disk.
-
-Nothing here blocks. Drift and coverage are read-only reports that always exit zero. A CI job wrapped around them can treat their findings as a gate. The commands themselves never are.
-
-## Accessibility
-
-The whole tree is a native VS Code TreeView, so every row, disclosure, title action, hover action and menu is keyboard-reachable without anything added for it. No status rides on color alone: icon shape, group, the description line and the tooltip each carry it independently, and the only animation in the tree, the running-step spinner, says so in words in its tooltip too.
+- **Empty workspace.** One welcome block with **Create your first spec** and **Open a live sample**, which copies the bundled sample into `specs/` and opens it.
+- **Install badge.** Without the Companion Spec Kit extension, a single dot on the Specs view and the activity bar icon reads "Install SpecKit Companion", with a pinned first row offering the same. It clears as soon as the extension is present. Status badges like **Specifying** live in the spec viewer header, not here.
+- **Upgrade commands** are in the Command Palette, not on the toolbar: `SpecKit: Upgrade…` offers Upgrade All, Upgrade Project or Upgrade CLI, and `SpecKit: Install Companion Extension` installs the companion.
+- **What it runs.** Only coverage and drift are computed locally, from files and git. Everything else builds a command and hands it to your assistant, and the extension reads what lands on disk. Nothing here blocks: drift and coverage are reports, and CI can decide to gate on them.
+- **Accessibility.** No status rides on color alone. Icon shape, group, description line and tooltip each carry it.
 
 ## Next
 
-[Steering](/docs/guides/steering) covers the second view in this container and the boundary around it. [Living specs](/docs/discussions/living-specs) covers the third, starting from why a capability spec exists at all.
+[Steering](/docs/guides/steering) covers the second view and its boundary. [Living specs](/docs/discussions/living-specs) covers the third, starting from why a capability spec exists.
