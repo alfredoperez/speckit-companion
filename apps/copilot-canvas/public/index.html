@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SpecKit Spec Board</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <img class="brand-mark" src="/seedling.svg" alt="" width="28" height="28">
+        <div class="brand">
+            <h1>Spec board</h1>
+            <p class="brand-sub" id="repo-line">Loading specs…</p>
+        </div>
+        <span class="live" id="live" data-state="connecting"><span class="live-dot" aria-hidden="true"></span><span id="live-label">Connecting</span></span>
+        <button class="btn btn-quiet" id="new-spec-toggle" type="button" aria-expanded="false" aria-controls="new-spec">New spec</button>
+        <button class="btn btn-icon" id="refresh" type="button" title="Re-read every spec folder" aria-label="Refresh">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71M13.25 2.25v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+    </header>
+
+    <form class="new-spec" id="new-spec" hidden>
+        <label for="new-spec-text">Describe the feature. Specify creates the spec folder and writes <code>spec.md</code>.</label>
+        <div class="new-spec-row">
+            <textarea id="new-spec-text" rows="2" placeholder="Let people export their board as CSV" required></textarea>
+            <button class="btn btn-primary" type="submit">Specify</button>
+        </div>
+    </form>
+
+    <div class="layout" id="layout" data-view="board">
+        <aside class="board" aria-label="Specs">
+            <div class="board-tools">
+                <input class="search" id="search" type="search" placeholder="Search by name or number" aria-label="Search specs" autocomplete="off">
+                <div class="segmented" role="radiogroup" aria-label="Filter specs">
+                    <button type="button" role="radio" data-filter="active" aria-checked="true">Active <span class="count" id="count-active">0</span></button>
+                    <button type="button" role="radio" data-filter="done" aria-checked="false">Done <span class="count" id="count-done">0</span></button>
+                    <button type="button" role="radio" data-filter="all" aria-checked="false">All <span class="count" id="count-all">0</span></button>
+                </div>
+            </div>
+            <ul class="spec-list" id="spec-list" aria-label="Spec list"></ul>
+            <p class="list-empty" id="list-empty" hidden>No specs match.</p>
+        </aside>
+
+        <main class="detail" id="detail" tabindex="-1">
+            <div class="detail-empty" id="detail-empty">
+                <img src="/seedling.svg" alt="" width="40" height="40">
+                <p>Pick a spec to see its pipeline, documents and history.</p>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

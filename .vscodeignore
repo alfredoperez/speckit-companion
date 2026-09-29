@@ -56,6 +56,8 @@ bench/**
 # vsce ignores .gitignore whenever this file exists.
 apps/website/**
 apps/speckit-extension/**
+# The GitHub Copilot app canvas: its own deliverable, loaded by the Copilot app, never by VS Code.
+apps/copilot-canvas/**
 # Stub left behind at the pre-move path — never ships in the .vsix.
 speckit-extension/**
 # Ship the context writer inside the .vsix: the stock-mode prompt preamble
