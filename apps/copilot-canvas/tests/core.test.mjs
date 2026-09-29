@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt } from '../prompts.mjs';
+import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, commandInstructions } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -123,6 +123,18 @@ describe('prompts', () => {
         assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit'), '/speckit.plan specs/042-x');
         assert.deepEqual(availableCommands('speckit'), ['plan', 'tasks', 'implement']);
         assert.throws(() => buildPrompt('resume', 'specs/042-x', 'speckit'));
+    });
+
+    it('points at the command instructions when the host may not know the slash command', () => {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-'));
+        assert.equal(commandInstructions(root, 'plan'), null);
+        mkdirSync(join(root, '.claude/skills/speckit-companion-plan'), { recursive: true });
+        writeFileSync(join(root, '.claude/skills/speckit-companion-plan/SKILL.md'), '# plan');
+        const file = commandInstructions(root, 'plan');
+        assert.equal(file, '.claude/skills/speckit-companion-plan/SKILL.md');
+        const prompt = buildPrompt('plan', 'specs/042-x', 'companion', file);
+        assert.equal(prompt.split('\n')[0], '/speckit.companion.plan specs/042-x');
+        assert.match(prompt, /read `\.claude\/skills\/speckit-companion-plan\/SKILL\.md` and follow it for the spec in `specs\/042-x`/);
     });
 
     it('rejects unknown commands and empty descriptions', () => {

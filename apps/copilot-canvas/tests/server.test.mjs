@@ -74,8 +74,10 @@ describe('spec board server', () => {
     it('sends the step command for a spec into the chat', async () => {
         const res = await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'tasks' } });
         assert.equal(res.status, 200);
-        assert.deepEqual(JSON.parse(res.body), { prompt: '/speckit.companion.tasks specs/_01_demo-planned', sent: true });
-        assert.equal(sent.at(-1), '/speckit.companion.tasks specs/_01_demo-planned');
+        const { prompt, sent: delivered } = JSON.parse(res.body);
+        assert.equal(delivered, true);
+        assert.equal(prompt.split('\n')[0], '/speckit.companion.tasks specs/_01_demo-planned');
+        assert.equal(sent.at(-1), prompt);
         assert.equal((await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'bogus' } })).status, 400);
     });
 

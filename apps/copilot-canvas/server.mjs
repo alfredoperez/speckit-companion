@@ -8,7 +8,7 @@ import { watch } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, detectCommandSet } from './prompts.mjs';
+import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, commandInstructions, detectCommandSet } from './prompts.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -120,14 +120,18 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
     async function run(query, command) {
         const spec = requireSpec(query);
-        const prompt = command === 'ask' ? buildAskPrompt(spec) : buildPrompt(command, spec.id, commandSet());
+        const set = commandSet();
+        const prompt = command === 'ask'
+            ? buildAskPrompt(spec)
+            : buildPrompt(command, spec.id, set, availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null);
         const sent = await send(prompt);
         emit('run', { spec: spec.id, command, prompt, sent, at: new Date().toISOString() });
         return { prompt, sent };
     }
 
     async function specify(description) {
-        const prompt = buildSpecifyPrompt(description, commandSet());
+        const set = commandSet();
+        const prompt = buildSpecifyPrompt(description, set, commandInstructions(state.root, 'specify', set));
         const sent = await send(prompt);
         emit('run', { spec: null, command: 'specify', prompt, sent, at: new Date().toISOString() });
         return { prompt, sent };

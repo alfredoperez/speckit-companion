@@ -4,7 +4,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 ## Repo map
 
-Three deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), and the marketing site (`apps/website/`).
+Four deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, loaded in this repo through `.github/extensions/speckit-companion/`), and the marketing site (`apps/website/`).
 
 - `capabilities/` — this repo's own living specs; it dogfoods the feature it ships.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
