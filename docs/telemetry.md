@@ -9,13 +9,13 @@ The event names and properties below are what the dashboards and queries in this
 | Event | Key properties | Notes |
 |--------|---------------|-------|
 | `extension.installed` | — | Once **ever** per install, never per session; a wiped VS Code global state legitimately reads as a new install |
-| `extension.activated` | `extensionVersion`, `vscodeVersion`, `platform` | Attached to every event, for version/platform breakdowns |
+| `extension.activated` | `extensionVersion`, `vscodeVersion`, `platform`, `speckitCliVersion`, `specCount`, `companionInstalled`, `defaultWorkflow`, `activityPanel`, `installPrompt`, `telemetry` | Once per activation. `speckitCliVersion` is the installed Spec Kit CLI version or `unknown`; `specCount` counts spec folders; `companionInstalled` is whether the companion extension is present in the workspace. `defaultWorkflow` is the raw setting (`speckit`, `companion`, or `custom`, never a custom workflow's own name), and the last three are stringified booleans for the settings of the same name. No path or identifier |
 | `spec.created` | `chosenAs` (`default`/`picked`/`trial`), `source` (`form`/`watcher`) | `chosenAs` is how the workflow got picked in Create Spec; `source` is what observed the creation |
 | `provider.selected` | provider id | Fires when the configured AI provider changes |
 | `spec.archived` | — | Fires from the sidebar's Archive action |
 | `phase.dispatched` | phase name | `specify`/`plan`/`tasks`/`implement` |
 | `spec.completed` | — | Fires from every completion path — sidebar action, viewer action, Companion's terminal step — observed at one seam (status transition to `completed`), exactly once per completion. A completion while VS Code is closed goes unobserved. |
-| `companion.installPrompt` | `action` (`shown`/`clicked`), `surface` | Surfaces: Create Spec, Activity, sidebar, `activation`. Out-of-date variants report separately as `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate`, so update adoption reads apart from first install |
+| `companion.installPrompt` | `action` (`shown`/`clicked`), `surface` | Surfaces: Create Spec, Activity, the sidebar badge (`sidebarBadge`), the pinned row (`pinnedRow`), the welcome view (`welcome`), the terminal (`terminal`), `activation`. Out-of-date variants report separately as `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate`, so update adoption reads apart from first install |
 | `panel.opened` | — | Once per session; repeated visibility toggles don't re-count |
 | `sample.opened` | — | Once per session; the seeded sample never counts as a created spec |
 | `spec.opened`, `livingSpec.opened` | — | Once per spec/capability per session |
