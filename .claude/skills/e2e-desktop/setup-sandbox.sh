@@ -4,7 +4,8 @@
 set -euo pipefail
 
 SANDBOX="${1:?usage: setup-sandbox.sh <sandbox-dir>}"
-REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "$HERE/../../.." && pwd)"
 APP="${E2E_APP_DIR:-$HOME/dev/GitHub/speckit-bench/examples/todo-claude}"
 
 [ -e "$SANDBOX" ] && { echo "[setup] $SANDBOX already exists, pick a new name or delete it"; exit 1; }
@@ -23,19 +24,25 @@ git init -q -b main
 specify init --here --force --non-interactive --integration claude >/dev/null
 specify integration install copilot --force >/dev/null
 mv .specify/memory/constitution.md.keep .specify/memory/constitution.md
-# extension add emits only for the default integration and a re-add wipes the other agent's copy: emit copilot, park it, emit claude, restore
+# `specify extension add --dev` emits each agent's Companion skills as symlinks into .specify/extensions/companion/.specify-dev/, and a
+# later add for the other agent repoints or wipes them. The Copilot app runs every session in a worktree cut from COMMITTED main, so a
+# symlink there dangles and the agent never gets /speckit.companion.*. So: install per agent, and turn that agent's skills into real files
+# before installing for the next one. Copilot goes last and stays the default integration.
+materialize() {
+  find "$1" -type l -path '*speckit-companion-*' -exec sh -c 'cp -L "$1" "$1.real" && mv "$1.real" "$1"' _ {} \;
+}
 STASH="$(mktemp -d)"
-specify integration use copilot >/dev/null
-specify extension add "$REPO/apps/speckit-extension" --dev --force >/dev/null
-cp -R .github/skills/speckit-companion-* "$STASH"/
 specify integration use claude >/dev/null
 specify extension add "$REPO/apps/speckit-extension" --dev --force >/dev/null
-cp -R "$STASH"/speckit-companion-* .github/skills/
+materialize .claude/skills
+cp -R .claude/skills/speckit-companion-* "$STASH"/
+specify integration use copilot >/dev/null
+specify extension add "$REPO/apps/speckit-extension" --dev --force >/dev/null
+materialize .github/skills
+rm -rf .claude/skills/speckit-companion-*
+mkdir -p .claude/skills
+cp -R "$STASH"/speckit-companion-* .claude/skills/
 rm -rf "$STASH"
-
-for marker in .specify/extensions/companion .claude/skills/speckit-companion-plan .github/skills/speckit-companion-plan; do
-  [ -e "$marker" ] || echo "[setup] Missing Companion marker $marker -> canvas may fall back to stock /speckit.*"
-done
 
 # navigation fixtures: the repo's pinned demo specs (copied, so the repo's own copies are never mutated) plus one with related docs and one archived
 mkdir -p specs
@@ -57,6 +64,7 @@ for path, name in [("specs/_04_demo-related-docs/.spec-context.json", "Demo rela
 PY
 
 npm install --silent >/dev/null 2>&1 || echo "[setup] npm install failed -> implement cannot run tests"
+"$HERE/verify-companion-skills.sh" "$SANDBOX" || { echo "[setup] Companion install is broken, not committing"; exit 1; }
 git add -A
 git commit -qm "e2e sandbox baseline"
 echo "[setup] sandbox ready at $SANDBOX (main @ $(git rev-parse --short HEAD))"

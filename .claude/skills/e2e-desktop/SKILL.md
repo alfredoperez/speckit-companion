@@ -54,7 +54,11 @@ mkdir -p "$RESULTS"
 "$SKILL/setup-sandbox.sh" "$SANDBOX"
 ```
 
-`setup-sandbox.sh` copies the `todo-claude` app from speckit-bench, runs `specify init` with the Claude integration plus Copilot, installs this checkout's spec-kit extension (`specify extension add $REPO/apps/speckit-extension --dev`) for **both** agents (so `.claude/skills/speckit-companion-*` and `.github/skills/speckit-companion-*` both exist), seeds navigation fixtures (`specs/_00…_03` copied from the repo, plus `_04_demo-related-docs` with research, data model and a checklist, and `_05_demo-archived`), runs `npm install`, and **commits everything on `main`**. The commit matters: the Copilot app runs each session in a worktree cut from the default branch, so anything uncommitted is invisible to the canvas.
+`setup-sandbox.sh` copies the `todo-claude` app from speckit-bench, runs `specify init` with the Claude integration plus Copilot, installs this checkout's spec-kit extension (`specify extension add $REPO/apps/speckit-extension --dev`) once per agent, Claude first and Copilot last (Copilot stays the default), seeds navigation fixtures (`specs/_00…_03` copied from the repo, plus `_04_demo-related-docs` with research, data model and a checklist, and `_05_demo-archived`), runs `npm install`, and **commits everything on `main`**. The commit matters: the Copilot app runs each session in a worktree cut from the default branch, so anything uncommitted is invisible to the canvas.
+
+A `--dev` install writes each agent's Companion skills as symlinks into `.specify/extensions/companion/.specify-dev/`, and installing for the other agent repoints or wipes them. A symlink that dangles in the Copilot worktree means the agent never gets `/speckit.companion.*`: it falls back to reading `.claude/skills/...`, writes no `.spec-context.json`, and may implement the feature during specify. So the script turns each agent's skills into real files before installing for the next agent, then `verify-companion-skills.sh` fails the setup (exit 1, path printed) unless every `.github/skills/speckit-companion-*/SKILL.md` and `.claude/skills/speckit-companion-*/SKILL.md` resolves with `test -e`. Run it by hand on any sandbox to check it.
+
+Opening the sandbox in VS Code runs the extension's preset reconciler, which calls the `specify` CLI and rewrites the committed `.claude/skills/speckit-*` files (`source: preset:companion-standard`) and creates `.specify/presets/`. That is specified behaviour, but it dirties the tree: commit or restore it before the canvas pass.
 
 Any `[setup] Missing …` line is a finding before you start; fix or record it.
 
@@ -131,7 +135,7 @@ Compare three numbers per step: wall clock (your marks), recorded span (the tabl
 
 1. Note the sandbox is committed: `git -C "$SANDBOX" status --short` is empty (otherwise commit; the worktree won't see it).
 2. `open_application` GitHub Copilot. Add/open `$SANDBOX` as the project, start a new session, type `Open the SpecKit Companion canvas`. Screenshot; `shot.sh "$RESULTS" canvas board-initial dark`.
-3. Find the session's worktree: `git -C "$SANDBOX" worktree list`. Set `WT=<that path>`. Every spec the canvas run creates lives there, not in `$SANDBOX`.
+3. Find the session's worktree: `git -C "$SANDBOX" worktree list`. Set `WT=<that path>`. Every spec the canvas run creates lives there, not in `$SANDBOX`. `SPEC` is the newest non-fixture dir under `$WT/specs` (fixtures are `_0N_…`; a new spec is numbered normally, such as `001-todo-footer-count`), the same rule `timing.py` uses.
 4. Board checks (assert each, log in `$RESULTS/canvas-checks.md`):
    - [ ] Header reads SpecKit Companion and there is **no** "Stock Spec Kit commands: SpecKit Companion is not installed" hint (Companion commands detected)
    - [ ] All six fixtures listed with the right status; Active/Done/All filters and search by number (`04`) work
