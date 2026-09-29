@@ -40,6 +40,7 @@ const state = {
     query: '',
     tab: null,
     detailRequest: 0,
+    workflow: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -57,6 +58,8 @@ const els = {
     newSpec: $('new-spec'),
     newSpecToggle: $('new-spec-toggle'),
     newSpecText: $('new-spec-text'),
+    newSpecWorkflow: $('new-spec-workflow'),
+    newSpecHint: $('new-spec-hint'),
 };
 
 function el(tag, props = {}, ...children) {
@@ -357,8 +360,35 @@ function select(id, { pushView = false, fromServer = false } = {}) {
     if (!fromServer) api('/api/focus', { spec: id }).catch(() => {});
 }
 
+const WORKFLOW_NOTES = {
+    companion: 'Companion: the lean pipeline that records the run.',
+    speckit: 'Spec Kit: the standard commands.',
+    auto: 'Auto: runs every step without pausing.',
+};
+
+function renderSpecifyChoices() {
+    const { specify } = state.snapshot;
+    if (!specify) return;
+    const current = specify.choices.find(c => c.id === state.workflow);
+    if (!current || !current.available) state.workflow = specify.default;
+    els.newSpecWorkflow.replaceChildren(...specify.choices.map(choice => el('button', {
+        type: 'button',
+        role: 'radio',
+        'aria-checked': choice.id === state.workflow ? 'true' : 'false',
+        disabled: !choice.available,
+        title: choice.reason ?? WORKFLOW_NOTES[choice.id],
+        onclick: () => {
+            state.workflow = choice.id;
+            renderSpecifyChoices();
+        },
+    }, choice.label)));
+    const blocked = specify.choices.find(c => !c.available);
+    els.newSpecHint.textContent = blocked ? blocked.reason : WORKFLOW_NOTES[state.workflow];
+}
+
 function applySnapshot(snapshot) {
     state.snapshot = snapshot;
+    renderSpecifyChoices();
     if (state.selected && !snapshot.specs.some(s => s.id === state.selected)) state.selected = null;
     if (!state.selected && window.matchMedia('(min-width: 761px)').matches) {
         state.selected = snapshot.selected ?? snapshot.specs.find(s => !s.done)?.id ?? snapshot.specs[0]?.id ?? null;
@@ -429,7 +459,7 @@ els.newSpec.addEventListener('submit', async (event) => {
     const description = els.newSpecText.value.trim();
     if (!description) return;
     try {
-        const { prompt, sent } = await api('/api/specify', { description });
+        const { prompt, sent } = await api('/api/specify', { description, workflow: state.workflow });
         if (sent) {
             toast('Sent to chat: ', el('code', {}, prompt));
             els.newSpecText.value = '';

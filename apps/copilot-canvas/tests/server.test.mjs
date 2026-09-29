@@ -81,6 +81,60 @@ describe('spec board server', () => {
         assert.equal((await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'bogus' } })).status, 400);
     });
 
+    it('sends a new spec with the chosen workflow and the preamble that seeds the run record', async () => {
+        const res = await call(board, '/api/specify', { method: 'POST', headers: auth(), body: { description: 'Show a footer count', workflow: 'speckit' } });
+        assert.equal(res.status, 200);
+        const body = JSON.parse(res.body);
+        assert.equal(body.command, 'speckit.specify');
+        assert.equal(body.workflow, 'speckit');
+        assert.ok(sent.at(-1).startsWith('/speckit.specify Show a footer count'));
+        assert.match(sent.at(-1), /"workflow": "speckit"/);
+        assert.match(sent.at(-1), /"by": "extension"/);
+        const auto = await call(board, '/api/specify', { method: 'POST', headers: auth(), body: { description: 'x', workflow: 'auto' } });
+        assert.equal(JSON.parse(auto.body).command, 'speckit.companion.auto');
+    });
+
+    it('rejects an unknown workflow and an empty description', async () => {
+        const unknown = await call(board, '/api/specify', { method: 'POST', headers: auth(), body: { description: 'x', workflow: 'turbo' } });
+        assert.equal(unknown.status, 400);
+        assert.match(JSON.parse(unknown.body).error, /Unknown workflow/);
+        const empty = await call(board, '/api/specify', { method: 'POST', headers: auth(), body: { description: '  ', workflow: 'speckit' } });
+        assert.equal(empty.status, 400);
+    });
+
+    it('offers the workflow choices in the snapshot', async () => {
+        const { specify } = JSON.parse((await call(board, '/api/snapshot', { headers: auth() })).body);
+        assert.equal(specify.default, 'companion');
+        assert.deepEqual(specify.choices.map(c => c.id), ['companion', 'speckit', 'auto']);
+    });
+
+    it('refuses Auto and Companion on a workspace without the extension', async () => {
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-stock-'));
+        mkdirSync(join(stockRoot, 'specs'));
+        const stock = await createSpecServer({ root: stockRoot, send: async () => true });
+        try {
+            const headers = { 'x-speckit-token': stock.token };
+            const auto = await call(stock, '/api/specify', { method: 'POST', headers, body: { description: 'x', workflow: 'auto' } });
+            assert.equal(auto.status, 400);
+            assert.match(JSON.parse(auto.body).error, /Auto needs the companion spec-kit extension/);
+            const ok = await call(stock, '/api/specify', { method: 'POST', headers, body: { description: 'x', workflow: 'speckit' } });
+            assert.equal(ok.status, 200);
+            const { specify } = JSON.parse((await call(stock, '/api/snapshot', { headers })).body);
+            assert.equal(specify.default, 'speckit');
+            assert.deepEqual(specify.choices.map(c => c.available), [false, true, false]);
+        } finally {
+            await stock.close();
+        }
+    });
+
+    it('sends the step preamble with a run button', async () => {
+        await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_02_demo-tasked', command: 'implement' } });
+        assert.ok(sent.at(-1).startsWith('/speckit.companion.implement specs/_02_demo-tasked'));
+        assert.match(sent.at(-1), /<!-- speckit-companion:context-update -->/);
+        await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_02_demo-tasked', command: 'status' } });
+        assert.doesNotMatch(sent.at(-1), /context-update/);
+    });
+
     it('picks up a change on disk without a manual refresh', async () => {
         writeFileSync(join(root, 'specs/_02_demo-tasked/tasks.md'), '- [x] T001 One\n- [ ] T002 Two\n');
         const deadline = Date.now() + 3000;

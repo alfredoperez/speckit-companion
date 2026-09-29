@@ -130,6 +130,42 @@ describe('board page', { concurrency: false }, async () => {
         await page.setViewportSize({ width: 1280, height: 860 });
     });
 
+    it('offers the workflow choice and sends the one picked', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        await page.click('#new-spec-toggle');
+        assert.equal(await page.locator('#new-spec-workflow button').count(), 3);
+        assert.equal(await page.getAttribute('#new-spec-workflow [aria-checked="true"]', 'role'), 'radio');
+        assert.equal((await page.locator('#new-spec-workflow [aria-checked="true"]').textContent()).trim(), 'Companion');
+        await page.click('#new-spec-workflow button:has-text("Spec Kit")');
+        await page.fill('#new-spec-text', 'Show a footer count');
+        await shot('08-new-spec-workflow');
+        await page.click('#new-spec button[type="submit"]');
+        await page.waitForSelector('.toast.is-visible');
+        assert.ok(sent.at(-1).startsWith('/speckit.specify Show a footer count'));
+        assert.match(sent.at(-1), /"workflow": "speckit"/);
+    });
+
+    it('disables Companion and Auto with a reason when the extension is not installed', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-'));
+        mkdirSync(join(stockRoot, 'specs'));
+        const stock = await createSpecServer({ root: stockRoot, send: async () => true });
+        const stockPage = await browser.newPage({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
+        try {
+            await stockPage.goto(stock.url);
+            await stockPage.waitForSelector('#new-spec-toggle');
+            await stockPage.click('#new-spec-toggle');
+            const states = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => [b.textContent.trim(), b.disabled]));
+            assert.deepEqual(states, [['Companion', true], ['Spec Kit', false], ['Auto', true]]);
+            assert.equal((await stockPage.locator('#new-spec-workflow [aria-checked="true"]').textContent()).trim(), 'Spec Kit');
+            assert.match(await stockPage.locator('#new-spec-hint').textContent(), /not installed/);
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '09-new-spec-stock.png') });
+        } finally {
+            await stockPage.close();
+            await stock.close();
+        }
+    });
+
     it('reads in light mode', async (t) => {
         if (skipWithoutChrome(t)) return;
         await page.emulateMedia({ colorScheme: 'light' });

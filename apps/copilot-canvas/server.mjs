@@ -8,7 +8,7 @@ import { watch } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, commandInstructions, detectCommandSet } from './prompts.mjs';
+import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, specifyChoices } from './prompts.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -77,7 +77,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     function snapshot() {
-        return { ...state.snapshot, selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()) };
+        return { ...state.snapshot, selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     function rescan() {
@@ -123,18 +123,28 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         const set = commandSet();
         const prompt = command === 'ask'
             ? buildAskPrompt(spec)
-            : buildPrompt(command, spec.id, set, availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null);
+            : buildPrompt(
+                command,
+                spec.id,
+                set,
+                availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null,
+                buildStepPreamble(command, spec.id, state.root, set),
+            );
         const sent = await send(prompt);
         emit('run', { spec: spec.id, command, prompt, sent, at: new Date().toISOString() });
         return { prompt, sent };
     }
 
-    async function specify(description) {
-        const set = commandSet();
-        const prompt = buildSpecifyPrompt(description, set, commandInstructions(state.root, 'specify', set));
-        const sent = await send(prompt);
-        emit('run', { spec: null, command: 'specify', prompt, sent, at: new Date().toISOString() });
-        return { prompt, sent };
+    async function specify(description, workflow) {
+        let built;
+        try {
+            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root });
+        } catch (error) {
+            throw Object.assign(error, { status: 400 });
+        }
+        const sent = await send(built.prompt);
+        emit('run', { spec: null, command: 'specify', prompt: built.prompt, sent, at: new Date().toISOString() });
+        return { prompt: built.prompt, sent, workflow: built.workflow, command: built.command };
     }
 
     function authorized(req, url) {
@@ -174,7 +184,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             if (pathname === '/api/refresh') return sendJson(res, 200, { count: rescan().specs.length });
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
-            if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description));
+            if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description, body.workflow));
         }
 
         return sendJson(res, 404, { error: 'Not found' });

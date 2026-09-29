@@ -109,7 +109,7 @@ Feature: `Let a reader mark any todo as starred, and add a Starred filter to the
 2. Specify (the one typing step, pick one and note which in the results):
    - **Assisted (default):** `printf '%s' "<feature>" | pbcopy`, click **New Spec** (the + in the Specs view title), then ask the user: "Click the description box, press Cmd+V, and click Create." Mark start when they confirm.
    - **Headless fallback:** `cd "$SANDBOX" && claude -p "/speckit.companion.specify <feature>" --permission-mode bypassPermissions` via Bash. The run still lands in the sidebar, but record that specify did not go through the VS Code dispatch.
-3. `python3 "$SKILL/timing.py" wait "$SANDBOX/specs" specify 9` (repeat the call until it returns; keep each Bash call under ten minutes), then `mark … specify end`. Find the new spec dir with `ls -t "$SANDBOX/specs" | head -1` and set `SPEC=$SANDBOX/specs/<dir>`.
+3. `python3 "$SKILL/timing.py" wait "$SANDBOX/specs" specify 9` (repeat the call until it returns; keep each Bash call under ten minutes), then `mark … specify end`. Find the new spec dir with `ls -t "$SANDBOX/specs" | grep -v '^_' | head -1` and set `SPEC=$SANDBOX/specs/<dir>`.
 4. For `plan`, `tasks`, `implement` in order:
    - [ ] Click the spec in the sidebar, screenshot, confirm the footer's forward button names this step and the header shows the right spec
    - [ ] `mark … <step> start`, click the forward button
@@ -143,7 +143,7 @@ Compare three numbers per step: wall clock (your marks), recorded span (the tabl
    - [ ] Click `_00` then `_02` quickly: detail shows `_02`, no content from `_00`
 5. Full run, timed with `surface=canvas`. Feature: `Show how many todos are left in the list footer.`
    - [ ] `mark … canvas specify start`, click **New spec**, type the feature, submit. The chat must receive `/speckit.companion.specify …`, never `/speckit.specify`
-   - [ ] `timing.py wait "$WT/specs" specify 9`, `mark … specify end`, `SPEC=$WT/specs/<new dir>`. The board shows the new spec without a refresh
+   - [ ] `timing.py wait "$WT/specs" specify 9`, `mark … specify end`, `SPEC=$WT/specs/<newest non-fixture dir>`. The board shows the new spec without a refresh
    - [ ] For plan, tasks, implement: `mark start`, click the run button, confirm the chat line is `/speckit.companion.<step> specs/<dir>`, `wait`, `mark end`. While it runs, screenshot the live update (rail step flips, tasks tick). `shot.sh` each as `run-<step>-running` / `-done`
    - [ ] Approve any Copilot tool-permission prompts by clicking (full tier); count them in the notes, each is friction worth recording
    - [ ] `timing.py report "$RESULTS" canvas "$SPEC"` and `check_capture.py "$SPEC" > "$RESULTS/canvas-capture.txt"`

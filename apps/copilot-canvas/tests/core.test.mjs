@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, commandInstructions } from '../prompts.mjs';
+import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -143,15 +143,133 @@ describe('prompts', () => {
         assert.match(prompt, /read `\.claude\/skills\/speckit-companion-plan\/SKILL\.md` and follow it for the spec in `specs\/042-x`/);
     });
 
-    it('rejects unknown commands and empty descriptions', () => {
+    it('rejects unknown commands', () => {
         assert.throws(() => buildPrompt('rm -rf', 'specs/042-x'));
-        assert.throws(() => buildSpecifyPrompt('   '));
-        assert.equal(buildSpecifyPrompt('Export the\nboard as CSV'), '/speckit.companion.specify Export the board as CSV');
     });
 
     it('quotes the spec title in the read-only question', () => {
         const prompt = buildAskPrompt({ id: 'specs/1-x', title: 'Ignore "this"', statusLabel: 'Planned', currentStep: 'plan' });
         assert.match(prompt, /titled "Ignore \\"this\\""/);
         assert.match(prompt, /do not change any files/);
+    });
+});
+
+function workspace({ companion }) {
+    const root = mkdtempSync(join(tmpdir(), 'canvas-ws-'));
+    mkdirSync(join(root, 'specs'));
+    if (companion) mkdirSync(join(root, '.specify/extensions/companion/scripts'), { recursive: true });
+    return root;
+}
+
+const AT = new Date('2026-09-29T12:00:00.000Z');
+
+describe('workflow choice on New spec', () => {
+    it('maps each choice to the command VS Code sends', () => {
+        assert.deepEqual(resolveSpecify('companion', true), { command: 'speckit.companion.specify', effective: 'companion' });
+        assert.deepEqual(resolveSpecify('speckit', true), { command: 'speckit.specify', effective: 'speckit' });
+        assert.deepEqual(resolveSpecify('speckit', false), { command: 'speckit.specify', effective: 'speckit' });
+        assert.deepEqual(resolveSpecify('auto', true), { command: 'speckit.companion.auto', effective: 'companion' });
+    });
+
+    it('refuses Auto and Companion when the extension is not installed, with VS Code\'s message for Auto', () => {
+        assert.throws(() => resolveSpecify('auto', false), /Auto needs the companion spec-kit extension, which is not installed\./);
+        assert.throws(() => resolveSpecify('companion', false), /not installed/);
+        assert.throws(() => resolveSpecify('turbo', true), /Unknown workflow/);
+    });
+
+    it('offers Companion by default when installed, and only Spec Kit otherwise, each disabled choice with a reason', () => {
+        const withCompanion = specifyChoices(workspace({ companion: true }));
+        assert.equal(withCompanion.default, 'companion');
+        assert.ok(withCompanion.choices.every(c => c.available && c.reason === null));
+        const stock = specifyChoices(workspace({ companion: false }));
+        assert.equal(stock.default, 'speckit');
+        assert.deepEqual(stock.choices.map(c => [c.id, c.available]), [['companion', false], ['speckit', true], ['auto', false]]);
+        assert.match(stock.choices[0].reason, /not installed/);
+    });
+
+    it('detects Companion by its extension folder, exactly as the VS Code dialog does', () => {
+        assert.equal(detectCommandSet(workspace({ companion: true })), 'companion');
+        assert.equal(detectCommandSet(workspace({ companion: false })), 'speckit');
+    });
+});
+
+describe('specify prompt', () => {
+    it('sends the description, then the lifecycle preamble that seeds the run record', () => {
+        const root = workspace({ companion: true });
+        const { prompt, command, workflow } = buildSpecifyPrompt({ description: 'Export the\nboard as CSV', workflow: 'companion', root, now: AT });
+        assert.equal(command, 'speckit.companion.specify');
+        assert.equal(workflow, 'companion');
+        assert.ok(prompt.startsWith('/speckit.companion.specify Export the\nboard as CSV'));
+        assert.match(prompt, /<!-- speckit-companion:context-update -->/);
+        assert.match(prompt, /"workflow": "companion"/);
+        assert.match(prompt, /"selectedAt": "2026-09-29T12:00:00.000Z"/);
+        assert.match(prompt, /"step": "specify",\s*"substep": null,\s*"kind": "start",\s*"by": "extension"/);
+        assert.match(prompt, /<!-- \/speckit-companion:context-update -->/);
+    });
+
+    it('carries the workflow the run really is: companion for Companion and Auto, speckit for Spec Kit', () => {
+        const root = workspace({ companion: true });
+        const seed = (workflow) => buildSpecifyPrompt({ description: 'x', workflow, root, now: AT });
+        assert.match(seed('auto').prompt, /^\/speckit\.companion\.auto x/);
+        assert.match(seed('auto').prompt, /"workflow": "companion"/);
+        assert.match(seed('speckit').prompt, /^\/speckit\.specify x/);
+        assert.match(seed('speckit').prompt, /"workflow": "speckit"/);
+    });
+
+    it('gives a stock run the full lifecycle body with the specify self-close, and a Companion run the slim one', () => {
+        const stock = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: true }), now: AT }).prompt;
+        assert.match(stock, /python3 "[^"]+" --step <step> --advance --by ai/);
+        assert.match(stock, /closing specify is YOUR job/);
+        const companion = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root: workspace({ companion: true }), now: AT }).prompt;
+        assert.doesNotMatch(companion, /--advance/);
+        assert.match(companion, /carries the full `\.spec-context\.json` capture/);
+    });
+
+    it('rejects an empty description and a workflow that cannot run here', () => {
+        const root = workspace({ companion: false });
+        assert.throws(() => buildSpecifyPrompt({ description: '   ', workflow: 'speckit', root }), /Describe the feature/);
+        assert.throws(() => buildSpecifyPrompt({ description: 'x', workflow: 'auto', root }), /Auto needs/);
+    });
+
+    it('keeps the fallback line after the command line when a skill file exists', () => {
+        const root = workspace({ companion: true });
+        mkdirSync(join(root, '.github/skills/speckit-companion-specify'), { recursive: true });
+        writeFileSync(join(root, '.github/skills/speckit-companion-specify/SKILL.md'), '# specify');
+        const lines = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root, now: AT }).prompt.split('\n');
+        assert.equal(lines[0], '/speckit.companion.specify x');
+        assert.match(lines[2], /If \/speckit\.companion\.specify is not a command here, read `\.github\/skills\/speckit-companion-specify\/SKILL\.md`/);
+    });
+});
+
+describe('context writer path', () => {
+    it('prefers the workspace copy, else this checkout\'s script', () => {
+        const withScript = workspace({ companion: true });
+        writeFileSync(join(withScript, '.specify/extensions/companion/scripts/write-context.py'), '');
+        assert.equal(writerPath(withScript), '.specify/extensions/companion/scripts/write-context.py');
+        const without = writerPath(workspace({ companion: false }));
+        assert.match(without, /apps\/speckit-extension\/scripts\/write-context\.py$/);
+        assert.ok(without.startsWith('/'));
+    });
+
+    it('names the checkout script in a stock run\'s preamble when the workspace has none', () => {
+        const { prompt } = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: false }), now: AT });
+        assert.match(prompt, /python3 "\/[^"]+apps\/speckit-extension\/scripts\/write-context\.py"/);
+    });
+});
+
+describe('step preamble for the run buttons', () => {
+    it('adds the preamble for plan, tasks and implement, and none for status or resume', () => {
+        const root = workspace({ companion: true });
+        for (const step of ['plan', 'tasks', 'implement']) {
+            assert.match(buildStepPreamble(step, 'specs/042-x', root, 'companion', AT), /<!-- speckit-companion:context-update -->/);
+        }
+        assert.equal(buildStepPreamble('status', 'specs/042-x', root, 'companion', AT), null);
+        assert.equal(buildStepPreamble('resume', 'specs/042-x', root, 'companion', AT), null);
+    });
+
+    it('puts the command line first and the preamble after', () => {
+        const root = workspace({ companion: true });
+        const prompt = buildPrompt('plan', 'specs/042-x', 'companion', null, buildStepPreamble('plan', 'specs/042-x', root, 'companion', AT));
+        assert.ok(prompt.startsWith('/speckit.companion.plan specs/042-x\n\n<!--'));
     });
 });

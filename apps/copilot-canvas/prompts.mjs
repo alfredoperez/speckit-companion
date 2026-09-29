@@ -1,21 +1,29 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
 
 export const STEP_COMMANDS = ['plan', 'tasks', 'implement'];
 export const SPEC_COMMANDS = [...STEP_COMMANDS, 'status', 'resume', 'doctor', 'mark-complete'];
 const COMPANION_ONLY = new Set(['status', 'resume', 'doctor', 'mark-complete']);
 
-// Where `specify extension add` leaves the Companion commands, one entry per agent family.
-const COMPANION_MARKERS = [
-    '.specify/extensions/companion',
-    '.github/agents/speckit.companion.plan.agent.md',
-    '.agents/skills/speckit-companion-plan',
-    '.claude/skills/speckit-companion-plan',
-];
+/** Companion is installed when its extension folder is: the same check VS Code makes (`isCompanionInstalled`). */
+export function isCompanionInstalled(root) {
+    return existsSync(join(root, '.specify', 'extensions', 'companion'));
+}
 
 /** `companion` when the Companion commands are installed in the workspace, else stock `speckit`. */
 export function detectCommandSet(root) {
-    return COMPANION_MARKERS.some(marker => existsSync(join(root, marker))) ? 'companion' : 'speckit';
+    return isCompanionInstalled(root) ? 'companion' : 'speckit';
+}
+
+const WORKSPACE_WRITER = '.specify/extensions/companion/scripts/write-context.py';
+const CHECKOUT_WRITER = fileURLToPath(new URL('../speckit-extension/scripts/write-context.py', import.meta.url));
+
+/** The context writer a stock run's preamble tells the agent to call: the workspace's copy, else this checkout's. */
+export function writerPath(root) {
+    if (existsSync(join(root, WORKSPACE_WRITER))) return WORKSPACE_WRITER;
+    return existsSync(CHECKOUT_WRITER) ? CHECKOUT_WRITER : WORKSPACE_WRITER;
 }
 
 /** Which commands the board can offer for this workspace's command set. */
@@ -40,26 +48,65 @@ export function commandInstructions(root, command, commandSet = 'companion') {
 
 /**
  * The chat message a run button sends: the same `/speckit.companion.<cmd> <spec dir>` line the VS Code sidebar dispatches,
- * plus a pointer to the command's instructions so an agent without the slash command can still run it.
+ * a pointer to the command's instructions so an agent without the slash command can still run it, and the step preamble
+ * VS Code appends so the run records itself.
  */
-export function buildPrompt(command, specId, commandSet = 'companion', instructions = null) {
+export function buildPrompt(command, specId, commandSet = 'companion', instructions = null, preamble = null) {
     if (!availableCommands(commandSet).includes(command)) {
         throw new Error(`Unknown command for the ${commandSet} command set: ${command}`);
     }
     const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
-    const line = `/${prefix}.${command} ${specId}`;
-    if (!instructions) return line;
-    return `${line}\n\nIf /${prefix}.${command} is not a command here, read \`${instructions}\` and follow it for the spec in \`${specId}\`.`;
+    let text = `/${prefix}.${command} ${specId}`;
+    if (instructions) text += `\n\nIf /${prefix}.${command} is not a command here, read \`${instructions}\` and follow it for the spec in \`${specId}\`.`;
+    return preamble ? `${text}\n\n${preamble}` : text;
 }
 
-/** A new spec starts from a description, not a folder: specify mints the folder itself. */
-export function buildSpecifyPrompt(description, commandSet = 'companion', instructions = null) {
-    const text = String(description ?? '').replace(/\s+/g, ' ').trim();
+/** The step preamble for a run button (plan, tasks, implement), or null for commands VS Code sends none for. */
+export function buildStepPreamble(command, specId, root, commandSet, now = new Date()) {
+    if (!STEP_COMMANDS.includes(command) || !isKnownStep(command)) return null;
+    return renderPreamble(command, specId, now.toISOString(), commandSet === 'companion', writerPath(root));
+}
+
+/** What the New spec form offers, mirroring VS Code's create-spec dialog: Companion, Spec Kit, and Auto (Companion only). */
+export const SPECIFY_WORKFLOWS = ['companion', 'speckit', 'auto'];
+
+export function specifyChoices(root) {
+    const installed = isCompanionInstalled(root);
+    const needs = 'Needs the SpecKit Companion extension, which is not installed in this workspace.';
+    return {
+        installed,
+        default: installed ? 'companion' : 'speckit',
+        choices: [
+            { id: 'companion', label: 'Companion', available: installed, reason: installed ? null : needs },
+            { id: 'speckit', label: 'Spec Kit', available: true, reason: null },
+            { id: 'auto', label: 'Auto', available: installed, reason: installed ? null : needs },
+        ],
+    };
+}
+
+/** The command a workflow choice sends and the workflow name the run record carries. Throws when the choice cannot run here. */
+export function resolveSpecify(workflow, installed) {
+    if (!SPECIFY_WORKFLOWS.includes(workflow)) throw new Error(`Unknown workflow: ${String(workflow)}`);
+    if (workflow === 'auto' && !installed) throw new Error('Auto needs the companion spec-kit extension, which is not installed.');
+    if (workflow === 'companion' && !installed) throw new Error('SpecKit Companion is not installed in this workspace. Choose Spec Kit, or install the companion spec-kit extension.');
+    if (workflow === 'speckit') return { command: 'speckit.specify', effective: 'speckit' };
+    return { command: workflow === 'auto' ? 'speckit.companion.auto' : 'speckit.companion.specify', effective: 'companion' };
+}
+
+/**
+ * A new spec starts from a description, not a folder: specify mints the folder itself. The message is what VS Code writes to
+ * its temp file, kept inline: the command line with the description, then the lifecycle preamble that seeds `.spec-context.json`.
+ */
+export function buildSpecifyPrompt({ description, workflow, root, now = new Date() }) {
+    const text = String(description ?? '').replace(/\r\n?/g, '\n').trim();
     if (!text) throw new Error('Describe the feature to specify.');
-    const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
-    const line = `/${prefix}.specify ${text}`;
-    if (!instructions) return line;
-    return `${line}\n\nIf /${prefix}.specify is not a command here, read \`${instructions}\` and follow it with that feature description.`;
+    const installed = isCompanionInstalled(root);
+    const { command, effective } = resolveSpecify(workflow, installed);
+    const instructions = commandInstructions(root, command.replace(/^speckit\.(companion\.)?/, ''), command.startsWith('speckit.companion') ? 'companion' : 'speckit');
+    let message = `/${command} ${text}`;
+    if (instructions) message += `\n\nIf /${command} is not a command here, read \`${instructions}\` and follow it with the feature description above.`;
+    const preamble = renderSpecifyCreationLifecyclePreamble(effective, null, now.toISOString(), effective === 'companion' && installed, writerPath(root), null);
+    return { prompt: `${message}\n\n${preamble}`, command, workflow: effective };
 }
 
 /** A read-only question about one spec, for the "Ask Copilot" button. */

@@ -95,6 +95,9 @@ button { font: inherit; color: inherit; }
     background: var(--bg-secondary);
     font-size: 13px;
 }
+.new-spec-workflow { max-width: 320px; }
+.new-spec-workflow button:disabled { color: var(--text-muted); cursor: not-allowed; }
+.new-spec-hint { margin: 0; color: var(--text-body); font-size: 12px; }
 .new-spec-row { display: flex; gap: 8px; align-items: flex-start; }
 .new-spec textarea {
     flex: 1;
