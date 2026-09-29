@@ -46,6 +46,21 @@ webpack.config.js
 **/*.ts
 apps/vscode/src/**/*.js
 
+# Nothing here has a runtime reader (dist/extension.js references none of it). vsce ignores
+# .gitignore when this file exists, so caches and dev-only config are listed here.
+# The webview ships from dist/webview/, never from its .tsx/.css sources.
+apps/vscode/webview/**
+**/*.tsx
+# Compiled tests: only the top-level dist/__tests__ was listed before, so ~165 test
+# files under dist/features/** and dist/core/** rode along.
+**/__tests__/**
+**/*.test.js
+.pytest_cache/**
+.impeccable/**
+.sdd.json
+tsconfig.webview.json
+DESIGN.md
+
 # Dev workspace — never runtime code (vsce ignores .gitignore when this file exists,
 # so gitignored caches/build output must be listed here too)
 .codex/**

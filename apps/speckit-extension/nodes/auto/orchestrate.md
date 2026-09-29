@@ -20,6 +20,7 @@ Run the full Companion pipeline by **invoking each per-step command for real**, 
 
 2. **Invoke each command in order — actually run it, don't re-enact it.** Use your command/skill invocation tool (the same `speckit.companion.*` command a person would type) for each step, waiting for its full work to finish before starting the next. Each command does its *own* size-classification, artifact generation, and capture — your job is only to call them in sequence and not stop:
    - `speckit.companion.specify <feature description>` — runs the real specify command: classifies size, writes the full spec, persists the size.
+   - **Read the verdict before the next dispatch.** When specify returns, read `<feature_directory>/.spec-context.json`. If `size` is `simple`, or its `history` already holds a `tasks` complete, specify folded plan and tasks: the lean `plan.md` and `tasks.md` exist and both steps are recorded. Print `[companion] specify folded plan and tasks; going to implement`, skip the two commands below, and dispatch implement. A re-run of plan or tasks here would only overwrite the lean files and cost the time the fold saved. Any other verdict runs all three.
    - `speckit.companion.plan` — runs the real plan command: the slim plan **plus** `research.md`, `data-model.md`, and `contracts/` (right-sized by the recorded size).
    - `speckit.companion.tasks` — runs the real tasks command: the wave-structured, dependency-ordered task list.
    - `speckit.companion.implement` — runs the real implement command: executes the tasks and journals each finish.

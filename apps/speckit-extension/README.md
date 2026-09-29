@@ -107,7 +107,7 @@ The payoff is the Overview. Every run, watched, resumed, or hands-off, leaves th
 
 The extension also ships its own pipeline family, `/speckit.companion.specify · plan · tasks · implement`. The stock `/speckit.*` commands stay installed unchanged; the two families coexist, and installing one never deletes the other. A Companion run finishes itself: capture records each step and task as it lands, and a terminal **mark-complete** step moves a finished run into Completed on its own.
 
-`/speckit.companion.auto "what you want built"` runs the entire pipeline with no approval pauses: specify, plan, tasks, implement, completion. It sets an `unattended` signal that project checkpoint hooks can read (record the checkpoint and keep going instead of waiting for a human). On a plain one-shot terminal it gracefully falls back: the first step runs, then you trigger the rest as usual.
+`/speckit.companion.auto "what you want built"` runs the entire pipeline with no approval pauses: specify, plan, tasks, implement, completion. When specify sizes the change `simple` and folds plan and tasks, auto skips those two steps and goes straight to implement. It sets an `unattended` signal that project checkpoint hooks can read (record the checkpoint and keep going instead of waiting for a human). On a plain one-shot terminal it gracefully falls back: the first step runs, then you trigger the rest as usual.
 
 Prefer gates? The pipeline also ships as a Spec Kit **workflow definition**: a file that tells the Spec Kit engine which step follows which, and where to stop for you. Run it and the engine drives the whole spec end to end, pausing at two review gates (one before plan, one before tasks) so you approve the direction before the detail:
 

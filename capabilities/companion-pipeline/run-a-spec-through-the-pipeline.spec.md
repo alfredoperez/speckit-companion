@@ -61,7 +61,11 @@ Run as the `speckit-companion` workflow, or self-advancing on an agentic host, t
 ### Auto runs every step with no pauses
 <!-- touches: apps/speckit-extension/nodes/auto/**, apps/speckit-extension/presets/_parts/unattended.md -->
 
-`speckit.companion.auto` SHALL run specify, plan, tasks and implement in order by invoking the real per-step commands, so an auto run produces the same documents as a manual one. It SHALL mark the run `unattended`, and at every review gate or project checkpoint hook it records the checkpoint and continues instead of asking. Background, review and PR hooks still run.
+`speckit.companion.auto` SHALL run specify, plan, tasks and implement in order by invoking the real per-step commands, so an auto run produces the same documents as a manual one. When specify folded plan and tasks (a `simple` verdict recorded in `.spec-context.json`, or a `tasks` complete already in its history), auto SHALL skip those two commands, say so in one line, and dispatch implement next. It SHALL mark the run `unattended`, and at every review gate or project checkpoint hook it records the checkpoint and continues instead of asking. Background, review and PR hooks still run.
+
+#### Scenario: specify folded plan and tasks
+- **WHEN** the specify step auto dispatched records the change as `simple`
+- **THEN** auto prints that specify folded plan and tasks, does not invoke `speckit.companion.plan` or `speckit.companion.tasks`, and invokes `speckit.companion.implement` on the lean `plan.md` and `tasks.md` specify wrote
 
 #### Scenario: a checkpoint hook would normally ask
 - **WHEN** a project hook says "Continue / Fix / Stop" and the run is unattended

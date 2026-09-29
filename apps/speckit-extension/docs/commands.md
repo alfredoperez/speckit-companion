@@ -185,7 +185,7 @@ On a host with a subagent tool it hands each user-story phase that owns five or 
 
 ### `speckit.companion.auto`
 
-Runs the whole pipeline hands-off — specify → plan → tasks → implement → completed — with no approval pauses. It rides on the same per-step commands above, so it cannot drift from them. It sets an `unattended` signal that project checkpoint hooks read: a hook that would normally stop and ask a person records the checkpoint and keeps going instead. On a one-shot terminal it degrades gracefully, running the first step and stopping.
+Runs the whole pipeline hands-off — specify → plan → tasks → implement → completed — with no approval pauses. It rides on the same per-step commands above, so it cannot drift from them. After specify returns it reads the recorded size: on a `simple` verdict specify already wrote the lean `plan.md` and `tasks.md` and recorded both steps, so auto prints that it folded them and dispatches implement next instead of running plan and tasks again. It sets an `unattended` signal that project checkpoint hooks read: a hook that would normally stop and ask a person records the checkpoint and keeps going instead. On a one-shot terminal it degrades gracefully, running the first step and stopping.
 
 ### `speckit.companion.classify`
 

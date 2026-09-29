@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Implement's closing record is its own step.** Recording what was verified, decided and left open now runs as a separate node after the work and its checks. Hooks attached after the work still run after the checks, as before.
 
 ### Fixed
+- **Auto no longer re-runs plan and tasks that specify already folded.** On a `simple` verdict specify writes the lean `plan.md` and `tasks.md` and records both steps, but auto and the workflow's `simple` route dispatched plan and tasks anyway, overwriting the lean files and spending minutes on steps the fold had finished in seconds. Both now read the verdict and go straight to implement.
 - **The doctor stops warning about steps a Companion run closes itself.** Plan, tasks and implement closed by the assistant are how a Companion run works, including older specs on the turbo profile, so they are no longer reported as closed by the wrong writer.
 - **A dispatch time given in another time zone is stored in UTC.** A step start passed with an offset or without milliseconds could sort out of order against every other stamp.
 - **A folded requirement lands under Requirements.** When a feature added a requirement to a living spec that ends with another section, such as Uncovered, the fold put it after that section, where the requirement tools do not read it. It now goes at the end of the Requirements section.
