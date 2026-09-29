@@ -3,7 +3,7 @@
 
 import { joinSession, createCanvas, CanvasError } from '@github/copilot-sdk/extension';
 import { createSpecServer } from './server.mjs';
-import { SPEC_COMMANDS, openStatus } from './prompts.mjs';
+import { CANVAS_DESCRIPTION, SPEC_COMMANDS, SYSTEM_RULE, openStatus } from './prompts.mjs';
 
 const CANVAS_ID = 'speckit-spec-board';
 const servers = new Map();
@@ -33,11 +33,12 @@ const specInput = {
 };
 
 const session = await joinSession({
+    systemMessage: { mode: 'append', content: SYSTEM_RULE },
     canvases: [
         createCanvas({
             id: CANVAS_ID,
             displayName: 'SpecKit Companion',
-            description: 'A live board of every spec: its specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next step. Opening it only shows the board; wait for the user to say what to do next.',
+            description: CANVAS_DESCRIPTION,
             inputSchema: {
                 type: ['object', 'null'],
                 additionalProperties: false,

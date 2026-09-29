@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node dev.mjs ../..",
     "build": "node build.mjs",
-    "test": "node build.mjs && node --test 'tests/*.test.mjs'"
+    "test": "node build.mjs && node --test --import ./tests/sdk-stub/register.mjs 'tests/*.test.mjs'"
   },
   "dependencies": {
     "@github/copilot-sdk": "latest"

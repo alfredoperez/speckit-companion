@@ -29,6 +29,12 @@ export function writerPath(root) {
 /** The model reads only title, status and url from a canvas's `open` result, so the instruction to stop rides in `status`. */
 export const OPEN_NOTE = 'The board is open: wait for the user\'s next instruction and do not start any work.';
 
+/** The rule appended to the session's system message: the strongest place to say what opening the board means. */
+export const SYSTEM_RULE = 'When the SpecKit Companion canvas is opened, show it and stop. Do not read, test or implement any spec unless the user asks for that spec by name.';
+
+/** What the catalog shows the model for the canvas, in the same words as the rule. */
+export const CANVAS_DESCRIPTION = 'A live board of every spec: its specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next step. When it is opened, show it and stop. Do not read, test or implement any spec unless the user asks for that spec by name.';
+
 export function openStatus(active, total) {
     return `${active} active · ${total} specs. ${OPEN_NOTE}`;
 }

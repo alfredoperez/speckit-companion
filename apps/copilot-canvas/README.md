@@ -39,7 +39,7 @@ The run buttons need the Companion commands in the project (`specify extension a
 
 ## Good to know
 
-- **Opening the board starts nothing.** The canvas's open result tells the agent the board is open and to wait for your next instruction, because an agent that is only asked to open a canvas has been seen to go looking for work.
+- **Opening the board starts nothing.** An agent that is only asked to open a canvas has been seen to go looking for work, so the canvas says "show it and stop" in three places the agent reads: a rule appended to the session's system message, the canvas description, and the status of the open result. If your agent still wanders, ask "Only open it, then wait for me."
 - **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first. Expect that on every canvas run.
 - **Companion's skills must be real, committed files.** The worktree is cut from committed `main`, so a `--dev` install, whose skills are symlinks into `.specify/extensions/companion/.specify-dev/`, leaves the agent without `/speckit.companion.*`. If the commands don't resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit. The e2e sandbox script checks this for you.
 
