@@ -1475,6 +1475,7 @@
     "canvas:build": "node apps/copilot-canvas/build.mjs",
     "test:canvas": "npm run canvas:build && node --test 'apps/copilot-canvas/tests/*.test.mjs'",
     "canvas:dev": "node apps/copilot-canvas/dev.mjs .",
+    "canvas:shots": "npm run canvas:build && CANVAS_SHOTS=.canvas-shots node --test apps/copilot-canvas/tests/page.test.mjs",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:visual": "node tooling/scripts/visual-builder.mjs",
