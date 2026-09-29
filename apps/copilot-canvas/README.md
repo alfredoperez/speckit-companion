@@ -7,7 +7,8 @@ A [canvas extension](https://docs.github.com/en/copilot/how-tos/github-copilot-a
 - **Board.** Every spec folder under `specs/` (or your `speckit.specDirectories`), most recently active first. Each row shows its status, a four-step rail (specify → plan → tasks → implement), and task progress. Filter by Active, Done or All, or search by name or number.
 - **Spec detail.** The pipeline rail, the next step with a button that runs it, then the same tabs as the VS Code viewer: an Overview dossier (intent, timing per step, expectations, what was verified, decisions, coverage), and the spec, plan, tasks, research, data model and checklists rendered through the viewer's own markdown pipeline and stylesheet. An Activity tab lists the run history.
 - **Live.** The board watches the spec folders. When the agent writes `plan.md` or ticks a task, the board updates without a refresh.
-- **Run from the board.** Buttons send the same line the VS Code sidebar dispatches, such as `/speckit.companion.plan specs/042-export-csv`, into the chat. When the Companion commands aren't installed, the board falls back to the stock `/speckit.*` commands. **New spec** sends `/speckit.companion.specify <description>`.
+- **Run from the board.** Buttons send the same line the VS Code sidebar dispatches, such as `/speckit.companion.plan specs/042-export-csv`, into the chat. When the Companion commands aren't installed, the board falls back to the stock `/speckit.*` commands. **New spec** asks which workflow to use, like the VS Code create-spec dialog: **Companion** (the default when installed) sends `/speckit.companion.specify`, **Spec Kit** sends `/speckit.specify`, and **Auto** sends `/speckit.companion.auto` and runs every step without pausing. Companion and Auto are disabled, with the reason shown, in a workspace where the companion extension is not installed.
+- **The run records itself.** Every command the board sends carries the same lifecycle preamble VS Code sends (it is bundled from the extension's own source), so the run seeds `.spec-context.json` with the workflow and a specify start, and a stock Spec Kit run also closes specify itself.
 - **Agent actions.** The agent can drive the board too: `list_specs`, `get_spec`, `focus_spec`, `run_step`, `refresh`. Ask "what specs are still open?" or "show me the export spec" and the board follows.
 
 The board only reads. It never writes `.spec-context.json` or any spec file; the SpecKit commands it sends do that.
@@ -35,6 +36,12 @@ echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/
 Then open the project in the Copilot app, start a session, and ask for the **SpecKit Companion** canvas. It also appears under **Customize → Canvas**.
 
 The run buttons need the Companion commands in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)). Without them the buttons send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`.
+
+## Good to know
+
+- **Opening the board starts nothing.** The canvas's open result tells the agent the board is open and to wait for your next instruction, because an agent that is only asked to open a canvas has been seen to go looking for work.
+- **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first. Expect that on every canvas run.
+- **Companion's skills must be real, committed files.** The worktree is cut from committed `main`, so a `--dev` install, whose skills are symlinks into `.specify/extensions/companion/.specify-dev/`, leaves the agent without `/speckit.companion.*`. If the commands don't resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit. The e2e sandbox script checks this for you.
 
 ## Develop
 
