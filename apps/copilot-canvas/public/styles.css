@@ -128,7 +128,8 @@ button { font: inherit; color: inherit; }
 }
 .brand-mark { flex: none; }
 .brand { flex: 1; min-width: 0; }
-.brand h1 { margin: 0; font-size: 15px; line-height: 1.2; color: var(--text-primary); }
+.brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.2; color: var(--text-primary); }
+.brand-mark { border-radius: 7px; }
 .brand-sub { margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
@@ -219,7 +220,8 @@ button { font: inherit; color: inherit; }
     padding: 8px;
     list-style: none;
 }
-.list-empty { padding: 16px; color: var(--text-muted); text-align: center; }
+.spec-list:empty { flex: 0; padding: 0; }
+.list-empty { margin: 0; padding: 32px 16px; color: var(--text-muted); text-align: center; }
 
 .spec-card {
     display: grid;
@@ -296,7 +298,7 @@ button { font: inherit; color: inherit; }
     color: var(--text-muted);
     text-align: center;
 }
-.detail-empty img { opacity: 0.8; }
+.detail-empty p { max-width: 260px; margin: 0; color: var(--text-body); }
 
 .detail-inner { max-width: 880px; padding: 20px 24px 40px; }
 
@@ -366,6 +368,8 @@ button { font: inherit; color: inherit; }
 .btn.sent { background: var(--success-subtle); border-color: var(--success); color: var(--success); }
 .command-hint { margin: 0; font-size: 12px; color: var(--text-muted); }
 .command-hint code { font: 12px var(--font-mono); color: var(--text-body); }
+.command-hint.stock { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--warning-subtle); color: var(--text-body); }
+.command-hint.stock strong { color: var(--warning); }
 
 .intent {
     margin: 16px 0 0;

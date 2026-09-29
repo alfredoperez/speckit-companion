@@ -216,6 +216,16 @@ function sortKey(spec) {
     return spec.lastActivity ?? spec.updatedAt ?? '';
 }
 
+/** The repository's name, even from a linked worktree (the Copilot app runs sessions in one). */
+export function repoName(root) {
+    try {
+        const gitFile = readFileSync(join(root, '.git'), 'utf8');
+        const main = gitFile.match(/^gitdir:\s*(.+?)[\\/]\.git[\\/]worktrees[\\/]/m)?.[1];
+        if (main) return basename(main);
+    } catch { /* a normal checkout keeps .git as a directory */ }
+    return basename(root);
+}
+
 /** Every spec, most recently touched first. */
 export function buildSnapshot(root, specDirs = resolveSpecDirs(root)) {
     const specs = listSpecFolders(root, specDirs).map(id => scanSpec(root, id));
@@ -223,7 +233,7 @@ export function buildSnapshot(root, specDirs = resolveSpecDirs(root)) {
     return {
         generatedAt: new Date().toISOString(),
         root,
-        repoName: basename(root),
+        repoName: repoName(root),
         specDirs,
         specs,
     };

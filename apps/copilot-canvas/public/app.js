@@ -128,10 +128,13 @@ function renderBoard() {
     $('count-active').textContent = active;
     $('count-done').textContent = specs.length - active;
     $('count-all').textContent = specs.length;
-    els.repoLine.textContent = `${state.snapshot.repoName} · ${active} active of ${specs.length}`;
+    els.repoLine.textContent = `Spec board · ${state.snapshot.repoName} · ${active} active of ${specs.length}`;
 
     const shown = visibleSpecs();
     els.listEmpty.hidden = shown.length > 0;
+    els.listEmpty.textContent = specs.length === 0
+        ? 'No specs here yet. Use New spec to start one.'
+        : 'No specs match.';
     els.list.replaceChildren(...shown.map(spec => el('li', {},
         el('button', {
             class: 'spec-card',
@@ -211,7 +214,12 @@ function renderNext(spec) {
             el('div', { class: 'next-copy' }, el('p', { class: 'next-title' }, next.title), el('p', { class: 'next-why' }, next.why)),
             primary),
         el('div', { class: 'next-more' }, more),
-        el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.'));
+        state.snapshot.commandSet === 'companion'
+            ? el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.')
+            : el('p', { class: 'command-hint stock' },
+                el('strong', {}, 'Running stock GitHub Spec Kit. '),
+                'The SpecKit Companion commands aren\'t installed in this workspace, so buttons send ', el('code', {}, `/speckit.<step>`),
+                '. Add them with ', el('code', {}, 'specify extension add companion'), ' to get live capture, Resume and Doctor.'));
 }
 
 function tabsFor(detail) {
@@ -284,7 +292,6 @@ function renderDetail() {
     const detail = state.detail;
     if (!detail) {
         els.detail.replaceChildren(el('div', { class: 'detail-empty' },
-            el('img', { src: '/seedling.svg', alt: '', width: 40, height: 40 }),
             el('p', {}, 'Pick a spec to see its pipeline, documents and history.')));
         return;
     }

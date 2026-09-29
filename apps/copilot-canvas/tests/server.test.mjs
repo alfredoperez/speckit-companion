@@ -46,7 +46,7 @@ describe('spec board server', () => {
         const res = await call(board, '/');
         assert.equal(res.status, 200);
         assert.match(res.headers['content-security-policy'], /default-src 'self'/);
-        assert.match(res.body, /Spec board/);
+        assert.match(res.body, /SpecKit Companion/);
     });
 
     it('refuses the API without the token or from another host', async () => {

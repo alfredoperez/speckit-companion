@@ -107,6 +107,12 @@ describe('scanning spec folders', () => {
         assert.equal(findSpec(specs, 'no-such-spec-anywhere'), null);
     });
 
+    it('names the repository, not the worktree folder', () => {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-'));
+        writeFileSync(join(root, '.git'), 'gitdir: /Users/me/dev/speckit-companion/.git/worktrees/didactic-potato\n');
+        assert.equal(buildSnapshot(root, ['specs']).repoName, 'speckit-companion');
+    });
+
     it('labels statuses in Title Case', () => {
         assert.equal(specStatusLabel('ready-to-implement'), 'Ready to Implement');
         assert.equal(specStatusLabel('some-new-status'), 'Some New Status');

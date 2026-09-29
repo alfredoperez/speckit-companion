@@ -36,8 +36,8 @@ const session = await joinSession({
     canvases: [
         createCanvas({
             id: CANVAS_ID,
-            displayName: 'SpecKit Spec Board',
-            description: 'Every spec in the workspace with its specify → plan → tasks → implement pipeline, task progress and run history, live from .spec-context.json; run the next SpecKit step from the board.',
+            displayName: 'SpecKit Companion',
+            description: 'A live board of every spec: its specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next step.',
             inputSchema: {
                 type: 'object',
                 additionalProperties: false,
@@ -133,7 +133,7 @@ const session = await joinSession({
                 }
                 const { specs } = entry.snapshot;
                 const active = specs.filter(s => !s.done).length;
-                return { title: 'SpecKit Spec Board', status: `${active} active · ${specs.length} specs`, url: entry.url };
+                return { title: 'SpecKit Companion', status: `${active} active · ${specs.length} specs`, url: entry.url };
             },
             onClose: async (ctx) => {
                 const entry = servers.get(ctx.instanceId);

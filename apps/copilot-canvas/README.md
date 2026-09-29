@@ -32,7 +32,7 @@ mkdir -p ~/.copilot/extensions/speckit-companion
 echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
 ```
 
-Then open the project in the Copilot app, start a session, and ask for the **SpecKit Spec Board** canvas. It also appears under **Customize → Canvas**.
+Then open the project in the Copilot app, start a session, and ask for the **SpecKit Companion** canvas. It also appears under **Customize → Canvas**.
 
 The run buttons need the Companion commands in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)). Without them the buttons send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`.
 
@@ -57,6 +57,6 @@ Clicking through the demo specs (`specs/_0N_demo-*`) can change their `.spec-con
 | `tasks.mjs` | Task checkbox parsing. It agrees with the VS Code extension through the shared `apps/vscode/tests/fixtures/task-grammar/` cases. |
 | `markdown.mjs` | A small markdown renderer that escapes everything first. |
 | `prompts.mjs` | The chat lines the buttons send. |
-| `public/` | The board page: plain HTML, CSS and JS, with no build step. |
+| `public/` | The board page: plain HTML, CSS and JS, with no build step. The logo mark is a copy of the site's small-cut mark (`apps/website/public/favicon.svg`). |
 
-The folder has the same layout as an entry in [awesome-copilot's extensions](https://github.com/github/awesome-copilot/tree/main/extensions). To list it there, add a `plugins/speckit-companion/plugin.json` whose `logo` points at `assets/preview.png`, then follow their [contributing guide](https://github.com/github/awesome-copilot/blob/main/CONTRIBUTING.md#adding-canvas-extensions).
+The folder has the same layout as an entry in [awesome-copilot's extensions](https://github.com/github/awesome-copilot/tree/main/extensions). `plugin.json` is the listing manifest, ready to copy to their `plugins/speckit-companion/plugin.json`. Its `logo` is the `assets/preview.png` screenshot, which is also the listing card image. The app lists the canvas by its `displayName` (SpecKit Companion) and `description` from `extension.mjs`. To submit it, follow their [contributing guide](https://github.com/github/awesome-copilot/blob/main/CONTRIBUTING.md#adding-canvas-extensions).
