@@ -1275,6 +1275,86 @@ class AdvanceTests(unittest.TestCase):
                 self.assertIsNone(wc.journal_advance(self.fd, "implement", "ai"))
                 self.assertEqual(_ctx(self.fd), before, "terminal spec left untouched")
 
+    def test_unscoped_specify_against_a_finished_specify_is_refused(self) -> None:
+        # The stock create flow ran the writer BEFORE creating the new folder, so
+        # feature.json still named the previous spec: the start/advance landed on a
+        # spec whose specify was long closed and was absorbed silently, leaving the
+        # new spec stuck on `specifying`. A bare specify call the pointer resolves to
+        # a finished-specify spec is now refused, non-zero, naming --feature-dir.
+        root = Path(self._tmp.name)
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        wc.journal_advance(self.fd, "specify", "ai")
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        before = _ctx(self.fd)
+        with self._pointer_at(root, self.fd):
+            for argv in (
+                ["--step", "specify", "--status", "specifying", "--kind", "start", "--by", "extension"],
+                ["--step", "specify", "--advance", "--by", "ai"],
+                ["--advance", "--by", "ai"],  # --step defaults to specify
+            ):
+                with self.subTest(argv=argv):
+                    err = io.StringIO()
+                    with contextlib.redirect_stderr(err):
+                        rc = self._run_main(argv)
+                    self.assertEqual(rc, 2, "the wrong-spec call fails loudly")
+                    self.assertIn("already finished specify", err.getvalue())
+                    self.assertIn("this is the previous spec", err.getvalue())
+                    self.assertIn("--feature-dir", err.getvalue())
+                    self.assertEqual(_ctx(self.fd), before, "previous spec left untouched")
+
+    def test_explicit_feature_dir_keeps_the_idempotent_specify_paths(self) -> None:
+        root = Path(self._tmp.name)
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        wc.journal_advance(self.fd, "specify", "ai")
+        before = _ctx(self.fd)
+        rel = str(self.fd.relative_to(root))
+        with self._pointer_at(root, self.fd):
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(self._run_main(["--feature-dir", rel, "--step", "specify", "--advance", "--by", "ai"]), 0)
+                self.assertEqual(_ctx(self.fd)["status"], "specified", "re-advance stays a no-op")
+                self.assertEqual(self._run_main(["--feature-dir", rel, "--step", "specify", "--status", "specifying", "--kind", "start", "--by", "extension"]), 0)
+        self.assertEqual(len(self._completes("specify")), 1, "no duplicate specify complete")
+        self.assertEqual(len(self._starts("specify")), 1, "the redundant start is still collapsed")
+        self.assertEqual(_ctx(self.fd)["history"], before["history"])
+
+    def test_unscoped_specify_on_a_fresh_spec_still_writes(self) -> None:
+        # The intended flow: the command created the folder and rewrote the pointer,
+        # so the bare call resolves to a spec with no specify complete and proceeds.
+        root = Path(self._tmp.name)
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        with self._pointer_at(root, self.fd):
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(self._run_main(["--step", "specify", "--advance", "--by", "ai"]), 0)
+        self.assertEqual(_ctx(self.fd)["status"], "specified")
+        self.assertEqual(len(self._completes("specify")), 1)
+
+    @contextlib.contextmanager
+    def _pointer_at(self, root: Path, feature_dir: Path):
+        """Resolve a bare call through `.specify/feature.json` at `root`, as the stock
+        create-new-feature.sh leaves it: no env pointers, no --feature-dir."""
+        (root / ".specify").mkdir(exist_ok=True)
+        (root / ".specify" / "feature.json").write_text(
+            json.dumps({"FEATURE_DIR": str(feature_dir.relative_to(root))})
+        )
+        saved_env = {k: os.environ.pop(k, None) for k in ("SPECIFY_FEATURE_DIRECTORY", "SPECIFY_FEATURE")}
+        orig_root = wc._repo_root
+        wc._repo_root = lambda: root
+        try:
+            yield
+        finally:
+            wc._repo_root = orig_root
+            for k, v in saved_env.items():
+                if v is not None:
+                    os.environ[k] = v
+
+    def _run_main(self, argv: list[str]) -> int:
+        orig_argv = sys.argv
+        sys.argv = ["write-context.py", *argv]
+        try:
+            return wc.main()
+        finally:
+            sys.argv = orig_argv
+
     def test_advance_on_non_status_step_records_finish_only(self) -> None:
         # clarify/analyze have no canonical completed-status: record the finish,
         # leave status untouched (mirrors --finish on a non-canonical-status step).

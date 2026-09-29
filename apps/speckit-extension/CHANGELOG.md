@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Implement's closing record is its own step.** Recording what was verified, decided and left open now runs as a separate node after the work and its checks. Hooks attached after the work still run after the checks, as before.
 
 ### Fixed
+- **`write-context.py` refuses an unscoped specify write against a finished spec.** With no `--feature-dir`, the writer follows `.specify/feature.json`, which still points at the previous spec until the stock command creates the new folder. It printed "not regressing" and exited 0, so a transcript read as success while the new spec was never closed. It now exits 2 and names the flag to pass.
 - **Auto no longer re-runs plan and tasks that specify already folded.** On a `simple` verdict specify writes the lean `plan.md` and `tasks.md` and records both steps, but auto and the workflow's `simple` route dispatched plan and tasks anyway, overwriting the lean files and spending minutes on steps the fold had finished in seconds. Both now read the verdict and go straight to implement.
 - **The doctor stops warning about steps a Companion run closes itself.** Plan, tasks and implement closed by the assistant are how a Companion run works, including older specs on the turbo profile, so they are no longer reported as closed by the wrong writer.
 - **A dispatch time given in another time zone is stored in UTC.** A step start passed with an offset or without milliseconds could sort out of order against every other stamp.

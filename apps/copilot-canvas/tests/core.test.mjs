@@ -218,7 +218,11 @@ describe('specify prompt', () => {
 
     it('gives a stock run the full lifecycle body with the specify self-close, and a Companion run the slim one', () => {
         const stock = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: true }), now: AT }).prompt;
-        assert.match(stock, /python3 "[^"]+" --step <step> --advance --by ai/);
+        // The folder does not exist at dispatch: every writer call is scoped to the one the command mints, and none runs before it exists.
+        assert.match(stock, /python3 "[^"]+" --feature-dir "<the folder the command just created>" --step <step> --advance --by ai/);
+        assert.doesNotMatch(stock, /python3 "[^"]+" --step/);
+        assert.match(stock, /Run NO write-context\.py call before the command has created `specs\/<NNN>-<slug>\/` and written `\.specify\/feature\.json`\./);
+        assert.match(stock, /Never run these against a folder that already has history\. That is the previous spec\./);
         assert.match(stock, /closing specify is YOUR job/);
         const companion = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root: workspace({ companion: true }), now: AT }).prompt;
         assert.doesNotMatch(companion, /--advance/);
