@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Phase-complete notifications name the spec on Windows.** The toast read "completed in unknown" instead of the feature folder, because Windows paths use backslashes.
+
 ## [0.34.0] - 2026-09-30
 
 ### Security

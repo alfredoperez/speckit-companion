@@ -1,4 +1,4 @@
-import { parseTasksFile } from '../taskProgressService';
+import { extractSpecNameFromPath, parseTasksFile } from '../taskProgressService';
 
 describe('parseTasksFile', () => {
     it('counts the task items under each phase header', () => {
@@ -32,5 +32,23 @@ describe('parseTasksFile', () => {
         expect(progress.totalTasks).toBe(1);
         expect(progress.completedTasks).toBe(1);
         expect(progress.phases[0].isComplete).toBe(true);
+    });
+});
+
+describe('extractSpecNameFromPath', () => {
+    it('returns the feature folder for a POSIX tasks.md path', () => {
+        expect(extractSpecNameFromPath('/repo/specs/199-guided-task-walkthroughs/tasks.md')).toBe('199-guided-task-walkthroughs');
+    });
+
+    it('returns the feature folder for a Windows backslash tasks.md path', () => {
+        expect(extractSpecNameFromPath('c:\\repo\\specs\\199-guided-task-walkthroughs\\tasks.md')).toBe('199-guided-task-walkthroughs');
+    });
+
+    it('falls back to the parent folder of a Windows path that is not tasks.md', () => {
+        expect(extractSpecNameFromPath('c:\\repo\\specs\\my-feature\\plan.md')).toBe('my-feature');
+    });
+
+    it('returns unknown when there is no parent folder', () => {
+        expect(extractSpecNameFromPath('tasks.md')).toBe('unknown');
     });
 });
