@@ -1,9 +1,13 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import {
     navState,
+    overviewAvailable,
     viewerMode,
     viewerState,
     showingOverview,
 } from '../../../webview/src/spec-viewer/signals';
+import { deriveViewerState } from '../../../src/features/spec-viewer/stateDerivation';
 
 const WITH_DURABLE_CONTEXT = {
     intent: 'Make the spec name open its Overview',
@@ -86,6 +90,17 @@ describe('showingOverview — the viewer owns the landing decision', () => {
             viewerMode.value = 'overview';
 
             expect(showingOverview.value).toBe(true);
+        });
+    });
+
+    describe('a spec opened by its name whose history is empty but which keeps a status, a step and review comments', () => {
+        it('shows the document, because nothing was recorded', () => {
+            const record = JSON.parse(fs.readFileSync(path.join(__dirname, '../../fixtures/spec-context/empty-history-with-comments.json'), 'utf8'));
+            navState.value = { activityPanelEnabled: true, landing: 'overview' } as any;
+            viewerState.value = deriveViewerState(record) as any;
+
+            expect(overviewAvailable.value).toBe(false);
+            expect(showingOverview.value).toBe(false);
         });
     });
 

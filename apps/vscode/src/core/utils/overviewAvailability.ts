@@ -11,13 +11,12 @@ export interface RecordedActivity {
     coverage?: readonly unknown[];
     concerns?: readonly unknown[];
     filesModified?: readonly unknown[];
-    reviewComments?: readonly unknown[];
     livingSpecs?: unknown;
     history?: readonly unknown[];
     stepHistory?: object;
 }
 
-/** Whether the spec has recorded anything at all — no run, no Overview. */
+/** Whether the run recorded anything; a status, a step and the reader's review comments are not a run. */
 export function hasAnyData(state: RecordedActivity): boolean {
     if (state.approach || state.lastAction || state.prUrl) return true;
     if (state.taskSummaries && Object.keys(state.taskSummaries).length > 0) return true;
@@ -27,7 +26,6 @@ export function hasAnyData(state: RecordedActivity): boolean {
     if (state.coverage && state.coverage.length > 0) return true;
     if (state.concerns && state.concerns.length > 0) return true;
     if (state.filesModified && state.filesModified.length > 0) return true;
-    if (state.reviewComments && state.reviewComments.length > 0) return true;
     if (state.livingSpecs) return true;
     if (state.history && state.history.length > 0) return true;
     if (state.stepHistory && Object.keys(state.stepHistory).length > 0) return true;

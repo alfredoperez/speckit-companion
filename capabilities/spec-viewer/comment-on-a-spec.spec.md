@@ -40,7 +40,7 @@ Adding, editing or deleting a comment SHALL be written into the spec's own run r
 ### A stored comment finds the text it was written against
 <!-- touches: apps/vscode/webview/src/spec-viewer/editor/reanchor.ts, apps/vscode/webview/src/spec-viewer/editor/restoreComments.ts -->
 
-A comment SHALL record the block of text and the nearest heading it was written under, not only a line number, and on reopen SHALL be placed back on the line whose text still matches, falling back to the same text elsewhere in the document and then to the section it was written under. Re-rendering the same document SHALL not produce a second copy of a card. A comment that matches nothing inline is not lost: every comment for the spec is also listed with its status under the run log, grouped by document, with a way to jump to it and a way to refine that document's pending ones.
+A comment SHALL record the block of text and the nearest heading it was written under, not only a line number, and on reopen SHALL be placed back on the line whose text still matches, falling back to the same text elsewhere in the document and then to the section it was written under. Re-rendering the same document SHALL not produce a second copy of a card. A comment that matches nothing inline is not lost: every comment for the spec is also listed with its status under the run log, grouped by document, with a way to jump to it and a way to refine that document's pending ones. Comments alone do not give a spec a run log.
 
 #### Scenario: the spec was edited above the comment
 - **WHEN** paragraphs are inserted above a commented line and the document is reopened

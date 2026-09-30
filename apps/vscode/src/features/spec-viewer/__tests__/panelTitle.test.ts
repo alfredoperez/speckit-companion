@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { SpecViewerProvider } from '../specViewerProvider';
 import type { SpecDocument } from '../types';
@@ -48,6 +50,7 @@ import { scanDocuments } from '../documentScanner';
 import { readSpecContext } from '../../specs/specContextReader';
 
 const SPEC_DIR = '/workspace/specs/my-feature';
+const EMPTY_HISTORY_FIXTURE = path.join(__dirname, '../../../../tests/fixtures/spec-context/empty-history-with-comments.json');
 
 const SPEC_DOC = {
     type: 'spec', label: 'Specification', fileName: 'spec.md', filePath: `${SPEC_DIR}/spec.md`, exists: true, isCore: true,
@@ -127,6 +130,37 @@ describe('spec viewer tab title', () => {
 
         await provider.showSpec(SPEC_DIR);
         await provider.refreshContextIfDisplaying(`${SPEC_DIR}/.spec-context.json`);
+
+        expect(panel().title).toBe('Spec: my-feature - Overview');
+    });
+
+    describe('a spec with an empty history that keeps its status, step and review comments', () => {
+        const record = () => JSON.parse(fs.readFileSync(EMPTY_HISTORY_FIXTURE, 'utf8'));
+        const PLAN_DOC = { ...SPEC_DOC, type: 'plan', label: 'Plan', fileName: 'plan.md', filePath: `${SPEC_DIR}/plan.md` } as SpecDocument;
+
+        beforeEach(() => {
+            (scanDocuments as jest.Mock).mockResolvedValue([SPEC_DOC, PLAN_DOC]);
+            (readSpecContext as jest.Mock).mockResolvedValue(record());
+        });
+
+        it('names the document the pane shows once the webview has its state', async () => {
+            await provider.showSpec(SPEC_DIR);
+            await provider.refreshContextIfDisplaying(`${SPEC_DIR}/.spec-context.json`);
+
+            expect(panel().title).toBe('Spec: my-feature - Specification');
+        });
+
+        it('names the document from the first paint, before the webview asks for its state', async () => {
+            await provider.showSpec(SPEC_DIR);
+
+            expect(panel().title).toBe('Spec: my-feature - Specification');
+        });
+    });
+
+    it('names the Overview from the first paint when the spec has recorded activity', async () => {
+        (readSpecContext as jest.Mock).mockResolvedValue(recordedContext);
+
+        await provider.showSpec(SPEC_DIR);
 
         expect(panel().title).toBe('Spec: my-feature - Overview');
     });
