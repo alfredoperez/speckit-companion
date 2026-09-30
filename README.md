@@ -9,7 +9,7 @@
 
 **[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/getting-started/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
 
-**What's new in 0.33.0:** a Pipeline Builder panel that draws your Companion workflow as steps, phases and nodes, and lets you attach hooks and rewrite one from the panel. A living spec now reads as requirement cards you can approve instead of a wall of markdown. The Overview tells a check the run actually ran apart from one it only claims to have. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+**What's new in 0.34.0:** a spec board for the GitHub Copilot app that shows every spec's pipeline beside the chat and runs the next step from a button. Living specs get Approve all with Undo, New marks for requirements a branch added, and links between the requirements that lean on each other. The viewer opens the document you click from the Overview, and the update notification now installs the new version. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
 The site shows each feature as a short clip of the real thing — the Overview a finished run leaves behind, inline review, living specs — rather than describing it.
 

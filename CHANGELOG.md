@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-09-30
+
 ### Security
 - **A folder name can no longer run commands through Initialize or Upgrade.** Initialize SpecKit, Upgrade Project and Upgrade All pasted the workspace path into the terminal command, so a folder name containing shell syntax would have run it. The terminal now opens in the folder instead, the way installing the companion extension already did.
 
