@@ -80,7 +80,7 @@ When an update the user started has run and the installed version is exactly whe
 ### The standard SpecKit commands stay present once the extension is installed
 <!-- touches: apps/vscode/src/features/settings/companionPresetReconciler.ts, apps/vscode/src/extension.ts -->
 
-At start-up and whenever the extension lands on disk, the stock `/speckit.*` command family SHALL be restored from the presets bundled with the installed extension if it is absent, and presets left by old versions SHALL be removed. This only ever adds the standard family, never removes it, and a missing or failing CLI SHALL be logged without affecting start-up.
+At start-up and whenever the extension lands on disk, the stock `/speckit.*` command family SHALL be restored from the presets bundled with the installed extension if it is absent, and presets left by old versions SHALL be removed. This only ever adds the standard family, never removes it, and a missing or failing CLI SHALL be logged without affecting start-up. The `specify` CLI does the writing: restoring the family re-emits the stock command bodies under the project's `.claude/skills/speckit-*` (marked `source: preset:companion-standard`) and creates `.specify/presets/`, so a project that commits those folders sees a diff the first time the extension opens it and should commit the result. Nothing asks first; the trigger is the extension folder being present.
 
 #### Scenario: a fresh checkout
 - **WHEN** a project has the extension folder but the standard preset was never installed

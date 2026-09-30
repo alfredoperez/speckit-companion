@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { setupFileWatchers } from '../../../src/features/fileWatchers';
+import { setupFileWatchers, setupSpecViewerWatcher } from '../../../src/features/fileWatchers';
 import { getFileWatcherPatterns } from '../../../src/core/specDirectoryResolver';
 
 const flushPromises = () => new Promise(resolve => setImmediate(resolve));
@@ -94,5 +94,40 @@ describe('setupSpecContextWatchers (via setupFileWatchers)', () => {
 
         expect(specExplorer.refresh).toHaveBeenCalled();
         expect(specViewer.refreshContextIfDisplaying).toHaveBeenCalledWith(uri.fsPath);
+    });
+});
+
+describe('setupSpecViewerWatcher', () => {
+    let specViewer: any;
+    let outputChannel: any;
+    let context: any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue(['specs']),
+        });
+        specViewer = {
+            refreshIfDisplaying: jest.fn(),
+            handleFileDeleted: jest.fn(),
+            handleSpecDirectoryGone: jest.fn(),
+        };
+        outputChannel = { appendLine: jest.fn() };
+        context = { subscriptions: [] };
+    });
+
+    function folderWatchers(): any[] {
+        const results = (vscode.workspace.createFileSystemWatcher as jest.Mock).mock.results;
+        return results.map(r => r.value).filter(w => typeof w.pattern === 'string' && w.pattern.endsWith('/**/*'));
+    }
+
+    it('a deleted path under a spec directory reaches the viewer, which decides if it was a panel', async () => {
+        setupSpecViewerWatcher(context, specViewer, outputChannel);
+        const uri = vscode.Uri.file('/repo/specs/_02_demo-tasked');
+
+        await folderWatchers()[0].fireDelete(uri);
+
+        expect(specViewer.handleSpecDirectoryGone).toHaveBeenCalledWith(uri.fsPath);
+        expect(specViewer.handleFileDeleted).not.toHaveBeenCalled();
     });
 });

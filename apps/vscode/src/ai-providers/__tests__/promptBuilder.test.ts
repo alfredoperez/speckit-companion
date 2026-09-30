@@ -407,6 +407,13 @@ describe('buildSpecifyCreationPreamble', () => {
         mockConfig(true);
         const out = buildSpecifyCreationPreamble('speckit', null);
         expect(out).toContain('<specDir>/.spec-context.json');
+        // The folder is minted by the command: no writer call may run before it
+        // exists, and every rendered call is scoped to it rather than to the
+        // pointer that still names the previous spec.
+        expect(out).toContain('Run NO write-context.py call before the command has created `specs/<NNN>-<slug>/` and written `.specify/feature.json`.');
+        expect(out).toContain('--feature-dir "<the folder the command just created>"');
+        expect(out).toMatch(/--feature-dir "<the folder the command just created>" --step <step> --advance --by ai/);
+        expect(out).toContain('Never run these against a folder that already has history. That is the previous spec.');
     });
 
     it('substitutes the real spec dir when provided', () => {

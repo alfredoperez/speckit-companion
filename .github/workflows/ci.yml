@@ -32,6 +32,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run Copilot canvas tests
+        run: npm run test:canvas
+
   capture-suite:
     runs-on: ubuntu-latest
 

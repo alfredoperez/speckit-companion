@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { buildHandlers } from '../messageHandlers';
 import { preprocessLivingRequirements } from '../markdown';
-import { navState, viewerState, historyEntries } from '../signals';
+import { navState, viewerState, historyEntries, specMoved } from '../signals';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from '../types';
 
 function nav(overrides: Partial<NavState> = {}): NavState {
@@ -155,5 +155,15 @@ describe('the webview routes every message the extension can send', () => {
 
         const area = document.getElementById('content-area');
         expect(area?.querySelector('.empty-state')?.textContent).toBe('The file has been deleted.');
+    });
+
+    it('marks the panel moved when its folder is gone, and clears it on the next content', () => {
+        const handlers = buildHandlers(() => undefined);
+
+        handlers.specMoved({ type: 'specMoved', specDirectory: '/repo/specs/x' } as never);
+        expect(specMoved.value).toBe(true);
+
+        handlers.contentUpdated({ type: 'contentUpdated', content: '', documentType: 'spec', specName: 'x' } as never);
+        expect(specMoved.value).toBe(false);
     });
 });

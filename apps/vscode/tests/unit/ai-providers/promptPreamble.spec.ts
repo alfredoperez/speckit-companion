@@ -126,3 +126,46 @@ describe('renderSpecifyCreationLifecyclePreamble — install-state split', () =>
         expect(full).toContain('--advance --by ai');
     });
 });
+
+describe('renderSpecifyCreationLifecyclePreamble — spec dir unknown at dispatch', () => {
+    const ORDER_RULE = 'Run NO write-context.py call before the command has created `specs/<NNN>-<slug>/` and written `.specify/feature.json`.';
+    const PREVIOUS_SPEC_RULE = 'Never run these against a folder that already has history. That is the previous spec.';
+    const UNKNOWN_DIR_FLAG = '--feature-dir "<the folder the command just created>"';
+
+    it('stock create orders every writer call after the folder exists and scopes it to that folder', () => {
+        const out = renderSpecifyCreationLifecyclePreamble('speckit', null, DISPATCH, false);
+        expect(out).toContain(ORDER_RULE);
+        expect(out).toContain(PREVIOUS_SPEC_RULE);
+        expect(out).toContain('Write the seed file inside that folder, only after the command has created it and written `.specify/feature.json`.');
+        // The self-close, the captures and the per-task journal all carry the flag: a bare call resolves to the previous spec.
+        expect(out).toMatch(new RegExp(`${UNKNOWN_DIR_FLAG.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} --step <step> --advance --by ai`));
+        expect(out).toMatch(/--feature-dir "<the folder the command just created>" --coverage-req FR-NNN/);
+        expect(out).toMatch(/--feature-dir "<the folder the command just created>" --task <TaskID> --kind complete --by ai/);
+        // No rendered writer call is left unscoped.
+        expect(out).not.toMatch(/python3 "[^"]+" --step/);
+        expect(out).not.toMatch(/python3 "[^"]+" --coverage-req/);
+        expect(out).not.toMatch(/python3 "[^"]+" --set/);
+    });
+
+    it('a known dir renders the real flag and none of the unknown-dir prose', () => {
+        const out = renderSpecifyCreationLifecyclePreamble('speckit', SPEC_DIR, DISPATCH, false);
+        expect(out).toContain(`--feature-dir "${SPEC_DIR}" --step <step> --advance --by ai`);
+        expect(out).not.toContain(ORDER_RULE);
+        expect(out).not.toContain(PREVIOUS_SPEC_RULE);
+        expect(out).not.toContain(UNKNOWN_DIR_FLAG);
+    });
+
+    it('the companion (slim) create body is unchanged by the unknown dir', () => {
+        const out = renderSpecifyCreationLifecyclePreamble('companion', null, DISPATCH, true);
+        expect(out).not.toContain(ORDER_RULE);
+        expect(out).not.toContain(UNKNOWN_DIR_FLAG);
+        expect(out).toContain('carries the full `.spec-context.json` capture');
+    });
+
+    it('the multi-step lifecycle preamble applies the same rule when the dir is unknown', () => {
+        const out = renderLifecyclePreamble('', DISPATCH, false);
+        expect(out).toContain(ORDER_RULE);
+        expect(out).toContain(UNKNOWN_DIR_FLAG);
+        expect(renderLifecyclePreamble(SPEC_DIR, DISPATCH, false)).not.toContain(ORDER_RULE);
+    });
+});

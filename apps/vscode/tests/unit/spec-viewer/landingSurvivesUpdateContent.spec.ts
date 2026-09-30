@@ -34,3 +34,80 @@ describe('opening a spec as a whole', () => {
         expect(landingOf(panel)).toBe('overview');
     });
 });
+
+describe('navigating inside an open panel', () => {
+    let specDir: string;
+    let provider: SpecViewerProvider;
+
+    beforeEach(() => {
+        specDir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'speckit-nav-')), '001-demo');
+        fs.mkdirSync(specDir);
+        fs.writeFileSync(path.join(specDir, 'spec.md'), '# Spec\n');
+        fs.writeFileSync(path.join(specDir, 'plan.md'), '# Plan\n');
+        (vscode.window.createWebviewPanel as jest.Mock).mockClear();
+        const { context } = (vscode as unknown as {
+            createMockExtensionContext: () => { context: vscode.ExtensionContext };
+        }).createMockExtensionContext();
+        provider = new SpecViewerProvider(context, vscode.window.createOutputChannel('test'));
+    });
+
+    afterEach(() => fs.rmSync(path.dirname(specDir), { recursive: true, force: true }));
+
+    function openPanel() {
+        return (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+    }
+
+    it('a rail click from the Overview lands on the document, and the tab says which', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+        expect(panel.title).toBe('Spec: 001-demo - Overview');
+
+        await panel.__receive({ type: 'stepperClick', phase: 'plan' });
+
+        const update = panel.__lastPosted('contentUpdated');
+        expect(update.navState.landing).toBe('document');
+        expect(panel.title).toBe('Spec: 001-demo - Plan');
+    });
+
+    it('choosing the Overview again renames the tab back', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+        await panel.__receive({ type: 'stepperClick', phase: 'plan' });
+
+        await panel.__receive({ type: 'overviewChosen' });
+
+        expect(panel.title).toBe('Spec: 001-demo - Overview');
+    });
+
+    it('a rail click after the folder moved says so instead of rendering a stale document', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+        fs.renameSync(specDir, path.join(path.dirname(specDir), '001-renamed'));
+
+        await panel.__receive({ type: 'stepperClick', phase: 'plan' });
+
+        expect(panel.__lastPosted('specMoved')).toEqual({ type: 'specMoved', specDirectory: specDir });
+        expect(panel.__lastPosted('contentUpdated')).toBeUndefined();
+        expect(panel.title).toBe('Spec: 001-demo (moved)');
+    });
+
+    it('the folder watcher marks the panel without waiting for a click', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+        fs.renameSync(specDir, path.join(path.dirname(specDir), '001-renamed'));
+
+        provider.handleSpecDirectoryGone(specDir);
+
+        expect(panel.__lastPosted('specMoved')).toBeDefined();
+        expect(panel.title).toBe('Spec: 001-demo (moved)');
+    });
+
+    it('ignores a delete event for a folder that is still there', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+
+        provider.handleSpecDirectoryGone(specDir);
+
+        expect(panel.__lastPosted('specMoved')).toBeUndefined();
+    });
+});

@@ -20,9 +20,9 @@ After drafting the spec, specify SHALL size the change as `simple`, `normal` or 
 - **THEN** the guardrail line `[companion] Change exceeds the small-change guardrail (5 files / 10 tasks)` is printed and the run continues as `normal`
 
 ### A simple change folds plan and tasks into specify
-<!-- touches: apps/speckit-extension/nodes/specify/branch.md, apps/speckit-extension/nodes/specify/finalize.md, apps/speckit-extension/nodes/specify/handoff.md -->
+<!-- touches: apps/speckit-extension/nodes/specify/branch.md, apps/speckit-extension/nodes/specify/finalize.md, apps/speckit-extension/nodes/specify/handoff.md, apps/speckit-extension/nodes/auto/orchestrate.md, apps/speckit-extension/workflows/speckit-companion.workflow.yml -->
 
-On a `simple` verdict specify SHALL write three lean files in one pass: the spec with an Approach section, a `plan.md` that points at that Approach, and a `tasks.md` holding the real checklist. The plan and tasks steps are recorded as satisfied, the spec lands at `ready-to-implement`, and the next step is implement. The task checklist lives only in `tasks.md`. A `normal` or `oversized` verdict writes the spec only.
+On a `simple` verdict specify SHALL write three lean files in one pass: the spec with an Approach section, a `plan.md` that points at that Approach, and a `tasks.md` holding the real checklist. The plan and tasks steps are recorded as satisfied, the spec lands at `ready-to-implement`, and the next step is implement. The task checklist lives only in `tasks.md`. A `normal` or `oversized` verdict writes the spec only. Every driver of the pipeline honours the fold the same way: the specify handoff, `speckit.companion.auto` and the workflow's `simple` route all go from specify to implement without running plan or tasks again.
 
 #### Scenario: a typo fix
 - **WHEN** specify classifies the change `simple`
@@ -31,6 +31,10 @@ On a `simple` verdict specify SHALL write three lean files in one pass: the spec
 #### Scenario: a normal change
 - **WHEN** the verdict is `normal`
 - **THEN** no `plan.md` or `tasks.md` is written by specify and the handoff names `speckit.companion.plan`
+
+#### Scenario: auto drives a simple change
+- **WHEN** `speckit.companion.auto` dispatches specify and the verdict is `simple`
+- **THEN** auto skips `speckit.companion.plan` and `speckit.companion.tasks` and dispatches implement, and the lean `plan.md` and `tasks.md` are not overwritten
 
 ### Plan and tasks trim for simple and signpost for oversized
 <!-- touches: apps/speckit-extension/nodes/plan/size-budget.md, apps/speckit-extension/nodes/tasks/size-budget.md, apps/speckit-extension/nodes/plan/side-files.md -->
@@ -48,7 +52,7 @@ Plan and tasks SHALL read the recorded size before writing, and a missing size m
 ### The workflow routes on the verdict and never skips silently
 <!-- touches: apps/speckit-extension/workflows/speckit-companion.workflow.yml, apps/speckit-extension/presets/_parts/routing.md, apps/speckit-extension/commands/speckit.companion.classify.md -->
 
-In the `speckit-companion` workflow a read-only classify step SHALL print `[companion] size=<verdict>` and expose the size to the routing step. `simple` runs plan, tasks and implement with no review gates. `oversized` prints a visible warning and then runs the full gated pipeline. `normal`, and any value the router cannot resolve, runs the full gated pipeline.
+In the `speckit-companion` workflow a read-only classify step SHALL print `[companion] size=<verdict>` and expose the size to the routing step. `simple` runs implement only, with no review gates, because the specify step already folded plan and tasks. `oversized` prints a visible warning and then runs the full gated pipeline. `normal`, and any value the router cannot resolve, runs the full gated pipeline.
 
 #### Scenario: the size cannot be read
 - **WHEN** the routing step gets an empty or unknown size
@@ -69,4 +73,4 @@ A project SHALL be able to override, per verdict, which steps it folds and what 
 
 ## Uncovered
 
-- The workflow's `simple` path still runs plan and tasks as separate steps without gates, while a self-advancing `simple` run skips them because specify already folded them. Both are shipped behaviour and nothing reconciles them.
+- Auto's fold check and the workflow's `simple` route read the recorded verdict and history, not a project's `folds:` override. A project that sets `simple` to fold only `tasks` gets a specify that still runs plan, and nothing checks that auto and the workflow agree with that override.

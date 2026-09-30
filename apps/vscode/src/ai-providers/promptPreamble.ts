@@ -113,10 +113,39 @@ function featureDirFromTarget(target: string): string {
  */
 export const WORKSPACE_WRITER_PATH = '.specify/extensions/companion/scripts/write-context.py';
 
+/** The target-path placeholder a create dispatch uses while the spec dir is still unknown. */
+const UNKNOWN_DIR_PLACEHOLDER = '<specDir>';
+
+/**
+ * The `--feature-dir` value every rendered writer call carries when the dir is
+ * unknown at dispatch. Omitting the flag let the writer fall back to
+ * `.specify/feature.json`, which still names the PREVIOUS spec until the command
+ * rewrites it, so the self-close landed on the wrong folder and was refused.
+ */
+export const UNKNOWN_DIR_FLAG_VALUE = '<the folder the command just created>';
+
 // Always quoted: extension install paths (and workspace spec dirs) can contain spaces.
 function writerInvocation(writerPath: string, featureDir: string): string {
-    const dir = featureDir && featureDir !== '<specDir>' ? ` --feature-dir "${featureDir}"` : '';
+    if (featureDir === UNKNOWN_DIR_PLACEHOLDER) {
+        return `python3 "${writerPath}" --feature-dir "${UNKNOWN_DIR_FLAG_VALUE}"`;
+    }
+    const dir = featureDir ? ` --feature-dir "${featureDir}"` : '';
     return `python3 "${writerPath}"${dir}`;
+}
+
+/**
+ * Stock create only: the folder does not exist when the preamble is rendered,
+ * so the writer calls below must wait for the command to mint it and must be
+ * scoped to it. Empty for a known dir, which keeps that body byte-identical.
+ */
+function renderUnknownDirOrderingRule(featureDir: string): string[] {
+    if (featureDir !== UNKNOWN_DIR_PLACEHOLDER) return [];
+    return [
+        'ORDER OF OPERATIONS: the spec folder does not exist yet. Run NO write-context.py call before the command has created `specs/<NNN>-<slug>/` and written `.specify/feature.json`.',
+        `Every writer call below carries \`--feature-dir "${UNKNOWN_DIR_FLAG_VALUE}"\`. Replace that placeholder with the real path of the folder the command created.`,
+        'Never run these against a folder that already has history. That is the previous spec.',
+        '',
+    ];
 }
 
 /**
@@ -285,7 +314,7 @@ function renderSlimCompanionPreamble(step: PromptStep, target: string, dispatchU
 }
 
 export function renderPreamble(step: PromptStep, specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH): string {
-    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const target = specDir ? `${specDir}/.spec-context.json` : `${UNKNOWN_DIR_PLACEHOLDER}/.spec-context.json`;
     if (companionInstalled) {
         return renderSlimCompanionPreamble(step, target, dispatchUtc);
     }
@@ -379,6 +408,7 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
     return [
         `Throughout this run, keep ${target} up to date as you move through steps. Schema:`,
         '',
+        ...renderUnknownDirOrderingRule(featureDir),
         SPEC_CONTEXT_SCHEMA,
         '',
         STATUS_LIFECYCLE,
@@ -404,7 +434,7 @@ export function renderLifecycleBody(target: string, dispatchUtc: string, compani
 }
 
 export function renderLifecyclePreamble(specDir: string, dispatchUtc: string, companionInstalled = false, writerPath: string = WORKSPACE_WRITER_PATH, unattended = false): string {
-    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const target = specDir ? `${specDir}/.spec-context.json` : `${UNKNOWN_DIR_PLACEHOLDER}/.spec-context.json`;
     return [
         MARKER_OPEN,
         renderLifecycleBody(target, dispatchUtc, companionInstalled, writerPath, unattended),
@@ -420,7 +450,7 @@ export function renderSpecifyCreationLifecyclePreamble(
     writerPath: string = WORKSPACE_WRITER_PATH,
     telemetryInstanceId: string | null = null
 ): string {
-    const target = specDir ? `${specDir}/.spec-context.json` : '<specDir>/.spec-context.json';
+    const target = specDir ? `${specDir}/.spec-context.json` : `${UNKNOWN_DIR_PLACEHOLDER}/.spec-context.json`;
     return [
         MARKER_OPEN,
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
@@ -434,7 +464,13 @@ export function renderSpecifyCreationLifecyclePreamble(
         'a later commit — do NOT pre-emit them here.',
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
         '',
-        `On first creation, write ${target} with these top-level fields (the file does not yet exist):`,
+        // Stock only: the companion specify body mints the folder and scopes its own writer calls.
+        ...(specDir || companionInstalled
+            ? [`On first creation, write ${target} with these top-level fields (the file does not yet exist):`]
+            : [
+                `On first creation, write ${target} with these top-level fields (the file does not yet exist). \`${UNKNOWN_DIR_PLACEHOLDER}\` is the folder the command creates. Write the seed file inside that folder, only after the command has created it and written \`.specify/feature.json\`. Run no write-context.py call before then.`,
+                'Never seed a folder that already has history. That is the previous spec.',
+            ]),
         '',
         '```json',
         '{',

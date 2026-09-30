@@ -470,5 +470,14 @@ export function setupSpecViewerWatcher(
         watcher.onDidDelete(handleDelete);
         context.subscriptions.push(watcher);
     }
+
+    // The markdown watchers never see a folder go: a renamed or deleted spec
+    // directory left its panel open over stale documents. Every path under a
+    // spec pattern reports here; the viewer ignores any that is not a panel key.
+    for (const pattern of watcherPatterns.specs) {
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern, true, true, false);
+        watcher.onDidDelete(uri => specViewer.handleSpecDirectoryGone(uri.fsPath));
+        context.subscriptions.push(watcher);
+    }
     outputChannel.appendLine(`[SpecViewerWatcher] Watchers registered for ${mdPatterns.length} spec patterns`);
 }

@@ -1,0 +1,46 @@
+---
+title: The GitHub Copilot app board
+description: A live board of every spec, next to the chat in the GitHub Copilot app, with a button that runs the next SpecKit Companion step.
+sidebar:
+  label: Copilot app board
+  order: 7
+---
+
+If you work in the GitHub Copilot app instead of VS Code, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step.
+
+![The SpecKit Companion board in the Copilot app: the spec list on the left, and on the right one spec with its pipeline, the next-step button, and the Overview.](/canvas/board.png)
+
+## What you get
+
+- **Every spec at a glance.** Status, a four-step bar (specify, plan, tasks, implement) and task progress, most recently active first. Filter by Active, Done or All, or search by name or number.
+- **The Overview and every document.** The same Overview dossier as the VS Code viewer (intent, time per phase, decisions, coverage), then the spec, plan, tasks, research and checklists.
+- **The next step, one click away.** The button sends the same line the VS Code sidebar does, such as `/speckit.companion.plan specs/042-export-csv`, into the chat.
+- **New spec, your workflow.** Pick Companion, Spec Kit or Auto the way the VS Code create-spec dialog does. Companion and Auto are greyed out, with the reason, in a project without the companion extension.
+- **Live.** When the agent writes `plan.md` or ticks a task, the board updates without a refresh.
+
+![A spec mid-implement on the board: Implement is running, three of six tasks are done, and the tasks tab shows each phase with the files the run captured.](/canvas/tasks.png)
+
+![The New spec form with Companion, Spec Kit and Auto, and a line under it saying what Companion does.](/canvas/new-spec.png)
+
+## Set it up
+
+The board reads and never writes: it does not touch `.spec-context.json` or any spec file. The commands it sends do that.
+
+Copy the `apps/copilot-canvas` folder from the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project or your user folder:
+
+```bash
+# shared with your team
+cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
+# every project on your machine
+cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+```
+
+Start a new session in the Copilot app and ask: **Open the SpecKit Companion canvas**. It also appears under **Customize, Canvas**.
+
+The Copilot app runs each session in a fresh worktree cut from your default branch. A project copy only shows up once it is on that branch, so use the user folder while you try it out.
+
+## Use it with the Companion commands
+
+The buttons send `/speckit.companion.*` when the [companion Spec Kit extension](/docs/install) is installed in the project, and the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` when it is not. The board says which it is using under the next-step button.
+
+You can also ask the agent: "which specs are still open?" or "show me the export spec", and the board follows.

@@ -112,6 +112,7 @@ function makeDeps(
     }),
     updateContent: jest.fn().mockResolvedValue(undefined),
     sendContentUpdateMessage: jest.fn().mockResolvedValue(undefined),
+    refreshPanelTitle: jest.fn(),
     refreshContextIfDisplaying: jest.fn().mockResolvedValue(undefined),
     resolveWorkflowSteps: jest.fn().mockResolvedValue([]),
     executeInTerminal: jest.fn().mockResolvedValue(undefined),

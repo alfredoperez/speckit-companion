@@ -380,6 +380,12 @@ export type ExtensionToViewerMessage =
           type: 'fileDeleted';
           filePath: string;
       }
+    // The spec folder the panel is keyed by no longer exists (moved, renamed or
+    // deleted). The panel cannot follow it; the reader reopens from the sidebar.
+    | {
+          type: 'specMoved';
+          specDirectory: string;
+      }
     | {
           type: 'navStateUpdated';
           navState: NavState;
@@ -541,10 +547,6 @@ export type ViewerToExtensionMessage =
     // panel HTML and the webview's own mode does not survive that.
     | {
           type: 'overviewChosen';
-      }
-    // The reader left the Overview for the document, for the same reason.
-    | {
-          type: 'documentChosen';
       }
     // Living-spec approval: drop the `adopted` marker on one requirement, or all of them
     // Delete one requirement from the living spec, by heading

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SpecKit Companion</title>
+    <link rel="stylesheet" href="/viewer.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <!-- The site's full logo mark (apps/website/src/components/LogoMark.astro), coloured by theme tokens. -->
+        <svg class="brand-mark" width="24" height="24" viewBox="0 0 678 678" aria-hidden="true" focusable="false"><path class="mark-pale" d="M315.34 2.18C357.67-2.1 377.91 28.2 404.93 55.31L482.8 133.14L584.21 234.53C601.87 252.07 622.52 271.31 638.57 289.69C653.83 307.16 658.46 343.01 650.95 364.47C648.62 371.12 645.39 380.51 640.87 385.94C624.36 405.78 605.54 424.08 587.31 442.34L491.88 537.59L413.56 616.25C397.49 632.33 378.97 652.1 361.28 665.59C353.78 670.27 348.83 673.06 340.12 675.38C323.13 679.82 305.08 677.36 289.9 668.53C276.51 660.64 266.85 647.7 263.09 632.62C258.98 616.27 261.62 598.96 270.42 584.58C275.97 575.34 297.94 555.48 307 546.47L425.48 430.74C443.2 413.37 470.93 389 484.23 369.28C494.14 354.6 493.56 326.31 484.76 310.65C474.11 291.72 448.59 270.61 432.2 255.13L340.5 167.44C319.08 147.2 295.75 125.87 276.08 103.89C270.29 97.42 266.87 89.05 264.67 80.64C260.26 63.99 262.77 46.26 271.63 31.49C281.68 14.84 296.99 6.45 315.34 2.18z"/><path class="mark-violet" d="M170.9 232.63L89.44 153.61C72.98 137.67 46.88 115.02 34.44 96.61C9.21 59.25 36.58 2.46 82.89 1.29C113.53 0.52 130.63 23.82 150.46 43.28C156.76 49.48 162.92 55.91 169.12 62.22C197.56 91.23 226.29 119.94 255.31 148.36C265.23 158.37 331.99 223.45 332.76 229.72C327 240.01 262.65 300.94 250.99 310.16C225.07 285.72 196.37 257.63 170.9 232.63z"/><path class="mark-pale" d="M255.31 148.36C265.23 158.37 331.99 223.45 332.76 229.72C327 240.01 262.65 300.94 250.99 310.16C225.07 285.72 196.37 257.63 170.9 232.63C182.57 222.24 194.88 208.93 205.94 197.69L255.31 148.36z"/><path class="mark-violet" d="M169.67 451.43C195.29 425.65 225.42 394.59 251.81 369.89C259.8 376.73 331.49 446.43 332.55 451.22C327.33 461.58 267.72 520.38 254.9 533.4C217.03 571.66 179.03 609.89 141.17 648.15C124.85 664.65 110.3 677.32 85.8 677.01C71.59 676.84 56.35 671.51 46.27 661.13C34.73 649.07 28.38 632.97 28.59 616.27C29.14 581.69 58.75 560.4 81.65 537.76L169.67 451.43z"/><path class="mark-pale" d="M169.67 451.43C195.29 425.65 225.42 394.59 251.81 369.89C259.8 376.73 331.49 446.43 332.55 451.22C327.33 461.58 267.72 520.38 254.9 533.4C247.76 528.06 238.53 518.09 231.94 511.6L198.44 478.94C188.92 469.52 180.03 459.91 169.67 451.43z"/><path class="mark-pale" d="M403.53 293.71C410.8 296.72 428.95 311.41 420 319.53C410.87 327.82 352.9 390.82 345.5 391.67C337.78 389.59 326.89 376.49 320.97 370.33C305.4 355.01 285.95 346.93 316.27 328.27C321.28 325.19 339.21 345.41 344.31 349.18L345.51 350.05C357.26 337.99 391.83 301.3 403.53 293.71z"/></svg>
+        <div class="brand">
+            <h1>SpecKit Companion</h1>
+            <p class="brand-sub" id="repo-line">Loading specs…</p>
+        </div>
+        <span class="live" id="live" data-state="connecting"><span class="live-dot" aria-hidden="true"></span><span id="live-label">Connecting</span></span>
+        <button class="btn btn-quiet" id="new-spec-toggle" type="button" aria-expanded="false" aria-controls="new-spec">New spec</button>
+        <button class="btn btn-icon" id="refresh" type="button" title="Re-read every spec folder" aria-label="Refresh">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71M13.25 2.25v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+    </header>
+
+    <form class="new-spec" id="new-spec" hidden>
+        <label for="new-spec-text">Describe the feature. Specify creates the spec folder and writes <code>spec.md</code>.</label>
+        <div class="segmented new-spec-workflow" id="new-spec-workflow" role="radiogroup" aria-label="Workflow" aria-describedby="new-spec-hint"></div>
+        <p class="new-spec-hint" id="new-spec-hint"></p>
+        <div class="new-spec-row">
+            <textarea id="new-spec-text" rows="2" placeholder="Let people export their board as CSV" required></textarea>
+            <button class="btn btn-primary" type="submit">Specify</button>
+        </div>
+    </form>
+
+    <div class="layout" id="layout" data-view="board">
+        <aside class="board" aria-label="Specs">
+            <div class="board-tools">
+                <input class="search" id="search" type="search" placeholder="Search by name or number" aria-label="Search specs" autocomplete="off">
+                <div class="segmented" role="radiogroup" aria-label="Filter specs">
+                    <button type="button" role="radio" data-filter="active" aria-checked="true">Active <span class="count" id="count-active">0</span></button>
+                    <button type="button" role="radio" data-filter="done" aria-checked="false">Done <span class="count" id="count-done">0</span></button>
+                    <button type="button" role="radio" data-filter="all" aria-checked="false">All <span class="count" id="count-all">0</span></button>
+                </div>
+            </div>
+            <ul class="spec-list" id="spec-list" aria-label="Spec list"></ul>
+            <p class="list-empty" id="list-empty" hidden>No specs match.</p>
+        </aside>
+
+        <main class="detail" id="detail" tabindex="-1">
+            <div class="detail-empty" id="detail-empty">
+                <p>Pick a spec to see its pipeline, documents and history.</p>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

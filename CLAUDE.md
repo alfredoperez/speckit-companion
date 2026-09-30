@@ -4,7 +4,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 ## Repo map
 
-Three deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), and the marketing site (`apps/website/`).
+Four deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, loaded in this repo through `.github/extensions/speckit-companion/`), and the marketing site (`apps/website/`).
 
 - `capabilities/` — this repo's own living specs; it dogfoods the feature it ships.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
@@ -48,7 +48,7 @@ The webview's `escapeHtml` (textContent→innerHTML) does NOT escape attribute q
 
 ### Extension isolation
 
-The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**` are user/workspace files — read-only from the extension's perspective; never implement extension features by modifying them. Extension-owned behavior lives in command handlers (`apps/vscode/src/features/specs/specCommands.ts`, viewer message handlers) or in the prompt text the extension builds (`ai-providers/*`). Exception: the committed `.specify/`, `.claude/`, `.codex/`, `.agents/skills/`, `.github/{agents,prompts}/speckit.*` dirs are **manual-testing fixtures** (`specify init` output) — don't delete them as an "isolation violation".
+The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**` are user/workspace files — read-only from the extension's perspective; never implement extension features by modifying them. Extension-owned behavior lives in command handlers (`apps/vscode/src/features/specs/specCommands.ts`, viewer message handlers) or in the prompt text the extension builds (`ai-providers/*`). Exception: the committed `.specify/`, `.claude/`, `.codex/`, `.agents/skills/`, `.github/{agents,prompts}/speckit.*` dirs are **manual-testing fixtures** (`specify init` output) — don't delete them as an "isolation violation". One specified exception: with the companion extension installed, activation runs the `specify` CLI (`specify preset add --dev`) to restore the standard `/speckit.*` command family, and the CLI rewrites the committed `.claude/skills/speckit-*` bodies and creates `.specify/presets/` (`capabilities/extension-services/keep-the-companion-extension-current.spec.md`). The extension itself writes no files there.
 
 ### Demo spec fixtures are a pinned baseline
 

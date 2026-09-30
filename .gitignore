@@ -110,3 +110,6 @@ assets/mascot/explore/
 
 # Local hook caches from the impeccable tooling, per checkout.
 .impeccable/
+
+# Screenshots from `npm run canvas:shots`
+.canvas-shots/

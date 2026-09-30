@@ -1,0 +1,29 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "speckit-companion",
+  "description": "A live board of every spec in your repo: the specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next SpecKit Companion step.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Alfredo Perez",
+    "url": "https://github.com/alfredoperez"
+  },
+  "homepage": "https://speckit-companion.dev",
+  "keywords": [
+    "canvas",
+    "spec-driven-development",
+    "speckit",
+    "spec-kit",
+    "pipeline",
+    "tasks"
+  ],
+  "extensions": {
+    "com.github.copilot": {
+      "logo": "assets/preview.png"
+    },
+    "com.github.awesome-copilot": {
+      "extensions": [
+        "./extensions/speckit-companion"
+      ]
+    }
+  }
+}
