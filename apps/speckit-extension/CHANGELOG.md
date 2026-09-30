@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-09-30
+
 ### Added
 - **A run that never read the living specs now says so.** Loading them never fails by design, so a skipped load looked exactly like a project with nothing to load, and the run carried on without the context every other run gets. The health check reports it as a problem.
 
