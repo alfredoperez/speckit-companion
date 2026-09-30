@@ -2558,15 +2558,9 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 
-/* ── Side panel ──────────────────────────────────────────────
-   Last in the file: `@container` adds no specificity, and the lane and seam
-   rules it overrides are declared above. */
+/* ── Side panel ── last in the file, since `@container` adds no specificity. */
 
-/* Two lanes need about 650px. Below that the run is one column: steps stack in
-   run order, each as wide as the panel, and the seams between them turn from a
-   vertical rule into a horizontal one. A lane stays readable instead of being
-   clipped at its 300px floor, and nothing is left behind a sideways scroll
-   that nothing on screen points to. */
+/* Under two lanes' width the steps stack at the panel's width instead of clipping at 300px. */
 @container builder (max-width: 640px) {
     .pb-run,
     .pb-run--seamed {

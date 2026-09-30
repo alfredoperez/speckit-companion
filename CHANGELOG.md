@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the nearest edge of the one you pick, so you no longer have to drag it or remove and re-add it.
+- **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
 
 ### Fixed
 - **Phase-complete notifications name the spec on Windows.** The toast read "completed in unknown" instead of the feature folder, because Windows paths use backslashes.

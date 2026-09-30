@@ -38,7 +38,12 @@ describe('the phases a node can move to', () => {
 });
 
 describe('moving a node into another phase', () => {
-    it('leaves the order alone when the phase is next door', () => {
+    it('moves a node from the middle of its phase past its neighbours', () => {
+        const shape = movedToPhase(three(), 'a', 'author')!;
+        expect(shape.order).toEqual(['b', 'a', 'c', 'd', 'e']);
+    });
+
+    it('leaves the order alone when an edge node moves to the phase next door', () => {
         const shape = movedToPhase(three(), 'c', 'gather')!;
         expect(shape.order).toEqual(['a', 'b', 'c', 'd', 'e']);
         expect(shape.phases).toEqual([

@@ -1,12 +1,3 @@
-/**
- * Moving a node into another phase without dragging it.
- *
- * A phase is a contiguous run of the step, so the flat order the configuration
- * stores only changes when the node has to jump over a phase. The node joins the
- * edge of the destination nearest to where it was: the end of a phase above it,
- * the start of one below. For the phase next door that leaves the order exactly
- * as it was, which is the move least likely to cross a `reads:` dependency.
- */
 import { PipelineStep } from '../../../src/protocol/pipeline';
 
 export interface MoveTarget {
@@ -24,11 +15,7 @@ export function moveTargets(step: PipelineStep, nodeId: string): MoveTarget[] {
         : [{ phase: p.name, joins: at < from ? 'end' as const : 'start' as const }]);
 }
 
-/**
- * The step's order and grouping with one node in another phase, or null when it
- * is not in the step or is already there. A phase the move empties goes with it,
- * since an empty phase cannot be written.
- */
+/** The step's order and grouping with the node in another phase, or null when that is no move. */
 export function movedToPhase(step: PipelineStep, nodeId: string, phase: string):
 { order: string[]; phases: Array<{ name: string; nodes: string[] }> } | null {
     const grouped = step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) }));
