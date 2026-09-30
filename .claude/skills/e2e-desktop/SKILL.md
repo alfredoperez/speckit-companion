@@ -1,15 +1,17 @@
 ---
 name: e2e-desktop
-description: Screenshot-driven end-to-end verification of SpecKit Companion on the real Mac, from Claude Desktop with computer use. Builds a throwaway sandbox, hunts navigation bugs in the VS Code sidebar and spec viewer, runs a full spec (specify → plan → tasks → implement) through VS Code with per-step timing, then drives the same kind of run from the GitHub Copilot app canvas, and writes a dated results folder of numbered screenshots, findings and timing tables. Use when the user says "/e2e-desktop", "run the desktop e2e", "verify the extension and the canvas end to end", or wants VS Code timing runs instead of auto mode.
-compatibility: Claude Desktop with computer use (VS Code granted at click tier, GitHub Copilot at full tier), Bash, the `code` and `specify` CLIs, the Claude Code CLI signed in
+description: Release-scoped QA of SpecKit Companion on the real Mac, run once at the end of a batch of fixes. Reads what is being released (the diff since the last v* tag plus the Unreleased changelogs), turns changed paths into a checklist through surface-map.yml, runs every automated gate with Bash first, then spends desktop time only on what needs eyes (VS Code through computer use, the GitHub Copilot app canvas, a terminal run) on top of a fixed baseline, and writes one QA report note into the Obsidian vault with a ship / fix-first verdict. Use when the user says "/qa-release", "qa release", "run QA", "QA the release", "/e2e-desktop", "run the desktop e2e", or wants VS Code, canvas and terminal timing runs instead of auto mode.
+compatibility: Claude Desktop with computer use (VS Code granted at click tier, GitHub Copilot at full tier), Bash, the `code` and `specify` CLIs, the Claude Code CLI signed in, the `obsidian` skill
 metadata:
   author: alfredo
   source: repo
 ---
 
-# E2E desktop run
+# QA release
 
-Two surfaces, one throwaway sandbox, one results folder. Bash does every bit of setup, typing, polling and timing; computer use does the clicking and looking. Nothing here touches this repo's working tree except the throwaway `.vsix` written into the results folder.
+One run per release, never per ticket, and issue-agnostic: it reads what is being released, not a ticket list. Bash does every bit of setup, typing, polling and timing; computer use does the clicking and looking. QA never edits this repo; failures become fix candidates in the report. The repo stays untouched; the throwaway `.vsix` goes into the results folder.
+
+`/qa-release` is the entry point. This skill holds the flow; `surface-map.yml` holds the checks; the helper scripts in this folder do the mechanical parts.
 
 ## What each tool can do here
 
@@ -17,7 +19,7 @@ Two surfaces, one throwaway sandbox, one results folder. Bash does every bit of 
 |---|---|---|---|
 | Visual Studio Code | click | left-click, scroll, screenshot | type, press keys, right-click, drag. So no command palette, no typing in the Create Spec box, no terminal input |
 | GitHub Copilot | full | everything | - |
-| Browsers | read | look | click. Not needed here |
+| Browsers | read | look | click. Used only to look at changed site pages |
 
 Consequences, designed in: settings are written to a file by Bash, the AI provider runs with auto-approve so its terminal never waits for a keypress, and the one piece of typing VS Code needs (the Create Spec description) is either handed to the user as a paste or done headless by Bash. Look with the computer-use `screenshot`; save evidence with `shot.sh`, which writes a real PNG to disk.
 
@@ -26,16 +28,107 @@ Consequences, designed in: settings are written to a file by Bash, the AI provid
 ```bash
 REPO=/Users/alfredoperez/dev/GitHub/speckit-companion
 SKILL=$REPO/.claude/skills/e2e-desktop
+VAULT=$HOME/dev/GitHub/obsidian-vault
+DATE=$(date +%Y-%m-%d)
 RUN=$(date +%Y-%m-%d-%H%M)
 SANDBOX=$HOME/dev/projects/companion-sandboxes/e2e-$RUN
-RESULTS=$HOME/dev/projects/companion-sandboxes/e2e-results/$RUN
+STOCK=$SANDBOX-stock
+RESULTS=$HOME/dev/projects/companion-sandboxes/e2e-results/$DATE
 ```
 
-Re-declare them in every Bash call; shell state does not persist.
+Re-declare them in every Bash call; shell state does not persist. `$RESULTS` is per day: a second run the same day reuses it and its numbered shots.
 
-## 0. Preflight
+## Step 0. Scope the run from the release
 
-Run each and stop with a one-line reason on the first failure:
+Stop on a dirty tree, then read the release:
+
+```bash
+TAG=$(git -C $REPO describe --tags --abbrev=0 --match 'v[0-9]*')
+git -C $REPO diff $TAG..HEAD --stat
+git -C $REPO diff $TAG..HEAD --name-only
+awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' $REPO/CHANGELOG.md
+awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' $REPO/apps/speckit-extension/CHANGELOG.md
+```
+
+Then build the checklist:
+
+1. Match every changed path against `surface-map.yml`. Union the checks of every surface it matches, add `baseline`, and dedupe by check id: a check runs once however many surfaces ask for it.
+2. A path that matches no surface and no `ignore` glob is listed in the report as `no QA mapping`. Do not guess a check for it.
+3. Each Unreleased bullet is a claim the release makes. Name the check that would show it; a bullet no check reaches gets one extra desktop check of its own. An empty Unreleased section goes in the report as such.
+4. Write the checklist to `$RESULTS/checks.md` (`| check | kind | why | status | note |`). Every later step updates the status as it goes, and the report table is built from this file.
+
+`/qa-release recheck` is the re-run after fixes: it repeats the automated gates and only the checks that ended FAIL or BLOCKED, and carries a PASS over only when nothing changed since then matches its surface.
+
+## Step 1. Automated gates, Bash only
+
+Run every `kind: auto` check first, independent ones in parallel, each logging to `$RESULTS/auto/<id>.log`. Record PASS or FAIL per check. A red gate does not stop the run, so one pass gathers every finding; only a failed build or package marks the desktop checks BLOCKED.
+
+`check-capture` and `terminal-run` are not `auto` checks: they need a run first, so they belong to Step 2.
+
+## Step 2. Desktop time, only for what needs eyes
+
+Do [Preflight](#recipe-preflight) and [Sandbox](#recipe-sandbox-and-results-folder) once, then run the scoped checks in this order. Each recipe below says how.
+
+1. **`terminal-run`**, Bash only, before any timed desktop run so the timings never compete for the same API and CPU. It runs in its own copy of the sandbox (`cp -R "$SANDBOX" "$SANDBOX-terminal"` straight after setup), so `specs/` is never shared with the VS Code run.
+2. **`first-open`** in a fresh profile, then quit it.
+3. **The main VS Code session** on `$SANDBOX`: `nav-matrix`, `popups`, `provider-dispatch`, `builder`, `narrow-panel`, then `vscode-run`, then `themes` last so the light shots reuse the run's own state.
+4. **`stock-workspace`**, then **`multi-root`** (the sandbox beside the stock workspace).
+5. **The canvas checks** in the Copilot app: `canvas-open`, then `canvas-new-spec`.
+6. **`site-pages`** in a browser, whenever.
+
+Shoot once. A screenshot is saved with `shot.sh` when it fails or is docs-worthy, and it is the same file the report embeds and lists as a docs candidate, so nothing is shot twice. Log each check's status in `$RESULTS/checks.md` when it finishes, with a one-line note.
+
+A stuck prompt the clicks cannot answer is a FAIL finding for that check; unblock it through the headless fallback and continue.
+
+## Step 3. The report, one vault note
+
+Load the `obsidian` skill (report profile) and `writing`, then write one note:
+
+`$VAULT/Projects/speckit companion/QA Report $DATE.md` (a second run the same day adds ` 2`). No `reports/` folder exists; the note sits flat in the project folder.
+
+Frontmatter is the report profile's, plus what the release gate reads:
+
+```yaml
+kind: "QA report"
+lifespan: ephemeral
+head: <short sha under test>
+tag: <last v* tag>
+verdict: ship | fix-first
+fails: <n>
+blocked: <n>
+```
+
+Directly under the title, one line: `branch@sha`, the extension version, the tag it is measured from. `sub:` carries the 60 to 120 word finding, since it outlives the body.
+
+Sections, in this order:
+
+1. **Verdict** as the opening titled `[!note]`: `ship` or `fix first`, then one line naming every FAIL and BLOCKED check. `ship` means no FAIL; a BLOCKED check is named in the line even when the verdict is ship.
+2. **What the release changed**: the surfaces that matched, the Unreleased claims, and the `no QA mapping` paths.
+3. **Checks**: one row per check, `check | PASS/FAIL/BLOCKED | one-line note`, automated and desktop together, in the order they ran.
+4. **Timing**: one row per step, one column per surface (VS Code, canvas, terminal), the recorded span with the wall clock in brackets. Build it from `timing.md`. A gap over about 10s or a missing span is a finding. A surface that did not run shows `-`.
+5. **Findings**, most severe first, one block each, every FAIL a fix candidate:
+
+```markdown
+### F<n> — <one-line symptom>
+- Check: <check id>
+- Severity: blocker | major | minor | cosmetic
+- Repro: 1. <exact click> 2. <exact click> 3. …
+- Expected: <quote the living-spec requirement when there is one>
+- Actual: …
+- Fix candidate: <one line, the suspected area>
+- Evidence: ![[QA Report <DATE> - <slug>.png]]
+```
+
+6. **Screenshots worth keeping**: each docs candidate as `file`, what it shows, and which existing asset it could replace. Never copy into `docs/screenshots/`: the five README shots have their own recipe in `docs/visual-assets.md` and their filenames are load-bearing; generated images come from Storybook.
+7. **Evidence**: the `$RESULTS` path.
+
+Copy each embedded shot (every finding's evidence and every docs candidate) next to the note as `QA Report <DATE> - <slug>.png`, embed it with `![[…]]`, and give it a one-line italic caption. Raw evidence, the other shots, logs and capture output stay in `$RESULTS`. Run the `obsidian` skill's hard-wrap check on the note, then open it in Obsidian.
+
+End the chat with the verdict, the top findings, VS Code against canvas against terminal timing per step, and the note's path.
+
+## Recipe: Preflight
+
+Run each and stop with a one-line reason on the first failure. The two Copilot items apply only when a canvas check is scoped.
 
 - [ ] `specify extension --help` works (source build of spec-kit, see `apps/speckit-extension/docs/install.md`)
 - [ ] `claude --version` works and `claude -p "say ok"` answers (the VS Code provider shells out to it)
@@ -45,14 +138,18 @@ Run each and stop with a one-line reason on the first failure:
 - [ ] `ls ~/dev/GitHub/speckit-bench/examples/todo-claude/src` (the app fixture)
 - [ ] `request_access` for **Visual Studio Code** and **GitHub Copilot**; confirm the returned tiers match the table above
 - [ ] `$SKILL/shot.sh /tmp/e2e-probe x probe` writes a non-empty PNG (needs Screen Recording for Claude; Accessibility makes it crop to the front window)
-- [ ] Record what is under test: `git -C $REPO branch --show-current`, `git -C $REPO rev-parse --short HEAD`, `node -p "require('$REPO/package.json').version"`, `specify version | head -3`. These go in the results README.
+- [ ] `git -C $REPO status --porcelain` is empty, so the sha under test means something
+- [ ] Record what is under test: `git -C $REPO branch --show-current`, `git -C $REPO rev-parse --short HEAD`, `node -p "require('$REPO/package.json').version"`, `specify version | head -3`. These go in the report header.
 
-## 1. Sandbox and results folder
+## Recipe: Sandbox and results folder
 
 ```bash
 mkdir -p "$RESULTS"
 "$SKILL/setup-sandbox.sh" "$SANDBOX"
+cp -R "$SANDBOX" "$SANDBOX-terminal"
 ```
+
+The copy is the terminal run's own sandbox, taken before any run touches `specs/`.
 
 `setup-sandbox.sh` copies the `todo-claude` app from speckit-bench, runs `specify init` with the Claude integration plus Copilot, installs this checkout's spec-kit extension (`specify extension add $REPO/apps/speckit-extension --dev`) once per agent, Claude first and Copilot last (Copilot stays the default), seeds navigation fixtures (`specs/_00…_03` copied from the repo, plus `_04_demo-related-docs` with research, data model and a checklist, and `_05_demo-archived`), runs `npm install`, and **commits everything on `main`**. The commit matters: the Copilot app runs each session in a worktree cut from the default branch, so anything uncommitted is invisible to the canvas.
 
@@ -62,9 +159,9 @@ Opening the sandbox in VS Code runs the extension's preset reconciler, which cal
 
 Any `[setup] Missing …` line is a finding before you start; fix or record it.
 
-## 2. VS Code pass
+## Recipe: VS Code pass
 
-### 2a. Launch
+### Launch
 
 ```bash
 "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS"          # packages this checkout into $RESULTS and installs it
@@ -75,7 +172,7 @@ It runs an isolated instance (`--user-data-dir`/`--extensions-dir` under `~/dev/
 
 Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon, screenshot, `shot.sh "$RESULTS" vscode sidebar-initial dark`.
 
-### 2b. Navigation matrix
+### Navigation matrix
 
 For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from `capabilities/spec-viewer/read-a-spec.spec.md` and `move-a-spec-forward.spec.md`; quote the requirement in a FAIL.
 
@@ -101,7 +198,7 @@ Sidebar entry types (tree: group → spec → document → related doc):
 
 After the matrix, reset the sandbox fixtures: `git -C "$SANDBOX" stash -u && git -C "$SANDBOX" stash drop` (sandbox only; never run git in the repo).
 
-### 2c. Full run through VS Code, timed
+### Full run, timed
 
 Feature: `Let a reader mark any todo as starred, and add a Starred filter to the list view.`
 
@@ -127,54 +224,117 @@ python3 "$REPO/apps/speckit-extension/scripts/check_capture.py" "$SPEC" > "$RESU
 
 Compare three numbers per step: wall clock (your marks), recorded span (the table), and what the viewer's Overview shows. A disagreement over ~10s or a missing span is a finding.
 
-### 2d. Theme pass
+### Theme pass
 
-`"$SKILL/launch-vscode.sh" theme light` (the window picks it up live). Re-shoot the docs-worthy shots with `light`: sidebar expanded, viewer on Spec, viewer on Tasks mid-implement or done, Overview. Switch back with `theme dark`.
+`"$SKILL/launch-vscode.sh" theme light` (the window picks it up live). Shoot the states already shot in dark, now with `light`: sidebar expanded, viewer on Spec, viewer on Tasks, Overview. Switch back with `theme dark`.
 
-## 3. Copilot canvas pass
+### Narrow panel
 
-1. Note the sandbox is committed: `git -C "$SANDBOX" status --short` is empty (otherwise commit; the worktree won't see it).
-2. `open_application` GitHub Copilot. Add/open `$SANDBOX` as the project, start a new session, type `Open the SpecKit Companion canvas`. Screenshot; `shot.sh "$RESULTS" canvas board-initial dark`.
-3. Find the session's worktree: `git -C "$SANDBOX" worktree list`. Set `WT=<that path>`. Every spec the canvas run creates lives there, not in `$SANDBOX`. `SPEC` is the newest non-fixture dir under `$WT/specs` (fixtures are `_0N_…`; a new spec is numbered normally, such as `001-todo-footer-count`), the same rule `timing.py` uses.
-4. Board checks (assert each, log in `$RESULTS/canvas-checks.md`):
-   - [ ] Header reads SpecKit Companion and there is **no** "Stock Spec Kit commands: SpecKit Companion is not installed" hint (Companion commands detected)
-   - [ ] All six fixtures listed with the right status; Active/Done/All filters and search by number (`04`) work
-   - [ ] Click `_04`: rail, next-step button, document tabs (spec, plan, tasks with per-phase progress, research, data model, checklists) and the Activity tab render
-   - [ ] Click `_00` then `_02` quickly: detail shows `_02`, no content from `_00`
-5. Full run, timed with `surface=canvas`. Feature: `Show how many todos are left in the list footer.`
-   - [ ] `mark … canvas specify start`, click **New spec**, type the feature, submit. The chat must receive `/speckit.companion.specify …`, never `/speckit.specify`
-   - [ ] `timing.py wait "$WT/specs" specify 9`, `mark … specify end`, `SPEC=$WT/specs/<newest non-fixture dir>`. The board shows the new spec without a refresh
-   - [ ] For plan, tasks, implement: `mark start`, click the run button, confirm the chat line is `/speckit.companion.<step> specs/<dir>`, `wait`, `mark end`. While it runs, screenshot the live update (rail step flips, tasks tick). `shot.sh` each as `run-<step>-running` / `-done`
-   - [ ] Approve any Copilot tool-permission prompts by clicking (full tier); count them in the notes, each is friction worth recording
-   - [ ] `timing.py report "$RESULTS" canvas "$SPEC"` and `check_capture.py "$SPEC" > "$RESULTS/canvas-capture.txt"`
-6. Agent actions: in chat ask "what specs are still open?" and "show me the related docs spec". The board should follow (`list_specs`, `focus_spec`). Screenshot.
-7. Light shot if the app has a theme toggle; otherwise skip and say so.
+Click **Split Editor Right** in the viewer's tab bar twice so the viewer is a narrow column. With a spec on Spec and again on Tasks, assert the header, rail and footer buttons neither clip nor overflow, and nothing scrolls sideways. `shot.sh` it as `narrow-<state>`.
 
-## 4. Write-up
+### Popups
 
-In `$RESULTS`:
+Grep the files the diff changed for `showInformationMessage|showWarningMessage|showErrorMessage`. For each message found, cause it (the code says when) and assert it appears once, reads plainly, and its buttons do what they say. A changed file that raises no popup is nothing to check.
 
-- `README.md` — date, branch@sha, versions, sandbox path, which specify path was used, one-paragraph verdict per surface, then the two timing tables (paste from `timing.md`).
-- `findings.md` — one block per finding, most severe first:
+### Provider dispatch
 
-```markdown
-### F<n> — <one-line symptom>
-- Surface: vscode | canvas
-- Severity: blocker | major | minor | cosmetic
-- Steps: 1. … 2. … 3. …
-- Expected: … (quote the living-spec requirement when there is one)
-- Actual: …
-- Evidence: shots/NN-….png
+Open the AI provider picker and assert it lists the configured providers. Dispatch one step to the terminal. If `terminal-run` or `vscode-run` already ran, that dispatch counts and only the picker needs checking.
+
+### Pipeline builder
+
+Open the pipeline builder. Assert the phase menu opens, Add step adds a step that shows in the canvas, and the builder holds at a narrow width (split the editor as in Narrow panel). `shot.sh` it as `builder-<state>`.
+
+## Recipe: Clean profile and workspace variants
+
+### First open
+
+The packaged `.vsix` in a fresh profile with workspace trust on:
+
+```bash
+E2E_VSCODE_STATE=$HOME/dev/projects/companion-sandboxes/.e2e-vscode-fresh E2E_TRUST=1 "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS"
 ```
 
-- `nav-matrix.md`, `canvas-checks.md`, `timing.csv`, `timing.md`, `*-capture.txt`, `shots/`.
-- `docs-candidates.md` — the shot filenames good enough for docs, and which existing asset each could replace. Never copy into `docs/screenshots/`: the five README shots have their own recipe in `docs/visual-assets.md` (Dark Modern, zoom, crop) and their filenames are load-bearing; generated images come from Storybook, not from this run.
+Delete that state folder first so the profile is really clean. Assert Restricted Mode opens with no error popup and no empty view, and that the extension says what is limited, if anything is. Click **Trust**, then assert the sidebar fills and a spec opens. `shot.sh` both states. Quit the window afterwards: later checks use the default profile.
 
-End with a short plain summary to the user: what passed, the top findings, VS Code vs canvas timing per step, and the results path.
+### Stock workspace
 
-## 5. Cleanup
+A workspace with spec-kit and no Companion:
 
-- [ ] Quit the isolated VS Code instance (click its window, then the user quits it, or `pkill -f "e2e-vscode/data"`)
+```bash
+mkdir -p "$STOCK" && cd "$STOCK" && git init -q -b main && specify init --here --force --non-interactive --integration claude >/dev/null && git add -A && git commit -qm "stock workspace"
+"$SKILL/launch-vscode.sh" "$STOCK" "$RESULTS"
+```
+
+Read every popup that appears, in full, and use its main button once. Assert each popup reads plainly and the button does what it says (for example, an install nudge installs and a dismissed one stays dismissed). `shot.sh` each popup.
+
+### Multi-root
+
+```bash
+E2E_EXTRA_FOLDER="$STOCK" "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS"
+```
+
+Assert the sidebar lists specs per root without mixing them, a spec opens the right folder's document, and **New Spec** asks or targets the right root. `shot.sh` the sidebar.
+
+## Recipe: Terminal run
+
+In `$SANDBOX-terminal`, one small spec end to end through the CLI, timed as surface `terminal`:
+
+```bash
+cd "$SANDBOX-terminal"
+python3 "$SKILL/timing.py" mark "$RESULTS" terminal specify start
+claude -p "/speckit.companion.auto Let a reader mark any todo as starred, and add a Starred filter to the list view." --permission-mode bypassPermissions
+python3 "$SKILL/timing.py" mark "$RESULTS" terminal mark-complete end
+SPEC=$SANDBOX-terminal/specs/$(ls -t specs | grep -v '^_' | head -1)
+python3 "$SKILL/timing.py" report "$RESULTS" terminal "$SPEC"
+python3 "$REPO/apps/speckit-extension/scripts/check_capture.py" "$SPEC" > "$RESULTS/terminal-capture.txt"
+```
+
+Run it with `run_in_background` and wait for the exit, since the call can pass ten minutes. The wall marks cover the whole run, so the per-step figures come from the Recorded column. Assert the spec ends `completed` and `check_capture.py` passes.
+
+## Recipe: Copilot canvas pass
+
+1. Note the sandbox is committed: `git -C "$SANDBOX" status --short` is empty (otherwise commit; the worktree won't see it).
+2. `open_application` GitHub Copilot. Add/open `$SANDBOX` as the project.
+
+### Bare open
+
+Open the canvas three times without editing anything: start a new session each time and type `Open the SpecKit Companion canvas`. Before and after each open `git -C "$SANDBOX" status --short` must read the same, and the board must render.
+
+On the first open, screenshot (`shot.sh "$RESULTS" canvas board-initial dark`) and assert the board (log in `$RESULTS/canvas-checks.md`):
+
+- [ ] Header reads SpecKit Companion and there is **no** "Stock Spec Kit commands: SpecKit Companion is not installed" hint (Companion commands detected)
+- [ ] All six fixtures listed with the right status; Active/Done/All filters and search by number (`04`) work
+- [ ] Click `_04`: rail, next-step button, document tabs (spec, plan, tasks with per-phase progress, research, data model, checklists) and the Activity tab render
+- [ ] Click `_00` then `_02` quickly: detail shows `_02`, no content from `_00`
+
+### Full run
+
+Find the session's worktree: `git -C "$SANDBOX" worktree list`, and set `WT=<that path>`. Every spec the canvas run creates lives there, not in `$SANDBOX`. `SPEC` is the newest non-fixture dir under `$WT/specs` (fixtures are `_0N_…`; a new spec is numbered normally, such as `001-todo-footer-count`), the same rule `timing.py` uses.
+
+Timed with `surface=canvas`, Companion workflow. Feature: `Show how many todos are left in the list footer.`
+
+- [ ] `mark … canvas specify start`, click **New spec**, type the feature, submit. The chat must receive `/speckit.companion.specify …`, never `/speckit.specify`
+- [ ] `timing.py wait "$WT/specs" specify 9`, `mark … specify end`, `SPEC=$WT/specs/<newest non-fixture dir>`. The board shows the new spec without a refresh
+- [ ] For plan, tasks, implement: `mark start`, click the run button, confirm the chat line is `/speckit.companion.<step> specs/<dir>`, `wait`, `mark end`. While it runs, screenshot the live update (rail step flips, tasks tick). `shot.sh` each as `run-<step>-running` / `-done`
+- [ ] Approve any Copilot tool-permission prompts by clicking (full tier); count them in the notes, each is friction worth recording
+- [ ] `timing.py report "$RESULTS" canvas "$SPEC"` and `check_capture.py "$SPEC" > "$RESULTS/canvas-capture.txt"`
+
+Then once more with the stock workflow, however the canvas exposes the choice: New spec, and the chat must receive `/speckit.specify …`. Only specify has to land; no timing.
+
+Agent actions: in chat ask "what specs are still open?" and "show me the related docs spec". The board should follow (`list_specs`, `focus_spec`). Screenshot. Light shot if the app has a theme toggle; otherwise skip and say so.
+
+## Recipe: Website pages
+
+```bash
+cd "$REPO/apps/website" && npm run preview
+```
+
+Open each changed page in a browser (the `apps/website/src/content/docs/**` paths map to `/docs/...` routes) and look: images load, no layout break, links resolve. A page the diff changed only in text still gets one look. `shot.sh` a page when it fails or is docs-worthy.
+
+## Cleanup
+
+- [ ] Quit the isolated VS Code instance (click its window, then the user quits it, or `pkill -f "e2e-vscode"`)
 - [ ] Close the Copilot session; `git -C "$SANDBOX" worktree prune` after the app removes its worktree
-- [ ] Keep `$SANDBOX` until findings are triaged, then `rm -rf "$SANDBOX"`
-- [ ] `git -C $REPO status --short` shows nothing new from this run (the `.vsix` went to `$RESULTS`)
+- [ ] Stop the website preview if it is running
+- [ ] Keep `$SANDBOX` until the report's findings are triaged, then `rm -rf "$SANDBOX" "$SANDBOX-terminal" "$STOCK"`
+- [ ] `git -C $REPO status --short` shows nothing from this run (the `.vsix` went to `$RESULTS`)

@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Autonomously fix one or more speckit-companion GitHub issues with /speckit-companion-auto — fresh main, auto (fix + reviews + PR), merge, learnings — then one install-local and a manual-verification report. Self-hosting build loop.
+description: Autonomously fix one or more speckit-companion GitHub issues with /speckit-companion-auto — fresh main, auto (fix + reviews + PR), merge, learnings — then one install-local and a run report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
 
@@ -16,11 +16,11 @@ A **self-hosting build loop** for `speckit-companion`. For each ticket, in stric
 4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
 5. **Next ticket.**
 
-After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, **flagging UI / manual-test items**, what the pipeline already exercised (don't re-test), the **new lessons** captured, and any **architecture/skill flags** worth promoting. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
+After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, the **new lessons** captured, and any **architecture/skill flags** worth promoting. It ends by pointing at `/qa-release`, which tests the whole batch once; this loop never desktop-tests a ticket. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
-- **Merge:** auto-merge, no per-ticket stop. You review via the final report + manual verification.
+- **Merge:** auto-merge, no per-ticket stop. You review via the final report; `/qa-release` covers the batch afterwards.
 - **Auto runs in the main loop, not a subagent.** Its review hook dispatches `/code-review` and `/codex:review` as two subagents; inside a subagent that nesting fails and the hook falls back to `/code-review` alone, silently dropping Codex. Keep the main context lean another way: after each ticket, re-derive state from `git`/`gh` and the ticket's result line, not from the transcript.
 - **The auto hooks are the review gate.** Don't add a second `/code-review` pass on top — that's what the old loop did, and it reviewed every ticket twice.
 - **Sequential only.** Never parallelize — each ticket must run on the previous ticket's merged commands. (`--light` lifts this. See [Light mode](#light-mode---light).)
@@ -105,7 +105,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 - Updates the docs the change requires (`CLAUDE.md`'s doc-map is not optional in light mode).
 - Runs `npm run compile && npm test` (+ `npm run package` if the manifest/webview changed). **Does not return green if red.**
 - Commits on a branch named `light/<slug>` and **pushes**.
-- Returns `{ branch, filesChanged[], testsPassed, summary, uiOrManualSurfaces[], escalate? }`.
+- Returns `{ branch, filesChanged[], testsPassed, summary, escalate? }`.
 
 If a subagent returns `escalate` — the task was bigger than it looked — **do not merge it**. Leave the branch, report it, and re-run it through the full loop.
 
@@ -121,7 +121,7 @@ Merge **one at a time**, confirming CI green on each (`gh pr checks`). After eac
 ### L5. Close out — main loop
 - **One** `install-local`, then `git restore package.json package-lock.json .specify/`. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored.
 - **One** learnings distill for the whole batch (same routing rules as the full loop: checklist / `CLAUDE.md` proposal / this file / issue candidate). An empty distill is the norm.
-- **Chat summary**, not an HTML brief: what shipped, what needs manual eyeballing, anything escalated.
+- **Chat summary**, not an HTML brief: what shipped, anything escalated, and `/qa-release` as the next step.
 
 ---
 
@@ -161,18 +161,17 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
   - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.**
   - The PR does not carry regenerated `.specify/` artifacts (`feature.json`, registry files). **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate requires it.
   - `npm run compile && npm test` is green. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
-  - Note any UI / webview / sidebar / settings surface a human should eyeball, for the report.
   - Push any fixes to the PR branch.
 - **Log the subagents — observe, never force.** Run `python3 .claude/scripts/subagent-tally.py specs/<NNN>-<slug>`. It reads this session's transcript and prints, per step, the subagents auto actually dispatched next to what that step's rule expects (plan: one reader per recorded `area:`, at most 4, plus 2 design-doc writers, nothing on a simple run; implement: one per story phase with 5+ files, up to 4 per Foundational wave of 4+ tasks, plus 2 reviewers per round). Copy the output into the ticket's result line as is. Do not re-run a step to get the expected number, and do not dispatch workers auto skipped: a gap between expected and actual is a finding for the report, not something to fix mid-ticket.
 - If auto can't produce a passing fix, or ends without a PR, record the ticket as "needs attention," get back to a clean `main`, and continue.
 
-Then write one result line for the ticket (PR, spec dir, summary, manual surfaces, findings, subagent tally) and work from that, not the transcript, for the rest of the run.
+Then write one result line for the ticket (PR, spec dir, summary, findings, subagent tally) and work from that, not the transcript, for the rest of the run.
 
 #### 3. Merge + cleanup — main loop
 ```bash
 gh pr checks <PR> --watch || true     # let CI finish
 ```
-**Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link, a one-line summary, and the manual-verification surfaces, record it as "merged: NO — awaiting your review," and move to the next ticket.
+**Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link and a one-line summary, record it as "merged: NO — awaiting your review," and move to the next ticket.
 
 Otherwise:
 ```bash
@@ -208,15 +207,14 @@ Run `/install-local`, then `git restore package.json package-lock.json .specify/
 Write **one markdown run report** (via the vault `obsidian` skill) flat in `~/dev/GitHub/obsidian-vault/Projects/speckit companion/`, named for what the run did (no date prefix, no `reports/` folder: the date is a frontmatter field). **Never overwrite a prior report.** Concise and plain-language:
 
 - **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped / needs attention.
-- **🖐️ Manual verification needed** — the UI / sidebar / webview / settings surfaces from each ticket. For each: what changed and how to eyeball it.
 - **🤖 Subagents** — one row per ticket and step from the tally: dispatched vs expected. Call out every gap in plain words (e.g. "plan expected 3 area workers, ran 0"), and any step that never dispatches in an auto run at all. This is how we know users actually get the fan-out the commands promise.
-- **Already exercised by the pipeline** — what auto + tests + CI proved, so the user doesn't re-test those.
 - **🧠 Lessons captured this run** — review checks added to `.claude/review-checklist.md` and loop tweaks to this file, with where each landed.
 - **🏗️ Architecture / skill flags** — the promotion candidates from step 4b, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion.
 - **Needs attention** — skipped tickets and why, PRs left in review, CI gaps.
 - The final installed version.
+- **Next:** run `/qa-release` for the batch.
 
-End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, and a pointer to the report.
+End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, a pointer to the report, and `/qa-release` as the next step.
 
 ## Guardrails
 

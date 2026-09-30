@@ -1,0 +1,78 @@
+# Turns the files a release changed into the QA checklist.
+# Input: `git diff --name-only <last v* tag>..HEAD`. A path may match several surfaces; take the union of their checks and run each check id once.
+# `**` spans directories. A changed path that matches no surface and no `ignore` glob is reported as "no QA mapping" so this file gets extended.
+# New surface ships (app, panel, provider, top-level feature path)? Add its globs and checks here.
+
+checks:
+  # auto: Bash only, runs before any desktop time.
+  jest: { kind: auto, run: "npm test" }
+  canvas-tests: { kind: auto, run: "npm run test:canvas" }
+  clips-check: { kind: auto, run: "npm run clips:check", pass: "0 broken" }
+  docs-build: { kind: auto, run: "cd apps/website && npm run build && npx astro check" }
+  speckit-ext-tests: { kind: auto, run: "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py' && python3 apps/speckit-extension/scripts/check_shape_parity.py" }
+  check-capture: { kind: auto-after, run: "python3 apps/speckit-extension/scripts/check_capture.py <spec dir>", after: terminal-run, note: "vscode-run and canvas-new-spec run it on their own spec inside their recipes" }
+
+  # run: Bash drives it, no eyes needed. Timed with `timing.py`, surface `terminal`.
+  terminal-run: { kind: run, recipe: "Terminal run", what: "`/speckit.companion.auto` on one small spec through the terminal CLI, then check-capture" }
+
+  # desktop: needs eyes. `recipe` names the section of SKILL.md that says how (`## Recipe: ...`, then `### ...`).
+  first-open: { kind: desktop, recipe: "Clean profile and workspace variants › First open", what: "the packaged .vsix in a fresh profile with workspace trust on: Restricted Mode first, then Trust" }
+  vscode-run: { kind: desktop, recipe: "VS Code pass › Full run, timed", what: "one small spec through VS Code's own buttons (specify, plan, tasks, implement), timed" }
+  stock-workspace: { kind: desktop, recipe: "Clean profile and workspace variants › Stock workspace", what: "a workspace with spec-kit and no Companion: read every popup and use its main button once" }
+  multi-root: { kind: desktop, recipe: "Clean profile and workspace variants › Multi-root", what: "the sandbox plus the stock workspace in one window: sidebar, viewer and New Spec target the right root" }
+  themes: { kind: desktop, recipe: "VS Code pass › Theme pass", what: "dark and light: sidebar expanded, viewer on Spec and Tasks, Overview" }
+  nav-matrix: { kind: desktop, recipe: "VS Code pass › Navigation matrix", what: "sidebar and viewer navigation, rows N1 to N15" }
+  narrow-panel: { kind: desktop, recipe: "VS Code pass › Narrow panel", what: "viewer split into a narrow column: header, rail and footer buttons neither clip nor overflow" }
+  popups: { kind: desktop, recipe: "VS Code pass › Popups", what: "each notification the diff touches (grep the changed files for `showInformationMessage|showWarningMessage|showErrorMessage`) appears once, reads plainly, and its buttons work" }
+  provider-dispatch: { kind: desktop, recipe: "VS Code pass › Provider dispatch", what: "provider picker lists the configured providers; one dispatch reaches the terminal (terminal-run or vscode-run already counts as the dispatch)" }
+  canvas-open: { kind: desktop, recipe: "Copilot canvas pass › Bare open", what: "open the canvas three times without editing anything: the board checks pass on the first open, the board renders on the next two, and the sandbox `git status --short` never changes" }
+  canvas-new-spec: { kind: desktop, recipe: "Copilot canvas pass › Full run", what: "New spec once per workflow (stock Spec Kit and Companion); the chat receives the matching command each time" }
+  site-pages: { kind: desktop, recipe: "Website pages", what: "serve with `npm run preview` in apps/website and look at each changed page in a browser" }
+  builder: { kind: desktop, recipe: "VS Code pass › Pipeline builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
+
+# Runs on every release whatever the diff says.
+baseline: [vscode-run, terminal-run, first-open, stock-workspace, multi-root, themes]
+
+surfaces:
+  - name: webview and feature UI
+    paths: ["apps/vscode/webview/**", "apps/vscode/src/features/**"]
+    checks: [jest, clips-check, nav-matrix, themes, narrow-panel, popups]
+
+  - name: AI providers
+    paths: ["apps/vscode/src/ai-providers/**"]
+    checks: [jest, provider-dispatch]
+
+  - name: spec-kit extension
+    paths: ["apps/speckit-extension/**"]
+    checks: [speckit-ext-tests, terminal-run, check-capture]
+
+  - name: Copilot canvas
+    paths: ["apps/copilot-canvas/**", ".github/extensions/**"]
+    checks: [canvas-tests, canvas-open, canvas-new-spec]
+
+  - name: website
+    paths: ["apps/website/**"]
+    checks: [docs-build, site-pages]
+
+  - name: pipeline builder
+    paths:
+      - "apps/vscode/src/features/pipeline-builder/**"
+      - "apps/vscode/src/features/specs/pipelineBuildCommands.ts"
+      - "apps/vscode/webview/src/pipeline-builder/**"
+      - "apps/vscode/webview/styles/pipeline-builder.css"
+    checks: [builder]
+
+  - name: extension host
+    paths: ["apps/vscode/src/**", "package.json"]
+    checks: [jest]
+
+  - name: docs only
+    paths: ["docs/**", "*.md", "capabilities/**"]
+    checks: [docs-build]
+
+  - name: media
+    paths: ["content/**", "assets/**"]
+    checks: [clips-check, docs-build]
+
+# Changed paths that need no QA (not shipped, or covered by the baseline).
+ignore: [".claude/**", ".serena/**", "specs/**", "package-lock.json"]
