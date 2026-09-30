@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - **A spec with nothing recorded no longer has a tab titled Overview.** The tab now names the document the pane is showing, and switches to Overview once the run has recorded something.
 - **A link to another spec opens it in the viewer, and source files stop splitting the editor.** A link to another spec's document opened its raw markdown in a new group; it now opens that spec in the viewer, the same as clicking it in the sidebar. A link to a source file now always opens in the one group beside the viewer instead of adding a new group on every click.
 - **Review comments alone no longer give a spec an Overview.** A spec whose run recorded nothing, but which still had a status and a review comment, opened on an Overview holding only an empty run log under a tab titled Overview. It now opens on its document, and the tab says which from the first paint.
+- **A step's time on the Overview stops when the step finishes.** A spec specified in 22 seconds read "Specify 35m 56s" once Plan was clicked half an hour later, because the step was timed to the next step's start. Each step now ends at its own finish, a finish recorded more than once counts only the first time, and the wait between steps is billed to none of them. The Copilot board times steps the same way.
 
 ## [0.34.0] - 2026-09-30
 

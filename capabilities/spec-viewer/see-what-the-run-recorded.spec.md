@@ -64,13 +64,17 @@ A coverage row SHALL land in one of three states: it has tests, it has none, or 
 - **THEN** the table still renders and says so
 
 ### A phase claims a duration only when both ends were recorded
-<!-- touches: apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx, apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
-The run overview SHALL list one entry per phase and show an elapsed time only for a phase whose start and finish were both recorded and trusted. Otherwise it reports how many phases were measured out of how many were expected, or that timing was not recorded. A phase the run collapsed into an earlier one SHALL say which one it folded into, and a phase still running SHALL be marked in flight with no duration.
+The run overview SHALL list one entry per phase and show an elapsed time only for a phase whose start and finish were both recorded and trusted, otherwise reporting how many phases were measured or that timing was not recorded. A folded phase SHALL name the phase it folded into, and a running phase is marked in flight with no duration. A phase ends at its own first finish, so waiting before the next phase belongs to no phase.
 
 #### Scenario: a half-measured run
 - **WHEN** two of four phases have both ends recorded
 - **THEN** the head reads timing coverage two of four phases and the unmeasured phases show no number
+
+#### Scenario: a spec left idle between phases
+- **WHEN** specify finishes in 22 seconds and plan is started 53 minutes later
+- **THEN** Specify still reads 22 seconds, before and after plan starts
 
 ### The granular work log stays out of the first read
 <!-- touches: apps/vscode/webview/src/spec-viewer/components/ActivityPanel.tsx, apps/vscode/webview/src/spec-viewer/components/cards/** -->

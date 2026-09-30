@@ -1,7 +1,8 @@
 /** @jest-environment jsdom */
 import { h, render } from 'preact';
 import { IntentSection, OverviewTiming, CoverageSection } from '../OverviewDossier';
-import type { ViewerState } from '../../types';
+import type { HistoryEntry, ViewerState } from '../../types';
+import { deriveStepHistory, deriveTimingSummary } from '../../../../../src/features/specs/stepHistoryDerivation';
 
 const base = (overrides: Partial<ViewerState>): ViewerState => ({
     status: 'specified',
@@ -139,6 +140,41 @@ describe('OverviewTiming', () => {
         }), host);
         expect(host.textContent).toContain('Timing coverage: 0 of 4 phases');
         expect(host.textContent).not.toContain('elapsed');
+    });
+
+    describe('a spec that sat idle between specify and plan', () => {
+        const qaRecord: HistoryEntry[] = [
+            { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T20:23:24.574Z' },
+            { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-09-30T20:23:47.208Z' },
+            { step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T21:17:20.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:18.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:19.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:20.000Z' },
+        ];
+        const renderFor = (history: HistoryEntry[], currentStep: 'specify' | 'plan', status: 'specified' | 'planning' | 'planned') => {
+            const stepHistory = deriveStepHistory(history, currentStep, status);
+            const host = document.createElement('div');
+            render(h(OverviewTiming, {
+                state: base({ history, stepHistory, timing: deriveTimingSummary(stepHistory) }),
+            }), host);
+            const phase = (name: string) => Array.from(host.querySelectorAll('.dossier-timing__phase'))
+                .find(node => node.querySelector('.dossier-timing__name')?.textContent === name);
+            return (name: string) => phase(name)?.querySelector('.dossier-timing__duration')?.textContent ?? null;
+        };
+
+        it('shows Specify at 22s before plan is clicked', () => {
+            expect(renderFor(qaRecord.slice(0, 2), 'specify', 'specified')('Specify')).toBe('22s');
+        });
+
+        it('keeps Specify at 22s the moment plan starts', () => {
+            expect(renderFor(qaRecord.slice(0, 3), 'plan', 'planning')('Specify')).toBe('22s');
+        });
+
+        it('keeps Specify at 22s after plan records three finishes', () => {
+            const duration = renderFor(qaRecord, 'plan', 'planned');
+            expect(duration('Specify')).toBe('22s');
+            expect(duration('Plan')).toBeNull();
+        });
     });
 
     it('omits itself when no lifecycle history exists', () => {

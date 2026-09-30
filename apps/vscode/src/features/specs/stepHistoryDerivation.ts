@@ -18,8 +18,10 @@
  *   - For each step seen in (de-duplicated) transitions, in order of first
  *     appearance, emit a `StepHistoryEntry`.
  *   - `startedAt` = `at` of the first transition for that step.
- *   - `completedAt` = `at` of the first transition for the *next* step
- *     in the array, OR `null` if this is the most recently seen step
+ *   - `completedAt` = `at` of the step's own first step-level complete after
+ *     its latest start (idle time before the next step is billed to no step);
+ *     without one, the first transition for the *next* step in the array,
+ *     OR `null` if this is the most recently seen step
  *     and `currentStep` matches it (i.e. step is in flight). If the spec
  *     is in a TERMINAL status (`completed`/`archived`), that last-seen
  *     current step is finalized instead to the `at` of its own last
@@ -339,6 +341,14 @@ export function deriveStepHistory(
         const lastStepLevel = [...g.transitions].reverse()
             .find(isStepLevelEntry);
         const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
+        // A step ends at its latest attempt's first complete; idle time before the next step is billed to none.
+        let lastStartIdx = -1;
+        g.transitions.forEach((t, idx) => {
+            if (isStepLevelEntry(t) && t.kind === 'start') lastStartIdx = idx;
+        });
+        const ownCompletion = lastOwnIsCompletion
+            ? g.transitions.find((t, idx) => idx > lastStartIdx && isStepLevelEntry(t) && t.kind === 'complete') ?? null
+            : null;
 
         if (g.nextStepFirstIdx !== -1) {
             // Another step's transition follows this group — normally that is
@@ -352,17 +362,17 @@ export function deriveStepHistory(
             const bIdx = STEP_NAMES.indexOf(boundary.step as StepName);
             const rolledBack = gIdx >= 0 && bIdx >= 0 && bIdx < gIdx && isStepLevelEntry(boundary);
             if (rolledBack) {
-                if (!lastOwnIsCompletion) continue;
-                closeEntry = lastStepLevel!;
+                if (!ownCompletion) continue;
+                closeEntry = ownCompletion;
             } else {
-                closeEntry = boundary;
+                closeEntry = ownCompletion ?? boundary;
             }
             completedAt = closeEntry.at;
-        } else if (lastOwnIsCompletion) {
+        } else if (ownCompletion) {
             // No later step yet, but this step has a real completion entry —
             // honor it (covers `setStepCompleted` calls before the user has
             // clicked the next-phase button).
-            closeEntry = lastStepLevel!;
+            closeEntry = ownCompletion;
             completedAt = closeEntry.at;
         } else if (isLastSeen && isCurrent && isTerminal) {
             // Most recently seen step, currentStep matches, AND the spec is in

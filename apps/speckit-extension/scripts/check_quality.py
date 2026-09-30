@@ -165,8 +165,8 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     """Mirror of the viewer's duration-trust rule (`deriveStepHistory` in
     apps/vscode/src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
     when the raw log carries exactly ONE step-level start from a trusted writer,
-    the lifecycle close boundary — the step's own complete OR the next step's
-    start, from a writer at least as authoritative as the start — lands
+    the lifecycle close boundary — the step's own first complete, else the next
+    step's start, from a writer at least as authoritative as the start — lands
     strictly after it, no step-level
     complete precedes the start, no competing step-level start falls inside
     the span, and the span doesn't overlap another trusted span (overlap
@@ -192,6 +192,11 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
         last_step_level = next((e for e in reversed(own) if _is_step_level(e)), None)
         last_own_is_completion = (last_step_level is not None
                                   and last_step_level.get("kind") == "complete")
+        last_start = max((k for k, e in enumerate(own)
+                          if _is_step_level(e) and e.get("kind") == "start"), default=-1)
+        own_completion = next((e for k, e in enumerate(own)
+                               if k > last_start and _is_step_level(e)
+                               and e.get("kind") == "complete"), None) if last_own_is_completion else None
 
         close = None
         if boundary is not None:
@@ -199,9 +204,9 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
             b_step = boundary.get("step")
             b_idx = STEP_NAMES.index(b_step) if b_step in STEP_NAMES else -1
             rolled_back = g_idx >= 0 and 0 <= b_idx < g_idx and _is_step_level(boundary)
-            close = (last_step_level if last_own_is_completion else None) if rolled_back else boundary
-        elif last_own_is_completion:
-            close = last_step_level
+            close = own_completion if rolled_back else (own_completion or boundary)
+        elif own_completion is not None:
+            close = own_completion
         if close is None:
             continue
 

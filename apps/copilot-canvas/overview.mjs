@@ -24,7 +24,7 @@ function formatElapsed(ms) {
     return `${Math.floor(m / 60)}h ${m % 60}m`;
 }
 
-/** Each step's first start and last step-level finish, from the run record's history. */
+/** Each step's first start and its first step-level finish after that start, from the run record's history. */
 export function stepTiming(ctx) {
     const timing = {};
     for (const entry of list(ctx?.history)) {
@@ -32,7 +32,13 @@ export function stepTiming(ctx) {
         if (entry.substep != null || entry.task != null) continue;
         const slot = timing[entry.step] ?? (timing[entry.step] = { startedAt: null, completedAt: null });
         if (entry.kind === 'start' && (!slot.startedAt || entry.at < slot.startedAt)) slot.startedAt = entry.at;
-        if (entry.kind === 'complete' && (!slot.completedAt || entry.at > slot.completedAt)) slot.completedAt = entry.at;
+    }
+    for (const entry of list(ctx?.history)) {
+        if (!entry || typeof entry.step !== 'string' || typeof entry.at !== 'string') continue;
+        if (entry.substep != null || entry.task != null || entry.kind !== 'complete') continue;
+        const slot = timing[entry.step];
+        if (slot.startedAt && entry.at < slot.startedAt) continue;
+        if (!slot.completedAt || entry.at < slot.completedAt) slot.completedAt = entry.at;
     }
     return timing;
 }

@@ -70,4 +70,17 @@ describe('overview dossier', () => {
         ] });
         assert.deepEqual(timing.plan, { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T00:02:00Z' });
     });
+
+    it('ends each step at its first finish, so repeats and idle time before the next step count for nothing', () => {
+        const timing = stepTiming({ history: [
+            { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T20:23:24.574Z' },
+            { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-09-30T20:23:47.208Z' },
+            { step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T21:17:20.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:18.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:19.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:20.000Z' },
+        ] });
+        assert.deepEqual(timing.specify, { startedAt: '2026-09-30T20:23:24.574Z', completedAt: '2026-09-30T20:23:47.208Z' });
+        assert.deepEqual(timing.plan, { startedAt: '2026-09-30T21:17:20.000Z', completedAt: '2026-09-30T21:20:18.000Z' });
+    });
 });
