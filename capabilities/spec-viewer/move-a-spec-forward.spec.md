@@ -1,5 +1,7 @@
 # Move a Spec Forward — Living Spec
 
+<!-- reviewed: 46adbd42 -->
+
 ## Purpose
 
 A person watches a run, sees which step it is on, and pushes it to the next step, re-runs a step, or closes the spec, all from the viewer. Without this the viewer is a reader only, and a wrong button at the wrong moment re-runs finished work or strands a spec with no way forward.

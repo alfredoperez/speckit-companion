@@ -57,7 +57,15 @@ describe('navigating inside an open panel', () => {
         return (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
     }
 
+    function recordActivity(): void {
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: '001-demo', currentStep: 'specify', status: 'specifying', approach: 'Do the thing', history: [] }),
+        );
+    }
+
     it('a rail click from the Overview lands on the document, and the tab says which', async () => {
+        recordActivity();
         await provider.showSpec(specDir);
         const panel = openPanel();
         expect(panel.title).toBe('Spec: 001-demo - Overview');
@@ -70,10 +78,7 @@ describe('navigating inside an open panel', () => {
     });
 
     it('choosing the Overview again renames the tab back', async () => {
-        fs.writeFileSync(
-            path.join(specDir, '.spec-context.json'),
-            JSON.stringify({ workflow: 'speckit', specName: '001-demo', currentStep: 'specify', status: 'specifying', approach: 'Do the thing', history: [] }),
-        );
+        recordActivity();
         await provider.showSpec(specDir);
         const panel = openPanel();
         await panel.__receive({ type: 'stepperClick', phase: 'plan' });
@@ -86,6 +91,7 @@ describe('navigating inside an open panel', () => {
     it('a spec with nothing recorded has no Overview, so its tab keeps naming the document', async () => {
         await provider.showSpec(specDir);
         const panel = openPanel();
+        expect(panel.title).toBe('Spec: 001-demo - Specification');
         await panel.__receive({ type: 'stepperClick', phase: 'plan' });
 
         await panel.__receive({ type: 'overviewChosen' });

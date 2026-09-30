@@ -18,7 +18,7 @@ Each spec folder SHALL have at most one viewer tab. Opening any document of a sp
 ### Opening a spec lands on the Overview, opening a document lands on that document
 <!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/core/utils/overviewAvailability.ts, apps/vscode/webview/src/spec-viewer/signals.ts, apps/vscode/webview/src/spec-viewer/overviewModel.ts -->
 
-Opening the spec as a whole SHALL land on the Overview, and opening a named document SHALL land on that document. A choice the reader makes inside the viewer holds until the next time the spec or a document is opened from outside, which decides again. The Overview is offered only when the run record holds something and the `speckit.viewer.activityPanel` setting is on. Otherwise the viewer shows the document. The editor tab is titled for what the pane shows, so a spec with nothing recorded reads as its document, never as Overview.
+Opening the spec as a whole SHALL land on the Overview, and opening a named document SHALL land on that document. A choice the reader makes inside the viewer holds until the next time the spec or a document is opened from outside, which decides again. The Overview is offered only when the run recorded something, a history entry or what the run wrote down, and the `speckit.viewer.activityPanel` setting is on. A status, a current step and the reader's own review comments are not recorded activity. Otherwise the viewer shows the document. The editor tab is titled for what the pane shows from the first paint, so a spec with nothing recorded reads as its document, never as Overview.
 
 #### Scenario: the spec is reopened after a document was read
 - **WHEN** a tab that was last showing the Plan is reopened by clicking the spec's name
@@ -27,6 +27,10 @@ Opening the spec as a whole SHALL land on the Overview, and opening a named docu
 #### Scenario: nothing was recorded
 - **WHEN** a spec whose run record is empty is opened as a whole
 - **THEN** the viewer shows the first document that exists and offers no Overview, and the tab is titled with that document
+
+#### Scenario: a status and review comments but no history
+- **WHEN** a spec whose history is empty but whose record still says planned, on the plan step, with a review comment, is opened as a whole
+- **THEN** the viewer shows the Specification with no Overview, and the tab reads Specification
 
 ### The rail lists the documents of the workflow the spec recorded
 <!-- touches: apps/vscode/src/features/spec-viewer/documentScanner.ts, apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx -->

@@ -599,6 +599,66 @@ describe('messageHandlers - openFile', () => {
         expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
     });
 
+    it('opens a link to another spec\'s document in the viewer, the way the sidebar does, not as raw markdown', async () => {
+        const other = path.join(root, 'specs', '_01_demo-planned', 'spec.md');
+        fs.mkdirSync(path.dirname(other), { recursive: true });
+        fs.writeFileSync(other, '# Other spec');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: other } as any);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.viewSpecDocument', other);
+        expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('opens a markdown file that sits loose in the specs folder as a file, not as a spec', async () => {
+        const readme = path.join(root, 'specs', 'README.md');
+        fs.mkdirSync(path.dirname(readme), { recursive: true });
+        fs.writeFileSync(readme, '# Specs');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: readme } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything());
+        expect((vscode.workspace.openTextDocument as jest.Mock).mock.calls[0][0].fsPath).toBe(readme);
+    });
+
+    it('opens a markdown file the viewer does not list, in a hidden folder or with an upper-case extension, as a file', async () => {
+        const hidden = path.join(root, 'specs', 'foo', '.notes', 'review.md');
+        const upper = path.join(root, 'specs', 'foo', 'NOTES.MD');
+        fs.mkdirSync(path.dirname(hidden), { recursive: true });
+        fs.writeFileSync(hidden, '');
+        fs.writeFileSync(upper, '');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: hidden } as any);
+        await handler({ type: 'openFile', filename: upper } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything());
+        expect((vscode.workspace.openTextDocument as jest.Mock).mock.calls.map(c => c[0].fsPath)).toEqual([hidden, upper]);
+    });
+
+    it('opens every source file link in the one group beside the viewer instead of a new group per click', async () => {
+        const source = path.join(root, 'src', 'App.tsx');
+        fs.mkdirSync(path.dirname(source), { recursive: true });
+        fs.writeFileSync(source, '');
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({
+                state: { specDirectory: SPEC_DIR, specName: 'my-feature', currentDocument: 'spec', availableDocuments: [] },
+                debounceTimer: undefined,
+                panel: { viewColumn: vscode.ViewColumn.One },
+            }),
+        });
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'openFile', filename: source } as any);
+        await handler({ type: 'openFile', filename: source } as any);
+
+        const columns = (vscode.window.showTextDocument as jest.Mock).mock.calls.map(c => c[1].viewColumn);
+        expect(columns).toEqual([vscode.ViewColumn.Two, vscode.ViewColumn.Two]);
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything());
+    });
+
     it('still finds a bare file name by searching the workspace', async () => {
         const found = vscode.Uri.file(path.join(root, 'x.ts'));
         (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([found]);

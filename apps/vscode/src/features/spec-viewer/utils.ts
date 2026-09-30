@@ -29,22 +29,23 @@ export function generateNonce(): string {
 // re-exported (callers import from `core/utils/fileNaming` directly).
 import { fileNameToDocType, relativePathToDocType } from '../../core/utils/fileNaming';
 
-/**
- * Check if a file path is a spec document
- */
-export function isSpecDocument(filePath: string): boolean {
-    const fileName = path.basename(filePath).toLowerCase();
-    if (!fileName.endsWith('.md')) {
+/** A markdown file inside a spec folder that the document scanner lists, so the viewer can open it. */
+export function isSpecDocument(
+    filePath: string,
+    workspaceRoot: string | undefined = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+): boolean {
+    if (!filePath.endsWith('.md') || filePath.endsWith('-extra.md')) {
         return false;
     }
-
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if (workspaceRoot) {
-        return isInsideSpecDirectory(filePath, workspaceRoot) !== undefined;
+    if (!workspaceRoot) {
+        return filePath.includes('/specs/');
     }
-
-    // Fallback: check for /specs/ in path
-    return filePath.includes('/specs/');
+    const specRel = isInsideSpecDirectory(filePath, workspaceRoot);
+    if (!specRel) {
+        return false;
+    }
+    const inside = path.relative(path.resolve(workspaceRoot, specRel), path.resolve(filePath));
+    return inside !== '' && !inside.startsWith('..') && !inside.split(/[\\/]/).some(part => part.startsWith('.'));
 }
 
 /**

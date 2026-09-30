@@ -921,6 +921,10 @@ export class SpecViewerProvider {
         taskCompletionPercent: derived.taskCompletionPercent,
       };
 
+      if (instance.state.landing === "overview" && instance.overviewAvailable === undefined) {
+        const viewerState = await this.readViewerState(specDirectory);
+        instance.overviewAvailable = hasOverview(viewerState, this.readActivityPanelEnabled(), false);
+      }
       instance.panel.title = this.panelTitle(instance, doc?.label);
 
       // Staleness is I/O (filesystem probes); compute here after derived state.
@@ -1310,9 +1314,18 @@ export class SpecViewerProvider {
       installPrompt: this.computeInstallPrompt(),
     };
 
-    // Derive ViewerState from the canonical .spec-context.json — the footer's
-    // sole input. The run-step artifact-ready flag is the only I/O-derived
-    // field, computed above and injected into the otherwise-pure derivation.
+    const viewerState = await this.readViewerState(specDirectory);
+    instance.overviewAvailable = hasOverview(viewerState, navState.activityPanelEnabled ?? true, false);
+
+    return { doc, content, navState, viewerState, featureCtx, derived };
+  }
+
+  /**
+   * Derive ViewerState from the canonical .spec-context.json — the footer's
+   * sole input. The run-step artifact-ready flag is the only I/O-derived
+   * field, injected into the otherwise-pure derivation.
+   */
+  private async readViewerState(specDirectory: string): Promise<CoreViewerState | undefined> {
     let viewerState: CoreViewerState | undefined;
     try {
       let specCtx = await readSpecContext(specDirectory);
@@ -1366,9 +1379,6 @@ export class SpecViewerProvider {
     } catch (error) {
       this.outputChannel.appendLine(`[SpecViewer] deriveViewerState failed: ${error}`);
     }
-
-    instance.overviewAvailable = hasOverview(viewerState, navState.activityPanelEnabled ?? true, false);
-
-    return { doc, content, navState, viewerState, featureCtx, derived };
+    return viewerState;
   }
 }
