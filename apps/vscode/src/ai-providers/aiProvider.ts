@@ -531,10 +531,19 @@ export function isProviderConfigured(): boolean {
     return !!(inspection?.globalValue || inspection?.workspaceValue || inspection?.workspaceFolderValue);
 }
 
+let integrationProviderOverride: AIProviderType | undefined;
+
+/** Makes the provider the project's Spec Kit integration names win over the setting until cleared. */
+export function setIntegrationProviderOverride(type: AIProviderType | undefined): void {
+    integrationProviderOverride = type;
+}
+
 /**
- * Get the configured AI provider type from settings
+ * Get the AI provider type in effect: the project's Spec Kit integration when it
+ * overrode the setting, otherwise `speckit.aiProvider`
  */
 export function getConfiguredProviderType(): AIProviderType {
+    if (integrationProviderOverride) { return integrationProviderOverride; }
     const config = vscode.workspace.getConfiguration('speckit');
     const configured = config.get<AIProviderType>('aiProvider', AIProviders.CLAUDE);
     // Guard against a stale or typo'd value (e.g. a renamed provider id left in

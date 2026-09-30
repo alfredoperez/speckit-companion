@@ -30,6 +30,33 @@ A `speckit.aiProvider` value that matches no supported provider SHALL be treated
 - **WHEN** settings still hold the old id
 - **THEN** the extension activates and dispatches through Claude Code
 
+### The project's Spec Kit integration wins when it names a different assistant
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/extension.ts -->
+
+At activation the extension SHALL read the default integration from `.specify/integration.json` (`default_integration`, else `integration`). When that agent differs from the one `speckit.aiProvider` resolves to and a provider maps directly to it, the extension SHALL use that provider for the session and SHALL say so in a message. It SHALL NOT rewrite the setting.
+
+#### Scenario: the project was set up for another assistant
+- **WHEN** `speckit.aiProvider` is `claude` and `.specify/integration.json` names `copilot`
+- **THEN** dispatch goes through GitHub Copilot CLI and a message says the project's integration is copilot and offers **Keep Claude Code**
+
+### The user can keep their own provider over the project's integration
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts -->
+
+The message SHALL offer to keep the configured provider. Choosing Keep SHALL put dispatch back on the setting and be remembered for that integration and provider pair in the project.
+
+#### Scenario: the user keeps their setting
+- **WHEN** they choose **Keep Claude Code**
+- **THEN** dispatch returns to Claude Code and the message does not return for that pair
+
+### An integration with no matching provider leaves the setting in charge
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts -->
+
+An agent with no provider that maps directly to it, a missing or unreadable `.specify/integration.json`, and IDE Chat on Windsurf SHALL leave `speckit.aiProvider` in charge and show nothing.
+
+#### Scenario: the integration has no provider here
+- **WHEN** `.specify/integration.json` names an agent such as `cursor-agent` that no provider maps to
+- **THEN** the setting is used unchanged and nothing is shown
+
 ### Switching provider takes effect after a reload
 <!-- touches: apps/vscode/src/extension.ts, apps/vscode/src/ai-providers/aiProviderFactory.ts -->
 

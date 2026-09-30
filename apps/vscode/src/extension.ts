@@ -34,7 +34,8 @@ import { ConfigKeys } from './core/constants';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
-import { getConfiguredProviderType } from './ai-providers/aiProvider';
+import { getConfiguredProviderType, setIntegrationProviderOverride } from './ai-providers/aiProvider';
+import { applyIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
 
@@ -104,6 +105,8 @@ export async function activate(context: vscode.ExtensionContext) {
             return;
         }
     }
+
+    applyIntegrationProvider(context, outputChannel);
 
     // Initialize providers and managers
     aiProvider = AIProviderFactory.getProvider(context, outputChannel);
@@ -270,6 +273,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async e => {
             if (e.affectsConfiguration('speckit.aiProvider')) {
+                setIntegrationProviderOverride(undefined);
                 sendTelemetryEvent('provider.selected', { providerId: getConfiguredProviderType() });
                 const action = await vscode.window.showInformationMessage(
                     'AI provider changed. Reload window to apply changes.',

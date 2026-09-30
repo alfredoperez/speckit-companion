@@ -1114,7 +1114,7 @@ function providerIconPath(
     extContext: vscode.ExtensionContext
 ): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | vscode.ThemeIcon {
     const asset = (f: string) => vscode.Uri.joinPath(extContext.extensionUri, 'assets', 'icons', 'providers', f);
-    const id = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider') || AIProviders.CLAUDE;
+    const id = getConfiguredProviderType();
     const key = resolveProviderIconKey(id, detectHostIde(vscode.env.uriScheme, vscode.env.appName));
     switch (key.kind) {
         case 'asset':

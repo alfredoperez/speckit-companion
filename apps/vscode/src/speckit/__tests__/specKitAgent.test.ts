@@ -1,4 +1,4 @@
-import { resolveSpecKitAgent, PROVIDER_TO_AGENT } from '../specKitAgent';
+import { resolveSpecKitAgent, resolveIntegrationProvider, PROVIDER_TO_AGENT } from '../specKitAgent';
 import { HostIde } from '../../ai-providers/ideChatProvider';
 
 const ANY_HOST: HostIde = 'vscode';
@@ -85,5 +85,49 @@ describe('resolveSpecKitAgent', () => {
                 }
             }
         });
+    });
+});
+
+describe('resolveIntegrationProvider', () => {
+    it('leaves the setting alone when the integration agrees', () => {
+        expect(resolveIntegrationProvider('claude', 'vscode', 'claude')).toBeUndefined();
+        expect(resolveIntegrationProvider('claude-vscode', 'vscode', 'claude')).toBeUndefined();
+    });
+
+    it('treats IDE Chat as agreeing when its host resolves to the integration agent', () => {
+        expect(resolveIntegrationProvider('ide-chat', 'vscode', 'copilot')).toBeUndefined();
+        expect(resolveIntegrationProvider('ide-chat', 'cursor', 'cursor-agent')).toBeUndefined();
+    });
+
+    it('picks the direct provider for the agent when they disagree', () => {
+        expect(resolveIntegrationProvider('claude', 'vscode', 'copilot')).toBe('copilot');
+        expect(resolveIntegrationProvider('gemini', 'vscode', 'codex')).toBe('codex');
+        expect(resolveIntegrationProvider('ide-chat', 'vscode', 'claude')).toBe('claude');
+    });
+
+    it('maps agy to antigravity and claude to the terminal provider', () => {
+        expect(resolveIntegrationProvider('claude', 'vscode', 'agy')).toBe('antigravity');
+        expect(resolveIntegrationProvider('gemini', 'vscode', 'claude')).toBe('claude');
+    });
+
+    it('never overrides to an agent with no direct provider', () => {
+        expect(resolveIntegrationProvider('claude', 'vscode', 'cursor-agent')).toBeUndefined();
+        expect(resolveIntegrationProvider('claude', 'vscode', 'windsurf')).toBeUndefined();
+        expect(resolveIntegrationProvider('claude', 'vscode', 'kimi')).toBeUndefined();
+    });
+
+    it('never overrides a provider Spec Kit has no agent for', () => {
+        expect(resolveIntegrationProvider('wibey', 'vscode', 'copilot')).toBeUndefined();
+        expect(resolveIntegrationProvider('wibey-vscode', 'vscode', 'codex')).toBeUndefined();
+        expect(resolveIntegrationProvider(undefined, 'vscode', 'codex')).toBeUndefined();
+    });
+
+    it('never overrides IDE Chat on Windsurf', () => {
+        expect(resolveIntegrationProvider('ide-chat', 'windsurf', 'claude')).toBeUndefined();
+    });
+
+    it('does not resolve a prototype key to a provider', () => {
+        expect(resolveIntegrationProvider('claude', 'vscode', 'constructor')).toBeUndefined();
+        expect(resolveIntegrationProvider('claude', 'vscode', '__proto__')).toBeUndefined();
     });
 });
