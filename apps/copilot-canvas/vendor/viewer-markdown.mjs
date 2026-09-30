@@ -1207,5 +1207,6 @@ export {
   setLivingMode,
   setLivingNew,
   setTaskSummaries,
+  slugify,
   stripLivingDraftBanner
 };
