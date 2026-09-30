@@ -156,7 +156,6 @@
     "Footer behavior stays unchanged (Approve → Implement, Mark Completed / Archive)",
     "The workflow definition keeps the steps — only their side-nav rendering is removed"
   ],
-  "telemetryInstanceId": "2c37567a-3324-47d3-a35b-ebbd6d97cae8",
   "currentTask": "T005",
   "task_summaries": {
     "T001": {

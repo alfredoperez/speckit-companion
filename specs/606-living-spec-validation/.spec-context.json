@@ -468,7 +468,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "e5096784-c79a-4f38-adfa-b2e5af72ae03",
   "livingSpecs": {
     "loaded": [
       "companion-commands",

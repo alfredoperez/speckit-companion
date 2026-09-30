@@ -152,6 +152,5 @@
     "Extracted resolveDefaultWorkflow() as shared private helper to prevent divergence between resolveWorkflow() and getOrSelectWorkflow()",
     "T010: Badge already correctly reflects context state — no code change needed"
   ],
-  "history": [],
-  "telemetryInstanceId": "7b5004ba-670e-4f5b-b491-feec42342a34"
+  "history": []
 }

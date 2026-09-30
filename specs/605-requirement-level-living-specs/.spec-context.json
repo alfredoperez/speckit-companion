@@ -292,7 +292,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "488f4800-3042-4d95-a4e0-1c8d4019fea9",
   "livingSpecs": {
     "loaded": [
       "capture-runtime",
