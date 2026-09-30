@@ -257,6 +257,7 @@ export class SpecViewerProvider {
     if (existingInstance) {
       // Update existing panel and reveal
       existingInstance.state.landing = 'document';
+      existingInstance.state.removedDocument = undefined;
       await this.updateContent(specDirectory, documentType);
       existingInstance.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -275,6 +276,7 @@ export class SpecViewerProvider {
     const existing = this.panels.get(specDirectory);
     if (existing) {
       existing.state.landing = 'overview';
+      existing.state.removedDocument = undefined;
       await this.updateContent(specDirectory, existing.state.currentDocument);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -885,6 +887,9 @@ export class SpecViewerProvider {
 
       // Resolve which document to display (cascading fallback)
       const doc = resolveDisplayDocument(documents, documentType);
+      if (documents.some(d => d.exists && d.label === instance.state.removedDocument)) {
+        instance.state.removedDocument = undefined;
+      }
 
       // Read content + tasks.md (I/O)
       const { content, emptyMessage } = await this.readDocumentContent(doc);

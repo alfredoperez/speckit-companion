@@ -167,6 +167,16 @@ describe('a document deleted while it is showing', () => {
         expect(removedOf(panel)).toBe('Plan');
     });
 
+    it('stops naming it once the document is back', async () => {
+        const panel = await showPlanThenDeleteIt();
+        fs.writeFileSync(path.join(specDir, 'plan.md'), '# Plan\n');
+
+        await provider.showSpec(specDir);
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(removedOf(panel)).toBeNull();
+    });
+
     it('stops naming it once the reader navigates', async () => {
         const panel = await showPlanThenDeleteIt();
 
