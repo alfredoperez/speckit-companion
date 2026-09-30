@@ -388,7 +388,6 @@
       "summary": "Transport swapped to fire-and-forget PostHog capture POSTs behind the frozen API; editor-wide gate re-implemented with live toggling; common facts re-attached; old dependency, credential, mock, and Azure docs fully excised; 1913 tests green"
     }
   },
-  "telemetryInstanceId": "96ba1237-4b1c-44f2-a0e5-82eebf8f7e39",
   "currentTask": "T015",
   "task_summaries": {
     "T001": {

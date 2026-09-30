@@ -12,6 +12,7 @@
  * doc mention. That's the point.
  */
 
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -256,6 +257,22 @@ describe('docs consistency', () => {
     it('no pinned fixture carries a per-machine telemetry id', () => {
       const carrying = PINNED.filter(dir => {
         const file = path.join(REPO_ROOT, dir, '.spec-context.json');
+        return fs.existsSync(file) && 'telemetryInstanceId' in JSON.parse(fs.readFileSync(file, 'utf8'));
+      });
+      expect(carrying).toEqual([]);
+    });
+
+    it('no committed run record carries a per-machine telemetry id', () => {
+      let tracked: string[];
+      try {
+        tracked = execFileSync('git', ['ls-files', '-z', 'specs'], { cwd: REPO_ROOT, encoding: 'utf8' })
+          .split('\0')
+          .filter(f => /(^|\/)\.spec-context\.json$/.test(f));
+      } catch {
+        return;
+      }
+      const carrying = tracked.filter(f => {
+        const file = path.join(REPO_ROOT, f);
         return fs.existsSync(file) && 'telemetryInstanceId' in JSON.parse(fs.readFileSync(file, 'utf8'));
       });
       expect(carrying).toEqual([]);

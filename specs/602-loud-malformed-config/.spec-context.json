@@ -274,7 +274,6 @@
     ]
   },
   "last_action": "all 21 tasks done — 714 Python tests, 1942 TypeScript tests, every gate green, doctor 0 problems",
-  "telemetryInstanceId": "a57c7deb-6b7c-41d3-8a47-0892e21a2061",
   "coverage": {
     "FR-001": {
       "title": "The config reader rejects, rather than partially accepts, a file using unsupported YAML",

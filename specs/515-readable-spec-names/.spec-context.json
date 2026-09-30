@@ -175,7 +175,6 @@
     "No new second humanizer — reuse deriveSpecName",
     "Slug stays the identifier for filter, sort, and open commands"
   ],
-  "telemetryInstanceId": "60b9c2a2-5e7e-4f75-8259-b22e2867c55f",
   "currentTask": "T007",
   "task_summaries": {
     "T001": {

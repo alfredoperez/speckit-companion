@@ -115,7 +115,6 @@
     }
   ],
   "unattended": true,
-  "telemetryInstanceId": "59d13e75-adba-4eb8-bd99-152198276f2a",
   "livingSpecs": {
     "loaded": [
       "speckit-cli-notifications"

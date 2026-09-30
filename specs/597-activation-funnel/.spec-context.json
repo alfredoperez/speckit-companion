@@ -715,7 +715,6 @@
     "No reintroduction of the retired profile standard/turbo dimension",
     "Dashboard build happens in the analytics tool; repo-side scope is events + disclosure + recording the parity check"
   ],
-  "telemetryInstanceId": "91a41d53-ef9f-4602-95f2-ca82db6506b2",
   "approach": "Merge the two overlapping viewsWelcome blocks into one welcome (two mutually-exclusive variants) whose sample action copy-seeds a bundled asset spec and opens the viewer; replace the Create Spec dropdown with radio-card workflow choices fed by one shared buildWorkflowChoices builder; add the missing funnel events with the completed emit moved to a single status-transition seam in the context-file watcher; produce launch content through the existing HyperFrames/screenshot pipeline.",
   "decisions": [
     {

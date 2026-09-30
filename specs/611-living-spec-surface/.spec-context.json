@@ -707,6 +707,5 @@
       "note": "Doctor: one capture call in this run resolved no spec and wrote nothing; could not attribute it to a specific call",
       "step": "implement"
     }
-  ],
-  "telemetryInstanceId": "598e88f9-1b94-4a24-a1d3-286ccc3e9ac0"
+  ]
 }

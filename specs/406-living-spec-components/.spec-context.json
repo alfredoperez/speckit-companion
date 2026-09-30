@@ -615,7 +615,6 @@
     "Feature (non-living) specs render byte-for-byte unchanged",
     "Not an editing change — authored wording and document order are preserved exactly"
   ],
-  "telemetryInstanceId": "c6862489-d00b-42b4-a04d-56e7849a9594",
   "approach": "Render living-spec repeating structures as preprocessor components inside the existing webview string-render pipeline, gated to living mode by a setLivingMode flag so feature specs are byte-identical. Each component emits recognized HTML wrapped in a per-region fallback that hands a failing region back to the base renderer, preserving data-line comment identity throughout.",
   "decisions": [
     {
