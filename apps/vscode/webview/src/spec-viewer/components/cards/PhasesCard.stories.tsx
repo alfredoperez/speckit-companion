@@ -42,7 +42,7 @@ const trusted = (start: string, end: string) => ({
 });
 
 // ── Overall stats only ───────────────────────────────────────
-// Completed run whose timing totals are known (started / elapsed /
+// Completed run whose timing totals are known (started / active /
 // ended). No per-phase substeps were recorded, so the card shows
 // only the overall block. The compact coverage line and phase strip
 // now live solely in the Overview, not here.
@@ -70,9 +70,36 @@ export const OverallStatsOnly: Story = {
     ),
 };
 
+// ── Overall stats with a wait between phases ─────────────────
+// Plan started an hour after specify finished. Active counts only the
+// phases, so it reads 24m while Started to Ended spans the wait too.
+
+export const OverallStatsWithWait: Story = {
+    name: 'Overall stats — wait between phases',
+    render: () => (
+        <PhasesCard state={baseState({
+            status: 'completed',
+            stepHistory: {
+                specify: trusted('2026-07-02T10:00:00Z', '2026-07-02T10:05:00Z'),
+                plan: trusted('2026-07-02T11:05:00Z', '2026-07-02T11:12:00Z'),
+                tasks: trusted('2026-07-02T11:12:00Z', '2026-07-02T11:15:00Z'),
+                implement: trusted('2026-07-02T11:15:00Z', '2026-07-02T11:24:00Z'),
+            },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T10:00:00Z',
+                endedAt: '2026-07-02T11:24:00Z',
+                elapsedMs: 1_440_000,
+            },
+        })} />
+    ),
+};
+
 // ── Overall stats + per-phase events ─────────────────────────
 // A completed run whose implement phase carries recorded substeps.
-// Both unique blocks render: the Started / Elapsed / Ended overall
+// Both unique blocks render: the Started / Active / Ended overall
 // stats and the grouped per-phase event timeline.
 
 export const OverallStatsWithEvents: Story = {

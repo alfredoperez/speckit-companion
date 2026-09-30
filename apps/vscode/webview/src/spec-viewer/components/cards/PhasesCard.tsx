@@ -95,7 +95,7 @@ export function PhasesCard({ state }: PhasesCardProps) {
                             <span class="phases-overall__value">{formatAbsolute(timing.startedAt!)}</span>
                         </div>
                         <div class="phases-overall__stat">
-                            <span class="phases-overall__label">Elapsed</span>
+                            <span class="phases-overall__label">Active</span>
                             <span class="phases-overall__value">{formatElapsed(timing.elapsedMs!)}</span>
                         </div>
                         <div class="phases-overall__stat">
