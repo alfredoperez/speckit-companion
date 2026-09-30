@@ -139,7 +139,7 @@ export function getCachedProgress(specPath: string): SpecProgress | undefined {
  * e.g., /path/to/specs/my-feature/tasks.md -> my-feature
  */
 export function extractSpecNameFromPath(filePath: string): string {
-    const parts = filePath.split('/');
+    const parts = filePath.split(/[/\\]/);
     const tasksIndex = parts.findIndex((p) => p === 'tasks.md');
     if (tasksIndex > 0) {
         return parts[tasksIndex - 1];
