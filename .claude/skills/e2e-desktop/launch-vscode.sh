@@ -2,6 +2,7 @@
 # Open the sandbox in an isolated VS Code instance (own user-data and extensions dirs) with SpecKit Companion from this checkout.
 # Usage: launch-vscode.sh <sandbox-dir> <results-dir> [vsix|dev]
 #   vsix (default) packages the checkout into <results-dir> and installs it; dev runs it as an Extension Development Host.
+# Env: E2E_VSCODE_STATE=<dir> uses a fresh profile; E2E_TRUST=1 leaves workspace trust on (Restricted Mode first-open); E2E_EXTRA_FOLDER=<dir> opens it beside the sandbox as a multi-root window.
 # Theme switch while running: launch-vscode.sh theme light|dark
 set -euo pipefail
 
@@ -47,16 +48,20 @@ cat > "$SETTINGS" <<'JSON'
 }
 JSON
 
+[ "${E2E_TRUST:-}" = "1" ] && sed -i '' 's/"security.workspace.trust.enabled": false/"security.workspace.trust.enabled": true/' "$SETTINGS"
+FOLDERS=("$SANDBOX")
+[ -n "${E2E_EXTRA_FOLDER:-}" ] && FOLDERS+=("$E2E_EXTRA_FOLDER")
+
 CODE=(code --user-data-dir "$STATE/data" --extensions-dir "$STATE/ext")
 
 if [ "$MODE" = "dev" ]; then
   (cd "$REPO" && npm run vscode:prepublish >/dev/null) || { echo "[vscode] build failed -> cannot launch the Extension Development Host"; exit 1; }
-  "${CODE[@]}" --new-window --extensionDevelopmentPath="$REPO" "$SANDBOX"
+  "${CODE[@]}" --new-window --extensionDevelopmentPath="$REPO" "${FOLDERS[@]}"
 else
   VERSION="$(node -p "require('$REPO/package.json').version")"
   VSIX="$RESULTS/speckit-companion-$VERSION-e2e.vsix"
-  (cd "$REPO" && npm run package -- -o "$VSIX" >/dev/null) || { echo "[vscode] vsce package failed -> no vsix to install"; exit 1; }
+  [ -f "$VSIX" ] || (cd "$REPO" && npm run package -- -o "$VSIX" >/dev/null) || { echo "[vscode] vsce package failed -> no vsix to install"; exit 1; }
   "${CODE[@]}" --install-extension "$VSIX" --force >/dev/null
-  "${CODE[@]}" --new-window "$SANDBOX"
+  "${CODE[@]}" --new-window "${FOLDERS[@]}"
 fi
 echo "[vscode] opened $SANDBOX ($MODE, $(git -C "$REPO" branch --show-current)@$(git -C "$REPO" rev-parse --short HEAD))"

@@ -72,7 +72,7 @@ Capture the PR number/URL.
 ```bash
 gh pr checks <PR> --watch || true
 ```
-**Review-gate:** if `--review-merge` was passed, do **not** merge — post the PR link + a one-line summary + manual-verification surfaces, record "merged: NO — awaiting your review," and stop. Otherwise:
+**Review-gate:** if `--review-merge` was passed, do **not** merge — post the PR link + a one-line summary, record "merged: NO — awaiting your review," and stop. Otherwise:
 ```bash
 gh pr merge <PR> --squash --delete-branch
 ```
@@ -102,7 +102,7 @@ specify extension list                            # confirm "companion" at the n
 git restore .specify/                             # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
 ```
 The `.claude/` command emissions are **committed real files** (not gitignored like `.specify/`), and the merged PR should already carry the updated ones. If the reinstall leaves `.claude/` dirty (`git status`), that means the PR shipped without re-emitting — **surface it, don't silently restore or commit on main**; the emission belongs in the feature PR.
-End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and a **🖐️ manual-verification** list — the UI / sidebar / webview / settings surfaces a human should eyeball (vs what tests/CI already exercised).
+End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and `/qa-release` as the next step for the batch.
 
 ## Guardrails
 
