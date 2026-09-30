@@ -94,8 +94,8 @@ describe('overview dossier', () => {
             { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:18.000Z' },
         ] }, null);
         const duration = name => html.match(new RegExp(`>${name}</span>(<span class="dossier-timing__duration">([^<]*)</span>)?`))?.[2] ?? null;
-        assert.equal(duration('Specify'), '23s');
-        assert.equal(duration('Plan'), null);
-        assert.match(html, /Timing coverage: 1 of 4 phases/);
+        assert.equal(duration('Specify'), '22s');
+        assert.equal(duration('Plan'), '2m 58s');
+        assert.match(html, /Timing coverage: 2 of 4 phases/);
     });
 });

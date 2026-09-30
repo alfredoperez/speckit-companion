@@ -386,7 +386,7 @@ describe('deriveStepHistory', () => {
         });
     });
 
-    describe('duration honesty: durationTrusted only from extension-stamped boundaries', () => {
+    describe('duration honesty: durationTrusted only from trusted-writer boundaries', () => {
         it('trusts a span whose start and close are both extension-stamped', () => {
             const history: HistoryEntry[] = [
                 tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
@@ -396,13 +396,22 @@ describe('deriveStepHistory', () => {
             expect(sh.specify.durationTrusted).toBe(true);
         });
 
-        it('does not trust a span closed by an ai-journaled finish', () => {
+        it('trusts a span closed by the assistant through the recording script', () => {
             const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
-                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:58Z' }),
             ];
             const sh = deriveStepHistory(history, 'plan', 'planned');
-            expect(sh.plan.completedAt).toBe('2026-07-01T10:00:00.100Z');
+            expect(sh.plan.completedAt).toBe('2026-07-01T10:02:58Z');
+            expect(sh.plan.durationTrusted).toBe(true);
+        });
+
+        it('does not trust a span closed by a finish from an unknown writer', () => {
+            const history: HistoryEntry[] = [
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: undefined, at: '2026-07-01T10:02:58Z' }),
+            ];
+            const sh = deriveStepHistory(history, 'plan', 'planned');
             expect(sh.plan.durationTrusted).toBe(false);
         });
 
@@ -487,13 +496,13 @@ describe('deriveStepHistory', () => {
             expect(sh.specify.durationTrusted).toBe(true);
         });
 
-        it('still does NOT trust an extension start closed by a premature ai finish', () => {
+        it('trusts an extension start closed by a script-stamped ai finish', () => {
             const history: HistoryEntry[] = [
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
-                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:00:00.100Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:03:00Z' }),
             ];
             const sh = deriveStepHistory(history, 'plan', 'planned');
-            expect(sh.plan.durationTrusted).toBe(false);
+            expect(sh.plan.durationTrusted).toBe(true);
         });
 
         it('claims no duration for an advance-only phase (ai complete, no start)', () => {
@@ -551,19 +560,32 @@ describe('deriveStepHistory', () => {
             expect(spanMs(sh.plan)).toBe(178_000);
         });
 
-        it('does not measure plan, whose editor-stamped start was closed by an assistant', () => {
+        it('measures plan, opened by the editor and closed by the assistant, at 2m 58s', () => {
             const sh = deriveStepHistory(qaRecord(), 'plan', 'planned');
-            expect(sh.plan.durationTrusted).toBe(false);
+            expect(sh.plan.durationTrusted).toBe(true);
+            expect(spanMs(sh.plan)).toBe(178_000);
         });
 
-        it('closes at a trusted finish that follows an assistant finish', () => {
+        it('closes at the first trusted finish, skipping one from an unknown writer', () => {
             const sh = deriveStepHistory([
                 tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
-                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:00Z' }),
-                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: undefined, at: '2026-07-01T10:02:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:03:00Z' }),
                 tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-01T11:00:00Z' }),
             ], 'tasks', 'tasking');
             expect(sh.plan.completedAt).toBe('2026-07-01T10:03:00Z');
+            expect(sh.plan.durationTrusted).toBe(true);
+        });
+
+        it('closes at the next step start when its own finish landed after that start', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'specify', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:05:00Z' }),
+                tx({ step: 'specify', kind: 'complete', by: 'cli', at: '2026-07-01T10:06:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:09:00Z' }),
+            ], 'plan', 'planned');
+            expect(sh.specify.completedAt).toBe('2026-07-01T10:05:00Z');
+            expect(sh.specify.durationTrusted).toBe(true);
             expect(sh.plan.durationTrusted).toBe(true);
         });
 
@@ -686,6 +708,17 @@ describe('deriveTimingSummary', () => {
         });
         expect(timing.complete).toBe(true);
         expect(timing.elapsedMs).toBe(24 * 60 * 1000);
+    });
+
+    it('counts a measured clarify between expected phases in the total', () => {
+        const timing = deriveTimingSummary({
+            specify: measured('2026-07-01T10:00:00Z', '2026-07-01T10:01:00Z'),
+            clarify: measured('2026-07-01T10:01:00Z', '2026-07-01T10:11:00Z'),
+            plan: measured('2026-07-01T10:11:00Z', '2026-07-01T10:13:00Z'),
+            tasks: measured('2026-07-01T10:13:00Z', '2026-07-01T10:14:00Z'),
+            implement: measured('2026-07-01T10:14:00Z', '2026-07-01T10:19:00Z'),
+        });
+        expect(timing.elapsedMs).toBe(19 * 60 * 1000);
     });
 
     it('keeps partial timing as coverage and never a total', () => {

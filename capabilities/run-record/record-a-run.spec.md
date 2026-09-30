@@ -83,15 +83,19 @@ The recorder SHALL be able to run a named check itself and store what happened: 
 ### Timestamps say when the write happened
 <!-- touches: apps/speckit-extension/scripts/write-context.py, apps/vscode/src/core/types/** -->
 
-Every boundary SHALL be stamped with the clock at the moment it is written, and a caller that supplies its own time for a finish, a task close or a mark-complete SHALL be refused with nothing written. The one exception is a step start whose dispatch time the dispatcher already knows, which may be supplied. A step's duration counts as trustworthy only when both its start and its finish were stamped by a writer whose clock the run trusts, and the writer that closed the step is trusted at least as far as the one that opened it, so a hand-typed time can never become a measurement and a less trusted hand can never declare an earlier writer's step over.
+Every boundary SHALL be stamped with the clock at the moment it is written, and a caller that supplies its own time for a finish, a task close or a mark-complete SHALL be refused with nothing written. The one exception is a step start whose dispatch time the dispatcher already knows, which may be supplied. A step's duration counts as trustworthy only when both its start and its finish were stamped by a writer whose clock the run trusts, so a hand-typed time or a finish from an unknown writer can never become a measurement. An assistant's finish written through the recorder is trusted, because the recorder stamps it when it is written.
 
 #### Scenario: an assistant runs a step end to end
 - **WHEN** an assistant stamps both the start and the finish of a step through the recorder
 - **THEN** the duration is shown as measured, because nothing more trusted was waiting to close it
 
 #### Scenario: an assistant closes a step the editor opened
-- **WHEN** the editor stamps a step's start and an assistant stamps its finish
-- **THEN** the span is not offered as a measurement, because a finish claimed early would read as a real duration
+- **WHEN** the editor stamps a step's start and an assistant stamps its finish through the recorder
+- **THEN** the duration is shown as measured, because the recorder stamped the finish when the step actually ended
+
+#### Scenario: a finish nobody can vouch for
+- **WHEN** a step's finish carries no writer the run recognises
+- **THEN** the span is not offered as a measurement
 
 ### A capture finds its spec, or skips without failing the command
 <!-- touches: apps/speckit-extension/scripts/spec_context.py, apps/speckit-extension/scripts/write-context.py, apps/speckit-extension/commands/speckit.companion.after-*.md -->

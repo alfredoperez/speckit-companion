@@ -170,10 +170,10 @@ describe('OverviewTiming', () => {
             expect(renderFor(qaRecord.slice(0, 3), 'plan', 'planning')('Specify')).toBe('22s');
         });
 
-        it('keeps Specify at 22s after plan records three finishes', () => {
+        it('keeps Specify at 22s and shows Plan at 2m 58s after plan records three finishes', () => {
             const duration = renderFor(qaRecord, 'plan', 'planned');
             expect(duration('Specify')).toBe('22s');
-            expect(duration('Plan')).toBeNull();
+            expect(duration('Plan')).toBe('2m 58s');
         });
     });
 
