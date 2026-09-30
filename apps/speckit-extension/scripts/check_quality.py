@@ -28,21 +28,12 @@ PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
 # Full lifecycle order — overlap handling must see clarify/analyze spans too,
 # exactly like the viewer's STEP_NAMES.
 STEP_NAMES = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
-# Same trust rule as the viewer's deriveStepHistory (`boundaryWriterRank`):
-# 2 = instrumented (extension/cli/derive/user — host or in-command script),
-# 1 = agent-journaled (`ai`, a CLI/agent run's own script-stamped boundary),
-# 0 = untrusted. A span is trusted when both boundaries rank > 0 AND the close's
-# rank >= the start's, so an `ai` finish can't finalize an instrumented start.
-_INSTRUMENTED_WRITERS = frozenset({"extension", "cli", "derive", "user"})
-_AGENT_WRITERS = frozenset({"ai"})
+# Same trust rule as the viewer's deriveStepHistory (`isTrustedBoundaryWriter`).
+_TRUSTED_BOUNDARY_WRITERS = frozenset({"extension", "cli", "derive", "user", "ai"})
 
 
-def _boundary_writer_rank(by: object) -> int:
-    if by in _INSTRUMENTED_WRITERS:
-        return 2
-    if by in _AGENT_WRITERS:
-        return 1
-    return 0
+def _is_trusted_writer(by: object) -> bool:
+    return by in _TRUSTED_BOUNDARY_WRITERS
 
 # Verbosity budgets — the single home of every threshold.
 # artifact -> (warn_lines, fail_lines, warn_chars, fail_chars); calibrated on
@@ -165,9 +156,8 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     """Mirror of the viewer's duration-trust rule (`deriveStepHistory` in
     apps/vscode/src/features/specs/stepHistoryDerivation.ts): a step's span is trusted only
     when the raw log carries exactly ONE step-level start from a trusted writer,
-    the lifecycle close boundary — the step's own complete OR the next step's
-    start, from a writer at least as authoritative as the start — lands
-    strictly after it, no step-level
+    the lifecycle close boundary — the step's own first complete, else the next
+    step's start, from a trusted writer — lands strictly after it, no step-level
     complete precedes the start, no competing step-level start falls inside
     the span, and the span doesn't overlap another trusted span (overlap
     untrusts both sides). Returns step -> seconds for trusted spans only."""
@@ -186,12 +176,15 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     spans: dict[str, tuple[float, float]] = {}
     for step in order:
         idxs = groups[step]
-        own = [deduped[i] for i in idxs]
         boundary = next((deduped[j] for j in range(idxs[-1] + 1, len(deduped))
                          if deduped[j].get("step") != step), None)
-        last_step_level = next((e for e in reversed(own) if _is_step_level(e)), None)
-        last_own_is_completion = (last_step_level is not None
-                                  and last_step_level.get("kind") == "complete")
+        raw_own = [e for e in raw if e.get("step") == step]
+        last_start = max((k for k, e in enumerate(raw_own)
+                          if _is_step_level(e) and e.get("kind") == "start"), default=-1)
+        own_completes = [e for k, e in enumerate(raw_own)
+                         if k > last_start and _is_step_level(e) and e.get("kind") == "complete"]
+        own_completion = next((e for e in own_completes if _is_trusted_writer(e.get("by"))),
+                              own_completes[0] if own_completes else None)
 
         close = None
         if boundary is not None:
@@ -199,30 +192,35 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
             b_step = boundary.get("step")
             b_idx = STEP_NAMES.index(b_step) if b_step in STEP_NAMES else -1
             rolled_back = g_idx >= 0 and 0 <= b_idx < g_idx and _is_step_level(boundary)
-            close = (last_step_level if last_own_is_completion else None) if rolled_back else boundary
-        elif last_own_is_completion:
-            close = last_step_level
+            attempt_idx = max((j for j in idxs if _is_step_level(deduped[j])
+                               and deduped[j].get("kind") == "start"), default=idxs[0])
+            interruption = next((deduped[j] for j in range(attempt_idx + 1, len(deduped))
+                                 if deduped[j].get("step") != step), boundary)
+            finished_first = ((oc := _parse_at(own_completion.get("at") if own_completion else None)) is not None
+                              and (ic := _parse_at(interruption.get("at"))) is not None and oc <= ic)
+            if rolled_back:
+                close = own_completion
+            elif own_completion is None:
+                close = boundary
+            else:
+                close = own_completion if finished_first else interruption
+        elif own_completion is not None:
+            close = own_completion
         if close is None:
             continue
 
-        raw_own = [e for e in raw if e.get("step") == step]
         explicit_starts = [e for e in raw_own
                            if _is_step_level(e) and e.get("kind") == "start"
-                           and _boundary_writer_rank(e.get("by")) > 0]
+                           and _is_trusted_writer(e.get("by"))]
         if len(explicit_starts) != 1:
             continue
-        start_rank = _boundary_writer_rank(explicit_starts[0].get("by"))
-
-        def _close_trusted(by: object) -> bool:
-            rank = _boundary_writer_rank(by)
-            return rank > 0 and rank >= start_rank
 
         close_is_own_completion = (close.get("step") == step and _is_step_level(close)
                                    and close.get("kind") == "complete"
-                                   and _close_trusted(close.get("by")))
+                                   and _is_trusted_writer(close.get("by")))
         close_is_next_start = (close.get("step") != step and _is_step_level(close)
                                and close.get("kind") == "start"
-                               and _close_trusted(close.get("by")))
+                               and _is_trusted_writer(close.get("by")))
         if not (close_is_own_completion or close_is_next_start):
             continue
         s = _parse_at(explicit_starts[0].get("at"))
@@ -282,7 +280,7 @@ def check_timing(r: Report, spec_dir: Path) -> None:
         return
     history = [e for e in history if isinstance(e, dict)]
 
-    # trusted-boundaries — each reached step needs extension-stamped boundaries (close = own complete or next step's start).
+    # trusted-boundaries — each reached step needs trusted-writer boundaries (close = own complete or next step's start).
     reached = [s for s in PIPELINE_STEPS if any(e.get("step") == s for e in history)]
     all_spans = _derive_trusted_spans(history)
     spans = {s: all_spans[s] for s in reached if s in all_spans}
@@ -296,7 +294,7 @@ def check_timing(r: Report, spec_dir: Path) -> None:
     else:
         r.add("PASS", "trusted-boundaries",
               f"{len(spans)}/{len(reached)} reached steps carry ordered "
-              "extension-stamped boundaries (closed by own complete or next step's start)")
+              "trusted-writer boundaries (closed by own complete or next step's start)")
 
     # burst-journaling — ai task finishes dumped in one instant instead of live.
     ai_finishes = sorted(

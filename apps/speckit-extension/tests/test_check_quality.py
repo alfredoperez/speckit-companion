@@ -324,14 +324,23 @@ class CliOnlyTimingTrustTests(QualityEvalBase):
         self.assertEqual(status, "PASS")
         self.assertIn("4/4", detail)
 
-    def test_ai_close_cannot_finalize_an_extension_start(self) -> None:
-        masquerade = [
+    def test_ai_close_finalizes_an_extension_start(self) -> None:
+        mixed = [
             {"step": "plan", "substep": None, "kind": "start", "by": "extension",
              "at": "2026-07-21T14:00:00.000Z"},
             {"step": "plan", "substep": None, "kind": "complete", "by": "ai",
-             "at": "2026-07-21T14:00:00.100Z"},
+             "at": "2026-07-21T14:02:58.000Z"},
         ]
-        self.assertNotIn("plan", cq._derive_trusted_spans(masquerade))
+        self.assertEqual(cq._derive_trusted_spans(mixed)["plan"], 178.0)
+
+    def test_close_from_an_unknown_writer_claims_no_span(self) -> None:
+        unknown = [
+            {"step": "plan", "substep": None, "kind": "start", "by": "extension",
+             "at": "2026-07-21T14:00:00.000Z"},
+            {"step": "plan", "substep": None, "kind": "complete",
+             "at": "2026-07-21T14:02:58.000Z"},
+        ]
+        self.assertNotIn("plan", cq._derive_trusted_spans(unknown))
 
     def test_advance_only_phase_claims_no_span(self) -> None:
         advance_only = [

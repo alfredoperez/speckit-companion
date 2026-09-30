@@ -130,13 +130,7 @@ export interface StepHistoryEntry {
      * is declared — it is not part of this contract.
      */
     substeps?: SubstepEntry[];
-    /**
-     * True only when BOTH boundaries were stamped by the extension's own clock
-     * (`by: 'extension'`). AI/cli-journaled timestamps order events correctly but
-     * reflect when the write ran, not when the work happened — so a duration
-     * computed from them is fiction. Renderers must not show an elapsed time
-     * for an untrusted span.
-     */
+    /** True only when both boundaries came from a writer whose clock the run trusts; never render a time otherwise. */
     durationTrusted?: boolean;
     /**
      * True when the step's boundaries were stamped as a fast-path fold (an
@@ -159,7 +153,7 @@ export interface TimingSummary {
     startedAt?: string;
     /** Present only when every expected phase has a trustworthy closed span. */
     endedAt?: string;
-    /** Wall-clock elapsed time, including pauses; present only for a complete run. */
+    /** Sum of the phase spans, excluding waits between phases; present only for a complete run. */
     elapsedMs?: number;
 }
 

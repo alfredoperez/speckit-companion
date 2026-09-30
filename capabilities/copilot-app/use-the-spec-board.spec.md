@@ -1,5 +1,7 @@
 # Use the Spec Board in the Copilot App — Living Spec
 
+<!-- reviewed: 46adbd42 -->
+
 ## Purpose
 
 In the GitHub Copilot app, SpecKit Companion opens as a canvas beside the chat. It is how someone working there sees every spec, where each one stands, and runs the next step without leaving the conversation. It has to show the same pipeline VS Code shows and send the same commands, or a spec would read one way in one tool and run another way in the other.

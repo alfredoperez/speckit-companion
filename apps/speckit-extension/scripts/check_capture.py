@@ -2,7 +2,7 @@
 """Deterministic eval for speckit-extension lifecycle capture.
 
 Given a spec dir holding `.spec-context.json`, assert the capture contract and
-print a PASS/FAIL report plus a timing breakdown (step→step gaps and per-task
+print a PASS/FAIL report plus a timing breakdown (per-step durations and per-task
 cadence). Stdlib only. Re-runnable; extend CHECKS as features land.
 
 Usage:
@@ -21,6 +21,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from check_quality import _derive_trusted_spans
 from check_report import Report
 
 # Inline fallbacks (used only when the schema can't be read).
@@ -409,21 +410,11 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
 
 
 def _timing(r: Report, history: list) -> None:
-    # First occurrence per step → step-boundary gaps.
-    firsts: list[tuple[str, dt.datetime]] = []
-    seen = set()
-    for e in history:
-        s = e.get("step")
-        at = _parse_at(e.get("at"))
-        if s and at and s not in seen:
-            seen.add(s)
-            firsts.append((s, at))
-    if len(firsts) >= 2:
-        parts = []
-        for i in range(1, len(firsts)):
-            gap = (firsts[i][1] - firsts[i - 1][1]).total_seconds()
-            parts.append(f"{firsts[i-1][0]}→{firsts[i][0]} {_fmt(gap)}")
-        r.add(None, "step-timing", " | ".join(parts))
+    steps = list(dict.fromkeys(e.get("step") for e in history if isinstance(e.get("step"), str)))
+    if steps:
+        spans = _derive_trusted_spans(history)
+        r.add(None, "step-timing", " | ".join(
+            f"{s} {_fmt(spans[s])}" if s in spans else f"{s} unmeasured" for s in steps))
     # Per-task cadence within implement (finish-only model). The live path stamps
     # ONE finish per task via a script as work proceeds (by:ai, ms precision) →
     # non-zero gaps are the HEALTHY honest-cadence signal. The end-of-step hook

@@ -41,7 +41,7 @@ export function OverviewTiming({ state }: { state: ViewerState }) {
     const timing = state.timing;
     const complete = timing?.complete === true && timing.elapsedMs !== undefined;
     const summary = complete
-        ? `${formatElapsed(timing.elapsedMs!)} elapsed`
+        ? `${formatElapsed(timing.elapsedMs!)} active`
         : timing
             ? `Timing coverage: ${timing.measuredPhases} of ${timing.expectedPhases} phases`
             : 'Timing not recorded';

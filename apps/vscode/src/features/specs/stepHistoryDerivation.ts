@@ -18,8 +18,10 @@
  *   - For each step seen in (de-duplicated) transitions, in order of first
  *     appearance, emit a `StepHistoryEntry`.
  *   - `startedAt` = `at` of the first transition for that step.
- *   - `completedAt` = `at` of the first transition for the *next* step
- *     in the array, OR `null` if this is the most recently seen step
+ *   - `completedAt` = `at` of the step's own first step-level complete after
+ *     its latest start (idle time before the next step is billed to no step);
+ *     without one, the first transition for the *next* step in the array,
+ *     OR `null` if this is the most recently seen step
  *     and `currentStep` matches it (i.e. step is in flight). If the spec
  *     is in a TERMINAL status (`completed`/`archived`), that last-seen
  *     current step is finalized instead to the `at` of its own last
@@ -285,24 +287,11 @@ function buildSubsteps(
 /** A fold's stamps land tens of ms apart in one hook run; a real phase takes multiple seconds. */
 const FOLD_WINDOW_MS = 1000;
 
-/** Host/script-instrumented writers — a UI click, an in-command hook, or a reconstruction. */
-const INSTRUMENTED_WRITERS = new Set(['extension', 'cli', 'derive', 'user']);
-/** Agent-journaled writers — a CLI/agent run's own script-stamped boundary. */
-const AGENT_WRITERS = new Set(['ai']);
+/** Writers whose clock the run trusts; `ai` counts because `write-context.py` stamps its time. */
+const TRUSTED_BOUNDARY_WRITERS = new Set(['extension', 'cli', 'derive', 'user', 'ai']);
 
-/**
- * Rank a boundary's writer for duration trust: 2 = instrumented (extension
- * button, in-command hook, reconstruction — host/script observed), 1 = agent
- * (a CLI/agent run's own `write-context.py`-stamped boundary), 0 = not a
- * trusted writer. A trusted span needs both boundaries > 0 AND the close's
- * rank ≥ the start's — so an `ai` finish can't masquerade as the close of an
- * instrumented start (a premature-finish masquerade), while a coherent CLI-only
- * run whose start is itself `ai` accepts an `ai` close.
- */
-function boundaryWriterRank(by: string | undefined): number {
-    if (by !== undefined && INSTRUMENTED_WRITERS.has(by)) return 2;
-    if (by !== undefined && AGENT_WRITERS.has(by)) return 1;
-    return 0;
+function isTrustedBoundaryWriter(by: string | undefined): boolean {
+    return by !== undefined && TRUSTED_BOUNDARY_WRITERS.has(by);
 }
 
 export function deriveStepHistory(
@@ -328,17 +317,15 @@ export function deriveStepHistory(
         let completedAt: string | null = null;
         // The entry whose clock closed the span — drives `durationTrusted`.
         let closeEntry: HistoryEntry | null = null;
-        // A "completion" entry is one whose `from.step` matches its own
-        // `step` — that's how setStepCompleted writes the close-boundary.
-        // If the most recent entry for this step is a completion, the step
-        // is done even if currentStep is still pointed at it.
-        // The last STEP-LEVEL transition (substep null, no `task`), skipping per-task
-        // implement finishes the backstop can append AFTER the step-level complete —
-        // otherwise a trailing task finish hides the real completion and the step
-        // renders in-flight forever.
-        const lastStepLevel = [...g.transitions].reverse()
-            .find(isStepLevelEntry);
-        const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
+        // A step ends at its latest attempt's first complete (a trusted one first), so idle time before the next step is billed to none.
+        const rawStepTransitions = transitions.filter(t => t.step === g.step);
+        let lastStartIdx = -1;
+        rawStepTransitions.forEach((t, idx) => {
+            if (isStepLevelEntry(t) && t.kind === 'start') lastStartIdx = idx;
+        });
+        const ownCompletes = rawStepTransitions.filter((t, idx) =>
+            idx > lastStartIdx && isStepLevelEntry(t) && t.kind === 'complete');
+        const ownCompletion = ownCompletes.find(t => isTrustedBoundaryWriter(t.by)) ?? ownCompletes[0] ?? null;
 
         if (g.nextStepFirstIdx !== -1) {
             // Another step's transition follows this group — normally that is
@@ -352,17 +339,24 @@ export function deriveStepHistory(
             const bIdx = STEP_NAMES.indexOf(boundary.step as StepName);
             const rolledBack = gIdx >= 0 && bIdx >= 0 && bIdx < gIdx && isStepLevelEntry(boundary);
             if (rolledBack) {
-                if (!lastOwnIsCompletion) continue;
-                closeEntry = lastStepLevel!;
+                if (!ownCompletion) continue;
+                closeEntry = ownCompletion;
             } else {
-                closeEntry = boundary;
+                // The first other-step entry after this attempt began; a finish stamped after it came too late to close the step.
+                let attemptIdx = deduped.indexOf(g.transitions[0]);
+                deduped.forEach((t, idx) => {
+                    if (t.step === g.step && isStepLevelEntry(t) && t.kind === 'start') attemptIdx = idx;
+                });
+                const interruption = deduped.slice(attemptIdx + 1).find(t => t.step !== g.step) ?? boundary;
+                if (ownCompletion === null) closeEntry = boundary;
+                else closeEntry = Date.parse(ownCompletion.at) <= Date.parse(interruption.at) ? ownCompletion : interruption;
             }
             completedAt = closeEntry.at;
-        } else if (lastOwnIsCompletion) {
+        } else if (ownCompletion) {
             // No later step yet, but this step has a real completion entry —
             // honor it (covers `setStepCompleted` calls before the user has
             // clicked the next-phase button).
-            closeEntry = lastStepLevel!;
+            closeEntry = ownCompletion;
             completedAt = closeEntry.at;
         } else if (isLastSeen && isCurrent && isTerminal) {
             // Most recently seen step, currentStep matches, AND the spec is in
@@ -386,35 +380,27 @@ export function deriveStepHistory(
         // Duration honesty is deliberately stricter than lifecycle derivation.
         // A measured phase needs exactly one step-level start from a trusted
         // writer and a trusted close after it (this step's own completion or the
-        // next lifecycle step's start). A CLI/agent run stamps its boundaries
-        // `by:ai` through `write-context.py` — those are script-stamped and count,
-        // but only when the close is at least as authoritative as the start
-        // (see `boundaryWriterRank`): an `ai` close can't finalize an
-        // extension-stamped start (a premature-finish masquerade). A phase with
-        // no start (advanced with only a complete) or AI prose stays unmeasured.
+        // next lifecycle step's start). A phase with no start (advanced with only a
+        // complete) or a boundary from an unknown writer stays unmeasured.
         // Trust checks use the raw append-only log, not the UI de-duplicated
         // sequence: a repeated start is precisely one of the anomalies that
         // must remain visible to the timing validator.
-        const rawStepTransitions = transitions.filter(t => t.step === g.step);
         const explicitStarts = rawStepTransitions.filter(t =>
-            isStepLevelEntry(t) && t.kind === 'start' && boundaryWriterRank(t.by) > 0
+            isStepLevelEntry(t) && t.kind === 'start' && isTrustedBoundaryWriter(t.by)
         );
         const trustedStart = explicitStarts.length === 1 ? explicitStarts[0] : null;
-        const startRank = trustedStart ? boundaryWriterRank(trustedStart.by) : 0;
-        const closeTrusted = (by: string | undefined): boolean =>
-            boundaryWriterRank(by) > 0 && boundaryWriterRank(by) >= startRank;
         const startMs = trustedStart ? Date.parse(trustedStart.at) : NaN;
         const closeMs = completedAt ? Date.parse(completedAt) : NaN;
         const closeIsOwnCompletion = closeEntry !== null
             && closeEntry.step === g.step
             && isStepLevelEntry(closeEntry)
             && closeEntry.kind === 'complete'
-            && closeTrusted(closeEntry.by);
+            && isTrustedBoundaryWriter(closeEntry.by);
         const closeIsNextStart = closeEntry !== null
             && closeEntry.step !== g.step
             && isStepLevelEntry(closeEntry)
             && closeEntry.kind === 'start'
-            && closeTrusted(closeEntry.by);
+            && isTrustedBoundaryWriter(closeEntry.by);
         const completionBeforeStart = trustedStart !== null && rawStepTransitions.some(t =>
             isStepLevelEntry(t)
             && t.kind === 'complete'
@@ -502,7 +488,7 @@ export function deriveStepHistory(
     return out;
 }
 
-/** Derive timing coverage and, only for a complete sequence, wall-clock elapsed time. */
+/** Derive timing coverage and, only for a complete sequence, the summed phase time (waits between phases excluded). */
 export function deriveTimingSummary(
     stepHistory: Record<string, StepHistoryEntry>,
     expectedPhases: readonly string[] = DEFAULT_PIPELINE_STEPS,
@@ -534,7 +520,13 @@ export function deriveTimingSummary(
 
     const startedAt = entries[0].startedAt;
     const endedAt = entries[entries.length - 1].completedAt as string;
-    const elapsedMs = Date.parse(endedAt) - Date.parse(startedAt);
+    const [runStart, runEnd] = [Date.parse(startedAt), Date.parse(endedAt)];
+    // Every measured phase inside the run counts, clarify and analyze included; the waits between them do not.
+    const elapsedMs = Object.values(stepHistory).reduce((sum, entry) => {
+        if (entry?.durationTrusted !== true || !entry.completedAt) return sum;
+        const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];
+        return start >= runStart && end <= runEnd && end > start ? sum + (end - start) : sum;
+    }, 0);
     if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return { ...base, complete: false };
     return { ...base, startedAt, endedAt, elapsedMs };
 }
