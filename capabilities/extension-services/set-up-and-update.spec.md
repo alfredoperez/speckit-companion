@@ -31,11 +31,15 @@ At start-up the extension SHALL work out whether the `specify` CLI is on the mac
 ### CLI install, init and upgrade run in a terminal the user can watch
 <!-- touches: apps/vscode/src/speckit/detector.ts, apps/vscode/src/speckit/cliCommands.ts -->
 
-Installing the CLI, initialising the workspace and the upgrade choices (`SpecKit: Upgrade` offers Upgrade All, Upgrade Project, Upgrade CLI and Update spec-kit Extension) SHALL each run as a command in a visible integrated terminal and offer a window reload for when it finishes. The project upgrade SHALL refresh the scaffolding for the currently configured AI provider. Commands that act on a project SHALL refuse with a message when no folder is open.
+Installing the CLI, initialising the workspace and the upgrade choices (`SpecKit: Upgrade` offers Upgrade All, Upgrade Project, Upgrade CLI and Update spec-kit Extension) SHALL each run as a command in a visible integrated terminal and offer a window reload for when it finishes. The project upgrade SHALL refresh the scaffolding for the currently configured AI provider. The project upgrade SHALL pick the agent with `--integration`, and fall back to `--ai` only for an older CLI whose init help does not list `--integration`. Commands that act on a project SHALL refuse with a message when no folder is open.
 
 #### Scenario: upgrading a project
 - **WHEN** the user picks Upgrade Project with Claude as the provider
 - **THEN** a terminal opens at the project root and re-runs the project init in place for that provider, and a message offers Reload Window
+
+#### Scenario: upgrading a project with an older CLI
+- **WHEN** the installed `specify init --help` lists `--ai` but not `--integration`
+- **THEN** the terminal command names the provider's agent with `--ai` instead
 
 ### Settings saved by an older version never break start-up
 <!-- touches: apps/vscode/src/core/settingsMigration.ts, apps/vscode/src/extension.ts -->

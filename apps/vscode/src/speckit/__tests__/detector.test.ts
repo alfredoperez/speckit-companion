@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
+import { promisify } from 'util';
 import { SpecKitDetector } from '../detector';
 
 // Mock child_process and fs since detector uses them
-jest.mock('child_process', () => ({
-    exec: jest.fn(),
-}));
+jest.mock('child_process', () => {
+    const exec: any = jest.fn();
+    exec[require('util').promisify.custom] = jest.fn();
+    return { exec };
+});
 
 jest.mock('fs', () => ({
     existsSync: jest.fn().mockReturnValue(false),
@@ -12,9 +15,14 @@ jest.mock('fs', () => ({
 }));
 
 const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
+const mockExecAsync = (require('child_process').exec as any)[promisify.custom] as jest.Mock;
+
+const INTEGRATION_HELP = '--here  --force\n--integration  <str>  AI coding agent integration';
+const LEGACY_HELP = '--here  --force\n--ai  <str>  AI assistant to use';
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockExecAsync.mockResolvedValue({ stdout: INTEGRATION_HELP, stderr: '' });
     // Reset singleton for isolation
     (SpecKitDetector as any).instance = undefined;
 });
@@ -80,7 +88,7 @@ describe('SpecKitDetector', () => {
         });
     });
 
-    describe('upgrade dispatch (--ai agent resolution)', () => {
+    describe('upgrade dispatch (agent resolution)', () => {
         const getConfig = vscode.workspace.getConfiguration as jest.Mock;
 
         function mockProvider(value: string | undefined): void {
@@ -107,7 +115,7 @@ describe('SpecKitDetector', () => {
                 mockProvider('codex');
                 await SpecKitDetector.getInstance().upgradeProject();
                 const sent = lastSentText();
-                expect(sent).toContain('--ai codex');
+                expect(sent).toContain('--integration codex');
                 expect(sent).not.toContain('claude-code');
             });
 
@@ -115,8 +123,24 @@ describe('SpecKitDetector', () => {
                 mockProvider('claude');
                 await SpecKitDetector.getInstance().upgradeProject();
                 const sent = lastSentText();
-                expect(sent).toContain('--ai claude');
+                expect(sent).toContain('--integration claude');
                 expect(sent).not.toContain('claude-code');
+            });
+
+            it('falls back to --ai for a CLI that only lists --ai', async () => {
+                mockProvider('codex');
+                mockExecAsync.mockResolvedValue({ stdout: LEGACY_HELP, stderr: '' });
+                await SpecKitDetector.getInstance().upgradeProject();
+                const sent = lastSentText();
+                expect(sent).toContain('--ai codex');
+                expect(sent).not.toContain('--integration');
+            });
+
+            it('uses --integration when the CLI help cannot be read', async () => {
+                mockProvider('claude');
+                mockExecAsync.mockRejectedValue(new Error('spawn failed'));
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toContain('--integration claude');
             });
         });
 
@@ -125,7 +149,7 @@ describe('SpecKitDetector', () => {
                 mockProvider('claude');
                 await SpecKitDetector.getInstance().upgradeAll();
                 const sent = lastSentText();
-                expect(sent).toContain('--ai claude');
+                expect(sent).toContain('--integration claude');
                 expect(sent).not.toContain('claude-code');
             });
         });
@@ -143,12 +167,12 @@ describe('SpecKitDetector', () => {
             }
         });
 
-        it('both upgrade paths emit the same --ai value for the same provider (FR-006)', async () => {
+        it('both upgrade paths emit the same agent value for the same provider (FR-006)', async () => {
             mockProvider('claude');
             await SpecKitDetector.getInstance().upgradeProject();
-            const projectAgent = lastSentText().match(/--ai (\S+)/)?.[1];
+            const projectAgent = lastSentText().match(/--(?:integration|ai) (\S+)/)?.[1];
             await SpecKitDetector.getInstance().upgradeAll();
-            const allAgent = lastSentText().match(/--ai (\S+)/)?.[1];
+            const allAgent = lastSentText().match(/--(?:integration|ai) (\S+)/)?.[1];
             expect(projectAgent).toBe('claude');
             expect(allAgent).toBe('claude');
         });

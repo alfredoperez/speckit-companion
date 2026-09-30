@@ -225,6 +225,20 @@ export class SpecKitDetector {
     }
 
     /**
+     * The flag this CLI uses to pick the agent: `--integration` on current spec-kit,
+     * `--ai` on older CLIs that do not list it. An unreadable help falls back to the current flag.
+     */
+    private async detectAgentFlag(): Promise<'--integration' | '--ai'> {
+        try {
+            const { stdout } = await execAsync('specify init --help', { timeout: 5000 });
+            return /--integration(?![\w-])/.test(stdout) || !/--ai(?![\w-])/.test(stdout) ? '--integration' : '--ai';
+        } catch {
+            this.log('Could not read `specify init --help`; using --integration');
+            return '--integration';
+        }
+    }
+
+    /**
      * Upgrade project files to latest SpecKit version
      */
     async upgradeProject(): Promise<void> {
@@ -234,9 +248,10 @@ export class SpecKitDetector {
             return;
         }
 
+        const agentFlag = await this.detectAgentFlag();
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText(`specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
+        terminal.sendText(`specify init --here --force ${agentFlag} ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading project files... Reload window after upgrade completes.',
@@ -261,7 +276,7 @@ export class SpecKitDetector {
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder.uri });
         terminal.show();
         terminal.sendText('uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
-            `specify init --here --force --ai ${getConfiguredSpecKitAgent()}`);
+            `specify init --here --force --integration ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI and project files... Reload window after upgrade completes.',
