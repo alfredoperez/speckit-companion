@@ -49,7 +49,7 @@ Ticking or clearing a task's checkbox SHALL rewrite that task's line in the file
 ### A file the document names opens from the page
 <!-- touches: apps/vscode/webview/src/spec-viewer/markdown/inline.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
-A path written in backticks whose extension is one the viewer recognises SHALL render as a control that opens that file beside the viewer, showing the short name and the full path on hover. A path with no match in the workspace SHALL say so rather than failing silently, and text in backticks that is not a file path stays ordinary code.
+A path written in backticks whose extension is one the viewer recognises SHALL render as a control that opens that file in the editor group beside the viewer, showing the short name and the full path on hover. Every file opened from the page goes to that same group, so repeated clicks never split the editor again. A path with no match in the workspace SHALL say so rather than failing silently, and text in backticks that is not a file path stays ordinary code.
 
 #### Scenario: a path in the plan
 - **WHEN** the plan names a source file in backticks and the reader clicks it
@@ -60,9 +60,9 @@ A path written in backticks whose extension is one the viewer recognises SHALL r
 - **THEN** the reader is told it is not in the workspace
 
 ### A link to another document opens that document
-<!-- touches: apps/vscode/webview/src/spec-viewer/documentLinks.ts, apps/vscode/webview/src/spec-viewer/markdown/inline.ts -->
+<!-- touches: apps/vscode/webview/src/spec-viewer/documentLinks.ts, apps/vscode/webview/src/spec-viewer/markdown/inline.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
-A link in a document to another document of the same spec SHALL open that document in the viewer, and a link with a heading fragment SHALL scroll to that heading once the document has rendered. A link that is only a fragment SHALL scroll within the current document. A link to a file that is not one of the spec's documents opens it beside the viewer, and a web link is left to the editor to open.
+A link in a document to another document of the same spec SHALL open that document in the viewer, and a link with a heading fragment SHALL scroll to that heading once the document has rendered. A link that is only a fragment SHALL scroll within the current document. A link to a document of another spec SHALL open that spec in the viewer, the same as clicking it in the sidebar, never as raw markdown. A link to any other file opens it in the editor group beside the viewer, reusing that group on every click, and a web link is left to the editor to open.
 
 #### Scenario: a plan that points at the tasks
 - **WHEN** the reader clicks a link to the tasks document in a one-line plan
@@ -71,3 +71,11 @@ A link in a document to another document of the same spec SHALL open that docume
 #### Scenario: a link to a section of another document
 - **WHEN** the reader clicks a link to a heading in the spec from the plan
 - **THEN** the spec opens scrolled to that heading
+
+#### Scenario: a link to another spec
+- **WHEN** the reader clicks a link to another spec's spec.md
+- **THEN** that spec opens in its own viewer tab, as it does from the sidebar
+
+#### Scenario: a link to a source file, clicked twice
+- **WHEN** the reader clicks a link to a source file, goes back to the viewer and clicks it again
+- **THEN** both clicks open the file in the one group beside the viewer and no third group appears

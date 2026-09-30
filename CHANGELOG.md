@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - **The Pipeline Builder reads in a side panel.** Docked beside the editor, the steps now stack one under the next at the panel's width instead of being clipped behind a sideways scroll, and the joins between them are drawn as horizontal rules.
 - **Links between spec documents now work in the viewer.** Clicking a link to another document of the spec, such as the Approach and tasks.md links a simple spec's Plan points to, opens that document and scrolls to the heading the link names. A link that is only a heading jumps within the page, and a link to a source file opens it beside the viewer.
 - **A spec with nothing recorded no longer has a tab titled Overview.** The tab now names the document the pane is showing, and switches to Overview once the run has recorded something.
+- **A link to another spec opens it in the viewer, and source files stop splitting the editor.** A link to another spec's document opened its raw markdown in a new group; it now opens that spec in the viewer, the same as clicking it in the sidebar. A link to a source file now always opens in the one group beside the viewer instead of adding a new group on every click.
 
 ## [0.34.0] - 2026-09-30
 

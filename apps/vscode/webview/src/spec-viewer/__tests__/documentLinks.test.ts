@@ -61,6 +61,10 @@ describe('resolveDocumentLink', () => {
         expect(resolveDocumentLink('../../src/app.ts', nav('spec'))).toEqual({ kind: 'file', filename: '/ws/src/app.ts' });
     });
 
+    it('sends a link to another spec\'s document to the file opener as its full path, for the extension to open in the viewer', () => {
+        expect(resolveDocumentLink('../_01_demo-planned/spec.md', nav('spec'))).toEqual({ kind: 'file', filename: '/ws/specs/_01_demo-planned/spec.md' });
+    });
+
     it('does not match a document whose file is missing', () => {
         const ns = nav('plan', { relatedDocs: [doc('research', 'research.md', false)] });
         expect(resolveDocumentLink('./research.md', ns)).toEqual({ kind: 'file', filename: `${DIR}/research.md` });

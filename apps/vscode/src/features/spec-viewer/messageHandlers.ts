@@ -58,6 +58,7 @@ import {
 } from "./reviewComments";
 import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
+import { isInsideSpecDirectory } from "../../core/specDirectoryResolver";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -82,7 +83,7 @@ export interface MessageHandlerDependencies {
   getInstance: (
     specDirectory: string,
   ) =>
-    | { state: SpecViewerState; debounceTimer: NodeJS.Timeout | undefined }
+    | { state: SpecViewerState; debounceTimer: NodeJS.Timeout | undefined; panel?: { viewColumn?: vscode.ViewColumn } }
     | undefined;
   updateContent: (
     specDirectory: string,
@@ -217,7 +218,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
     approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
     undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
-    openFile: (msg, _dir, deps) => handleOpenFile(msg.filename, deps),
+    openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
     webviewError: async (msg, _dir, deps) => {
@@ -744,16 +745,22 @@ async function handleToggleCheckbox(
  * Handle open file request from a file reference click
  */
 async function handleOpenFile(
+  specDirectory: string,
   filename: string,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   const basename = path.basename(filename);
   if (path.isAbsolute(filename)) {
-    if (!isWithinWorkspace(filename) || !fs.existsSync(filename)) {
+    const folder = workspaceFolderOf(filename);
+    if (!folder || !fs.existsSync(filename)) {
       vscode.window.showWarningMessage(`File not found in workspace: ${basename}`);
       return;
     }
-    await showFileBeside(vscode.Uri.file(filename), deps);
+    if (isSpecFolderDocument(filename, folder)) {
+      await vscode.commands.executeCommand("speckit.viewSpecDocument", filename);
+      return;
+    }
+    await showFileBeside(vscode.Uri.file(filename), specDirectory, deps);
     return;
   }
   const results = await vscode.workspace.findFiles(`**/${basename}`, null, 1);
@@ -763,24 +770,38 @@ async function handleOpenFile(
     );
     return;
   }
-  await showFileBeside(results[0], deps);
+  await showFileBeside(results[0], specDirectory, deps);
 }
 
-function isWithinWorkspace(filePath: string): boolean {
-  return (vscode.workspace.workspaceFolders ?? []).some((folder) => {
+function workspaceFolderOf(filePath: string): vscode.WorkspaceFolder | undefined {
+  return (vscode.workspace.workspaceFolders ?? []).find((folder) => {
     const rel = path.relative(folder.uri.fsPath, filePath);
     return rel !== "" && rel !== ".." && !rel.startsWith(".." + path.sep) && !path.isAbsolute(rel);
   });
 }
 
+/** A markdown file inside a spec folder, which the viewer opens the way the sidebar does. */
+function isSpecFolderDocument(filePath: string, folder: vscode.WorkspaceFolder): boolean {
+  if (!filePath.toLowerCase().endsWith(".md")) return false;
+  const specRel = isInsideSpecDirectory(filePath, folder.uri.fsPath);
+  return !!specRel && path.resolve(folder.uri.fsPath, specRel) !== path.resolve(filePath);
+}
+
+/** One fixed group to the right of the viewer, so repeated clicks reuse it instead of splitting again. */
+function besideViewerColumn(specDirectory: string, deps: MessageHandlerDependencies): vscode.ViewColumn {
+  const viewerColumn = deps.getInstance(specDirectory)?.panel?.viewColumn;
+  return viewerColumn && viewerColumn > 0 ? viewerColumn + 1 : vscode.ViewColumn.Beside;
+}
+
 async function showFileBeside(
   uri: vscode.Uri,
+  specDirectory: string,
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   try {
     const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, {
-      viewColumn: vscode.ViewColumn.Beside,
+      viewColumn: besideViewerColumn(specDirectory, deps),
     });
     deps.outputChannel.appendLine(`[SpecViewer] Opened file ref: ${uri.fsPath}`);
   } catch (error) {
