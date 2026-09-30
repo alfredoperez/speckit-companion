@@ -28,6 +28,15 @@ The board SHALL draw every step that takes a turn in the run as a numbered colum
 - **WHEN** a project step declares no step to run behind
 - **THEN** it is drawn under Outside the run and not among the numbered columns
 
+### A narrow panel stacks the steps instead of clipping them
+<!-- touches: apps/vscode/webview/styles/pipeline-builder.css -->
+
+Where the panel is too narrow for two columns, such as docked beside the editor, the steps SHALL stack in run order at the panel's width, with the joins between them drawn as horizontal rules, so no card is clipped or left behind a sideways scroll.
+
+#### Scenario: the panel is docked narrow
+- **WHEN** the panel is narrower than two columns need
+- **THEN** every step is drawn one under the next at the full panel width and each node card reads in full
+
 ### Everything the project changed carries one mark
 <!-- touches: apps/vscode/webview/src/pipeline-builder/** -->
 

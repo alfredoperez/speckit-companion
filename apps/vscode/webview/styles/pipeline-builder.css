@@ -2556,3 +2556,53 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     flex: none;
     white-space: nowrap;
 }
+
+
+/* ── Side panel ──────────────────────────────────────────────
+   Last in the file: `@container` adds no specificity, and the lane and seam
+   rules it overrides are declared above. */
+
+/* Two lanes need about 650px. Below that the run is one column: steps stack in
+   run order, each as wide as the panel, and the seams between them turn from a
+   vertical rule into a horizontal one. A lane stays readable instead of being
+   clipped at its 300px floor, and nothing is left behind a sideways scroll
+   that nothing on screen points to. */
+@container builder (max-width: 640px) {
+    .pb-run,
+    .pb-run--seamed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pb-step { border-left: none; }
+
+    .pb-lane-seam {
+        flex-direction: row;
+        align-items: center;
+        align-self: auto;
+        width: auto;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .pb-lane-seam::after {
+        flex-grow: 1;
+        width: auto;
+        height: 0;
+        margin: 0 0 0 var(--space-2);
+        border-left: none;
+        border-top: 1px dashed var(--border);
+    }
+
+    .pb-lane-seam:hover::after,
+    .pb-lane-seam:focus-visible::after {
+        border-left-color: transparent;
+        border-top-color: var(--accent);
+    }
+
+    .pb-outside {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding: var(--space-3);
+    }
+
+    .pb-aside { max-width: none; }
+}
