@@ -1878,6 +1878,8 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     position: fixed;
     z-index: 20;
     box-sizing: border-box;
+    /* Reduced motion gives every property a 0.01ms transition, which placement would measure mid-flight. */
+    transition: none;
 }
 
 /* What picking this one does. A select had nowhere to put it. Body, not the
