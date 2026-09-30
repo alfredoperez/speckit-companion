@@ -21,6 +21,9 @@ export function isNewerVersion(current: string, latest: string): boolean {
     return false;
 }
 
+const RELEASES_API = 'https://api.github.com/repos/alfredoperez/speckit-companion/releases';
+const GITHUB_HEADERS = { 'User-Agent': 'speckit-companion', Accept: 'application/vnd.github+json' };
+
 export class UpdateChecker {
     private static readonly SKIP_VERSION_KEY = ConfigKeys.globalState.skipVersion;
     private static readonly LAST_CHECK_KEY = ConfigKeys.globalState.lastUpdateCheck;
@@ -80,16 +83,42 @@ export class UpdateChecker {
         }
     }
     
-    /** Remember the newest published spec-kit extension version, for the next session to compare against. Forward-only: a check finds no ext tag once older ones fall off the shared releases page, and accepting that would erase it. */
+    /** Forward-only while the remembered release still exists (older tags fall off the shared page); a retracted one is replaced by the newest listed, or forgotten. */
     private async rememberPublishedCompanionVersion(latest: string | null): Promise<void> {
-        if (!latest) {
-            return;
-        }
         const known = this.context.globalState.get<string>(UpdateChecker.PUBLISHED_COMPANION_KEY);
-        if (known && !isNewerVersion(known, latest)) {
+        if (latest && (!known || isNewerVersion(known, latest))) {
+            await this.context.globalState.update(UpdateChecker.PUBLISHED_COMPANION_KEY, latest);
             return;
         }
-        await this.context.globalState.update(UpdateChecker.PUBLISHED_COMPANION_KEY, latest);
+        if (!known || latest === known) {
+            return;
+        }
+        if ((await this.specKitExtReleaseState(known)) !== 'retracted') {
+            return;
+        }
+        this.outputChannel.appendLine(`[UpdateChecker] Release speckit-ext-v${known} was retracted, forgetting it`);
+        await this.context.globalState.update(UpdateChecker.PUBLISHED_COMPANION_KEY, latest ?? undefined);
+        notePublishedCompanionVersion(latest ?? undefined);
+    }
+
+    /** Ask GitHub for one spec-kit extension release by tag. Only a 404 or an unpublished release means retracted; any failure to ask means unknown. */
+    private async specKitExtReleaseState(version: string): Promise<'exists' | 'retracted' | 'unknown'> {
+        try {
+            const response = await fetch(`${RELEASES_API}/tags/speckit-ext-v${version}`, { headers: GITHUB_HEADERS });
+            if (response.status === 404) {
+                return 'retracted';
+            }
+            if (!response.ok) {
+                return 'unknown';
+            }
+            const release = await response.json() as GitHubRelease;
+            if (release?.tag_name !== `speckit-ext-v${version}`) {
+                return 'unknown';
+            }
+            return release.draft || release.prerelease ? 'retracted' : 'exists';
+        } catch {
+            return 'unknown';
+        }
     }
 
     /**
@@ -105,10 +134,7 @@ export class UpdateChecker {
     private async fetchLatestRelease(): Promise<GitHubRelease | null> {
         try {
             this.outputChannel.appendLine('[UpdateChecker] Fetching releases from GitHub...');
-            const response = await fetch(
-                'https://api.github.com/repos/alfredoperez/speckit-companion/releases?per_page=100',
-                { headers: { 'User-Agent': 'speckit-companion', Accept: 'application/vnd.github+json' } }
-            );
+            const response = await fetch(`${RELEASES_API}?per_page=100`, { headers: GITHUB_HEADERS });
 
             if (!response.ok) {
                 this.outputChannel.appendLine(`[UpdateChecker] GitHub API returned ${response.status}: ${response.statusText}`);

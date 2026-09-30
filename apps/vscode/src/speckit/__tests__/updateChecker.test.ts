@@ -223,23 +223,91 @@ describe('UpdateChecker', () => {
             expect(publishedCompanionVersion()).toBeUndefined();
         });
 
-        it('keeps the remembered version when a later check finds no spec-kit extension tag', async () => {
-            // Older ext tags fall off the first page once the shared releases list grows.
+        const mockReleasesAndTags = (
+            releases: Array<{ tag_name: string; draft?: boolean; prerelease?: boolean }>,
+            tagLookup: { status: number; body?: unknown } | 'network-error'
+        ) => {
+            global.fetch = jest.fn().mockImplementation(async (url: string) => {
+                if (!url.includes('/releases/tags/')) {
+                    return { ok: true, status: 200, json: async () => releases };
+                }
+                if (tagLookup === 'network-error') {
+                    throw new Error('offline');
+                }
+                return { ok: tagLookup.status < 400, status: tagLookup.status, json: async () => tagLookup.body };
+            }) as any;
+        };
+        const ext = (version: string, flags: object = {}) => ({ tag_name: `speckit-ext-v${version}`, ...flags });
+
+        it('keeps the remembered version when it fell off the page but its release still exists', async () => {
             const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
-            mockReleases([{ tag_name: 'v0.32.0' }]);
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }], { status: 200, body: ext('0.22.0') });
 
             await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
 
             expect(store.get('speckit.companionPublishedVersion')).toBe('0.22.0');
         });
 
-        it('never moves the remembered version backwards', async () => {
+        it('keeps the remembered version when an older release is listed but the remembered one still exists', async () => {
             const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
-            mockReleases([{ tag_name: 'v0.32.0' }, { tag_name: 'speckit-ext-v0.21.0' }]);
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }, ext('0.21.0')], { status: 200, body: ext('0.22.0') });
 
             await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
 
             expect(store.get('speckit.companionPublishedVersion')).toBe('0.22.0');
+        });
+
+        it('falls back to the newest listed release when the remembered one was retracted', async () => {
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.30.0' });
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }, ext('0.29.0')], { status: 404 });
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBe('0.29.0');
+            expect(publishedCompanionVersion()).toBe('0.29.0');
+            expect((global.fetch as jest.Mock).mock.calls.map(([url]) => String(url)))
+                .toContain('https://api.github.com/repos/alfredoperez/speckit-companion/releases/tags/speckit-ext-v0.30.0');
+        });
+
+        it('forgets a retracted version when no spec-kit extension release is listed', async () => {
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.30.0' });
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }], { status: 404 });
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBeUndefined();
+        });
+
+        it('treats a remembered release turned into a draft or prerelease as retracted', async () => {
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.30.0' });
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }], { status: 200, body: ext('0.30.0', { prerelease: true }) });
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBeUndefined();
+        });
+
+        it.each([
+            ['GitHub answers with a server error', { status: 500 }],
+            ['the lookup is rate limited', { status: 403 }],
+            ['the lookup cannot reach GitHub', 'network-error' as const],
+            ['the answer is not the release asked for', { status: 200, body: [] }],
+        ])('keeps the remembered version when %s', async (_name, tagLookup) => {
+            const { context, store } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.30.0' });
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }], tagLookup);
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect(store.get('speckit.companionPublishedVersion')).toBe('0.30.0');
+        });
+
+        it('does not look the release up when the check already found the remembered version', async () => {
+            const { context } = buildContextWithStore({ 'speckit.companionPublishedVersion': '0.22.0' });
+            mockReleasesAndTags([{ tag_name: 'v0.32.0' }, ext('0.22.0')], { status: 404 });
+
+            await new UpdateChecker(context, buildOutputChannel()).checkForUpdates(true);
+
+            expect((global.fetch as jest.Mock).mock.calls.some(([url]) => String(url).includes('/releases/tags/'))).toBe(false);
         });
 
         it('leaves the running session on the yardstick it started with', async () => {
