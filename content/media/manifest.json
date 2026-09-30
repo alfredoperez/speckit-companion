@@ -815,6 +815,281 @@
       },
       "referencedBy": {},
       "notes": "Typographic, reads no capture (like make-it-yours). 1920x1080 30fps 26.0s, silent; frame 0 is the fully-stamped hook and the loop closes on it (frame 0 is also the poster). Colors sampled from IMG-hero-write-only-specs.png; Permanent Marker vendored in assets/fonts. Promotes the blog article, not a product surface."
+    },
+    {
+      "id": "live-footer-next-step",
+      "name": "Viewer footer: next step",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-footer-next-step.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-footer-next-step.png": "The viewer footer with \"Next: Plan\", Regenerate and the Plan button."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-footer-other-actions",
+      "name": "Viewer footer: Other actions",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-footer-other-actions.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-footer-other-actions.png": "The Tasks view of a spec with the footer's Other actions menu open, offering Analyze, beside Regenerate and Implement."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-create-spec",
+      "name": "Create New Spec panel",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-create-spec.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-create-spec.png": "The Create New Spec panel: a Workflow picker set to SpecKit Companion, a Feature Brief box, an Attach image button, and Cancel, Auto and Create Spec buttons."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-provider-picker",
+      "name": "AI provider picker",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-provider-picker.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-provider-picker.png": "The Settings editor on speckit.aiProvider with the dropdown open, listing Claude Code, Claude Code (VS Code), Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode, IDE Chat, Wibey CLI, Wibey (VS Code) and Antigravity."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-settings-list",
+      "name": "SpecKit Companion settings",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-settings-list.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-settings-list.png": "The Settings editor filtered to the extension, showing the first settings: AI Context Instructions, Step Complete notifications, AI Provider, Command Format and Permission Mode."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-steering-view",
+      "name": "Steering view",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-steering-view.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-steering-view.png": "The Steering view expanded: Companion, Claude Code, and SpecKit Project Files with the Constitution and the Scripts folder."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-sidebar-hover",
+      "name": "Sidebar row actions",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-sidebar-hover.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-sidebar-hover.png": "The Specs view with a spec row hovered, showing its inline Run and More actions buttons."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-sidebar-more-actions",
+      "name": "Sidebar More Actions menu",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-sidebar-more-actions.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-sidebar-more-actions.png": "The More Actions menu on a spec: Set Status, Mark Complete, Archive, Copy Spec Name, Copy Spec Path, Reveal in VS Code Explorer, Reveal in File Manager and Delete."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-overview-decisions",
+      "name": "Overview: Decisions",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-overview-decisions.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-overview-decisions.png": "The Decisions region of an Overview: numbered choices, each with why it was made and the alternative it rejected."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-overview-expectations",
+      "name": "Overview: Expectations",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-overview-expectations.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-overview-expectations.png": "The Expectations region of an Overview: what must stay true, and what is deliberately out of scope."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+    },
+    {
+      "id": "live-install-extension-list",
+      "name": "specify extension list",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/live-install-extension-list.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/live-install-extension-list.png": "A terminal running specify extension list, showing SpecKit Companion v0.22.0 enabled with 21 commands and 4 hooks."
+      },
+      "referencedBy": {},
+      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
     }
   ]
 }
