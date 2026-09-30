@@ -1,6 +1,6 @@
 # Webview safety — Living Spec
 
-<!-- reviewed: 5b9ffa9b -->
+<!-- reviewed: 46adbd42 -->
 
 ## Purpose
 

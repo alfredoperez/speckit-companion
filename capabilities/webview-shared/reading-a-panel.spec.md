@@ -1,5 +1,7 @@
 # Reading a panel — Living Spec
 
+<!-- reviewed: 46adbd42 -->
+
 ## Purpose
 
 Every screen the extension draws sits inside the editor the person already chose, and has to stay legible in whichever colour theme that is. Without one shared answer each panel picks its own colours, and the panel that picks badly ships text nobody can read.

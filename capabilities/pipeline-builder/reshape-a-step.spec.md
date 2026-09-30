@@ -34,9 +34,9 @@ Adding, removing, moving or replacing a node SHALL write the step's whole node o
 - **THEN** the board snaps back and the panel says why
 
 ### A node moves only when nothing downstream holds it
-<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx, apps/vscode/webview/src/pipeline-builder/Inspector.tsx, apps/vscode/webview/src/pipeline-builder/moves.ts, apps/vscode/webview/src/pipeline-builder/index.tsx -->
+<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx, apps/vscode/webview/src/pipeline-builder/Inspector.tsx, apps/vscode/webview/src/pipeline-builder/Menu.tsx, apps/vscode/webview/src/pipeline-builder/moves.ts, apps/vscode/webview/src/pipeline-builder/index.tsx, apps/vscode/webview/styles/pipeline-builder.css -->
 
-A free node SHALL move by dragging, including into another phase, or by **Move up**, **Move down** and **Move to phase…** on its Order row. Move to phase SHALL list every phase the node is not in and put it at the edge nearest where it was, so a node already at that edge of its phase leaves the order unchanged. A held node SHALL refuse a drag and show what holds it instead of move buttons.
+A free node SHALL move by dragging, including into another phase, or by **Move up**, **Move down** and **Move to phase…** on its Order row, at every panel width. Move to phase SHALL list every phase the node is not in, in a list that stays inside the panel and scrolls when it is longer than the room it has, and put the node at the edge nearest where it was, so a node already at that edge of its phase leaves the order unchanged. A held node SHALL refuse a drag and show what holds it instead of move buttons.
 
 #### Scenario: moving without a mouse
 - **WHEN** Move up is pressed on a free node
@@ -45,6 +45,10 @@ A free node SHALL move by dragging, including into another phase, or by **Move u
 #### Scenario: moving to another phase without dragging
 - **WHEN** Move to phase… is used to pick a phase above the node
 - **THEN** the node joins the end of that phase, a phase it emptied is dropped, and the status line names the new phase
+
+#### Scenario: moving to another phase in a narrow side panel
+- **WHEN** the node's panel is stacked under the board and Move to phase… is opened
+- **THEN** every other phase is listed inside the panel's edges, on the side of the button with room
 
 ### Nodes are taken out, put back and swapped without deleting anything
 <!-- touches: apps/vscode/webview/src/pipeline-builder/**, apps/vscode/src/features/pipeline-builder/builderPanel.ts -->

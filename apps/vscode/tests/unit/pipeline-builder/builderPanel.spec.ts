@@ -995,6 +995,41 @@ describe('moving a node without dragging it', () => {
         expect(panel.__lastPosted('status').status.text)
             .toBe('draft moved to gather in specify');
     });
+
+    it('writes an allowed move into another phase and says where it went', async () => {
+        const phases = [
+            { name: 'gather', nodes: ['resolve-dir', 'load-living-specs'] },
+            { name: 'author', nodes: ['draft-spec', 'quality-checklist'] },
+            { name: 'classify', nodes: ['classify-size', 'persist-size', 'branch'] },
+            { name: 'wrap-up', nodes: ['finalize', 'handoff'] },
+        ];
+        const order = phases.flatMap(p => p.nodes);
+        await panel.__receive({
+            type: 'moveNode', command: 'specify', nodeId: 'branch', phase: 'classify',
+            order, phases,
+        });
+
+        const [, , command, written, , writtenOrder] = graph.writePhases.mock.calls.at(-1)!;
+        expect(command).toBe('specify');
+        expect(written).toEqual(phases);
+        expect(writtenOrder).toEqual(order);
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('branch moved to classify in specify');
+        expect(panel.__lastPosted('notice')).toBeUndefined();
+    });
+
+    it('says the reason, and claims no move, when the order is refused', async () => {
+        graph.writePhases.mockResolvedValue(
+            "specify: 'branch' reads 'classify-size', so it cannot run before it.");
+        await panel.__receive({
+            type: 'moveNode', command: 'specify', nodeId: 'branch', phase: 'gather',
+            order: ['resolve-dir', 'branch'],
+            phases: [{ name: 'gather', nodes: ['resolve-dir', 'branch'] }],
+        });
+        expect(panel.__lastPosted('notice').text)
+            .toBe("specify: 'branch' reads 'classify-size', so it cannot run before it.");
+        expect(panel.__lastPosted('status')).toBeUndefined();
+    });
 });
 
 describe('moving a hook to another boundary', () => {

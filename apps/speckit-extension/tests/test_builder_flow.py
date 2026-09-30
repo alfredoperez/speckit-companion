@@ -195,6 +195,44 @@ class PuttingADroppedNodeBack(unittest.TestCase):
                          "a refused write must leave the file untouched")
 
 
+class MovingANodeToAnotherPhase(unittest.TestCase):
+    """The shapes the panel's Move to phase… sends for specify's `branch`."""
+
+    PHASES = [
+        {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+        {"name": "author", "nodes": ["draft-spec", "quality-checklist"]},
+        {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+        {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
+    ]
+
+    def setUp(self):
+        self.project = Project()
+        self.addCleanup(self.project.close)
+
+    def move(self, phase: str) -> None:
+        phases = [{"name": p["name"], "nodes": [n for n in p["nodes"] if n != "branch"]}
+                  for p in self.PHASES]
+        next(p for p in phases if p["name"] == phase)["nodes"].append("branch")
+        order = [n for p in phases for n in p["nodes"]]
+        self.project.write("--command", "specify", "--phases", json.dumps(phases),
+                           "--nodes", ",".join(order))
+
+    def test_a_move_after_what_it_reads_is_written_and_built(self):
+        self.move("classify")
+        specify = next(s for s in self.project.graph()["steps"] if s["name"] == "specify")
+        classify = next(p for p in specify["phases"] if p["name"] == "classify")
+        self.assertEqual([n["id"] for n in classify["nodes"]],
+                         ["classify-size", "persist-size", "branch"])
+        self.project.build_ok()
+
+    def test_a_move_ahead_of_what_it_reads_is_refused_and_writes_nothing(self):
+        before = self.project.config_text()
+        with self.assertRaises(Refused) as refusal:
+            self.move("gather")
+        self.assertIn("reads 'classify-size'", str(refusal.exception))
+        self.assertEqual(self.project.config_text(), before)
+
+
 class AddingAShippedOptionalNode(unittest.TestCase):
     """A node Companion ships but does not run by default.
 

@@ -38,6 +38,8 @@ interface Props {
     moveTargets?: MoveTarget[];
     /** Put it in another phase. */
     onMoveToPhase?: (phase: string) => void;
+    /** Render with Move to phase… already open, for a story or a capture. */
+    moveMenuOpen?: boolean;
     /** Hand the whole step to one document. Offered on a step's frame only. */
     onReplaceStep?: () => void;
 }
@@ -277,6 +279,7 @@ export function Inspector(props: Props) {
                                 trigger="Move to phase…"
                                 caret={false}
                                 align="right"
+                                floating
                                 title="Put this node in another phase of the step"
                                 options={targets.map(target => ({
                                     id: target.phase,
@@ -285,6 +288,7 @@ export function Inspector(props: Props) {
                                         ? 'Joins the end of it' : 'Joins the start of it',
                                 }))}
                                 onPick={moveToPhase}
+                                defaultOpen={props.moveMenuOpen}
                             />
                         )}
                     </>
