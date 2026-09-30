@@ -352,9 +352,7 @@ export const A3PlannedFooterReadsTasks: Story = {
     ),
 };
 
-// ── Snapshot 2 · plan.md deleted while it was open ────────────────────────
-// A docs still, not a beat: the viewer falls back to the Specification and
-// says why, instead of switching documents without a word.
+// ── Docs still, not a beat · plan.md deleted while it was open ────────────
 
 export const A3bPlanDeletedWhileOpen: Story = {
     name: 'A3b · Plan deleted while it was open',
