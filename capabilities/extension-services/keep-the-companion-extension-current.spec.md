@@ -19,6 +19,14 @@ The extension SHALL treat the Companion extension as missing, current or out of 
 - **WHEN** yesterday's update check saw a published spec-kit extension newer than the bundled one
 - **THEN** today's session measures the project against the published version
 
+#### Scenario: a published release was retracted
+- **WHEN** the remembered published version is no longer a published release on GitHub
+- **THEN** the next update check drops it, measures against the newest release still listed, and a project on the last real release reads as current
+
+#### Scenario: a remembered release fell off the releases page
+- **WHEN** an update check lists no spec-kit extension release but the remembered one still exists on GitHub, or GitHub cannot be asked
+- **THEN** the remembered version is kept
+
 ### A missing extension is pointed out wherever the user would need it
 <!-- touches: apps/vscode/src/extension.ts, apps/vscode/src/features/specs/specExplorerProvider.ts, apps/vscode/src/features/spec-editor/installBanner.ts, apps/vscode/src/features/spec-viewer/**, apps/vscode/webview/styles/spec-viewer/_install-banner.css, package.json -->
 

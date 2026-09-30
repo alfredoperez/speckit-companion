@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Phase-complete notifications name the spec on Windows.** The toast read "completed in unknown" instead of the feature folder, because Windows paths use backslashes.
+- **A pulled spec-kit extension release no longer leaves you out of date.** If a release was published and then retracted, every project kept being told its spec-kit commands were behind a version that no longer exists and could not be installed. The daily update check now confirms the newest version it remembers is still a published release, and drops it when it is not. A release that has only scrolled off the releases page, or a check that cannot reach GitHub, leaves the remembered version alone.
 
 ## [0.34.0] - 2026-09-30
 
