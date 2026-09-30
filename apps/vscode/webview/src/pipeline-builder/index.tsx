@@ -27,6 +27,7 @@ import { Canvas, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
+import { moveTargets, movedToPhase } from './moves';
 import { AttachForm, NewStepForm, NewWorkflowForm, Attachment } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
 
@@ -186,6 +187,8 @@ function App() {
 
     const selected = side?.kind === 'node' ? side.at : null;
     const node = selected ? findNode(graph, selected) : null;
+    const selectedStep = selected
+        ? graph.steps.find(s => s.name === selected.command) : undefined;
     const key = selected ? `${selected.command}/${selected.nodeId}` : '';
     const attaching = side?.kind === 'attach' ? side.at : null;
     const attachStep = attaching
@@ -405,6 +408,17 @@ function App() {
                             send({
                                 type: 'moveNode', command: selected.command,
                                 nodeId: selected.nodeId, ...shape,
+                            });
+                        }}
+                        moveTargets={selectedStep && !node.pinned
+                            ? moveTargets(selectedStep, selected.nodeId) : []}
+                        onMoveToPhase={(phase: string) => {
+                            const shape = selectedStep
+                                ? movedToPhase(selectedStep, selected.nodeId, phase) : null;
+                            if (!shape) { return; }
+                            send({
+                                type: 'moveNode', command: selected.command,
+                                nodeId: selected.nodeId, phase, ...shape,
                             });
                         }}
                         // Opens the form, the way every other route to a hook

@@ -1,5 +1,7 @@
 # Webview safety — Living Spec
 
+<!-- reviewed: 5b9ffa9b -->
+
 ## Purpose
 
 Every panel this extension draws shows text a person did not write: the words in a spec document, the name of a file someone attached, a version string in a banner, a step's own note from the run record. A repository the reader merely opened can carry any of it. This is its own capability because no single panel owns the rule: the viewer, the editor and the builder each render text from outside, each dropped the rule independently, and a reader who opens an untrusted repository is protected only if all of them hold it. What follows is what stays true wherever that text reaches a panel.

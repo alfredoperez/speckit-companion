@@ -10,6 +10,7 @@
 
 import { Menu, MenuOption } from './Menu';
 import { SidePanel } from './SidePanel';
+import { MoveTarget } from './moves';
 import { useState } from 'preact/hooks';
 import { PipelineNode } from '../../../src/protocol/pipeline';
 
@@ -33,6 +34,10 @@ interface Props {
     onRemove: () => void;
     /** Move it a place earlier or later in the step. */
     onMove: (direction: 'up' | 'down') => void;
+    /** The phases this node is not in, each with the edge it would land on. */
+    moveTargets?: MoveTarget[];
+    /** Put it in another phase. */
+    onMoveToPhase?: (phase: string) => void;
     /** Hand the whole step to one document. Offered on a step's frame only. */
     onReplaceStep?: () => void;
 }
@@ -183,6 +188,12 @@ export function Inspector(props: Props) {
         setMoved(`${node.name} moved ${direction} in ${step}.`);
     };
 
+    const targets = props.moveTargets ?? [];
+    const moveToPhase = (phase: string) => {
+        props.onMoveToPhase?.(phase);
+        setMoved(`${node.name} moved to ${phase} in ${step}.`);
+    };
+
     const pick = (id: string) => {
         if (id === 'remove') {
             props.onRemove();
@@ -260,6 +271,22 @@ export function Inspector(props: Props) {
                             onClick={() => move('up')}>Move up</button>
                         <button type="button" class="pb-order-move"
                             onClick={() => move('down')}>Move down</button>
+                        {props.onMoveToPhase && targets.length > 0 && (
+                            <Menu
+                                class="pb-order-move"
+                                trigger="Move to phase…"
+                                caret={false}
+                                align="right"
+                                title="Put this node in another phase of the step"
+                                options={targets.map(target => ({
+                                    id: target.phase,
+                                    label: target.phase,
+                                    note: target.joins === 'end'
+                                        ? 'Joins the end of it' : 'Joins the start of it',
+                                }))}
+                                onPick={moveToPhase}
+                            />
+                        )}
                     </>
                 )}</dd>
 

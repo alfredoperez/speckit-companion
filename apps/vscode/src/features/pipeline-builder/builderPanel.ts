@@ -501,7 +501,9 @@ export class PipelineBuilderPanel {
                 'Moving a node',
                 {
                     tone: 'done',
-                    text: `${message.nodeId} moved in ${message.command}`,
+                    text: message.phase
+                        ? `${message.nodeId} moved to ${message.phase} in ${message.command}`
+                        : `${message.nodeId} moved in ${message.command}`,
                     detail: 'Build to apply',
                 });
         },

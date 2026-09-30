@@ -710,6 +710,11 @@ export const InspectorOrderRow: Story = {
             })}
             step="specify" body="Load `spec-template.md` and write the specification."
             parts={[]} editable="Load `spec-template.md` and write the specification."
+            moveTargets={[
+                { phase: 'gather', joins: 'end' },
+                { phase: 'classify', joins: 'start' },
+            ]}
+            onMoveToPhase={noop}
             {...INSPECT} /></One>
     ),
 };
