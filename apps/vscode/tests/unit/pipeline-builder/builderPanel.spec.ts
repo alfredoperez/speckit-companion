@@ -985,6 +985,16 @@ describe('moving a node without dragging it', () => {
         expect(phases).toEqual([{ name: 'gather', nodes: ['draft', 'resolve-dir'] }]);
         expect(panel.__lastPosted('status').status.text).toBe('draft moved in specify');
     });
+
+    it('names the phase when the node was moved into another one', async () => {
+        await panel.__receive({
+            type: 'moveNode', command: 'specify', nodeId: 'draft', phase: 'gather',
+            order: ['resolve-dir', 'draft'],
+            phases: [{ name: 'gather', nodes: ['resolve-dir', 'draft'] }],
+        });
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('draft moved to gather in specify');
+    });
 });
 
 describe('moving a hook to another boundary', () => {

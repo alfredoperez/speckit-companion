@@ -2556,3 +2556,47 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     flex: none;
     white-space: nowrap;
 }
+
+
+/* ── Side panel ── last in the file, since `@container` adds no specificity. */
+
+/* Under two lanes' width the steps stack at the panel's width instead of clipping at 300px. */
+@container builder (max-width: 640px) {
+    .pb-run,
+    .pb-run--seamed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pb-step { border-left: none; }
+
+    .pb-lane-seam {
+        flex-direction: row;
+        align-items: center;
+        align-self: auto;
+        width: auto;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .pb-lane-seam::after {
+        flex-grow: 1;
+        width: auto;
+        height: 0;
+        margin: 0 0 0 var(--space-2);
+        border-left: none;
+        border-top: 1px dashed var(--border);
+    }
+
+    .pb-lane-seam:hover::after,
+    .pb-lane-seam:focus-visible::after {
+        border-left-color: transparent;
+        border-top-color: var(--accent);
+    }
+
+    .pb-outside {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding: var(--space-3);
+    }
+
+    .pb-aside { max-width: none; }
+}

@@ -34,13 +34,17 @@ Adding, removing, moving or replacing a node SHALL write the step's whole node o
 - **THEN** the board snaps back and the panel says why
 
 ### A node moves only when nothing downstream holds it
-<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx, apps/vscode/webview/src/pipeline-builder/Inspector.tsx -->
+<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx, apps/vscode/webview/src/pipeline-builder/Inspector.tsx, apps/vscode/webview/src/pipeline-builder/moves.ts, apps/vscode/webview/src/pipeline-builder/index.tsx -->
 
-A free node SHALL move by dragging, including into another phase, or by **Move up** and **Move down** on its Order row. A held node SHALL refuse a drag and show what holds it instead of move buttons.
+A free node SHALL move by dragging, including into another phase, or by **Move up**, **Move down** and **Move to phase…** on its Order row. Move to phase SHALL list every phase the node is not in and put it at the edge nearest where it was, so a node already at that edge of its phase leaves the order unchanged. A held node SHALL refuse a drag and show what holds it instead of move buttons.
 
 #### Scenario: moving without a mouse
 - **WHEN** Move up is pressed on a free node
 - **THEN** the node moves one place earlier inside its phase and the status line says it moved
+
+#### Scenario: moving to another phase without dragging
+- **WHEN** Move to phase… is used to pick a phase above the node
+- **THEN** the node joins the end of that phase, a phase it emptied is dropped, and the status line names the new phase
 
 ### Nodes are taken out, put back and swapped without deleting anything
 <!-- touches: apps/vscode/webview/src/pipeline-builder/**, apps/vscode/src/features/pipeline-builder/builderPanel.ts -->

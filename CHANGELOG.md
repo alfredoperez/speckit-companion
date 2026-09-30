@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
+
 ### Fixed
 - **Phase-complete notifications name the spec on Windows.** The toast read "completed in unknown" instead of the feature folder, because Windows paths use backslashes.
 - **A pulled spec-kit extension release no longer leaves you out of date.** If a release was published and then retracted, every project kept being told its spec-kit commands were behind a version that no longer exists and could not be installed. The daily update check now confirms the newest version it remembers is still a published release, and drops it when it is not. A release that has only scrolled off the releases page, or a check that cannot reach GitHub, leaves the remembered version alone.
 - **Upgrade Project and Upgrade All use Spec Kit's current init flag.** They still passed the agent with `--ai`, which newer Spec Kit no longer accepts, so the upgrade failed in the terminal. They now use `--integration`, and Upgrade Project falls back to `--ai` for an older Spec Kit that only knows the old flag.
+- **The Pipeline Builder reads in a side panel.** Docked beside the editor, the steps now stack one under the next at the panel's width instead of being clipped behind a sideways scroll, and the joins between them are drawn as horizontal rules.
 
 ## [0.34.0] - 2026-09-30
 

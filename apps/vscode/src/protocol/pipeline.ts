@@ -535,6 +535,8 @@ export type BuilderToExtensionMessage =
         type: 'moveNode';
         command: string;
         nodeId: string;
+        /** Set when the move was into another phase, so the status line can name it. */
+        phase?: string;
         order: string[];
         phases: Array<{ name: string; nodes: string[] }>;
     }
