@@ -70,6 +70,10 @@ describe('navigating inside an open panel', () => {
     });
 
     it('choosing the Overview again renames the tab back', async () => {
+        fs.writeFileSync(
+            path.join(specDir, '.spec-context.json'),
+            JSON.stringify({ workflow: 'speckit', specName: '001-demo', currentStep: 'specify', status: 'specifying', approach: 'Do the thing', history: [] }),
+        );
         await provider.showSpec(specDir);
         const panel = openPanel();
         await panel.__receive({ type: 'stepperClick', phase: 'plan' });
@@ -77,6 +81,16 @@ describe('navigating inside an open panel', () => {
         await panel.__receive({ type: 'overviewChosen' });
 
         expect(panel.title).toBe('Spec: 001-demo - Overview');
+    });
+
+    it('a spec with nothing recorded has no Overview, so its tab keeps naming the document', async () => {
+        await provider.showSpec(specDir);
+        const panel = openPanel();
+        await panel.__receive({ type: 'stepperClick', phase: 'plan' });
+
+        await panel.__receive({ type: 'overviewChosen' });
+
+        expect(panel.title).toBe('Spec: 001-demo - Plan');
     });
 
     it('a rail click after the folder moved says so instead of rendering a stale document', async () => {
