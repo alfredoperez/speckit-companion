@@ -1,7 +1,7 @@
 ---
 name: e2e-desktop
 description: Release-scoped QA of SpecKit Companion on the real Mac, run once at the end of a batch of fixes. Reads what is being released (the diff since the last v* tag plus the Unreleased changelogs), turns changed paths into a checklist through surface-map.yml, runs every automated gate with Bash first, then spends desktop time only on what needs eyes (VS Code through computer use, the GitHub Copilot app canvas, a terminal run) on top of a fixed baseline, and writes one QA report note into the Obsidian vault with a ship / fix-first verdict. Use when the user says "/qa-release", "qa release", "run QA", "QA the release", "/e2e-desktop", "run the desktop e2e", or wants VS Code, canvas and terminal timing runs instead of auto mode.
-compatibility: Claude Desktop with computer use (VS Code granted at click tier, GitHub Copilot at full tier), Bash, the `code` and `specify` CLIs, the Claude Code CLI signed in, the `obsidian` skill
+compatibility: Claude Code on the Mac runs this skill (Bash, the `code`, `specify` and `claude` CLIs, Swift command line tools, the `obsidian` skill). Claude Desktop with computer use only clicks, from the handoff qa-stage.sh writes.
 metadata:
   author: alfredo
   source: repo
@@ -9,7 +9,7 @@ metadata:
 
 # QA release
 
-One run per release, never per ticket, and issue-agnostic: it reads what is being released, not a ticket list. Bash does every bit of setup, typing, polling and timing; computer use does the clicking and looking. QA never edits this repo; failures become fix candidates in the report. The repo stays untouched; the throwaway `.vsix` goes into the results folder.
+One run per release, never per ticket, and issue-agnostic: it reads what is being released, not a ticket list. Claude Code runs this skill on the Mac and does every bit of setup, typing, polling and timing. Claude Desktop only clicks and looks, from a handoff Claude Code writes: its Bash is a Linux sandbox with no `code`, `specify` or `gh`, and VS Code is click-only for it. QA never edits this repo; failures become fix candidates in the report. The repo stays untouched; the throwaway `.vsix` goes into the results folder.
 
 `/qa-release` is the entry point. This skill holds the flow; `surface-map.yml` holds the checks; the helper scripts in this folder do the mechanical parts.
 
@@ -67,16 +67,22 @@ Run every `kind: auto` check first, independent ones in parallel, each logging t
 
 ## Step 2. Desktop time, only for what needs eyes
 
-Do [Preflight](#recipe-preflight) and [Sandbox](#recipe-sandbox-and-results-folder) once, then run the scoped checks in this order. Each recipe below says how.
+Claude Code, on the Mac:
 
-1. **`terminal-run`**, Bash only, before any timed desktop run so the timings never compete for the same API and CPU. It runs in its own copy of the sandbox (`cp -R "$SANDBOX" "$SANDBOX-terminal"` straight after setup), so `specs/` is never shared with the VS Code run.
-2. **`first-open`** in a fresh profile, then quit it.
-3. **The main VS Code session** on `$SANDBOX`: `nav-matrix`, `popups`, `provider-dispatch`, `builder`, `narrow-panel`, then `vscode-run`, then `themes` last so the light shots reuse the run's own state.
-4. **`stock-workspace`**, then **`multi-root`** (the sandbox beside the stock workspace).
-5. **The canvas checks** in the Copilot app: `canvas-open`, then `canvas-new-spec`.
-6. **`site-pages`** in a browser, whenever.
+1. **`terminal-run`** first, in its own copy of a sandbox (the Terminal run recipe), so its timing never competes with the desktop run.
+2. **Canvas checks headlessly** through the Copilot SDK harness on a copy of the sandbox (three bare opens, New spec per workflow, per-spec commands). The harness has one model, not the Copilot app's own, so the real-app check stays a separate row.
+3. **`qa-stage.sh <run-name>`**. It builds the sandbox and fixtures, answers Claude Code's folder-trust prompt once for the sandbox and the stock workspace, creates the timed-run spec headlessly (so nothing needs typing), installs this build into the user's normal VS Code, opens the three QA windows in the Default profile, starts `record-windows.sh`, and writes `desktop-handoff.md` from the template. It prints `READY` only when every gate passed, or `NOT READY` and the gate that failed. Never hand anything to Claude Desktop before `READY`.
 
-Shoot once. A screenshot is saved with `shot.sh` when it fails or is docs-worthy, and it is the same file the report embeds and lists as a docs candidate, so nothing is shot twice. Log each check's status in `$RESULTS/checks.md` when it finishes, with a one-line note.
+Then the user pastes the handoff path into Claude Desktop, which clicks through the checks and replies with one line per step. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
+
+What staging has to get right, each learned the hard way:
+
+- Any folder with its own `.claude/` shows Claude Code's trust prompt, even with `bypassPermissions`. `trust-claude-folder.py` answers it once; Claude Code records the answer itself.
+- `speckit.permissionMode` is machine-scoped, so a workspace `settings.json` cannot set it. The user's Claude Code already runs in auto mode, which is what the timed run relies on.
+- A fresh `--user-data-dir` asks the user to log in again, and a long one breaks VS Code's socket path. Use the user's own VS Code.
+- `code --new-window` reuses the last-used profile; `--profile Default` avoids that, and the stage fails if a QA window lands in another profile.
+- `screencapture -R` grabs whatever floats on top. `record-windows.sh` captures by window id instead, and `screencapture` refuses dot-file names.
+- Close QA windows with their own close button (`AXCloseButton`), never with a keystroke: a keystroke goes to whichever app is in front.
 
 A stuck prompt the clicks cannot answer is a FAIL finding for that check; unblock it through the headless fallback and continue.
 
