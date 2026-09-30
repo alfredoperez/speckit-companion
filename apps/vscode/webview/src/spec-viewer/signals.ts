@@ -5,7 +5,8 @@
 
 import { computed, signal } from '@preact/signals';
 import type { NavState, Refinement, ViewerState, HistoryEntry } from './types';
-import { hasAnyData, hasDurableContext } from './overviewModel';
+import { hasDurableContext } from './overviewModel';
+import { hasOverview } from '../../../src/core/utils/overviewAvailability';
 
 /** Navigation state from extension messages */
 export const navState = signal<NavState | null>(null);
@@ -34,10 +35,8 @@ export const specMoved = signal(false);
 /** Whether this spec has an Overview at all (no recorded run → no Overview). */
 export const overviewAvailable = computed(() => {
     const ns = navState.value;
-    const vs = viewerState.value;
     // A living spec is its cards; the requirement is the unit, not a page about the page.
-    if (ns?.livingMode) return false;
-    return (ns?.activityPanelEnabled ?? true) && !!vs && hasAnyData(vs);
+    return hasOverview(viewerState.value, ns?.activityPanelEnabled ?? true, !!ns?.livingMode);
 });
 
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */

@@ -58,3 +58,16 @@ A path written in backticks whose extension is one the viewer recognises SHALL r
 #### Scenario: a file that is not in the workspace
 - **WHEN** the named file cannot be found
 - **THEN** the reader is told it is not in the workspace
+
+### A link to another document opens that document
+<!-- touches: apps/vscode/webview/src/spec-viewer/documentLinks.ts, apps/vscode/webview/src/spec-viewer/markdown/inline.ts -->
+
+A link in a document to another document of the same spec SHALL open that document in the viewer, and a link with a heading fragment SHALL scroll to that heading once the document has rendered. A link that is only a fragment SHALL scroll within the current document. A link to a file that is not one of the spec's documents opens it beside the viewer, and a web link is left to the editor to open.
+
+#### Scenario: a plan that points at the tasks
+- **WHEN** the reader clicks a link to the tasks document in a one-line plan
+- **THEN** the viewer switches to the tasks document
+
+#### Scenario: a link to a section of another document
+- **WHEN** the reader clicks a link to a heading in the spec from the plan
+- **THEN** the spec opens scrolled to that heading

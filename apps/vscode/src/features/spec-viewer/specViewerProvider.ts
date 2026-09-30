@@ -48,6 +48,7 @@ import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { customCommandButtons, optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
+import { hasOverview } from "../../core/utils/overviewAvailability";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
@@ -397,7 +398,9 @@ export class SpecViewerProvider {
       const built = await this.buildViewerPayload(specDir, instance.state.currentDocument, {
         skipContentAndStaleness: true,
       });
-      if (!built || !built.viewerState) return;
+      if (!built) return;
+      this.refreshPanelTitle(specDir);
+      if (!built.viewerState) return;
       instance.panel.webview.postMessage({
         type: 'viewerStateUpdated',
         viewerState: built.viewerState,
@@ -513,9 +516,10 @@ export class SpecViewerProvider {
     this.postMessage(specDirectory, { type: "specMoved", specDirectory });
   }
 
-  /** The tab names the Overview when that is what the panel shows, else the document. */
+  /** The tab names the Overview when that is what the pane shows, else the document. */
   private panelTitle(instance: PanelInstance, docLabel: string | undefined): string {
-    const suffix = instance.state.landing === "overview" ? "Overview" : docLabel || "Spec";
+    const showsOverview = instance.state.landing === "overview" && instance.overviewAvailable !== false;
+    const suffix = showsOverview ? "Overview" : docLabel || "Spec";
     return `Spec: ${instance.state.specName} - ${suffix}`;
   }
 
@@ -1350,6 +1354,8 @@ export class SpecViewerProvider {
     } catch (error) {
       this.outputChannel.appendLine(`[SpecViewer] deriveViewerState failed: ${error}`);
     }
+
+    instance.overviewAvailable = hasOverview(viewerState, navState.activityPanelEnabled ?? true, false);
 
     return { doc, content, navState, viewerState, featureCtx, derived };
   }

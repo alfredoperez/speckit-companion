@@ -743,6 +743,14 @@ async function handleOpenFile(
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   const basename = path.basename(filename);
+  if (path.isAbsolute(filename)) {
+    if (!isWithinWorkspace(filename) || !fs.existsSync(filename)) {
+      vscode.window.showWarningMessage(`File not found in workspace: ${basename}`);
+      return;
+    }
+    await showFileBeside(vscode.Uri.file(filename), deps);
+    return;
+  }
   const results = await vscode.workspace.findFiles(`**/${basename}`, null, 1);
   if (results.length === 0) {
     vscode.window.showWarningMessage(
@@ -750,14 +758,26 @@ async function handleOpenFile(
     );
     return;
   }
+  await showFileBeside(results[0], deps);
+}
+
+function isWithinWorkspace(filePath: string): boolean {
+  return (vscode.workspace.workspaceFolders ?? []).some((folder) => {
+    const rel = path.relative(folder.uri.fsPath, filePath);
+    return rel !== "" && rel !== ".." && !rel.startsWith(".." + path.sep) && !path.isAbsolute(rel);
+  });
+}
+
+async function showFileBeside(
+  uri: vscode.Uri,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
   try {
-    const doc = await vscode.workspace.openTextDocument(results[0]);
+    const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, {
       viewColumn: vscode.ViewColumn.Beside,
     });
-    deps.outputChannel.appendLine(
-      `[SpecViewer] Opened file ref: ${results[0].fsPath}`,
-    );
+    deps.outputChannel.appendLine(`[SpecViewer] Opened file ref: ${uri.fsPath}`);
   } catch (error) {
     deps.outputChannel.appendLine(
       `[SpecViewer] Error opening file ref: ${error}`,

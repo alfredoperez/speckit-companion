@@ -10,6 +10,7 @@ import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
 import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
+import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
@@ -52,6 +53,7 @@ function updateContent(content: string): void {
             document.getElementById('markdown-content'),
             document.getElementById('spec-toc')
         );
+        applyPendingFragment();
     });
 }
 
@@ -116,6 +118,7 @@ function init(): void {
     setupLineActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupDocumentLinkClickHandler();
     setupApproveRequirement();
     setupRevealGlob();
     setupOpenLivingRequirement();

@@ -106,7 +106,7 @@ function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
 }
 
 
-function prefersReducedMotion(): boolean {
+export function prefersReducedMotion(): boolean {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 

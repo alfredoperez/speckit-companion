@@ -554,6 +554,62 @@ describe('messageHandlers - overviewChosen', () => {
     });
 });
 
+describe('messageHandlers - openFile', () => {
+    let root: string;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'open-file-'));
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root), name: 'ws', index: 0 }];
+        (vscode.workspace.openTextDocument as jest.Mock).mockResolvedValue({});
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([]);
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('opens the exact file for an absolute path inside the workspace, not a same-named one elsewhere', async () => {
+        const target = path.join(root, 'a', 'index.ts');
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, '');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: target } as any);
+
+        expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
+        expect((vscode.workspace.openTextDocument as jest.Mock).mock.calls[0][0].fsPath).toBe(target);
+    });
+
+    it('says so when the absolute path does not exist, and does not open a same-named file', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: path.join(root, 'tasks.md') } as any);
+
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('File not found in workspace: tasks.md');
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('refuses an absolute path outside the workspace', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: path.join(os.tmpdir(), 'elsewhere.md') } as any);
+
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('still finds a bare file name by searching the workspace', async () => {
+        const found = vscode.Uri.file(path.join(root, 'x.ts'));
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([found]);
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'x.ts' } as any);
+
+        expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith(found);
+    });
+});
+
 describe('messageHandlers - persisted review comments', () => {
     beforeEach(() => {
         jest.clearAllMocks();

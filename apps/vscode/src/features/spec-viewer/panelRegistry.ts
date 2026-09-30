@@ -31,6 +31,8 @@ export interface PanelInstance {
      * subsequent navigation is strictly read-only.
      */
     firstOpenComplete: boolean;
+    /** Whether the webview will have an Overview to show; unknown until the first viewer state is built. */
+    overviewAvailable?: boolean;
     /** True once the spec folder has been found on disk; a later miss means it moved. */
     specDirectorySeen?: boolean;
 }

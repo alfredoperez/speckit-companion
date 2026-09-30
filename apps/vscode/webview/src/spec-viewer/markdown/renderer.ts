@@ -80,7 +80,7 @@ export function setLivingMode(value: boolean): void {
     livingMode = value;
 }
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
     return text
         .toLowerCase()
         .replace(/<[^>]+>/g, '')         // strip any inline HTML produced by parseInline
