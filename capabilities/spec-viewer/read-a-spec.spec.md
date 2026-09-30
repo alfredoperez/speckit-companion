@@ -77,9 +77,9 @@ Text from a spec SHALL reach the page as the characters that were typed, so mark
 - **THEN** it shows in the file control as typed and does not become markup
 
 ### The viewer follows the files on disk
-<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/fileWatchers.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/fileWatchers.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts, apps/vscode/webview/src/spec-viewer/components/RemovedDocBanner.tsx -->
 
-An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer says so instead of showing stale content. When the spec folder itself is moved, renamed or deleted, the open panel SHALL say the folder is gone and ask the reader to reopen it from the sidebar, with its tab marked moved, instead of keeping a rail over an empty document.
+An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer shows another document under a one-line note naming the deleted one, until the reader navigates. When the spec folder itself is moved, renamed or deleted, the open panel SHALL say the folder is gone and ask the reader to reopen it from the sidebar, with its tab marked moved, instead of keeping a rail over an empty document.
 
 #### Scenario: the plan appears during a run
 - **WHEN** the viewer is showing the Spec and the assistant writes plan.md for the first time
@@ -88,6 +88,10 @@ An open viewer SHALL re-render when the document it shows changes on disk, and S
 #### Scenario: the run record changes
 - **WHEN** a step closes and the run record is rewritten while the reader is halfway down the Spec
 - **THEN** the badge, rail and footer update and the document stays where it was
+
+#### Scenario: the document on screen is deleted
+- **WHEN** the reader is on the Plan and plan.md is deleted
+- **THEN** the viewer shows the Specification under a line saying the Plan was moved or deleted
 
 #### Scenario: the spec folder is renamed while open
 - **WHEN** the folder of an open spec is renamed on disk

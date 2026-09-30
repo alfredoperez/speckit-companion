@@ -53,7 +53,8 @@ export function generateHtml(
     titleFromHeading: boolean = false,
     landing?: 'overview' | 'document',
     livingOverview?: LivingOverview | null,
-    livingUndo?: LivingUndo | null
+    livingUndo?: LivingUndo | null,
+    removedDocument?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -120,6 +121,7 @@ export function generateHtml(
         // state does not survive an HTML reassignment — so the entry point's
         // request has to ride in here, not only on the later navigation update.
         landing,
+        removedDocument: removedDocument ?? null,
     };
 
     return `<!DOCTYPE html>

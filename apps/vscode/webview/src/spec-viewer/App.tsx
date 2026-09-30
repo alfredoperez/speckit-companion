@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
+import { RemovedDocBanner } from './components/RemovedDocBanner';
 import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
 import { ActivityPanel } from './components/ActivityPanel';
@@ -70,6 +71,7 @@ export function App({ specStatus }: AppProps) {
                 {!living && !moved && <NavigationBar />}
                 <div class="main-column">
                     {/* Document-scoped: it must not span the rail. */}
+                    <RemovedDocBanner />
                     <StaleBanner />
                     <main class="content-area" id="content-area">
                         <div
