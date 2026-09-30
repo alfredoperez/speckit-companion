@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
+import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -190,6 +190,15 @@ describe('workflow choice on New spec', () => {
     it('detects Companion by its extension folder, exactly as the VS Code dialog does', () => {
         assert.equal(detectCommandSet(workspace({ companion: true })), 'companion');
         assert.equal(detectCommandSet(workspace({ companion: false })), 'speckit');
+    });
+
+    it('keeps a spec recorded as the Spec Kit workflow on the stock commands, whatever is installed', () => {
+        const installed = workspace({ companion: true });
+        assert.equal(commandSetFor(installed, 'speckit'), 'speckit');
+        assert.equal(commandSetFor(installed, 'companion'), 'companion');
+        assert.equal(commandSetFor(installed, 'speckit-companion'), 'companion');
+        assert.equal(commandSetFor(installed, null), 'companion');
+        assert.equal(commandSetFor(workspace({ companion: false }), 'companion'), 'speckit');
     });
 });
 

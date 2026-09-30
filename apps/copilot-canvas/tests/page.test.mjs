@@ -94,7 +94,8 @@ describe('board page', { concurrency: false }, async () => {
         await page.waitForSelector('.next-title:has-text("Next: Tasks")');
         await page.click('.next .btn-primary');
         await page.waitForSelector('.toast.is-visible');
-        assert.equal(sent.at(-1)?.split('\n')[0], '/speckit.companion.tasks specs/_01_demo-planned');
+        assert.equal(sent.at(-1)?.split('\n')[0], '/speckit.tasks specs/_01_demo-planned');
+        assert.match(await page.locator('.command-hint').textContent(), /uses the Spec Kit workflow/);
         assert.match(await page.locator('.toast').textContent(), /Sent to chat/);
         await shot('04-run-sent');
     });

@@ -17,6 +17,11 @@ export function detectCommandSet(root) {
     return isCompanionInstalled(root) ? 'companion' : 'speckit';
 }
 
+/** A stock-workflow spec keeps the stock commands even when Companion is installed; every other spec follows the workspace. */
+export function commandSetFor(root, workflow) {
+    return workflow === 'speckit' ? 'speckit' : detectCommandSet(root);
+}
+
 const WORKSPACE_WRITER = '.specify/extensions/companion/scripts/write-context.py';
 const CHECKOUT_WRITER = fileURLToPath(new URL('../speckit-extension/scripts/write-context.py', import.meta.url));
 

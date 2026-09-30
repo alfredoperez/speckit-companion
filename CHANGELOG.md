@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
 
 ### Fixed
+- **The Copilot board no longer turns a Spec Kit spec into a Companion one.** Its run buttons sent Companion commands to every spec once the extension was installed, which flipped a stock spec's workflow; a spec recorded as Spec Kit now runs the standard commands.
 - **Deleting the document you are reading now says so.** The viewer used to jump to the Specification without a word; it now shows a line saying the document was moved or deleted until you navigate.
 - **A fresh project no longer warns the Pipeline Builder is out of date.** The header said the configuration changed since the last build before anything had been configured.
 - **A fresh checkout no longer says Tasks may be stale.** Files written together, as when a spec is cloned or copied, are treated as one generation, so the stale banner only appears once a document is edited more than a second after the one below it.

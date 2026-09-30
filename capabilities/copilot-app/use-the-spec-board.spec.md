@@ -27,7 +27,11 @@ Opening the canvas SHALL never start work. The instruction to stop after opening
 ### A run button sends the same command VS Code sends
 <!-- touches: apps/copilot-canvas/prompts.mjs, apps/copilot-canvas/server.mjs -->
 
-A button on a spec SHALL send the chat line VS Code's sidebar dispatches for that step, such as `/speckit.companion.plan specs/042-export-csv`, followed by the same lifecycle preamble so the run records itself in `.spec-context.json`. When the Companion extension is not installed in the workspace, the buttons SHALL send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` and SHALL offer none of the Companion-only commands. The board SHALL say which command set it is using.
+A button on a spec SHALL send the chat line VS Code's sidebar dispatches for that step, such as `/speckit.companion.plan specs/042-export-csv`, followed by the same lifecycle preamble so the run records itself in `.spec-context.json`. When the Companion extension is not installed in the workspace, the buttons SHALL send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` and SHALL offer none of the Companion-only commands. A spec whose run record says it is the Spec Kit workflow SHALL get the stock commands even when the Companion extension is installed, so a press never changes its workflow. The board SHALL say which command set it is using.
+
+#### Scenario: a Spec Kit spec in a Companion workspace
+- **WHEN** the person presses Tasks on a spec recorded as the Spec Kit workflow, with the Companion extension installed
+- **THEN** `/speckit.tasks` for that spec is sent and its workflow stays Spec Kit
 
 #### Scenario: Plan on a stock workspace
 - **WHEN** the person presses Plan in a workspace without the Companion extension
