@@ -1,7 +1,11 @@
 /**
  * @jest-environment jsdom
  */
+import { readFileSync } from 'fs';
+import { render } from 'preact';
+import { join } from 'path';
 import { Inspector } from '../Inspector';
+import { placeFloating } from '../Menu';
 import { moveTargets, movedToPhase } from '../moves';
 import { flush, mount, node, step } from './support';
 
@@ -98,7 +102,7 @@ describe('the inspector offers Move to phase…', () => {
         host.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
         .find(el => el.textContent?.startsWith('Move to phase'));
 
-    it('lists the other phases and reports the one picked', async () => {
+    it('lists the other phases and reports the one picked, announcing nothing yet', async () => {
         const picked: string[] = [];
         const host = mount(
             <Inspector node={node({ id: 'c', name: 'Write it' })} step="specify" body="x"
@@ -113,8 +117,7 @@ describe('the inspector offers Move to phase…', () => {
         rows[1].click();
         await flush();
         expect(picked).toEqual(['check']);
-        expect(host.querySelector('.pb-live')?.textContent)
-            .toBe('Write it moved to check in specify.');
+        expect(host.querySelector('.pb-live')?.textContent).toBe('');
     });
 
     it('is absent for a held node, which has no targets to offer', () => {
@@ -129,5 +132,187 @@ describe('the inspector offers Move to phase…', () => {
             <Inspector node={node()} step="specify" body="x" parts={[]} {...actions}
                 moveTargets={[]} onMoveToPhase={noop} />);
         expect(trigger(host)).toBeUndefined();
+    });
+});
+
+describe('the Move to phase… list in a narrow panel', () => {
+    const noop = () => undefined;
+    const actions = {
+        onClose: noop, onOpenFile: noop, onSave: noop, onRestore: noop, onAttach: noop,
+        onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
+    };
+    const wrapUp = step({
+        phases: [
+            { name: 'gather', hooks: [], nodes: [node({ id: 'resolve-dir' })] },
+            { name: 'author', hooks: [], nodes: [node({ id: 'draft-spec' })] },
+            { name: 'classify', hooks: [], nodes: [node({ id: 'classify-size' })] },
+            { name: 'wrap-up', hooks: [], nodes: [
+                node({ id: 'branch', name: 'Create the feature branch' }), node({ id: 'handoff' }),
+            ] },
+        ],
+    });
+
+    function inspect(onMoveToPhase: (phase: string) => void = noop) {
+        return mount(
+            <Inspector node={wrapUp.phases[3].nodes[0]} step="specify" body="x" parts={[]}
+                {...actions} moveTargets={moveTargets(wrapUp, 'branch')}
+                onMoveToPhase={onMoveToPhase} />);
+    }
+
+    const trigger = (host: HTMLElement) => Array.from(
+        host.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
+        .find(el => el.textContent?.startsWith('Move to phase'))!;
+
+    const rect = (left: number, top: number, width: number, height: number) => ({
+        left, top, width, height, right: left + width, bottom: top + height, x: left, y: top,
+        toJSON: () => ({}),
+    }) as DOMRect;
+
+    function viewport(width: number, height: number) {
+        Object.defineProperty(document.documentElement, 'clientWidth',
+            { configurable: true, value: width });
+        Object.defineProperty(document.documentElement, 'clientHeight',
+            { configurable: true, value: height });
+    }
+
+    /** A list of `height` px that a fixed box at 0,0 measures from the viewport origin. */
+    function sized(list: HTMLElement, width: number, height: number) {
+        Object.defineProperty(list, 'scrollHeight', { configurable: true, value: height });
+        list.getBoundingClientRect = () => rect(0, 0, width, Math.min(
+            height, parseFloat(list.style.maxHeight) || height));
+    }
+
+    afterEach(() => {
+        delete (document.documentElement as unknown as Record<string, unknown>).clientWidth;
+        delete (document.documentElement as unknown as Record<string, unknown>).clientHeight;
+    });
+
+    it('is offered at every width, since nothing in it reads the width', () => {
+        viewport(330, 600);
+        expect(trigger(inspect())).toBeDefined();
+    });
+
+    it('lists every phase the node is not in', async () => {
+        const host = inspect();
+        trigger(host).click();
+        await flush();
+        expect(Array.from(host.querySelectorAll('.pb-menu-label')).map(l => l.textContent))
+            .toEqual(['gather', 'author', 'classify']);
+    });
+
+    it('floats out of the pane that clips it', async () => {
+        const host = inspect();
+        trigger(host).click();
+        await flush();
+        expect(host.querySelector('.pb-menu-list')!.classList)
+            .toContain('pb-menu-list--floating');
+    });
+
+    it('is a named menu the keyboard opens, walks and closes', async () => {
+        const host = inspect();
+        const button = trigger(host);
+        expect(button.getAttribute('aria-haspopup')).toBe('menu');
+        button.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        const menu = host.querySelector('[role="menu"]')!;
+        expect(menu.getAttribute('aria-label')).toBe('Put this node in another phase of the step');
+        const rows = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+        expect(document.activeElement).toBe(rows[0]);
+        menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+        expect(document.activeElement).toBe(rows[2]);
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        await flush();
+        expect(host.querySelector('[role="menu"]')).toBeNull();
+        expect(document.activeElement).toBe(button);
+    });
+
+    it('reports an allowed move to the phase picked, announcing nothing until the write answers', async () => {
+        const picked: string[] = [];
+        const host = inspect(phase => picked.push(phase));
+        trigger(host).click();
+        await flush();
+        Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))[2].click();
+        await flush();
+        expect(picked).toEqual(['classify']);
+        expect(host.querySelector('.pb-live')?.textContent).toBe('');
+        expect(movedToPhase(wrapUp, 'branch', 'classify')!.phases[2])
+            .toEqual({ name: 'classify', nodes: ['classify-size', 'branch'] });
+    });
+
+    it('opens above a trigger near the bottom and stays inside the left edge', () => {
+        viewport(330, 600);
+        const list = document.createElement('ul');
+        const button = document.createElement('button');
+        button.getBoundingClientRect = () => rect(20, 540, 100, 27);
+        sized(list, 300, 160);
+        placeFloating(list, button, 'right');
+        expect(list.dataset.side).toBe('above');
+        expect(parseFloat(list.style.left)).toBe(8);
+        expect(parseFloat(list.style.top)).toBe(540 - 4 - 160);
+        expect(parseFloat(list.style.maxWidth)).toBe(314);
+    });
+
+    it('opens below when the whole list fits there', () => {
+        viewport(480, 760);
+        const list = document.createElement('ul');
+        const button = document.createElement('button');
+        button.getBoundingClientRect = () => rect(350, 100, 100, 27);
+        sized(list, 220, 160);
+        placeFloating(list, button, 'right');
+        expect(list.dataset.side).toBe('below');
+        expect(parseFloat(list.style.top)).toBe(131);
+        expect(parseFloat(list.style.left)).toBe(450 - 220);
+    });
+
+    it('caps its height to the roomier side, so a long list scrolls', () => {
+        viewport(330, 400);
+        const list = document.createElement('ul');
+        const button = document.createElement('button');
+        button.getBoundingClientRect = () => rect(20, 250, 100, 27);
+        sized(list, 300, 900);
+        placeFloating(list, button, 'left');
+        expect(list.dataset.side).toBe('above');
+        expect(parseFloat(list.style.maxHeight)).toBe(250 - 4 - 8);
+        expect(parseFloat(list.style.top)).toBeGreaterThanOrEqual(8);
+    });
+
+    it('closes when the pane scrolls its button out of view, not when the list scrolls', async () => {
+        const pane = document.createElement('div');
+        pane.style.overflowY = 'auto';
+        document.body.appendChild(pane);
+        const host = document.createElement('div');
+        pane.appendChild(host);
+        render(
+            <Inspector node={wrapUp.phases[3].nodes[0]} step="specify" body="x" parts={[]}
+                {...actions} moveTargets={moveTargets(wrapUp, 'branch')}
+                onMoveToPhase={noop} />, host);
+        const button = trigger(host);
+        button.click();
+        await flush();
+        pane.getBoundingClientRect = () => rect(0, 0, 330, 300);
+        button.getBoundingClientRect = () => rect(20, 200, 100, 27);
+        const list = host.querySelector<HTMLElement>('.pb-menu-list')!;
+        list.dispatchEvent(new Event('scroll'));
+        pane.dispatchEvent(new Event('scroll'));
+        await flush();
+        expect(host.querySelector('.pb-menu-list')).not.toBeNull();
+
+        button.getBoundingClientRect = () => rect(20, 320, 100, 27);
+        pane.dispatchEvent(new Event('scroll'));
+        await flush();
+        expect(host.querySelector('.pb-menu-list')).toBeNull();
+    });
+
+    // jsdom has no cascade, so the narrow layout is read from the sheet.
+    it('scrolls the whole inspector when it is stacked under the board', () => {
+        const css = readFileSync(
+            join(__dirname, '..', '..', '..', 'styles', 'pipeline-builder.css'), 'utf8');
+        const narrow = css.slice(css.lastIndexOf('@container builder (max-width: 860px)'));
+        const pane = /\n {4}\.pb-inspector \{([^}]*grid-template-rows[^}]*)\}/.exec(narrow)?.[1] ?? '';
+        expect(pane).toMatch(/overflow-y:\s*auto/);
+        expect(pane).not.toMatch(/minmax\(0/);
+        expect(narrow).toMatch(/\.pb-inspector \.pb-inspector-actions \{ position: sticky; \}/);
+        expect(css).toMatch(/\.pb-menu-list--floating \{[^}]*position: fixed/);
+        expect(css).toMatch(/\.pb-menu-list--floating \{[^}]*box-sizing: border-box/);
     });
 });

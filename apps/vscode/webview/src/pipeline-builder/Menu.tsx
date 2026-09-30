@@ -15,7 +15,7 @@
  * a label and a note, and the note gets its own line.
  */
 
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 
 export interface MenuOption {
     id: string;
@@ -56,11 +56,59 @@ interface Props {
      * the shot depends on a `play` function having run.
      */
     defaultOpen?: boolean;
+    /** Hang the list from the viewport on the side with room, for a trigger inside a pane that clips. */
+    floating?: boolean;
+}
+
+/** How far a floating list keeps from the trigger, and from the panel's edges. */
+const GAP = 4;
+const EDGE = 8;
+
+/** Below the trigger when the list fits there, else the roomier side, capped so it scrolls. */
+export function placeFloating(
+    list: HTMLElement, trigger: HTMLElement, align: 'left' | 'right',
+): void {
+    const width = document.documentElement.clientWidth || window.innerWidth;
+    const height = document.documentElement.clientHeight || window.innerHeight;
+    const at = trigger.getBoundingClientRect();
+    const below = height - at.bottom - GAP - EDGE;
+    const above = at.top - GAP - EDGE;
+    const down = below >= list.scrollHeight || below >= above;
+
+    list.style.maxWidth = `${width - EDGE * 2}px`;
+    list.style.minWidth = `${Math.min(220, width - EDGE * 2)}px`;
+    list.style.maxHeight = `${Math.max(down ? below : above, 0)}px`;
+    // Measured from wherever `fixed` puts 0,0, since a contained ancestor can move it.
+    list.style.left = '0px';
+    list.style.top = '0px';
+    list.style.right = 'auto';
+    list.style.bottom = 'auto';
+    const origin = list.getBoundingClientRect();
+
+    const hang = align === 'right' ? at.right - origin.width : at.left;
+    const left = Math.max(EDGE, Math.min(hang, width - EDGE - origin.width));
+    const top = down ? at.bottom + GAP : at.top - GAP - origin.height;
+    list.style.left = `${left - origin.left}px`;
+    list.style.top = `${top - origin.top}px`;
+    list.dataset.side = down ? 'below' : 'above';
+}
+
+/** Whether a clipping or scrolling ancestor has scrolled the element fully out of its view. */
+function clippedAway(element: HTMLElement): boolean {
+    const box = element.getBoundingClientRect();
+    for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        const style = getComputedStyle(parent);
+        if (!/auto|scroll|hidden|clip/.test(`${style.overflowX} ${style.overflowY}`)) { continue; }
+        const view = parent.getBoundingClientRect();
+        if (box.bottom <= view.top || box.top >= view.bottom
+            || box.right <= view.left || box.left >= view.right) { return true; }
+    }
+    return false;
 }
 
 export function Menu({
     trigger, title, options, onPick, disabled, disabledTitle, defaultOpen,
-    label, caret = true, align = 'left', ...rest
+    label, caret = true, align = 'left', floating = false, ...rest
 }: Props) {
     const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
@@ -89,6 +137,26 @@ export function Menu({
         if (!open || !byHand.current) { return; }
         items().find(item => item.getAttribute('aria-disabled') !== 'true')?.focus();
     }, [open]);
+
+    useLayoutEffect(() => {
+        if (!open || !floating) { return undefined; }
+        const place = (event?: Event) => {
+            if (!list.current || !button.current) { return; }
+            if (event?.type === 'scroll' && list.current.contains(event.target as Node)) { return; }
+            if (event?.type === 'scroll' && clippedAway(button.current)) {
+                setOpen(false);
+                return;
+            }
+            placeFloating(list.current, button.current, align);
+        };
+        place();
+        window.addEventListener('resize', place);
+        document.addEventListener('scroll', place, true);
+        return () => {
+            window.removeEventListener('resize', place);
+            document.removeEventListener('scroll', place, true);
+        };
+    }, [open, floating, align]);
 
     // A menu that stays open after you look away is a menu you have to dismiss.
     useEffect(() => {
@@ -159,8 +227,9 @@ export function Menu({
                 )}
             </button>
             {open && (
-                <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}`}
-                    role="menu" ref={list} onKeyDown={steer}>
+                <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}${
+                    floating ? ' pb-menu-list--floating' : ''}`}
+                    role="menu" aria-label={title} ref={list} onKeyDown={steer}>
                     {options.map(option => (
                         <li key={option.id} role="none">
                             {/* `aria-disabled` rather than the native attribute,

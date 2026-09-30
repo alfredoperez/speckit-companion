@@ -9,7 +9,7 @@
  */
 
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import {
     ExtensionToBuilderMessage,
     PipelineBuildKind,
@@ -132,6 +132,9 @@ function App() {
     const [report, setReport] = useState<BuildReport | null>(null);
     const [body, setBody] = useState<
         { key: string; body: string; parts: string[]; editable: string } | null>(null);
+    // A move is announced once its write answers, never when it is only asked for.
+    const [announced, setAnnounced] = useState('');
+    const moving = useRef(false);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -143,8 +146,13 @@ function App() {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
                 setNotice(message.text);
+                if (moving.current) { moving.current = false; setAnnounced(message.text); }
             } else if (message.type === 'status') {
                 setStatus(message.status);
+                if (moving.current && message.status) {
+                    moving.current = false;
+                    setAnnounced(message.status.text);
+                }
             } else if (message.type === 'buildReport') {
                 setReport(message.report);
             } else if (message.type === 'nodeBody') {
@@ -182,6 +190,7 @@ function App() {
         setSide({ kind: 'node', at: { command, nodeId } });
         setNotice(null);
         setBody(null);
+        setAnnounced('');
         vscode.postMessage({ type: 'readNode', command, nodeId });
     };
 
@@ -196,6 +205,11 @@ function App() {
         : null;
 
     const send = (message: unknown) => { setNotice(null); vscode.postMessage(message); };
+    const sendMove = (message: unknown) => {
+        moving.current = true;
+        setAnnounced('');
+        send(message);
+    };
 
     // One strip at the foot, whatever it has to say. A refusal is a status with
     // nothing to take back, so it reads in the same place as everything else
@@ -405,18 +419,19 @@ function App() {
                         onMove={(direction: 'up' | 'down') => {
                             const shape = movedNode(graph, selected, direction);
                             if (!shape) { return; }
-                            send({
+                            sendMove({
                                 type: 'moveNode', command: selected.command,
                                 nodeId: selected.nodeId, ...shape,
                             });
                         }}
+                        announce={announced}
                         moveTargets={selectedStep && !node.pinned
                             ? moveTargets(selectedStep, selected.nodeId) : []}
                         onMoveToPhase={(phase: string) => {
                             const shape = selectedStep
                                 ? movedToPhase(selectedStep, selected.nodeId, phase) : null;
                             if (!shape) { return; }
-                            send({
+                            sendMove({
                                 type: 'moveNode', command: selected.command,
                                 nodeId: selected.nodeId, phase, ...shape,
                             });

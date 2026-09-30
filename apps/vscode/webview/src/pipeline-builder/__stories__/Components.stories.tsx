@@ -13,6 +13,7 @@ import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import { TemplateForm } from '../TemplateForm';
+import { moveTargets } from '../moves';
 import {
     AUTO, CHOICES, IMPLEMENT, NO_CHANGES, NO_PHASES, OWN_STEP, PLAN, SPECIFY,
     SPECIFY_THREE_YOURS, STOCK, TASKS,
@@ -717,6 +718,41 @@ export const InspectorOrderRow: Story = {
             onMoveToPhase={noop}
             {...INSPECT} /></One>
     ),
+};
+
+/** The board and the inspector for `branch`, laid out as the panel lays them out. */
+function MoveToPhaseOpen({ width }: { width: number }) {
+    const branch = SPECIFY.phases[3].nodes[0];
+    return (
+        <div style={{ width: `${width}px` }}>
+            <div class="builder">
+                <div class="builder-body">
+                    <Canvas graph={graph([SPECIFY])} {...CANVAS}
+                        selected={{ command: 'specify', nodeId: branch.id }} />
+                    <Inspector node={branch} step="specify"
+                        body="Branch on the verdict." parts={[]}
+                        editable="Branch on the verdict."
+                        moveTargets={moveTargets(SPECIFY, branch.id)}
+                        onMoveToPhase={noop} moveMenuOpen {...INSPECT} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// The list escapes the clipping pane, stays inside the panel and scrolls when it runs out of room.
+export const InspectorMoveToPhaseNarrow: Story = {
+    name: 'Inspector · Move to phase, open in a narrow panel',
+    parameters: { layout: 'fullscreen' },
+    args: { width: 330 },
+    render: args => <MoveToPhaseOpen width={Number(args?.width ?? 330)} />,
+};
+
+export const InspectorMoveToPhaseWide: Story = {
+    name: 'Inspector · Move to phase, open in a wide panel',
+    parameters: { layout: 'fullscreen' },
+    args: { width: 1100 },
+    render: args => <MoveToPhaseOpen width={Number(args?.width ?? 1100)} />,
 };
 
 export const InspectorHeld: Story = {

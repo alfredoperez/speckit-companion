@@ -1873,6 +1873,13 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     right: 0;
 }
 
+/* Out of the pane that clips it; the script sets its place and its height. */
+.pb-menu-list--floating {
+    position: fixed;
+    z-index: 20;
+    box-sizing: border-box;
+}
+
 /* What picking this one does. A select had nowhere to put it. Body, not the
    metadata tone: on a row whose whole point is the sentence under the name,
    this is the readable content and not a label beside it. */
@@ -2488,6 +2495,18 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
         border-top: 1px solid var(--border);
         max-height: 50vh;
     }
+
+    /* At half height the facts alone outgrow the pane, so the whole pane scrolls and the actions stay at its foot. */
+    .pb-inspector {
+        grid-template-rows: auto auto auto auto;
+        overflow-y: auto;
+        /* Room for two wrapped rows of actions, so a focused row never lands under them. */
+        scroll-padding-bottom: 6rem;
+    }
+
+    .pb-inspector .pb-doc { overflow: visible; }
+
+    .pb-inspector .pb-inspector-actions { position: sticky; }
 
     /* Two rows rather than four wrapped fragments. Row one is what this is and
        the one thing to do with it; row two is what the pipeline holds and the
