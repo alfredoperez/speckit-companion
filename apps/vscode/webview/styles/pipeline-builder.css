@@ -1877,6 +1877,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-menu-list--floating {
     position: fixed;
     z-index: 20;
+    box-sizing: border-box;
 }
 
 /* What picking this one does. A select had nowhere to put it. Body, not the

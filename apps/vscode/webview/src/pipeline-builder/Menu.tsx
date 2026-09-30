@@ -93,6 +93,19 @@ export function placeFloating(
     list.dataset.side = down ? 'below' : 'above';
 }
 
+/** Whether a clipping or scrolling ancestor has scrolled the element fully out of its view. */
+function clippedAway(element: HTMLElement): boolean {
+    const box = element.getBoundingClientRect();
+    for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        const style = getComputedStyle(parent);
+        if (!/auto|scroll|hidden|clip/.test(`${style.overflowX} ${style.overflowY}`)) { continue; }
+        const view = parent.getBoundingClientRect();
+        if (box.bottom <= view.top || box.top >= view.bottom
+            || box.right <= view.left || box.left >= view.right) { return true; }
+    }
+    return false;
+}
+
 export function Menu({
     trigger, title, options, onPick, disabled, disabledTitle, defaultOpen,
     label, caret = true, align = 'left', floating = false, ...rest
@@ -127,10 +140,14 @@ export function Menu({
 
     useLayoutEffect(() => {
         if (!open || !floating) { return undefined; }
-        const place = () => {
-            if (list.current && button.current) {
-                placeFloating(list.current, button.current, align);
+        const place = (event?: Event) => {
+            if (!list.current || !button.current) { return; }
+            if (event?.type === 'scroll' && list.current.contains(event.target as Node)) { return; }
+            if (event?.type === 'scroll' && clippedAway(button.current)) {
+                setOpen(false);
+                return;
             }
+            placeFloating(list.current, button.current, align);
         };
         place();
         window.addEventListener('resize', place);

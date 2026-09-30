@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import { readFileSync } from 'fs';
+import { render } from 'preact';
 import { join } from 'path';
 import { Inspector } from '../Inspector';
 import { placeFloating } from '../Menu';
@@ -277,6 +278,33 @@ describe('the Move to phase… list in a narrow panel', () => {
         expect(parseFloat(list.style.top)).toBeGreaterThanOrEqual(8);
     });
 
+    it('closes when the pane scrolls its button out of view, not when the list scrolls', async () => {
+        const pane = document.createElement('div');
+        pane.style.overflowY = 'auto';
+        document.body.appendChild(pane);
+        const host = document.createElement('div');
+        pane.appendChild(host);
+        render(
+            <Inspector node={wrapUp.phases[3].nodes[0]} step="specify" body="x" parts={[]}
+                {...actions} moveTargets={moveTargets(wrapUp, 'branch')}
+                onMoveToPhase={noop} />, host);
+        const button = trigger(host);
+        button.click();
+        await flush();
+        pane.getBoundingClientRect = () => rect(0, 0, 330, 300);
+        button.getBoundingClientRect = () => rect(20, 200, 100, 27);
+        const list = host.querySelector<HTMLElement>('.pb-menu-list')!;
+        list.dispatchEvent(new Event('scroll'));
+        pane.dispatchEvent(new Event('scroll'));
+        await flush();
+        expect(host.querySelector('.pb-menu-list')).not.toBeNull();
+
+        button.getBoundingClientRect = () => rect(20, 320, 100, 27);
+        pane.dispatchEvent(new Event('scroll'));
+        await flush();
+        expect(host.querySelector('.pb-menu-list')).toBeNull();
+    });
+
     // jsdom has no cascade, so the narrow layout is read from the sheet.
     it('scrolls the whole inspector when it is stacked under the board', () => {
         const css = readFileSync(
@@ -287,5 +315,6 @@ describe('the Move to phase… list in a narrow panel', () => {
         expect(pane).not.toMatch(/minmax\(0/);
         expect(narrow).toMatch(/\.pb-inspector \.pb-inspector-actions \{ position: sticky; \}/);
         expect(css).toMatch(/\.pb-menu-list--floating \{[^}]*position: fixed/);
+        expect(css).toMatch(/\.pb-menu-list--floating \{[^}]*box-sizing: border-box/);
     });
 });
