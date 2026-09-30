@@ -23,14 +23,19 @@ Help the user publish a new version of the extension by:
    - `## [X.X.X] - YYYY-MM-DD` format
    - Generated changelog with sections for New Features, Bug Fixes, and Improvements
    - Keep all previous versions' changelogs intact
-5. Update documentation files with the new version:
+5. Run the release checklist in `docs/doc-sync.md` ("Per-release checklist") before anything is committed, and stop on a failure:
+   - `npm run clips:check` must report 0 broken.
+   - The README "What's new" block names this version and its three highlights, the provider matrix matches `speckit.aiProvider` in `package.json`, and the README "VS Code" badge matches `engines.vscode`.
+   - Every changelog bullet under the new version has its README section or site page, and the site builds: `cd apps/website && npm run build && npx astro check`.
+   - If the release touches `apps/speckit-extension/`, say so: the spec-kit extension ships separately with `/publish-speckit-ext`, and changes there (Auto folding, the writer) reach users only through it.
+6. Update documentation files with the new version:
    - Update version references in CLAUDE.md if needed
    - Update version references in README.md (e.g., in installation commands)
    - Update version references in README.zh-CN.md (e.g., in installation commands)
-6. Update package.json version using `npm version X.X.X --no-git-tag-version`.
-7. Commit CHANGELOG.md, CLAUDE.md, README.md, README.zh-CN.md, package.json and package-lock.json with message "chore: bump version to X.X.X".
-8. Create an annotated tag `vX.X.X` with message "Release vX.X.X - See CHANGELOG.md for details".
-9. Push both the commit and tag to origin.
-10. Inform the user that GitHub Actions will handle the rest.
+7. Update package.json version using `npm version X.X.X --no-git-tag-version`.
+8. Commit CHANGELOG.md, CLAUDE.md, README.md, README.zh-CN.md, package.json and package-lock.json with message "chore: bump version to X.X.X".
+9. Create an annotated tag `vX.X.X` with message "Release vX.X.X - See CHANGELOG.md for details".
+10. Push both the commit and tag to origin.
+11. Inform the user that GitHub Actions will handle the rest.
 
 Make sure to handle errors gracefully and provide clear feedback at each step.
