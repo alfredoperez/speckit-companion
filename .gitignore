@@ -113,3 +113,5 @@ assets/mascot/explore/
 
 # Screenshots from `npm run canvas:shots`
 .canvas-shots/
+
+.claude/skills/e2e-desktop/.bin/
