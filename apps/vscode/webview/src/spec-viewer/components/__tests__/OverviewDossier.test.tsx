@@ -89,7 +89,7 @@ describe('IntentSection', () => {
 });
 
 describe('OverviewTiming', () => {
-    it('shows a trustworthy whole-run elapsed total and lifecycle phases', () => {
+    it('shows a trustworthy whole-run active total and lifecycle phases', () => {
         const host = document.createElement('div');
         render(h(OverviewTiming, {
             state: base({
@@ -103,7 +103,7 @@ describe('OverviewTiming', () => {
             }),
         }), host);
 
-        expect(host.textContent).toContain('24m elapsed');
+        expect(host.textContent).toContain('24m active');
         expect(host.textContent).toContain('Specify');
         expect(host.textContent).toContain('Implement');
         expect(host.textContent).not.toContain('Timing coverage');
@@ -125,10 +125,10 @@ describe('OverviewTiming', () => {
 
         expect(host.textContent).toContain('Timing coverage: 1 of 4 phases');
         expect(host.textContent).toContain('6m 29s');
-        expect(host.textContent).not.toContain('elapsed');
+        expect(host.textContent).not.toContain('active');
     });
 
-    it('makes zero trusted timing explicit without inventing an elapsed total', () => {
+    it('makes zero trusted timing explicit without inventing an active total', () => {
         const host = document.createElement('div');
         render(h(OverviewTiming, {
             state: base({
@@ -139,7 +139,7 @@ describe('OverviewTiming', () => {
             }),
         }), host);
         expect(host.textContent).toContain('Timing coverage: 0 of 4 phases');
-        expect(host.textContent).not.toContain('elapsed');
+        expect(host.textContent).not.toContain('active');
     });
 
     describe('a spec that sat idle between specify and plan', () => {

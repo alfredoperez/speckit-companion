@@ -37,7 +37,7 @@ export function RunStrip() {
     }
     if (stats.checks !== undefined) facts.push({ key: 'checks', value: `${stats.checks} checks` });
     if (vs.timing?.complete && vs.timing.elapsedMs !== undefined) {
-        facts.push({ key: 'timing', value: `${formatActiveTime(vs.timing.elapsedMs)} elapsed` });
+        facts.push({ key: 'timing', value: `${formatActiveTime(vs.timing.elapsedMs)} active` });
     } else if (vs.timing && vs.timing.measuredPhases > 0) {
         facts.push({
             key: 'timing',

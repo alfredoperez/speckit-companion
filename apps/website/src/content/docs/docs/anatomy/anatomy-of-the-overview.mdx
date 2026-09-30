@@ -66,7 +66,7 @@ Each region has a small kicker, a title and, on the right, a count. Skim the cou
 
 - **Where it comes from.** The page is read out of `.spec-context.json` next to the spec. The Companion Spec Kit extension writes it during runs, the VS Code extension only reads it, and the two install independently. Commit the file and the record travels with the branch.
 - **Without the Companion extension**, a banner offers to install it, and the page will be thin because most of what it reads never gets written. Dismiss it once and it stays gone, or set `speckit.companion.installPrompt` to `false`.
-- **Timestamps differ in trust.** Step boundaries and per-task finishes are written by a script. Clarify and analyze closes, and plan and tasks substeps, are reported by the assistant to the second. The run only says "X elapsed" when specify, plan, tasks and implement all measured cleanly.
+- **Timestamps differ in trust.** Step boundaries and per-task finishes are written by a script. Clarify and analyze closes, and plan and tasks substeps, are reported by the assistant to the second. The run only says "X active", the time its phases took without the waits between them, when specify, plan, tasks and implement all measured cleanly.
 - **The log only grows.** A write that would publish a shorter history is rejected.
 
 ## Next

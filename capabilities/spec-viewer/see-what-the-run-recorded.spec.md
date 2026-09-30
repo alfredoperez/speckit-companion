@@ -9,7 +9,7 @@ A person opens a spec someone else ran and reads, in one page, why the work was 
 ### Every document carries the spec's standing above it
 <!-- touches: apps/vscode/webview/src/spec-viewer/components/SpecHeader.tsx, apps/vscode/webview/src/spec-viewer/components/RunStrip.tsx -->
 
-A band above the document SHALL show the spec's recorded name, its status, its branch and the date it was created, read from the same run record the sidebar reads so the two cannot disagree. Beside it sits a strip of run facts the status and the rail do not already say: tasks done out of total, requirements traced, concerns, checks, elapsed time and a link to the pull request. Facts SHALL drop from the least important end as the pane narrows, and the strip SHALL not render when there is nothing to say.
+A band above the document SHALL show the spec's recorded name, its status, its branch and the date it was created, read from the same run record the sidebar reads so the two cannot disagree. Beside it sits a strip of run facts the status and the rail do not already say: tasks done out of total, requirements traced, concerns, checks, active time and a link to the pull request. Facts SHALL drop from the least important end as the pane narrows, and the strip SHALL not render when there is nothing to say.
 
 #### Scenario: nothing recorded but the name
 - **WHEN** a spec has a name and a status but no counts, no timing and no pull request

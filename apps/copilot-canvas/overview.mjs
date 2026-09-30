@@ -36,7 +36,7 @@ function timingSection(ctx) {
     });
     const summaryTiming = deriveTimingSummary(timing, PIPELINE_STEPS);
     const summary = summaryTiming.complete && summaryTiming.elapsedMs !== undefined
-        ? `${formatElapsed(summaryTiming.elapsedMs)} elapsed`
+        ? `${formatElapsed(summaryTiming.elapsedMs)} active`
         : `Timing coverage: ${summaryTiming.measuredPhases} of ${summaryTiming.expectedPhases} phases`;
     const items = phases.map((p, i) => {
         const inFlight = timing[p].startedAt && !timing[p].completedAt;
