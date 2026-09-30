@@ -921,7 +921,7 @@ export class SpecViewerProvider {
         taskCompletionPercent: derived.taskCompletionPercent,
       };
 
-      if (instance.state.landing === "overview") {
+      if (instance.state.landing === "overview" && instance.overviewAvailable === undefined) {
         const viewerState = await this.readViewerState(specDirectory);
         instance.overviewAvailable = hasOverview(viewerState, this.readActivityPanelEnabled(), false);
       }

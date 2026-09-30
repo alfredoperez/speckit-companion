@@ -623,6 +623,21 @@ describe('messageHandlers - openFile', () => {
         expect((vscode.workspace.openTextDocument as jest.Mock).mock.calls[0][0].fsPath).toBe(readme);
     });
 
+    it('opens a markdown file the viewer does not list, in a hidden folder or with an upper-case extension, as a file', async () => {
+        const hidden = path.join(root, 'specs', 'foo', '.notes', 'review.md');
+        const upper = path.join(root, 'specs', 'foo', 'NOTES.MD');
+        fs.mkdirSync(path.dirname(hidden), { recursive: true });
+        fs.writeFileSync(hidden, '');
+        fs.writeFileSync(upper, '');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: hidden } as any);
+        await handler({ type: 'openFile', filename: upper } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything());
+        expect((vscode.workspace.openTextDocument as jest.Mock).mock.calls.map(c => c[0].fsPath)).toEqual([hidden, upper]);
+    });
+
     it('opens every source file link in the one group beside the viewer instead of a new group per click', async () => {
         const source = path.join(root, 'src', 'App.tsx');
         fs.mkdirSync(path.dirname(source), { recursive: true });

@@ -58,7 +58,7 @@ import {
 } from "./reviewComments";
 import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
-import { isInsideSpecDirectory } from "../../core/specDirectoryResolver";
+import { isSpecDocument } from "./utils";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -756,7 +756,7 @@ async function handleOpenFile(
       vscode.window.showWarningMessage(`File not found in workspace: ${basename}`);
       return;
     }
-    if (isSpecFolderDocument(filename, folder)) {
+    if (isSpecDocument(filename, folder.uri.fsPath)) {
       await vscode.commands.executeCommand("speckit.viewSpecDocument", filename);
       return;
     }
@@ -778,13 +778,6 @@ function workspaceFolderOf(filePath: string): vscode.WorkspaceFolder | undefined
     const rel = path.relative(folder.uri.fsPath, filePath);
     return rel !== "" && rel !== ".." && !rel.startsWith(".." + path.sep) && !path.isAbsolute(rel);
   });
-}
-
-/** A markdown file inside a spec folder, which the viewer opens the way the sidebar does. */
-function isSpecFolderDocument(filePath: string, folder: vscode.WorkspaceFolder): boolean {
-  if (!filePath.toLowerCase().endsWith(".md")) return false;
-  const specRel = isInsideSpecDirectory(filePath, folder.uri.fsPath);
-  return !!specRel && path.resolve(folder.uri.fsPath, specRel) !== path.resolve(filePath);
 }
 
 /** One fixed group to the right of the viewer, so repeated clicks reuse it instead of splitting again. */
