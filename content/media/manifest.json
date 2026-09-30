@@ -1092,6 +1092,81 @@
       "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
     },
     {
+      "id": "builder-move-to-phase",
+      "name": "Pipeline Builder: Move to phase",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/builder-move-to-phase.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/builder-move-to-phase.png": "The panel for the Create the feature branch node, its Order row offering Move up, Move down and Move to phase, with the phase list open on gather, author and classify, each marked Joins the end of it."
+      },
+      "referencedBy": {},
+      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'Moving a node to another phase'. Shown on the site's guides/pipeline-builder page."
+    },
+    {
+      "id": "builder-side-panel",
+      "name": "Pipeline Builder in a side panel",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/builder-side-panel.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/builder-side-panel.png": "The Pipeline Builder docked narrow: the specify step's gather and author phases at the panel's full width, a dashed rule with a plus between steps, and the plan step stacked underneath."
+      },
+      "referencedBy": {},
+      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'The board in a side panel'. Shown on the site's guides/pipeline-builder page."
+    },
+    {
+      "id": "viewer-removed-doc",
+      "name": "Spec viewer: document moved or deleted",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/viewer-removed-doc.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/viewer-removed-doc.png": "The spec viewer on a planned spec with a yellow note above the page reading Plan was moved or deleted, so Specification is showing, and the Specification open beneath it."
+      },
+      "referencedBy": {},
+      "notes": "Shot by capture-docs-images.mjs from the Teamboard Run story A3b. Shown on the site's anatomy/anatomy-of-the-spec-viewer page."
+    },
+    {
       "id": "copilot-canvas",
       "name": "GitHub Copilot app board",
       "kind": "still",

@@ -352,6 +352,34 @@ export const A3PlannedFooterReadsTasks: Story = {
     ),
 };
 
+// ── Snapshot 2 · plan.md deleted while it was open ────────────────────────
+// A docs still, not a beat: the viewer falls back to the Specification and
+// says why, instead of switching documents without a word.
+
+export const A3bPlanDeletedWhileOpen: Story = {
+    name: 'A3b · Plan deleted while it was open',
+    render: () => (
+        <CaptureFrame>
+            <InteractiveViewer
+                ctx={ctxPlanned}
+                docs={teamboardDocs(teamboardTasks, 'specify')}
+                initialDoc="spec"
+                view="document"
+                extraNav={{
+                    coreDocs: coreDocsFor('specify'),
+                    taskCompletionPercent: 0,
+                    workflowPhase: 'plan',
+                    badgeText: 'PLANNED',
+                    removedDocument: 'Plan',
+                }}
+                vs={vsFromContext(ctxPlanned, pauseFooter('Tasks'), {
+                    steps: steps('completed', 'completed', 'not-started', 'not-started'),
+                })}
+            />
+        </CaptureFrame>
+    ),
+};
+
 // ── Snapshot 2b · the tasks list, every box empty ─────────────────────────
 // Storyboard beat E3.1. Six tasks, dependency ordered, none started.
 

@@ -24,6 +24,7 @@ import { StatusLine } from '../StatusLine';
 import { BrokenPipeline } from '../BrokenPipeline';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import { TemplateForm } from '../TemplateForm';
+import { moveTargets } from '../moves';
 import {
     CHOICES, IMPLEMENT, NO_CHANGES, PLAN, SPECIFY, TASKS,
     graph, hook, node, phase, step,
@@ -231,6 +232,18 @@ export const ThePhaseMenu: Story = {
  * what the pipeline holds, and opens onto the counts. There is no prop for the
  * open state — it is what clicking does — so the story clicks it.
  */
+/** Docked beside the editor, the lanes stack one under the next at the panel's width. */
+export const ASidePanel: Story = {
+    parameters: { capture: { width: 380, height: 820 } },
+    name: 'The board in a side panel',
+    render: () => (
+        <div class="builder" style="width: 380px">
+            <Canvas graph={graph([HERO_SPECIFY, HERO_PLAN], { configured: true })}
+                {...CANVAS} />
+        </div>
+    ),
+};
+
 export const WhatChanged: Story = {
     parameters: { capture: { width: 1000, height: 200 } },
     name: 'What this project changed',
@@ -343,6 +356,25 @@ export const TheWayBack: Story = {
                 onUndo={noop} onDismiss={noop} />
         </Panel>
     ),
+};
+
+/** The Order row's third way to move a node, open on the phases it can join. */
+export const MovingANodeToAnotherPhase: Story = {
+    // Fullscreen puts the panel at the viewport's corner, as in VS Code, since the list is placed in the viewport.
+    parameters: { layout: 'fullscreen', capture: { width: 420, height: 490 } },
+    name: 'Moving a node to another phase',
+    render: () => {
+        const branch = SPECIFY.phases[3].nodes[0];
+        return (
+            <Pane>
+                <Inspector node={branch} step="specify"
+                    body="Create the feature branch for this spec."
+                    editable="Create the feature branch for this spec." parts={[]}
+                    moveTargets={moveTargets(SPECIFY, branch.id)}
+                    onMoveToPhase={noop} moveMenuOpen {...INSPECT} />
+            </Pane>
+        );
+    },
 };
 
 export const ReplacingANode: Story = {
