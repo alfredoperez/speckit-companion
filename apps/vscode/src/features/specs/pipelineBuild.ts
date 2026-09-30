@@ -32,9 +32,10 @@ const BUILD_INPUT_DIRS = [
     path.join('.specify', 'companion', 'nodes'),
     path.join('.specify', 'companion', 'workflows'),
     path.join('.specify', 'companion', 'fragments'),
-    // The templates a build reshapes are spec-kit's own, not a Companion copy.
-    path.join('.specify', 'templates'),
 ];
+
+/** The templates a build reshapes are spec-kit's own, and only count once the project is configured. */
+const TEMPLATES_DIR = path.join('.specify', 'templates');
 
 export type PipelineBuildState =
     /** No configuration to build from — the project runs the shipped pipeline. */
@@ -74,7 +75,7 @@ function newestBuildTime(commandsDir: string): number | null {
 }
 
 /** The newest write across every build input, walking each directory once. */
-function newestInputTime(workspaceRoot: string): number | null {
+function newestInputTime(workspaceRoot: string, dirs: string[]): number | null {
     let newest: number | null = null;
     const walk = (dir: string) => {
         let entries: fs.Dirent[];
@@ -90,7 +91,7 @@ function newestInputTime(workspaceRoot: string): number | null {
             if (stamp !== null && (newest === null || stamp > newest)) { newest = stamp; }
         }
     };
-    for (const rel of BUILD_INPUT_DIRS) { walk(path.join(workspaceRoot, rel)); }
+    for (const rel of dirs) { walk(path.join(workspaceRoot, rel)); }
     return newest;
 }
 
@@ -103,14 +104,18 @@ function newestInputTime(workspaceRoot: string): number | null {
  */
 export function readPipelineBuildState(workspaceRoot: string): PipelineBuildState {
     const configAt = mtime(path.join(workspaceRoot, COMPANION_CONFIG_REL));
-    const inputsAt = newestInputTime(workspaceRoot);
+    const inputsAt = newestInputTime(workspaceRoot, BUILD_INPUT_DIRS);
     // A project with a rewritten node and no configuration file is configured:
     // the build has something of this project's to fold in, and saying
     // "unconfigured" told the reader their edit was not there.
-    const configuredAt = configAt === null ? inputsAt : Math.max(configAt, inputsAt ?? configAt);
-    if (configuredAt === null) {
+    const ownAt = configAt === null ? inputsAt : Math.max(configAt, inputsAt ?? configAt);
+    // Templates written by the spec-kit init are newer than the shipped commands on
+    // every fresh project, so they alone must not read as a configuration.
+    if (ownAt === null) {
         return { kind: 'unconfigured' };
     }
+    const templatesAt = newestInputTime(workspaceRoot, [TEMPLATES_DIR]);
+    const configuredAt = Math.max(ownAt, templatesAt ?? ownAt);
 
     const builtAt = newestBuildTime(path.join(workspaceRoot, BUILT_COMMANDS_REL));
     if (builtAt === null) {

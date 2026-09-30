@@ -35,6 +35,13 @@ describe('whether the built pipeline is still the one described', () => {
         expect(readPipelineBuildState(project()).kind).toBe('unconfigured');
     });
 
+    it('is unconfigured on a fresh project whose templates are newer than the shipped commands', () => {
+        const root = project();
+        write(root, '.specify/extensions/companion/commands/speckit.companion.specify.md', EARLY);
+        write(root, '.specify/templates/spec-template.md', LATE);
+        expect(readPipelineBuildState(root).kind).toBe('unconfigured');
+    });
+
     it('counts a rewritten node as a configuration, though it writes no yml', () => {
         const root = project();
         write(root, '.specify/companion/nodes/specify/draft-spec.md', EARLY);

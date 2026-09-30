@@ -42,6 +42,10 @@ The header SHALL say when the built commands are behind the configuration or wer
 - **WHEN** the configuration has not changed since the last build
 - **THEN** no staleness line is shown and Build stays outlined
 
+#### Scenario: a fresh project
+- **WHEN** a project has spec-kit's own templates and no configuration of its own
+- **THEN** no staleness line is shown, however recently the templates were written
+
 ### Build and Preview build answer in the header
 <!-- touches: apps/vscode/src/features/pipeline-builder/builderPanel.ts, apps/vscode/webview/src/pipeline-builder/Header.tsx -->
 
