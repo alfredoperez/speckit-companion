@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Move to phase… works in a narrow Pipeline Builder.** In a side panel the node's panel now scrolls, so the button is always reachable, and its list opens inside the panel on the side with room, showing every phase instead of being cut off at the edge.
+- **Move to phase… opens in the right place with reduced motion on.** With the system's reduce-motion setting turned on, the list of phases opened far from its button, off the top of the panel; it now opens right under it.
 - **The Copilot board no longer turns a Spec Kit spec into a Companion one.** Its run buttons sent Companion commands to every spec once the extension was installed, which flipped a stock spec's workflow; a spec recorded as Spec Kit now runs the standard commands.
 - **Deleting the document you are reading now says so.** The viewer used to jump to the Specification without a word; it now shows a line saying the document was moved or deleted until you navigate.
 - **A fresh project no longer warns the Pipeline Builder is out of date.** The header said the configuration changed since the last build before anything had been configured.

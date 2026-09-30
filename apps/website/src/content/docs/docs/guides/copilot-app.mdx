@@ -41,6 +41,6 @@ The Copilot app runs each session in a fresh worktree cut from your default bran
 
 ## Use it with the Companion commands
 
-The buttons send `/speckit.companion.*` when the [companion Spec Kit extension](/docs/install) is installed in the project, and the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` when it is not. The board says which it is using under the next-step button.
+The buttons send `/speckit.companion.*` when the [companion Spec Kit extension](/docs/install) is installed in the project, and the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` when it is not. Each spec also keeps the workflow it was started with: a spec recorded as Spec Kit runs the stock commands even where Companion is installed, so a run never switches workflow halfway. The board says which commands it is using under the next-step button.
 
 You can also ask the agent: "which specs are still open?" or "show me the export spec", and the board follows.

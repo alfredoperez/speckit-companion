@@ -12,6 +12,10 @@ Open it from the circuit icon at the top of the Specs sidebar, or run **SpecKit 
 
 ![The Pipeline Builder board with one lane per step](../../../../../../../docs/screenshots/generated/builder-board.png)
 
+Dock it beside the editor and the steps stack one under the next at the panel's width, with a dashed rule between them where the lanes would meet. Nothing is cut off or hidden behind a sideways scroll, and every control works the same.
+
+![The Pipeline Builder docked narrow: the specify step's gather and author phases at the panel's full width, a dashed rule with a plus between steps, and the plan step stacked underneath.](../../../../../../../docs/screenshots/generated/builder-side-panel.png)
+
 ## Change something in four steps
 
 1. Click a node to read what it tells your assistant.
@@ -45,6 +49,12 @@ Your hooks show under the Companion mascot. Hooks from an installed extension sh
 The node panel shows the instructions plus what the node writes, what it needs first and whether it can move. To go back, open **More** and choose **Use the shipped node**. The status line offers **Undo**.
 
 ![The status line after going back to the shipped node](../../../../../../../docs/screenshots/generated/builder-revert.png)
+
+## Move a node to another phase
+
+Drag a node to reorder it, or use the **Order** row in its panel. **Move up** and **Move down** step it through the phase, and **Move to phase…** lists the other phases of the step. The node joins the phase you pick at the edge nearest where it was: the end of an earlier phase, or the start of a later one. A node marked `held` has to stay where it is, and its row says why.
+
+![The panel for the Create the feature branch node, its Order row offering Move up, Move down and Move to phase, with the phase list open on gather, author and classify, each marked Joins the end of it.](../../../../../../../docs/screenshots/generated/builder-move-to-phase.png)
 
 ## Replace or add a node
 
