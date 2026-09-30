@@ -125,3 +125,63 @@ describe('navigating inside an open panel', () => {
         expect(panel.__lastPosted('specMoved')).toBeUndefined();
     });
 });
+
+describe('a document deleted while it is showing', () => {
+    let specDir: string;
+    let provider: SpecViewerProvider;
+
+    beforeEach(() => {
+        specDir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'speckit-deleted-')), '001-demo');
+        fs.mkdirSync(specDir);
+        fs.writeFileSync(path.join(specDir, 'spec.md'), '# Spec\n');
+        fs.writeFileSync(path.join(specDir, 'plan.md'), '# Plan\n');
+        (vscode.window.createWebviewPanel as jest.Mock).mockClear();
+        const { context } = (vscode as unknown as {
+            createMockExtensionContext: () => { context: vscode.ExtensionContext };
+        }).createMockExtensionContext();
+        provider = new SpecViewerProvider(context, vscode.window.createOutputChannel('test'));
+    });
+
+    afterEach(() => fs.rmSync(path.dirname(specDir), { recursive: true, force: true }));
+
+    function removedOf(panel: { webview: { html: string } }): unknown {
+        const m = /window\.__INITIAL_NAV_STATE__ = (\{.*?\});/s.exec(panel.webview.html);
+        if (!m) throw new Error('no initial nav state in html');
+        return JSON.parse(m[1]).removedDocument;
+    }
+
+    async function showPlanThenDeleteIt() {
+        await provider.showSpec(specDir);
+        const panel = (vscode.window.createWebviewPanel as jest.Mock).mock.results[0].value;
+        await panel.__receive({ type: 'stepperClick', phase: 'plan' });
+        const planPath = path.join(specDir, 'plan.md');
+        fs.rmSync(planPath);
+        provider.handleFileDeleted(planPath);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        return panel;
+    }
+
+    it('names the deleted document in the render that falls back to another one', async () => {
+        const panel = await showPlanThenDeleteIt();
+
+        expect(removedOf(panel)).toBe('Plan');
+    });
+
+    it('stops naming it once the document is back', async () => {
+        const panel = await showPlanThenDeleteIt();
+        fs.writeFileSync(path.join(specDir, 'plan.md'), '# Plan\n');
+
+        await provider.showSpec(specDir);
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(removedOf(panel)).toBeNull();
+    });
+
+    it('stops naming it once the reader navigates', async () => {
+        const panel = await showPlanThenDeleteIt();
+
+        await panel.__receive({ type: 'stepperClick', phase: 'spec' });
+
+        expect(panel.__lastPosted('contentUpdated').navState.removedDocument).toBeNull();
+    });
+});

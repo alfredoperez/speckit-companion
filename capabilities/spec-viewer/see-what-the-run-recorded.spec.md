@@ -24,6 +24,10 @@ The Overview SHALL present what the run wrote down in a fixed order: intent, the
 - **WHEN** the run wrote an intent and nothing else
 - **THEN** the page shows the intent region alone, not empty frames for the rest
 
+#### Scenario: a run that recorded only its phases
+- **WHEN** the run recorded phase times but no intent
+- **THEN** the run overview shows without an Intent heading above nothing
+
 #### Scenario: a spec with an empty record
 - **WHEN** the Overview is opened on a spec whose record holds nothing
 - **THEN** it says no activity was recorded yet

@@ -18,10 +18,13 @@ export function isStalenessRelevant(status: string | undefined): boolean {
     return status !== SpecStatuses.COMPLETED && status !== SpecStatuses.ARCHIVED;
 }
 
+/** A checkout or copy writes a spec's files in a burst, so mtimes that close are the same generation. */
+const SAME_GENERATION_MS = 1000;
+
 /**
  * Compute staleness for all core workflow documents.
  * A document is stale if any preceding document in the workflow
- * has a strictly newer mtime.
+ * is newer by more than a second.
  */
 export async function computeStaleness(
     documents: SpecDocument[]
@@ -67,7 +70,7 @@ export async function computeStaleness(
         for (let j = 0; j < i; j++) {
             const upstreamType = coreDocs[j].type;
             const upstreamMtime = mtimes.get(upstreamType);
-            if (upstreamMtime !== undefined && upstreamMtime > docMtime && upstreamMtime > newestUpstreamMtime) {
+            if (upstreamMtime !== undefined && upstreamMtime - docMtime > SAME_GENERATION_MS && upstreamMtime > newestUpstreamMtime) {
                 newestUpstreamType = upstreamType;
                 newestUpstreamMtime = upstreamMtime;
             }

@@ -161,8 +161,16 @@ function renderBoard() {
             el('span', { class: 'card-time', title: spec.lastActivity ?? spec.updatedAt ?? '' }, relativeTime(spec.lastActivity ?? spec.updatedAt)))))));
 }
 
+/** The commands this spec's buttons send: its own workflow's family, else the workspace's. */
+function specCommands() {
+    return {
+        commandSet: state.detail?.commandSet ?? state.snapshot.commandSet,
+        commands: state.detail?.commands ?? state.snapshot.commands,
+    };
+}
+
 function nextAction(spec) {
-    const commands = state.snapshot.commands;
+    const { commands } = specCommands();
     const running = STEPS.find(s => spec.steps[s] === 'in-progress');
     if (running && running !== 'specify') {
         return { title: `${STEP_LABELS[running]} is running`, why: 'Watch the pipeline move here, or pick the run back up if it stopped.', command: commands.includes('resume') ? 'resume' : running, label: commands.includes('resume') ? 'Resume' : `Run ${running}` };
@@ -208,7 +216,7 @@ function renderRail(steps) {
 
 function renderNext(spec) {
     const next = nextAction(spec);
-    const commands = state.snapshot.commands;
+    const { commandSet, commands } = specCommands();
     const primary = next.command
         ? el('button', { class: 'btn btn-primary', type: 'button', onclick: (e) => run(next.command, e.currentTarget) }, next.label)
         : null;
@@ -216,14 +224,14 @@ function renderNext(spec) {
         .filter(([command]) => command === 'ask' || commands.includes(command))
         .filter(([command]) => command !== next.command && !(command === 'resume' && spec.done))
         .map(([command, label, title]) => el('button', { class: 'btn btn-chip', type: 'button', title, onclick: (e) => run(command, e.currentTarget) }, label));
-    const prefix = state.snapshot.commandSet === 'companion' ? 'speckit.companion' : 'speckit';
+    const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
     return el('section', { class: 'next', 'aria-label': 'Next step' },
         el('div', { class: 'next-main' },
             el('div', { class: 'next-copy' }, el('p', { class: 'next-title' }, next.title), el('p', { class: 'next-why' }, next.why)),
             primary),
         el('div', { class: 'next-more' }, more),
         el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.',
-            state.snapshot.commandSet === 'companion' ? null : el('span', { class: 'command-hint__stock', title: 'Install with: specify extension add companion' }, ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.')));
+            commandSet === 'companion' ? null : el('span', { class: 'command-hint__stock', title: 'Install with: specify extension add companion' }, state.snapshot.commandSet === 'companion' ? ' This spec uses the Spec Kit workflow, so it runs the standard commands.' : ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.')));
 }
 
 function tabsFor(detail) {

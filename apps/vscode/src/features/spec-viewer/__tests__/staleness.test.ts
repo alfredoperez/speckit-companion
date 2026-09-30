@@ -40,7 +40,7 @@ const TASKS_PATH = '/workspace/specs/feat/tasks.md';
 
 describe('computeStaleness', () => {
     it('should mark the first document as not stale', async () => {
-        mockMtimes({ [SPEC_PATH]: 1000 });
+        mockMtimes({ [SPEC_PATH]: 10_000 });
 
         const docs = [
             makeDoc({ type: 'spec', label: 'Spec', filePath: SPEC_PATH }),
@@ -57,8 +57,8 @@ describe('computeStaleness', () => {
 
     it('should mark a doc as stale when upstream has a newer mtime', async () => {
         mockMtimes({
-            [SPEC_PATH]: 2000,
-            [PLAN_PATH]: 1000,
+            [SPEC_PATH]: 20_000,
+            [PLAN_PATH]: 10_000,
         });
 
         const docs = [
@@ -76,8 +76,8 @@ describe('computeStaleness', () => {
 
     it('should not mark a doc as stale when upstream has an older mtime', async () => {
         mockMtimes({
-            [SPEC_PATH]: 1000,
-            [PLAN_PATH]: 2000,
+            [SPEC_PATH]: 10_000,
+            [PLAN_PATH]: 20_000,
         });
 
         const docs = [
@@ -95,7 +95,7 @@ describe('computeStaleness', () => {
     });
 
     it('should not mark a non-existent doc as stale', async () => {
-        mockMtimes({ [SPEC_PATH]: 2000 });
+        mockMtimes({ [SPEC_PATH]: 20_000 });
 
         const docs = [
             makeDoc({ type: 'spec', label: 'Spec', filePath: SPEC_PATH }),
@@ -113,9 +113,9 @@ describe('computeStaleness', () => {
 
     it('should mark both plan and tasks as stale when spec is newest (cascading)', async () => {
         mockMtimes({
-            [SPEC_PATH]: 3000,
-            [PLAN_PATH]: 1000,
-            [TASKS_PATH]: 2000,
+            [SPEC_PATH]: 30_000,
+            [PLAN_PATH]: 10_000,
+            [TASKS_PATH]: 20_000,
         });
 
         const docs = [
@@ -135,9 +135,9 @@ describe('computeStaleness', () => {
 
     it('should detect staleness from only the immediate predecessor when it is newer', async () => {
         mockMtimes({
-            [SPEC_PATH]: 1000,
-            [PLAN_PATH]: 3000,
-            [TASKS_PATH]: 2000,
+            [SPEC_PATH]: 10_000,
+            [PLAN_PATH]: 30_000,
+            [TASKS_PATH]: 20_000,
         });
 
         const docs = [
@@ -156,8 +156,8 @@ describe('computeStaleness', () => {
 
     it('should not mark a doc as stale when mtimes are equal', async () => {
         mockMtimes({
-            [SPEC_PATH]: 1000,
-            [PLAN_PATH]: 1000,
+            [SPEC_PATH]: 10_000,
+            [PLAN_PATH]: 10_000,
         });
 
         const docs = [
@@ -174,12 +174,28 @@ describe('computeStaleness', () => {
         });
     });
 
+    it('should not mark a doc as stale when upstream is newer by only a burst of writes', async () => {
+        mockMtimes({
+            [SPEC_PATH]: 10_400,
+            [PLAN_PATH]: 10_000,
+        });
+
+        const docs = [
+            makeDoc({ type: 'spec', label: 'Spec', filePath: SPEC_PATH }),
+            makeDoc({ type: 'plan', label: 'Plan', filePath: PLAN_PATH }),
+        ];
+
+        const result = await computeStaleness(docs);
+
+        expect(result['plan'].isStale).toBe(false);
+    });
+
     it('should ignore non-core docs entirely', async () => {
         const RESEARCH_PATH = '/workspace/specs/feat/research.md';
         mockMtimes({
-            [SPEC_PATH]: 1000,
-            [RESEARCH_PATH]: 5000,
-            [PLAN_PATH]: 2000,
+            [SPEC_PATH]: 10_000,
+            [RESEARCH_PATH]: 50_000,
+            [PLAN_PATH]: 20_000,
         });
 
         const docs = [
@@ -192,7 +208,7 @@ describe('computeStaleness', () => {
 
         // Non-core doc should not appear in the staleness map
         expect(result['research']).toBeUndefined();
-        // Plan should not be stale since spec (1000) < plan (2000)
+        // Plan should not be stale since spec < plan
         expect(result['plan'].isStale).toBe(false);
     });
 });

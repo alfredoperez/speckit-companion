@@ -257,6 +257,7 @@ export class SpecViewerProvider {
     if (existingInstance) {
       // Update existing panel and reveal
       existingInstance.state.landing = 'document';
+      existingInstance.state.removedDocument = undefined;
       await this.updateContent(specDirectory, documentType);
       existingInstance.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -275,6 +276,7 @@ export class SpecViewerProvider {
     const existing = this.panels.get(specDirectory);
     if (existing) {
       existing.state.landing = 'overview';
+      existing.state.removedDocument = undefined;
       await this.updateContent(specDirectory, existing.state.currentDocument);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
@@ -471,6 +473,9 @@ export class SpecViewerProvider {
 
     // If the current document was deleted, show error message
     if (documentType === instance.state.currentDocument) {
+      instance.state.removedDocument =
+        instance.state.availableDocuments.find(d => d.type === documentType)?.label
+        ?? path.basename(filePath);
       this.postMessage(specDirectory, {
         type: "fileDeleted",
         filePath,
@@ -882,6 +887,9 @@ export class SpecViewerProvider {
 
       // Resolve which document to display (cascading fallback)
       const doc = resolveDisplayDocument(documents, documentType);
+      if (documents.some(d => d.exists && d.label === instance.state.removedDocument)) {
+        instance.state.removedDocument = undefined;
+      }
 
       // Read content + tasks.md (I/O)
       const { content, emptyMessage } = await this.readDocumentContent(doc);
@@ -950,6 +958,9 @@ export class SpecViewerProvider {
         undefined,     // livingMeta — default
         undefined,     // titleFromHeading — default
         instance.state.landing,
+        undefined,     // livingOverview — default
+        undefined,     // livingUndo — default
+        instance.state.removedDocument,
       );
 
       this.outputChannel.appendLine(
@@ -1292,6 +1303,7 @@ export class SpecViewerProvider {
       // whole navState, so omitting this would drop a tree click's explicit
       // document request on the first content refresh after it opened.
       landing: instance.state.landing,
+      removedDocument: instance.state.removedDocument ?? null,
       // Must be re-sent on every update: the webview replaces the whole navState
       // object, so omitting this would make the relocated Activity-panel banner
       // (#255) vanish on the first content/spec-context refresh after load.

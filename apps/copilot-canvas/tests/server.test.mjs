@@ -1,7 +1,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { mkdtempSync, mkdirSync, writeFileSync, cpSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,6 +32,8 @@ describe('spec board server', () => {
         mkdirSync(join(root, 'specs'));
         cpSync(join(REPO, 'specs/_01_demo-planned'), join(root, 'specs/_01_demo-planned'), { recursive: true });
         cpSync(join(REPO, 'specs/_02_demo-tasked'), join(root, 'specs/_02_demo-tasked'), { recursive: true });
+        const tasked = join(root, 'specs/_02_demo-tasked/.spec-context.json');
+        writeFileSync(tasked, readFileSync(tasked, 'utf8').replace('"workflow": "speckit"', '"workflow": "companion"'));
         mkdirSync(join(root, '.specify/extensions/companion'), { recursive: true });
         board = await createSpecServer({ root, send: async (prompt) => { sent.push(prompt); return true; } });
     });
@@ -72,13 +74,26 @@ describe('spec board server', () => {
     });
 
     it('sends the step command for a spec into the chat', async () => {
-        const res = await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'tasks' } });
+        const res = await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_02_demo-tasked', command: 'plan' } });
         assert.equal(res.status, 200);
         const { prompt, sent: delivered } = JSON.parse(res.body);
         assert.equal(delivered, true);
-        assert.equal(prompt.split('\n')[0], '/speckit.companion.tasks specs/_01_demo-planned');
+        assert.equal(prompt.split('\n')[0], '/speckit.companion.plan specs/_02_demo-tasked');
         assert.equal(sent.at(-1), prompt);
         assert.equal((await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'bogus' } })).status, 400);
+    });
+
+    it('keeps a stock-workflow spec on the stock commands even with Companion installed', async () => {
+        const res = await call(board, '/api/run', { method: 'POST', headers: auth(), body: { spec: 'specs/_01_demo-planned', command: 'tasks' } });
+        const { prompt } = JSON.parse(res.body);
+        assert.equal(prompt.split('\n')[0], '/speckit.tasks specs/_01_demo-planned');
+        assert.doesNotMatch(prompt, /speckit\.companion/);
+        const stock = JSON.parse((await call(board, '/api/spec?id=_01_demo-planned', { headers: auth() })).body);
+        assert.equal(stock.commandSet, 'speckit');
+        assert.ok(!stock.commands.includes('mark-complete'));
+        const companion = JSON.parse((await call(board, '/api/spec?id=_02_demo-tasked', { headers: auth() })).body);
+        assert.equal(companion.commandSet, 'companion');
+        assert.ok(companion.commands.includes('mark-complete'));
     });
 
     it('sends a new spec with the chosen workflow and the preamble that seeds the run record', async () => {

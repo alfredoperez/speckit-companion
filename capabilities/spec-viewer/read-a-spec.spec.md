@@ -77,9 +77,9 @@ Text from a spec SHALL reach the page as the characters that were typed, so mark
 - **THEN** it shows in the file control as typed and does not become markup
 
 ### The viewer follows the files on disk
-<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/fileWatchers.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts -->
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/fileWatchers.ts, apps/vscode/webview/src/spec-viewer/messageHandlers.ts, apps/vscode/webview/src/spec-viewer/components/RemovedDocBanner.tsx -->
 
-An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer says so instead of showing stale content. When the spec folder itself is moved, renamed or deleted, the open panel SHALL say the folder is gone and ask the reader to reopen it from the sidebar, with its tab marked moved, instead of keeping a rail over an empty document.
+An open viewer SHALL re-render when the document it shows changes on disk, and SHALL switch to a workflow document the moment that document is first created. A change to the run record SHALL refresh the header, rail and footer without reloading the document or losing the reader's place. When the document being read is deleted, the viewer shows another document under a one-line note naming the deleted one, until the reader navigates. When the spec folder itself is moved, renamed or deleted, the open panel SHALL say the folder is gone and ask the reader to reopen it from the sidebar, with its tab marked moved, instead of keeping a rail over an empty document.
 
 #### Scenario: the plan appears during a run
 - **WHEN** the viewer is showing the Spec and the assistant writes plan.md for the first time
@@ -89,6 +89,10 @@ An open viewer SHALL re-render when the document it shows changes on disk, and S
 - **WHEN** a step closes and the run record is rewritten while the reader is halfway down the Spec
 - **THEN** the badge, rail and footer update and the document stays where it was
 
+#### Scenario: the document on screen is deleted
+- **WHEN** the reader is on the Plan and plan.md is deleted
+- **THEN** the viewer shows the Specification under a line saying the Plan was moved or deleted
+
 #### Scenario: the spec folder is renamed while open
 - **WHEN** the folder of an open spec is renamed on disk
 - **THEN** the panel says the folder was moved or deleted and the sidebar opens the renamed spec in its own panel
@@ -96,11 +100,15 @@ An open viewer SHALL re-render when the document it shows changes on disk, and S
 ### A document older than the one above it is flagged as stale
 <!-- touches: apps/vscode/src/features/spec-viewer/staleness.ts, apps/vscode/webview/src/spec-viewer/components/StaleBanner.tsx -->
 
-A workflow document SHALL show a stale banner, and a mark on its rail entry, when any document earlier in the workflow was modified after it. The banner names the newer document and offers Regenerate. It is a warning only: the document stays readable and every other action stays available. A completed or archived spec SHALL show no staleness.
+A workflow document SHALL show a stale banner, and a mark on its rail entry, when any document earlier in the workflow was modified more than a second after it, so files written together by a checkout or copy are never flagged. The banner names the newer document and offers Regenerate. It is a warning only: the document stays readable and every other action stays available. A completed or archived spec SHALL show no staleness.
 
 #### Scenario: the spec is edited after planning
 - **WHEN** spec.md is saved after plan.md was last written
 - **THEN** the Plan shows a banner saying it was generated before the current spec, with a Regenerate action
+
+#### Scenario: files written together
+- **WHEN** a fresh checkout or copy writes spec.md, plan.md and tasks.md within the same second
+- **THEN** no banner and no stale mark appear
 
 #### Scenario: a finished spec
 - **WHEN** the same file times occur on a completed spec

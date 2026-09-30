@@ -117,11 +117,12 @@ export function IntentSection({ state }: { state: ViewerState }) {
     const livingSpecs = state.livingSpecs;
     const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
     const hasTiming = phaseNames(state).length > 0;
-    if (!intent && !approach && !area && !classification && livingSpecsCount === 0 && !hasTiming) return null;
+    const hasIntentContent = Boolean(intent || approach || area || classification || livingSpecsCount > 0);
+    if (!hasIntentContent && !hasTiming) return null;
 
     return (
-        <section class="dossier-intent" aria-label="Intent">
-            <p class="dossier-kicker">Intent</p>
+        <section class="dossier-intent" aria-label={hasIntentContent ? 'Intent' : 'Run overview'}>
+            {hasIntentContent && <p class="dossier-kicker">Intent</p>}
             {intent && <p class="dossier-intent__statement">{intent}</p>}
             <OverviewTiming state={state} />
             {(approach || area || classification || livingSpecsCount > 0) && (

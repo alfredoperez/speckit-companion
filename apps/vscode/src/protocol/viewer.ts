@@ -177,6 +177,9 @@ export interface SpecViewerState {
      */
     landing?: 'overview' | 'document';
 
+    /** Label of the document that was deleted while on screen, until the reader navigates. */
+    removedDocument?: string;
+
     /** List of all available documents in this spec */
     availableDocuments: SpecDocument[];
 
@@ -346,6 +349,8 @@ export interface NavState {
      * a whole, which is the case the viewer's own landing rule is for.
      */
     landing?: 'overview' | 'document';
+    /** Label of the document that was deleted while it was showing, so the fallback is not silent. */
+    removedDocument?: string | null;
     /** Which banner the Activity panel renders (viewer only): install, update, or none. */
     installPrompt?: InstallPrompt | null;
     /** Run-recovery affordance for a quiet in-flight run (issue #418). */

@@ -210,6 +210,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       const instance = deps.getInstance(dir);
       if (!instance) return;
       instance.state.landing = 'overview';
+      instance.state.removedDocument = undefined;
       deps.refreshPanelTitle(dir);
     },
     approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
@@ -286,6 +287,7 @@ async function handleSwitchDocument(
   // Recorded here, not echoed back by the webview: the next nav state resets
   // the webview's own choice, so an unrecorded pick snaps back to the Overview.
   instance.state.landing = "document";
+  instance.state.removedDocument = undefined;
 
   // Debounce rapid clicks
   if (instance.debounceTimer) {
@@ -357,7 +359,10 @@ async function handleStepperClick(
   if (phase === "done") return; // Done is not clickable
 
   const instance = deps.getInstance(specDirectory);
-  if (instance) instance.state.landing = "document";
+  if (instance) {
+    instance.state.landing = "document";
+    instance.state.removedDocument = undefined;
+  }
 
   // Message-based update, like the artifact chips: a full HTML regeneration
   // would reload the webview and wipe its in-memory shell state (the

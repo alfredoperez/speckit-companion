@@ -8,7 +8,7 @@ import { watch } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, detectCommandSet, specifyChoices } from './prompts.mjs';
+import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, specifyChoices } from './prompts.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -120,7 +120,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
     async function run(query, command) {
         const spec = requireSpec(query);
-        const set = commandSet();
+        const set = commandSetFor(state.root, spec.workflow);
         const prompt = command === 'ask'
             ? buildAskPrompt(spec)
             : buildPrompt(
@@ -164,7 +164,8 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
         if (req.method === 'GET' && pathname === '/api/spec') {
             const spec = requireSpec(url.searchParams.get('id'));
-            return sendJson(res, 200, readSpecDetail(state.root, spec.id));
+            const set = commandSetFor(state.root, spec.workflow);
+            return sendJson(res, 200, { ...readSpecDetail(state.root, spec.id), commandSet: set, commands: availableCommands(set) });
         }
 
         if (req.method === 'GET' && pathname === '/api/events') {

@@ -68,6 +68,18 @@ describe('IntentSection', () => {
         expect(host.textContent).toContain('Viewer Ui');
     });
 
+    it('shows the run overview without an empty Intent heading when only timing exists', () => {
+        const host = document.createElement('div');
+        render(h(IntentSection, {
+            state: base({
+                stepHistory: { specify: { startedAt: '2026-07-21T10:00:00Z', completedAt: '2026-07-21T10:04:00Z', durationTrusted: false } },
+                timing: { measuredPhases: 0, expectedPhases: 4, complete: false },
+            }),
+        }), host);
+        expect(host.querySelector('.dossier-timing')).not.toBeNull();
+        expect(host.textContent).not.toContain('Intent');
+    });
+
     it('omits the whole region when no intent context exists', () => {
         const host = document.createElement('div');
         render(h(IntentSection, { state: base({}) }), host);
