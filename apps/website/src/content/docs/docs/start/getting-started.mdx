@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Create your first spec, run it through the workflow, and read the record it leaves behind, picking up once both halves of SpecKit Companion are installed.
+description: 'Create one spec, run it through the workflow and read the record it leaves, in five steps, with a short path for small changes.'
 tableOfContents: false
 sidebar:
   label: Getting started
@@ -10,98 +10,155 @@ sidebar:
 import GuidedStep from '../../../../components/docs/GuidedStep.astro';
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
 
-By the end of this page you'll have one spec created and run through its workflow, and a run record you can read in the Overview.
+You will make one spec, watch it move through the workflow and read the record it leaves. Do [Install](/docs/install) first.
 
-Both halves of SpecKit Companion install from [Install](/docs/install) — the VS Code extension and the Companion Spec Kit extension. This page picks up once both are in place.
+## Pick your path
+
+| | Short path | Full path |
+| --- | --- | --- |
+| **Use it for** | A small change: up to 5 files and 10 tasks | A feature that touches more |
+| **You run** | `specify`, then `implement` | `specify`, `plan`, `tasks`, then `implement` |
+| **Or hands-off** | `/speckit.companion.auto` | `/speckit.companion.auto` |
+
+The short path is built in to the SpecKit Companion workflow, and there is no setting to turn on. After it drafts the spec, `/speckit.companion.specify` sizes the change. A small one gets its plan and task list in that same pass, and the next step is implement. Anything bigger writes only the spec, and you continue with plan and tasks.
+
+The steps below work for either path.
 
 <GuidedStep n={1} title="Initialize the workspace">
 
-Open the SpecKit icon in the activity bar. The Specs view reads your workspace and welcomes you accordingly: once it detects the `specify` CLI in a project that hasn't run `specify init` yet, it offers **Initialize Workspace** to scaffold `.specify/` on the spot.
+Open the SpecKit icon in the activity bar. In a project that has not run `specify init`, the Specs view offers **Initialize Workspace**.
 
 <div slot="action">
-  <p>Click <strong>Initialize Workspace</strong> in the Specs view.</p>
+  <p>Click <strong>Initialize Workspace</strong>.</p>
 </div>
 
 <div slot="result">
 
-The welcome content moves forward with you: a **Configure Constitution** prompt and a **Create New Spec** button replace the initialize step. Once the constitution's configured, the same panel swaps to **Create your first spec** paired with **Open a live sample**, if you'd rather look at a finished run before creating your own. The Specs view is guiding you toward your first spec, not sitting empty.
-
-</div>
-
-</GuidedStep>
-
-<GuidedStep n={2} title="Create your first spec">
-
-Click the SpecKit icon, then the `+` button in the Specs view, or run **SpecKit: New Spec** from the command palette. The Create New Spec panel lists every workflow with its description. Describe what you want to build and let it run.
-
-<div slot="result">
-
-A new spec under **Active**, named from what you typed, with the workflow recorded on it. Expand it and each document carries its own state.
+A **Configure Constitution** prompt and a **Create New Spec** button. Once the constitution is set, you also get **Open a live sample**, a finished run you can look at first.
 
 </div>
 
 <MediaSlot
   slot="media"
   feature="specs-sidebar"
-  alt="The Specs sidebar: Active and Completed groups each with a count, one spec expanded to show its Specification, Plan and Tasks documents with their own state marks, and the Living Specs and Steering views below."
-  caption="The shape the sidebar keeps from the first spec on: lifecycle groups on the outside, per-document state on the inside, all read from the run record rather than a separate index."
+  caption="The Specs view is where every step starts, and where each spec shows how far it got."
 />
 
 </GuidedStep>
 
-<GuidedStep n={3} title="Run the workflow">
+<GuidedStep n={2} title="Create your first spec">
 
-Open the spec. The viewer's footer carries one forward button, labeled with the next step's own name, with a context line above it reading `Next: Plan`. Use that button.
-
-It records the current step complete, records the next one starting, refreshes the viewer, and hands that step's command to the AI provider you picked.
-
-There often isn't a forward button, and that's a real state rather than a fault: [the spec viewer anatomy](/docs/anatomy/anatomy-of-the-spec-viewer) lists the five situations where forward motion disappears.
-
-The Create New Spec panel also shows an **Auto** button for workflows that support it, which is the Companion workflow. It dispatches `/speckit.companion.auto` and runs specify through mark-complete without pauses.
+Click `+` in the Specs view, or run **SpecKit: New Spec** from the command palette. Pick a workflow, describe what you want to build and submit. Not sure which workflow? See [Pick a pipeline](/docs/discussions/pick-a-pipeline).
 
 <div slot="result">
 
-While a step runs, the forward buttons drop and the footer reads "Step running, actions unlock when it settles". During implement the step tab shows a live percentage counted from checked boxes in `tasks.md`. When every task is checked, the extension's own file watcher closes the step, without waiting on a hook or a terminal. Closing the spec itself is a separate action: Mark Completed in the footer, or the Companion workflow's own mark-complete step.
+A new spec under **Active**, with its workflow recorded. Expand it to see each document and its state.
 
 </div>
 
 <MediaSlot
   slot="media"
-  feature="run-in-flight"
-  caption="A spec after its first step: Specification carries a check, Plan and Tasks stay hollow because their documents don't exist yet, and the header reports how many phases have timing so far."
+  feature="live-create-spec"
+  caption="Pick a workflow, describe the feature, then Create Spec. Auto runs every step without pausing."
+/>
+
+
+</GuidedStep>
+
+<GuidedStep n={3} title="Open it in the viewer">
+
+Click the spec name.
+
+<div slot="result">
+
+Your `spec.md` as a readable page, with the workflow's steps in a rail beside it. Hover a line to comment on it.
+
+</div>
+
+<MediaSlot
+  slot="media"
+  feature="spec-viewer"
+  caption="The spec as a page, not a file."
 />
 
 </GuidedStep>
 
-<GuidedStep n={4} title="Read what came out">
+<GuidedStep n={4} title="Run the next step">
 
-Switch to **Overview**, the second view inside the spec viewer. It exists only for a spec that recorded something.
+Click the forward button in the viewer footer. It is named for the next step, with `Next: Plan` above it. In the Companion workflow you can instead click **Auto** in the Create New Spec panel to run every step without pausing.
 
 <div slot="result">
 
-The run's intent, its approach, the area it worked in, and how the change was sized. Under that, the expectations (the constraints the run had to honor and the non-goals it declared), the decisions with what each one rejected, and a coverage table that maps each requirement to the tasks that delivered it and the tests that exercise it, counted as "N/M traced".
+The current step closes, the next one starts and its command goes to your AI provider. While it runs, the footer says "Step running, actions unlock when it settles". During implement, the step tab shows a live percentage from the checked boxes in `tasks.md`.
 
-A Run overview strip sits inside the Intent region, one entry per phase. Timing is reported only where both ends of a phase were recorded. A phase that can't be measured cleanly is listed with no number, and the strip's head reads "Timing coverage: N of M phases". When no phase was measured at all it reads "Timing not recorded".
+</div>
+
+<MediaSlot
+  slot="media"
+  feature="live-footer-next-step"
+  caption="The footer names the next step. Regenerate redoes the current one."
+/>
+
+<MediaSlot
+  slot="media"
+  feature="step-rail"
+  caption="The rail shows where the spec is, and the footer offers the one next move."
+/>
+
+<MediaSlot
+  slot="media"
+  feature="run-in-flight"
+  caption="After the first step, Specification is checked and Plan and Tasks stay hollow until their documents exist."
+/>
+
+</GuidedStep>
+
+<GuidedStep n={5} title="Read what came out">
+
+Click **Overview**, the first tab in the rail. It appears once the spec has recorded something.
+
+<div slot="result">
+
+The intent, approach and size of the change. Then the expectations, the decisions with what each one rejected, and a table that maps requirements to tasks and tests.
 
 </div>
 
 <MediaSlot
   slot="media"
   feature="overview"
-  alt="The Overview read top to bottom: the run's intent, a per-phase timing strip, the approach, working area and size, the expectations fence, each verified check beside the command it ran, the decisions with what they rejected, and the requirement-to-test coverage table."
-  caption="Every region on this page is read from the run record next to the spec. Commit that file and the page travels with the branch."
+  caption="Every region is read from the run record next to the spec. Commit that file and the page travels with the branch."
+/>
+
+<MediaSlot
+  slot="media"
+  feature="coverage"
+  caption="Coverage ties each requirement to the tasks that delivered it and the tests that exercise it."
 />
 
 </GuidedStep>
 
-## What the extension isn't doing
+## Commands at a glance
 
-It hands your assistant the command text, then reads whatever lands on disk. It never reads the chat back, and it gets no completion callback.
+Type these in your assistant's chat or terminal. Some assistants spell them with dashes, such as `/speckit-companion-plan`. They come from the Companion Spec Kit extension.
 
-The Overview's verifications are a recorded report: the check, the command the assistant says it ran, and the outcome it reported. Nothing re-executes. One thing gets re-checked, and only for existence: a coverage test reference that looks like a file path is checked to see whether that file is there.
+| Command | Use it when |
+| --- | --- |
+| `/speckit.companion.specify` | You have an idea. It writes the spec and sizes the change. |
+| `/speckit.companion.plan` | The spec is ready and you want the design. |
+| `/speckit.companion.tasks` | The plan is ready and you want a task list. |
+| `/speckit.companion.implement` | The tasks are ready and you want them built. |
+| `/speckit.companion.auto` | You want every step run for you, with no pauses. |
+| `/speckit.companion.resume` | A run stopped and you want to continue where it left off. |
+| `/speckit.companion.status` | You want to know the current step and what to do next. |
+| `/speckit.companion.doctor` | A run looks wrong and you want a health report. |
+| `/speckit.companion.mark-complete` | The work is finished and you want to close the spec. |
 
-Everything is plain files in your repo, both committable, with no extension-owned database. Install only the VS Code extension and the viewer, review comments and Specs sidebar still work. Living Specs, the Resume button and the Companion workflow are what the second half adds.
+Living specs have seven more, all named `/speckit.companion.living-<verb>`. They are covered in [Living specs](/docs/discussions/living-specs).
+
+## Good to know
+
+SpecKit Companion hands your assistant the command text, then reads what lands on disk. It never reads the chat. The Overview's checks are a report of what the assistant said it ran, and nothing runs them again. Everything is plain files in your repo.
 
 ## Next
 
-Two directions from here. [Anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) names every part of the surface you used above. [Pick a pipeline](/docs/discussions/pick-a-pipeline) is the one decision worth making before your second spec.
+[Anatomy of the spec viewer](/docs/anatomy/anatomy-of-the-spec-viewer) names every part of what you just used.

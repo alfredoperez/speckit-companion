@@ -20,19 +20,11 @@ export const COMPANION_COMMAND = 'specify extension add companion --from https:/
 
 export const SOURCE_CLI = 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
 
-There are two installs and they go through different channels. The VS Code extension comes from the Marketplace. The Companion Spec Kit extension comes from the `specify` CLI, which is where the prerequisite below bites.
-
-## Before you start
-
-| You need | Why |
-| --- | --- |
-| VS Code, or an editor that reads the Open VSX registry | The viewer, the sidebar and the review comments are a VS Code extension. |
-| A folder open as a workspace | Specs are read from the folder you have open. With no folder, the sidebar shows an empty state and an **Open Folder** action. |
-| A `specify` CLI that has the `extension` subsystem, at Spec Kit 0.9.5 or newer | Step 2 covers this. It is the one prerequisite people skip, and skipping it makes step 3 fail with an error that doesn't say why. |
+Install SpecKit Companion in four steps: the VS Code extension from the Marketplace, then the Companion Spec Kit extension from the `specify` command. Open a folder as your workspace first. Step 2 needs Spec Kit 0.9.5 or newer.
 
 <GuidedStep n={1} title="Install the VS Code extension">
 
-This is the half you look at: the spec viewer, inline review comments, the Specs sidebar and the Steering view. It works on its own.
+This is the half you look at. It works on its own.
 
 <div slot="action">
   <Button
@@ -52,25 +44,21 @@ This is the half you look at: the spec viewer, inline review comments, the Specs
 
 <div slot="result">
 
-A SpecKit icon in the activity bar. Click it and you get two views, **Specs** and **Steering**. Two is the correct number here, not a broken install: Living Specs arrives with the second half, and Settings & Feedback is hidden until you turn it on.
-
-It's on Open VSX too, if that's where your editor looks.
+A SpecKit icon in the activity bar with two views, **Specs** and **Steering**. Two is correct: Living Specs arrives with the second half. It is on Open VSX too.
 
 </div>
 
 <MediaSlot
   slot="media"
-  feature="banner-install-vscode"
-  caption="The viewer half is free and standalone. Everything on this step works before you touch a terminal."
+  feature="specs-sidebar"
+  caption="What the activity bar gives you right after step 1."
 />
 
 </GuidedStep>
 
 <GuidedStep n={2} title="Get an extension-capable Spec Kit CLI">
 
-The `specify extension` subsystem ships in the GitHub-source build of Spec Kit. The stock PyPI `specify-cli` package exposes `init`, `check` and `version` only, so step 3 fails on it with `No such command 'extension'`.
-
-Installing from source is a global change to your `uv` tools, not a project-local one.
+The stock PyPI `specify-cli` has no `extension` command, so step 3 would fail. Install the GitHub build instead. This changes your global `uv` tools.
 
 <div slot="action">
   <CodeLine command={SOURCE_CLI} />
@@ -78,17 +66,21 @@ Installing from source is a global change to your `uv` tools, not a project-loca
 
 <div slot="result">
 
-`specify extension --help` lists `add` and `list`. If it doesn't, step 3 has nothing to run and you're still on the stock package.
+`specify extension --help` lists `add` and `list`.
 
 </div>
+
+<MediaSlot
+  slot="media"
+  feature="banner-install-vscode"
+  caption="Steps 1 and 2 set up the viewer half. Step 3 adds the run record."
+/>
 
 </GuidedStep>
 
 <GuidedStep n={3} title="Add the Companion Spec Kit extension">
 
-This is the half that rides your runs. It writes the run record, a `.spec-context.json` file that logs what each step did, next to each spec, and the VS Code extension reads that file.
-
-Run it from your project root. Copy the command whole: the short catalog form isn't supported, because the extension isn't listed in Spec Kit's catalog.
+This half writes the run record, a `.spec-context.json` file next to each spec. Run the command from your project root and copy it whole. The short catalog form does not work.
 
 <div slot="action">
   <CodeLine
@@ -100,21 +92,19 @@ Run it from your project root. Copy the command whole: the short catalog form is
 
 <div slot="result">
 
-A one-time **untrusted source** prompt, because the archive comes from a raw URL rather than the catalog. Accept it and the install proceeds. You'll see the prompt once, not on every update.
+A one-time **untrusted source** prompt, because the archive comes from a URL and not the catalog. Accept it.
 
 </div>
 
 <MediaSlot
   slot="media"
   feature="banner-install-engine"
-  caption="This is the half nothing else can substitute for. Without it a spec still renders, but nothing records what the run did."
+  caption="Without this step a spec still renders, but nothing records what the run did."
 />
 
 </GuidedStep>
 
-<GuidedStep n={4} title="Check that it took" resultLabel="All four should be true">
-
-Two commands and two things on screen.
+<GuidedStep n={4} title="Check that it took" resultLabel="All three should be true">
 
 <div slot="action">
   <CodeLine command="specify extension list" />
@@ -122,36 +112,42 @@ Two commands and two things on screen.
 
 <div slot="result">
 
-`companion` is in the list, at the version you installed.
+`companion` is in the list.
 
-Your assistant offers the `/speckit.companion.*` commands alongside the stock `/speckit.*` ones. Both families stay installed; adding one never removes the other.
+Your assistant offers `/speckit.companion.*` commands next to the stock `/speckit.*` ones.
 
 A **Living Specs** view has joined the sidebar.
 
-The Specs view's install dot is gone, and the Companion workflow in **SpecKit: New Spec** no longer carries the **Install to enable** label. Both clear the moment the extension is present, with no reload.
-
 </div>
+
+<MediaSlot
+  slot="media"
+  feature="live-install-extension-list"
+  caption="The list shows SpecKit Companion enabled, with its commands and hooks."
+/>
+
+<MediaSlot
+  slot="media"
+  feature="living-specs"
+  caption="The Living Specs view is the visible sign the second half is in."
+/>
 
 </GuidedStep>
 
-## Updating
+## Update later
 
-Re-run the exact same command from step 3. The `companion-latest/companion.zip` URL is a rolling asset that always serves the newest build, and `--force` refreshes an existing install in place. There's no version string to edit and no new URL to find.
+Re-run the step 3 command. The URL always serves the newest build, and `--force` refreshes in place. To silence the install prompts, set `speckit.companion.installPrompt` to `false`.
 
-Inside the editor there are two paths to the same result. The Specs view's **More Actions** menu has an **Install Companion Extension** entry, and its **Upgrade…** submenu has **Update spec-kit Extension**. Either runs `specify extension add companion --from <URL>` in a terminal for you, adding `--force` when the extension is already there — `extension add` refuses to overwrite an existing install without it.
+## If something did not work
 
-The extension also nudges you toward this install on its own: a toast on activation when the project has a `.specify` folder but no Companion, a pinned row at the top of the Specs view, and a one-click prompt when you pick the Companion workflow without it. Set `speckit.companion.installPrompt` to `false` to turn all of them off, or choose **Don't show again** on the toast.
+**`No such command 'extension'`.** You have the stock PyPI build. Redo step 2, then step 3.
 
-## When something didn't take
+**Stuck on an old build.** Run `specify extension remove companion`, then add it again.
 
-**`No such command 'extension'`.** The `specify` on your path is the stock PyPI build, which has no extension subsystem at all. Go back to step 2 and reinstall from source, then re-run step 3.
+**No `/speckit.companion.*` commands.** Run `specify extension list` from the repo root, not your home directory. Then reload the window so your provider re-reads its commands.
 
-**It says `companion` is already installed, or you're stuck on an old build.** The command in step 3 already carries `--force`, which is what refreshes an existing install. If it still won't move, run `specify extension remove companion` and add it again.
-
-**The `/speckit.companion.*` commands aren't showing up.** Confirm the install landed in this project: run `specify extension list` from the repo root, not from your home directory. Then reload the window, or restart the CLI, so your provider re-reads its command directory.
-
-**Only two views in the sidebar.** That's the expected shape before step 3, and Settings & Feedback stays hidden until you set `speckit.views.settings.visible`. If Living Specs is still missing after a successful step 3, the install went somewhere other than this workspace.
+**No Living Specs view after step 3.** The install went somewhere other than this workspace.
 
 ## Next
 
-Both halves in, nothing created yet. [Getting started](/docs/start/getting-started) takes one spec from an empty folder through to a run record you can read.
+[Getting started](/docs/start/getting-started) takes one spec from an empty folder to a run record you can read.

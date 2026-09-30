@@ -36,14 +36,14 @@ describe('docs consistency', () => {
     it('package.json enum, the website provider matrix, and architecture.md prose agree', () => {
       const count = enumValues.length;
 
-      // The provider matrix moved from README.md to the site's provider reference in the
-      // README rewrite, then to the website's provider reference when the repo
-      // docs merged into the site.
+      // The website's provider reference lists every provider once, with its `aiProvider` value in
+      // backticks, in the table under "How each one is reached". Those values must be exactly the enum.
       const providersDoc = read('apps/website/src/content/docs/docs/reference/providers.mdx');
-      const matrixHeader = providersDoc.match(/^\| Feature \|([^\n]+)\|$/m);
-      expect(matrixHeader).not.toBeNull();
-      const matrixColumns = matrixHeader![1].split('|').map((s) => s.trim()).filter(Boolean);
-      expect(matrixColumns).toHaveLength(count);
+      const reached = providersDoc.match(/^## How each one is reached\n+((?:\|[^\n]*\n)+)/m);
+      expect(reached).not.toBeNull();
+      const documented = [...reached![1].matchAll(/\(`([a-z-]+)`\)\s*\|/g)].map((m) => m[1]);
+      expect([...documented].sort()).toEqual([...enumValues].sort());
+      expect(documented).toHaveLength(count);
 
       const arch = read('docs/architecture.md');
       // The architecture doc must claim a provider count that matches the enum.
