@@ -38,6 +38,8 @@ interface Props {
     moveTargets?: MoveTarget[];
     /** Put it in another phase. */
     onMoveToPhase?: (phase: string) => void;
+    /** What the last move's write said, success or refusal, for a screen reader. */
+    announce?: string;
     /** Render with Move to phase… already open, for a story or a capture. */
     moveMenuOpen?: boolean;
     /** Hand the whole step to one document. Offered on a step's frame only. */
@@ -153,8 +155,6 @@ export function Inspector(props: Props) {
     // the copy is written when you save, so the thing you wanted to do and the
     // thing you had to do first are the same action.
     const [draft, setDraft] = useState<string | null>(null);
-    // A move rearranges the board, which a screen reader is not looking at.
-    const [moved, setMoved] = useState('');
     const editing = draft !== null;
 
     const frame = node.id === FRAME;
@@ -185,16 +185,7 @@ export function Inspector(props: Props) {
         });
     }
 
-    const move = (direction: 'up' | 'down') => {
-        props.onMove(direction);
-        setMoved(`${node.name} moved ${direction} in ${step}.`);
-    };
-
     const targets = props.moveTargets ?? [];
-    const moveToPhase = (phase: string) => {
-        props.onMoveToPhase?.(phase);
-        setMoved(`${node.name} moved to ${phase} in ${step}.`);
-    };
 
     const pick = (id: string) => {
         if (id === 'remove') {
@@ -270,9 +261,9 @@ export function Inspector(props: Props) {
                     <>
                         free to move
                         <button type="button" class="pb-order-move"
-                            onClick={() => move('up')}>Move up</button>
+                            onClick={() => props.onMove('up')}>Move up</button>
                         <button type="button" class="pb-order-move"
-                            onClick={() => move('down')}>Move down</button>
+                            onClick={() => props.onMove('down')}>Move down</button>
                         {props.onMoveToPhase && targets.length > 0 && (
                             <Menu
                                 class="pb-order-move"
@@ -287,7 +278,7 @@ export function Inspector(props: Props) {
                                     note: target.joins === 'end'
                                         ? 'Joins the end of it' : 'Joins the start of it',
                                 }))}
-                                onPick={moveToPhase}
+                                onPick={phase => props.onMoveToPhase?.(phase)}
                                 defaultOpen={props.moveMenuOpen}
                             />
                         )}
@@ -356,7 +347,8 @@ export function Inspector(props: Props) {
             </div>
 
             <footer class="pb-inspector-actions">
-                <p class="pb-live" role="status" aria-live="polite">{moved}</p>
+                {/* A move rearranges a board the screen reader is not on, so its outcome is said here. */}
+                <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
                 {editing ? (
                     <>
                         <button class="pb-inspector-action pb-inspector-action--yours"

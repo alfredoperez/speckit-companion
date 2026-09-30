@@ -351,11 +351,16 @@ describe('everything else a node can do, in one menu', () => {
 
     // Dragging is pointer-only, so the row that says a node is free to move is
     // the whole keyboard and touch story for moving it.
-    it('moves a node from the row that claims it can move, and says so aloud', async () => {
+    it('moves a node from the row that claims it can move, and says aloud what the write said', async () => {
         const moves: string[] = [];
         const host = mount(
             <Inspector node={node({ name: 'Draft the spec' })} step="specify" body="x"
                 parts={[]} {...actions} onMove={(d: 'up' | 'down') => moves.push(d)} />);
+        const said = mount(
+            <Inspector node={node({ name: 'Draft the spec' })} step="specify" body="x"
+                parts={[]} {...actions} announce="draft-spec moved in specify" />);
+        expect(said.querySelector('[aria-live="polite"]')!.textContent)
+            .toBe('draft-spec moved in specify');
         const order = Array.from(host.querySelectorAll('.pb-facts dd'))
             .find(el => el.textContent?.startsWith('free to move'))!;
         const buttons = Array.from(order.querySelectorAll('button'));
@@ -366,7 +371,7 @@ describe('everything else a node can do, in one menu', () => {
         await flush();
         expect(moves).toEqual(['up']);
         const live = host.querySelector('[aria-live="polite"]')!;
-        expect(live.textContent).toBe('Draft the spec moved up in specify.');
+        expect(live.textContent).toBe('');
 
         buttons[1].click();
         await flush();

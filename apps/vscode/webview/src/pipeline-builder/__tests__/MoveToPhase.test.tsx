@@ -102,7 +102,7 @@ describe('the inspector offers Move to phase…', () => {
         host.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
         .find(el => el.textContent?.startsWith('Move to phase'));
 
-    it('lists the other phases and reports the one picked', async () => {
+    it('lists the other phases and reports the one picked, announcing nothing yet', async () => {
         const picked: string[] = [];
         const host = mount(
             <Inspector node={node({ id: 'c', name: 'Write it' })} step="specify" body="x"
@@ -117,8 +117,7 @@ describe('the inspector offers Move to phase…', () => {
         rows[1].click();
         await flush();
         expect(picked).toEqual(['check']);
-        expect(host.querySelector('.pb-live')?.textContent)
-            .toBe('Write it moved to check in specify.');
+        expect(host.querySelector('.pb-live')?.textContent).toBe('');
     });
 
     it('is absent for a held node, which has no targets to offer', () => {
@@ -227,7 +226,7 @@ describe('the Move to phase… list in a narrow panel', () => {
         expect(document.activeElement).toBe(button);
     });
 
-    it('reports an allowed move to the phase picked', async () => {
+    it('reports an allowed move to the phase picked, announcing nothing until the write answers', async () => {
         const picked: string[] = [];
         const host = inspect(phase => picked.push(phase));
         trigger(host).click();
@@ -235,8 +234,7 @@ describe('the Move to phase… list in a narrow panel', () => {
         Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))[2].click();
         await flush();
         expect(picked).toEqual(['classify']);
-        expect(host.querySelector('.pb-live')?.textContent)
-            .toBe('Create the feature branch moved to classify in specify.');
+        expect(host.querySelector('.pb-live')?.textContent).toBe('');
         expect(movedToPhase(wrapUp, 'branch', 'classify')!.phases[2])
             .toEqual({ name: 'classify', nodes: ['classify-size', 'branch'] });
     });
