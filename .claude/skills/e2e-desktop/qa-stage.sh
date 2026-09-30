@@ -82,13 +82,18 @@ code --install-extension "$RESULTS/speckit-companion-$NEXT.vsix" --force > "$RES
 [ -d "$HOME/.vscode/extensions/alfredoperez.speckit-companion-$NEXT" ] || fail "VS Code did not unpack $NEXT"
 
 say "windows"
-code --new-window "$SB"; sleep 5
-code --new-window "$STOCK"; sleep 5
-code --new-window "$RESULTS/two-roots.code-workspace"; sleep 8
+code --profile Default --new-window "$SB"; sleep 5
+code --profile Default --new-window "$STOCK"; sleep 5
+code --profile Default --new-window "$RESULTS/two-roots.code-workspace"; sleep 8
 TITLES=$("$HERE/.bin/windows" | awk -F'\t' '$2=="Code"{print $3}')
 for want in "qa-$NAME" "qa-$NAME-stock" "two-roots"; do
   printf '%s\n' "$TITLES" | grep -q -- "$want" || fail "no VS Code window titled with $want"
 done
+PROFILES=$(python3 -c "import json,os;print('\\n'.join(p['name'] for p in json.load(open(os.path.expanduser('~/Library/Application Support/Code/User/globalStorage/storage.json'))).get('userDataProfiles',[])))" 2>/dev/null || true)
+while IFS= read -r prof; do
+  [ -z "$prof" ] && continue
+  printf '%s\n' "$TITLES" | grep -- "qa-$NAME\|two-roots" | grep -q -- "— $prof\$" && fail "a QA window opened in the '$prof' profile, which does not have the build; close it and rerun"
+done <<< "$PROFILES"
 
 say "recorder"
 nohup "$HERE/record-windows.sh" "$RESULTS/shots" "qa-$NAME" > "$RESULTS/recorder.log" 2>&1 &

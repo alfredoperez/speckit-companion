@@ -11,7 +11,7 @@ while [ ! -e "$OUT/STOP" ]; do
   if [ -n "$line" ]; then
     id=$(printf '%s' "$line" | cut -f1)
     slug=$(printf '%s' "$line" | cut -f3 | tr -c 'A-Za-z0-9._-' '_' | cut -c1-50)
-    tmp="$OUT/.frame.png"
+    tmp="$OUT/frame-in-progress.png"
     if screencapture -x -o -l "$id" "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
       sum=$(md5 -q "$tmp")
       if [ "$sum" != "$last" ]; then mv "$tmp" "$OUT/$(date +%H%M%S)-$slug.png"; last="$sum"; else rm -f "$tmp"; fi
