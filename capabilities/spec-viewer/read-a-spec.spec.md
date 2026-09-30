@@ -96,11 +96,15 @@ An open viewer SHALL re-render when the document it shows changes on disk, and S
 ### A document older than the one above it is flagged as stale
 <!-- touches: apps/vscode/src/features/spec-viewer/staleness.ts, apps/vscode/webview/src/spec-viewer/components/StaleBanner.tsx -->
 
-A workflow document SHALL show a stale banner, and a mark on its rail entry, when any document earlier in the workflow was modified after it. The banner names the newer document and offers Regenerate. It is a warning only: the document stays readable and every other action stays available. A completed or archived spec SHALL show no staleness.
+A workflow document SHALL show a stale banner, and a mark on its rail entry, when any document earlier in the workflow was modified more than a second after it, so files written together by a checkout or copy are never flagged. The banner names the newer document and offers Regenerate. It is a warning only: the document stays readable and every other action stays available. A completed or archived spec SHALL show no staleness.
 
 #### Scenario: the spec is edited after planning
 - **WHEN** spec.md is saved after plan.md was last written
 - **THEN** the Plan shows a banner saying it was generated before the current spec, with a Regenerate action
+
+#### Scenario: files written together
+- **WHEN** a fresh checkout or copy writes spec.md, plan.md and tasks.md within the same second
+- **THEN** no banner and no stale mark appear
 
 #### Scenario: a finished spec
 - **WHEN** the same file times occur on a completed spec
