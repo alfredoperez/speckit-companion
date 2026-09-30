@@ -66,7 +66,7 @@ A coverage row SHALL land in one of three states: it has tests, it has none, or 
 ### A phase claims a duration only when both ends were recorded
 <!-- touches: apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx, apps/vscode/src/features/specs/stepHistoryDerivation.ts -->
 
-The run overview SHALL list one entry per phase and show an elapsed time only for a phase whose start and finish were both recorded and trusted, otherwise reporting how many phases were measured or that timing was not recorded. A folded phase SHALL name the phase it folded into, and a running phase is marked in flight with no duration. A phase ends at its own first finish, so waiting before the next phase belongs to no phase.
+The run overview SHALL list one entry per phase and show an elapsed time only for a phase whose start and finish were both recorded and trusted, otherwise reporting how many phases were measured or that timing was not recorded. A folded phase SHALL name the phase it folded into, and a running phase is marked in flight with no duration. A phase ends at its own first finish, so waiting before the next phase counts toward no phase and not toward the total.
 
 #### Scenario: a half-measured run
 - **WHEN** two of four phases have both ends recorded

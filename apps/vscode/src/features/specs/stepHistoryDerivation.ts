@@ -330,25 +330,17 @@ export function deriveStepHistory(
         let completedAt: string | null = null;
         // The entry whose clock closed the span — drives `durationTrusted`.
         let closeEntry: HistoryEntry | null = null;
-        // A "completion" entry is one whose `from.step` matches its own
-        // `step` — that's how setStepCompleted writes the close-boundary.
-        // If the most recent entry for this step is a completion, the step
-        // is done even if currentStep is still pointed at it.
-        // The last STEP-LEVEL transition (substep null, no `task`), skipping per-task
-        // implement finishes the backstop can append AFTER the step-level complete —
-        // otherwise a trailing task finish hides the real completion and the step
-        // renders in-flight forever.
-        const lastStepLevel = [...g.transitions].reverse()
-            .find(isStepLevelEntry);
-        const lastOwnIsCompletion = lastStepLevel?.kind === 'complete';
-        // A step ends at its latest attempt's first complete; idle time before the next step is billed to none.
+        // A step ends at its latest attempt's first complete (a trusted one first), so idle time before the next step is billed to none.
+        const rawStepTransitions = transitions.filter(t => t.step === g.step);
         let lastStartIdx = -1;
-        g.transitions.forEach((t, idx) => {
+        rawStepTransitions.forEach((t, idx) => {
             if (isStepLevelEntry(t) && t.kind === 'start') lastStartIdx = idx;
         });
-        const ownCompletion = lastOwnIsCompletion
-            ? g.transitions.find((t, idx) => idx > lastStartIdx && isStepLevelEntry(t) && t.kind === 'complete') ?? null
-            : null;
+        const attemptStartRank = lastStartIdx >= 0 ? boundaryWriterRank(rawStepTransitions[lastStartIdx].by) : 0;
+        const ownCompletes = rawStepTransitions.filter((t, idx) =>
+            idx > lastStartIdx && isStepLevelEntry(t) && t.kind === 'complete');
+        const ownCompletion = ownCompletes.find(t =>
+            boundaryWriterRank(t.by) > 0 && boundaryWriterRank(t.by) >= attemptStartRank) ?? ownCompletes[0] ?? null;
 
         if (g.nextStepFirstIdx !== -1) {
             // Another step's transition follows this group — normally that is
@@ -405,7 +397,6 @@ export function deriveStepHistory(
         // Trust checks use the raw append-only log, not the UI de-duplicated
         // sequence: a repeated start is precisely one of the anomalies that
         // must remain visible to the timing validator.
-        const rawStepTransitions = transitions.filter(t => t.step === g.step);
         const explicitStarts = rawStepTransitions.filter(t =>
             isStepLevelEntry(t) && t.kind === 'start' && boundaryWriterRank(t.by) > 0
         );
@@ -512,7 +503,7 @@ export function deriveStepHistory(
     return out;
 }
 
-/** Derive timing coverage and, only for a complete sequence, wall-clock elapsed time. */
+/** Derive timing coverage and, only for a complete sequence, the summed phase time (waits between phases excluded). */
 export function deriveTimingSummary(
     stepHistory: Record<string, StepHistoryEntry>,
     expectedPhases: readonly string[] = DEFAULT_PIPELINE_STEPS,
@@ -544,7 +535,7 @@ export function deriveTimingSummary(
 
     const startedAt = entries[0].startedAt;
     const endedAt = entries[entries.length - 1].completedAt as string;
-    const elapsedMs = Date.parse(endedAt) - Date.parse(startedAt);
+    const elapsedMs = spans.reduce((sum, span) => sum + (span.end - span.start), 0);
     if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return { ...base, complete: false };
     return { ...base, startedAt, endedAt, elapsedMs };
 }

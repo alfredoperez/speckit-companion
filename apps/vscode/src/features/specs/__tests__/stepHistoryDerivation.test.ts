@@ -556,6 +556,17 @@ describe('deriveStepHistory', () => {
             expect(sh.plan.durationTrusted).toBe(false);
         });
 
+        it('closes at a trusted finish that follows an assistant finish', () => {
+            const sh = deriveStepHistory([
+                tx({ step: 'plan', kind: 'start', by: 'extension', at: '2026-07-01T10:00:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'ai', at: '2026-07-01T10:02:00Z' }),
+                tx({ step: 'plan', kind: 'complete', by: 'extension', at: '2026-07-01T10:03:00Z' }),
+                tx({ step: 'tasks', kind: 'start', by: 'extension', at: '2026-07-01T11:00:00Z' }),
+            ], 'tasks', 'tasking');
+            expect(sh.plan.completedAt).toBe('2026-07-01T10:03:00Z');
+            expect(sh.plan.durationTrusted).toBe(true);
+        });
+
         it('still closes a step at the next step start when it recorded no finish of its own', () => {
             const sh = deriveStepHistory([qaRecord()[0], qaRecord()[2]], 'plan', 'planning');
             expect(sh.specify.completedAt).toBe('2026-09-30T21:17:20.000Z');
@@ -649,7 +660,7 @@ describe('deriveTimingSummary', () => {
         durationTrusted: true,
     });
 
-    it('returns wall-clock elapsed only when every expected phase is measured', () => {
+    it('returns summed phase time only when every expected phase is measured', () => {
         const timing = deriveTimingSummary({
             specify: measured('2026-07-01T10:00:00Z', '2026-07-01T10:05:00Z'),
             plan: measured('2026-07-01T10:05:00Z', '2026-07-01T10:12:00Z'),
@@ -664,6 +675,17 @@ describe('deriveTimingSummary', () => {
             endedAt: '2026-07-01T10:24:00Z',
             elapsedMs: 24 * 60 * 1000,
         });
+    });
+
+    it('leaves the waits between phases out of the total', () => {
+        const timing = deriveTimingSummary({
+            specify: measured('2026-07-01T10:00:00Z', '2026-07-01T10:05:00Z'),
+            plan: measured('2026-07-01T11:00:00Z', '2026-07-01T11:07:00Z'),
+            tasks: measured('2026-07-01T11:07:00Z', '2026-07-01T11:10:00Z'),
+            implement: measured('2026-07-02T09:00:00Z', '2026-07-02T09:09:00Z'),
+        });
+        expect(timing.complete).toBe(true);
+        expect(timing.elapsedMs).toBe(24 * 60 * 1000);
     });
 
     it('keeps partial timing as coverage and never a total', () => {

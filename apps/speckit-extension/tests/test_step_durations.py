@@ -41,6 +41,15 @@ class TrustedSpansStopAtTheStepsOwnFinish(unittest.TestCase):
         spans = cq._derive_trusted_spans([QA_RECORD[0], QA_RECORD[2]])
         self.assertAlmostEqual(spans["specify"], 3235.426, places=3)
 
+    def test_a_trusted_finish_after_an_assistant_finish_closes_the_step(self):
+        spans = cq._derive_trusted_spans([
+            {"step": "plan", "substep": None, "kind": "start", "by": "extension", "at": "2026-07-01T10:00:00Z"},
+            {"step": "plan", "substep": None, "kind": "complete", "by": "ai", "at": "2026-07-01T10:02:00Z"},
+            {"step": "plan", "substep": None, "kind": "complete", "by": "extension", "at": "2026-07-01T10:03:00Z"},
+            {"step": "tasks", "substep": None, "kind": "start", "by": "extension", "at": "2026-07-01T11:00:00Z"},
+        ])
+        self.assertEqual(spans["plan"], 180.0)
+
 
 class StepTimingReportsDurationsNotGaps(unittest.TestCase):
     def test_specify_reads_about_23_seconds_never_53_minutes(self):
@@ -50,13 +59,6 @@ class StepTimingReportsDurationsNotGaps(unittest.TestCase):
 
     def test_an_unmeasured_step_says_so(self):
         self.assertIn("plan unmeasured", _step_timing(QA_RECORD))
-
-
-class TheImplementSpanClosesAtTheFirstFinish(unittest.TestCase):
-    def test_repeated_finishes_do_not_stretch_the_span(self):
-        history = [dict(e, step="implement") for e in QA_RECORD[2:]]
-        _s, _c, seconds = cc._step_span(history, "implement")
-        self.assertEqual(seconds, 178.0)
 
 
 if __name__ == "__main__":

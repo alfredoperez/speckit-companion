@@ -159,7 +159,7 @@ export interface TimingSummary {
     startedAt?: string;
     /** Present only when every expected phase has a trustworthy closed span. */
     endedAt?: string;
-    /** Wall-clock elapsed time, including pauses; present only for a complete run. */
+    /** Sum of the phase spans, excluding waits between phases; present only for a complete run. */
     elapsedMs?: number;
 }
 

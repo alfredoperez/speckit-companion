@@ -186,17 +186,18 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
     spans: dict[str, tuple[float, float]] = {}
     for step in order:
         idxs = groups[step]
-        own = [deduped[i] for i in idxs]
         boundary = next((deduped[j] for j in range(idxs[-1] + 1, len(deduped))
                          if deduped[j].get("step") != step), None)
-        last_step_level = next((e for e in reversed(own) if _is_step_level(e)), None)
-        last_own_is_completion = (last_step_level is not None
-                                  and last_step_level.get("kind") == "complete")
-        last_start = max((k for k, e in enumerate(own)
+        raw_own = [e for e in raw if e.get("step") == step]
+        last_start = max((k for k, e in enumerate(raw_own)
                           if _is_step_level(e) and e.get("kind") == "start"), default=-1)
-        own_completion = next((e for k, e in enumerate(own)
-                               if k > last_start and _is_step_level(e)
-                               and e.get("kind") == "complete"), None) if last_own_is_completion else None
+        attempt_rank = _boundary_writer_rank(raw_own[last_start].get("by")) if last_start >= 0 else 0
+        own_completes = [e for k, e in enumerate(raw_own)
+                         if k > last_start and _is_step_level(e) and e.get("kind") == "complete"]
+        own_completion = next((e for e in own_completes
+                               if _boundary_writer_rank(e.get("by")) > 0
+                               and _boundary_writer_rank(e.get("by")) >= attempt_rank),
+                              own_completes[0] if own_completes else None)
 
         close = None
         if boundary is not None:
@@ -210,7 +211,6 @@ def _derive_trusted_spans(history: list[dict]) -> dict[str, float]:
         if close is None:
             continue
 
-        raw_own = [e for e in raw if e.get("step") == step]
         explicit_starts = [e for e in raw_own
                            if _is_step_level(e) and e.get("kind") == "start"
                            and _boundary_writer_rank(e.get("by")) > 0]

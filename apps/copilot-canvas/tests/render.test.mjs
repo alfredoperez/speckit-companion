@@ -64,11 +64,13 @@ describe('overview dossier', () => {
 
     it('takes each step\'s duration from its start and finish', () => {
         const timing = stepTiming({ history: [
-            { step: 'plan', kind: 'start', at: '2026-01-01T00:00:00Z' },
-            { step: 'plan', task: 'T001', kind: 'complete', at: '2026-01-01T00:01:00Z' },
-            { step: 'plan', kind: 'complete', at: '2026-01-01T00:02:00Z' },
+            { step: 'plan', kind: 'start', by: 'extension', at: '2026-01-01T00:00:00Z' },
+            { step: 'plan', task: 'T001', kind: 'complete', by: 'ai', at: '2026-01-01T00:01:00Z' },
+            { step: 'plan', kind: 'complete', by: 'extension', at: '2026-01-01T00:02:00Z' },
         ] });
-        assert.deepEqual(timing.plan, { startedAt: '2026-01-01T00:00:00Z', completedAt: '2026-01-01T00:02:00Z' });
+        assert.equal(timing.plan.startedAt, '2026-01-01T00:00:00Z');
+        assert.equal(timing.plan.completedAt, '2026-01-01T00:02:00Z');
+        assert.equal(timing.plan.durationTrusted, true);
     });
 
     it('ends each step at its first finish, so repeats and idle time before the next step count for nothing', () => {
@@ -80,7 +82,20 @@ describe('overview dossier', () => {
             { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:19.000Z' },
             { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:20.000Z' },
         ] });
-        assert.deepEqual(timing.specify, { startedAt: '2026-09-30T20:23:24.574Z', completedAt: '2026-09-30T20:23:47.208Z' });
-        assert.deepEqual(timing.plan, { startedAt: '2026-09-30T21:17:20.000Z', completedAt: '2026-09-30T21:20:18.000Z' });
+        assert.equal(timing.specify.completedAt, '2026-09-30T20:23:47.208Z');
+        assert.equal(timing.plan.completedAt, '2026-09-30T21:20:18.000Z');
+    });
+
+    it('shows the same phase times the viewer shows for a spec left idle between steps', () => {
+        const html = renderOverview({ currentStep: 'plan', status: 'planned', history: [
+            { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T20:23:24.574Z' },
+            { step: 'specify', substep: null, kind: 'complete', by: 'extension', at: '2026-09-30T20:23:47.208Z' },
+            { step: 'plan', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T21:17:20.000Z' },
+            { step: 'plan', substep: null, kind: 'complete', by: 'ai', at: '2026-09-30T21:20:18.000Z' },
+        ] }, null);
+        const duration = name => html.match(new RegExp(`>${name}</span>(<span class="dossier-timing__duration">([^<]*)</span>)?`))?.[2] ?? null;
+        assert.equal(duration('Specify'), '23s');
+        assert.equal(duration('Plan'), null);
+        assert.match(html, /Timing coverage: 1 of 4 phases/);
     });
 });

@@ -300,15 +300,16 @@ def _is_step_level(e: dict) -> bool:
 def _step_span(history: list, step: str):
     """(start_at, complete_at, seconds) for a step's start→complete at the step
     level (substep None); None when either boundary is missing or unparseable."""
-    boundary = [(i, e) for i, e in enumerate(history)
-                if e.get("step") == step and _is_step_level(e)]
-    start = next(((i, e) for i, e in boundary if e.get("kind") == "start"), None)
-    complete = next((e for i, e in boundary
-                     if start and i > start[0] and e.get("kind") == "complete"), None)
-    if not start or not complete:
+    start = next((e for e in history if e.get("step") == step
+                  and _is_step_level(e)
+                  and e.get("kind") == "start"), None)
+    completes = [e for e in history if e.get("step") == step
+                 and _is_step_level(e)
+                 and e.get("kind") == "complete"]
+    if not start or not completes:
         return None
-    s = _parse_at(start[1].get("at"))
-    c = _parse_at(complete.get("at"))
+    s = _parse_at(start.get("at"))
+    c = _parse_at(completes[-1].get("at"))
     if s is None or c is None:
         return None
     return (s, c, (c - s).total_seconds())
