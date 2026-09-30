@@ -265,6 +265,14 @@ const cards = [
     title: 'Eleven providers',
     body: 'Terminal CLIs, IDE chat, the Claude Code panel. The extension hands your assistant the command text, then reads what lands on disk. Not every provider supports every piece.',
   },
+  {
+    eyebrow: 'COPILOT APP',
+    title: 'A board in the GitHub Copilot app',
+    // The board is its own surface, not a twelfth provider, so the count above stays at eleven.
+    body: 'Work in the GitHub Copilot app instead of VS Code? A live board of every spec opens beside the chat. A button runs the next step by sending the same command the VS Code sidebar does. The board only reads your specs; the commands it sends do the writing.',
+    link: { label: 'set up the board', href: '/docs/guides/copilot-app/' },
+    wide: true,
+  },
 ];
 
 // One leaf per section below the hero, in document order. The script measures
@@ -757,13 +765,18 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         {
           cards.map((card, index) => (
             <article
-              class="card"
+              class:list={['card', { 'card--wide': card.wide }]}
               data-reveal
               style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
             >
               <p class="card-eyebrow">{card.eyebrow}</p>
               <h2 class="card-title">{card.title}</h2>
               <p class="card-body">{card.body}</p>
+              {card.link && (
+                <a class="card-link" href={card.link.href}>
+                  {card.link.label} →
+                </a>
+              )}
             </article>
           ))
         }
@@ -1637,6 +1650,32 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     color: var(--text-muted);
     font-size: var(--fs-ui-sm);
     line-height: var(--lh-ui);
+  }
+
+  .card--wide {
+    grid-column: 1 / -1;
+  }
+
+  .card--wide .card-body {
+    max-width: var(--measure-lead);
+  }
+
+  .card-link {
+    align-self: flex-start;
+    margin-top: var(--space-4);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+  }
+
+  .card-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .card-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   /* ------------------------------------------------------------ claim band */
