@@ -1,6 +1,6 @@
 # Keep Living Specs Current — Living Spec
 
-<!-- reviewed: aebf4657 -->
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 Nothing updates a living spec on its own. This capability is the set of actions in VS Code that start the work: setting living specs up, adopting code areas, and asking the assistant to check, sync, move or update specs. The extension asks the questions a picker answers well, checks the shape of what gets saved, then hands the rest to the configured assistant. Without it a person has to remember seven slash commands and their arguments.

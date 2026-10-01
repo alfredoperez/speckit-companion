@@ -1,7 +1,6 @@
 # Produce the docs media — Living Spec
 
-<!-- reviewed: dee80029 -->
-
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 A maintainer produces every docs image, README GIF and site clip from the product's own screens, so the pictures never drift from what ships. Without these rules a rename breaks the live Marketplace listing, a retheme leaves two palettes on one page, or the deployed site shows broken images.

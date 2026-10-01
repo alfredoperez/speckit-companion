@@ -19,11 +19,15 @@ The SpecKit container SHALL hold Specs, Living Specs, Steering, and Settings & F
 ### An empty Specs view offers exactly one next step
 <!-- touches: package.json, apps/vscode/src/core/utils/contextKeys.ts -->
 
-A Specs view with no specs SHALL show a single welcome block chosen by setup state: Open Folder when no folder is open, Initialize Workspace when the Spec Kit CLI is installed but the project is not initialized, Configure Constitution with Create New Spec when the constitution still needs setting up, and otherwise a welcome with **Create your first spec** and **Open a live sample**. Two blocks SHALL never stack.
+A Specs view with no specs and no bug reports SHALL show a single welcome block chosen by setup state: Open Folder when no folder is open, Initialize Workspace when the Spec Kit CLI is installed but the project is not initialized, Configure Constitution with Create New Spec when the constitution still needs setting up, and otherwise a welcome with **Create your first spec** and **Open a live sample**. Two blocks SHALL never stack. A workspace with bug reports and no specs shows its Bugs group instead of a welcome block.
 
 #### Scenario: the CLI is installed but the project is bare
 - **WHEN** the Spec Kit CLI is detected and the workspace has no Spec Kit scaffolding
 - **THEN** the only block shown offers Initialize Workspace
+
+#### Scenario: bug reports but no specs
+- **WHEN** the workspace has a report under `.specify/bugs/` and no specs
+- **THEN** the Specs view shows the Bugs group and no welcome block
 
 ### Open a live sample seeds one copy of the bundled spec
 <!-- touches: apps/vscode/src/features/specs/sampleSpec.ts -->

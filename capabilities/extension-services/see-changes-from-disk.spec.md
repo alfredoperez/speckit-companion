@@ -1,6 +1,6 @@
 # See Changes From Disk — Living Spec
 
-<!-- reviewed: dee80029 -->
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 Specs are written mostly by AI CLIs running in a terminal, outside the editor's knowledge. The extension watches the disk so the sidebar, the viewer and notifications keep up without a reload. Without this the user stares at a stale viewer while a run finishes.

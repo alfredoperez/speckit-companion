@@ -161,6 +161,9 @@ export interface SpecViewerState {
      */
     livingSourcePath?: string;
 
+    /** Bug-report mode: a `.specify/bugs/<slug>/` folder shown read-only, with no run record. */
+    bug?: boolean;
+
     /** Absolute path to the spec directory */
     specDirectory: string;
 

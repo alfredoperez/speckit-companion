@@ -1,6 +1,6 @@
 # Review a Living Spec — Living Spec
 
-<!-- reviewed: aebf4657 -->
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 A living spec drafted by an assistant is a claim nobody has checked. This capability is the viewer in living-spec mode: it shows what a capability covers and how healthy it is, renders each requirement as a card that says whether it is confirmed, adopted, drifted or new, and lets a person approve, remove or comment on requirements. Without it, reviewing a spec means reading raw markdown and hand-deleting markers.

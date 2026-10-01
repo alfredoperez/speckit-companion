@@ -105,6 +105,8 @@ export interface MessageHandlerDependencies {
   offerLivingUndo: (specDirectory: string, action: LivingUndoAction) => void;
   /** Take the held action back when the token is current; undefined when stale. */
   takeLivingUndo: (specDirectory: string, token: string) => LivingUndoAction | undefined;
+  /** Fixed when the panel opens: a read-only panel accepts only the messages that read. */
+  readOnly?: boolean;
 }
 
 /**
@@ -248,6 +250,17 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
   };
 }
 
+/** The only messages a read-only bug panel may act on; every write and dispatch is dropped. */
+const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Set<ViewerToExtensionMessage["type"]>([
+  "ready",
+  "switchDocument",
+  "stepperClick",
+  "refreshContent",
+  "openFile",
+  "editSource",
+  "webviewError",
+]);
+
 /**
  * Create message handlers for a spec directory.
  *
@@ -272,6 +285,11 @@ export function createMessageHandlers(
   });
   return async (message: ViewerToExtensionMessage) => {
     deps.outputChannel.appendLine(`[SpecViewer] Received message: ${message.type}`);
+    const readOnly = deps.readOnly || deps.getInstance(specDirectory)?.state.bug;
+    if (readOnly && !BUG_PANEL_MESSAGES.has(message.type)) {
+      deps.outputChannel.appendLine(`[SpecViewer] Bug report is read-only: ${message.type} dropped`);
+      return;
+    }
     await dispatch(message, specDirectory, deps);
   };
 }

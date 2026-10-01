@@ -1,7 +1,6 @@
 # Comment on a Spec — Living Spec
 
-<!-- reviewed: aebf4657 -->
-
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 A person reviews a spec line by line inside the viewer, leaves the comments in the repository beside the spec, and hands the pending ones to the assistant as one edit request. Without this, review happens in a chat window that the branch does not carry and the assistant is asked to regenerate a document when all that was wanted was three corrections.

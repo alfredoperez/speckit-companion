@@ -81,3 +81,16 @@ A link in a document to another document of the same spec SHALL open that docume
 #### Scenario: a link to a source file, clicked twice
 - **WHEN** the reader clicks a link to a source file, goes back to the viewer and clicks it again
 - **THEN** both clicks open the file in the one group beside the viewer and no third group appears
+
+### A checkbox in a bug report never changes the report
+<!-- touches: apps/vscode/webview/src/spec-viewer/actions.ts, apps/vscode/webview/src/spec-viewer/editor/readOnly.ts -->
+
+Clicking a checkbox in an open bug report SHALL leave the box as the report file has it and leave the file unchanged. Completed and archived specs are not read-only in this sense: their task boxes still tick through to the file.
+
+#### Scenario: a checkbox inside a bug report
+- **WHEN** a checkbox in an open bug report is clicked
+- **THEN** it snaps back to its state on disk and the report file is not changed
+
+#### Scenario: a checkbox in a completed spec
+- **WHEN** a task box is ticked in the viewer on a completed spec
+- **THEN** its line in the tasks file is marked done
