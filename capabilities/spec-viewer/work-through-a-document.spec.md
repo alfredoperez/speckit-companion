@@ -1,5 +1,7 @@
 # Work Through a Document — Living Spec
 
+<!-- reviewed: aebf4657 -->
+
 ## Purpose
 
 A spec document is long, and a person reading one needs to jump to a section, come back to where they were, tick off work as it lands, and open the files the text names. Without this the viewer is a wall of prose that has to be re-scrolled every time it is opened and every file it mentions has to be found by hand.

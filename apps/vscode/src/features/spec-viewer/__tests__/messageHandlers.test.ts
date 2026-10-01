@@ -11,6 +11,9 @@ jest.mock('../../specs/stepLifecycle', () => ({
     reactivate: jest.fn().mockResolvedValue(undefined),
     startStep: jest.fn().mockResolvedValue(undefined),
     completeStep: jest.fn().mockResolvedValue(undefined),
+    retractStepStart: jest.fn().mockResolvedValue(true),
+    runPositionOf: jest.requireActual('../../specs/stepLifecycle').runPositionOf,
+    runUntouchedSince: jest.requireActual('../../specs/stepLifecycle').runUntouchedSince,
 }));
 
 // Mock notificationUtils
@@ -910,5 +913,55 @@ describe("recording a start for a project's added step (US3)", () => {
             { name: 'tickets', command: 'to-tickets', file: 'tickets.md' },
         ]);
         expect(startStep).not.toHaveBeenCalledWith(SPEC_DIR, 'tickets', 'extension');
+    });
+});
+
+describe('the viewer forward button when the dispatched command never runs', () => {
+    const { readSpecContextSyncSafe } = require('../../specs/specContextReader');
+    const { startStep, retractStepStart } = require('../../specs/stepLifecycle');
+    const { runInTerminal } = require('../../../core/utils/terminalUtils');
+    const mock = vscode as unknown as {
+        createMockTerminal: (o?: { name?: string }) => any;
+        __fireShellExecutionEnd: (terminal: unknown, execution: unknown, exitCode: number) => void;
+    };
+    const pipeline = [
+        { name: 'specify', command: 'speckit.specify', file: 'spec.md' },
+        { name: 'plan', command: 'speckit.plan', file: 'plan.md' },
+    ];
+    const entry = (step: string, kind: string) => ({ step, substep: null, kind, by: 'extension', at: '2026-09-30T10:00:00.000Z' });
+
+    it('hands the failed dispatch to the retraction, from where the run stood to where the start put it', async () => {
+        jest.clearAllMocks();
+        let current: any = { workflow: 'speckit', currentStep: 'specify', status: 'specified', history: [entry('specify', 'start'), entry('specify', 'complete')] };
+        (readSpecContextSyncSafe as jest.Mock).mockImplementation(() => current);
+        (startStep as jest.Mock).mockImplementation(async () => {
+            current = { ...current, currentStep: 'plan', status: 'planning', history: [...current.history, entry('plan', 'start')] };
+        });
+        const terminal = mock.createMockTerminal({ name: 'SpecKit - Claude Code' });
+        const deps = createMockDeps({
+            resolveWorkflowSteps: jest.fn().mockResolvedValue(pipeline),
+            executeInTerminal: jest.fn(async () => {
+                await runInTerminal(terminal, 'laude --append-system-prompt');
+                return terminal;
+            }),
+        });
+
+        await createMessageHandlers(SPEC_DIR, deps)({ type: 'approve' });
+        expect(retractStepStart).not.toHaveBeenCalled();
+
+        mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+        for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve));
+
+        expect(retractStepStart).toHaveBeenCalledWith(
+            SPEC_DIR,
+            'plan',
+            { status: 'specified', currentStep: 'specify', historyLength: 2 },
+            { status: 'planning', currentStep: 'plan', historyLength: 3 },
+        );
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+            expect.stringContaining('Plan did not run: the command in the "SpecKit - Claude Code" terminal exited with code 127'),
+            'Show Terminal',
+        );
+        (startStep as jest.Mock).mockResolvedValue(undefined);
     });
 });

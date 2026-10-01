@@ -311,6 +311,67 @@ export const createMockStatusBarItem = () => ({
     dispose: jest.fn(),
 });
 
+const shellIntegrationEmitter = new EventEmitter<{ terminal: any; shellIntegration: any }>();
+const shellExecutionEndEmitter = new EventEmitter<{ terminal: any; execution: any; exitCode: number | undefined }>();
+const closeTerminalEmitter = new EventEmitter<any>();
+
+/** A Terminal stub: `__activateShellIntegration` fires the integration event, `autoExitCode` ends each command, `write` gets keystrokes, `__commands` lists what ran. */
+export function createMockTerminal(options: {
+    name?: string;
+    shellIntegration?: boolean;
+    autoExitCode?: number;
+    write?: (data: string) => void;
+} = {}) {
+    const order: Array<{ via: 'sendText' | 'executeCommand'; text: string; enter: boolean }> = [];
+    const terminal: any = {
+        name: options.name ?? 'mock terminal',
+        exitStatus: undefined,
+        shellIntegration: undefined,
+        show: jest.fn(),
+        dispose: jest.fn(),
+        sendText: jest.fn((text: string, addNewLine: boolean = true) => {
+            order.push({ via: 'sendText', text, enter: addNewLine !== false });
+            options.write?.(addNewLine !== false ? `${text}\r` : text);
+        }),
+        executions: [] as any[],
+        __activateShellIntegration(): void {
+            terminal.shellIntegration = {
+                cwd: undefined,
+                executeCommand: jest.fn((commandLine: string) => {
+                    order.push({ via: 'executeCommand', text: commandLine, enter: true });
+                    options.write?.(`${commandLine}\r`);
+                    const execution = { commandLine: { value: commandLine } };
+                    terminal.executions.push(execution);
+                    if (options.autoExitCode !== undefined) {
+                        const code = options.autoExitCode;
+                        void Promise.resolve().then(() => shellExecutionEndEmitter.fire({ terminal, execution, exitCode: code }));
+                    }
+                    return execution;
+                }),
+            };
+            shellIntegrationEmitter.fire({ terminal, shellIntegration: terminal.shellIntegration });
+        },
+        __commands(): string[] {
+            return order.filter(o => o.enter).map(o => o.text);
+        },
+        __typed(): Array<{ via: 'sendText' | 'executeCommand'; text: string; enter: boolean }> {
+            return [...order];
+        },
+    };
+    if (options.shellIntegration !== false) terminal.__activateShellIntegration();
+    return terminal;
+}
+
+/** End a command started through shell integration, as `onDidEndTerminalShellExecution` would report it. */
+export function __fireShellExecutionEnd(terminal: any, execution: any, exitCode: number | undefined): void {
+    shellExecutionEndEmitter.fire({ terminal, execution, exitCode });
+}
+
+/** Close a terminal, as `onDidCloseTerminal` would report it. */
+export function __fireCloseTerminal(terminal: any): void {
+    closeTerminalEmitter.fire(terminal);
+}
+
 export const window = {
     createWebviewPanel: jest.fn().mockImplementation(createMockWebviewPanel),
     createStatusBarItem: jest.fn().mockImplementation(createMockStatusBarItem),
@@ -323,8 +384,11 @@ export const window = {
     showTextDocument: jest.fn(),
     activeTextEditor: undefined as any,
     onDidChangeActiveTextEditor: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-    createTerminal: jest.fn().mockReturnValue({ show: jest.fn(), sendText: jest.fn() }),
-    onDidCloseTerminal: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    createTerminal: jest.fn().mockImplementation((nameOrOptions?: any) =>
+        createMockTerminal({ name: typeof nameOrOptions === 'string' ? nameOrOptions : nameOrOptions?.name })),
+    onDidCloseTerminal: jest.fn(closeTerminalEmitter.event),
+    onDidChangeTerminalShellIntegration: jest.fn(shellIntegrationEmitter.event),
+    onDidEndTerminalShellExecution: jest.fn(shellExecutionEndEmitter.event),
     createOutputChannel: jest.fn().mockReturnValue({
         appendLine: jest.fn(),
         show: jest.fn(),

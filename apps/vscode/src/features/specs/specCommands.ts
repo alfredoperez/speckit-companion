@@ -24,6 +24,7 @@ import { dispatchStep } from './dispatchStep';
 import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
+import { watchStepDispatch } from './dispatchFailure';
 import type { StepName, Status } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
@@ -641,9 +642,11 @@ function registerPhaseCommands(
                     prompt += refinementContext;
                 }
                 const cmdPipeline = await resolveSpecPipeline(targetDir);
+                const watch = watchStepDispatch({ specDir: targetDir, step: cmd.name, outputChannel });
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     await startStep(targetDir, cmd.name as StepName, 'extension');
                 }
+                watch.started();
                 const wrapped = buildPrompt({
                     command: prompt,
                     step: cmd.name,
@@ -653,6 +656,7 @@ function registerPhaseCommands(
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
                 }
+                void watch.attach(terminal);
             })
         );
     }
@@ -696,11 +700,13 @@ async function executeWorkflowStep(
     // `updateSpecContext` also serializes per file, but awaiting here keeps the
     // single start-write ordered ahead of dispatch. A write failure must not
     // block dispatch (R002), so the error is logged, not thrown.
+    const watch = watchStepDispatch({ specDir: targetDir, step, completesFromStep: true, outputChannel });
     try {
         await updateStepProgress(targetDir, step, pipelineSteps.map(s => s.name));
     } catch (err) {
         outputChannel.appendLine(`[SpecKit] Failed to update step progress: ${err}`);
     }
+    watch.started();
 
     // Resolve the command for this step from the spec's workflow (a `companion`
     // spec resolves the /speckit.companion.* command family).
@@ -743,6 +749,7 @@ async function executeWorkflowStep(
     if (shouldRecordStepStart(pipelineSteps, step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }
+    void watch.attach(terminal);
 
     // Execute checkpoints after implement step
     if (step === WorkflowSteps.IMPLEMENT) {

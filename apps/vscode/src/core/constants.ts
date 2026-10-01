@@ -107,8 +107,14 @@ export const DefaultPaths = {
  * Timing constants (in milliseconds)
  */
 export const Timing = {
-    /** Timeout for waiting for shell integration to become available */
-    shellReadyTimeoutMs: 5000,
+    /** How long dispatch waits for a shell that supports shell integration to reach its prompt; long enough to answer a startup question */
+    shellIntegrationTimeoutMs: 60000,
+    /** Wait before typing into a shell that cannot report it is ready */
+    shellStartFallbackMs: 5000,
+    /** How long a terminal may take to start before a notice explains the wait */
+    shellWaitNoticeMs: 2000,
+    /** Longest wait for the previous command in the same terminal to finish */
+    previousCommandWaitMs: 3000,
     /** Delay before cleaning up temporary prompt files */
     tempFileCleanupDelay: 30000,
     /** Delay before disposing terminal after execution */

@@ -1,5 +1,7 @@
 # Open the Sidebar — Living Spec
 
+<!-- reviewed: aebf4657 -->
+
 ## Purpose
 
 The SpecKit icon in the activity bar opens one container of views, and what a person meets there depends on how far their setup has got. Without these rules a first-time user sees an empty panel with no way forward, and an installed user sees offers for things they already have.

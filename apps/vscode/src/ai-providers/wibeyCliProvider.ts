@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { AIProviders } from '../core/constants';
 import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { runInTerminal } from '../core/utils/terminalUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
 import { splitContextPreamble } from './promptBuilder';
 
@@ -121,8 +121,7 @@ export class WibeyCliProvider implements IAIProvider {
 
         if (isNew) {
             // Boot Wibey interactively, then send the command once the TUI is ready.
-            await waitForShellReady(terminal);
-            terminal.sendText('wibey', true);
+            await runInTerminal(terminal, 'wibey');
 
             const delay = WibeyCliProvider.INIT_DELAY_MS;
             setTimeout(() => {

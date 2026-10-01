@@ -25,6 +25,11 @@ export function track(
     tracked.set(terminal, { specDir, step });
 }
 
+/** Forget a terminal whose command never ran, so closing it records nothing. */
+export function untrack(terminal: vscode.Terminal): void {
+    tracked.delete(terminal);
+}
+
 /**
  * Subscribe to terminal-close events. Returns a disposable that the caller
  * pushes into `context.subscriptions`.

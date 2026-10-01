@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
 import { getConfiguredSpecKitAgent } from './specKitAgent';
+import { runInTerminal } from '../core/utils/terminalUtils';
 
 const execAsync = promisify(exec);
 
@@ -164,7 +165,7 @@ export class SpecKitDetector {
     async installCli(): Promise<void> {
         const terminal = vscode.window.createTerminal('Install SpecKit CLI');
         terminal.show();
-        terminal.sendText('uv tool install specify-cli --from git+https://github.com/github/spec-kit.git');
+        await runInTerminal(terminal, 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git');
 
         const selection = await vscode.window.showInformationMessage(
             'Installing SpecKit CLI... Once complete, reload the window to detect it.',
@@ -191,7 +192,7 @@ export class SpecKitDetector {
 
         const terminal = vscode.window.createTerminal({ name: 'Initialize SpecKit', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText('specify init .');
+        await runInTerminal(terminal, 'specify init .');
 
         const selection = await vscode.window.showInformationMessage(
             'Initializing SpecKit... Reload window once complete.',
@@ -212,7 +213,7 @@ export class SpecKitDetector {
     async upgradeCli(): Promise<void> {
         const terminal = vscode.window.createTerminal('Upgrade SpecKit CLI');
         terminal.show();
-        terminal.sendText('uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git');
+        await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git');
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI... Reload window after upgrade completes.',
@@ -251,7 +252,7 @@ export class SpecKitDetector {
         const agentFlag = await this.detectAgentFlag();
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText(`specify init --here --force ${agentFlag} ${getConfiguredSpecKitAgent()}`);
+        await runInTerminal(terminal, `specify init --here --force ${agentFlag} ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading project files... Reload window after upgrade completes.',
@@ -275,7 +276,7 @@ export class SpecKitDetector {
 
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder.uri });
         terminal.show();
-        terminal.sendText('uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
+        await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
             `specify init --here --force --integration ${getConfiguredSpecKitAgent()}`);
 
         const selection = await vscode.window.showInformationMessage(

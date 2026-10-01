@@ -8,10 +8,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
+    completedStatusForStep,
     HistoryEntryBy,
     inFlightStatusForStep,
     SpecContext,
     STATUS_OWNING_STEP,
+    STEP_NAMES,
     StepName,
 } from '../../core/types/specContext';
 import {
@@ -206,6 +208,64 @@ export async function reactivate(
     }
 }
 
+
+/** Where a run stands: enough to tell whether anything was written since. */
+export interface RunPosition {
+    status: Status;
+    currentStep: StepName;
+    historyLength: number;
+}
+
+export function runPositionOf(ctx: SpecContext | null | undefined): RunPosition | undefined {
+    if (!ctx) return undefined;
+    return { status: ctx.status, currentStep: ctx.currentStep, historyLength: ctx.history?.length ?? 0 };
+}
+
+/** True when the record still stands exactly where `position` saw it. */
+export function runUntouchedSince(ctx: SpecContext | null | undefined, position: RunPosition): boolean {
+    return !!ctx
+        && ctx.status === position.status
+        && ctx.currentStep === position.currentStep
+        && (ctx.history?.length ?? 0) === position.historyLength;
+}
+
+/** Back to `from`, keeping the stray start; a settled step it left is re-stamped complete so its forward button returns. */
+export function restoreRunPosition(ctx: SpecContext, step: string, from: RunPosition): SpecContext {
+    const back: SpecContext = { ...ctx, status: from.status, currentStep: from.currentStep };
+    const settledElsewhere = from.currentStep !== step
+        && STEP_NAMES.includes(from.currentStep)
+        && from.status === completedStatusForStep(from.currentStep);
+    return settledElsewhere ? setStepCompleted(back, from.currentStep, 'extension') : back;
+}
+
+/** Undo the running state a failed dispatch wrote, only while nothing has been recorded since; returns whether it did. */
+export async function retractStepStart(
+    specDir: string,
+    step: string,
+    from: RunPosition,
+    started: RunPosition,
+): Promise<boolean> {
+    const unchangedByStart = from.status === started.status
+        && from.currentStep === started.currentStep
+        && from.historyLength === started.historyLength;
+    if (unchangedByStart) return false;
+    let retracted = false;
+    try {
+        await updateSpecContext(
+            specDir,
+            ctx => {
+                if (!runUntouchedSince(ctx, started)) return ctx;
+                retracted = true;
+                return restoreRunPosition(ctx, step, from);
+            },
+            buildFallback(specDir, from.currentStep),
+        );
+    } catch (err) {
+        logError(`retractStepStart(${path.basename(specDir)}, ${step})`, err);
+        return false;
+    }
+    return retracted;
+}
 
 export async function completeSubstep(
     specDir: string,

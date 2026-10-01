@@ -1,5 +1,7 @@
 # Read a Spec — Living Spec
 
+<!-- reviewed: aebf4657 -->
+
 ## Purpose
 
 A person opens a workflow spec and reads its documents as a page instead of as raw markdown files. Without this, the spec, plan and tasks of a run are three unrelated files and nobody can tell which belong together, which exist, or which went out of date.

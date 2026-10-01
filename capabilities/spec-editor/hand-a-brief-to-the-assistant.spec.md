@@ -1,5 +1,7 @@
 # Hand a Brief to the Assistant — Living Spec
 
+<!-- reviewed: aebf4657 -->
+
 ## Purpose
 
 Creating a spec means turning what the person wrote into a command their AI assistant runs. This covers what the assistant receives, which command it is given, what happens when the chosen workflow is not installed, and how long the handed-off files stay around.

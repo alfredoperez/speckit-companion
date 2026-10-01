@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { AIProviders, Timing } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { runInTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { detectHostIde, HostIde } from '../core/utils/hostIde';
@@ -81,8 +81,7 @@ export async function dispatchSlashCommandViaTempFile(opts: {
             : cliInvocation;
     }
 
-    await waitForShellReady(terminal);
-    terminal.sendText(line, autoExecute);
+    await runInTerminal(terminal, line, { autoExecute });
 
     if (tempFilePath) {
         const fileToClean = tempFilePath;

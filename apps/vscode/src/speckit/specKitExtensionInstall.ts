@@ -6,6 +6,7 @@ import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
 import { cachedCompanionGap, markInstallInFlight, readInstalledCompanionVersion, type CompanionGap } from './companionVersionGap';
 import type { InstallPrompt } from '../protocol/viewer';
+import { runInTerminal } from '../core/utils/terminalUtils';
 
 export type { InstallPrompt };
 
@@ -192,12 +193,12 @@ export async function runInstallSpecKitExtension(workspaceRoot?: string): Promis
     // comment line is unreliable: interactive zsh has INTERACTIVE_COMMENTS off by
     // default, so a leading `#` would be executed and error ("command not found: #")
     // instead of being treated as a comment. echo is portable across bash/zsh.
-    terminal.sendText(`echo "Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}"`);
+    await runInTerminal(terminal, `echo "Prerequisite (github-source spec-kit CLI): ${CLI_PREREQ_COMMAND}"`);
     // `extension add` refuses when the spec-kit registry lists the extension, which can outlive the directory
     // (a deleted dir, a dropped `--dev` symlink, a half-finished install), so either signal means force.
     const alreadyThere = !!workspaceRoot && (isCompanionInstalled(workspaceRoot) || readInstalledCompanionVersion(workspaceRoot) !== undefined);
     markInstallInFlight();
-    terminal.sendText(buildInstallCommand({ force: alreadyThere && (await specifySupportsForce()) }));
+    await runInTerminal(terminal, buildInstallCommand({ force: alreadyThere && (await specifySupportsForce()) }));
 }
 
 /** Workspace root of the first open folder, or undefined. */

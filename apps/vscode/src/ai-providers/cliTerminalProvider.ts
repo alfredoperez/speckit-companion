@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { AIProviderType, AIExecutionResult, IAIProvider, buildPromptDispatchCommand, toSlashCommand } from './aiProvider';
 import { Timing } from '../core/constants';
-import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { runInTerminal, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
 import { getPermissionFlagForProvider } from './permissionValidation';
@@ -62,7 +62,7 @@ export interface DispatchContext {
  *
  * Owns the per-dispatch dance every CLI provider was independently
  * reimplementing — `ensureInstalled` → write temp file(s) → build the shell
- * line → create terminal → `waitForShellReady` → `sendText` → schedule
+ * line → create terminal → `runInTerminal` (waits for the shell) → schedule
  * cleanup. Concrete providers only have to supply (1) static identity
  * (name, cli binary, install hint, log prefix) and (2) a `prepareDispatch`
  * hook that returns the exact `commandLine` + the temp files to clean up.
@@ -220,8 +220,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
             });
             terminal.show();
 
-            await waitForShellReady(terminal);
-            terminal.sendText(plan.commandLine, autoExecute);
+            await runInTerminal(terminal, plan.commandLine, { autoExecute });
 
             this.scheduleCleanup(plan.tempFiles);
             return terminal;

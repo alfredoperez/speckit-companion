@@ -36,6 +36,7 @@ import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { isPathWithinRoot, requirementKey, requirementLinks, resolveCapabilityBySpecPath } from "../living-specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
+import { watchStepDispatch, type StepDispatchWatch } from "../specs/dispatchFailure";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
 import {
   completeStep,
@@ -97,7 +98,7 @@ export interface MessageHandlerDependencies {
   /** Re-derive the editor tab title from the instance's landing and document. */
   refreshPanelTitle: (specDirectory: string) => void;
   resolveWorkflowSteps: () => Promise<WorkflowStepConfig[]>;
-  executeInTerminal: (prompt: string) => Promise<void>;
+  executeInTerminal: (prompt: string) => Promise<vscode.Terminal | undefined | void>;
   outputChannel: vscode.OutputChannel;
   context: vscode.ExtensionContext;
   /** Hold this action as the panel's one Undo; a newer action settles the older one. */
@@ -394,11 +395,13 @@ async function handleRegenerate(
     : undefined;
 
   if (stepDef && targetStepName) {
+    const watch = watchStepDispatch({ specDir: specDirectory, step: targetStepName, outputChannel: deps.outputChannel });
     if (shouldRecordStepStart(steps, targetStepName)) {
       await startStep(specDirectory, targetStepName, "extension");
     }
+    watch.started();
     await deps.updateContent(specDirectory, instance.state.currentDocument);
-    await executeStepInTerminal(stepDef, specDirectory, deps);
+    await executeStepInTerminal(stepDef, specDirectory, deps, watch);
   }
 }
 
@@ -454,11 +457,18 @@ async function handleApprove(
 
   const nextStep = nextWorkflowStep(steps, currentName);
   if (nextStep) {
+    const watch = watchStepDispatch({
+      specDir: specDirectory,
+      step: nextStep.name,
+      fromStep: currentName,
+      outputChannel: deps.outputChannel,
+    });
     if (shouldRecordStepStart(steps, nextStep.name)) {
       await startStep(specDirectory, nextStep.name as StepName, "extension");
     }
+    watch.started();
     await deps.updateContent(specDirectory, instance.state.currentDocument);
-    await executeStepInTerminal(nextStep, specDirectory, deps);
+    await executeStepInTerminal(nextStep, specDirectory, deps, watch);
   } else {
     deps.outputChannel.appendLine(
       `[approve] No next step after '${currentName ?? "unknown"}' — nothing dispatched`,
@@ -475,10 +485,11 @@ async function executeStepInTerminal(
   step: WorkflowStepConfig,
   specDirectory: string,
   deps: MessageHandlerDependencies,
+  watch: StepDispatchWatch,
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
-  await dispatchStep(
+  const terminal = await dispatchStep(
     {
       baseCommand: step.command,
       step: step.name,
@@ -492,6 +503,7 @@ async function executeStepInTerminal(
       run: prompt => deps.executeInTerminal(prompt),
     },
   );
+  void watch.attach(terminal);
 }
 
 /**

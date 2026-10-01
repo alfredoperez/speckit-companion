@@ -621,9 +621,7 @@ export class SpecViewerProvider {
       refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
       refreshPanelTitle: dir => this.refreshPanelTitle(dir),
       resolveWorkflowSteps: () => this.resolveWorkflowSteps(specDirectory),
-      executeInTerminal: async (prompt: string) => {
-        await getAIProvider().executeInTerminal(prompt);
-      },
+      executeInTerminal: (prompt: string) => getAIProvider().executeInTerminal(prompt),
       outputChannel: this.outputChannel,
       context: this.context,
       offerLivingUndo: (dir, action) => this.offerLivingUndo(dir, action),
