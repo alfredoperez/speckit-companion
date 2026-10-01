@@ -1,7 +1,6 @@
 # Share Anonymous Usage — Living Spec
 
-<!-- reviewed: aebf4657 -->
-
+<!-- reviewed: b924da12 -->
 ## Purpose
 
 The maintainer learns which providers, workflows and features are used, and where new users drop off, without learning anything about the user or their code. Without the privacy limits below the extension would leak spec names and paths; without the counting rules the funnel numbers would be wrong.

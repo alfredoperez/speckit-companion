@@ -6,7 +6,6 @@ import {
     PROVIDER_PATHS,
     getConfiguredProviderType,
     getProviderDisplayName,
-    setIntegrationProviderOverride,
 } from '../ai-providers/aiProvider';
 import { detectHostIde } from '../ai-providers/ideChatProvider';
 import { resolveIntegrationProvider } from './specKitAgent';
@@ -36,21 +35,26 @@ function readIntegrationAgent(root: string, log: (message: string) => void): str
         text = fs.readFileSync(path.join(root, '.specify', 'integration.json'), 'utf-8');
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-            log('[integration] Could not read .specify/integration.json; keeping speckit.aiProvider');
+            log('[integration] Could not read .specify/integration.json; no provider suggestion');
         }
         return undefined;
     }
     const agent = parseIntegrationAgent(text);
-    if (!agent) { log('[integration] .specify/integration.json names no default integration; keeping speckit.aiProvider'); }
+    if (!agent) { log('[integration] .specify/integration.json names no default integration; no provider suggestion'); }
     return agent;
+}
+
+function keptPairs(context: vscode.ExtensionContext): string[] {
+    const value = context.workspaceState.get<unknown>(KEPT_KEY);
+    return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
 
 /**
  * When the project's Spec Kit integration names a different agent than `speckit.aiProvider`
- * resolves to, use the provider for that agent and say so. The setting is never rewritten;
- * "Keep" remembers the choice for this project.
+ * resolves to, suggest switching. The provider changes only when the user picks Switch;
+ * Keep or a dismissal is remembered for that pair in this workspace.
  */
-export function applyIntegrationProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): void {
+export async function suggestIntegrationProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): Promise<void> {
     const log = (message: string) => outputChannel.appendLine(message);
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!root) { return; }
@@ -63,24 +67,30 @@ export function applyIntegrationProvider(context: vscode.ExtensionContext, outpu
     if (!target || !(target in PROVIDER_PATHS)) { return; }
 
     const pair = `${agent}|${configured}`;
-    if (context.workspaceState.get<string>(KEPT_KEY) === pair) {
-        log(`[integration] Project integration is ${agent}; keeping speckit.aiProvider ${configured} as chosen`);
-        return;
-    }
+    if (keptPairs(context).includes(pair)) { return; }
 
-    setIntegrationProviderOverride(target as AIProviderType);
     const configuredName = getProviderDisplayName(configured);
     const targetName = getProviderDisplayName(target as AIProviderType);
-    log(`[integration] Project integration is ${agent} but speckit.aiProvider is ${configured} → using ${target}`);
+    const switchLabel = `Switch to ${targetName}`;
+    const keepLabel = `Keep ${configuredName}`;
 
-    const keep = `Keep ${configuredName}`;
-    void Promise.resolve(vscode.window.showInformationMessage(
-        `This project's Spec Kit integration is ${agent}, but the AI provider setting is ${configuredName}. Using ${targetName} for this project.`,
-        keep
-    )).then(async choice => {
-        if (choice !== keep) { return; }
-        setIntegrationProviderOverride(undefined);
-        await context.workspaceState.update(KEPT_KEY, pair);
-        log(`[integration] Keeping ${configured} over project integration ${agent}`);
-    }).catch(() => log('[integration] Could not remember the kept provider; the message will show again'));
+    try {
+        const choice = await vscode.window.showInformationMessage(
+            `This project was set up with Spec Kit for ${targetName}, but SpecKit Companion is using ${configuredName}.`,
+            switchLabel,
+            keepLabel
+        );
+        if (choice === switchLabel) {
+            const config = vscode.workspace.getConfiguration('speckit');
+            const scope = config.inspect('aiProvider')?.workspaceValue !== undefined
+                ? vscode.ConfigurationTarget.Workspace
+                : vscode.ConfigurationTarget.Global;
+            await config.update('aiProvider', target, scope);
+            log(`[integration] Switched speckit.aiProvider to ${target} to match project integration ${agent}`);
+            return;
+        }
+        await context.workspaceState.update(KEPT_KEY, [...keptPairs(context), pair]);
+    } catch {
+        log('[integration] Could not apply the provider choice; the suggestion will show again');
+    }
 }

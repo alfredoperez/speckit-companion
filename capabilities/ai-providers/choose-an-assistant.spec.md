@@ -30,28 +30,37 @@ A `speckit.aiProvider` value that matches no supported provider SHALL be treated
 - **WHEN** settings still hold the old id
 - **THEN** the extension activates and dispatches through Claude Code
 
-### The project's Spec Kit integration wins when it names a different assistant
-<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/extension.ts -->
+### A project set up for another assistant gets a suggestion, never a switch
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/extension.ts -->
 
-At activation the extension SHALL read the default integration from `.specify/integration.json` (`default_integration`, else `integration`). When that agent differs from the one `speckit.aiProvider` resolves to and a provider maps directly to it, the extension SHALL use that provider for the session and SHALL say so in a message. It SHALL NOT rewrite the setting.
+At activation the extension SHALL read the default integration from `.specify/integration.json` (`default_integration`, else `integration`). When that agent differs from the one `speckit.aiProvider` resolves to and a provider maps directly to it, the extension SHALL show one message that names both assistants and offers **Switch to** that provider and **Keep** the current one. The extension SHALL NOT change the provider unless the user picks Switch.
 
 #### Scenario: the project was set up for another assistant
 - **WHEN** `speckit.aiProvider` is `claude` and `.specify/integration.json` names `copilot`
-- **THEN** dispatch goes through GitHub Copilot CLI and a message says the project's integration is copilot and offers **Keep Claude Code**
+- **THEN** a message says the project was set up for GitHub Copilot CLI while Claude Code is in use, offers **Switch to GitHub Copilot CLI** and **Keep Claude Code**, and dispatch stays on Claude Code until a button is pressed
 
-### The user can keep their own provider over the project's integration
+### Switch updates the setting
 <!-- touches: apps/vscode/src/speckit/integrationProvider.ts -->
 
-The message SHALL offer to keep the configured provider. Choosing Keep SHALL put dispatch back on the setting and be remembered for that integration and provider pair in the project.
+Choosing Switch SHALL write the suggested provider to `speckit.aiProvider` in user settings, or in workspace settings when a workspace value is the one in charge. The new provider takes effect after a reload, as any provider change does.
+
+#### Scenario: the user switches
+- **WHEN** they choose **Switch to GitHub Copilot CLI**
+- **THEN** `speckit.aiProvider` becomes `copilot` and the reload prompt for a provider change appears
+
+### Keep or a dismissal is remembered for that pair
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts -->
+
+Choosing Keep, or closing the message, SHALL be remembered in the workspace for that integration and provider pair, and the message SHALL NOT show again for the same pair. A different pair SHALL be asked about once.
 
 #### Scenario: the user keeps their setting
-- **WHEN** they choose **Keep Claude Code**
-- **THEN** dispatch returns to Claude Code and the message does not return for that pair
+- **WHEN** they choose **Keep Claude Code** and reload the window
+- **THEN** no message appears and dispatch stays on Claude Code
 
-### An integration with no matching provider leaves the setting in charge
+### An integration with nothing to suggest shows nothing
 <!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts -->
 
-An agent with no provider that maps directly to it, a missing or unreadable `.specify/integration.json`, and IDE Chat on Windsurf SHALL leave `speckit.aiProvider` in charge and show nothing.
+An agent no provider maps directly to (such as `cursor-agent` or `windsurf`), a provider Spec Kit has no agent for (Wibey), IDE Chat on Windsurf, a matching integration, and a missing, unreadable or malformed `.specify/integration.json` SHALL leave `speckit.aiProvider` alone and show nothing.
 
 #### Scenario: the integration has no provider here
 - **WHEN** `.specify/integration.json` names an agent such as `cursor-agent` that no provider maps to

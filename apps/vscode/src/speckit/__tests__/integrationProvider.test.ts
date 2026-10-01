@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { parseIntegrationAgent, applyIntegrationProvider } from '../integrationProvider';
-import { getConfiguredProviderType, setIntegrationProviderOverride } from '../../ai-providers/aiProvider';
+import { parseIntegrationAgent, suggestIntegrationProvider } from '../integrationProvider';
+import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 jest.mock('fs', () => ({
     ...jest.requireActual('fs'),
@@ -25,10 +25,14 @@ const COPILOT_FILE = JSON.stringify({
     default_integration: 'copilot',
 });
 
+const update = jest.fn();
+let inspected: { globalValue?: string; workspaceValue?: string } | undefined;
+
 function setProvider(value: string): void {
     (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
         get: jest.fn(() => value),
-        inspect: jest.fn(),
+        inspect: jest.fn(() => inspected),
+        update,
     });
 }
 
@@ -63,120 +67,198 @@ describe('parseIntegrationAgent', () => {
     });
 });
 
-describe('applyIntegrationProvider', () => {
+describe('suggestIntegrationProvider', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        setIntegrationProviderOverride(undefined);
+        showInfo.mockReset();
         showInfo.mockResolvedValue(undefined);
+        update.mockReset();
+        update.mockResolvedValue(undefined);
+        inspected = undefined;
         (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/project' } }];
     });
 
     afterAll(() => {
-        setIntegrationProviderOverride(undefined);
         (vscode.workspace as any).workspaceFolders = undefined;
     });
 
-    it('uses the integration agent\'s provider and says so when the setting disagrees', () => {
-        setProvider('claude');
-        setFile(COPILOT_FILE);
-        const { context } = createMockExtensionContext();
+    describe('when the project was set up for a different assistant', () => {
+        it('shows one message that names both and offers Switch and Keep', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('copilot');
-        expect(showInfo).toHaveBeenCalledTimes(1);
-        expect(showInfo.mock.calls[0][0]).toContain('integration is copilot');
-        expect(showInfo.mock.calls[0][0]).toContain('Claude Code');
+            expect(showInfo).toHaveBeenCalledTimes(1);
+            const [message, ...buttons] = showInfo.mock.calls[0];
+            expect(message).toContain('GitHub Copilot');
+            expect(message).toContain('Claude Code');
+            expect(buttons).toEqual([expect.stringMatching(/^Switch to GitHub Copilot/), 'Keep Claude Code']);
+        });
+
+        it('never changes the provider without a click', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
+            showInfo.mockReturnValue(new Promise(() => undefined));
+
+            void suggestIntegrationProvider(context, channel);
+            await new Promise(resolve => setImmediate(resolve));
+
+            expect(showInfo).toHaveBeenCalledTimes(1);
+            expect(update).not.toHaveBeenCalled();
+            expect(getConfiguredProviderType()).toBe('claude');
+        });
     });
 
-    it('does nothing when the integration matches the setting', () => {
-        setProvider('copilot');
-        setFile(COPILOT_FILE);
-        const { context } = createMockExtensionContext();
+    describe('when the user picks Switch', () => {
+        it('writes the suggested provider to the global setting', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context, workspaceStore } = createMockExtensionContext();
+            showInfo.mockImplementation(async (_message: string, switchLabel: string) => switchLabel);
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('copilot');
-        expect(showInfo).not.toHaveBeenCalled();
+            expect(update).toHaveBeenCalledWith('aiProvider', 'copilot', vscode.ConfigurationTarget.Global);
+            expect(workspaceStore.size).toBe(0);
+        });
+
+        it('writes the workspace setting when that is the one in charge', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            inspected = { globalValue: 'gemini', workspaceValue: 'claude' };
+            const { context } = createMockExtensionContext();
+            showInfo.mockImplementation(async (_message: string, switchLabel: string) => switchLabel);
+
+            await suggestIntegrationProvider(context, channel);
+
+            expect(update).toHaveBeenCalledWith('aiProvider', 'copilot', vscode.ConfigurationTarget.Workspace);
+        });
+
+        it('logs instead of throwing when the setting cannot be written', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
+            showInfo.mockImplementation(async (_message: string, switchLabel: string) => switchLabel);
+            update.mockRejectedValue(new Error('read-only'));
+
+            await expect(suggestIntegrationProvider(context, channel)).resolves.toBeUndefined();
+            expect(channel.appendLine).toHaveBeenCalledWith(expect.stringContaining('Could not apply'));
+        });
     });
 
-    it('does nothing when there is no integration.json', () => {
-        setProvider('claude');
-        setFile(Object.assign(new Error('missing'), { code: 'ENOENT' }));
-        const { context } = createMockExtensionContext();
+    describe('when the user picks Keep or dismisses the message', () => {
+        it('remembers Keep and stays quiet on the next activation', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
+            showInfo.mockResolvedValue('Keep Claude Code');
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
+            showInfo.mockClear();
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('claude');
-        expect(showInfo).not.toHaveBeenCalled();
+            expect(showInfo).not.toHaveBeenCalled();
+            expect(update).not.toHaveBeenCalled();
+        });
+
+        it('remembers a dismissal the same way', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
+
+            await suggestIntegrationProvider(context, channel);
+            showInfo.mockClear();
+            await suggestIntegrationProvider(context, channel);
+
+            expect(showInfo).not.toHaveBeenCalled();
+            expect(update).not.toHaveBeenCalled();
+        });
+
+        it('asks again for a different assistant pair and keeps both remembered', async () => {
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
+            await suggestIntegrationProvider(context, channel);
+
+            setFile(JSON.stringify({ integration: 'codex', default_integration: 'codex' }));
+            await suggestIntegrationProvider(context, channel);
+            expect(showInfo).toHaveBeenCalledTimes(2);
+
+            showInfo.mockClear();
+            setFile(COPILOT_FILE);
+            await suggestIntegrationProvider(context, channel);
+            setFile(JSON.stringify({ integration: 'codex', default_integration: 'codex' }));
+            await suggestIntegrationProvider(context, channel);
+            expect(showInfo).not.toHaveBeenCalled();
+        });
     });
 
-    it('keeps the setting and logs when the file cannot be read for another reason', () => {
-        setProvider('claude');
-        setFile(Object.assign(new Error('denied'), { code: 'EACCES' }));
-        const { context } = createMockExtensionContext();
+    describe('when there is nothing to suggest', () => {
+        it('shows nothing when the integration matches the setting', async () => {
+            setProvider('copilot');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('claude');
-        expect(channel.appendLine).toHaveBeenCalledWith(expect.stringContaining('Could not read'));
-    });
+            expect(showInfo).not.toHaveBeenCalled();
+        });
 
-    it('keeps the setting for an agent that has no direct provider', () => {
-        setProvider('claude');
-        setFile(JSON.stringify({ integration: 'cursor-agent', default_integration: 'cursor-agent' }));
-        const { context } = createMockExtensionContext();
+        it('shows nothing when there is no integration.json', async () => {
+            setProvider('claude');
+            setFile(Object.assign(new Error('missing'), { code: 'ENOENT' }));
+            const { context } = createMockExtensionContext();
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('claude');
-        expect(showInfo).not.toHaveBeenCalled();
-    });
+            expect(showInfo).not.toHaveBeenCalled();
+            expect(channel.appendLine).not.toHaveBeenCalled();
+        });
 
-    it('does nothing with no folder open', () => {
-        (vscode.workspace as any).workspaceFolders = undefined;
-        setProvider('claude');
-        setFile(COPILOT_FILE);
-        const { context } = createMockExtensionContext();
+        it('shows nothing and logs when the file cannot be read for another reason', async () => {
+            setProvider('claude');
+            setFile(Object.assign(new Error('denied'), { code: 'EACCES' }));
+            const { context } = createMockExtensionContext();
 
-        applyIntegrationProvider(context, channel);
+            await suggestIntegrationProvider(context, channel);
 
-        expect(mockRead).not.toHaveBeenCalled();
-        expect(getConfiguredProviderType()).toBe('claude');
-    });
+            expect(showInfo).not.toHaveBeenCalled();
+            expect(channel.appendLine).toHaveBeenCalledWith(expect.stringContaining('Could not read'));
+        });
 
-    it('goes back to the setting and stays quiet next time once the user chooses Keep', async () => {
-        setProvider('claude');
-        setFile(COPILOT_FILE);
-        const { context, workspaceStore } = createMockExtensionContext();
-        showInfo.mockResolvedValue('Keep Claude Code');
+        it('shows nothing when the file is not valid JSON', async () => {
+            setProvider('claude');
+            setFile('{ not json');
+            const { context } = createMockExtensionContext();
 
-        applyIntegrationProvider(context, channel);
-        await new Promise(resolve => setImmediate(resolve));
+            await suggestIntegrationProvider(context, channel);
 
-        expect(getConfiguredProviderType()).toBe('claude');
-        expect(workspaceStore.size).toBe(1);
+            expect(showInfo).not.toHaveBeenCalled();
+        });
 
-        showInfo.mockClear();
-        applyIntegrationProvider(context, channel);
+        it('shows nothing for an agent that has no direct provider', async () => {
+            setProvider('claude');
+            setFile(JSON.stringify({ integration: 'cursor-agent', default_integration: 'cursor-agent' }));
+            const { context } = createMockExtensionContext();
 
-        expect(getConfiguredProviderType()).toBe('claude');
-        expect(showInfo).not.toHaveBeenCalled();
-    });
+            await suggestIntegrationProvider(context, channel);
 
-    it('asks again when the integration changes after a Keep', async () => {
-        setProvider('claude');
-        setFile(COPILOT_FILE);
-        const { context } = createMockExtensionContext();
-        showInfo.mockResolvedValue('Keep Claude Code');
-        applyIntegrationProvider(context, channel);
-        await new Promise(resolve => setImmediate(resolve));
+            expect(showInfo).not.toHaveBeenCalled();
+        });
 
-        showInfo.mockResolvedValue(undefined);
-        setFile(JSON.stringify({ integration: 'codex', default_integration: 'codex' }));
-        applyIntegrationProvider(context, channel);
+        it('shows nothing with no folder open', async () => {
+            (vscode.workspace as any).workspaceFolders = undefined;
+            setProvider('claude');
+            setFile(COPILOT_FILE);
+            const { context } = createMockExtensionContext();
 
-        expect(getConfiguredProviderType()).toBe('codex');
-        expect(showInfo).toHaveBeenCalledTimes(2);
+            await suggestIntegrationProvider(context, channel);
+
+            expect(mockRead).not.toHaveBeenCalled();
+            expect(showInfo).not.toHaveBeenCalled();
+        });
     });
 });

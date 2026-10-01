@@ -1,6 +1,6 @@
+import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
 import { detectHostIde, HostIde } from '../ai-providers/ideChatProvider';
-import { getConfiguredProviderType } from '../ai-providers/aiProvider';
 
 /**
  * The spec-kit CLI accepted agent identifier the upgrade command passes as
@@ -58,10 +58,10 @@ const AGENT_TO_PROVIDER: ReadonlyMap<string, string> = (() => {
 })();
 
 /**
- * The provider to use when the project's Spec Kit integration names an agent that the
- * configured provider does not resolve to, or undefined to leave the setting alone.
- * Agents with no direct provider (Cursor, Windsurf, and the rest of Spec Kit's list) and
- * a provider Spec Kit has no agent for (Wibey), and an IDE Chat setup on Windsurf are never overridden.
+ * The provider to suggest when the project's Spec Kit integration names an agent that the
+ * configured provider does not resolve to, or undefined when there is nothing to suggest.
+ * Agents with no direct provider (Cursor, Windsurf, and the rest of Spec Kit's list),
+ * a provider Spec Kit has no agent for (Wibey), and IDE Chat on Windsurf get no suggestion.
  */
 export function resolveIntegrationProvider(
     configured: string | undefined,
@@ -75,9 +75,10 @@ export function resolveIntegrationProvider(
 }
 
 /**
- * Impure wrapper: reads the effective provider, detects the host, and resolves the
+ * Impure wrapper: reads `speckit.aiProvider`, detects the host, and resolves the
  * agent. Both upgrade dispatch sites call this so neither can hardcode an agent.
  */
 export function getConfiguredSpecKitAgent(): SpecKitAgent {
-    return resolveSpecKitAgent(getConfiguredProviderType(), detectHostIde());
+    const provider = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider');
+    return resolveSpecKitAgent(provider, detectHostIde());
 }

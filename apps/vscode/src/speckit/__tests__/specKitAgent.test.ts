@@ -89,7 +89,7 @@ describe('resolveSpecKitAgent', () => {
 });
 
 describe('resolveIntegrationProvider', () => {
-    it('leaves the setting alone when the integration agrees', () => {
+    it('suggests nothing when the integration agrees', () => {
         expect(resolveIntegrationProvider('claude', 'vscode', 'claude')).toBeUndefined();
         expect(resolveIntegrationProvider('claude-vscode', 'vscode', 'claude')).toBeUndefined();
     });
@@ -99,7 +99,7 @@ describe('resolveIntegrationProvider', () => {
         expect(resolveIntegrationProvider('ide-chat', 'cursor', 'cursor-agent')).toBeUndefined();
     });
 
-    it('picks the direct provider for the agent when they disagree', () => {
+    it('suggests the direct provider for the agent when they disagree', () => {
         expect(resolveIntegrationProvider('claude', 'vscode', 'copilot')).toBe('copilot');
         expect(resolveIntegrationProvider('gemini', 'vscode', 'codex')).toBe('codex');
         expect(resolveIntegrationProvider('ide-chat', 'vscode', 'claude')).toBe('claude');
@@ -110,19 +110,19 @@ describe('resolveIntegrationProvider', () => {
         expect(resolveIntegrationProvider('gemini', 'vscode', 'claude')).toBe('claude');
     });
 
-    it('never overrides to an agent with no direct provider', () => {
+    it('suggests nothing for an agent with no direct provider', () => {
         expect(resolveIntegrationProvider('claude', 'vscode', 'cursor-agent')).toBeUndefined();
         expect(resolveIntegrationProvider('claude', 'vscode', 'windsurf')).toBeUndefined();
         expect(resolveIntegrationProvider('claude', 'vscode', 'kimi')).toBeUndefined();
     });
 
-    it('never overrides a provider Spec Kit has no agent for', () => {
+    it('suggests nothing for a provider Spec Kit has no agent for', () => {
         expect(resolveIntegrationProvider('wibey', 'vscode', 'copilot')).toBeUndefined();
         expect(resolveIntegrationProvider('wibey-vscode', 'vscode', 'codex')).toBeUndefined();
         expect(resolveIntegrationProvider(undefined, 'vscode', 'codex')).toBeUndefined();
     });
 
-    it('never overrides IDE Chat on Windsurf', () => {
+    it('suggests nothing for IDE Chat on Windsurf', () => {
         expect(resolveIntegrationProvider('ide-chat', 'windsurf', 'claude')).toBeUndefined();
     });
 

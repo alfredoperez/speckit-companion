@@ -8,7 +8,7 @@ sidebar:
 
 Pick the AI assistant that runs your spec commands with **Settings > `speckit.aiProvider`** (default `claude`). SpecKit Companion sends commands to the assistant you already use, and this page lists how each one is reached and which files it reads.
 
-Spec Kit records the assistant a project was set up for in `.specify/integration.json`. If it names a different assistant than your setting, Companion uses the one the project was set up for and tells you, with a button to keep your setting. It never rewrites the setting.
+Spec Kit records the assistant a project was set up for in `.specify/integration.json`. If it names a different assistant than your setting, Companion says so when it starts and offers **Switch to** that assistant or **Keep** yours. It never changes the provider on its own: Switch updates `speckit.aiProvider` and takes effect after a reload, and Keep (or closing the message) means it will not ask again about that pair in this project.
 
 ## How each one is reached
 
